@@ -1,11 +1,11 @@
-"""Where the runtime finds the agent image it hosts, the relay the agent mounts, and the agent's root.
+"""Where the runtime finds the agent image it hosts, the programs it advertises to the agent, and the agent's root.
 
 Every path is located, never spelled by a caller. In a native package the
-runtime image's launch profile fixes the agent image and the relay as package
-values in the runtime's own environment; the runtime reads no package file. In
-a checkout the relay runs from the checkout's environment, and the agent only
-from a source tree the development lane names. Nothing here is looked up by
-bare name on ``PATH``.
+runtime image's launch profile fixes the agent image, the relay, the ``aeat``
+command line and the package interpreter as package values in the runtime's own
+environment; the runtime reads no package file. In a checkout those programs
+run from the checkout's environment, and the agent only from a source tree the
+development lane names. Nothing here is looked up by bare name on ``PATH``.
 """
 
 from __future__ import annotations
@@ -32,6 +32,10 @@ PACKAGE_AGENT_VARIABLE: Final = "CADRUMO_PACKAGE_AGENT_EXECUTABLE"
 """The package value naming the bundled agent image, ``bin/cadrumo-agent``, fixed in the runtime image's profile."""
 PACKAGE_RELAY_VARIABLE: Final = "CADRUMO_PACKAGE_RELAY_EXECUTABLE"
 """The package value naming the ``cadrumo-mcp`` relay, fixed in the runtime image's profile."""
+PACKAGE_AEAT_VARIABLE: Final = "CADRUMO_PACKAGE_AEAT_EXECUTABLE"
+"""The package value naming the ``aeat`` command line, fixed in the runtime image's profile."""
+PACKAGE_PYTHON_VARIABLE: Final = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE"
+"""The package value naming the package's interpreter image, fixed in the runtime image's profile."""
 
 _ROOT_KEY_NAME: Final = ".agent-root-key"
 _ROOT_KEY_BYTES: Final = 32
@@ -70,6 +74,26 @@ class AgentImage:
     directory: Path
 
 
+def _located_program(variable: str, checkout_program: Path | None, received: Mapping[str, str] | None) -> Path:
+    """Return the absolute program a package variable names, or the checkout's own; refuse any other install."""
+    environment = os.environ if received is None else received
+    declared = environment.get(variable)
+    if declared is not None:
+        program = Path(declared)
+    elif storage_mode().mode is StorageMode.DEVELOPMENT and checkout_program is not None:
+        program = checkout_program
+    else:
+        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
+    if not program.is_absolute() or not program.is_file():
+        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
+    return program
+
+
+def _checkout_script(name: str, interpreter: Path | None) -> Path:
+    python = Path(sys.executable if interpreter is None else interpreter)
+    return python.parent / (f"{name}.exe" if sys.platform == "win32" else name)
+
+
 def hosted_relay(*, received: Mapping[str, str] | None = None, interpreter: Path | None = None) -> Path:
     """Locate the ``cadrumo-mcp`` relay a hosted agent mounts.
 
@@ -77,18 +101,43 @@ def hosted_relay(*, received: Mapping[str, str] | None = None, interpreter: Path
     from the environment that holds this interpreter. Any other install has no
     relay to name.
     """
+    return _located_program(PACKAGE_RELAY_VARIABLE, _checkout_script("cadrumo-mcp", interpreter), received)
+
+
+def hosted_aeat(*, received: Mapping[str, str] | None = None, interpreter: Path | None = None) -> Path | None:
+    """Locate the ``aeat`` command line a hosted agent may run, as :func:`hosted_relay` locates the relay.
+
+    A checkout's command line sits inside its virtual environment, which the
+    agent refuses to run as a program; the answer is then ``None``.
+    """
+    checkout = _checkout_script("aeat", interpreter)
     environment = os.environ if received is None else received
-    declared = environment.get(PACKAGE_RELAY_VARIABLE)
-    if declared is not None:
-        relay = Path(declared)
-    elif storage_mode().mode is StorageMode.DEVELOPMENT:
-        python = Path(sys.executable if interpreter is None else interpreter)
-        relay = python.parent / ("cadrumo-mcp.exe" if sys.platform == "win32" else "cadrumo-mcp")
-    else:
-        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
-    if not relay.is_absolute() or not relay.is_file():
-        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
-    return relay
+    if PACKAGE_AEAT_VARIABLE not in environment and inside_virtual_environment(checkout):
+        return None
+    return _located_program(PACKAGE_AEAT_VARIABLE, checkout, received)
+
+
+def inside_virtual_environment(program: Path) -> bool:
+    """Whether the program's folder or any parent holds a ``pyvenv.cfg``, which the agent refuses to run."""
+    return (
+        any((folder / "pyvenv.cfg").exists() for folder in program.parent.parents)
+        or (program.parent / "pyvenv.cfg").exists()
+    )
+
+
+def hosted_python(*, received: Mapping[str, str] | None = None, interpreter: Path | None = None) -> Path | None:
+    """Locate the Python interpreter a hosted agent may run: the package's image, or this checkout's interpreter.
+
+    A checkout's interpreter that sits inside a virtual environment is not
+    advertised, because the agent refuses such a program; the answer is then
+    ``None``. The package's interpreter is never inside one.
+    """
+    checkout = Path(sys.executable if interpreter is None else interpreter)
+    if received is None:
+        received = os.environ
+    if PACKAGE_PYTHON_VARIABLE not in received and inside_virtual_environment(checkout):
+        return None
+    return _located_program(PACKAGE_PYTHON_VARIABLE, checkout, received)
 
 
 def agent_image(agent_source: str | None, *, agent_root: Path, received: Mapping[str, str] | None = None) -> AgentImage:

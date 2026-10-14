@@ -119,7 +119,7 @@ def test_a_package_without_its_agent_is_a_finding_and_a_checkout_without_one_is_
 
 
 def _first_non_slot_system_name(facts: dict[str, Any]) -> str:
-    slots = set(facts["runtime"]["gateway_slots"])
+    slots = set(facts["runtime"]["gateway_slots"]) | set(facts["runtime"]["advertised_variables"])
     return str(
         next(
             name
@@ -152,6 +152,10 @@ def _composer_writes(name: str) -> _Mutation:
 
 def _composer_omits_a_system_name(facts: dict[str, Any]) -> None:
     facts["runtime"]["composed"].remove(_first_non_slot_system_name(facts))
+
+
+def _composer_omits_an_advertised_name(facts: dict[str, Any]) -> None:
+    facts["runtime"]["composed"].remove(facts["runtime"]["advertised_variables"][0])
 
 
 def _runtime_adds_a_slot(facts: dict[str, Any]) -> None:
@@ -223,6 +227,30 @@ _PLANTED_FACTS: list[tuple[str, _Mutation, str, str]] = [
     ("slot-added-by-the-runtime", _runtime_adds_a_slot, "runtime-launch", "does not declare"),
     ("composer-writes-a-credential", _composer_writes("ANTHROPIC_API_KEY"), "runtime-launch", "does not admit it"),
     ("composer-omits-a-slot", _composer_omits_a_slot, "runtime-launch", "composer does not write"),
+    (
+        "composer-omits-an-advertised-name",
+        _composer_omits_an_advertised_name,
+        "runtime-launch",
+        "advertised name the composer does not write",
+    ),
+    (
+        "advertised-name-outside-the-agent-prefix",
+        _set(("runtime", "advertised_variables"), ["SOMETHING_ELSE"]),
+        "runtime-launch",
+        "does not admit it by the agent's prefix",
+    ),
+    (
+        "aeat-variable",
+        _set(("runtime", "program_variables"), ["SOMETHING_ELSE", "CADRUMO_PACKAGE_PYTHON_EXECUTABLE"]),
+        "runtime-launch",
+        "not fixed as the path of an entrypoint",
+    ),
+    (
+        "python-variable",
+        _set(("runtime", "program_variables"), ["CADRUMO_PACKAGE_AEAT_EXECUTABLE", "SOMETHING_ELSE"]),
+        "runtime-launch",
+        "not fixed as the path of the package's interpreter",
+    ),
     ("composer-omits-a-system-name", _composer_omits_a_system_name, "runtime-launch", "composer omits"),
     (
         "gateway-invocation",
@@ -385,9 +413,9 @@ def _all(*edits: _Edit) -> _Edit:
     return edit
 
 
-def _without_the_gateways_relay_slot(text: str) -> str:
+def _without_the_gateways_worker_port_slot(text: str) -> str:
     edited = re.sub(
-        r'(\[profiles\.agent-gateway\].*?)\n  \{ name = "[A-Z_]+HOSTED_RELAY_EXECUTABLE", required = false \},',
+        r'(\[profiles\.agent-gateway\].*?)\n  \{ name = "[A-Z_]+_WORKER_PORT", required = false \},',
         r"\1",
         text,
         count=1,
@@ -442,7 +470,7 @@ _PLANTED_DECLARATIONS: list[tuple[str, _Edit, str, str]] = [
         "storage-root",
         "channel preview",
     ),
-    ("gateway-slot-dropped", _without_the_gateways_relay_slot, "runtime-launch", "does not declare"),
+    ("gateway-slot-dropped", _without_the_gateways_worker_port_slot, "runtime-launch", "does not declare"),
 ]
 
 

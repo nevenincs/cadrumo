@@ -103,7 +103,6 @@ _AGENT_SLOTS = {
     "CADRUMO_AGENT_HOSTED_ROOT",
     "CADRUMO_AGENT_PORT",
     "CADRUMO_AGENT_WORKER_PORT",
-    "CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE",
 }
 _STORE_INVOCATIONS = {
     ("stores-state",),
@@ -127,7 +126,7 @@ def test_vectors_admit_each_store_and_version_invocation_with_the_gateways_slots
         for tail in _STORE_INVOCATIONS:
             vector = admitted[tail]
             assert vector["arguments"][:2] == ["-m", "cadrumo_agent.cli.main"]
-            # The hosted root, both ports, the relay and the storage root all arrive, as for serve.
+            # The hosted root, both ports and the storage root all arrive, as for serve.
             assert set(vector["environment"]) >= _AGENT_SLOTS, vector["name"]
             # What the gateway never admits does not arrive under these arguments either, and a name
             # under the agent's prefix that the declaration does not list does.

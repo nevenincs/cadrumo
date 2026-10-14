@@ -626,9 +626,9 @@ class DropRunEventFilter(logging.Filter):
         return getattr(record, "run_event", None) is None
 
 
-#: Import root of every first-party logger. ``get_logger(__name__)`` is seeded
-#: from the module path, so a Cadrumo record's ``name`` always starts here.
-_FIRST_PARTY_LOGGER_ROOT = "cadrumo"
+#: First-party namespaces for Cadrumo and its hosted agent diagnostics. SDK
+#: request-body DEBUG remains excluded even when it originates inside the agent.
+_FIRST_PARTY_LOGGER_ROOTS = ("cadrumo", "cadrumo_agent")
 
 
 class _ThirdPartyDebugFilter(logging.Filter):
@@ -661,11 +661,11 @@ class _ThirdPartyDebugFilter(logging.Filter):
 
         Returns:
             ``True`` for any record at INFO or above, and for DEBUG records
-            emitted by a first-party ``cadrumo`` logger.
+            emitted by a first-party ``cadrumo`` or ``cadrumo_agent`` logger.
         """
         if record.levelno >= logging.INFO:
             return True
-        return record.name == _FIRST_PARTY_LOGGER_ROOT or record.name.startswith(f"{_FIRST_PARTY_LOGGER_ROOT}.")
+        return any(record.name == root or record.name.startswith(f"{root}.") for root in _FIRST_PARTY_LOGGER_ROOTS)
 
 
 #: Extra key marking a record whose content the emitter has ALREADY written to

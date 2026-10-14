@@ -77,7 +77,14 @@ impl Draft {
                 pid,
             });
         Entry {
-            source: "python",
+            source: if process
+                .as_ref()
+                .is_some_and(|process| process.role.starts_with("agent_"))
+            {
+                "cadrumo-agent"
+            } else {
+                "python"
+            },
             timestamp: self.timestamp,
             timestamp_ms,
             level: self.level,
@@ -665,6 +672,33 @@ fn read(mut file: File, offset: u64, length: u64, cap: u64) -> io::Result<Vec<u8
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn agent_records_keep_their_source_process_and_severity() {
+        for role in [
+            "agent_launcher",
+            "agent_gateway",
+            "agent_worker",
+            "agent_cli",
+        ] {
+            let entry = Draft {
+                timestamp: "2026-10-14T12:30:15.123Z".to_owned(),
+                level: Some(super::super::format::Level::Error),
+                logger: Some("cadrumo_agent.worker".to_owned()),
+                message: "worker failed".to_owned(),
+                detail: String::new(),
+                detail_lines: false,
+                context: BTreeMap::from([
+                    ("process_id".to_owned(), serde_json::json!(4321)),
+                    ("process_role".to_owned(), serde_json::json!(role)),
+                ]),
+            }
+            .entry();
+            assert_eq!(entry.source, "cadrumo-agent");
+            assert_eq!(entry.process.unwrap().role, role);
+            assert_eq!(entry.level, Some(super::super::format::Level::Error));
+        }
+    }
 
     #[test]
     fn observations_differ_when_a_rotation_moved_files_between_them() {

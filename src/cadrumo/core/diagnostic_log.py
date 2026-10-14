@@ -15,7 +15,9 @@ from typing import Literal, cast, override
 from uuid import uuid4
 
 type DiagnosticValue = str | int | float | bool | None
-type DiagnosticProcessRole = Literal["python", "tui", "runtime", "profile_worker"]
+type DiagnosticProcessRole = Literal[
+    "python", "tui", "runtime", "profile_worker", "agent_launcher", "agent_gateway", "agent_worker", "agent_cli"
+]
 
 _DIAGNOSTIC_ID: ContextVar[str | None] = ContextVar("cadrumo_diagnostic_id", default=None)
 _process_role: DiagnosticProcessRole = "python"
@@ -24,6 +26,20 @@ _MAX_CONTEXT_TEXT = 512
 _LIFECYCLE_FIELDS = tuple(
     sorted(
         {
+            "action",
+            "event",
+            "service",
+            "gateway_port",
+            "worker_port",
+            "port",
+            "duration_ms",
+            "elapsed_ms",
+            "reason",
+            "status",
+            "trace_id",
+            "span_id",
+            "agent_sequence",
+            "diagnostic_rejected_count",
             "cleanup_incomplete",
             "cleanup_error_type",
             "cleanup_status",

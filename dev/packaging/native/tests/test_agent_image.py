@@ -151,10 +151,9 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
         "CADRUMO_AGENT_HOSTED_ROOT": "directory",
         "CADRUMO_AGENT_PORT": "port",
         "CADRUMO_AGENT_WORKER_PORT": "port",
-        "CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE": "executable",
     }
     # The gateway and its worker each receive their parent's storage root as an optional slot
-    # they do not pin, which carries it on to the relay the worker starts. A slot is admitted
+    # they do not pin, which the agent forwards to the programs it starts. A slot is admitted
     # by its kind alone: whoever the caller is, the compiled slot names no parent.
     worker = next(profile for profile in section["profiles"] if profile["name"] == "agent-worker")
     for profile in (gateway, worker):
@@ -166,6 +165,8 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
     assert {(value["name"], value["value"]) for value in runtime["fixed"]} == {
         ("CADRUMO_PACKAGE_AGENT_EXECUTABLE", _AGENT),
         ("CADRUMO_PACKAGE_RELAY_EXECUTABLE", "cadrumo-mcp"),
+        ("CADRUMO_PACKAGE_AEAT_EXECUTABLE", "aeat"),
+        ("CADRUMO_PACKAGE_PYTHON_EXECUTABLE", "python"),
     }
 
 
@@ -255,7 +256,7 @@ def test_the_generic_interpreter_takes_the_agent_location_only_as_a_relayed_laun
     assert agent_location in runtime_fixed
     assert python_slots[agent_location] == {"name": agent_location, "kind": "executable", "required": False}
     # The image that fixes a package fact cannot also take it from its parent.
-    relay = '  { name = "CADRUMO_PACKAGE_RELAY_EXECUTABLE", image = "cadrumo-mcp" },\n]\n'
+    relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\n'
     planted = _SOURCE.replace(
         relay, relay + 'slots = [{ name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false }]\n', 1
     )

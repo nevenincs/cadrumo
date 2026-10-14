@@ -26,6 +26,8 @@ from ...adapters.local_runtime.agent_programs import (
     AgentProgramRefusalError,
     HostedStoresAside,
     agent_image,
+    hosted_aeat,
+    hosted_python,
     hosted_relay,
     profile_agent_root,
     profile_agent_workspace,
@@ -244,6 +246,8 @@ class ProfileConnectionAgentMixin:
             workspace = profile_agent_workspace(agent_root)
             image = agent_image(request.agent_source, agent_root=agent_root)
             relay = hosted_relay()
+            aeat = hosted_aeat()
+            python = hosted_python()
         except AgentProgramRefusalError as refused:
             return self._agent_refused(context, request, refused.code)
         except OSError:
@@ -258,7 +262,12 @@ class ProfileConnectionAgentMixin:
             arguments=image.arguments,
             directory=image.directory,
             environment=agent_launch_environment(
-                storage_root=self.root, agent_root=agent_root, relay=relay, received=os.environ
+                storage_root=self.root,
+                agent_root=agent_root,
+                relay=relay,
+                aeat=aeat,
+                python=python,
+                received=os.environ,
             ),
         )
         stores = AgentStoreLifecycle(

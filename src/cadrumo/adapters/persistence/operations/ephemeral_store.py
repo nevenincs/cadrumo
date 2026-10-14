@@ -156,8 +156,15 @@ class EphemeralOperationStore(
             while len(self._settled) > self._settled_retention:
                 forgotten, _ = self._settled.popitem(last=False)
                 self._records.pop(forgotten, None)
-                for reference in self._operand_owners.pop(forgotten, set()):
-                    self._operands.pop(reference, None)
+                self._forget_operands(forgotten)
+
+    def forget_unadmitted(self, operation_id: OperationId) -> None:
+        """Drop the lease and operands of an operation whose record was never created."""
+        with self._lock:
+            if operation_id in self._records:
+                return
+            self._leases.pop(operation_id, None)
+            self._forget_operands(operation_id)
 
     @override
     async def read_after(
@@ -359,6 +366,10 @@ class EphemeralOperationStore(
             raise RepositoryError("operation secure reference payload does not match requested operand type") from exc
 
     # Internals -----------------------------------------------------------
+
+    def _forget_operands(self, operation_id: OperationId) -> None:
+        for reference in self._operand_owners.pop(operation_id, set()):
+            self._operands.pop(reference, None)
 
     def _record(self, operation_id: OperationId) -> OperationJournalRecord:
         record = self._records.get(operation_id)

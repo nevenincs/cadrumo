@@ -2677,6 +2677,9 @@ cli:
           be újra, és próbáld meg ismét.
         revision_conflict: Ez a szolgáltató megváltozott az állapotlekérdezésed óta.
           Kérdezd le újra az állapotot, és a jelzett revíziót küldd el.
+        runtime_unavailable: A háttérszolgáltatás nem fogadta a kérést, így semmit
+          sem olvastunk be, és semmi sem változott. Ellenőrizd, hogy fut-e a háttérszolgáltatás-kezelő,
+          majd próbáld újra.
         unknown: A kérést elutasítottuk. Ellenőrizd a szolgáltató azonosítóját az
           `aeat config provider status` paranccsal, és hogy ez a szolgáltató fogad-e
           kulcsot. Semmi sem változott.

@@ -11,9 +11,11 @@ from threading import Lock, Thread
 from typing import BinaryIO, Final
 
 from ...application.agent_host.controller import AgentHostError, AgentHostRefusal, AgentProcess
+from ...application.agent_host.launch_environment import HOSTED_ROOT_VARIABLE
 from ...application.agent_host.native_refusal import STANDARD_ERROR_TAIL_BYTES
 from ...application.agent_host.store_lifecycle import AgentInvocationResult
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from .agent_diagnostics import AgentDiagnosticFiles, AgentDiagnosticLines, AgentDiagnosticSink
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 _STANDARD_ERROR_CHUNK_BYTES: Final = 4096
@@ -28,13 +30,14 @@ class _StandardErrorTail:
 
     The agent's standard error is a private pipe, so the runtime must read it
     or a chatty agent would block on a full pipe. Everything but the last
-    bytes is discarded as it arrives, and nothing is logged: the host reads
-    only the native launch-profile refusal line from the end.
+    bytes is discarded after structured diagnostics are forwarded to the application
+    log. The host still reads the native launch-profile refusal from the end.
     """
 
-    def __init__(self, stream: BinaryIO, *, limit: int) -> None:
+    def __init__(self, stream: BinaryIO, *, limit: int, diagnostics: AgentDiagnosticLines | None = None) -> None:
         """Start draining the stream on a daemon thread that closes it at the end of the output."""
         self._stream = stream
+        self._diagnostics = diagnostics
         self._limit = limit
         self._lock = Lock()
         self._tail = bytearray()
@@ -58,11 +61,16 @@ class _StandardErrorTail:
     def _drain(self) -> None:
         try:
             with contextlib.suppress(OSError, ValueError):
-                while chunk := self._stream.read(_STANDARD_ERROR_CHUNK_BYTES):
+                reader = getattr(self._stream, "read1", self._stream.read)
+                while chunk := reader(_STANDARD_ERROR_CHUNK_BYTES):
+                    if self._diagnostics is not None:
+                        self._diagnostics.feed(chunk)
                     with self._lock:
                         self._tail += chunk
                         del self._tail[: -self._limit]
         finally:
+            if self._diagnostics is not None:
+                self._diagnostics.finish()
             with contextlib.suppress(OSError):
                 self._stream.close()
 
@@ -78,13 +86,22 @@ class WindowsAgentProcess:
         standard_input: BinaryIO,
         standard_output: BinaryIO,
         standard_error: BinaryIO,
+        diagnostic_sink: AgentDiagnosticSink | None = None,
+        diagnostic_files: AgentDiagnosticFiles | None = None,
     ) -> None:
         """Take ownership of the job, the agent and the parent pipe ends, and start draining standard error."""
         self._scope = scope
         self._process = process
         self._input: BinaryIO | None = standard_input
         self._output = standard_output
-        self._standard_error = _StandardErrorTail(standard_error, limit=STANDARD_ERROR_TAIL_BYTES)
+        self._diagnostic_files = diagnostic_files
+        self._standard_error = _StandardErrorTail(
+            standard_error,
+            limit=STANDARD_ERROR_TAIL_BYTES,
+            diagnostics=AgentDiagnosticLines(diagnostic_sink or AgentDiagnosticSink(), pid=process.pid),
+        )
+        if diagnostic_files is not None:
+            diagnostic_files.start()
         self._lines: Queue[bytes | BaseException] = Queue(maxsize=1)
         self._reader: Thread | None = None
 
@@ -144,6 +161,8 @@ class WindowsAgentProcess:
             self._output.close()
             # The drain closes its own end once the job's writers are gone.
             self._standard_error.release(timeout=_STANDARD_ERROR_RELEASE_SECONDS)
+            if self._diagnostic_files is not None:
+                self._diagnostic_files.close()
 
     def job_limit_flags(self) -> int:
         """The agent job's limit flags as the kernel holds them; it never admits breakaway."""
@@ -188,6 +207,9 @@ class WindowsAgentProcessLauncher:
         """Start the tree; its environment is exactly the one given, with no credential in it."""
         if sys.platform != "win32":
             raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED)
+        sink = AgentDiagnosticSink()
+        root = environment.get(HOSTED_ROOT_VARIABLE)
+        files = AgentDiagnosticFiles(Path(root), sink) if root is not None and root != "" else None
         scope = WindowsProcessScope()
         try:
             process, standard_input, standard_output, standard_error = scope.launch_with_standard_pipes(
@@ -203,6 +225,8 @@ class WindowsAgentProcessLauncher:
                 standard_input=standard_input,
                 standard_output=standard_output,
                 standard_error=standard_error,
+                diagnostic_sink=sink,
+                diagnostic_files=files,
             )
         except BaseException:
             # The drain could not start, so the tree has no owner: end it and release every pipe end.
@@ -259,7 +283,7 @@ class WindowsAgentInvocationRunner:
         """Start the tree with no standard input, wait for it to the bound, then end every member.
 
         A tree still running at the bound is ended and reported with no
-        status. Its standard error is drained and discarded. A job whose end
+        status. Recognized diagnostics on standard error reach the application log. A job whose end
         cannot be confirmed raises, so the caller learns nothing it could take
         for an outcome.
         """
@@ -276,7 +300,11 @@ class WindowsAgentInvocationRunner:
         streams = (standard_input, standard_output, standard_error)
         try:
             standard_input.close()
-            errors = _StandardErrorTail(standard_error, limit=STANDARD_ERROR_TAIL_BYTES)
+            errors = _StandardErrorTail(
+                standard_error,
+                limit=STANDARD_ERROR_TAIL_BYTES,
+                diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=process.pid, cli=True),
+            )
             output = _StandardOutput(standard_output, limit=output_limit)
             try:
                 status: int | None = process.wait(timeout=timeout)

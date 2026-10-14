@@ -32,7 +32,7 @@ from ....application.provider_settings.registered_operations import (
     ProviderSettingsStatusResult,
     change_effect,
 )
-from ....application.runtime.contracts import RuntimeRefusalError
+from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..errors import CliRefusedBoundaryError
@@ -58,6 +58,19 @@ _LOCKED_REASONS = frozenset(
     }
 )
 _NOT_SIGNED_IN_REASONS = frozenset({AccessDenialCode.AUTHENTICATION_REQUIRED.value})
+_RUNTIME_UNAVAILABLE_REASONS = frozenset(
+    {
+        RuntimeRefusalCode.UNAVAILABLE.value,
+        RuntimeRefusalCode.ENDPOINT_NOT_READY.value,
+        RuntimeRefusalCode.OWNER_BUSY.value,
+        RuntimeRefusalCode.DRAINING.value,
+    }
+)
+"""Runtime refusals that mean no runtime took the request.
+
+A closed connection or an exceeded deadline is not among them: a change may
+already have reached the runtime, so its effect stays unknown.
+"""
 
 
 def refuse(code: ProviderSettingsRefusalCode, *, operation_id: str | None = None) -> Never:
@@ -75,6 +88,8 @@ def _contract_code(reason: object) -> ProviderSettingsRefusalCode:
         return ProviderSettingsRefusalCode.PROFILE_LOCKED
     if reason in _NOT_SIGNED_IN_REASONS:
         return ProviderSettingsRefusalCode.NOT_SIGNED_IN
+    if reason in _RUNTIME_UNAVAILABLE_REASONS:
+        return ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE
     return ProviderSettingsRefusalCode.UNKNOWN
 
 
@@ -112,10 +127,11 @@ def _run[ResultT: BaseModel](
     except CliRefusedBoundaryError as error:
         context = error.context or {}
         operation_id = context.get("operation_id")
-        refuse(
-            _contract_code(context.get("reason")),
-            operation_id=operation_id if isinstance(operation_id, str) else None,
-        )
+        code = _contract_code(context.get("reason"))
+        if isinstance(operation_id, str) and code is ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE:
+            # The runtime took the operation before it went away, so the change may have committed.
+            code = ProviderSettingsRefusalCode.UNKNOWN
+        refuse(code, operation_id=operation_id if isinstance(operation_id, str) else None)
 
 
 def _settled(

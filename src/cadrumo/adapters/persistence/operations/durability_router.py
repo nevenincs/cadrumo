@@ -85,6 +85,12 @@ class DurabilityRoutedOperationPersistence(
         return registered or self._ephemeral.holds(operation_id)
 
     @override
+    def abandon_ephemeral(self, operation_id: OperationId) -> None:
+        with self._lock:
+            self._registered.discard(operation_id)
+        self._ephemeral.forget_unadmitted(operation_id)
+
+    @override
     def operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore:
         return self._ephemeral.operands_for(operation_id)
 

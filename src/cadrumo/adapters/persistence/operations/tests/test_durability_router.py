@@ -29,7 +29,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.models import CredentialFreeOperationRequest, OperationRequest
+from cadrumo.application.operations.models import CredentialFreeOperationRequest, OperationRequest, new_operation_id
 from cadrumo.application.operations.observation import OperationObservationService
 from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
@@ -54,6 +54,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from ...storage.errors import RepositoryError
 from .. import journal as journal_module
 from .. import lease as lease_module
 from ..durability_router import DurabilityRoutedOperationPersistence
@@ -300,3 +301,22 @@ async def test_an_ephemeral_read_takes_the_journal_lock_zero_times_and_a_recorde
         await supervisor.shutdown()
     assert counts[_EPHEMERAL] == 0, counts
     assert counts[_RECORDED] > 0, counts
+
+
+@pytest.mark.asyncio
+async def test_an_abandoned_admission_leaves_neither_routing_nor_operands(tmp_path: Path) -> None:
+    persistence = _router(tmp_path / "synthetic-state")
+    operation_id = new_operation_id()
+    persistence.register_ephemeral(operation_id)
+    reference = await persistence.operands_for(operation_id).put(
+        _Result(definition_id=_EPHEMERAL), written_at=datetime.now(UTC)
+    )
+    assert persistence.routes_ephemeral(operation_id)
+    assert await persistence.resolve(reference, _Result) == _Result(definition_id=_EPHEMERAL)
+
+    persistence.abandon_ephemeral(operation_id)
+
+    assert not persistence.routes_ephemeral(operation_id)
+    # The durable operand store of this router is a separate in-memory store; it never held the operand.
+    with pytest.raises(RepositoryError, match="absent"):
+        await persistence.resolve(reference, _Result)

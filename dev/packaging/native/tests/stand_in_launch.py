@@ -248,7 +248,7 @@ def build(directory: Path, target: str, contract: dict[str, Any]) -> StandIn:
     suffix = layout["entrypoint_suffix"]
     native = package / layout["paths"]["native"]
     native.mkdir(parents=True)
-    for image in ("python", "cadrumo-mcp", *layout["bundled_images"]):
+    for image in ("python", "aeat", "cadrumo-mcp", *layout["bundled_images"]):
         (native / f"{image}{suffix}").write_bytes(b"")
     # The stand-in agent spells its settings as the agent does: its prefix, which the contract carries, and the
     # setting's name. The contract lists none of them but the gateway's launch parameters.

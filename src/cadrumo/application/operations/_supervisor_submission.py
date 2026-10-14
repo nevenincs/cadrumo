@@ -36,21 +36,31 @@ class SupervisorSubmissionMixin(SupervisorHost):
         definition, definition_contract, identity, now = await self._authorize_submission(
             request, operation_id=operation_id, provenance=provenance
         )
-        request_storage, request_reference, credential_free_request_json = await self._store_submission_request(
-            request, definition, now
-        )
-        secret_requirement = self._submission_secret_requirement(definition, identity, now)
-        return await self._persist_submission(
-            request=request,
-            definition_contract=definition_contract,
-            identity=identity,
-            now=now,
-            request_storage=request_storage,
-            request_reference=request_reference,
-            credential_free_request_json=credential_free_request_json,
-            secret_requirement=secret_requirement,
-            provenance=provenance,
-        )
+        # Route before the first operand write, so an ephemeral operation's
+        # request and provenance never reach the encrypted durable store.
+        self._register_durability(identity.operation_id, definition_contract.durability)
+        try:
+            request_storage, request_reference, credential_free_request_json = await self._store_submission_request(
+                request, definition, now, operation_id=identity.operation_id
+            )
+            secret_requirement = self._submission_secret_requirement(definition, identity, now)
+            created_operation_id = await self._persist_submission(
+                request=request,
+                definition_contract=definition_contract,
+                identity=identity,
+                now=now,
+                request_storage=request_storage,
+                request_reference=request_reference,
+                credential_free_request_json=credential_free_request_json,
+                secret_requirement=secret_requirement,
+                provenance=provenance,
+            )
+        except BaseException:
+            self._abandon_durability(identity.operation_id)
+            raise
+        if created_operation_id != identity.operation_id:
+            self._abandon_durability(identity.operation_id)
+        return created_operation_id
 
     @override
     async def _authorize_submission[RequestPayloadT: BaseModel](
@@ -83,12 +93,15 @@ class SupervisorSubmissionMixin(SupervisorHost):
         request: OperationRequest[RequestPayloadT],
         definition: OperationDefinition,
         now: datetime,
+        *,
+        operation_id: OperationId,
     ) -> tuple[OperationRequestStoragePolicy, str, str | None]:
         request_storage = definition.capabilities.request_storage
         if request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE:
-            if self._operands is None:
+            operands = self._operands_for(operation_id)
+            if operands is None:
                 raise ValueError("secure-reference request storage requires an operand store")
-            request_reference = await self._operands.put(request.payload, written_at=now)
+            request_reference = await operands.put(request.payload, written_at=now)
             credential_free_request_json = None
         else:
             credential_free_request_json = request.payload.model_dump_json()
@@ -144,12 +157,10 @@ class SupervisorSubmissionMixin(SupervisorHost):
         existing_operation_id = await self._resolve_idempotency(claim)
         if existing_operation_id is not None:
             return existing_operation_id
+        operands = self._operands_for(identity.operation_id)
         provenance_reference = (
-            await self._operands.put(provenance, written_at=now)
-            if provenance is not None and self._operands is not None
-            else None
+            await operands.put(provenance, written_at=now) if provenance is not None and operands is not None else None
         )
-        self._register_durability(identity.operation_id, definition_contract.durability)
         lease = self._candidate(identity, now)
         replayed_operation_id = await self._acquire_submission_lease(lease, claim=claim)
         if replayed_operation_id is not None:

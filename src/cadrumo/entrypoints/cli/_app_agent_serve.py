@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -36,6 +37,7 @@ from uuid import UUID
 import typer
 
 from ...application.agent_host.launcher_protocol import LAUNCHER_LANE, AgentLauncherRefusal, AgentStoppedReason
+from ...core.diagnostic_log import diagnostic_event, diagnostic_process
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import reject_duplicate_json_members
 from .common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -57,7 +59,8 @@ def app_agent_serve(
     try:
         if agent_source is not None and (not agent_source.is_absolute() or not agent_source.is_dir()):
             _refuse(AgentLauncherRefusal.SERVICE_ABSENT)
-        _serve(bearer, agent_source)
+        with diagnostic_process("agent_launcher"):
+            _serve(bearer, agent_source)
     finally:
         bearer[:] = bytes(len(bearer))
 
@@ -170,5 +173,17 @@ def _refuse(code: AgentLauncherRefusal) -> NoReturn:
 
 
 def _event(kind: str, **fields: object) -> None:
+    port = fields.get("gateway_port")
+    with diagnostic_process("agent_launcher"):
+        diagnostic_event(
+            logging.getLogger(__name__),
+            kind,
+            level=logging.ERROR if kind == "agent_refused" else logging.INFO,
+            fields={
+                "gateway_port": port if type(port) is int else None,
+                "reason_code": str(fields["code"]) if "code" in fields else None,
+                "reason": str(fields["reason"]) if "reason" in fields else None,
+            },
+        )
     sys.stdout.write(json.dumps({"event": kind, **fields}, separators=(",", ":")) + "\n")
     sys.stdout.flush()

@@ -290,6 +290,17 @@ def test_the_agent_image_and_the_runtime_relay_are_read_from_the_contract(stand_
     suffix = stand_in.contract["layout"]["entrypoint_suffix"]
     assert contract.image_path == stand_in.package / "bin" / f"cadrumo-agent{suffix}"
     assert contract.relay_path == stand_in.package / "bin" / f"cadrumo-mcp{suffix}"
+    assert contract.aeat_path == stand_in.package / "bin" / f"aeat{suffix}"
+    assert contract.python_path == stand_in.package / stand_in.contract["layout"]["paths"]["executable"]
+    # The agent refuses a declared program inside a virtual environment: no folder from the interpreter up
+    # to the package root holds a pyvenv.cfg, and the layout stages none.
+    folder = contract.python_path.parent
+    while True:
+        assert not (folder / "pyvenv.cfg").exists()
+        if folder == stand_in.package:
+            break
+        folder = folder.parent
+    assert "pyvenv.cfg" not in json.dumps(stand_in.contract["layout"])
     assert contract.worker_arguments == ("-m", "cadrumo_agent.worker")
     assert contract.stores_state_arguments == ("-m", "cadrumo_agent.cli.main", "stores-state")
     assert contract.setup_arguments == ("-m", "cadrumo_agent.cli.main", "setup")

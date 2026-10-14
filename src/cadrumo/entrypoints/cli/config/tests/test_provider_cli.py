@@ -17,13 +17,17 @@ import sys
 from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
-from typing import Final
+from types import SimpleNamespace
+from typing import Final, cast
+from uuid import UUID
 
 import pytest
+import typer
 from click.testing import Result
 
 from .....adapters.local_runtime.agent_programs import PACKAGE_AGENT_VARIABLE
-from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from .....application.operations.registry import OperationFrontendProjection
 from .....application.provider_settings.contracts import ProviderSettingsRefusalCode
 from .....application.provider_settings.tests.synthetic_catalog import (
     DEFAULTED_KEY_LANE,
@@ -32,6 +36,7 @@ from .....application.provider_settings.tests.synthetic_catalog import (
     SIGN_IN_ONLY_LANE,
     synthetic_catalog,
 )
+from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .....core.config import override_settings
 from .....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from .....core.i18n.render import tr
@@ -40,7 +45,8 @@ from ....runtime.tests.agent_host_support import stand_in_agent_image
 from ...command_parameter_contracts import ArgumentSpec
 from ...command_shared_contracts import TEXT_VALUE
 from ...command_specs import COMMAND_GRAPH
-from ...tests.cli_runner import invoke_cached_cli, semantic_cli_output
+from ...errors import CliRefusedBoundaryError
+from ...tests.cli_runner import invoke_cached_cli, invoke_unbound_cli, semantic_cli_output
 from ...tests.profile_password_cli import invoke_with_profile_password
 from ...tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ..command_specs import CONFIG_COMMAND_SPECS
@@ -135,6 +141,26 @@ def test_with_no_profile_signed_in_every_command_refuses_and_reads_no_key(name: 
         ("None", tr("cli.config.errors.no_active_profile")),
         (ProviderSettingsRefusalCode.NOT_SIGNED_IN.value, tr("cli.config.provider.refused.not_signed_in")),
     }, (reason, message)
+    assert _SYNTHETIC_KEY not in result.output
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("name", _COMMANDS)
+def test_with_no_runtime_every_command_refuses_with_the_closed_runtime_unavailable_code(
+    name: str, tmp_path: Path
+) -> None:
+    command = ["config", "provider", name]
+    if name != "status":
+        command += [KEY_LANE, "--expected-revision", ABSENT_SECURE_OBJECT_REVISION_ID]
+    if name == "set":
+        command.append("--secrets-stdin")
+    with isolated_runtime_profile(tmp_path=tmp_path), override_settings(cadrumo_output_language="en"):
+        result = invoke_unbound_cli(
+            ["--format", "json", *command], input=json.dumps({"secret": _SYNTHETIC_KEY}) if name == "set" else None
+        )
+    reason, _message = _refusal(result)
+    # The desktop reads this reason from the provider-settings refusal set.
+    assert reason == ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE.value, result.stderr[-400:]
     assert _SYNTHETIC_KEY not in result.output
 
 
@@ -271,3 +297,69 @@ def test_status_and_every_change_print_the_masked_contract_through_the_runtime(
     unchanged = _result(_run(profile, "status"))
     assert _entry(unchanged, DEFAULTED_KEY_LANE)["mode"] == "unset"
     assert _SYNTHETIC_KEY not in json.dumps(unchanged)
+
+
+# -- the bridge's refusal mapping -------------------------------------------------------------------
+
+
+class _RefusingClient:
+    """A bound runtime client whose first exchange is refused, before any operation is taken."""
+
+    profile_id = UUID("3a7c9e1f-5b2d-4c8e-9f60-1d2e3f4a5b6c")
+    session_id = UUID("11111111-1111-4111-8111-111111111111")
+    frontend = OperationFrontendProjection.CLI
+
+    def __init__(self, error: Exception) -> None:
+        self._error = error
+
+    def contract(self, definition_id: str, *, deadline: float) -> object:
+        del definition_id, deadline
+        raise self._error
+
+
+def _bridge_refusal(monkeypatch: pytest.MonkeyPatch, error: Exception) -> tuple[object, object]:
+    from .. import runtime_provider_settings as bridge
+
+    client = _RefusingClient(error)
+    monkeypatch.setattr(bridge, "resolve_active_profile_pointer", lambda: SimpleNamespace(bucket_id=client.profile_id))
+    monkeypatch.setattr(bridge, "require_profile_client", lambda _ctx, *, expected_profile_id: client)
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        bridge.read_status(cast(typer.Context, None))
+    context = refused.value.context or {}
+    return context.get("reason"), context.get("operation_id")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [
+        (RuntimeRefusalCode.UNAVAILABLE, ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE),
+        (RuntimeRefusalCode.ENDPOINT_NOT_READY, ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE),
+        (RuntimeRefusalCode.OWNER_BUSY, ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE),
+        (RuntimeRefusalCode.DRAINING, ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE),
+        # A closed connection or a missed deadline may follow a change the runtime already took.
+        (RuntimeRefusalCode.CONNECTION_CLOSED, ProviderSettingsRefusalCode.UNKNOWN),
+        (RuntimeRefusalCode.DEADLINE_EXCEEDED, ProviderSettingsRefusalCode.UNKNOWN),
+    ],
+)
+def test_a_runtime_that_took_nothing_is_refused_as_unavailable_and_anything_else_as_unknown(
+    code: RuntimeRefusalCode, expected: ProviderSettingsRefusalCode, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert _bridge_refusal(monkeypatch, RuntimeRefusalError(code)) == (expected.value, None)
+
+
+@pytest.mark.unit
+def test_an_operation_the_runtime_took_is_never_reported_as_an_unavailable_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    operation = "a" * 64
+    taken = CliRefusedBoundaryError(
+        translated_message="cli.config.provider.refused.unknown",
+        context={"reason": RuntimeRefusalCode.UNAVAILABLE.value, "operation_id": operation},
+    )
+    assert _bridge_refusal(monkeypatch, taken) == (ProviderSettingsRefusalCode.UNKNOWN.value, operation)
+    untaken = CliRefusedBoundaryError(
+        translated_message="cli.config.provider.refused.unknown",
+        context={"reason": RuntimeRefusalCode.UNAVAILABLE.value},
+    )
+    assert _bridge_refusal(monkeypatch, untaken) == (ProviderSettingsRefusalCode.RUNTIME_UNAVAILABLE.value, None)

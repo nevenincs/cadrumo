@@ -26,7 +26,9 @@ import pytest
 from cadrumo.adapters.local_runtime.agent_process import WindowsAgentInvocationRunner
 from cadrumo.adapters.local_runtime.agent_programs import (
     AGENT_COMMAND_LINE,
+    PACKAGE_AEAT_VARIABLE,
     PACKAGE_AGENT_VARIABLE,
+    PACKAGE_PYTHON_VARIABLE,
     PACKAGE_RELAY_VARIABLE,
     STORES_ASIDE,
     HostedStoresAside,
@@ -45,9 +47,12 @@ from cadrumo.adapters.local_runtime.tests.agent_store_fixture import (
 )
 from cadrumo.application.agent_host.controller import AgentHostError, AgentHostRefusal, AgentLaunch
 from cadrumo.application.agent_host.launch_environment import (
+    ADVERTISED_VARIABLES,
     AGENT_SLOTS,
-    HOSTED_RELAY_VARIABLE,
     HOSTED_ROOT_VARIABLE,
+    PROGRAM_AEAT_VARIABLE,
+    PROGRAM_PYTHON_VARIABLE,
+    TOOL_SERVER_VARIABLE,
     agent_launch_environment,
 )
 from cadrumo.application.agent_host.launcher_protocol import AgentLauncherRefusal
@@ -99,6 +104,8 @@ def _session(
 
 
 _RELAY = Path(sys.executable).parent / "cadrumo-mcp.exe"
+_AEAT = Path(sys.executable).parent / "aeat.exe"
+_PYTHON = Path(sys.executable)
 # The hosting contract retired these program paths; the agent refuses a start that carries either.
 _RETIRED_PROGRAM_VARIABLES = ("CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE", "CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE")
 
@@ -115,6 +122,8 @@ def _packaged_agent(
     image, record = stand_in_agent_image(tmp_path, mode=mode, probe=probe, stores=stores)
     monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
     monkeypatch.setenv(PACKAGE_RELAY_VARIABLE, str(_RELAY))
+    monkeypatch.setenv(PACKAGE_AEAT_VARIABLE, str(_AEAT))
+    monkeypatch.setenv(PACKAGE_PYTHON_VARIABLE, str(_PYTHON))
     return image, record
 
 
@@ -171,10 +180,12 @@ def test_the_agent_starts_with_its_key_only_on_its_frame_and_stops_with_the_pers
         assert launch["arguments"] == ["-m", "cadrumo_agent.cli.main", "serve"]
         # The agent and every process it starts, the relay included, inherit the pinned storage root.
         assert Path(environment[STORAGE_ROOT.variable]).resolve() == runtime.root.resolve()
-        # Of the agent's settings the runtime fills only the gateway's slots, never a retired program path.
-        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS
+        # Of the agent's names the runtime supplies only the gateway's slots and what Cadrumo advertises.
+        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS | ADVERTISED_VARIABLES
         assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
-        assert Path(environment[HOSTED_RELAY_VARIABLE]) == _RELAY
+        assert Path(environment[TOOL_SERVER_VARIABLE]) == _RELAY
+        assert Path(environment[PROGRAM_AEAT_VARIABLE]) == _AEAT
+        assert Path(environment[PROGRAM_PYTHON_VARIABLE]) == _PYTHON
         # The search path is not narrowed: in a package the agent image's host composes it.
         assert environment["PATH"] == os.environ["PATH"]
         hosted_root = Path(environment[HOSTED_ROOT_VARIABLE])
@@ -321,9 +332,13 @@ def test_a_development_source_tree_runs_the_gateway_invocation_from_its_own_envi
         assert Path(str(launch["executable"])).is_relative_to(source)
         assert launch["arguments"] == ["-m", "cadrumo_agent.cli.main", "serve"]
         assert Path(str(launch["directory"])) == source
-        # The checkout's relay, beside this interpreter, and the same gateway slots.
-        assert Path(environment[HOSTED_RELAY_VARIABLE]) == _RELAY
-        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS
+        # The checkout's relay, beside this interpreter. Its command line and interpreter sit inside the
+        # checkout's virtual environment, which the agent refuses to run as programs, so they are not advertised.
+        assert Path(environment[TOOL_SERVER_VARIABLE]) == _RELAY
+        assert PROGRAM_AEAT_VARIABLE not in environment
+        assert PROGRAM_PYTHON_VARIABLE not in environment
+        advertised = ADVERTISED_VARIABLES - {PROGRAM_AEAT_VARIABLE, PROGRAM_PYTHON_VARIABLE}
+        assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS | advertised
 
 
 _CONTROLLER_LOGGER = "cadrumo.application.agent_host.controller"
@@ -618,7 +633,12 @@ def test_an_invocation_past_its_bound_is_ended_with_its_whole_tree_and_its_outco
     hosted_root.mkdir()
     seed_stores(hosted_root, primary="0001", checkpoint=EXPECTED_CHECKPOINT)
     environment = agent_launch_environment(
-        storage_root=tmp_path / "storage", agent_root=hosted_root, relay=_RELAY, received=os.environ
+        storage_root=tmp_path / "storage",
+        agent_root=hosted_root,
+        relay=_RELAY,
+        aeat=_AEAT,
+        python=_PYTHON,
+        received=os.environ,
     )
     lifecycle = AgentStoreLifecycle(
         runner=WindowsAgentInvocationRunner(),

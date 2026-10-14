@@ -91,6 +91,8 @@ A successful change returns the provider's new status entry. A refusal returns `
 - `base_url_rejected`: not `https`, or not allowed for this provider.
 - `revision_conflict`: the record changed since the status read; read again.
 - `committed_readback_failed`: the change is stored but could not be read back; show it as saved with unknown status and read again.
+- `catalog_unavailable`: cadrumo-agent could not report its providers, so nothing was read or changed.
+- `runtime_unavailable`: no runtime took the request, so nothing was read or changed; check the background-services manager and retry. A change the runtime already took and then lost reports `unknown` with its `operation_id`, never this code.
 - `person_act_required`: the request came from a frontend that may not change credentials.
 - `unknown`.
 

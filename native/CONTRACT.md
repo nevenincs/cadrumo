@@ -463,22 +463,34 @@ name under the agent's prefix, no launch parameter and no pin. The profiles
   file names no credential; the agent's credentials and the worker's internal token
   travel on standard input.
 - **Launch parameters.** The gateway takes the storage root, the hosted root, the
-  gateway and worker ports and the relay program as optional launch parameters,
-  each checked by its kind; the prefix admission never bypasses that check. The
-  worker takes the same parameters, and the settings the gateway writes for it
-  (its gateway address, host, lifetime identifier and generation) reach it by the
-  prefix. Neither profile pins the storage root, so the root a parent hands the
-  gateway reaches the worker and the relay the worker starts. Both pin the
+  gateway and worker ports as optional launch parameters, each checked by its kind;
+  the prefix admission never bypasses that check. The worker takes the same
+  parameters, and the settings the gateway writes for it (its gateway address,
+  host, lifetime identifier and generation) reach it by the prefix. Neither profile
+  pins the storage root, so the root a parent hands the gateway reaches the worker,
+  and the agent forwards it to the programs and tool servers it starts. Both pin the
   temporary variables and the authority root.
+- **What Cadrumo advertises.** The runtime tells the agent what Cadrumo supplies as
+  plain variables under the agent's prefix, which the prefix admits and the file
+  does not list: the absolute paths of the programs the agent may run
+  (`PROGRAM_<NAME>`: `aeat` and the package's `python`), the tool server it may
+  mount and that server's arguments as a JSON array (`TOOL_SERVER_<NAME>` and
+  `TOOL_SERVER_ARGS_<NAME>`: `cadrumo-mcp`), the directories of Cadrumo's agent
+  skills and rules (`SKILLS_DIR`, `RULES_DIR`), and the
+  names the agent forwards to what it starts (`FORWARD`: the storage root). The
+  agent keeps no list of Cadrumo's tools, and Cadrumo keeps none of the agent's
+  providers or lanes; trust in a tool comes from the tool server's own
+  declarations, not from these variables.
 - **Search path.** Both profiles take the package's `PATH` composition, so the agent
   finds `aeat`, `cadrumo-mcp` and the bundled `python` beside the system directory.
   They do not admit `CADRUMO_EXTERNAL_BIN_DIRS`.
 - **Runtime start.** The runtime image's profile fixes
-  `CADRUMO_PACKAGE_AGENT_EXECUTABLE` and `CADRUMO_PACKAGE_RELAY_EXECUTABLE` as the
-  paths of the agent image and of `cadrumo-mcp`. The runtime starts the agent image
-  at the first of them and reads no package manifest. Beyond the operating-system
-  names the profile takes from it, it supplies only the gateway's declared launch
-  parameters.
+  `CADRUMO_PACKAGE_AGENT_EXECUTABLE`, `CADRUMO_PACKAGE_RELAY_EXECUTABLE`,
+  `CADRUMO_PACKAGE_AEAT_EXECUTABLE` and `CADRUMO_PACKAGE_PYTHON_EXECUTABLE` as the
+  paths of the agent image, of `cadrumo-mcp`, of `aeat` and of the package's
+  interpreter. The runtime starts the agent image at the first of them and reads no
+  package manifest. Beyond the operating-system names the profile takes from it, it
+  supplies only the gateway's declared launch parameters and the advertised names.
 
 The package-side conformance check, registered in CTest as
 `bundle.environment-conformance`, runs the assembled package's own interpreter
@@ -494,7 +506,8 @@ disagreement. Its comparisons are:
   credentials; and that every setting the gateway writes for its worker reaches
   the worker, by a launch parameter or by the prefix;
 - the gateway's launch parameters, against exactly what the runtime's composer
-  writes, and the fixed agent and relay paths the runtime reads;
+  writes plus its advertised names, which the agent's prefix must admit, and the
+  fixed agent, relay, `aeat` and interpreter paths the runtime reads;
 - the native-host exit range, the refusal status and the refusal codes, against the
   runtime's reserved table;
 - the command line's built-in storage-root rule (its variables, development

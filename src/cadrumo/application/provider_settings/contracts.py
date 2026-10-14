@@ -127,6 +127,8 @@ class ProviderSettingsRefusalCode(StrEnum):
     COMMITTED_READBACK_FAILED = "committed_readback_failed"
     CATALOG_UNAVAILABLE = "catalog_unavailable"
     """cadrumo-agent could not report its providers, so there is nothing to read or change."""
+    RUNTIME_UNAVAILABLE = "runtime_unavailable"
+    """No runtime took the request, so nothing was read or changed; produced at the frontend, never by the service."""
     PERSON_ACT_REQUIRED = "person_act_required"
     """Produced at dispatch for a frontend that may not change credentials, never by the service."""
     UNKNOWN = "unknown"

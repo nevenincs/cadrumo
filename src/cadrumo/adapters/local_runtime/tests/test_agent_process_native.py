@@ -280,3 +280,36 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
     finally:
         controller.stop()
     assert not [thread for thread in threading.enumerate() if thread.name == "agent-standard-error"]
+
+
+def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Exercise the real job, pipe drain and file follower with a separate worker PID."""
+    import time
+
+    environment = dict(fixture_environment())
+    environment["CADRUMO_AGENT_HOSTED_ROOT"] = str(tmp_path / "agent")
+    caplog.set_level(logging.DEBUG)
+    process = WindowsAgentProcessLauncher().launch(
+        executable=native_python(),
+        arguments=fixture_arguments(_FIXTURE, "diagnostics", str(tmp_path)),
+        directory=tmp_path,
+        environment=environment,
+    )
+    try:
+        process.write_input(bytearray(b"{}\n"))
+        assert b"agent_ready" in process.read_output_line(limit=4096, timeout=30)
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and not any(r.msg == "worker file-only probe" for r in caplog.records):
+            time.sleep(0.02)
+    finally:
+        process.terminate(timeout=10)
+    gateway = [r for r in caplog.records if r.msg == "gateway live probe"]
+    worker = [r for r in caplog.records if r.msg == "worker file-only probe"]
+    assert len(gateway) == len(worker) == 1
+    assert gateway[0].levelno == logging.DEBUG
+    assert worker[0].levelno == logging.ERROR
+    assert gateway[0].process != worker[0].process
+    assert gateway[0].__dict__["_cadrumo_process_role"] == "agent_gateway"
+    assert worker[0].__dict__["_cadrumo_process_role"] == "agent_worker"

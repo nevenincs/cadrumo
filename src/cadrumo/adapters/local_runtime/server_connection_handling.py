@@ -68,6 +68,7 @@ from ...application.runtime.profile_access import (
 )
 from ...application.runtime.sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
 from ...application.runtime.transport import RuntimeConnectionContext
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from .framing import accept_runtime_handshake
 from .runtime_frame_io import read_document, write_document, write_profile_status, write_session_event
@@ -166,7 +167,13 @@ class RuntimeConnectionHandling:
                 channel_owner = retained
                 cleanup_deferred = not retained.released
             # No peer input or secret bytes become a diagnostic. Incompatible,
-            # malformed, disconnected and timed-out connections end locally.
+            # malformed, disconnected and timed-out connections end locally,
+            # recording only the refusal code and where it was raised.
+            diagnostic_event(
+                _LOGGER,
+                "runtime_connection_refused",
+                fields={"reason": error.reason.value, **diagnostic_error_fields(error)},
+            )
             return
         except BaseException as error:
             if not isinstance(error, Exception):

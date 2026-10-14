@@ -2708,6 +2708,9 @@ cli:
           a iniciar sesión y reinténtalo.
         revision_conflict: Este proveedor ha cambiado desde tu lectura del estado.
           Vuelve a leer el estado y envía la revisión que indique.
+        runtime_unavailable: El servicio en segundo plano no aceptó la solicitud,
+          así que no se ha leído ni cambiado nada. Comprueba que el gestor de servicios
+          en segundo plano está en marcha y vuelve a intentarlo.
         unknown: Se ha rechazado la solicitud. Comprueba el identificador del proveedor
           con `aeat config provider status` y que este proveedor admite una clave.
           No se ha cambiado nada.

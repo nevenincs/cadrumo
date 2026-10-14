@@ -163,24 +163,38 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
     """Collect the runtime's agent launch: its package variables, gateway invocation, slots and reserved exits."""
     from cadrumo.adapters.local_runtime.agent_programs import (
         GATEWAY_ARGUMENTS,
+        PACKAGE_AEAT_VARIABLE,
         PACKAGE_AGENT_VARIABLE,
+        PACKAGE_PYTHON_VARIABLE,
         PACKAGE_RELAY_VARIABLE,
     )
-    from cadrumo.application.agent_host.launch_environment import GATEWAY_SLOTS, agent_launch_environment
+    from cadrumo.application.agent_host.launch_environment import (
+        ADVERTISED_VARIABLES,
+        GATEWAY_SLOTS,
+        agent_launch_environment,
+    )
     from cadrumo.application.agent_host.native_refusal import NativeLaunchRefusalCode
     from cadrumo.application.runtime.contracts import (
         NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE,
         RESERVED_RUNTIME_EXIT_CODES,
     )
 
-    relay = scratch / "relay"
-    relay.write_bytes(b"")
+    programs = {name: scratch / name for name in ("relay", "aeat", "python")}
+    for program in programs.values():
+        program.write_bytes(b"")
     composed = agent_launch_environment(
-        storage_root=scratch / "storage", agent_root=scratch / "hosted", relay=relay, received=request["received"]
+        storage_root=scratch / "storage",
+        agent_root=scratch / "hosted",
+        relay=programs["relay"],
+        aeat=programs["aeat"],
+        python=programs["python"],
+        received=request["received"],
     )
     return {
         "agent_variable": PACKAGE_AGENT_VARIABLE,
         "relay_variable": PACKAGE_RELAY_VARIABLE,
+        "program_variables": [PACKAGE_AEAT_VARIABLE, PACKAGE_PYTHON_VARIABLE],
+        "advertised_variables": sorted(ADVERTISED_VARIABLES),
         "gateway_arguments": list(GATEWAY_ARGUMENTS),
         "gateway_slots": sorted(GATEWAY_SLOTS),
         "composed": sorted(composed),

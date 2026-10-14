@@ -517,6 +517,10 @@ class OperationEphemeralRouting(Protocol):
         """Whether ``operation_id`` is held in process memory."""
         ...
 
+    def abandon_ephemeral(self, operation_id: OperationId) -> None:
+        """Forget a registered operation whose admission stopped before its record was created."""
+        ...
+
     def operands_for(self, operation_id: OperationId) -> OperationSecureReferenceStore:
         """The operand store one ephemeral operation writes through."""
         ...

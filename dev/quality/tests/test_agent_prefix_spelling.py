@@ -87,7 +87,7 @@ _ALLOWED_FILES: Final[Mapping[str, str]] = {
         "the package declaration: the one file that names each packaged image's environment, the agent's included"
     ),
     "src/cadrumo/application/agent_host/launch_environment.py": (
-        "the runtime's launch composer: names exactly the gateway's launch slots and supplies no other agent name"
+        "the runtime's launch composer: names the gateway's launch slots and the names Cadrumo advertises to the agent"
     ),
     "src/cadrumo/application/agent_host/tests/test_launch_environment.py": (
         "retired-name refusal fixture: the composer drops every agent name it receives and never emits a retired path"

@@ -239,6 +239,12 @@ class OperationSupervisor(
         if durability is OperationDurability.EPHEMERAL and self._ephemeral is not None:
             self._ephemeral.register_ephemeral(identity_operation_id)
 
+    @override
+    def _abandon_durability(self, identity_operation_id: OperationId) -> None:
+        """Forget an ephemeral operation whose admission stopped before its record was created."""
+        if self._ephemeral is not None:
+            self._ephemeral.abandon_ephemeral(identity_operation_id)
+
     @property
     def lease_duration(self) -> timedelta:
         """How long an owner keeps a subject without renewing; a lapsed owner's submitter gets as long again."""

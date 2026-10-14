@@ -40,6 +40,8 @@ LOG_RELOCATION: Final = "relocated-logs"
 """A relative diagnostic-log directory the command line must anchor beneath its storage root."""
 CHANNELS: Final = ("stable", "preview")
 """The release channels a package is built for."""
+_INTERPRETER_IMAGE: Final = "python"
+"""The image name the declaration gives the package's own interpreter."""
 
 # A package kind may be no wider than the component's own field: the package must never
 # declare, pass or validate a value the component's schema would refuse. A narrower kind is
@@ -285,10 +287,26 @@ def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> li
     base = {_fold(reference, name) for name in gateway["base"]}
     pins = {_fold(reference, name) for name in reference.section["pins"]["temporary"]}
     declared_slots = {_fold(reference, name) for name in slots}
-    unadmitted = composed - declared_slots - base - pins - {"PATH"}
+    advertised = {_fold(reference, name) for name in runtime["advertised_variables"]}
+    admitted_by_prefix = {name for name in advertised if _admits_by_prefix(reference, gateway, name)}
+    findings.extend(
+        Finding(
+            check, name, "is advertised to the agent, and the gateway profile does not admit it by the agent's prefix"
+        )
+        for name in sorted(advertised - admitted_by_prefix)
+    )
+    findings.extend(
+        Finding(check, name, "is advertised to the agent and declared as a launch slot")
+        for name in sorted(advertised & declared_slots)
+    )
+    unadmitted = composed - declared_slots - base - pins - {"PATH"} - admitted_by_prefix
     findings.extend(
         Finding(check, name, "is written by the composer, and the gateway profile does not admit it")
         for name in sorted(unadmitted)
+    )
+    findings.extend(
+        Finding(check, name, "is an advertised name the composer does not write")
+        for name in sorted(advertised - composed)
     )
     findings.extend(
         Finding(check, name, "is a declared gateway slot the composer does not write")
@@ -302,16 +320,17 @@ def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> li
     fixed = {value["name"]: value for profile in section["profiles"] for value in profile["fixed"]}
     bundled = set(reference.layout.get("bundled_images", {}))
     agent_variable, relay_variable = runtime["agent_variable"], runtime["relay_variable"]
+    aeat_variable, python_variable = runtime["program_variables"]
     agent_fixed, relay_fixed = fixed.get(agent_variable), fixed.get(relay_variable)
+    aeat_fixed, python_fixed = fixed.get(aeat_variable), fixed.get(python_variable)
     if agent_fixed is None or agent_fixed["source"] != "image" or agent_fixed["value"] not in bundled:
         findings.append(Finding(check, agent_variable, "is not fixed as the path of a bundled agent image"))
-    if (
-        relay_fixed is None
-        or relay_fixed["source"] != "image"
-        or relay_fixed["value"] not in reference.layout["entrypoints"]
-    ):
-        findings.append(Finding(check, relay_variable, "is not fixed as the path of an entrypoint image"))
-    reads_it = {agent_variable, relay_variable, reference.declaration.authority.name}
+    for variable, program in ((relay_variable, relay_fixed), (aeat_variable, aeat_fixed)):
+        if program is None or program["source"] != "image" or program["value"] not in reference.layout["entrypoints"]:
+            findings.append(Finding(check, variable, "is not fixed as the path of an entrypoint image"))
+    if python_fixed is None or python_fixed["source"] != "image" or python_fixed["value"] != _INTERPRETER_IMAGE:
+        findings.append(Finding(check, python_variable, "is not fixed as the path of the package's interpreter image"))
+    reads_it = {agent_variable, relay_variable, aeat_variable, python_variable, reference.declaration.authority.name}
     findings.extend(
         Finding(check, name, "is fixed by the package and read by no installed component")
         for name in sorted(set(fixed) - reads_it)

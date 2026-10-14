@@ -2688,6 +2688,9 @@ cli:
           a iniciar la sessió i torna-ho a provar.
         revision_conflict: Aquest proveïdor ha canviat des de la teva lectura de l'estat.
           Torna a llegir l'estat i envia la revisió que indiqui.
+        runtime_unavailable: El servei en segon pla no ha acceptat la sol·licitud,
+          així que no s'ha llegit ni canviat res. Comprova que el gestor de serveis
+          en segon pla està en marxa i torna-ho a provar.
         unknown: S'ha rebutjat la sol·licitud. Comprova l'identificador del proveïdor
           amb `aeat config provider status` i que aquest proveïdor admet una clau.
           No s'ha canviat res.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd71422b6fb2c756b2126a0cfc9370d7648313bff2205c608b480c2b355bb161'
+body_hash: 'sha256:8d5f45b8018e8c43bb4b83fcb5a70507d7ba90b0ca53cb798420b731d601de66'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
 ---
@@ -72,3 +72,12 @@ Added typed agent start/ready/refused/retry/stop facts, loopback gateway port an
 Verification: native logs suite (49 tests), environment suite (7 tests), real child-process agent-supervisor suite (6 tests), Python diagnostic suite (27 tests), CLI level integration suite (12 tests), browser host-default/reset tests (3 tests), npm check, native Clippy, Python Ruff lint/format, configured Python type checks and import boundaries. The first browser attempt timed out during development-server bootstrap; the retry used the already configured build inputs and passed. Native log tests exercise real Tauri channel delivery, loss accounting and an actual failed/recovered file sink; browser tests exercise the production frontend with a test host. No installed service registration, machine boot/login, or packaged interactive GUI acceptance was performed.
 
 Remaining recommendations from the initial audit: a complete authoritative inventory of all runtime-owned descendant processes, bounded replay of earlier desktop log files, and a broader sanitized binary/configuration catalogue. Those remain distinct from the severity/default override implementation and are not claimed complete. Existing unrelated work and commits by other sessions were preserved.
+
+
+## Agent diagnostic integration 2026-10-14
+
+The owner explicitly extended scope to all hosted cadrumo-agent diagnostics, including the launcher, gateway and workers. The runtime now forwards schema cadrumo-agent.log/1 records from the contained gateway's stderr and follows gateway/worker rotating logs and worker-autospawn stderr files below that run's owned hosted root. CLI invocation warnings/errors use the agent's logger format. The Cadrumo launcher emits its ready/refused/stopped diagnostics into the shared application log. Stdout remains the private readiness/control protocol. The Logs adapter attributes these records to source cadrumo-agent with agent_launcher, agent_gateway, agent_worker or agent_cli roles and original producer PID, timestamp and severity.
+
+The bridge deduplicates overlapping stream/file copies, frames partial writes, follows file identity across rotation, recognizes truncation and rewritten prefixes, drains final records after tree termination and reports bounded rejection/unreadable/backlog warnings without echoing input. Hosted first-party DEBUG capture is enabled independently of the application's INFO default view; the agent's explicit CADRUMO_AGENT_LOG_LEVEL override can reduce producer output. Safe operational scalars, including ports, elapsed times and trace/span IDs, survive normalization through the existing credential/payload scrubbers. Arbitrary nested tool arguments, private protocol bytes and third-party SDK DEBUG payloads stay outside the plaintext diagnostic feed. Existing logs are baselined before spawning; this change copies new hosted-run diagnostics, not a retroactive import of pre-integration agent history.
+
+Verification: 57 focused Python diagnostic/environment/privacy tests; 16 Windows process/launcher integration tests, including a real gateway process and separate file-only worker PID; 50 native logging tests through the existing Tauri channel; native Clippy. The real process integration verifies original DEBUG and ERROR levels and one record per overlapping output. Packaged interactive GUI acceptance and a provider-backed live agent lane remain unverified. Earlier recommendations about complete live process inventory, installed service registration and replay of desktop-native history remain open. Unrelated concurrent edits were preserved.

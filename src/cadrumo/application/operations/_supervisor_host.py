@@ -102,6 +102,8 @@ class SupervisorHost:
 
         def _register_durability(self, identity_operation_id: OperationId, durability: OperationDurability) -> None: ...
 
+        def _abandon_durability(self, identity_operation_id: OperationId) -> None: ...
+
         def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease: ...
 
         def _lease_lock(self, operation_id: OperationId) -> asyncio.Lock: ...
@@ -211,6 +213,8 @@ class SupervisorHost:
             request: OperationRequest[RequestPayloadT],
             definition: OperationDefinition,
             now: datetime,
+            *,
+            operation_id: OperationId,
         ) -> tuple[OperationRequestStoragePolicy, str, str | None]: ...
 
         @staticmethod

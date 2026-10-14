@@ -42,7 +42,9 @@ from typing import Any, Final
 
 from cadrumo.adapters.local_runtime.agent_programs import (
     GATEWAY_ARGUMENTS,
+    PACKAGE_AEAT_VARIABLE,
     PACKAGE_AGENT_VARIABLE,
+    PACKAGE_PYTHON_VARIABLE,
     PACKAGE_RELAY_VARIABLE,
 )
 from cadrumo.application.agent_host.credential_frame import build_credential_frame
@@ -145,6 +147,8 @@ class Contract:
     image_name: str
     image_path: Path
     relay_path: Path
+    aeat_path: Path
+    python_path: Path
     gateway: Mapping[str, Any]
     worker: Mapping[str, Any]
     worker_arguments: tuple[str, ...]
@@ -170,7 +174,7 @@ def _literals(invocation: Mapping[str, Any]) -> tuple[str | None, ...]:
 
 
 def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
-    """Resolve the agent image, its gateway and worker profiles, its store invocations and the runtime's relay."""
+    """Resolve the agent image, its profiles and store invocations, and the programs the runtime fixes."""
     layout, section = document["layout"], document["application_environment"]
     bundled = list(layout["bundled_images"])
     if len(bundled) != 1:
@@ -210,9 +214,20 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
         stores[verb] = arguments
     fixed = {value["name"]: value for profile in profiles.values() for value in profile["fixed"]}
     relay = fixed.get(PACKAGE_RELAY_VARIABLE)
+    aeat = fixed.get(PACKAGE_AEAT_VARIABLE)
+    interpreter = fixed.get(PACKAGE_PYTHON_VARIABLE)
     agent = fixed.get(PACKAGE_AGENT_VARIABLE)
-    if relay is None or relay["source"] != "image" or agent is None or agent["value"] != name:
-        raise SetupError("the runtime's profile does not fix the agent image and the relay image")
+    if (
+        relay is None
+        or relay["source"] != "image"
+        or aeat is None
+        or aeat["source"] != "image"
+        or interpreter is None
+        or interpreter["source"] != "image"
+        or agent is None
+        or agent["value"] != name
+    ):
+        raise SetupError("the runtime's profile does not fix the agent image, the relay, the command line and python")
 
     def admitted(profile: Mapping[str, Any]) -> set[str]:
         return {*profile["operator"], *profile["pass"], *(slot["name"] for slot in profile["slots"])}
@@ -228,6 +243,8 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
         image_name=name,
         image_path=native / f"{name}{suffix}",
         relay_path=native / f"{relay['value']}{suffix}",
+        aeat_path=native / f"{aeat['value']}{suffix}",
+        python_path=package / layout["paths"]["executable"],
         gateway=profiles[gateway_name],
         worker=profiles[worker_name],
         worker_arguments=tuple(str(argument) for argument in worker_arguments[0]),
@@ -448,7 +465,12 @@ class Probe:
     def _composed(self) -> dict[str, str]:
         """The gateway's environment as the runtime composes it for this root."""
         return agent_launch_environment(
-            storage_root=self.storage, agent_root=self.hosted, relay=self.contract.relay_path, received=os.environ
+            storage_root=self.storage,
+            agent_root=self.hosted,
+            relay=self.contract.relay_path,
+            aeat=self.contract.aeat_path,
+            python=self.contract.python_path,
+            received=os.environ,
         )
 
     async def undeclared_invocation(self) -> Result:
@@ -544,7 +566,7 @@ class Probe:
             await running.end()
         return Result(
             "hosted gateway",
-            f"refused {_UNPROVEN}: the gateway received its hosted root, ports and relay",
+            f"refused {_UNPROVEN}: the gateway received its hosted root, ports and advertised names",
             pending=(
                 "agent_ready and the worker re-execution (sys.executable is the image, sys.frozen is unset) need the "
                 "agent's recorded hosted-lane proof",

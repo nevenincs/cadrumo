@@ -86,7 +86,38 @@ def main() -> None:
     if mode == "chatty":
         sys.stderr.buffer.write(b"x" * CHATTY_BYTES)
         sys.stderr.buffer.flush()
-    if mode in {"ready", "chatty"}:
+    if mode == "diagnostics":
+        logs = Path(os.environ["CADRUMO_AGENT_HOSTED_ROOT"]) / "home" / "runtime"
+        logs.mkdir(parents=True, exist_ok=True)
+        diagnostic = {
+            "schema": "cadrumo-agent.log/1",
+            "pid": os.getpid(),
+            "seq": 1,
+            "timestamp": "2026-10-14T12:30:15.123+00:00",
+            "level": "DEBUG",
+            "service": "gateway",
+            "name": "cadrumo_agent.gateway",
+            "message": "gateway live probe",
+        }
+        line = json.dumps(diagnostic) + "\n"
+        sys.stderr.write(line)
+        sys.stderr.flush()
+        (logs / "gateway.log").write_text(line, encoding="utf-8")
+        worker_program = """
+import json, os, sys
+from pathlib import Path
+entry = {"schema": "cadrumo-agent.log/1", "pid": os.getpid(), "seq": 1,
+         "timestamp": "2026-10-14T12:30:15.124+00:00", "level": "ERROR",
+         "service": "worker", "name": "cadrumo_agent.worker", "message": "worker file-only probe"}
+line = json.dumps(entry) + "\\n"
+root = Path(sys.argv[1])
+(root / "worker.log").write_text(line, encoding="utf-8")
+(root / "worker-autospawn-54321.stderr.log").write_text(line, encoding="utf-8")
+"""
+        subprocess.run(  # noqa: S603 -- fixed diagnostic fixture under the real contained interpreter
+            [sys.executable, "-c", worker_program, str(logs)], check=True
+        )
+    if mode in {"ready", "chatty", "diagnostics"}:
         answer = {"event": "agent_ready", "gateway_port": 47001, "agent_version": "0.0.0-test", "hosting_contract": 1}
     elif mode == "future":
         answer = {"event": "agent_ready", "gateway_port": 47001, "agent_version": "9.0.0-test", "hosting_contract": 2}

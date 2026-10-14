@@ -56,7 +56,9 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID
 from cadrumo.core.operations import (
+    OperationDurability,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -200,11 +202,22 @@ def test_profile_operation_families_have_one_secure_registered_definition_each()
         PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     } <= set(definition_ids)
     assert len(set(definition_ids)) == len(definition_ids)
+    # The page read is the one ephemeral definition: its credential-free request never leaves process memory.
+    view = registry.lookup(PROFILE_VIEW_OPERATION_DEFINITION_ID).capabilities
+    assert view.durability is OperationDurability.EPHEMERAL
+    assert view.request_storage is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
+    assert view.sensitive_input is OperationSensitiveInputPolicy.NONE
+    assert view.permitted_effects == frozenset({OperationEffect.NONE})
     assert all(
         registry.lookup(definition_id).capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
         and registry.lookup(definition_id).capabilities.sensitive_input
         is OperationSensitiveInputPolicy.SECURE_REFERENCE
-        and registry.lookup(definition_id).reconciliation_policy is OperationReconciliationPolicy.INTERRUPT
+        and registry.lookup(definition_id).capabilities.durability is OperationDurability.RECORDED
+        for definition_id in definition_ids
+        if definition_id != PROFILE_VIEW_OPERATION_DEFINITION_ID
+    )
+    assert all(
+        registry.lookup(definition_id).reconciliation_policy is OperationReconciliationPolicy.INTERRUPT
         and not registry.lookup(definition_id).capabilities.owned_resources
         for definition_id in definition_ids
     )

@@ -2502,6 +2502,9 @@ cli:
           and retry.
         revision_conflict: This provider changed since your status read. Read the
           status again and send the revision it reports.
+        runtime_unavailable: The background runtime did not take the request, so nothing
+          was read or changed. Check that the background-services manager is running,
+          then try again.
         unknown: The request was refused. Check the provider id against `aeat config
           provider status` and that this provider takes a key. Nothing was changed.
       remove_help: 'Turn a provider off: its stored key is dropped and no development
