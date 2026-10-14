@@ -10,7 +10,7 @@ If you are starting or working on this kind of project, context, efficiency, and
 
 Read these files if the actual task is relevant to you.
 
-Use the reference indexes to select the files relevant to the actual task: the numbered references cover the Python application, the build references cover CMake, Rust, the Tauri desktop shell, the frontend and the Python build. Do not preload the entire collection. Follow code-source links only when needed to resolve the task's ownership, implementation or verification questions. Scoped findings describe static inspection and require checking against current code before treating them as current defects.
+Use the reference indexes to select the files relevant to the actual task: the numbered references cover the Python application, the build references cover CMake, Rust, the Tauri desktop shell, the frontend and the Python build, and two cross-cutting references cover the external agent integration and the process environment contract. Do not preload the entire collection. Follow code-source links only when needed to resolve the task's ownership, implementation or verification questions. Scoped findings describe static inspection and require checking against current code before treating them as current defects.
 
 All rules must be respected when working. Selective reading limits session context; it does not exempt work from applicable rules.
 
@@ -48,7 +48,7 @@ Use the repository's configured check scopes. The current commands and checker c
 
 ## Build systems
 
-The Python application above is delivered two ways: as wheels and sdists, and as a native package that bundles CPython, the wheel cohort, the published registry authority, user documentation, a per-user runtime manager and a Tauri desktop shell. CMake orchestrates the native package and delegates to Python build actions, Cargo and Node. [native/CONTRACT.md](../../../native/CONTRACT.md) is the authored contract for the native build and installed layout.
+The Python application above is delivered two ways: as wheels and sdists, and as a native package that bundles CPython, the wheel cohort, the separately built cadrumo-agent wheel, the published registry authority, user documentation, a per-user runtime manager and a Tauri desktop shell. CMake orchestrates the native package and delegates to Python build actions, Cargo and Node. [native/CONTRACT.md](../../../native/CONTRACT.md) is the authored contract for the native build and installed layout.
 
 ```mermaid
 flowchart TD
@@ -74,14 +74,14 @@ The diagram shows build hand-offs, not runtime authority. At run time the deskto
 Build entry points:
 
 - Environment: `just setup` converges the uv environment; `just init` also installs browsers and search and publishes the registry authority.
-- Native package: `just build-native [Release|Debug] [TARGET]` (default target `bundle`), `just test-native-bundle`, `just build-native-package`, `just test-native-package`, `just test-native-release`. Each maps the host to a root preset and builds in `build/<preset>`; other binary directory names are refused.
+- Native package: configure needs the cache variable `CADRUMO_PACKAGE_AGENT_SOURCE_DIR` naming a local cadrumo-agent project folder (the environment is not read). `just build-native [Release|Debug] [TARGET]` (default target `bundle`), `just test-native-bundle`, `just build-native-package`, `just test-native-package`, `just test-native-release`. Each maps the host to a root preset and builds in `build/<preset>`; other binary directory names are refused.
 - Rust: no `just` recipe runs cargo, clippy or rustfmt. Build one crate target through CMake, for example `just build-native Release rust_manager`. Crates include generated contract sources, so a bare `cargo` invocation does not compile them.
 - Desktop shell: configure `cmake -S native/desktop --preset desktop-windows-x64` (it needs the native contract and a package root), then build targets such as `desktop-host-build`, `desktop-host-test`, `desktop-host-clippy` and `desktop-run`. Packaged-window tests need an interactive desktop session.
-- Frontend: `just dev` serves the frontend in a browser on fixed ports and compiles no Rust. In `native/desktop/frontend`, `npm run check` then `npm test`.
+- Frontend: `just dev` republishes the registry authority when stale, then serves the frontend in a browser on fixed ports and compiles no Rust. In `native/desktop/frontend`, `npm run check` then `npm test`.
 - Python distributions and docs: `just build-distributions`, `just test-packaging-preflight`, `just docs-build`, `just docs-check`.
 - Python gates before finishing: `just check-code`, `just check-registry-gate`, `just test-gate`.
 
-Tool versions are pinned in [native/toolchain.json](../../../native/toolchain.json) and configure refuses a mismatch. A local build, package or export is a file on disk: it is not a published release, an installed and working product, or a submission to a tax authority.
+Minimum tool versions are declared in [native/toolchain.json](../../../native/toolchain.json); configure refuses anything older and admits newer releases. A local build, package or export is a file on disk: it is not a published release, an installed and working product, or a submission to a tax authority.
 
 | Actual task | Build reference |
 |---|---|
@@ -90,6 +90,10 @@ Tool versions are pinned in [native/toolchain.json](../../../native/toolchain.js
 | Tauri desktop host: build scripts, configuration, commands, docs scheme, logs, terminal, packaged tests | [build-tauri-desktop-shell](references/build-tauri-desktop-shell.md) |
 | Desktop web frontend: stack, npm scripts, Host port and IPC contract, design system, scenarios and Playwright | [build-desktop-frontend](references/build-desktop-frontend.md) |
 | `pyproject.toml`, `justfile`, wheel and wheelhouse packaging, Python build actions, docs build, CI and release | [build-python-packaging-and-release](references/build-python-packaging-and-release.md) |
+| Packaging, launching and supervising cadrumo-agent: `aeat app agent serve`, hosting frame, provider catalog, credentials, desktop agent host, agent acceptance lanes | [agent-integration](references/agent-integration.md) |
+| Process environment: `native/application-environment.toml`, launch profiles and invocations, storage-root precedence, build and development variables | [environment-contract](references/environment-contract.md) |
+
+Cadrumo implements no agent capability. cadrumo-agent is a separate project that alone decides which agents, providers, lanes and models it supports; Cadrumo packages it, launches and supervises it, hands it profile credentials and serves its tools through Cadrumo's MCP relay. Cadrumo records and code make no ruling on agent providers and name none.
 
 The build references are orientation written from static reading of the build sources. They mirror no numbered rule and add no rule authority; where one disagrees with the contract, a CMake refusal or a test, the repository is right. When a build file moves or changes shape, refresh the matching reference and its line anchors.
 
