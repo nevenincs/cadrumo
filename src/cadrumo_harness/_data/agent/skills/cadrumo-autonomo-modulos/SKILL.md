@@ -1,12 +1,11 @@
 ---
 name: cadrumo-autonomo-modulos
 description: >-
-  Entry itinerary for a self-employed individual (autónomo) under IRPF estimación
-  objetiva (módulos): signos, índices y módulos net income, quarterly IVA
-  (frequently régimen simplificado) and IRPF instalments on Modelo 131. Use when
-  the taxpayer profile declares an actividad económica income category and
-  `irpf_estimation_regime` is objetiva. Never hard-codes the obligation set;
-  derives it from the overview surface.
+  Itinerary for a self-employed individual (autónomo) under IRPF estimación
+  objetiva (módulos): reads the obligations from the overview, then sequences the
+  quarterly IVA (often régimen simplificado) and the Modelo 131 instalments. Use
+  when the profile declares an actividad económica income category and
+  `irpf_estimation_regime` is objetiva.
 applies_when:
   profile_facts:
     - fact: irpf_income_categories
@@ -19,59 +18,65 @@ applies_when:
 
 # Autónomo, estimación objetiva (módulos)
 
-Gating predicate: the active `TaxpayerProfile` declares an actividad económica
-income category and `irpf_estimation_regime` is objetiva (RIRPF RD 439/2007;
-LIRPF Arts. 16, 28-31) - the módulos route (Modelo 131), never the estimación
-directa route (`cadrumo-autonomo-estimacion-directa` owns that predicate). The
+Gating predicate: the active profile declares an actividad económica income
+category and `irpf_estimation_regime` is objetiva (RIRPF RD 439/2007; LIRPF
+Arts. 16, 28-31) - the módulos route (Modelo 131), never the estimación directa
+route (`cadrumo-autonomo-estimacion-directa` owns that predicate). The
 objective-estimation declared-volume facts on the profile
 (`objective_estimation_prior_year_gross_income_eur` and siblings) belong to this
-predicate. This skill is thin: it sequences the obligations the CLI derives and
-delegates every filing to the per-modelo skill that owns it.
+predicate. This skill sequences the obligations the overview derives and sends each
+filing to the modelo skill that owns it.
 
 ## Preconditions
 
-- The taxpayer is onboarded (`cadrumo-alta-contribuyente` has run;
-  `aeat app overview status` reports an active profile).
-- The profile declares the gating facts: actividad económica income category and
-  `irpf_estimation_regime` objetiva. If undeclared, route back to onboarding.
+- The taxpayer is onboarded (`aeat app overview status` reports a profile); if
+  not, load `cadrumo-alta-contribuyente`.
+- The profile declares the gating facts: an actividad económica income category and
+  `irpf_estimation_regime` objetiva. If not, ask the person and record them as
+  `cadrumo-alta-contribuyente` describes.
 
 ## Procedure
 
-1. Derive the applicable obligations from the CLI - never assume a módulos
-   taxpayer's obligation set from memory. Run
-   `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>` for the
-   window in question and `aeat app overview agenda` for what is next due. Read
-   any `coverage_advised` line as an open question requiring investigation.
-2. Confirm one modelo's applicability explicitly when in doubt:
-   `aeat app overview explain <MODELO> --year <YEAR>`. Módulos taxpayers are
-   frequently, but not always, enrolled in régimen simplificado IVA; confirm the
-   IVA regime from the explain payload's `profile_fact` lines rather than
-   assuming it.
-3. Discover the registry-modelled forms available: `aeat app modelo list`.
-   Cross-reference against what the calendar surfaced.
-4. Sequence the itinerary by cadence, in the order the calendar returns them:
-   - Ledger stays current before any calculation: hand off to `cadrumo-llevar-libro`,
-     then `cadrumo-clasificar` (módulos income still needs the ledger classified for IVA
-     and expense evidence, even though the IRPF instalment itself derives from
-     the objective-estimation volume facts, not the ledger totals).
-   - Quarterly IVA (when the calendar surfaces it, e.g. Modelo 303 under régimen
-     simplificado): delegate to `cadrumo-preparar-modelo-303`.
-   - Quarterly IRPF pago fraccionado on the módulos route (Modelo 131, when the
-     calendar surfaces it): delegate to `cadrumo-preparar-modelo-131`.
-   - Any other surfaced modelo: drive the same spine against its own
-     `aeat app modelo describe` / `casillas` output.
-5. After each filing's local export, hand off to `cadrumo-reconciliar` once the taxpayer
-   has filed in the AEAT portal.
+All of these read local state and contact nobody.
+
+1. Derive the obligations; never assume a módulos taxpayer's obligations from
+   memory. Run `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>`
+   (operation `overview.calendar`) for the window in question and
+   `aeat app overview agenda` (operation `overview.agenda`) for what is due next.
+   Read the coverage report's `advised` entries (the command line prints them as
+   `coverage_advised`) as open questions to put to the person.
+2. Confirm one modelo's applicability when in doubt:
+   `aeat app overview explain <MODELO> --year <YEAR>` (operation
+   `overview.explain`). Módulos taxpayers are often, but not always, in régimen
+   simplificado for IVA; confirm the IVA regime from the `profile_facts` in the
+   explain result rather than assuming it.
+3. See which forms Cadrumo models: `aeat app modelo list` (tool server: `authority`
+   with query `modelos`), and compare with what the calendar surfaced.
+4. Sequence the work by cadence, in the order the calendar returns it:
+   - Keep the ledger current before any calculation: load `cadrumo-llevar-libro`,
+     then `cadrumo-clasificar`. Módulos income still needs the ledger classified
+     for IVA and expense evidence, even though the IRPF instalment itself derives
+     from the objective-estimation volume facts and not from the ledger totals.
+   - Quarterly IVA, when the calendar surfaces it (for example Modelo 303 under
+     régimen simplificado): load `cadrumo-preparar-modelo-303`.
+   - Quarterly IRPF pago fraccionado on the módulos route (Modelo 131), when the
+     calendar surfaces it: load `cadrumo-preparar-modelo-131`.
+   - Any other surfaced modelo: load the matching `cadrumo-preparar-modelo-<NUMBER>`
+     skill, or if none exists read its shape with `aeat app modelo describe` and
+     `aeat app modelo casillas` and tell the person that Cadrumo has no prepared
+     workflow for it here.
+5. After a filing's local export, the person files in the AEAT portal; once they
+   say they have, load `cadrumo-reconciliar`.
 
 ## Success assertions
 
-- Every obligation acted on was read from `aeat app overview calendar` /
-  `agenda` / `explain`, never assumed from this itinerary's prose.
-- A `coverage_advised` entry is surfaced to the taxpayer, not silently dropped.
-- No casilla value is computed here; every number is quoted from the delegated
-  skill's CLI output.
+- Every obligation acted on was read from `overview calendar`, `agenda` or
+  `explain`, not assumed from this skill's prose.
+- A coverage advisory was put to the taxpayer, not silently dropped.
+- No casilla value is computed here; every number is quoted from the tool output of
+  the modelo skill that produced it.
 
-## Hand off
+## Next
 
-Each delegated filing follows its own skill's hand-off. This itinerary's job
-ends once every calendar-surfaced obligation for the period has been routed.
+Each filing follows its own skill's steps. This skill is done when every obligation
+the calendar surfaced for the period has been taken up.

@@ -2,20 +2,22 @@
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 200 --year <YEAR> --period 0A` and treat that output
-as canonical; this page is orientation only, so you know which section a
-casilla belongs to and where to look. Never report a casilla value from this
-page - report the value the CLI computes, with its `legal_refs`/`source_refs`.
+`(year, period)`. Read it with the `authority` tool (`query` `casillas`, with
+`modelo` 200, `filing_year` and `period` `0A`), or `aeat app modelo casillas 200
+--year <YEAR> --period 0A`, and treat that output as canonical; this page
+is orientation only, so you know which section a casilla belongs to and where to look. Never report a casilla value from this
+page — report the value Cadrumo computes, with its `legal_refs`/`source_refs`.
 Because Modelo 200 spans hundreds of casillas across many páginas of the
 official form, always scope the read to the section the taxpayer's question
-concerns rather than reading the whole set.
+concerns (the `authority` tool's `casilla_number`, `form_number` and `input_kind`
+filters, or `--number`, `--form-number` and `--input-kind` on the command line)
+rather than reading the whole set.
 
 ## The section map
 
 Modelo 200 groups its casillas into páginas that mirror the AEAT paper form
 (Diseño de Registros DP200012 through DP200020D and beyond). The load-bearing
-groups an operator navigates:
+groups you navigate:
 
 - **Identificación y caracteres de la declaración** — entity identification,
   `legal_entity_form`, régimen fiscal flags (entidad parcialmente exenta,
@@ -24,8 +26,8 @@ groups an operator navigates:
 - **Balance y cuenta de pérdidas y ganancias** — the entity's finalised
   cuentas anuales, entered manually. Casilla `00500` (resultado after IS) and
   casilla `00501` (resultado before IS, the fiscal-base starting point) live
-  here. These are the two earliest links in the base-determination chain -
-  see `no-silent-under-declaration` for the guard on this handoff.
+  here. These are the two earliest links in the base-determination chain;
+  the under-declaration advisories in `SKILL.md` guard this handoff.
 - **Liquidación I — resultado de la cuenta de pérdidas y ganancias** — carries
   `00501` forward into the fiscal computation.
 - **Liquidación III — base imponible** — ajustes extracontables (aumentos y
@@ -57,20 +59,18 @@ groups an operator navigates:
 
 - Inputs fall into three provenance classes and each is fixed differently:
   manually-entered accounting facts with no ledger counterpart (`00500`,
-  `00501`, most ajustes, deducciones — route to the role that owns
-  operator-entered facts), profile-sourced (`legal_entity_form`, INCN,
+  `00501`, most ajustes, deducciones — ask the taxpayer for the
+  figure), profile-sourced (`legal_entity_form`, INCN,
   new-entity flag — fix the profile), and cross-modelo folded-in
   (Modelo 202 instalments — fix the source 202 filing and recalculate).
   Never edit a casilla to a number you prefer regardless of provenance.
 - Computed casillas (base imponible, tipo de gravamen, cuota íntegra, cuota
-  líquida, and the resultado) come only from `aeat app modelo work
-  calculate`. Reach them through the calculation, never by re-deriving the
+  líquida, and the resultado) come only from the `modelo.work.calculate` operation (`aeat app modelo work calculate`). Reach them through the calculation, never by re-deriving the
   bracket or dispatch arithmetic.
 - A strictly positive `00500` with a zero `00501`, or a strictly positive
   `00501` with a zero base imponible (`DP200014:00552`) and no declared
   ajuste/BIN compensation/corrección explaining it, is the under-declaration
-  shape to question before any export (see `cadrumo-operator-grounding` and
-  `cadrumo-operator-safety-handoff`). It is legitimate for a loss-making year or a
+  shape to question before any export; the grounding, honest-declaration and safety rules govern. It is legitimate for a loss-making year or a
   year with full BIN compensation, so confirm rather than assume either way.
 - The BIN compensation applied (`DP200014:00547`) is BLOCKING-capped by both
   the art. 26.1 elective ceiling and the opening stock (`00670`) - a verify

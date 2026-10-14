@@ -2,12 +2,11 @@
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 193 --year <YEAR> --period 0A` and treat that
-output as canonical; this page is orientation only, so you know what you are
-looking at. Never report a casilla value or a per-perceptor row from this
-page — report the value the CLI computes, with its `legal_refs`/
-`source_refs`.
+`(year, period)`. Read it with the `authority` tool (`query` `casillas`, with
+`modelo` 193, `filing_year` and `period` `0A`), or `aeat app modelo casillas 193
+--year <YEAR> --period 0A`, and treat that output as canonical; this page
+is orientation only, so you know what you are looking at. Never report a casilla value or a per-perceptor row from this
+page — report the value Cadrumo computes, with its `legal_refs`/`source_refs`.
 
 ## The declarante summary block
 
@@ -52,5 +51,4 @@ computed from; they are not a separate manual entry surface.
   Modelo 123 quarter) — question it there, not on the 193.
 - A nonzero perceptor count with a zero total base or zero total retenciones
   on the declarante summary is the under-declaration shape to question
-  before any export (see `cadrumo-operator-grounding` and
-  `cadrumo-operator-safety-handoff`).
+  before any export; the grounding, honest-declaration and safety rules govern.

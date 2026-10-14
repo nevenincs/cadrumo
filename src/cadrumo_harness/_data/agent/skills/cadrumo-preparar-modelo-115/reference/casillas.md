@@ -2,11 +2,11 @@
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 115 --year <YEAR> --period <PERIOD>` and treat
-that output as canonical; this page is orientation only, so you know what you
-are looking at. Never report a casilla value from this page — report the value
-the CLI computes, with its `legal_refs`/`source_refs`.
+`(year, period)`. Read it with the `authority` tool (`query` `casillas`, with
+`modelo` 115, `filing_year` and `period` (`1T`-`4T`)), or `aeat app modelo casillas 115
+--year <YEAR> --period <PERIOD>`, and treat that output as canonical; this page
+is orientation only, so you know what you are looking at. Never report a casilla value from this
+page — report the value Cadrumo computes, with its `legal_refs`/`source_refs`.
 
 ## The five casillas
 
@@ -24,9 +24,9 @@ a landlord).
   Ledger-derived, same scheme as 01.
 - **Retenciones e ingresos a cuenta (03)** — computed as 19% of casilla 02
   (`irpf.urban_rental_withholding_rate`). Reach it only through
-  `aeat app modelo work calculate`; never re-derive the percentage yourself.
+  the `modelo.work.calculate` operation (`aeat app modelo work calculate`); never re-derive the percentage yourself.
 - **Resultado de anteriores declaraciones (04)** — manual input: an
-  operator-supplied same-year prior-quarter correction, used only when
+  taxpayer-supplied same-year prior-quarter correction, used only when
   amending. It is not cross-period carried; ask whether an amendment applies
   before assuming zero.
 - **Resultado a ingresar (05)** — computed as casilla 03 minus casilla 04,
@@ -38,12 +38,11 @@ a landlord).
   en-especie or additional income block to check for manual entry, unlike
   Modelo 111 — Modelo 115 is a single-concept form.
 - Casilla 03 (computed) and casilla 05 (computed) come only from
-  `aeat app modelo work calculate`. Reach them through the calculation, never
+  the `modelo.work.calculate` operation (`aeat app modelo work calculate`). Reach them through the calculation, never
   by re-deriving the arithmetic.
 - A nonzero perceptor count (01) with a zero base or zero retención sum
-  (02/03) is the under-declaration shape to question before any export (see
-  `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`).
-- Casilla 04's prior-autoliquidación correction is operator-supplied, not
+  (02/03) is the under-declaration shape to question before any export; the grounding, honest-declaration and safety rules govern.
+- Casilla 04's prior-autoliquidación correction is taxpayer-supplied, not
   cross-period carried; do not assume it defaults to zero without asking
   whether an amendment applies.
 - Modelo 180 (not Modelo 190) folds this modelo's annual base and

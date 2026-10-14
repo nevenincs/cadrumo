@@ -2,18 +2,20 @@
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 100 --year <YEAR> --period 0A` and treat that output
-as canonical; this page is orientation only, so you know which section a
-casilla belongs to and where to look. Never report a casilla value from this
-page - report the value the CLI computes, with its `legal_refs`/`source_refs`.
+`(year, period)`. Read it with the `authority` tool (`query` `casillas`, with
+`modelo` 100, `filing_year` and `period` `0A`), or `aeat app modelo casillas 100
+--year <YEAR> --period 0A`, and treat that output as canonical; this page
+is orientation only, so you know which section a casilla belongs to and where to look. Never report a casilla value from this
+page — report the value Cadrumo computes, with its `legal_refs`/`source_refs`.
 Because Modelo 100 spans thousands of casillas, always scope the read to the
-section the taxpayer's question concerns rather than reading the whole set.
+section the taxpayer's question concerns (the `authority` tool's `casilla_number`,
+`form_number` and `input_kind` filters, or `--number`, `--form-number` and
+`--input-kind` on the command line) rather than reading the whole set.
 
 ## The section map
 
 Modelo 100 groups its casillas into sections that mirror the AEAT paper form.
-The load-bearing groups an operator navigates:
+The load-bearing groups you navigate:
 
 - **Datos identificativos y personales** — contribuyente identification,
   marital status, descendientes and ascendientes, discapacidad. Profile-
@@ -59,16 +61,15 @@ The load-bearing groups an operator navigates:
   ledger-derived (actividades económicas - fix the ledger and re-calculate),
   profile-sourced (personal/family data, comunidad autónoma - fix the
   profile), and manually-entered with no ledger counterpart (capital
-  inmobiliario/mobiliario, ganancias patrimoniales, most deducciones - route
-  to the role that owns operator-entered facts). Never edit a casilla to a
+  inmobiliario/mobiliario, ganancias patrimoniales, most deducciones - ask the
+  taxpayer for the figure). Never edit a casilla to a
   number you prefer regardless of provenance.
 - Computed casillas (every base, mínimo, cuota, and the resultado) come only
-  from `aeat app modelo work calculate`. Reach them through the calculation,
+  from the `modelo.work.calculate` operation (`aeat app modelo work calculate`). Reach them through the calculation,
   never by re-deriving the escala arithmetic.
 - A strictly positive base liquidable general with a zero cuota resultante de
   la autoliquidación and no declared minimo-personal-y-familiar or deducción
-  explanation is the under-declaration shape to question before any export
-  (see `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`). It is legitimate
+  explanation is the under-declaration shape to question before any export; the grounding, honest-declaration and safety rules govern. It is legitimate
   for a filer whose base sits at or below the mínimo, so confirm rather than
   assume either way.
 - The Modelo 130/131 pagos-fraccionados fold-in and the retenciones

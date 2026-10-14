@@ -1,75 +1,79 @@
-# Modelo 353 casillas — orientation
+# Modelo 353 casillas - orientation
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 353 --year <YEAR> --period <PERIOD>` and treat
-that output as canonical; this page is orientation only, so you know what
-shape you are looking at. Never report a casilla value from this page —
-report the value the CLI computes, with its `legal_refs`/`source_refs`.
+`(year, period)`. Read it with tool `authority`, `query` `casillas`, `modelo`
+`353`, `filing_year` and `period` (`aeat app modelo casillas 353 --year <YEAR>
+--period <PERIOD>`), and treat that output as canonical. This page is
+orientation only, so you know what shape you are looking at. Never report a
+casilla value from this page: report the value the calculation produced, with
+its `legal_refs` and `source_refs`.
 
-## Régimen general agregado (single revision, monthly, `2008-y-siguientes`)
+Modelo 353 is monthly only (period tokens `01`-`12`). The registry has two
+revisions: `2021-hasta-2026-01` (every period up to January 2026) and
+`2026-desde-02` (`02`-`12` of 2026). They share a core and differ in the
+ledger totals.
 
-Modelo 353 has one registry-modelled revision spanning 2008 onward, monthly
-cadence only (period tokens `01`-`12`).
+## Core of both revisions
 
-### Directly-computed group casillas
+- `01` - Resultado total (sumatorio del resultado de entidades). Bound to the
+  Modelo 322 results of the group's members.
+- `02` - Cuotas a compensar pendientes de ejercicios anteriores (manual).
+- `08` - Cuotas a compensar de periodos anteriores aplicadas en este periodo
+  (manual).
+- `09` - Cuotas a compensar pendientes para periodos posteriores (computed).
+- `03` - Resultado, `[01] - [08]` (computed).
+- `04` - A deducir: resultado de autoliquidaciones anteriores del mismo
+  concepto (manual).
+- `05` - Resultado de la autoliquidación, `[03] - [04]` (computed).
+- `06` - Importe a compensar and `07` - Importe a devolver (manual), and
+  `papel.importe-ingreso` (manual).
+- The three reconciliation casillas, below.
 
-- **Cuota devengada, per tipo** — three bound casillas
-  (`iva.repercutido.general` 21%, `iva.repercutido.reducido` 10%,
-  `iva.repercutido.super-reducido` 4%), ledger-derived from the entidad
-  dominante's own repercutido lines classified at that rate.
-- **Cuota autorepercutida intracomunitaria** — one bound casilla
-  (`iva.autorepercutido.intracomunitaria`) for inversión del sujeto pasivo
-  on intra-community acquisitions (LIVA art. 84), ledger-derived.
-- **Cuota deducible interiores** — one bound casilla
-  (`iva.soportado.interiores`) summing the entidad dominante's soportado
-  lines across all three tipos on domestic operations, ledger-derived.
-- **Cuota devengada total** — computed casilla
-  (`iva.cuota-devengada-total`) summing the three repercutido casillas plus
-  the autorepercutido casilla.
-- **Cuota deducible total** — computed casilla
-  (`iva.cuota-deducible-total`) summing the soportado casilla plus the
-  autorepercutido casilla.
-- **Resultado del régimen general** — computed casilla
-  (`iva.resultado-regimen-general`), cuota devengada total minus cuota
-  deducible total. These eight casillas are what the group files; report
-  them as the group's aggregate position.
+The revision from February 2026 also lists casilla `10`, "Pago a cuenta de
+entregas de gasolinas, gasóleos y biocarburantes" (manual).
 
-### Cross-member reconciliation casillas (still evolving)
+## Ledger totals (revision up to January 2026 only)
 
-- **`iva.reconciliacion.devengada-322`**, **`iva.reconciliacion.deducible-322`**,
-  **`iva.reconciliacion.resultado-322`** — bound casillas grounded as the
-  `per_grupo_member` sum, across every grupo member, of that member's own
-  Modelo 322 `iva.cuota-devengada-total` / `iva.cuota-deducible-total` /
-  `iva.resultado-regimen-general` for the same month. They are part of the
-  registry's completeness manifest for this revision, so `aeat app modelo
-  casillas 353` always lists them, but their VALUE is only as trustworthy
-  as the member-observation history behind it — see the "Cross-member
-  reconciliation" section in `SKILL.md` before quoting one. Do not confuse
-  these with the directly-computed group casillas above: the reconciliation
-  is a cross-check, not an alternate way to compute the filing.
+These come from the entidad dominante's own classified ledger and are labelled
+as the group aggregate:
+
+- Cuota devengada, per tipo - three bound casillas (`iva.repercutido.general`
+  21%, `iva.repercutido.reducido` 10%, `iva.repercutido.super-reducido` 4%).
+- `iva.autorepercutido.intracomunitaria` - cuota autorepercutida on
+  intra-community acquisitions (LIVA art. 84), bound.
+- `iva.soportado.interiores` - cuota deducible on domestic operations, bound.
+- `iva.cuota-devengada-total`, `iva.cuota-deducible-total` and
+  `iva.resultado-regimen-general` - computed totals and the group result
+  (cuota devengada agregada menos cuota deducible agregada).
+
+The revision from February 2026 does not list these casillas.
+
+## Cross-member reconciliation casillas (still evolving)
+
+- `iva.reconciliacion.devengada-322`, `iva.reconciliacion.deducible-322` and
+  `iva.reconciliacion.resultado-322` - bound casillas grounded as the sum,
+  across every grupo member, of that member's own Modelo 322
+  `iva.cuota-devengada-total`, `iva.cuota-deducible-total` and
+  `iva.resultado-regimen-general` for the same month. `aeat app modelo
+  casillas 353` always lists them, but their value is only as trustworthy as
+  the member-observation history behind it. See the "Cross-member
+  reconciliation" section in `SKILL.md` before quoting one.
+- Do not confuse them with the ledger totals above: the reconciliation is a
+  cross-check, not an alternate way to compute the filing.
 
 ## How to read it safely
 
-- Every directly-computed cuota casilla is `input_kind = "bound"`, resolved
-  by the `ledger_iva_aggregation` source from the entidad dominante's
-  classified ledger — never a manual entry. If a cuota looks wrong, fix the
-  ledger classification and re-calculate; do not edit a casilla to a number
-  you prefer.
-- The total/result casillas are `input_kind = "computed"`; read them only
-  from `aeat app modelo work calculate` / `work revision`, never by
-  hand-summing the bound casillas yourself.
-- The three reconciliation casillas are also `input_kind = "bound"`, but
-  their source is the cross-member `previous_filing` fan-in over captured
-  Modelo 322 observations, not the entidad dominante's own ledger. Run
-  `aeat app modelo work dependencies --modelo 353 --year <YEAR> --period
-  <PERIOD>` and read its clean-state payload before treating a
-  reconciliation figure as a confirmed group cross-check.
+- A bound casilla is never a manual entry. If a ledger cuota looks wrong, fix
+  the ledger classification and calculate again; do not edit a casilla to a
+  number you prefer.
+- Computed casillas come only from the calculation. Read them from the
+  revision, never by hand-summing other casillas yourself.
+- The casillas that rest on member Modelo 322 results (`01`, the three
+  reconciliation casillas) are checked with operation
+  `modelo.work.dependencies` (`aeat app modelo work dependencies --modelo 353
+  --year <YEAR> --period <PERIOD>`); read its `clean_state` before treating
+  one as a confirmed group figure.
 - A classified IVA line whose cuota no binding consumes is the
-  under-declaration shape the unconsumed-declarable-IVA advisory exists to
-  catch; act on it before export rather than assuming a silent zero.
-- Modelo 353 has no prorrata, recargo de equivalencia, or régimen
-  simplificado casillas modelled at this revision — those regimes are
-  incompatible with grupo de entidades membership under Orden
-  EHA/3434/2007, so their absence here is by design, not an omission.
+  under-declaration shape the advisory about IVA consumed by no casilla exists
+  to catch. Act on it before export rather than assuming a silent zero.

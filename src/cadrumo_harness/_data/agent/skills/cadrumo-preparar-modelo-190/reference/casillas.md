@@ -2,12 +2,11 @@
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 190 --year <YEAR> --period 0A` and treat that
-output as canonical; this page is orientation only, so you know what you are
-looking at. Never report a casilla value or a per-perceptor row from this
-page — report the value the CLI computes, with its `legal_refs`/
-`source_refs`.
+`(year, period)`. Read it with the `authority` tool (`query` `casillas`, with
+`modelo` 190, `filing_year` and `period` `0A`), or `aeat app modelo casillas 190
+--year <YEAR> --period 0A`, and treat that output as canonical; this page
+is orientation only, so you know what you are looking at. Never report a casilla value or a per-perceptor row from this
+page — report the value Cadrumo computes, with its `legal_refs`/`source_refs`.
 
 ## The declarante summary block
 
@@ -52,7 +51,7 @@ totals are computed from; they are not a separate manual entry surface.
 - The fold-in relations select only the quarterly Modelo 111 period tokens
   (`1T`-`4T`). If the taxpayer's Modelo 111 cadence is monthly instead, the
   automatic annual fold-in does not draw on those monthly filings —
-  confirm cadence with `aeat app overview explain 111 --year <YEAR>` before
+  confirm cadence with `overview.explain` (`aeat app overview explain 111 --year <YEAR>`) before
   assuming the 190's totals are complete.
 - Modelo 111's manual (non-ledger-derived) blocks — trabajo en especie,
   ganancias patrimoniales forestales, cesión de derechos de imagen — fold
@@ -61,5 +60,4 @@ totals are computed from; they are not a separate manual entry surface.
   suspicious zero on the Modelo 111 quarter itself, not on the 190.
 - A nonzero perceptor count with a zero total percepciones or zero total
   retenciones on the declarante summary is the under-declaration shape to
-  question before any export (see `cadrumo-operator-grounding` and
-  `cadrumo-operator-safety-handoff`).
+  question before any export; the grounding, honest-declaration and safety rules govern.

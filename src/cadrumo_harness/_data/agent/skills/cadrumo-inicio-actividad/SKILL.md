@@ -1,15 +1,11 @@
 ---
 name: cadrumo-inicio-actividad
 description: >-
-  Life-situation itinerary for starting an economic activity: record the
-  start facts on the profile, treat the censo alta (Modelo 036) as the
-  taxpayer's own AEAT-portal act, record the resulting censo facts on the
-  profile by hand, and derive the first obligations the new activity
-  creates.
-  Use when the taxpayer is starting (or has just started) an activity —
-  the profile's activity start date is being set or was set recently.
-  Never invents the new obligation set; derives it from the overview
-  surface after the censo facts land.
+  Walk a taxpayer through starting an economic activity: record the start facts on
+  the profile, explain that the censo alta (Modelo 036) is the person's own act in
+  the AEAT portal, bring the resulting censo data into the profile, and read the
+  first obligations from the overview. Use when the taxpayer is starting or has
+  just started an activity and the profile's activity start date is being set.
 applies_when:
   profile_facts:
     - fact: activity_start_date
@@ -19,72 +15,87 @@ applies_when:
 
 # Inicio de actividad (starting an activity)
 
-Gating situation: the taxpayer is starting an economic activity — the
-moment their obligation universe changes shape. The sequence that keeps
-this honest: facts first (what activity, from when, under which regime),
-censo second (the alta is the taxpayer's own act before AEAT), derivation
-third (the CLI computes which obligations now exist). One hard honesty
-rule governs the censo step: the application does not prepare or file the
-Modelo 036 alta censal — the taxpayer files it in the AEAT portal or
-through their gestor, and this itinerary says so plainly instead of
-pretending otherwise.
+Gating situation: the taxpayer is starting an economic activity - the moment their
+obligations change shape. The order that keeps this honest: facts first (what
+activity, from when, under which regime), censo second (the alta is the taxpayer's
+own act before AEAT), derivation third (the overview works out which obligations now
+exist). One rule governs the censo step: Cadrumo does not prepare or file the
+Modelo 036 alta censal. The taxpayer files it in the AEAT portal or through their
+gestor, and you say so plainly.
 
 ## Preconditions
 
-- The taxpayer is onboarded (`aeat app overview status` reports an active
-  profile) — run `cadrumo-alta-contribuyente` first for a brand-new user.
-- The activity's defining facts are known: what the activity is, the
-  intended start date, the IRPF estimation regime, and the IVA regime the
-  activity will operate under (with professional advice where the choice
-  is genuinely open — regime election is a decision with multi-year
-  consequences, not a default to assume).
+- The taxpayer is onboarded (`aeat app overview status` reports a profile); for a
+  brand-new taxpayer load `cadrumo-alta-contribuyente` first.
+- The activity's defining facts are known: what the activity is, the intended start
+  date, the IRPF estimation regime and the IVA regime it will operate under. Where
+  the choice of regime is genuinely open, tell the person it has multi-year
+  consequences and is theirs (with professional advice) to make; do not assume a
+  default.
 
 ## Procedure
 
-1. Record the start facts on the profile: `aeat config profile edit` with
-   the activity start date, income category, estimation regime, and IVA
-   regime the taxpayer chose. These facts are what the obligation
-   derivation reads; an undeclared regime leaves the calendar incomplete
-   and the CLI will say so rather than guess.
-2. The censo alta itself: tell the taxpayer plainly that the Modelo 036
-   alta censal is filed in the AEAT portal (or by their gestor), before
-   the activity starts. This application records and derives; it does not
-   file the alta.
-3. After the alta is filed, record the official censo state by hand:
-   read the filed Modelo 036 (or the AEAT portal) with the taxpayer and
-   enter the resulting facts through `aeat config profile edit`. AEAT
-   publishes no read-only censo view this application could fetch, so
-   the profile mirrors AEAT only as faithfully as the taxpayer's own
-   copy — divergences are questions for the taxpayer, and the calendar
-   keeps its `censo.enrolment_unverified` disclosure because the facts
-   are operator-declared, not AEAT-verified.
-4. Derive the new obligation universe:
-   `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>`
-   for the first filing horizon and `aeat app overview agenda` for what
-   comes first. Confirm any doubtful obligation with
-   `aeat app overview explain <MODELO> --year <YEAR>`. Relay the first
-   deadlines verbatim — the first quarter of a new activity arrives
-   faster than most taxpayers expect.
-5. Route the steady state to the WHO itinerary the recorded facts now
-   select (`cadrumo-autonomo-estimacion-directa`, `cadrumo-autonomo-modulos`,
+1. Record the start facts the person gave you. Say which you are about to write,
+   then run `aeat config profile edit --quiet` with just those flags:
+   `--activity`, `--activity-start-date`, `--irpf-income-categories`,
+   `--irpf-estimation-regime` and `--iva-regime` (operation `user-profile.patch`).
+   Do not add `--accept-defaults`. These facts are what the overview reads: an
+   undeclared regime leaves the calendar incomplete, and the tools say so rather
+   than guess.
+2. The censo alta itself: tell the taxpayer plainly that the Modelo 036 alta censal
+   is filed in the AEAT portal (or by their gestor) before the activity starts, and
+   that Cadrumo only records and derives.
+3. After the person has filed the alta, bring the censo into the profile. Each
+   source covers only part of it, and the person chooses which to use.
+   - AEAT's own censal data: tell the person you will contact AEAT (it needs the
+     AEAT read access they configured; `aeat config auth status` shows it), run
+     `aeat config profile censo pull` to preview, and apply the exact proposal with
+     `aeat config profile censo pull --apply` only after they have seen it. It reads
+     identity and domicile, and needs the tax ID already on the profile.
+   - The Certificado de Situación Censal PDF (sede procedure G313) saved in the
+     workspace: `aeat config profile censo import --file <PDF>` previews what it
+     carries (domicile and activities with their IAE epígrafe); add `--apply` to
+     record it once the person agrees. The profile marks it as taken from a
+     document the person supplied, not as read from AEAT.
+   - Everything neither covers (start date, regimes, IVA facts) is read with the
+     person from their filed Modelo 036 and entered with
+     `aeat config profile edit --quiet` as in step 1. `aeat config profile censo show`
+     reads back what is stored. Facts entered this way are the person's declarations,
+     so the calendar keeps its `censo.enrolment_unverified` advisory for them;
+     relay it, and put any divergence from the filed 036 to the person.
+   - Record that the alta was filed: ask for the date they filed it (and the sede
+     acuse identifier if they have one), then run
+     `aeat app modelo m036 alta --declared-on <YYYY-MM-DD> [--sede-justificante <ID>]`
+     (operation `modelo.036.record`). It stores the person's own statement locally
+     and sends nothing to AEAT. Never invent the date.
+4. Derive the new obligations. Both commands read local state and contact nobody:
+   `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>` (operation
+   `overview.calendar`) for the first filing horizon and
+   `aeat app overview agenda` (operation `overview.agenda`) for what comes first.
+   Confirm a doubtful obligation with
+   `aeat app overview explain <MODELO> --year <YEAR>` (operation `overview.explain`).
+   Relay the first deadlines exactly as returned - the first quarter of a new
+   activity arrives faster than most taxpayers expect.
+5. Send the steady state to the skill the recorded facts now select
+   (`cadrumo-autonomo-estimacion-directa`, `cadrumo-autonomo-modulos` or
    `cadrumo-pyme-sociedad`, with `cadrumo-retenedor-empleador` or
-   `cadrumo-intra-community-operator` overlays as the facts declare), and start
-   the bookkeeping habit immediately: hand off to `cadrumo-llevar-libro` so the
-   first quarter's records are complete from day one.
+   `cadrumo-intra-community-operator` on top as the facts declare), and start the
+   bookkeeping habit now: load `cadrumo-llevar-libro` so the first quarter's records
+   are complete from day one.
 
 ## Success assertions
 
-- The profile carries the declared start facts before any obligation was
-  discussed; nothing was derived from an undeclared profile.
-- The censo alta was described as the taxpayer's own AEAT-portal act;
-  no narration implied this application filed it.
-- The post-alta censo facts were entered from the taxpayer's own filed
-  036 copy, and any divergence was put to the taxpayer.
-- The first obligations were read from `aeat app overview calendar` /
-  `agenda` / `explain`, never recited from memory.
+- The profile carried the declared start facts before any obligation was discussed;
+  nothing was derived from an undeclared profile.
+- The censo alta was described as the taxpayer's own act in the AEAT portal; nothing
+  said implied Cadrumo filed it.
+- Post-alta censo facts came from AEAT's data, the person's certificate or the
+  person's own copy of the filed 036, and any divergence was put to the person.
+- The first obligations were read from `overview calendar`, `agenda` and `explain`,
+  not recited from memory.
 
-## Hand off
+## Next
 
-Steady-state operation belongs to the selected WHO itinerary. This
-itinerary closes when the recorded censo facts agree with the filed 036, the first
-deadlines are known to the taxpayer, and the bookkeeping loop is running.
+Steady-state work belongs to the skill the facts select. This skill is done when the
+recorded censo facts agree with the filed 036, the first deadlines are known to the
+taxpayer, and the bookkeeping has started.

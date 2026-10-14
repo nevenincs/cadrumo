@@ -1,13 +1,11 @@
 ---
 name: cadrumo-preparar-modelo-180
 description: >-
-  Prepare a Modelo 180 (resumen anual de retenciones e ingresos a cuenta sobre
-  rentas procedentes del arrendamiento de inmuebles urbanos) from the four
-  already-calculated quarterly Modelo 115s: create the work unit, calculate
-  the annual summary, verify it reconciles against the four trimestrales,
-  review the per-perceptor (landlord) detail rows, export the fichero-BOE,
-  and hand off for the taxpayer to file. Use when the taxpayer files their
-  annual urban-rental retenciones informativa summary.
+  Prepare a Modelo 180 (annual summary of retenciones on urban-premises rent)
+  from the four calculated quarterly Modelo 115s: create the work unit,
+  calculate the annual summary, check the per-landlord rows, verify, export
+  the local fichero-BOE and hand it to the taxpayer to file. Use when the
+  taxpayer who withholds retención on rent must file the annual Modelo 180.
 applies_when:
   profile_facts:
     - fact: pays_rent_with_retencion
@@ -19,46 +17,68 @@ applies_when:
 Modelo 180 is the annual retenciones e ingresos a cuenta declaración
 informativa for urban-premises rental: it does not compute a new withholding
 result, it folds the year's four quarterly Modelo 115 self-assessments into
-annual totals and adds a per-perceptor breakdown (which landlord was paid
-what, and how much was withheld from them). The CLI computes and folds it;
-you orchestrate and relay. Never compute a casilla value yourself.
+annual totals and adds a per-perceptor breakdown (which landlord was paid what,
+and how much was withheld from them). Cadrumo computes and folds it; you run the
+steps and relay the result. Never compute a casilla value yourself.
 
-This skill diffs against `cadrumo-preparar-modelo-190`: Modelo 180 is to Modelo 115
-what Modelo 190 is to Modelo 111 — an annual informativa that reconciles
-against four already-filed quarterly self-assessments of the same
-withholding concept. The lifecycle spine (work create → calculate → verify →
-revision review → export → reconcile) is identical. The delta is the source
-modelo (115, not 111), the narrower fold-in (a single ledger-aggregated
-block, not up to nine income blocks), and — the load-bearing difference —
-Modelo 180's per-perceptor detail rows are **manual input**, not
-ledger-derived like Modelo 190's.
+Each step below names the registered operation that does the work and, in
+brackets, the `aeat` command that is the same step on the command line. Through
+the tool server, read the operation's contract and input schema with `describe`,
+submit it with `execute`, and read the settled `result`. Before a step runs, say
+in a sentence what it does: every call and every program start is put to the
+person for approval.
+
+Modelo 180 is to Modelo 115 what Modelo 190 is to Modelo 111 (see
+`cadrumo-preparar-modelo-190`): an annual informativa that reconciles against
+four already-filed quarterly self-assessments of the same withholding concept.
+The lifecycle (work create, calculate, verify, revision review, export,
+reconcile) is the same. The delta is the source modelo (115, not 111), the
+narrower fold-in (a single ledger-aggregated block, not up to nine income
+blocks), and — the load-bearing difference — Modelo 180's per-perceptor detail
+rows are **manual input**, not ledger-derived like Modelo 190's.
 
 ## Preconditions
 
-- An active profile exists (`aeat app overview status` reports one).
+Confirm these before you start. If one is missing, say what is missing and stop
+that step.
+
+- `status` shows a session (`sign_in` or `key`). With `none`, ask the person to
+  sign in to Cadrumo.
+- A profile is active (`overview.status`, `aeat app overview status`).
 - **All four Modelo 115 quarters (`1T`, `2T`, `3T`, `4T`) for the same
-  `filing_year` are already calculated** — read each with
-  `aeat app modelo work revision <work-unit-id> --format json` before
-  starting the 180. Modelo 180 folds these four filings' casillas 02 (base)
-  and 03 (retenciones) into its annual totals; a missing or stale quarter
-  blocks verification (see below). Modelo 115 is quarterly-only, so there is
-  no cadence ambiguity to confirm the way Modelo 111/190 requires.
+  `filing_year` are already calculated.** Find each quarter's work unit with
+  `modelo.work.list` (`aeat app modelo work list`) and read it with
+  `modelo.work.revision` (`aeat app modelo work revision --work-unit-id
+  <work-unit-id>`) before starting the 180. If a quarter is missing, load
+  `cadrumo-preparar-modelo-115`. Modelo 180 folds these four filings' casillas
+  02 (base) and 03 (retenciones) into its annual totals; a missing or stale
+  quarter blocks verification (see below). Modelo 115 is quarterly-only, so
+  there is no cadence ambiguity to confirm the way Modelo 111/190 requires.
 - The `filing_year`. The period is always the annual token `0A` — Modelo 180
   has no quarterly variant.
 
 ## Procedure
 
-1. Read the form shape: `aeat app modelo describe 180 --year <YEAR>
-   --period 0A` and `aeat app modelo casillas 180 --year <YEAR> --period
-   0A`. See the `reference/casillas.md` companion for what each casilla and
-   the per-perceptor rows mean.
-2. Create the work unit: `aeat app modelo work create --modelo 180 --year
-   <YEAR> --period 0A`.
-3. Calculate: `aeat app modelo work calculate <work-unit-id> --format json`.
-   Read `result` and `notices`; every casilla carries
-   `legal_refs`/`source_refs`.
-4. Read the computed revision: `aeat app modelo work revision <work-unit-id>
-   --format json`.
+1. Read the form shape so you cite real casillas, not remembered ones: the
+   `authority` tool with `query` `describe` and then `casillas`, giving
+   `modelo` 180, `filing_year` and `period` `0A` (`aeat app modelo describe 180` and
+   `aeat app modelo casillas 180`, each with `--year` and `--period`). Both read
+   bundled public data. `reference/casillas.md` explains what each casilla and the per-perceptor rows mean.
+2. Create the work unit with `modelo.work.create` (`aeat app modelo work
+   create --modelo 180 --year <YEAR> --period 0A`). It creates, or reuses, the
+   local work unit for that year and sends nothing out. In the result,
+   `outcome.kind` is `success` with the work unit under `unit` (`work_unit_id`),
+   or `refused` with a `reason`. Report a refusal as it is; do not ask for the
+   applicability check to be bypassed unless the person asks.
+3. Calculate with `modelo.work.calculate` (`aeat app modelo work calculate
+   <work-unit-id>`). It saves a new draft calculation, folding in the four
+   Modelo 115 quarters. Read the result's `calculation_revision_id`, the `calculation` (`casilla_values`,
+   `result_summary`, and `observations`, each with its `casilla_id`, `value`,
+   `legal_refs` and `source_refs`) and `advisories`. Keep the grounding with
+   every value.
+4. To read the computed revision again without recalculating, use
+   `modelo.work.revision` (`aeat app modelo work revision --work-unit-id
+   <work-unit-id>`). This is the value set you report to the taxpayer.
 
 ## What Modelo 180 adds over the annual-informativa pattern
 
@@ -75,18 +95,19 @@ ledger-derived like Modelo 190's.
   - **Casilla "Retenciones e ingresos a cuenta total"** — the year's four
     Modelo 115 casilla-03 totals (each quarter's own retenciones) summed via
     a relation fold-in.
-- **Per-perceptor detail rows are MANUAL, not ledger-derived.** Unlike
-  Modelo 190 (whose per-perceptor rows are computed from the withholding
-  store), Modelo 180's per-landlord rows — base and retenciones per
-  perceptor, plus the landlord's identity, the leased inmueble's cadastral
-  and address detail — are `input_kind = "manual"` in the registry. The
-  declarante-level totals above are folded/computed automatically; the
-  per-perceptor breakdown that must sum to those totals is NOT. Before
-  export, confirm every landlord paid during the year has a corresponding
-  manually-entered row, and that the per-perceptor base/retenciones rows sum
-  to the declarante totals — a taxpayer who calculates only the
-  declarante-level summary and skips the per-perceptor entry has an
-  incomplete filing even though `calculate` reports `success`.
+- **Per-perceptor detail rows.** Each landlord's base (`perc.base`) and
+  retenciones (`perc.retenciones`) are bound from the withholding store, one
+  row per type-2 record (`modelo-180-perceptor-row-base`,
+  `modelo-180-perceptor-row-retenciones`). The landlord's identity and the
+  leased inmueble's cadastral and address detail are manual; list the manual
+  casillas with the `authority` tool's `casillas` query. Check that the rows
+  sum to the declarante totals above. Before export, confirm every landlord
+  paid during the year appears as a row. A missing landlord means the
+  withholding store lacks that payment: record it in the ledger (load
+  `cadrumo-llevar-libro`) and recalculate; never invent a row. Ask the person
+  for each landlord's identity and inmueble detail, and enter them through the
+  inputs `modelo.work.calculate` accepts (read its input schema with
+  `describe`).
 - **No en-especie or manual-block distinction on the declarante side.**
   Modelo 115 has a single ledger-aggregated block (unlike Modelo 111's
   nine); Modelo 180's declarante totals fold only that one concept. There is
@@ -95,33 +116,53 @@ ledger-derived like Modelo 190's.
 
 ## Success assertions
 
-- `status` is `success` (or `warning` with every warning surfaced).
+Before handing off, confirm in the calculate or revision result:
+
+- The operation settled successfully. An operation that settled refused or
+  failed has no result, so read `error_detail`. On the command line with `--format json`, the
+  envelope `status` is `success`, or `warning` with every notice surfaced to the
+  taxpayer, and never `error`.
 - The annual declarante totals are consistent with the four quarters'
   declared Modelo 115 casillas 02/03; a nonzero perceptor count with a zero
   total base or zero total retenciones is the under-declaration shape to
-  question before export.
+  question before export. The honest-declaration rule governs.
 - Every manually-entered per-perceptor row is present for every landlord
   paid during the year, and the per-perceptor base/retenciones figures sum
-  to the declarante-level totals the CLI computed — a mismatch here is not
-  caught by `calculate` and must be checked before relying on `verify`.
+  to the declarante-level totals Cadrumo computed — a mismatch here is not
+  caught by the calculation and must be checked before relying on verify.
 - Every reported casilla and per-perceptor row value is quoted verbatim
-  from the JSON with its grounding.
+  from the result with its grounding.
 
 ## Verify and hand off
 
-5. Verify independently: `aeat app modelo work verify <work-unit-id>
-   --format json`. Modelo 180 verification is a blocking equality gate on
-   the three declarante summary casillas: the annual perceptor count, base
-   total, and retenciones total must each match the corresponding fold-in
-   from the four Modelo 115 quarters within the registry's tolerance. It
-   does NOT check that the manually-entered per-perceptor rows sum to those
-   totals — that reconciliation is the operator's responsibility per the
-   success assertions above. A `BLOCKING_RULE` finding on the declarante
-   totals means a quarter is missing, stale, or was recalculated after 180
-   was created — re-check each 115 quarter's revision before retrying, never
-   edit the 180 declarante casilla to force a match. Treat exit `1` as a
-   verdict; do not export a BLOCKED revision.
-6. Once the person gives the go-ahead for that export in the conversation, export the local artefact: `aeat app modelo export <work-unit-id>`. It is
-   NOT official AEAT evidence; the taxpayer uploads it in the AEAT portal.
-7. After the human files, pull official evidence with
-   `aeat app modelo reconcile pull`.
+5. Verify with `modelo.work.verify` (`aeat app modelo work verify
+   --work-unit-id <work-unit-id>`). It checks the saved draft against the
+   requirements for being verified complete and records a verification report
+   in the profile. A second run by you is not an independent check, so read the
+   result itself: `completeness_status` is `complete`, `incomplete` or
+   `blocked`, `granted_verificado_completo` says whether the revision was
+   granted, and the findings are in `verification.report.findings`, each with its `kind`,
+   `severity` (`blocking` or `warning`), `casilla_id`, `legal_refs` and
+   `source_refs`. Modelo 180 verification is a blocking equality gate on the three
+   declarante summary casillas: the annual perceptor count, base total, and
+   retenciones total must each match the corresponding fold-in from the four
+   Modelo 115 quarters within the registry's tolerance. It does NOT check that
+   the manually-entered per-perceptor rows sum to those totals — that
+   reconciliation is yours, per the success assertions above. A finding of kind
+   `blocking_rule` on the declarante totals means a quarter is missing, stale,
+   or was recalculated after 180 was created — re-check each 115 quarter's
+   revision before retrying, never edit the 180 declarante casilla to force a
+   match. Relay every finding. On the command line, exit `1` is a verdict, not
+   a crash. Do not export a revision that verifies `blocked`.
+6. When the revision verifies clean, tell the person you are about to export it
+   and wait for their go-ahead in the conversation. Then export with
+   `modelo.export` (`aeat app modelo export <work-unit-id>`). It writes a fichero-BOE to the
+   `output_path` you give, which must be inside the conversation workspace, and
+   never contacts the AEAT. Do not replace an existing file unless the person
+   asks. The file is NOT official AEAT evidence and the return is NOT filed. Tell
+   the taxpayer to upload it themselves in the AEAT portal.
+7. After the person says they have filed, load `cadrumo-reconciliar`. Official
+   evidence comes from `modelo.reconcile.pull` (`aeat app modelo reconcile
+   pull`), which contacts the AEAT read-only to fetch the justificante and
+   compare it with the saved calculation. It is never asserted from the local
+   export.

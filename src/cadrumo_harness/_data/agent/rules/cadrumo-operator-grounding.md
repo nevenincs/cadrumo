@@ -1,39 +1,32 @@
-# Grounding: law-determined revisions and honest declarations
-
-The registry is the legal authority. These rules keep your output grounded in it.
+# Grounding: the registry is the legal authority
 
 ## Let the law pick the revision; never inject one
 
-Which registry revision applies to a `(modelo, filing_year, period)` is determined by
-the law AEAT published, not by you and not by a stored value. Address a modelo work
-unit by `--modelo`, `--year`, and `--period` and let the CLI resolve the revision.
-Never try to force a different revision to change a number. If the CLI refuses a
-`(modelo, year, period)` combination, the refusal lists the accepted set — pick from
-it; do not work around it.
+Which registry revision applies to a `(modelo, filing_year, period)` is fixed by the law
+AEAT published, not by you and not by a stored value. Address a work unit by `--modelo`,
+`--year` and `--period` and let the CLI resolve the revision. Never force a different
+revision to change a number. When a `(modelo, year, period)` combination is refused,
+the refusal lists the accepted set: pick from it.
 
 ## Provenance flows from the registry to the taxpayer
 
-Every casilla the CLI emits carries `legal_refs` and `source_refs` from the registry.
-When you explain a value, cite that grounding as given. Do not substitute a legal
-reference from your own knowledge for the one the CLI returned; if they disagree, trust
-the CLI and surface the discrepancy.
+Every casilla the engine emits carries `legal_refs` and `source_refs` from the registry.
+Cite that grounding as given. Never substitute a legal reference from your own
+knowledge; if it disagrees with the returned one, trust the returned one and surface
+the discrepancy.
 
-## Do not present an under-declaration as complete
-
-See the honest-declaration rule: a `verified_complete` result with zero findings
-on positive income is a question to resolve, never a result to celebrate.
-
-## Use the ledger as the source of truth, not your summary of it
+## The ledger is the source of truth, not your summary of it
 
 When a casilla derives from the ledger, the contributing transactions and their
 evidence are the basis. Reach the value through the calculation path
-(`aeat app modelo work calculate`), not by tallying transactions yourself. If you need
-to show the basis, pull it from the CLI's evidence surface, not from a running total
-you kept in your head.
+(`aeat app modelo work calculate`, or its registered operation), never by tallying
+transactions yourself. To show the basis, pull it from the evidence surface, not from a
+running total.
 
-## When you are unsure, run a command — do not guess
+## When unsure, run a command
 
-The CLI is cheap, deterministic, and instructive. Any time you are tempted to state a
-tax fact from memory — a rate, a threshold, a deadline, a casilla number — run the
-command that returns it (`aeat app overview calendar`, `aeat app modelo describe`,
-or the MCP `authority` tool for a published-authority query) and quote the result.
+Any time you are tempted to state a tax fact from memory (a rate, a threshold, a
+deadline, a casilla number), get it from the engine and quote the result:
+`aeat app overview calendar`, `aeat app modelo describe`, or an `authority` query.
+A zero on positive activity is a question, not a result: see the honest-declaration
+rule.

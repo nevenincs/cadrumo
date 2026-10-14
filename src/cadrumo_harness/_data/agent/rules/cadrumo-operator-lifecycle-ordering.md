@@ -1,53 +1,41 @@
-# Lifecycle ordering — calculate, then verify, then file
+# Lifecycle ordering: calculate, then verify, then file
 
-The modelo lifecycle follows `calculate → verify → file`. Use MCP `describe`
-before submitting a registered lifecycle operation and retain its result and
-effect receipt. A local filing record is not evidence that AEAT accepted a filing.
+**Calculate before you verify. Verify before you export or record the filed marker.
+Never claim reconciled with AEAT before the person has filed and you have pulled back
+evidence of that.** Treat any attempt to skip a step, or any result that lets you skip
+one, as a refusal to work around, not a shortcut. A local filing record is not evidence
+that AEAT accepted a filing. Keep each operation's receipt.
 
-## The invariant
-
-**Calculate before you verify. Verify before you export or mark filed. Never claim
-reconciled with AEAT before a human has actually filed and you have pulled back
-evidence of that.** This is not a suggestion to follow when convenient; treat any
-attempt to skip a step, or any tool result that lets you skip one, as a refusal to
-work around, not a shortcut to take.
-
-- **Calculate first.** `aeat app modelo work create` establishes the work unit;
-  `aeat app modelo work calculate` produces the first draft revision. Nothing
-  downstream has a value to check before this runs.
-- **Verify before you export or file.** `aeat app modelo work verify` runs
-  independently of the calculation step — do not treat a calculate result as
-  self-certifying. Read the verify envelope; do not proceed to `aeat app modelo
-  export` or `aeat app modelo work file` while it reports a blocking finding.
-- **File and export only after a clean verify.** `aeat app modelo export`
-  (produce the fichero-BOE) and `aeat app modelo work file` (mark internally
-  filed) are the terminal, irreversible steps of the local half. Both still stop
-  short of AEAT — see the safety rule.
-- **Tell the person before you export or record the marker.** A clean verify
-  informs their decision and never stands in for it, and a second run by the same
-  agent is not an independent verifier. Say what you are about to do and run each of
-  the two only after the person gives the go-ahead in the conversation, and record
-  the marker only after the person has filed outside the application. The go-ahead
-  for one does not cover the other.
-- **Reconcile is a separate, later step.** `aeat app modelo reconcile pull` or
-  `reconcile import --file ...` runs after the human has actually filed outside the
-  application. Never report a filing as reconciled or accepted before this step
-  has actually run and returned official evidence. You may start either one; what
-  it returns is a finding for the person. Relay its verdict and every difference
-  verbatim, and let the person decide what follows from a difference.
+- **Calculate first.** `aeat app modelo work create` establishes the work unit and
+  `aeat app modelo work calculate` stores the first draft revision. Nothing downstream
+  has a value to check before this runs.
+- **Verify next.** `aeat app modelo work verify` runs independently of the calculation;
+  a calculate result does not certify itself. Read the verify result, and do not go on
+  to `aeat app modelo export` or `aeat app modelo work file` while it reports a
+  blocking finding.
+- **Export and file only after a clean verify.** `aeat app modelo export` produces
+  the local fichero-BOE and `aeat app modelo work file` records the local filed marker.
+  Both are irreversible local steps and neither reaches AEAT. Tell the person what
+  you are about to do and run each only on their go-ahead in the conversation; a
+  clean verify informs that decision and never replaces it, and a second run by you is
+  not an independent verifier. Record the marker only after the person has filed
+  outside the application. The go-ahead for one does not cover the other.
+- **Reconcile is separate and later.** `aeat app modelo reconcile pull`, or
+  `aeat app modelo reconcile import --file`, runs after the person has filed outside
+  the application. Both only read: you may start either. Relay the verdict and every
+  difference verbatim, and let the person decide what follows. Never report a filing
+  as reconciled or accepted before this has run and returned official evidence.
 
 ## Contradictions between surfaces are a stop, not a retry
 
-If one surface says a work unit is ready (for example `readiness: true`) while
-another blocks it (for example a verify result naming an unmet obligation or a
-cross-period dependency), do not retry past the disagreement or pick whichever
-answer is more convenient. Stop, report both results verbatim to the taxpayer, and
-resolve the contradiction before continuing — a silent retry-until-it-works
-pattern is how a wrong revision or a wrong period gets filed.
+If one surface says a work unit is ready (for example `readiness: true`) while another
+blocks it (a verify result naming an unmet obligation or a cross-period dependency),
+do not retry past the disagreement or pick the convenient answer. Stop, report both
+results verbatim, and resolve the contradiction first. A silent retry-until-it-works
+pattern is how a wrong revision or period gets filed.
 
 ## Never reorder to "fix" a number
 
-If verify blocks on a finding you do not like, the fix is to correct the input
-(the ledger entry, the profile fact, the declared casilla) and recalculate — never
-to re-run export or file against an unverified or previously-blocked revision to
-route around the finding.
+If verify blocks on a finding you do not like, correct the input (the ledger entry, the
+profile fact, the declared casilla) and recalculate. Never run export or file against
+an unverified or previously blocked revision to route around the finding.

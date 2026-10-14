@@ -1,12 +1,11 @@
 ---
 name: cadrumo-intra-community-operator
 description: >-
-  Entry itinerary for a taxpayer conducting operaciones intracomunitarias: ROI/
-  VIES enrolment, the Modelo 349 recapitulative declaration, and the interaction
-  with periodic IVA. Use when the taxpayer profile declares
-  `does_intracomunitario` true, or `iva.roi_enrolled` / `iva.oss_enrolled` /
-  `iva.intracommunity_operations_exceed_50000_eur` true. Never hard-codes the
-  obligation set; derives it from the overview surface.
+  Itinerary for a taxpayer with intra-community operations: reads the obligations
+  from the overview, then sequences the Modelo 349 recapitulative declaration, the
+  periodic IVA it affects and any OSS filing. Use when the profile declares
+  `does_intracomunitario`, or `iva.roi_enrolled`, `iva.oss_enrolled` or
+  `iva.intracommunity_operations_exceed_50000_eur` true.
 applies_when:
   profile_match: any
   profile_facts:
@@ -22,73 +21,72 @@ applies_when:
 
 # Intra-community operator
 
-Gating predicate: the active `TaxpayerProfile` declares `does_intracomunitario`,
-or any of `iva.roi_enrolled`, `iva.oss_enrolled`,
+Gating predicate: the active profile declares `does_intracomunitario`, or any of
+`iva.roi_enrolled`, `iva.oss_enrolled`,
 `iva.intracommunity_operations_exceed_50000_eur` (Ley 37/1992 LIVA; RD 1619/2012;
-Reglamento (UE) 904/2010 for the OSS one-stop-shop). This is a facts-driven
-overlay: a taxpayer routed here may simultaneously match
-`cadrumo-autonomo-estimacion-directa`, `cadrumo-autonomo-modulos`, or `cadrumo-pyme-sociedad` on their
-entity-type/regime axis, and both itineraries' obligations apply. This skill is
-thin: it sequences the intra-community-specific obligations the CLI derives and
-delegates every filing to the modelo skill that owns it.
+Reglamento (UE) 904/2010 for the OSS one-stop-shop). This applies on top of the
+taxpayer's regime skill: a taxpayer here may also match
+`cadrumo-autonomo-estimacion-directa`, `cadrumo-autonomo-modulos` or
+`cadrumo-pyme-sociedad`, and both sets of obligations apply. This skill sequences
+the intra-community obligations the overview derives and sends each filing to the
+modelo skill that owns it.
 
 ## Preconditions
 
-- The taxpayer is onboarded (`cadrumo-alta-contribuyente` has run;
-  `aeat app overview status` reports an active profile).
-- The profile declares at least one gating fact. If undeclared but suspected,
-  route back to onboarding to confirm ROI/VIES enrolment and cross-border
-  operation volume before continuing.
-- The taxpayer's primary regime itinerary (`cadrumo-autonomo-estimacion-directa`,
-  `cadrumo-autonomo-modulos`, or `cadrumo-pyme-sociedad`) is already sequencing the domestic IVA
-  and income-tax obligations; do not duplicate that sequencing here.
+- The taxpayer is onboarded (`aeat app overview status` reports a profile); if
+  not, load `cadrumo-alta-contribuyente`.
+- The profile declares at least one gating fact. If it is suspected but not
+  declared, ask the person about ROI/VIES enrolment and cross-border volume and
+  record the answers as `cadrumo-alta-contribuyente` describes.
+- The taxpayer's regime skill (`cadrumo-autonomo-estimacion-directa`,
+  `cadrumo-autonomo-modulos` or `cadrumo-pyme-sociedad`) already sequences the
+  domestic IVA and income-tax obligations; do not repeat that here.
 
 ## Procedure
 
-1. Derive the applicable obligations from the CLI - never assume the
-   intra-community obligation set from memory. Run
-   `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>` and
-   `aeat app overview agenda`. Read any `coverage_advised` line as an open
-   question requiring investigation, in particular for cross-period cadence
-   thresholds (e.g. the 50,000 EUR intracommunity-operations threshold, which
-   changes Modelo 349 from quarterly to monthly).
-2. Confirm each candidate modelo's applicability explicitly:
-   `aeat app overview explain 349 --year <YEAR>` for the recapitulative
-   declaration, and `aeat app overview explain 303 --year <YEAR>` to confirm the
-   periodic IVA cadence the intra-community volume may have shifted. Read
-   `profile_fact` lines rather than assuming enrolment status.
-3. Discover the registry-modelled forms available: `aeat app modelo list`.
-4. Sequence the itinerary:
-   - Ensure the ledger's intra-community transactions carry their
-     counterpart-country and IVA classification before any calculation: hand off
-     to `cadrumo-llevar-libro`, then `cadrumo-clasificar`.
+All of these read local state and contact nobody.
+
+1. Derive the obligations; never assume the intra-community set from memory. Run
+   `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>` (operation
+   `overview.calendar`) and `aeat app overview agenda` (operation
+   `overview.agenda`). Read the coverage report's `advised` entries (the command
+   line prints them as `coverage_advised`) as open questions to put to the person,
+   in particular for cadence thresholds across periods such as the 50,000 EUR
+   intracommunity-operations threshold, which changes Modelo 349 from quarterly to
+   monthly.
+2. Confirm each candidate modelo explicitly with
+   `aeat app overview explain 349 --year <YEAR>` for the recapitulative declaration
+   and `aeat app overview explain 303 --year <YEAR>` for the periodic IVA cadence
+   the intra-community volume may have shifted (operation `overview.explain`). Read
+   the `profile_facts` in the result instead of assuming enrolment status.
+3. See which forms Cadrumo models: `aeat app modelo list` (tool server: `authority`
+   with query `modelos`).
+4. Sequence the work:
+   - The ledger's intra-community transactions must carry their counterparty
+     country and IVA classification before any calculation: load
+     `cadrumo-llevar-libro`, then `cadrumo-clasificar` (it covers `--iva-category`,
+     `--counterparty-country` and `--counterparty-identification-state`).
    - The recapitulative declaration (Modelo 349, when the calendar surfaces it):
-     read `aeat app modelo describe 349 --year <YEAR> --period <PERIOD>` and
-     drive the shared `work create -> calculate -> verify -> revision review ->
-     export -> record marker -> reconcile` spine demonstrated by
-     `cadrumo-preparar-modelo-303`, substituting Modelo 349's own casillas.
-   - The periodic IVA declaration, whose cadence and cuota the intra-community
-     volume can change (Modelo 303, when the calendar surfaces it): delegate to
+     load `cadrumo-preparar-modelo-349`.
+   - The periodic IVA, whose cadence and cuota the intra-community volume can
+     change (Modelo 303, when the calendar surfaces it): load
      `cadrumo-preparar-modelo-303`.
-   - Any OSS-enrolled cross-border consumer-sales obligation the calendar
-     surfaces: drive the same spine against its own `aeat app modelo describe`
-     output; no dedicated Tier-B skill is assumed to exist yet for every OSS
-     form.
-5. After each filing's local export, hand off to `cadrumo-reconciliar` once the taxpayer
-   has filed in the AEAT portal.
+   - An OSS-enrolled cross-border consumer-sales obligation the calendar surfaces
+     (Modelo 369): load `cadrumo-preparar-modelo-369`.
+5. After a filing's local export, the person files in the AEAT portal; once they
+   say they have, load `cadrumo-reconciliar`.
 
 ## Success assertions
 
-- Every obligation acted on was read from `aeat app overview calendar` /
-  `agenda` / `explain`, never assumed from this itinerary's prose.
-- A `coverage_advised` entry (e.g. an undetermined ROI enrolment) is surfaced to
-  the taxpayer, not silently dropped.
-- No casilla value is computed here; every number is quoted from the delegated
-  skill's CLI output.
+- Every obligation acted on was read from `overview calendar`, `agenda` or
+  `explain`, not assumed from this skill's prose.
+- A coverage advisory (for example an undetermined ROI enrolment) was put to the
+  taxpayer, not silently dropped.
+- No casilla value is computed here; every number is quoted from the tool output of
+  the modelo skill that produced it.
 
-## Hand off
+## Next
 
-Each delegated filing follows its own skill's hand-off. This itinerary's job
-ends once every calendar-surfaced intra-community obligation for the period has
-been routed, alongside whatever the taxpayer's primary regime itinerary already
-sequenced.
+Each filing follows its own skill's steps. This skill is done when every
+intra-community obligation the calendar surfaced for the period has been taken up,
+alongside whatever the taxpayer's regime skill already sequenced.

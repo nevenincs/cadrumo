@@ -2,12 +2,11 @@
 
 The registry is the authority for the exact casilla set, numbering, legal
 grounding, and formulas of the revision that applies to a given
-`(year, period)`. Read it with
-`aeat app modelo casillas 180 --year <YEAR> --period 0A` and treat that
-output as canonical; this page is orientation only, so you know what you are
-looking at. Never report a casilla value or a per-perceptor row from this
-page — report the value the CLI computes, with its `legal_refs`/
-`source_refs`.
+`(year, period)`. Read it with the `authority` tool (`query` `casillas`, with
+`modelo` 180, `filing_year` and `period` `0A`), or `aeat app modelo casillas 180
+--year <YEAR> --period 0A`, and treat that output as canonical; this page
+is orientation only, so you know what you are looking at. Never report a casilla value or a per-perceptor row from this
+page — report the value Cadrumo computes, with its `legal_refs`/`source_refs`.
 
 ## The declarante summary block
 
@@ -34,12 +33,12 @@ the year — tax id, legal name, the leased inmueble's address and cadastral
 reference, the modalidad and porcentaje de retención, and the base and
 retenciones amounts attributable to that landlord.
 
-Unlike Modelo 190's per-perceptor rows (computed from the withholding
-store), **Modelo 180's per-perceptor base and retenciones casillas are
-manual input** in the registry (`input_kind = "manual"`). The declarante
-totals fold automatically from the four Modelo 115 quarters; the
-per-perceptor rows that should sum to those totals do not. Confirm every
-landlord paid during the year has an entered row and that the rows sum to
+Modelo 180's per-perceptor base and retenciones casillas are **bound** from
+the withholding store, one row per type-2 record
+(`modelo-180-perceptor-row-base`, `modelo-180-perceptor-row-retenciones`); the
+landlord's identity and inmueble detail are manual. The declarante totals fold
+from the four Modelo 115 quarters, and the rows should sum to them. Confirm every
+landlord paid during the year appears as a row and that the rows sum to
 the declarante totals before export — `calculate` reporting `success` does
 not by itself mean the per-perceptor breakdown is complete.
 
@@ -56,8 +55,7 @@ not by itself mean the per-perceptor breakdown is complete.
   covers the full year.
 - A nonzero perceptor count with a zero total base or zero total
   retenciones on the declarante summary is the under-declaration shape to
-  question before any export (see `cadrumo-operator-grounding` and
-  `cadrumo-operator-safety-handoff`).
+  question before any export; the grounding, honest-declaration and safety rules govern.
 - The per-perceptor rows are manual: a declarante summary that reconciles
   against the four Modelo 115 quarters does not guarantee the per-perceptor
   breakdown is complete or that it sums to those totals. Check it

@@ -1,12 +1,11 @@
 ---
 name: cadrumo-arrendador
 description: >-
-  Entry itinerary for a taxpayer with rendimientos del capital inmobiliario
-  (rental income): the annual Renta declaration of rental income and, when the
-  taxpayer also pays a retención on their own commercial rent, the interaction
-  with retenciones. Use when the taxpayer profile declares
-  `irpf_income_categories` including capital_inmobiliario. Never hard-codes the
-  obligation set; derives it from the overview surface.
+  Itinerary for a taxpayer with rental income (rendimientos del capital
+  inmobiliario): reads the obligations from the overview, then sequences the
+  ledger work, the annual Renta and any retención on the taxpayer's own rent
+  payments. Use when the profile declares `irpf_income_categories` including
+  capital_inmobiliario.
 applies_when:
   profile_facts:
     - fact: irpf_income_categories
@@ -16,67 +15,72 @@ applies_when:
 
 # Arrendador (rental income)
 
-Gating predicate: the active `TaxpayerProfile` declares `capital_inmobiliario`
-in `irpf_income_categories` (LIRPF Arts. 22-24) - rendimientos del capital
+Gating predicate: the active profile declares `capital_inmobiliario` in
+`irpf_income_categories` (LIRPF Arts. 22-24) - rendimientos del capital
 inmobiliario, distinct from actividad económica income even where the taxpayer
 also holds actividad económica categories (a landlord with a genuine business
-letting operation may match both this itinerary and
-`cadrumo-autonomo-estimacion-directa` / `cadrumo-autonomo-modulos`; route both when both facts
-are declared). A landlord with no actividad económica income files no quarterly
-IRPF instalment - never assume Modelo 130/131 applies from the presence of
-rental income alone.
+letting operation may match both this skill and `cadrumo-autonomo-estimacion-directa`
+or `cadrumo-autonomo-modulos`; follow both when both facts are declared). A landlord
+with no actividad económica income files no quarterly IRPF instalment - never
+assume Modelo 130/131 applies from the presence of rental income alone.
+
+This skill sequences the obligations the overview derives and sends each filing to
+the modelo skill that owns it. It does not fix a list of modelos.
 
 ## Preconditions
 
-- The taxpayer is onboarded (`cadrumo-alta-contribuyente` has run;
-  `aeat app overview status` reports an active profile).
-- The profile declares `capital_inmobiliario` in `irpf_income_categories`. If
-  undeclared, route back to onboarding.
+- The taxpayer is onboarded (`aeat app overview status` reports a profile); if
+  not, load `cadrumo-alta-contribuyente`.
+- The profile declares `capital_inmobiliario` in `irpf_income_categories`. If not,
+  ask the person and record it as `cadrumo-alta-contribuyente` describes.
 - `fiscal_address_cadastral_reference` and `fiscal_address_is_habitual_vivienda`
-  are relevant when the rented property is also the taxpayer's own habitual
-  residence context; confirm these are current before calculating.
+  matter when the rented property is also the taxpayer's own habitual residence
+  context; check with the person that they are current before calculating.
 
 ## Procedure
 
-1. Derive the applicable obligations from the CLI - never assume the rental
-   taxpayer's obligation set from memory, and never assume a quarterly IRPF
-   instalment applies. Run
-   `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>` and
-   `aeat app overview agenda`. Read any `coverage_advised` line as an open
-   question requiring investigation.
-2. Confirm applicability explicitly rather than assuming:
-   `aeat app overview explain 130 --year <YEAR>` - for a landlord with no
-   actividad económica income this typically resolves NOT_APPLICABLE; confirm
-   the `verdict` and `rationale` rather than reading the absence of an entry from
-   the calendar as ambiguous. `aeat app overview explain 100 --year <YEAR>` for
-   the annual Renta declaration that carries the rental income.
-3. Discover the registry-modelled forms available: `aeat app modelo list`.
-4. Sequence the itinerary:
-   - Ledger records every rent receipt and deductible expense (IBI, comunidad,
-     seguro, amortización) with its capital_inmobiliario category before any
-     calculation: hand off to `cadrumo-llevar-libro`, then `cadrumo-clasificar`.
-   - The annual Renta declaration (Modelo 100, when the calendar surfaces it):
-     read `aeat app modelo describe 100 --year <YEAR> --period <PERIOD>` and
-     drive the shared `work create -> calculate -> verify -> revision review ->
-     export -> record marker -> reconcile` spine demonstrated by
-     `cadrumo-preparar-modelo-130`, substituting Modelo 100's own casillas.
-   - If the profile also declares actividad económica income, hand off to
-     `cadrumo-autonomo-estimacion-directa` or `cadrumo-autonomo-modulos` for the quarterly
-     instalment obligations that itinerary owns; do not sequence a quarterly
-     IRPF instalment here on the strength of rental income alone.
-5. After the filing's local export, hand off to `cadrumo-reconciliar` once the taxpayer
-   has filed in the AEAT portal.
+All of these read local state and contact nobody.
+
+1. Derive the obligations; never assume them from memory. Run
+   `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>` (operation
+   `overview.calendar`) for the window in question and `aeat app overview agenda`
+   (operation `overview.agenda`) for what is due next. Read the coverage report's
+   `advised` entries (the command line prints them as `coverage_advised`) as open
+   questions to put to the person.
+2. Confirm applicability instead of reading an absence as an answer:
+   `aeat app overview explain 130 --year <YEAR>` (operation `overview.explain`) -
+   for a landlord with no actividad económica income this normally returns
+   NOT_APPLICABLE; read its `verdict` and `rationale`. Run
+   `aeat app overview explain 100 --year <YEAR>` for the annual Renta that carries
+   the rental income.
+3. See which forms Cadrumo models: `aeat app modelo list` (tool server:
+   `authority` with query `modelos`).
+4. Sequence the work:
+   - Every rent receipt and deductible expense (IBI, comunidad, seguro,
+     amortización) goes into the ledger with its capital_inmobiliario category
+     before any calculation: load `cadrumo-llevar-libro`, then `cadrumo-clasificar`.
+   - The annual Renta (Modelo 100, when the calendar surfaces it): load
+     `cadrumo-preparar-modelo-100`.
+   - If the taxpayer pays rent on premises used for an activity and withholds
+     retención on it, and the calendar surfaces Modelo 115: load
+     `cadrumo-preparar-modelo-115`.
+   - If the profile also declares actividad económica income, follow
+     `cadrumo-autonomo-estimacion-directa` or `cadrumo-autonomo-modulos` for the
+     quarterly instalments; do not sequence a quarterly IRPF instalment here on
+     the strength of rental income alone.
+5. After a filing's local export, the person files in the AEAT portal; once they
+   say they have, load `cadrumo-reconciliar`.
 
 ## Success assertions
 
-- Every obligation acted on was read from `aeat app overview calendar` /
-  `agenda` / `explain`, never assumed from this itinerary's prose.
-- A `coverage_advised` entry is surfaced to the taxpayer, not silently dropped.
-- No casilla value is computed here; every number is quoted from the delegated
-  skill's CLI output.
+- Every obligation acted on was read from `overview calendar`, `agenda` or
+  `explain`, not assumed from this skill's prose.
+- A coverage advisory was put to the taxpayer, not silently dropped.
+- No casilla value is computed here; every number is quoted from the tool output of
+  the modelo skill that produced it.
 
-## Hand off
+## Next
 
-Once the annual Renta filing is routed (and any actividad-económica itinerary
-this profile also matches), the reconciler (`cadrumo-reconciliar`) pulls the official
-evidence after the human files.
+Each filing follows its own skill's steps. Once the annual Renta is sequenced (and
+any actividad económica skill this profile also matches), `cadrumo-reconciliar`
+pulls the official evidence after the person files.
