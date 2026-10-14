@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:09b2595e55935cf300c35381c7cb7dbe37ace3a0fbf44c1c25431af0f7c47a39'
+body_hash: 'sha256:26f67b3b2ec641b4e772d2b7fe57e45f119f535df7bea45d64ed5f81249fb7a4'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -316,6 +316,28 @@ related:
 - `S17` `verify:` `just check-style, just check-format and just check-import-boundaries` -> `pass`
 - `S17` `verify:` `just check-types (15 diagnostics, all in src/cadrumo/adapters/persistence/operations/tests, other sessions; none in this Step's files)` -> `fail`
 - `S17` `by:` `implementation-engineer-standard`
+- `S18` `A` `src/cadrumo/application/agent_host/store_lifecycle.py`
+- `S18` `A` `src/cadrumo/application/agent_host/tests/test_store_lifecycle.py`
+- `S18` `M` `src/cadrumo/application/agent_host/controller.py`
+- `S18` `M` `src/cadrumo/application/agent_host/launcher_protocol.py`
+- `S18` `M` `src/cadrumo/application/agent_host/tests/test_launcher_protocol.py`
+- `S18` `M` `src/cadrumo/adapters/local_runtime/agent_programs.py`
+- `S18` `M` `src/cadrumo/adapters/local_runtime/agent_process.py`
+- `S18` `A` `src/cadrumo/adapters/local_runtime/tests/agent_store_fixture.py`
+- `S18` `M` `src/cadrumo/entrypoints/runtime/agent_hosts.py`
+- `S18` `M` `src/cadrumo/entrypoints/runtime/profile_connection_agents.py`
+- `S18` `M` `src/cadrumo/entrypoints/runtime/tests/agent_host_support.py`
+- `S18` `M` `src/cadrumo/entrypoints/runtime/tests/test_agent_host_runtime.py`
+- `S18` `A` `src/cadrumo/entrypoints/runtime/tests/test_agent_hosts_store_quiescence.py`
+- `S18` `M` `dev/quality/metadata/import_load_targets.json`
+- `S18` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S18` `verify:` `pytest -m '' test_agent_host_runtime.py test_agent_hosts_store_quiescence.py application/agent_host test_agent_process_native.py (166)` -> `pass`
+- `S18` `verify:` `ruff check and format on touched files` -> `pass`
+- `S18` `verify:` `just check-types` -> `pass`
+- `S18` `verify:` `just check-import-boundaries` -> `pass`
+- `S18` `verify:` `pytest dev/quality/tests/test_agent_prefix_spelling.py test_no_git_cli.py` -> `pass`
+- `S18` `verify:` `pytest -m '' src/cadrumo/entrypoints/runtime src/cadrumo/application/runtime` -> `fail`
+- `S18` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -361,3 +383,7 @@ related:
 - `S17` Pattern language: an option argument, an optional flag followed by one typed value, present whole or absent, read left to right with no backtracking; options trail every other argument, are distinct and ordered, and a flag without a valid value leaves the invocation undeclared. The new revision kind is opaque ASCII, 1 to 128 of letters, digits, underscore, dot and hyphen, not starting with a dot or hyphen. The matcher lives in native/platform (Rust) and the Python reference; the C hosts only forward argv to `cadrumo_platform_define` and needed no change, so native/interpreter is untouched and consumer.c gained an ABI refusal check.
 - `S17` Not run here: the POSIX C host test platform.invocation (no POSIX C toolchain on this host) and the desktop crate (it references none of the changed structs; the manager crate passed clippy). The package CTest bundle.environment-launch still waits on a built bundle.
 - `S17` The coordinator widened this Step to the docs generator: `dev/docs/env_reference.py` spells an option as `[--flag` `<slot:kind>]` and the page was regenerated, not hand-edited. native/CONTRACT.md gained the pattern language and the six invocations.
+- `S18` Copy aside: home/state under the hosted root is copied to stores-aside under the same root (written as stores-aside.partial, files fsynced, then renamed); removed once stores-state reads current; a failed, timed-out or unconfirmed migrate keeps it and every later start of that root is refused until the stores read current or an operator restores or removes it. No automatic restore.
+- `S18` Refusals: newer stores and an `api_version` other than v1 map to `agent_service_incompatible;` every other store failure maps to `agent_service_failed.` The desktop's closed launcher set is unchanged. Worst-case start time can now exceed the frontend's 120 s agent start bound `(frontend_client.py` `AGENT_START_TIMEOUT_SECONDS),` outside this Step's write scope.
+- `S18` Store invocations run before the bearer secret frame is read, under the profile's reservation and a per-profile preparing hold that refuses any other start of the profile until the sequence ends, so no second start can migrate or clear a partial copy concurrently.
+- `S18` Full entrypoints/runtime -m '' run: 20 failed, 4 errors, 1039 passed; a rerun of the failed set gave 16 failed, 9 passed, 4 errors with a shifting set. Failures are `runtime_deadline_exceeded` and `connection_closed` in sign-in, automation, grant, provenance, submission-stream and projection tests that do not reach the agent store code; `test_mcp_sign_in_adapter` fails on `agent_access_remains` (issued-key check) in both runs. Not shown pre-existing: no baseline run was possible without changing the shared checkout.

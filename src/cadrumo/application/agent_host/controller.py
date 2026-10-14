@@ -60,6 +60,9 @@ class AgentHostRefusal(StrEnum):
     AGENT_REFUSED = "agent_refused"
     STALE_GENERATION = "stale_generation"
     ALREADY_RUNNING = "already_running"
+    AGENT_INCOMPATIBLE = "agent_incompatible"
+    STORES_NEWER = "stores_newer"
+    STORES_UNPREPARED = "stores_unprepared"
 
 
 class AgentHostError(RuntimeError):

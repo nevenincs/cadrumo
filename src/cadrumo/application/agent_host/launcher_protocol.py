@@ -70,5 +70,8 @@ def launcher_refusal_for(error: AgentHostError) -> AgentLauncherRefusal:
         return AgentLauncherRefusal.PROVIDER_CREDENTIAL_MISSING
     if error.reason is AgentHostRefusal.AGENT_REFUSED and error.agent_code in _INCOMPATIBLE_AGENT_CODES:
         return AgentLauncherRefusal.SERVICE_INCOMPATIBLE
-    # Includes the native host's launch-profile refusal: the agent never ran, so the desktop's closed set is unchanged.
+    if error.reason in {AgentHostRefusal.AGENT_INCOMPATIBLE, AgentHostRefusal.STORES_NEWER}:
+        # A downgrade: the agent build is older than the stores it would serve.
+        return AgentLauncherRefusal.SERVICE_INCOMPATIBLE
+    # Includes the native host's launch-profile refusal and every store step that did not reach current stores.
     return AgentLauncherRefusal.SERVICE_FAILED

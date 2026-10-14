@@ -14,6 +14,7 @@ import hashlib
 import hmac
 import os
 import secrets
+import shutil
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -40,8 +41,15 @@ _HOSTED_WORKSPACES: Final = "workspaces"
 """The directory under the hosted home that bounds every workspace a run or catalog request may name."""
 _HOSTED_WORKSPACE: Final = "cadrumo"
 """The one workspace this runtime creates inside that boundary."""
-GATEWAY_ARGUMENTS: Final = ("-m", "cadrumo_agent.cli.main", "serve")
-"""The gateway invocation: the agent's declared command-line module, which has no package-level ``__main__``."""
+_HOSTED_STORES: Final = ("home", "state")
+"""The directory under a hosted root that holds the agent's two stores and their write-ahead logs."""
+STORES_ASIDE: Final = "stores-aside"
+"""The host's copy of the stores, directly under the hosted root: a name the agent's layout leaves to the host."""
+_STORES_ASIDE_PARTIAL: Final = "stores-aside.partial"
+AGENT_COMMAND_LINE: Final = ("-m", "cadrumo_agent.cli.main")
+"""The agent's declared command-line module, which has no package-level ``__main__``; each invocation adds its verb."""
+GATEWAY_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "serve")
+"""The gateway invocation."""
 
 
 class AgentProgramRefusalError(Exception):
@@ -151,3 +159,51 @@ def _root_key(base: Path) -> bytes:
     if len(key) != _ROOT_KEY_BYTES:
         raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
     return key
+
+
+class HostedStoresAside:
+    """The host's one copy of a hosted agent's stores, kept beside them under the same hosted root.
+
+    The copy stays inside the profile's opaque agent root, with the same scope
+    and permissions as the stores it copies, and outside the agent's state
+    home, its workspaces and the directories the agent empties at start. It is
+    written under a partial name and renamed once every file is flushed, so a
+    complete copy is never confused with an interrupted one.
+    """
+
+    def __init__(self, hosted_root: Path) -> None:
+        """Bind the hosted root whose stores this copy is of."""
+        self._stores = hosted_root.joinpath(*_HOSTED_STORES)
+        self._aside = hosted_root / STORES_ASIDE
+        self._partial = hosted_root / _STORES_ASIDE_PARTIAL
+
+    def clear_partial(self) -> None:
+        """Remove an unfinished copy left by an interrupted start; no migrate ran after it."""
+        if self._partial.exists() or self._partial.is_symlink():
+            shutil.rmtree(self._partial)
+
+    def kept(self) -> bool:
+        """Whether a complete copy exists."""
+        return self._aside.exists() or self._aside.is_symlink()
+
+    def keep(self) -> None:
+        """Copy the stores aside, flush every file, and publish the copy under its complete name."""
+        if self.kept():
+            raise FileExistsError(STORES_ASIDE)
+        if not self._stores.is_dir() or self._stores.is_symlink():
+            raise NotADirectoryError(_HOSTED_STORES[-1])
+        # A link inside the store directory is copied as a link, never followed out of the profile's tree.
+        shutil.copytree(self._stores, self._partial, symlinks=True, copy_function=_copy_durably)
+        self._partial.rename(self._aside)
+
+    def discard(self) -> None:
+        """Remove the complete copy."""
+        if self.kept():
+            shutil.rmtree(self._aside)
+
+
+def _copy_durably(source: str, destination: str) -> str:
+    copied = shutil.copy2(source, destination)
+    with open(copied, "rb+") as handle:
+        os.fsync(handle.fileno())
+    return str(copied)

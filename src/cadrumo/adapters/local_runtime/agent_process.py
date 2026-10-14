@@ -1,4 +1,4 @@
-"""Contained agent trees reached only through private standard pipes."""
+"""Contained agent trees reached only through private standard pipes, served or run once."""
 
 from __future__ import annotations
 
@@ -12,11 +12,15 @@ from typing import BinaryIO, Final
 
 from ...application.agent_host.controller import AgentHostError, AgentHostRefusal, AgentProcess
 from ...application.agent_host.native_refusal import STANDARD_ERROR_TAIL_BYTES
+from ...application.agent_host.store_lifecycle import AgentInvocationResult
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 _STANDARD_ERROR_CHUNK_BYTES: Final = 4096
 _STANDARD_ERROR_RELEASE_SECONDS: Final = 1.0
+_OUTPUT_SETTLE_SECONDS: Final = 2.0
+"""How long an invocation that has exited is given to finish delivering its standard output."""
+_INVOCATION_TERMINATE_SECONDS: Final = 10.0
 
 
 class _StandardErrorTail:
@@ -207,4 +211,89 @@ class WindowsAgentProcessLauncher:
             finally:
                 for stream in (standard_input, standard_output, standard_error):
                     stream.close()
+            raise
+
+
+class _StandardOutput:
+    """An invocation's standard output, read to its end or one byte past the bound."""
+
+    def __init__(self, stream: BinaryIO, *, limit: int) -> None:
+        self._stream = stream
+        self._limit = limit
+        self._data = bytearray()
+        self._thread = Thread(target=self._read, name="agent-invocation-output", daemon=True)
+        self._thread.start()
+
+    def collected(self, *, timeout: float) -> bytes:
+        """Wait for the output to end, up to the bound, and return what arrived."""
+        self._thread.join(timeout)
+        return bytes(self._data)
+
+    def _read(self) -> None:
+        try:
+            with contextlib.suppress(OSError, ValueError):
+                while len(self._data) <= self._limit:
+                    chunk = self._stream.read(_STANDARD_ERROR_CHUNK_BYTES)
+                    if not chunk:
+                        break
+                    self._data += chunk
+                del self._data[self._limit + 1 :]
+        finally:
+            with contextlib.suppress(OSError):
+                self._stream.close()
+
+
+class WindowsAgentInvocationRunner:
+    """Run one agent invocation in a fresh kill-on-close job and end the whole job afterwards."""
+
+    def run(
+        self,
+        *,
+        executable: Path,
+        arguments: Sequence[str],
+        directory: Path,
+        environment: Mapping[str, str],
+        timeout: float,
+        output_limit: int,
+    ) -> AgentInvocationResult:
+        """Start the tree with no standard input, wait for it to the bound, then end every member.
+
+        A tree still running at the bound is ended and reported with no
+        status. Its standard error is drained and discarded. A job whose end
+        cannot be confirmed raises, so the caller learns nothing it could take
+        for an outcome.
+        """
+        if sys.platform != "win32":
+            raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED)
+        scope = WindowsProcessScope()
+        try:
+            process, standard_input, standard_output, standard_error = scope.launch_with_standard_pipes(
+                executable=executable, arguments=arguments, directory=directory, environment=environment
+            )
+        except BaseException:
+            scope.terminate()
+            raise
+        streams = (standard_input, standard_output, standard_error)
+        try:
+            standard_input.close()
+            errors = _StandardErrorTail(standard_error, limit=STANDARD_ERROR_TAIL_BYTES)
+            output = _StandardOutput(standard_output, limit=output_limit)
+            try:
+                status: int | None = process.wait(timeout=timeout)
+            except RuntimeRefusalError as error:
+                if error.reason is not RuntimeRefusalCode.DEADLINE_EXCEEDED:
+                    raise
+                status = None
+            # The job ends whether or not the invocation exited: a descendant may still hold the stores.
+            scope.terminate(timeout=_INVOCATION_TERMINATE_SECONDS)
+            collected = output.collected(timeout=_OUTPUT_SETTLE_SECONDS)
+            errors.release(timeout=_STANDARD_ERROR_RELEASE_SECONDS)
+            return AgentInvocationResult(status=status, standard_output=collected if status is not None else b"")
+        except BaseException:
+            try:
+                scope.terminate(timeout=_INVOCATION_TERMINATE_SECONDS)
+            finally:
+                for stream in streams:
+                    with contextlib.suppress(OSError):
+                        stream.close()
             raise

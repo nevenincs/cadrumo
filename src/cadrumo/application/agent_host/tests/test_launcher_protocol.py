@@ -20,6 +20,9 @@ _EXPECTED = {
     AgentHostRefusal.NOT_READY: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.AGENT_REFUSED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.ALREADY_RUNNING: AgentLauncherRefusal.SERVICE_FAILED,
+    AgentHostRefusal.AGENT_INCOMPATIBLE: AgentLauncherRefusal.SERVICE_INCOMPATIBLE,
+    AgentHostRefusal.STORES_NEWER: AgentLauncherRefusal.SERVICE_INCOMPATIBLE,
+    AgentHostRefusal.STORES_UNPREPARED: AgentLauncherRefusal.SERVICE_FAILED,
 }
 
 

@@ -7,7 +7,9 @@ authorizes after its preflight. The provider credentials are resolved by the
 profile worker and written only into the agent's standard-input frame; no
 client ever receives one. The tree is bound to the asking session's exact
 lease and ends with it, through the same retirement funnel that ends the
-session.
+session. Before the gateway starts, the agent's own store invocations bring
+the hosted root's stores to its build, with the gateway's program and
+environment, while the profile holds no other agent tree.
 """
 
 from __future__ import annotations
@@ -18,9 +20,11 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
-from ...adapters.local_runtime.agent_process import WindowsAgentProcessLauncher
+from ...adapters.local_runtime.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from ...adapters.local_runtime.agent_programs import (
+    AGENT_COMMAND_LINE,
     AgentProgramRefusalError,
+    HostedStoresAside,
     agent_image,
     hosted_relay,
     profile_agent_root,
@@ -45,6 +49,7 @@ from ...application.agent_host.launcher_protocol import (
     AgentLauncherRefusal,
     launcher_refusal_for,
 )
+from ...application.agent_host.store_lifecycle import AgentInvocationRunner, AgentStoreLifecycle
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.agent_host import RuntimeAgentRefused, RuntimeAgentStart, RuntimeAgentStarted
 from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
@@ -153,6 +158,7 @@ class ProfileConnectionAgentMixin:
     """Start, bind and retire the hosted agent of a person's session."""
 
     _agent_launcher: AgentProcessLauncher
+    _agent_invocations: AgentInvocationRunner = WindowsAgentInvocationRunner()
 
     def agent(
         self: RuntimeProfileConnections,
@@ -237,6 +243,31 @@ class ProfileConnectionAgentMixin:
         ):
             # One agent tree per signed-in profile: a second start is refused, never shared.
             return self._agent_refused(context, request, AgentLauncherRefusal.SERVICE_FAILED)
+        launch = AgentLaunch(
+            executable=image.executable,
+            arguments=image.arguments,
+            directory=image.directory,
+            environment=agent_launch_environment(
+                storage_root=self.root, agent_root=agent_root, relay=relay, received=os.environ
+            ),
+        )
+        stores = AgentStoreLifecycle(
+            runner=self._agent_invocations,
+            launch=launch,
+            command_line=AGENT_COMMAND_LINE,
+            aside=HostedStoresAside(agent_root),
+            quiesced=lambda: self._agents.quiesced(profile_id=request.profile_id, session_id=request.session_id),
+        )
+        try:
+            # Under the profile's one reservation and before the bearer is read, so no secret waits on a migrate.
+            with self._agents.preparing(request.profile_id):
+                stores.prepare()
+        except AgentHostError as error:
+            self._agents.release(request.session_id)
+            return self._agent_refused(context, request, launcher_refusal_for(error))
+        except BaseException:
+            self._agents.release(request.session_id)
+            raise
         try:
             write_document(
                 channel,
@@ -256,14 +287,7 @@ class ProfileConnectionAgentMixin:
         controller = AgentHostController(
             launcher=self._agent_launcher,
             credentials=source,
-            launch=AgentLaunch(
-                executable=image.executable,
-                arguments=image.arguments,
-                directory=image.directory,
-                environment=agent_launch_environment(
-                    storage_root=self.root, agent_root=agent_root, relay=relay, received=os.environ
-                ),
-            ),
+            launch=launch,
         )
         # Tracked before it starts, so a process of the tree is known as the agent's from its first moment.
         self._agents.track(

@@ -24,15 +24,35 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.adapters.local_runtime.agent_programs import PACKAGE_AGENT_VARIABLE, PACKAGE_RELAY_VARIABLE
+from cadrumo.adapters.local_runtime.agent_process import WindowsAgentInvocationRunner
+from cadrumo.adapters.local_runtime.agent_programs import (
+    AGENT_COMMAND_LINE,
+    PACKAGE_AGENT_VARIABLE,
+    PACKAGE_RELAY_VARIABLE,
+    STORES_ASIDE,
+    HostedStoresAside,
+    profile_agent_root,
+)
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.tests.agent_host_fixture import NATIVE_REFUSAL_SUBJECT
+from cadrumo.adapters.local_runtime.tests.agent_store_fixture import (
+    CHECKPOINT,
+    EXPECTED_CHECKPOINT,
+    EXPECTED_PRIMARY,
+    PRIMARY,
+    WRITE_AHEAD_LOG,
+    seed_stores,
+    store_directory,
+)
+from cadrumo.application.agent_host.controller import AgentHostError, AgentHostRefusal, AgentLaunch
 from cadrumo.application.agent_host.launch_environment import (
     AGENT_SLOTS,
     HOSTED_RELAY_VARIABLE,
     HOSTED_ROOT_VARIABLE,
+    agent_launch_environment,
 )
 from cadrumo.application.agent_host.launcher_protocol import AgentLauncherRefusal
+from cadrumo.application.agent_host.store_lifecycle import AgentStoreLifecycle, StoreLifecycleBounds
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.agent_host import RuntimeAgentRefused, RuntimeAgentStart, RuntimeAgentStarted
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus
@@ -45,9 +65,11 @@ from .agent_host_support import (
     FAKE_BEARER,
     FAKE_KEY,
     assert_no_secret_exposed,
+    invocations,
     launched,
     mark_lane_root,
     probe_result,
+    process_alive,
     received,
     stand_in_agent_image,
     stand_in_agent_source,
@@ -83,10 +105,15 @@ _RETIRED_PROGRAM_VARIABLES = ("CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE", "CADRUMO_AG
 
 
 def _packaged_agent(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, mode: str = "ready", probe: dict[str, object] | None = None
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    mode: str = "ready",
+    probe: dict[str, object] | None = None,
+    stores: dict[str, object] | None = None,
 ) -> tuple[Path, Path]:
     """Plant the stand-in agent image and name it and the relay as the runtime image's package values do."""
-    image, record = stand_in_agent_image(tmp_path, mode=mode, probe=probe)
+    image, record = stand_in_agent_image(tmp_path, mode=mode, probe=probe, stores=stores)
     monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
     monkeypatch.setenv(PACKAGE_RELAY_VARIABLE, str(_RELAY))
     return image, record
@@ -450,3 +477,170 @@ def test_the_relay_in_the_agents_tree_acts_as_the_agent_under_the_lease_that_sta
         runtime.session(person, person_session, "human_sign_out")
         assert tree_reaped(record)
         assert runtime.leases() == ()
+
+
+def _verbs(record: Path) -> list[list[str]]:
+    verbs: list[list[str]] = []
+    for entry in invocations(record):
+        verb = entry["verb"]
+        assert isinstance(verb, list)
+        verbs.append([str(part) for part in verb])
+    return verbs
+
+
+def _stores(hosted_root: Path) -> dict[str, str]:
+    stores = store_directory(hosted_root)
+    if not stores.is_dir():
+        return {}
+    return {path.name: path.read_text(encoding="utf-8") for path in sorted(stores.iterdir())}
+
+
+_SETUP_SEQUENCE = [["version", "--json"], ["stores-state"], ["setup"], ["stores-state"]]
+
+
+@pytest.mark.usefixtures("development_key")
+def test_a_fresh_root_is_set_up_by_the_agents_own_invocations_in_the_gateways_environment_before_it_serves(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    image, record = _packaged_agent(tmp_path, monkeypatch)
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
+        assert _verbs(record) == _SETUP_SEQUENCE
+        served = received(record)["environment"]
+        hosted_root = profile_agent_root(runtime.root, runtime.profile_id)
+        for entry in invocations(record):
+            # The same program, directory and environment as the gateway it prepares.
+            assert Path(str(entry["executable"])) == image
+            assert Path(str(entry["directory"])).resolve() == hosted_root.resolve()
+            assert entry["environment"] == served
+        assert launched(record)["arguments"] == [*AGENT_COMMAND_LINE, "serve"]
+        assert _stores(hosted_root)[PRIMARY] == EXPECTED_PRIMARY
+        assert not (hosted_root / STORES_ASIDE).exists()
+
+
+@pytest.mark.usefixtures("development_key")
+def test_older_stores_are_copied_aside_then_migrated_and_the_copy_goes_once_they_read_current(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, record = _packaged_agent(tmp_path, monkeypatch)
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        hosted_root = profile_agent_root(runtime.root, runtime.profile_id)
+        seed_stores(hosted_root, primary="0001", checkpoint=EXPECTED_CHECKPOINT)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        assert isinstance(_start(runtime, agent, session_id), RuntimeAgentStarted)
+        assert _verbs(record) == [
+            ["version", "--json"],
+            ["stores-state"],
+            ["migrate", "--expect-from", "0001", "--expect-head", EXPECTED_PRIMARY],
+            ["stores-state"],
+        ]
+        # The migrate ran over stores whose complete copy, write-ahead log included, was already aside.
+        assert invocations(record)[2]["aside"] == sorted([PRIMARY, CHECKPOINT, WRITE_AHEAD_LOG])
+        assert _stores(hosted_root)[PRIMARY] == EXPECTED_PRIMARY
+        assert not (hosted_root / STORES_ASIDE).exists()
+        assert received(record)["providers"] == ["claude"]
+
+
+@pytest.mark.usefixtures("development_key")
+def test_newer_stores_are_a_downgrade_that_is_refused_as_incompatible_and_left_untouched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, record = _packaged_agent(tmp_path, monkeypatch)
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        hosted_root = profile_agent_root(runtime.root, runtime.profile_id)
+        seed_stores(hosted_root, primary="0003", checkpoint=EXPECTED_CHECKPOINT)
+        before = _stores(hosted_root)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        refused = _start(runtime, agent, session_id)
+        assert isinstance(refused, RuntimeAgentRefused), refused
+        assert refused.code is AgentLauncherRefusal.SERVICE_INCOMPATIBLE
+        assert _verbs(record) == [["version", "--json"], ["stores-state"]]
+        assert _stores(hosted_root) == before
+        assert not (record / "received.json").exists()
+
+
+@pytest.mark.usefixtures("development_key")
+@pytest.mark.parametrize(
+    "stores",
+    [pytest.param({"setup": "fail"}, id="setup-failed"), pytest.param({"malformed": "stores-state"}, id="malformed")],
+)
+def test_stores_that_cannot_be_brought_to_current_refuse_the_start_and_release_the_profile(
+    stores: dict[str, object], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, record = _packaged_agent(tmp_path, monkeypatch, stores=stores)
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        for _attempt in range(2):
+            # Each refusal released the profile's one reservation: the second start ran the sequence again.
+            refused = _start(runtime, agent, session_id)
+            assert isinstance(refused, RuntimeAgentRefused), refused
+            assert refused.code is AgentLauncherRefusal.SERVICE_FAILED
+        expected = _SETUP_SEQUENCE[:3] if stores.get("setup") == "fail" else _SETUP_SEQUENCE[:2]
+        assert _verbs(record) == expected * 2
+        assert not (record / "received.json").exists()
+
+
+@pytest.mark.usefixtures("development_key")
+def test_a_failed_migrate_keeps_the_copy_and_no_later_start_migrates_over_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, record = _packaged_agent(tmp_path, monkeypatch, stores={"migrate": "fail"})
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        mark_lane_root(runtime.root)
+        hosted_root = profile_agent_root(runtime.root, runtime.profile_id)
+        seed_stores(hosted_root, primary="0001", checkpoint=EXPECTED_CHECKPOINT)
+        original = _stores(hosted_root)
+        agent, session_id = _session(runtime, OperationFrontendProjection.AGENT_HOST)
+        for _attempt in range(2):
+            refused = _start(runtime, agent, session_id)
+            assert isinstance(refused, RuntimeAgentRefused), refused
+            assert refused.code is AgentLauncherRefusal.SERVICE_FAILED
+        verbs = [verb[0] for verb in _verbs(record)]
+        assert verbs == ["version", "stores-state", "migrate", "version", "stores-state"]
+        # The live stores were left half-way; the copy is the stores as they were before the migrate.
+        assert _stores(hosted_root) != original
+        aside = hosted_root / STORES_ASIDE
+        assert {path.name: path.read_text(encoding="utf-8") for path in aside.iterdir()} == original
+        assert not (record / "received.json").exists()
+
+
+def test_an_invocation_past_its_bound_is_ended_with_its_whole_tree_and_its_outcome_stays_unknown(
+    tmp_path: Path,
+) -> None:
+    image, record = stand_in_agent_image(tmp_path, stores={"migrate": "hang"})
+    hosted_root = tmp_path / "hosted-root"
+    hosted_root.mkdir()
+    seed_stores(hosted_root, primary="0001", checkpoint=EXPECTED_CHECKPOINT)
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage", agent_root=hosted_root, relay=_RELAY, received=os.environ
+    )
+    lifecycle = AgentStoreLifecycle(
+        runner=WindowsAgentInvocationRunner(),
+        launch=AgentLaunch(
+            executable=image, arguments=(*AGENT_COMMAND_LINE, "serve"), directory=hosted_root, environment=environment
+        ),
+        command_line=AGENT_COMMAND_LINE,
+        aside=HostedStoresAside(hosted_root),
+        quiesced=lambda: True,
+        bounds=StoreLifecycleBounds(migrate=5.0),
+    )
+    started = time.monotonic()
+    with pytest.raises(AgentHostError) as refused:
+        lifecycle.prepare()
+    assert refused.value.reason is AgentHostRefusal.STORES_UNPREPARED
+    assert time.monotonic() - started < 60
+    hung = invocations(record)[-1]
+    assert hung["verb"] == ["migrate", "--expect-from", "0001", "--expect-head", EXPECTED_PRIMARY]
+    pid = hung["pid"]
+    assert isinstance(pid, int)
+    assert not process_alive(pid, within=5)
+    # Whether the migrate changed anything is not known: the copy stays and no second migrate runs.
+    assert (hosted_root / STORES_ASIDE).is_dir()
+    with pytest.raises(AgentHostError):
+        lifecycle.prepare()
+    assert [verb[0] for verb in _verbs(record)].count("migrate") == 1

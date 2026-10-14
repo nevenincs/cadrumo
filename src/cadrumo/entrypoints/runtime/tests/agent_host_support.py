@@ -7,8 +7,9 @@ package in that environment's site-packages. The stand-in source tree has the
 development lane's shape: its own ``.venv`` interpreter and the same package at
 its top. In both, ``cadrumo_agent.cli.main``, the agent's declared command-line
 module, records how it was started and runs the shared agent peer fixture for
-``serve``. So the runtime's real launch path, containment and frame are
-exercised, and nothing of Cadrumo is importable inside the agent.
+``serve``, and the store fixture for the agent's one-shot store and version
+invocations. So the runtime's real launch path, containment, store sequence
+and frame are exercised, and nothing of Cadrumo is importable inside the agent.
 """
 
 from __future__ import annotations
@@ -21,8 +22,9 @@ import time
 from pathlib import Path
 from typing import Final
 
-from cadrumo.adapters.local_runtime.tests import agent_host_fixture
+from cadrumo.adapters.local_runtime.tests import agent_host_fixture, agent_store_fixture
 from cadrumo.application.agent_host.lane_root import LANE_MARK_KIND, LANE_MARK_NAME
+from cadrumo.application.agent_host.launch_environment import HOSTED_ROOT_VARIABLE
 
 FAKE_KEY: Final = "sk-test-NOT-A-REAL-KEY"
 FAKE_BEARER: Final = "bearer-test-NOT-A-REAL-TOKEN"
@@ -32,7 +34,12 @@ _STAND_IN_MAIN: Final = """\
 import json, os, runpy, subprocess, sys, threading
 from pathlib import Path
 
-config = json.loads((Path(__file__).resolve().parents[2] / "stand_in.json").read_text(encoding="utf-8"))
+config_path = Path(__file__).resolve().parents[2] / "stand_in.json"
+config = json.loads(config_path.read_text(encoding="utf-8"))
+if sys.argv[1:2] != ["serve"]:
+    sys.argv = [config["stores_fixture"], str(config_path), config["record"], *sys.argv[1:]]
+    runpy.run_path(config["stores_fixture"], run_name="__main__")
+    raise SystemExit(0)
 (Path(config["record"]) / "launch.json").write_text(
     json.dumps({"executable": sys.executable, "arguments": sys.orig_argv[1:], "directory": os.getcwd()}),
     encoding="utf-8",
@@ -60,12 +67,17 @@ runpy.run_path(config["fixture"], run_name="__main__")
 
 
 def stand_in_agent_image(
-    directory: Path, *, mode: str = "ready", probe: dict[str, object] | None = None
+    directory: Path,
+    *,
+    mode: str = "ready",
+    probe: dict[str, object] | None = None,
+    stores: dict[str, object] | None = None,
 ) -> tuple[Path, Path]:
     """Build a stand-in package agent image and return its ``bin/cadrumo-agent.exe`` and its record directory.
 
     ``probe`` names a program, its environment and its standard input, which
     the stand-in starts as soon as it runs: a process inside the agent's tree.
+    ``stores`` sets the store invocations' behaviours (see the store fixture).
     """
     image, record = directory / "agent-image", directory / "agent-record"
     environment = Path(sys.executable).parent
@@ -74,7 +86,7 @@ def stand_in_agent_image(
     executable = image / "bin" / "cadrumo-agent.exe"
     shutil.copy2(environment / "python.exe", executable)
     shutil.copy2(environment.parent / "pyvenv.cfg", image / "pyvenv.cfg")
-    _plant_agent_package(image / "Lib" / "site-packages", mode=mode, record=record, probe=probe)
+    _plant_agent_package(image / "Lib" / "site-packages", mode=mode, record=record, probe=probe, stores=stores)
     return executable, record
 
 
@@ -92,18 +104,30 @@ def stand_in_agent_source(
     record.mkdir()
     shutil.copy2(environment / "python.exe", source / ".venv" / "Scripts" / "python.exe")
     shutil.copy2(environment.parent / "pyvenv.cfg", source / ".venv" / "pyvenv.cfg")
-    _plant_agent_package(source, mode=mode, record=record, probe=probe)
+    _plant_agent_package(source, mode=mode, record=record, probe=probe, stores=None)
     return source, record
 
 
-def _plant_agent_package(root: Path, *, mode: str, record: Path, probe: dict[str, object] | None) -> None:
+def _plant_agent_package(
+    root: Path, *, mode: str, record: Path, probe: dict[str, object] | None, stores: dict[str, object] | None
+) -> None:
     """Write the stand-in ``cadrumo_agent`` package and its configuration under ``root``."""
     command_line = root / "cadrumo_agent" / "cli"
     command_line.mkdir(parents=True)
     (command_line / "__init__.py").write_text("", encoding="utf-8")
     (command_line / "main.py").write_text(_STAND_IN_MAIN, encoding="utf-8")
     (root / "stand_in.json").write_text(
-        json.dumps({"fixture": agent_host_fixture.__file__, "mode": mode, "record": str(record), "probe": probe}),
+        json.dumps(
+            {
+                "fixture": agent_host_fixture.__file__,
+                "stores_fixture": agent_store_fixture.__file__,
+                "hosted_root_variable": HOSTED_ROOT_VARIABLE,
+                "stores": {} if stores is None else stores,
+                "mode": mode,
+                "record": str(record),
+                "probe": probe,
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -113,6 +137,19 @@ def launched(record: Path) -> dict[str, object]:
     document: object = json.loads((record / "launch.json").read_text(encoding="utf-8"))
     assert isinstance(document, dict)
     return {str(key): value for key, value in document.items()}
+
+
+def invocations(record: Path) -> list[dict[str, object]]:
+    """Return each one-shot invocation the stand-in answered, in order: its verb, program and environment."""
+    path = record / "invocations.jsonl"
+    if not path.exists():
+        return []
+    entries: list[dict[str, object]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        document: object = json.loads(line)
+        assert isinstance(document, dict)
+        entries.append({str(key): value for key, value in document.items()})
+    return entries
 
 
 def mark_lane_root(root: Path) -> None:

@@ -13,7 +13,8 @@ revalidation reads deadlines and never refreshes idle time.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from threading import Event, Lock, Thread
 from typing import Final
@@ -68,6 +69,7 @@ class RuntimeAgentHosts:
         self._reapers: list[_Reaper] = []
         self._trees: list[tuple[AgentHostController, AgentTreeOwner]] = []
         self._closed = False
+        self._preparing: set[UUID] = set()
         self._timer: Thread | None = None
         self._timer_stop = Event()
 
@@ -75,6 +77,9 @@ class RuntimeAgentHosts:
         """Claim the profile's one agent for this session; ``False`` when the profile already has one."""
         with self._lock:
             if self._closed or any(agent.profile_id == profile_id for agent in self._bound.values()):
+                return False
+            if profile_id in self._preparing:
+                # The profile's stores are being brought to current for an earlier start.
                 return False
             if any(reaper.profile_id == profile_id and not reaper.done.is_set() for reaper in self._reapers):
                 return False
@@ -118,6 +123,39 @@ class RuntimeAgentHosts:
                 AgentTreeOwner(agent.profile_id, agent.session_id, agent.connection_id)
                 for agent in self._bound.values()
                 if agent.profile_id == profile_id
+            )
+
+    @contextmanager
+    def preparing(self, profile_id: UUID) -> Generator[None]:
+        """Hold the profile's stores for one start's store sequence; no other start of the profile is reserved.
+
+        The hold outlives the claim: a session that ends while its stores are
+        being prepared gives up its claim, but no new claim is admitted until
+        the sequence's processes are gone.
+        """
+        with self._lock:
+            self._preparing.add(profile_id)
+        try:
+            yield
+        finally:
+            with self._lock:
+                self._preparing.discard(profile_id)
+
+    def quiesced(self, *, profile_id: UUID, session_id: UUID) -> bool:
+        """Whether this session's claim is the profile's only agent and no tree of the profile exists.
+
+        A tree being reaped, or one whose stop could not be confirmed, may
+        still hold the agent's stores: the profile is then not quiet.
+        """
+        with self._lock:
+            claims = [agent for agent in self._bound.values() if agent.profile_id == profile_id]
+            if len(claims) != 1 or claims[0].session_id != session_id or claims[0].controller is not None:
+                return False
+            if any(owner.profile_id == profile_id for _tree, owner in self._trees):
+                return False
+            return not any(
+                reaper.profile_id == profile_id and (reaper.failed or not reaper.done.is_set())
+                for reaper in self._reapers
             )
 
     def is_current(self, session_id: UUID) -> bool:
