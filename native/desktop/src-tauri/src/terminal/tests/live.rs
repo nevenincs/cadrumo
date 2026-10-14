@@ -1202,16 +1202,13 @@ mod relocated {
         }
     }
 
-    /// The storage member the generated contract declares for the webview
-    /// profile.
-    fn webview_member() -> serde_json::Value {
-        contract()["locations"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|location| location["category"] == "desktop-webview")
-            .cloned()
-            .expect("the contract declares the desktop webview member")
+    /// The webview profile's place beneath the storage root, as the package
+    /// declares it for the desktop.
+    fn webview_location() -> String {
+        contract()["desktop_defaults"]["webview"]
+            .as_str()
+            .expect("the contract declares the desktop webview location")
+            .to_owned()
     }
 
     /// Resolves a launch with the parent's storage variables replaced by `pins`.
@@ -1248,7 +1245,7 @@ mod relocated {
     /// member beneath the explicit root, not under the development tool cache,
     /// and an absolute override of that member is honoured.
     #[tokio::test]
-    async fn the_webview_profile_and_window_state_live_in_the_declared_member() {
+    async fn the_webview_profile_and_window_state_live_at_the_declared_location() {
         use crate::shell::window_state::{self, Placement};
 
         let scratch = outside_project("webview");
@@ -1257,16 +1254,12 @@ mod relocated {
         let explicit = scratch.0.join("storage");
         let launch_directory = scratch.0.join("launch");
         fs::create_dir_all(&launch_directory).unwrap();
-        let member = webview_member();
+        let location = webview_location();
         let root = root_variable();
 
         let launch = resolve_pinned(&package_root, &launch_directory, &[(&root, &explicit)]).await;
         assert_eq!(launch.working_directory, explicit, "projected storage root");
-        assert_eq!(
-            launch.webview,
-            explicit.join(member["subpath"].as_str().unwrap()),
-            "webview profile"
-        );
+        assert_eq!(launch.webview, explicit.join(&location), "webview profile");
 
         // The window state round-trips through the record the shell opens there.
         let record = launch.webview.join(window_state::FILE);
@@ -1290,21 +1283,19 @@ mod relocated {
             [window_state::FILE]
         );
 
-        // The member is declared operator-overridable, so its absolute
-        // override moves the profile while the storage root stays put.
-        assert_eq!(member["override_policy"], "operator_overridable");
-        let variable = member["variable"].as_str().unwrap();
-        let elsewhere = scratch.0.join("elsewhere").join("profile");
-        let overridden = resolve_pinned(
-            &package_root,
-            &launch_directory,
-            &[(&root, &explicit), (variable, &elsewhere)],
-        )
-        .await;
+        // The webview is the package's own component: it follows the pinned
+        // storage root and no operator override relocates it on its own.
+        let elsewhere = scratch.0.join("elsewhere");
+        let relocated =
+            resolve_pinned(&package_root, &launch_directory, &[(&root, &elsewhere)]).await;
         assert_eq!(
-            overridden.working_directory, explicit,
+            relocated.working_directory, elsewhere,
             "projected storage root"
         );
-        assert_eq!(overridden.webview, elsewhere, "overridden webview profile");
+        assert_eq!(
+            relocated.webview,
+            elsewhere.join(&location),
+            "relocated webview profile"
+        );
     }
 }

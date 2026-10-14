@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:32fd1192caaff13b9bc683fe93294d4ed815a569b5373633998160789843502f'
+body_hash: 'sha256:2c21f268dccf3bb0ac96447d1610be41e8aa8c4b85d31ab469bd88757289d957'
 related:
   - "[[2026-10-13-canonical-environment-plan]]"
 ---
@@ -256,6 +256,8 @@ related:
 - `S10` `verify:` `just check-types` -> `pass`
 - `S10` `verify:` `uv run --no-sync ruff check` -> `pass`
 - `S10` `by:` `implementation-engineer-high`
+- `S06` `verify:` `cargo +1.96.0 clippy --all-targets -D warnings native/desktop/src-tauri with and without live-package-tests` -> `pass`
+- `S06` `verify:` `cargo +1.96.0 test --features live-package-tests --bin cadrumo --no-run (live test compiles)` -> `pass`
 
 ## Notes
 
@@ -285,3 +287,4 @@ related:
 - `S12` S12 .vaultspec/skills/cadrumo-start/references/build-cmake-and-packaging.md:15 still names the retired CMake selector; the gate does not scan .vaultspec and the skill is user-owned, so it is reported, not edited.
 - `S12` S12 dev/quality failures unrelated to this Step: `test_suite_gate_table` (check-provider-catalog has no suite row; check-dependency-declarations arguments differ), `test_doc_privacy` (home paths in .vault audits and research), `test_production_scan_surface_has_no_orphans` `(contract_manifest.py,` `_provider_command_specs.py).` `dev/tests/test_native_build_recipes.py` fails on the windows-installers-x64 preset having no cacheVariables.
 - `S10` Commits 43962530ae and 64960fec66. Remaining suite failures are unrelated to S10 and predate it: storage liveness `posix_endpoint` claim, sha256 adoption, tty probe, `agent_programs` literal path (S09), `dead_code` population, playwright doctor, keychain receipt recovery, docs build and localization, plus the 2 known `test_authority_build_hook` cases. check-import-boundaries kept all 15 contracts and loaded 4688 modules; its verdict was unavailable only because other sessions changed the tree mid-run. Python child launches no longer clear interpreter or loader classes; the authority root stays relayed as the CLI's own setting; the POSIX worker containment baseline is kept. docs/reference/environment-overrides.md regenerated with `dev.docs.env_reference` after the webview setting was removed.
+- `S06` Follow-up after the CLI taxonomy dropped the desktop webview member: the live webview test reads the location from `desktop_defaults` under the pinned root and checks that relocating the root moves the webview; it needs a real package `(CADRUMO_DESKTOP_PACKAGE_ROOT)` to run and was compiled, not run, here
