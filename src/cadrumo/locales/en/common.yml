@@ -921,7 +921,6 @@ desktop:
     show: Show the bottom panel
   providers:
     add_key: Add key
-    add_token: Add token
     base_url_default: Leave it empty to use {url}.
     base_url_label: Base URL
     base_url_required: 'Required: this provider has no default.'
@@ -953,6 +952,7 @@ desktop:
     reason_sign_in_with_provider_tool: Sign in with {provider}'s own app first.
     refresh: Refresh
     refused_base_url_rejected: That base URL can't be used.
+    refused_catalog_unavailable: Cadrumo couldn't read the agent's providers.
     refused_invalid_key_format: That doesn't look like a key for this provider.
     refused_not_signed_in: Sign in to change keys.
     refused_person_act_required: Keys can only be changed by you, here.
@@ -960,7 +960,6 @@ desktop:
     refused_revision_conflict: This changed somewhere else. The latest is shown; try
       again.
     replace_key: Replace key
-    replace_token: Replace token
     reset: Reset
     reset_note: Reset forgets what was set for it, as if it had never been set up.
     reset_note_development: Reset forgets what was set for it; in this development
@@ -973,7 +972,6 @@ desktop:
     source_profile: Key saved in this profile
     through: Through {url}
     title: AI providers
-    token_label: '{provider} OAuth token'
   rail:
     aeat: AEAT website
     agent: Agent

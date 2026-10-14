@@ -944,7 +944,6 @@ desktop:
     show: Mostra el panell inferior
   providers:
     add_key: Afegeix una clau
-    add_token: Afegeix un testimoni
     base_url_default: Deixa-la buida per fer servir {url}.
     base_url_label: URL base
     base_url_required: 'Obligatòria: aquest proveïdor no en té cap per defecte.'
@@ -979,6 +978,7 @@ desktop:
       {provider}.
     refresh: Actualitza
     refused_base_url_rejected: Aquesta URL base no es pot fer servir.
+    refused_catalog_unavailable: El Cadrumo no ha pogut llegir els proveïdors de l'agent.
     refused_invalid_key_format: Això no sembla una clau d'aquest proveïdor.
     refused_not_signed_in: Inicia la sessió per canviar les claus.
     refused_person_act_required: Només tu pots canviar les claus, aquí.
@@ -986,7 +986,6 @@ desktop:
     refused_revision_conflict: Això ha canviat en un altre lloc. Es mostra el més
       recent; torna-ho a provar.
     replace_key: Substitueix la clau
-    replace_token: Substitueix el testimoni
     reset: Restableix
     reset_note: Restablir oblida el que s'hi havia configurat, com si mai no s'hagués
       configurat.
@@ -1001,7 +1000,6 @@ desktop:
     source_profile: Clau desada en aquest perfil
     through: A través de {url}
     title: Proveïdors d'IA
-    token_label: Testimoni OAuth de {provider}
   rail:
     aeat: Seu de l'AEAT
     agent: Agent

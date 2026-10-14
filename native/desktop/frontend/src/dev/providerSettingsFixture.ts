@@ -35,7 +35,6 @@ async function revisionOf(id: string, change: number): Promise<string> {
 /** How each made-up lane signs in; a lane not named here takes a key. */
 const AUTH: Record<string, ProviderSettingsRecord["auth_kind"]> = {
   gamma_cli: "provider_sign_in_only",
-  alpha_cli: "oauth_token_or_provider_sign_in",
   beta_cli: "provider_sign_in_only",
   gateway_cli: "api_key_with_base_url",
   relay_cli: "api_key_with_base_url",
@@ -176,10 +175,7 @@ export function providerSettingsFixture({
       return await keep({
         ...withoutAddress(record),
         ...(address ? { base_url: address } : {}),
-        mode:
-          record.auth_kind === "oauth_token_or_provider_sign_in"
-            ? "oauth_token"
-            : "key",
+        mode: "key",
         available: true,
         source: "profile",
         readiness: "not_verified",

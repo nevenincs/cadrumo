@@ -69,6 +69,8 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.providers.refused_base_url_rejected");
     case "revision_conflict":
       return t("desktop.providers.refused_revision_conflict");
+    case "catalog_unavailable":
+      return t("desktop.providers.refused_catalog_unavailable");
     case "person_act_required":
       return t("desktop.providers.refused_person_act_required");
     default:
@@ -141,7 +143,6 @@ function SecretForm({
   // A gateway without a default address needs one written.
   const needsAddress = gateway && !provider.defaultBaseUrl;
   const [addressFilled, setAddressFilled] = useState(Boolean(provider.baseUrl));
-  const token = provider.authKind === "oauth_token_or_provider_sign_in";
   const held = !filled || (needsAddress && !addressFilled) || saving;
 
   const save = (event: FormEvent) => {
@@ -162,9 +163,7 @@ function SecretForm({
     <form className="grid gap-3" onSubmit={save}>
       <Field>
         <FieldLabel htmlFor={secretId}>
-          {token
-            ? t("desktop.providers.token_label", { provider: provider.name })
-            : t("desktop.providers.key_label", { provider: provider.name })}
+          {t("desktop.providers.key_label", { provider: provider.name })}
         </FieldLabel>
         <Input
           ref={secret}
@@ -241,15 +240,10 @@ function WayRow({
   const headingId = useId();
   const [editing, setEditing] = useState(false);
   const signInOnly = provider.authKind === "provider_sign_in_only";
-  const token = provider.authKind === "oauth_token_or_provider_sign_in";
   const secretAction =
     provider.mode === "key" || provider.mode === "oauth_token"
-      ? token
-        ? t("desktop.providers.replace_token")
-        : t("desktop.providers.replace_key")
-      : token
-        ? t("desktop.providers.add_token")
-        : t("desktop.providers.add_key");
+      ? t("desktop.providers.replace_key")
+      : t("desktop.providers.add_key");
   const sentence = standing(t, provider);
   const why = reasonWords(t, provider);
   const address =

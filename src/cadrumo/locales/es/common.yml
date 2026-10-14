@@ -951,7 +951,6 @@ desktop:
     show: Mostrar el panel inferior
   providers:
     add_key: Añadir clave
-    add_token: Añadir token
     base_url_default: Déjala vacía para usar {url}.
     base_url_label: URL base
     base_url_required: 'Obligatoria: este proveedor no tiene una por defecto.'
@@ -985,6 +984,7 @@ desktop:
       {provider}.
     refresh: Actualizar
     refused_base_url_rejected: Esa URL base no se puede usar.
+    refused_catalog_unavailable: Cadrumo no ha podido leer los proveedores del agente.
     refused_invalid_key_format: Eso no parece una clave de este proveedor.
     refused_not_signed_in: Inicia sesión para cambiar las claves.
     refused_person_act_required: Solo tú puedes cambiar las claves, aquí.
@@ -992,7 +992,6 @@ desktop:
     refused_revision_conflict: Esto ha cambiado en otro sitio. Se muestra lo último;
       vuelve a intentarlo.
     replace_key: Sustituir clave
-    replace_token: Sustituir token
     reset: Restablecer
     reset_note: Restablecer olvida lo que se configuró, como si nunca se hubiera configurado.
     reset_note_development: Restablecer olvida lo que se configuró; en esta versión
@@ -1006,7 +1005,6 @@ desktop:
     source_profile: Clave guardada en este perfil
     through: A través de {url}
     title: Proveedores de IA
-    token_label: Token OAuth de {provider}
   rail:
     aeat: Sede de la AEAT
     agent: Agente

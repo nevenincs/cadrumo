@@ -937,7 +937,6 @@ desktop:
     show: Alsó panel megjelenítése
   providers:
     add_key: Kulcs hozzáadása
-    add_token: Token hozzáadása
     base_url_default: 'Hagyd üresen, és ezt használjuk: {url}.'
     base_url_label: Alap-URL
     base_url_required: 'Kötelező: ennek a szolgáltatónak nincs alapértelmezett címe.'
@@ -972,6 +971,7 @@ desktop:
       saját alkalmazásával.
     refresh: Frissítés
     refused_base_url_rejected: Ez az alap-URL nem használható.
+    refused_catalog_unavailable: A Cadrumo nem tudta beolvasni az ügynök szolgáltatóit.
     refused_invalid_key_format: Ez nem tűnik ennek a szolgáltatónak a kulcsának.
     refused_not_signed_in: Jelentkezz be a kulcsok módosításához.
     refused_person_act_required: A kulcsokat csak te módosíthatod, itt.
@@ -979,7 +979,6 @@ desktop:
     refused_revision_conflict: Ez máshol megváltozott. A legfrissebb látható; próbáld
       újra.
     replace_key: Kulcs cseréje
-    replace_token: Token cseréje
     reset: Visszaállítás
     reset_note: A visszaállítás elfelejti, amit beállítottál, mintha soha nem lett
       volna beállítva.
@@ -994,7 +993,6 @@ desktop:
     source_profile: A kulcs ebben a profilban van mentve
     through: 'Ezen keresztül: {url}'
     title: MI-szolgáltatók
-    token_label: OAuth-token ({provider})
   rail:
     aeat: Az AEAT honlapja
     agent: Ügynök

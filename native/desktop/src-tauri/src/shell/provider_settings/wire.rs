@@ -23,6 +23,7 @@ pub enum Refusal {
     BaseUrlRejected,
     RevisionConflict,
     CommittedReadbackFailed,
+    CatalogUnavailable,
     PersonActRequired,
     Unknown,
 }
@@ -62,7 +63,6 @@ pub enum Transport {
 pub enum AuthKind {
     ApiKey,
     ApiKeyWithBaseUrl,
-    OauthTokenOrProviderSignIn,
     ProviderSignInOnly,
 }
 
@@ -112,6 +112,7 @@ pub enum Reason {
     BaseUrlRejected,
     RevisionConflict,
     CommittedReadbackFailed,
+    CatalogUnavailable,
     PersonActRequired,
     Unknown,
     NotConfigured,
@@ -271,7 +272,7 @@ mod tests {
 
     fn api() -> Value {
         json!({
-            "id": "anthropic", "display_name": "Anthropic", "transport": "api",
+            "id": "alpha_api", "display_name": "Alpha API", "transport": "api",
             "auth_kind": "api_key", "consumers": ["assistant"], "mode": "key",
             "available": true, "source": "profile", "readiness": "not_verified",
             "reason": null, "base_url": null, "default_base_url": null,
@@ -281,7 +282,7 @@ mod tests {
 
     fn cli() -> Value {
         json!({
-            "id": "codex", "display_name": "Codex", "transport": "cli",
+            "id": "beta_cli", "display_name": "Beta CLI", "transport": "cli",
             "auth_kind": "provider_sign_in_only", "consumers": ["assistant"],
             "mode": "provider_sign_in", "available": false, "source": "none",
             "readiness": "sign_in_required", "reason": "sign_in_with_provider_tool",
@@ -365,7 +366,7 @@ mod tests {
             ("readiness", json!("healthy")),
             ("reason", json!("because")),
             ("available", json!("yes")),
-            ("id", json!("Anthropic")),
+            ("id", json!("Alpha_api")),
             ("id", json!("-x")),
             ("display_name", json!("")),
             ("display_name", json!("Any\nthing")),
@@ -400,7 +401,7 @@ mod tests {
         }
         // The flag is required, and every row must be an object.
         assert!(status(success(json!({"providers": []}))).is_err());
-        assert!(status(success(envelope(&[json!("anthropic")]))).is_err());
+        assert!(status(success(envelope(&[json!("alpha_api")]))).is_err());
     }
 
     #[test]
@@ -466,18 +467,18 @@ mod tests {
 
     #[test]
     fn a_change_answers_with_the_providers_new_entry_and_only_that_provider() {
-        let entry = changed(success(api()), "anthropic").unwrap();
-        assert_eq!(entry.id, "anthropic");
+        let entry = changed(success(api()), "alpha_api").unwrap();
+        assert_eq!(entry.id, "alpha_api");
         assert_eq!(
-            failed(changed(success(api()), "openai"))["code"],
+            failed(changed(success(api()), "gamma_api"))["code"],
             "read_failed"
         );
         assert_eq!(
-            failed(changed(success(json!({"id": "anthropic"})), "anthropic"))["code"],
+            failed(changed(success(json!({"id": "alpha_api"})), "alpha_api"))["code"],
             "read_failed"
         );
         assert_eq!(
-            failed(changed(success(envelope(&[api()])), "anthropic"))["code"],
+            failed(changed(success(envelope(&[api()])), "alpha_api"))["code"],
             "read_failed"
         );
     }
@@ -491,12 +492,13 @@ mod tests {
             "base_url_rejected",
             "revision_conflict",
             "committed_readback_failed",
+            "catalog_unavailable",
             "person_act_required",
             "unknown",
         ] {
             let refused = json!({"refused": code});
             assert_eq!(
-                failed(changed(success(refused.clone()), "anthropic")),
+                failed(changed(success(refused.clone()), "alpha_api")),
                 json!({"code": code})
             );
             assert_eq!(failed(status(success(refused))), json!({"code": code}));
@@ -512,10 +514,10 @@ mod tests {
             json!({"refused": null}),
             json!({"refused": 7}),
             json!({"refused": ["unknown"]}),
-            json!({"refused": "unknown", "id": "anthropic"}),
+            json!({"refused": "unknown", "id": "alpha_api"}),
         ] {
             assert_eq!(
-                failed(changed(success(refused.clone()), "anthropic"))["code"],
+                failed(changed(success(refused.clone()), "alpha_api"))["code"],
                 "read_failed",
                 "{refused}"
             );
@@ -542,8 +544,16 @@ mod tests {
             json!({"code": "profile_locked"})
         );
         assert_eq!(
-            failed(changed(row("revision_conflict"), "anthropic")),
+            failed(changed(row("revision_conflict"), "alpha_api")),
             json!({"code": "revision_conflict"})
+        );
+        assert_eq!(
+            failed(status(row("catalog_unavailable"))),
+            json!({"code": "catalog_unavailable"})
+        );
+        assert_eq!(
+            failed(changed(row("catalog_unavailable"), "alpha_api")),
+            json!({"code": "catalog_unavailable"})
         );
         // A code the contract does not list is not guessed at.
         for code in [
@@ -566,7 +576,7 @@ mod tests {
 
     #[test]
     fn identifiers_and_revisions_are_safe_command_line_words() {
-        for id in ["anthropic", "zai", "qwen", "p1", "open_ai"] {
+        for id in ["alpha_api", "beta", "gamma", "p1", "delta_api"] {
             assert!(is_provider_id(id), "{id}");
         }
         let long = "a".repeat(41);

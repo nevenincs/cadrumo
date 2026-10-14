@@ -60,6 +60,7 @@ export type ProviderSettingsRefusal =
   | "base_url_rejected"
   | "revision_conflict"
   | "committed_readback_failed"
+  | "catalog_unavailable"
   | "person_act_required"
   | "unknown";
 

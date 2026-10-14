@@ -348,7 +348,7 @@ mod tests {
     const KEY: &str = "sk-live-0123456789-not-a-real-key";
 
     fn target() -> Target {
-        Target::new("anthropic", &"0".repeat(64)).unwrap()
+        Target::new("alpha_api", &"0".repeat(64)).unwrap()
     }
 
     fn headers(pairs: &[(&str, &str)]) -> HeaderMap {
@@ -367,7 +367,7 @@ mod tests {
     }
 
     fn named() -> [(&'static str, &'static str); 2] {
-        [(PROVIDER_HEADER, "anthropic"), (REVISION_HEADER, "absent")]
+        [(PROVIDER_HEADER, "alpha_api"), (REVISION_HEADER, "absent")]
     }
 
     fn refused(failure: CommandFailure) -> serde_json::Value {
@@ -389,7 +389,7 @@ mod tests {
                 "config",
                 "provider",
                 "set",
-                "anthropic",
+                "alpha_api",
                 "--expected-revision",
                 revision.as_str(),
                 "--secrets-stdin"
@@ -404,7 +404,7 @@ mod tests {
                     "config",
                     "provider",
                     word,
-                    "anthropic",
+                    "alpha_api",
                     "--expected-revision",
                     revision.as_str()
                 ]
@@ -449,23 +449,23 @@ mod tests {
     #[test]
     fn a_request_names_its_provider_and_revision_once_and_one_base_url_instruction() {
         let both = [
-            (PROVIDER_HEADER, "anthropic"),
+            (PROVIDER_HEADER, "alpha_api"),
             (REVISION_HEADER, "absent"),
             (BASE_URL_HEADER, "https://gateway.example"),
             (CLEAR_BASE_URL_HEADER, "1"),
         ];
         let bad_clear = [
-            (PROVIDER_HEADER, "anthropic"),
+            (PROVIDER_HEADER, "alpha_api"),
             (REVISION_HEADER, "absent"),
             (CLEAR_BASE_URL_HEADER, "0"),
         ];
         let requests: [&[(&str, &str)]; 8] = [
             &[],
-            &[(PROVIDER_HEADER, "anthropic")],
+            &[(PROVIDER_HEADER, "alpha_api")],
             &[(REVISION_HEADER, "absent")],
-            &[(PROVIDER_HEADER, "Anthropic"), (REVISION_HEADER, "absent")],
+            &[(PROVIDER_HEADER, "Alpha_api"), (REVISION_HEADER, "absent")],
             &[(PROVIDER_HEADER, "-x"), (REVISION_HEADER, "absent")],
-            &[(PROVIDER_HEADER, "anthropic"), (REVISION_HEADER, "-1")],
+            &[(PROVIDER_HEADER, "alpha_api"), (REVISION_HEADER, "-1")],
             &both,
             &bad_clear,
         ];
@@ -588,13 +588,13 @@ mod tests {
 
     #[test]
     fn remove_and_reset_admit_only_a_known_shape_of_provider_and_revision() {
-        assert!(Target::new("anthropic", "absent").is_ok());
+        assert!(Target::new("alpha_api", "absent").is_ok());
         for (provider, revision) in [
             ("", "absent"),
-            ("anthropic", ""),
+            ("alpha_api", ""),
             ("--help", "absent"),
-            ("anthropic", "--help"),
-            ("anthropic", "a b"),
+            ("alpha_api", "--help"),
+            ("alpha_api", "a b"),
             ("anthropic x", "absent"),
         ] {
             assert_eq!(
@@ -638,7 +638,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            refused(wire::changed(outcome, "anthropic").unwrap_err()),
+            refused(wire::changed(outcome, "alpha_api").unwrap_err()),
             serde_json::json!({"code": "revision_conflict"})
         );
     }
