@@ -22,6 +22,7 @@ from ..runtime_wheelhouse_contract import target_platform
 from .agent import locked_requirements
 from .agent_runtime import stage_agent_runtime
 from .build_log import BuildLog, display_path
+from .build_paths import build_paths
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
 from .hashing import digest
@@ -264,6 +265,12 @@ def assemble(
     if bootstrap.count("LAYOUT = {}") != 1:
         raise ValueError("Missing bootstrap layout projection marker")
     bootstrap = bootstrap.replace("LAYOUT = {}", f"LAYOUT = {contract!r}")
+    generated = build_paths(binary_dir)["generated"] / "contract.json"
+    package_fixed = json.loads(generated.read_text(encoding="utf-8"))["application_environment"]["package_fixed"]
+    marker = "PACKAGE_FIXED_ENVIRONMENT_NAMES = ()"
+    if bootstrap.count(marker) != 1:
+        raise ValueError("Missing bootstrap fixed environment projection marker")
+    bootstrap = bootstrap.replace(marker, f"PACKAGE_FIXED_ENVIRONMENT_NAMES = {tuple(sorted(package_fixed))!r}")
     with timings.phase("stdlib-bytecode-zip") if timings is not None else nullcontext():
         bundle_stdlib(
             python / contract["sdk"]["stdlib"],

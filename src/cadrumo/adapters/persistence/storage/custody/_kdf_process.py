@@ -32,6 +32,7 @@ def launch_worker(
         request_read=request_read,
         result_write=result_write,
     )
+    environment_keys = _environment_keys(launch_kwargs)
     if sys.platform == "win32":
         job = _WindowsJob.create()
         process: subprocess.Popen[bytes] | None = None
@@ -48,13 +49,18 @@ def launch_worker(
             raise
         finally:
             clear_worker_handle_inheritance(request_read=request_read, result_write=result_write)
-        return process, job, _environment_keys(launch_kwargs)
+        return process, job, environment_keys
     process = _launch_worker_process(command, launch_kwargs)
-    return process, None, _environment_keys(launch_kwargs)
+    return process, None, environment_keys
 
 
 def _environment_keys(launch_kwargs: dict[str, object]) -> frozenset[str]:
-    return frozenset(cast("dict[str, str]", launch_kwargs["env"]))
+    # Native hosts pin these package-declared names after receiving our neutral
+    # environment. The bootstrap projects names only, never publisher values.
+    fixed = getattr(sys, "cadrumo_build", {}).get("fixed_environment_names", ())
+    if not isinstance(fixed, tuple) or not all(isinstance(name, str) for name in fixed):
+        raise _supervision_refusal()
+    return frozenset(cast("dict[str, str]", launch_kwargs["env"])) | frozenset(cast("tuple[str, ...]", fixed))
 
 
 def _launch_worker_process(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:

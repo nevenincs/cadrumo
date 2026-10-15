@@ -14,6 +14,7 @@ from typing import override
 _cadrumo_native = importlib.import_module("_cadrumo_native")
 
 LAYOUT = {}
+PACKAGE_FIXED_ENVIRONMENT_NAMES = ()
 
 
 def _inside(root, relative):
@@ -188,6 +189,7 @@ def install():
     """Apply explicit wheel paths and retain native search handles until exit."""
     root = _package_root()
     verify()
+    vars(sys)["cadrumo_build"]["fixed_environment_names"] = PACKAGE_FIXED_ENVIRONMENT_NAMES
     manifest = json.loads(_inside(root, LAYOUT["files"]["native_manifest"]).read_text(encoding="utf-8"))
     _cadrumo_native.prepare(root, manifest)
     path_file = _inside(root, LAYOUT["files"]["path_file"])
