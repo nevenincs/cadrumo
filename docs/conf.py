@@ -6,6 +6,7 @@ import ast
 import os
 import warnings
 from importlib import import_module
+from importlib.util import resolve_name
 
 from cadrumo.core.toml import load_toml
 
@@ -1394,6 +1395,109 @@ def _build_py_suffix_index(env):
     return index
 
 
+def _api_source_path(module_name: str) -> Path | None:
+    """Resolve a documented first-party module to its source file."""
+    for source_root_name in API_SOURCE_ROOTS:
+        source_root = _PROJECT_ROOT / source_root_name
+        package_name = source_root.name
+        if module_name != package_name and not module_name.startswith(package_name + "."):
+            continue
+        module_path = source_root.joinpath(*module_name.split(".")[1:])
+        if module_path.is_dir():
+            return module_path / "__init__.py"
+        return module_path.with_suffix(".py")
+    return None
+
+
+def _source_binding_target(module_name: str, symbol: str) -> str | None:
+    """Return the source-level owner bound to *symbol* in one API module."""
+    source_path = _api_source_path(module_name)
+    if source_path is None or not source_path.is_file():
+        return None
+    try:
+        tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return None
+
+    package = module_name if source_path.name == "__init__.py" else module_name.rpartition(".")[0]
+    owner: str | None = None
+    for statement in tree.body:
+        if isinstance(statement, ast.ImportFrom):
+            for imported in statement.names:
+                if imported.name == "*" or (imported.asname or imported.name) != symbol:
+                    continue
+                if statement.module is None:
+                    try:
+                        imported_module = resolve_name("." * statement.level, package)
+                    except (ImportError, ValueError):
+                        continue
+                elif statement.level:
+                    try:
+                        imported_module = resolve_name("." * statement.level + statement.module, package)
+                    except (ImportError, ValueError):
+                        continue
+                else:
+                    imported_module = statement.module
+                owner = f"{imported_module}.{imported.name}"
+            continue
+
+        bound_names: set[str] = set()
+        if isinstance(statement, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            bound_names.add(statement.name)
+        elif isinstance(statement, ast.TypeAlias):
+            bound_names.add(statement.name.id)
+        elif isinstance(statement, (ast.Assign, ast.AnnAssign)):
+            targets = statement.targets if isinstance(statement, ast.Assign) else (statement.target,)
+            for target in targets:
+                bound_names.update(node.id for node in ast.walk(target) if isinstance(node, ast.Name))
+        if symbol in bound_names:
+            owner = f"{module_name}.{symbol}"
+    return owner
+
+
+def _contextual_api_target(env, node, symbol: str, candidates: list[str]) -> str | None:
+    """Resolve an ambiguous short API name through its current source import."""
+    module_name = node.get("py:module")
+    if not isinstance(module_name, str):
+        docname = node.get("refdoc") or env.docname
+        module_name = docname.removeprefix("api/") if isinstance(docname, str) else ""
+    if not isinstance(module_name, str) or _api_source_path(module_name) is None:
+        return None
+    target = _source_binding_target(module_name, symbol)
+    return target if target in candidates else None
+
+
+def _contextual_external_reference(app, env, node, contnode):
+    """Resolve source-imported short names against the loaded inventories."""
+    from sphinx.ext.intersphinx import InventoryAdapter, missing_reference
+
+    target = node.get("reftarget", "")
+    module_name = node.get("py:module")
+    if not isinstance(module_name, str):
+        docname = node.get("refdoc") or env.docname
+        module_name = docname.removeprefix("api/") if isinstance(docname, str) else ""
+    root, _, nested = target.partition(".")
+    imported = _source_binding_target(module_name, root)
+    if imported is None or _api_source_path(imported) is not None:
+        return None
+    qualified = f"{imported}.{nested}" if nested else imported
+    parts = qualified.split(".")
+    # Textual exposes widgets through a lazy public module; its inventory uses
+    # the defining private module for nested events. Match the imported path
+    # in order, and refuse ambiguous inventory owners.
+    candidates = {
+        name
+        for objects in InventoryAdapter(env).main_inventory.values()
+        for name in objects
+        if name.rsplit(".", 1)[-1] == parts[-1] and _is_ordered_subsequence(parts, name.split("."))
+    }
+    if len(candidates) != 1:
+        return None
+    qualified_node = node.copy()
+    qualified_node["reftarget"] = candidates.pop()
+    return missing_reference(app, env, qualified_node, contnode)
+
+
 def _resolve_short_reference(app, env, node, contnode):
     """Bridge a short cross-reference to its single canonical defining-module target.
 
@@ -1428,6 +1532,9 @@ def _resolve_short_reference(app, env, node, contnode):
     short = parts[-1] if parts else ""
     if not short or not short.isidentifier():
         return None
+    contextual_external = _contextual_external_reference(app, env, node, contnode)
+    if contextual_external is not None:
+        return contextual_external
     # ``country`` is an upstream locale-library annotation, not the unrelated
     # in-tree callable that happens to share its final component.
     if target == "country":
@@ -1464,6 +1571,10 @@ def _resolve_short_reference(app, env, node, contnode):
     # keeping the candidates whose dotted components contain the reference's
     # components as an ordered subsequence. This separates same-named symbols
     # that live under different public packages (``iva`` vs ``normatives``).
+    if len(candidates) > 1:
+        contextual = _contextual_api_target(env, node, short, candidates)
+        if contextual is not None:
+            candidates = [contextual]
     if len(candidates) > 1 and len(parts) > 1:
         subseq = [name for name in candidates if _is_ordered_subsequence(parts, name.split("."))]
         if len(subseq) == 1:

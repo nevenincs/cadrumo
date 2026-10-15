@@ -23,7 +23,7 @@ _FORBIDDEN_PREFIXES = (
     "cadrumo.domain.calculations.registry",
     "cadrumo.adapters.persistence.storage",
     "cadrumo_harness",
-    "cadrumo.entrypoints.tui",
+    "cadrumo_runtime.host.frontend.tui",
     "cryptography",
     "keyring",
 )

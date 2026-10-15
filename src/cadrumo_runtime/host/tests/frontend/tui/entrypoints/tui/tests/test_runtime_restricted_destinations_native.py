@@ -59,7 +59,6 @@ from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
 from cadrumo.entrypoints.tui.reference.destination import ReferenceScreen
 from cadrumo.entrypoints.tui.reference.read_screen import ReferenceReadScreen
 from cadrumo.entrypoints.tui.reference.reads import ReferenceQuery, ReferenceRead, read_reference
-from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.installation_requests import InstallationAct, StorageCheckRequest
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -71,6 +70,8 @@ from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransp
 from cadrumo_runtime.host.installation_composition import InstallationActRegistry
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.installation_runtime import serve_check
+
+from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 
 pytestmark = [
     pytest.mark.integration,

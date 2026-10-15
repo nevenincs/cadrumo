@@ -4,9 +4,9 @@ Profile-bound runtime admission protects private AEAT operations: reading AEAT
 for the wrong taxpayer is a confidentiality breach even when nothing local
 changes. A command that reaches AEAT without declaring its capability would
 escape the CLI's capability policy, so this probe drives every runnable
-command that does not declare ``aeat`` but may leave the host (``network``) or
+command in the AEAT and runtime CLIs that does not declare ``aeat`` but may leave the host (``network``) or
 belongs to the ``config auth`` family, which reads the configured AEAT
-credentials, through the real CLI under the offline seal, and fails naming each
+credentials, through its owning CLI under the offline seal, and fails naming each
 one that reaches for AEAT.
 
 Detection signal
@@ -93,6 +93,8 @@ from cadrumo_client.commands.tests.command_drive_support import (
     synthetic_argv,
 )
 from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 
 from ._command_drive_support import seeded_probe_runtime, synthetic_aeat_credentials
 from .cli_runner import invoke_uncached_typer_app
@@ -460,17 +462,27 @@ def aeat_suspects_without_aeat(graph: CommandSpecGraph) -> tuple[CommandSpec, ..
     )
 
 
-_POPULATION: Final = aeat_suspects_without_aeat(COMMAND_GRAPH)
+# Tax commands and runtime authentication remain independent executable graphs.
+# Probe both through their owners so moving a command cannot remove its coverage.
+_PROBE_GRAPHS: Final = (COMMAND_GRAPH, RUNTIME_COMMAND_GRAPH)
+_POPULATION: Final = tuple(spec for graph in _PROBE_GRAPHS for spec in aeat_suspects_without_aeat(graph))
+
+
+def _owning_graph(key: str) -> CommandSpecGraph:
+    owners = [graph for graph in _PROBE_GRAPHS if key in graph.by_key() and is_runnable(graph.spec(key))]
+    assert len(owners) == 1, f"{key} must have exactly one runnable command owner"
+    return owners[0]
 
 
 def _drive(key: str, tmp_path: Path, *, json_output: bool = False) -> tuple[AeatContactObservation, int, str]:
-    spec = COMMAND_GRAPH.spec(key)
+    graph = _owning_graph(key)
+    spec = graph.spec(key)
     handler = spec.handler
     assert handler is not None and handler.state is BindingState.TARGET and handler.target is not None
     workdir = tmp_path / "probe-inputs"
     workdir.mkdir()
     argv = synthetic_argv(
-        COMMAND_GRAPH,
+        graph,
         spec,
         workdir,
         also=_HANDLER_REQUIRED_OPTIONS.get(key, ()),
@@ -486,7 +498,16 @@ def _drive(key: str, tmp_path: Path, *, json_output: bool = False) -> tuple[Aeat
         if seeder is not None:
             seeder(runtime)
         with observe_aeat_contact(handler_code(handler.target)) as observed:
-            result = runtime.invoke(["--format", "json", *argv] if json_output else argv)
+            arguments = ["--format", "json", *argv] if json_output else argv
+            if graph is RUNTIME_COMMAND_GRAPH:
+                passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+                result = invoke_runtime_cli(
+                    ["--profile", runtime.label, "--profile-secrets-stdin", *arguments],
+                    input=json.dumps({"profile_passphrase": passphrase}),
+                )
+                assert passphrase not in result.output
+            else:
+                result = runtime.invoke(arguments)
     return observed, result.exit_code, result.output
 
 
@@ -501,7 +522,12 @@ def test_the_declared_sede_client_is_the_one_in_the_source_tree() -> None:
 
 def test_every_aeat_command_is_a_positive_control_or_a_reasoned_exemption() -> None:
     """A stale exemption or an undriven AEAT command fails."""
-    declaring = {spec.key for spec in COMMAND_GRAPH.specs if is_runnable(spec) and "aeat" in spec.policy.capabilities}
+    declaring = {
+        spec.key
+        for graph in _PROBE_GRAPHS
+        for spec in graph.specs
+        if is_runnable(spec) and "aeat" in spec.policy.capabilities
+    }
 
     assert set(_POSITIVE_CONTROLS) | set(_AEAT_EXEMPTIONS) == declaring
     assert not set(_POSITIVE_CONTROLS) & set(_AEAT_EXEMPTIONS)
@@ -513,6 +539,10 @@ def test_the_population_covers_network_commands_and_the_authentication_family() 
     keys = {spec.key for spec in _POPULATION}
 
     assert {"config_provision_status", "config_auth_test", "config_auth_status"} <= keys
+    assert _owning_graph("config_auth_login") is RUNTIME_COMMAND_GRAPH
+    for spec in RUNTIME_COMMAND_GRAPH.specs:
+        if is_runnable(spec) and command_path(RUNTIME_COMMAND_GRAPH, spec)[:2] == _AUTHENTICATION_FAMILY:
+            assert spec.key in keys | set(_POSITIVE_CONTROLS) | set(_AEAT_EXEMPTIONS)
     assert not keys & set(_POSITIVE_CONTROLS)
     for key in _HANDLER_REQUIRED_OPTIONS:
         assert key in keys
@@ -525,7 +555,7 @@ def test_a_command_without_aeat_never_reaches_aeat(
     offline_guard: OfflineGuard,
 ) -> None:
     observed, exit_code, output = _drive(key, tmp_path)
-    spec = COMMAND_GRAPH.spec(key)
+    spec = _owning_graph(key).spec(key)
 
     assert observed.contacts(offline_guard) == [], (
         f"{key} reaches AEAT without declaring the aeat capability; "
@@ -540,7 +570,7 @@ def test_the_instrument_fires_on_a_command_that_declares_aeat(
     tmp_path: Path,
     offline_guard: OfflineGuard,
 ) -> None:
-    assert "aeat" in COMMAND_GRAPH.spec(key).policy.expanded_capabilities
+    assert "aeat" in _owning_graph(key).spec(key).policy.expanded_capabilities
     observed, exit_code, output = _drive(key, tmp_path)
 
     assert observed.handler_started, f"{key} never reached its behavior target (exit {exit_code}); output={output}"

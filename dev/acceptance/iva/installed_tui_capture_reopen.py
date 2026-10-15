@@ -135,7 +135,7 @@ def run_installed_tui_capture_reopen(
         executable,
         distribution="cadrumo",
         entry_point="aeat",
-        expected_value="cadrumo.entrypoints.cli.bootstrap:main",
+        expected_value="cadrumo_runtime.host.frontend.cli.bootstrap:main",
     )
     package_payload_sha256 = installed_wheel_payload_sha256(executable)
     storage_root = _require_empty_directory(root / "secure-store", label="IVA installed-TUI secure store")

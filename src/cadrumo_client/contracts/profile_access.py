@@ -20,10 +20,10 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.login_session import ProfileHumanLoginReceipt
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 
 from .access_management import (
@@ -84,16 +84,21 @@ class ProfileLogin(BaseModel):
     frontend: OperationFrontendProjection
     scope: AccessScope | None = None
     persist_receipt: bool = False
+    #: Omit the unset intent so older peers retain the ordinary login frame.
+    activity_only: bool = Field(default=False, exclude_if=lambda value: value is False)
 
-    #: Members left out of the frame while unset: a peer built before they
-    #: existed refuses a document that carries them.
+    @model_validator(mode="after")
+    def _activity_resumes_existing_receipt(self) -> ProfileLogin:
+        if self.activity_only and self.method != "receipt":
+            raise ValueError("activity-only admission requires an existing receipt")
+        return self
 
 
 class SessionRequest(BaseModel):
     """Address one connection-bound lease; its identifier is never a bearer."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    action: Literal["session_status", "session_refresh", "session_lock", "human_sign_out"]
+    action: Literal["session_status", "session_refresh", "session_activity", "session_lock", "human_sign_out"]
     request_id: UUID
     profile_id: UUID
     session_id: UUID

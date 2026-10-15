@@ -40,11 +40,6 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo.entrypoints.tui.secret.runtime_login_contracts import (
-    RuntimeLoginHandoff,
-    RuntimeLoginMethod,
-)
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -55,6 +50,9 @@ from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
+
+from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
+from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
 
 pytestmark = [
     pytest.mark.integration,

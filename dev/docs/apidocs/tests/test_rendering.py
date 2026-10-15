@@ -2,29 +2,67 @@
 
 from __future__ import annotations
 
+import inspect
 import io
+import pickle
 from pathlib import Path
 from typing import Annotated, get_args, get_type_hints
+from uuid import UUID
 
 import pytest
 from mcp.server import Server
 from pydantic import AllowInfNan, Field
 from sphinx.application import Sphinx
 
-from cadrumo.application.user_profile.access_contracts import AccessSession
+from cadrumo.application.user_profile.access_administration import FreshPasswordAuthorization
+from cadrumo.application.user_profile.access_contracts import AccessEvaluationContext, AccessSession
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.surfaces import McpSurface
+from cadrumo_runtime.contracts.profile_worker import ProfileWorkerSettlementRequest
+from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import (
+    RuntimeClientOpener as ContractRuntimeClientOpener,
+)
+from cadrumo_runtime.host.frontend.tui.secret.runtime_login_session import (
+    RuntimeClientOpener as SessionRuntimeClientOpener,
+)
 from dev._paths import REPO_ROOT
 
 from ..manager import _public_type_aliases
-from ..rendering import format_type_hint
+from ..rendering import TypeHintsFormatter, format_type_hint
+from ._sphinx_probe import run_sphinx_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-_FORMATTER_INPUTS: list[object] = []
 
 
-def _recording_formatter(annotation: object, config: object = None) -> str | None:
-    _FORMATTER_INPUTS.append(annotation)
-    return format_type_hint(annotation, config)
+_FRESH_PASSWORD_ANNOTATION = inspect.signature(FreshPasswordAuthorization).parameters["verified_monotonic"].annotation
+
+
+def _fresh_password_signature_probe(value: object) -> None:
+    """Exercise the exact generated constructor annotation through autodoc."""
+
+
+def _access_session_signature_probe(value: object) -> None:
+    """Exercise another actual generated constructor annotation through autodoc."""
+
+
+def _access_context_signature_probe(value: object) -> None:
+    """Exercise a context constructor annotation through autodoc."""
+
+
+def _worker_signature_probe(value: object) -> None:
+    """Exercise a worker constructor annotation through autodoc."""
+
+
+_SIGNATURE_PROBES = (
+    (_fresh_password_signature_probe, FreshPasswordAuthorization, "verified_monotonic"),
+    (_access_session_signature_probe, AccessSession, "issued_monotonic"),
+    (_access_context_signature_probe, AccessEvaluationContext, "monotonic_now"),
+    (_worker_signature_probe, ProfileWorkerSettlementRequest, "wait_seconds"),
+)
+for _probe, _model, _parameter in _SIGNATURE_PROBES:
+    _probe.__annotations__["value"] = inspect.signature(_model).parameters[_parameter].annotation
 
 
 _ALLOW_INF_NAN_ANNOTATION = get_type_hints(AccessSession, include_extras=True)["issued_monotonic"]
@@ -34,6 +72,11 @@ _ALLOW_INF_NAN_INSTANCE = next(
     for item in field_info.metadata
     if isinstance(item, AllowInfNan)
 )
+
+
+def _canonical_class_target(value: type[object]) -> str:
+    """Use an actual imported class's owner for a minimal Sphinx target."""
+    return f".. py:class:: {value.__module__}.{value.__qualname__}"
 
 
 def test_regex_metadata_is_rendered_as_source_literal() -> None:
@@ -65,6 +108,31 @@ def test_allow_inf_nan_metadata_keeps_the_actual_field_constraint() -> None:
     )
 
 
+def test_generated_constructor_signatures_preserve_finite_float_metadata() -> None:
+    constructors = (
+        (FreshPasswordAuthorization, "verified_monotonic"),
+        (AccessSession, "issued_monotonic"),
+        (AccessEvaluationContext, "monotonic_now"),
+        (ProfileWorkerSettlementRequest, "wait_seconds"),
+    )
+
+    for model, parameter in constructors:
+        annotation = inspect.signature(model).parameters[parameter].annotation
+        rendered = format_type_hint(annotation)
+        assert rendered is not None, f"{model.__name__}.{parameter} bypassed constrained metadata formatting"
+        assert "AllowInfNan(allow_inf_nan=False)" in rendered
+        assert "AllowInfNan`" not in rendered
+
+
+def test_typehints_formatter_config_value_is_pickleable() -> None:
+    formatter = TypeHintsFormatter()
+
+    serialized = pickle.dumps(formatter)
+
+    assert serialized
+    assert formatter("str") is None
+
+
 def test_annotated_unknown_base_remains_a_cross_reference() -> None:
     rendered = format_type_hint("Annotated[MissingFirstParty, Field(pattern='^[A-Z]+$')]")
 
@@ -86,6 +154,12 @@ def test_external_api_types_link_to_their_defining_documentation() -> None:
     assert format_type_hint(Server) == (
         "`Server <https://py.sdk.modelcontextprotocol.io/api/mcp/server/lowlevel/server/>`_"
     )
+    assert format_type_hint(ContractRuntimeClientOpener) == (
+        ":py:class:`cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts.RuntimeClientOpener`"
+    )
+    assert format_type_hint(SessionRuntimeClientOpener) == (
+        ":py:class:`cadrumo_runtime.host.frontend.tui.secret.runtime_login_session.RuntimeClientOpener`"
+    )
 
 
 def test_unaffected_annotations_use_the_default_formatter() -> None:
@@ -94,8 +168,26 @@ def test_unaffected_annotations_use_the_default_formatter() -> None:
 
 
 def test_type_alias_class_references_and_regex_fields_render_in_sphinx(tmp_path: Path) -> None:
+    run_sphinx_probe(__name__, "_build_type_alias_and_regex_probe", tmp_path)
+
+
+def _build_type_alias_and_regex_probe(tmp_path: Path) -> None:
     """The generated alias target and formatter resolve under nitpicky Sphinx."""
     assert build_server.__annotations__["return"] == "Server"
+    dependency_types = (UUID, FrontendClient, McpSurface)
+    assert tuple((value.__module__, value.__qualname__) for value in dependency_types) == (
+        ("uuid", "UUID"),
+        ("cadrumo_client.transport.frontend_client", "FrontendClient"),
+        ("cadrumo_harness.mcp.surfaces", "McpSurface"),
+    )
+    dependency_targets = "\n\n".join(_canonical_class_target(value) for value in dependency_types)
+    assert (RuntimeMcpAdapter.__module__, RuntimeMcpAdapter.__qualname__) == (
+        "cadrumo_harness.mcp.runtime_adapter",
+        "RuntimeMcpAdapter",
+    )
+    runtime_adapter_target = (
+        f".. autoclass:: {RuntimeMcpAdapter.__module__}.{RuntimeMcpAdapter.__qualname__}\n   :no-members:\n\n"
+    )
     docs = tmp_path / "docs"
     docs.mkdir()
     alias_module = "cadrumo_client.transport.automation_decision"
@@ -111,7 +203,7 @@ import importlib.util
 import os
 import sys
 from pathlib import Path
-from dev.docs.apidocs.tests.test_rendering import _recording_formatter
+from dev.docs.apidocs.rendering import TypeHintsFormatter
 
 repo = Path({str(REPO_ROOT)!r})
 os.environ["CADRUMO_DOCS_PROJECT_ROOT"] = str(repo)
@@ -129,7 +221,7 @@ master_doc = "index"
 nitpicky = True
 autodoc_typehints = "description"
 autodoc_typehints_format = "short"
-typehints_formatter = _recording_formatter
+typehints_formatter = TypeHintsFormatter()
 exclude_patterns = []
 
 def setup(app):
@@ -137,7 +229,6 @@ def setup(app):
 """
     (docs / "conf.py").write_text(conf, encoding="utf-8")
     warnings = io.StringIO()
-    _FORMATTER_INPUTS.clear()
     app = Sphinx(
         str(docs),
         str(docs),
@@ -149,7 +240,7 @@ def setup(app):
         freshenv=True,
         parallel=2,
     )
-    assert app.config.typehints_formatter is _recording_formatter
+    assert app.config.typehints_formatter == TypeHintsFormatter()
     attribute_extension = app.extensions["dev.docs.apidocs.attribute_types"]
     assert attribute_extension.parallel_read_safe
     assert attribute_extension.parallel_write_safe
@@ -160,20 +251,43 @@ def setup(app):
     rendered_allow_inf_nan = format_annotation(_ALLOW_INF_NAN_ANNOTATION, app.config)
     rendered_allow_inf_nan_type = format_annotation(_ALLOW_INF_NAN_INSTANCE, app.config)
     rendered_server_type = format_annotation(Server, app.config)
+    constructor_annotations = tuple(
+        inspect.signature(model).parameters[parameter].annotation
+        for model, parameter in (
+            (FreshPasswordAuthorization, "verified_monotonic"),
+            (AccessSession, "issued_monotonic"),
+            (AccessEvaluationContext, "monotonic_now"),
+            (ProfileWorkerSettlementRequest, "wait_seconds"),
+        )
+    )
+    rendered_constructor_annotations = tuple(
+        format_annotation(annotation, app.config) for annotation in constructor_annotations
+    )
+    assert all("AllowInfNan(allow_inf_nan=False)" in rendered for rendered in rendered_constructor_annotations)
     (docs / "index.rst").write_text(
         "API rendering probe\n====================\n\n"
         f"{alias_target}\n"
         ".. py:currentmodule:: cadrumo_client.transport.frame_io\n\n"
         "The decision type is :class:`AutomationDecision`.\n\n"
+        ".. py:type:: RuntimeClientOpener\n"
+        "   :module: cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts\n\n"
+        ".. py:type:: RuntimeClientOpener\n"
+        "   :module: cadrumo_runtime.host.frontend.tui.secret.runtime_login_session\n\n"
+        ".. py:currentmodule:: cadrumo_runtime.host.frontend.tui.runtime_admission\n\n"
+        "The imported runtime opener is :class:`RuntimeClientOpener`.\n\n"
         f"The production regex-bearing annotation is {rendered_regex}.\n\n"
         f"The production profile field annotation is {rendered_allow_inf_nan}.\n\n"
+        f"The constructor field annotation is {rendered_constructor_annotations[0]}.\n\n"
         f"Its Pydantic metadata type is {rendered_allow_inf_nan_type}.\n\n"
         f"The MCP SDK type is {rendered_server_type}.\n\n"
         "The fully qualified MCP target is :class:`mcp.server.lowlevel.server.Server`.\n\n"
-        ".. autoclass:: cadrumo_harness.mcp.runtime_adapter.RuntimeMcpAdapter\n"
-        "   :no-members:\n"
-        "   :no-signature:\n\n"
+        f"{runtime_adapter_target}"
+        f"{dependency_targets}\n\n"
         ".. autofunction:: cadrumo_harness.mcp.server.build_server\n\n"
+        ".. autofunction:: dev.docs.apidocs.tests.test_rendering._fresh_password_signature_probe\n\n"
+        ".. autofunction:: dev.docs.apidocs.tests.test_rendering._access_session_signature_probe\n\n"
+        ".. autofunction:: dev.docs.apidocs.tests.test_rendering._access_context_signature_probe\n\n"
+        ".. autofunction:: dev.docs.apidocs.tests.test_rendering._worker_signature_probe\n\n"
         ".. autoattribute:: cadrumo_agent_service.contracts.ServiceStartupFrame.bearer\n\n"
         ".. autoattribute:: cadrumo_agent_service.contracts.ServiceStartupFrame.gateway_bearer\n\n"
         ".. autoattribute:: cadrumo_client.contracts.extension_records.ExtensionRecordCapability.capability\n\n"
@@ -183,18 +297,18 @@ def setup(app):
     )
     app.build(force_all=True)
 
-    assert any("pattern=" in repr(annotation) for annotation in _FORMATTER_INPUTS)
-    assert any("AllowInfNan(allow_inf_nan=False)" in repr(annotation) for annotation in _FORMATTER_INPUTS)
-    assert any(annotation is Server for annotation in _FORMATTER_INPUTS)
-    assert "py:class reference target not found: MissingFirstParty" in warnings.getvalue()
-    assert "reference target not found: AllowInfNan" not in warnings.getvalue()
-    assert "reference target not found: mcp.server.lowlevel.server.Server" not in warnings.getvalue()
-    assert "Unknown target name:" not in warnings.getvalue(), warnings.getvalue()
-    assert "FieldInfo" not in warnings.getvalue(), warnings.getvalue()
-    assert "pattern=" not in warnings.getvalue(), warnings.getvalue()
+    diagnostics = [
+        line.partition(marker)[2].rsplit(" [", maxsplit=1)[0]
+        for line in warnings.getvalue().splitlines()
+        for marker in ("ERROR: ", "WARNING: ")
+        if marker in line
+    ]
+    assert diagnostics == ["py:class reference target not found: MissingFirstParty"], warnings.getvalue()
     rendered_html = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
     assert "AllowInfNan(allow_inf_nan=False)" in rendered_html
+    assert rendered_html.count("Constraint for") >= 4
     assert "https://py.sdk.modelcontextprotocol.io/api/mcp/server/lowlevel/server/" in rendered_html
+    assert "cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts.RuntimeClientOpener" in rendered_html
     assert "bearer" in rendered_html and "gateway_bearer" in rendered_html
     assert "capability" in rendered_html and "namespace" in rendered_html
     assert "pattern='^[a-z][a-z0-9_-]{0,63}$'" in rendered_html

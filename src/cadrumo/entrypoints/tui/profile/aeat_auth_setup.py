@@ -21,13 +21,17 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.request_faults import request_fault_line
 from ..components.theme import BASE_CSS, tokenised
-from .runtime_aeat_auth import AeatAuthFieldSaveError
+from .auth_fields import AeatAuthFieldSaveError
 
 _FACT_PATHS = ("identity.tax_id", "auth.dni_nie", "auth.fecha_validez", "auth.numero_soporte")
 
 
 class AeatAuthSetupPort(Protocol):
     """Exact-profile setup door, with all writes owned by registered operations."""
+
+    async def read_readiness(self) -> AuthSyncReadiness:
+        """Read current sync requirements without collecting the profile overview."""
+        ...
 
     async def snapshot(self) -> tuple[ProfileOverview, AuthSyncReadiness]:
         """Read stored facts and the worker's current readiness."""
@@ -63,7 +67,7 @@ def readiness_text(readiness: AuthSyncReadiness | None) -> str:
     )
 
 
-class AeatAuthSetupScreen(Screen[None]):
+class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | None]):
     """Show saved method-specific fields and reread authoritative readiness after edits."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
@@ -231,6 +235,7 @@ class AeatAuthSetupScreen(Screen[None]):
             try:
                 await self._apply(await self._door.snapshot())
             except Exception:
+                self._snapshot = None
                 self.query_one("#aeat-auth-readiness", Static).update(readiness_text(None))
         finally:
             if secret is not None:
@@ -243,4 +248,4 @@ class AeatAuthSetupScreen(Screen[None]):
         """Return only after the current save settles."""
         if not self._busy:
             self.query_one("#aeat-auth-secret", Input).value = ""
-            self.dismiss(None)
+            self.dismiss(self._snapshot)

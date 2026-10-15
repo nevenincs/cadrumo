@@ -29,10 +29,20 @@ from ..launch_environment import (
     TOOL_SERVER_ARGUMENTS_VARIABLE,
     TOOL_SERVER_VARIABLE,
     WORKER_PORT_VARIABLE,
+    agent_binary_directories,
     agent_launch_environment,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _write_package_manifest(root: Path, *, packages: str, executable: str) -> None:
+    manifest_path = root / "data" / "package-manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps({"layout": {"paths": {"packages": packages, "executable": executable}}}),
+        encoding="utf-8",
+    )
 
 
 @pytest.mark.parametrize(
@@ -53,6 +63,165 @@ def test_declared_provider_binary_directories_reach_the_native_agent_host(
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == str(tmp_path)
     assert "CODEX_HOME" not in environment
     assert "API_KEY" not in environment
+
+
+@pytest.mark.parametrize(
+    ("platform", "python_name", "packages_relative", "node_relative", "separator"),
+    [
+        ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
+        ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
+    ],
+)
+def test_packaged_node_bin_precedes_declared_provider_binary_directories(
+    tmp_path: Path,
+    platform: str,
+    python_name: str,
+    packages_relative: str,
+    node_relative: tuple[str, ...],
+    separator: str,
+) -> None:
+    python = tmp_path / python_name
+    python.touch()
+    packages = python.parent.joinpath(*packages_relative.split("/"))
+    packages.mkdir(parents=True)
+    _write_package_manifest(python.parent, packages=packages_relative, executable=python_name)
+    node = packages.parent.joinpath(*node_relative)
+    node.parent.mkdir(parents=True)
+    node.touch()
+    provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
+
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=python,
+        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
+        sys_platform=platform,
+    )
+
+    expected_directories = separator.join((str(node.parent), str(tmp_path / "codex"), str(tmp_path / "claude")))
+    assert (
+        agent_binary_directories(
+            python=python,
+            received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
+            sys_platform=platform,
+        )
+        == expected_directories
+    )
+    assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == expected_directories
+
+
+@pytest.mark.parametrize(
+    ("platform", "python_name", "packages_relative", "node_relative", "separator"),
+    [
+        ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
+        ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
+    ],
+)
+def test_missing_packaged_node_keeps_declared_provider_directories_without_phantom_entries(
+    tmp_path: Path,
+    platform: str,
+    python_name: str,
+    packages_relative: str,
+    node_relative: tuple[str, ...],
+    separator: str,
+) -> None:
+    python = tmp_path / python_name
+    python.touch()
+    packages = python.parent.joinpath(*packages_relative.split("/"))
+    packages.mkdir(parents=True)
+    _write_package_manifest(python.parent, packages=packages_relative, executable=python_name)
+    provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
+
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=python,
+        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
+        sys_platform=platform,
+    )
+
+    assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
+    assert str(packages.parent.joinpath(*node_relative[:-1])) not in environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE]
+
+
+@pytest.mark.parametrize(
+    ("platform", "python_name", "packages_relative", "node_relative", "separator"),
+    [
+        ("win32", "python.exe", "cadrumo/site-packages", ("node", "node.exe"), ";"),
+        ("linux", "python", "lib/cadrumo/site-packages", ("node", "bin", "node"), ":"),
+    ],
+)
+@pytest.mark.parametrize("manifest_state", ["missing", "malformed"])
+def test_missing_or_malformed_package_manifest_never_injects_node_directory(
+    tmp_path: Path,
+    platform: str,
+    python_name: str,
+    packages_relative: str,
+    node_relative: tuple[str, ...],
+    separator: str,
+    manifest_state: str,
+) -> None:
+    python = tmp_path / python_name
+    python.touch()
+    packages = python.parent.joinpath(*packages_relative.split("/"))
+    packages.mkdir(parents=True)
+    node = packages.parent.joinpath(*node_relative)
+    node.parent.mkdir(parents=True)
+    node.touch()
+    manifest_path = python.parent / "data" / "package-manifest.json"
+    if manifest_state == "malformed":
+        manifest_path.parent.mkdir(parents=True)
+        manifest_path.write_text("{", encoding="utf-8")
+    provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
+
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=python,
+        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
+        sys_platform=platform,
+    )
+
+    assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
+
+
+@pytest.mark.parametrize(
+    ("platform", "python_name", "separator"),
+    [("win32", "python.exe", ";"), ("linux", "python", ":")],
+)
+def test_manifest_package_path_cannot_escape_the_python_root(
+    tmp_path: Path, platform: str, python_name: str, separator: str
+) -> None:
+    package_root = tmp_path / "package"
+    package_root.mkdir()
+    python = package_root / python_name
+    python.touch()
+    outside_packages = tmp_path / "outside" / "site-packages"
+    outside_packages.mkdir(parents=True)
+    _write_package_manifest(package_root, packages="../outside/site-packages", executable=python_name)
+    node = outside_packages.parent / "node" / ("node.exe" if platform == "win32" else "bin/node")
+    node.parent.mkdir(parents=True)
+    node.touch()
+    provider_bins = str(tmp_path / "codex")
+
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=python,
+        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
+        sys_platform=platform,
+    )
+
+    assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
+    assert str(node.parent) not in environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE]
 
 
 _RECEIVED = {

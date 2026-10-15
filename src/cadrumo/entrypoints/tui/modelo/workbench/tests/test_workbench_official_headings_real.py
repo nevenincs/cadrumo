@@ -26,7 +26,7 @@ from ......core.external_constants import OutputLanguage
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ..casilla_list_models import CasillaListHeading
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..navigator import NavigatorState, looks_like_identifier, navigator_rows, presented_form
 from ..page_items import page_items, workbench_pages
 from ..screen import ModeloWorkbenchScreen

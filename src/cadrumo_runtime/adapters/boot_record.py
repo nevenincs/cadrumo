@@ -36,8 +36,6 @@ from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_mem
 from cadrumo.core.logging import get_logger
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.storage_environment import StorageMode, storage_mode
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix import posix_owner_uid
 
@@ -98,7 +96,7 @@ def runtime_boot_record_path(storage_root: Path) -> Path:
     """Return the boot record location under an absolute storage root."""
     if not storage_root.is_absolute():
         raise RefusalError(RefusalCode.ROOT_MISMATCH)
-    return storage_root / storage_location(StorageCategory.RUNTIME_BOOT_RECORD).relative_path()
+    return storage_root / ".runtime" / "boot.json"
 
 
 def encode_runtime_boot_record(record: RuntimeBootRecord) -> bytes:

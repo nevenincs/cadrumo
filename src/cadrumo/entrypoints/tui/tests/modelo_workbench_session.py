@@ -60,7 +60,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, c
 from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 from ...operation_composition import build_production_operation_registry
 from ..modelo.lifecycle import ModeloWorkspaceLifecycleDoor
-from ..modelo.workbench.installed import InstalledModeloWorkbench
+from ..modelo.workbench.factory import InstalledModeloWorkbench
 
 if TYPE_CHECKING:
     from ....application.operations.event_replay import OperationEventCursor

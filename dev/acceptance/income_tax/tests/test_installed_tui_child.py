@@ -24,7 +24,7 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessStatus,
 )
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
-from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
+from cadrumo_runtime.host.frontend.tui.runtime_admission import runtime_login_session
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.session_events import LifecycleNotice
 from cadrumo_client.transport.frontend_client import FrontendClient

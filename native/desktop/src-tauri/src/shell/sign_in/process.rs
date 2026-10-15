@@ -748,6 +748,35 @@ mod tests {
 
     #[cfg(windows)]
     #[test]
+    fn explicit_mutation_runs_while_the_separate_activity_owner_is_busy() {
+        let activity = Children::default();
+        let explicit = Children::default();
+        thread::scope(|scope| {
+            let renewal = scope
+                .spawn(|| activity.run(TEST_IDENTITY, powershell("Start-Sleep -Seconds 30"), None));
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while activity.mutation.active.lock().unwrap().child.is_none() {
+                assert!(Instant::now() < deadline);
+                thread::sleep(Duration::from_millis(10));
+            }
+            let logout = explicit
+                .run(
+                    TEST_IDENTITY,
+                    powershell("[Console]::Out.Write('logged-out')"),
+                    None,
+                )
+                .unwrap();
+            assert_eq!(&*logout.stdout, b"logged-out");
+            explicit.stop().unwrap();
+            activity.stop().unwrap();
+            assert!(renewal.join().unwrap().is_err());
+        });
+        assert!(activity.mutation.active.lock().unwrap().child.is_none());
+        assert!(explicit.mutation.active.lock().unwrap().child.is_none());
+    }
+
+    #[cfg(windows)]
+    #[test]
     fn status_reads_independently_and_duplicate_mutations_never_replay_a_password() {
         let children = Children::default();
         thread::scope(|scope| {

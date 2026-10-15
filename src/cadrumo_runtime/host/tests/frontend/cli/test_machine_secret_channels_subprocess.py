@@ -462,7 +462,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(
                 str(native_python()),
                 "-I",
                 *fixture_arguments(
-                    "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
+                    "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap",
                     "--profile-handle",
                     str(handle),
                     "--",

@@ -53,14 +53,7 @@ from cadrumo.core.async_cleanup import AsyncCloseable, await_cancellation_comple
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.time.clock import now
-from cadrumo.entrypoints.tui import installed_session
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
-from cadrumo.entrypoints.tui.launcher import main
-from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
-from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.transport.automation_decision import run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
@@ -76,6 +69,14 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationRe
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.profile_host import RuntimeProfileHost
+
+from .......frontend.tui import installed_session
+from .......frontend.tui.launcher import main
+from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from .......frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from .......frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
+from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
+from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
 pytestmark = [
     pytest.mark.integration,

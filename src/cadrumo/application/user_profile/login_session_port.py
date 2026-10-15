@@ -9,7 +9,7 @@ observes and binds one concrete port for an explicit host lifetime.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
@@ -240,6 +240,7 @@ class ProfileLoginSessionPort(Protocol):
         login_id: str,
         sign_in_binding: ProfileAccessBinding,
         sign_in_generation: ProfileSignInGenerationPort,
+        retain_sealing_key: Callable[[bytearray], None] | None = None,
     ) -> ProfilePersistedSessionPort | None:
         """Mint and return the canonical persisted acceleration receipt.
 

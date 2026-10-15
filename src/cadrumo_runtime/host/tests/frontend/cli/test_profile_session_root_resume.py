@@ -145,8 +145,8 @@ def _resume(bucket_id: str, *, storage_root: Path) -> ProfileSessionRefusalReaso
     from cadrumo.application.user_profile.login_session import (
         ProfileReceiptRefusedError,
         borrow_profile_receipt_key,
-        resume_profile_candidate,
     )
+    from cadrumo_runtime.host.profile_receipt import resume_profile_candidate
 
     _, decode = _profile_contexts_for_test()
     try:

@@ -29,7 +29,9 @@ from .overview import ProfileFieldView
 
 PROFILE_VIEW_OPERATION_DEFINITION_ID = "user-profile.view"
 PROFILE_VIEW_PHASES = ("user-profile.view.read", "user-profile.view.project")
-PROFILE_VIEW_MAX_ITEMS = 32
+# Let normal overview pages fill the byte budget instead of issuing extra
+# operation round trips for small schema fields. Keep a separate item-count bound.
+PROFILE_VIEW_MAX_ITEMS = 128
 # The result is nested in a settled-operation response and then a runtime frame.
 # Keep generous space beneath that frame's 64 KiB ceiling for both envelopes.
 PROFILE_VIEW_MAX_RESULT_BYTES = 20_000

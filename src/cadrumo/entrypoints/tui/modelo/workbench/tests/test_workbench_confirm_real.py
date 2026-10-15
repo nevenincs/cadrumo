@@ -34,8 +34,8 @@ from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWor
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
 from ..editor import CasillaEditorPanel, CasillaEditorScreen, EditorDecision, EditorOutcome
+from ..factory import InstalledModeloWorkbench
 from ..header import StatusLine, status_line
-from ..installed import InstalledModeloWorkbench
 from ..session import WorkbenchEditSession
 from ..vocabulary import origin_words
 

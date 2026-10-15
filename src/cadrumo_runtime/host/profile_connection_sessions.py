@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -27,6 +27,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodySnapshot,
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
+from cadrumo.core.config import load_settings
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.attendance import (
     AttendanceAsk,
@@ -99,7 +100,10 @@ class ProfileConnectionSessionMixin:
         )
         if isinstance(status, AccessDenied):
             return status
-        if status.denial is not None:
+        # An uncertain native observation denies work but preserves the live
+        # lease. Keep its wire identity so a fresh observation can recover;
+        # every later request still reauthorizes against the runtime authority.
+        if status.denial not in {None, AccessDenialCode.OS_SESSION_UNAVAILABLE}:
             connection.session_id = None
         return ProfileStatus(
             request_id=request_id,
@@ -134,10 +138,23 @@ class ProfileConnectionSessionMixin:
                     credential=api_login.credential,
                     scope=api_login.scope,
                 )
-        finished = self._finish_login(connection, host, context, request, admitted)
-        if request.method in {"password", "receipt"} and isinstance(finished, ProfileStatus):
-            self._sign_out_other_profiles(keep=request.profile_id)
-        return finished
+        if request.activity_only or request.method == "api_key":
+            return self._finish_login(connection, host, context, request, admitted)
+        # Publish the ordinary handover and retire other profiles as one ordered
+        # effect. Proof/KDF stays outside this lock and the profile-map lock is
+        # never held across worker I/O. A concurrently admitted loser rechecks
+        # its revoked lease before it can perform another cross-profile sweep.
+        with self._human_handover_guard:
+            finished = self._finish_login(connection, host, context, request, admitted)
+            if (
+                isinstance(finished, ProfileStatus)
+                and finished.status.denial is None
+                and finished.status.connected
+                and finished.status.credential_authenticated
+                and finished.status.profile_bound
+            ):
+                self._sign_out_other_profiles(keep=request.profile_id)
+            return finished
 
     def _sign_out_other_profiles(self: RuntimeProfileConnections, *, keep: UUID) -> None:
         """Keep one profile signed in: a person's sign-in to ``keep`` signs every other profile out everywhere.
@@ -250,7 +267,7 @@ class ProfileConnectionSessionMixin:
         with host.guard:
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
-            if request.action in {"session_lock", "human_sign_out"}:
+            if request.action in {"session_lock", "human_sign_out", "session_activity"}:
                 # Locking a session and signing the person out are the person's acts, never an automation's.
                 self._require_persons_frontend(connection.frontend)
             if request.action == "session_lock":
@@ -261,6 +278,14 @@ class ProfileConnectionSessionMixin:
                 return self._human_sign_out(host, context, request)
             if request.action == "session_refresh":
                 return self._refresh_session(connection, host, context, request)
+            if request.action == "session_activity":
+                renewed = host.authority.note_human_activity(
+                    connection_id=context.connection_id,
+                    session_id=request.session_id,
+                    idle_window=timedelta(minutes=load_settings().cadrumo_bucket_default_idle_lock_minutes),
+                )
+                if isinstance(renewed, AccessDenied):
+                    return renewed
             return self._status(connection, host, request.request_id, request.session_id)
 
     def _disclosure_page(
@@ -391,6 +416,12 @@ class ProfileConnectionSessionMixin:
                 raise RefusalError(RefusalCode.PEER_UNTRUSTED)
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
+            if (
+                isinstance(request, SessionRequest)
+                and request.action == "session_activity"
+                and self._nonhuman_peer(context, channel)
+            ):
+                raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
             if isinstance(request, SignInStatusRequest):
                 login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
                 if login.os_owner_id != context.peer.os_owner_id:

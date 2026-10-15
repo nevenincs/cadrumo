@@ -10,6 +10,7 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, Checkbox, Input, Static
 
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_controller import OperationController
 
 from ...application.modelo.reconciliation_export_operation import (
     RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
@@ -27,7 +28,6 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from .modelo.workbench.ports import WorkbenchExportRequest
 from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
-from .operations.runtime_controller import RuntimeOperationController
 
 
 class ReconciliationDestinationScreen(ModalScreen[WorkbenchExportRequest | None]):
@@ -93,7 +93,7 @@ class ReconciliationExportScreen(Screen[None]):
     async def _publish(self, request: WorkbenchExportRequest) -> None:
         client = self._client
         try:
-            controller = await RuntimeOperationController.submit(
+            controller = await OperationController.submit(
                 client,
                 definition_id=RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(client.profile_id)),
@@ -118,7 +118,7 @@ class ReconciliationExportScreen(Screen[None]):
         self.app.push_screen(OperationModal(controller), settled)
 
     async def _show_result(
-        self, controller: RuntimeOperationController, outcome: OperationModalSettledOutcomeV1
+        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1
     ) -> None:
         projection = outcome.view_model.projection
         if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:

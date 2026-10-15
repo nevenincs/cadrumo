@@ -85,7 +85,9 @@ pub fn level(event: &Event) -> Level {
         EventKind::ChildStarted
         | EventKind::ChildExited
         | EventKind::HostStarted
-        | EventKind::HostStopped => Level::Debug,
+        | EventKind::HostStopped
+        | EventKind::WindowCloseRequested
+        | EventKind::HostExitRequested => Level::Debug,
         _ => Level::Debug,
     }
 }

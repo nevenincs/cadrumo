@@ -50,8 +50,8 @@ from ....components.theme import install_cadrumo_themes
 from ....tests.modelo_workbench_session import application_workbench
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
+from ..factory import InstalledModeloWorkbench
 from ..grid import CasillaListRecords
-from ..installed import InstalledModeloWorkbench
 from ..issue_projection import issue_lines
 from ..issues import WorkbenchIssuesScreen
 from ..page_items import page_of, workbench_pages

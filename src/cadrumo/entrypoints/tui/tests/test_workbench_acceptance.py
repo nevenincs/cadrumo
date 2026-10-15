@@ -38,7 +38,7 @@ from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..modelo.workbench.casilla_list import CasillaList
 from ..modelo.workbench.editor import CasillaEditorPanel
-from ..modelo.workbench.installed import InstalledModeloWorkbench
+from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from ..modelo.workbench.sources import WorkbenchSourcesScreen
 from .modelo_workbench_session import real_workbench

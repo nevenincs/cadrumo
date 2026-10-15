@@ -350,6 +350,11 @@ export function scenarioHost(
       });
     },
 
+    noteActivity() {
+      say("noteActivity");
+      return Promise.resolve();
+    },
+
     signInStatus() {
       say("signInStatus");
       if (statusFailure) {

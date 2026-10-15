@@ -246,6 +246,25 @@ fn error_envelope(bytes: &[u8]) -> Result<Envelope> {
     Ok(envelope)
 }
 
+pub fn activity(outcome: Outcome) -> std::result::Result<(), CommandFailure> {
+    match outcome {
+        Outcome::Refused { refusal, .. } => Err(CommandFailure::Refused(refusal)),
+        Outcome::Success { result, .. } => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct Activity {
+                activity_recorded: bool,
+            }
+            let result: Activity =
+                serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
+            if !result.activity_recorded {
+                return Err(failure(ErrorCode::ReadFailed).into());
+            }
+            Ok(())
+        }
+    }
+}
+
 pub fn status(outcome: Outcome) -> Result<SignInStatus> {
     match outcome {
         Outcome::Success {

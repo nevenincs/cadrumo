@@ -25,6 +25,9 @@ The exchange directory holds JSON files written whole, each by one side:
 
 - ``handoff.json`` (this driver): the package, the storage root, the profile,
   the relay and the scenario;
+- ``driver-profile-owner.json`` (this driver): a nonce, its live process
+  identity, the one public synthetic profile inventory and the held session's
+  public identity coordinates; it contains no profile credential;
 - ``gateway.json`` (runner): the gateway's process id, its URL, its home and its
   workspace;
 - ``requests/<n>.json`` (runner): a pending permission, as the gateway's run
@@ -43,9 +46,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import ctypes
 import hashlib
 import json
 import os
+import secrets
 import shutil
 import sys
 import tempfile
@@ -85,10 +90,68 @@ from .session_holder import AsyncRuntimeSessionHolder
 
 _PROFILE: Final = "agent-live-acceptance"
 _PROTOCOL: Final = 1
+_DRIVER_PROFILE_FILE: Final = "driver-profile-owner.json"
 _SCENARIO: Final[dict[str, Any]] = {
     "taxpayer": "Daniel Persona",
     "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
 }
+
+
+def _driver_process_start_identity(pid: int) -> str | None:
+    """Read a clock-independent process start stamp for the package handoff."""
+    if pid <= 0:
+        return None
+    if sys.platform == "win32":
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.OpenProcess.argtypes = (
+            wintypes.DWORD,
+            wintypes.BOOL,
+            wintypes.DWORD,
+        )
+        filetime = ctypes.POINTER(wintypes.FILETIME)
+        kernel32.GetProcessTimes.restype = wintypes.BOOL
+        kernel32.GetProcessTimes.argtypes = (
+            wintypes.HANDLE,
+            filetime,
+            filetime,
+            filetime,
+            filetime,
+        )
+        handle = kernel32.OpenProcess(0x1000, False, pid)
+        if not handle:
+            return None
+        try:
+            creation = wintypes.FILETIME()
+            exit_time = wintypes.FILETIME()
+            kernel_time = wintypes.FILETIME()
+            user_time = wintypes.FILETIME()
+            if not kernel32.GetProcessTimes(
+                handle,
+                ctypes.byref(creation),
+                ctypes.byref(exit_time),
+                ctypes.byref(kernel_time),
+                ctypes.byref(user_time),
+            ):
+                return None
+            return f"{creation.dwHighDateTime}:{creation.dwLowDateTime}"
+        finally:
+            kernel32.CloseHandle(handle)
+    if sys.platform.startswith("linux"):
+        try:
+            with Path(f"/proc/{pid}/stat").open(encoding="ascii", errors="replace") as stream:
+                line = stream.read()
+        except OSError:
+            return None
+        _, separator, tail = line.rpartition(")")
+        fields = tail.split()
+        if separator and len(fields) >= 20:
+            return fields[19]
+    return None
+
+
 _GATEWAY_SECONDS: Final = 600.0
 _RUN_SECONDS: Final = 1800.0
 _POLL_SECONDS: Final = 0.5
@@ -283,6 +346,50 @@ def _ledger_text(programs: Programs, environment: Mapping[str, str], profile: Pr
     return json.dumps(envelope.get("result"), ensure_ascii=False)
 
 
+def _driver_profile_evidence(
+    profile: Profile,
+    held_session: Mapping[str, Any],
+    *,
+    storage_root: Path,
+    secret_store: Path,
+    relay: Path,
+    scenario: Mapping[str, Any],
+    owner_pid: int,
+    owner_start_identity: str,
+    owner_token: str,
+) -> dict[str, Any]:
+    """Record bounded public provenance after the exact profile is held."""
+    require(profile.profile_id is not None, "created profile has no verified identity")
+    profile_id = str(profile.profile_id)
+    require(
+        profile.inventory == ((profile.name, profile_id, True),),
+        "the public profile inventory is not exactly the active synthetic profile",
+    )
+    coordinates = {
+        name: held_session.get(name) for name in ("profile_id", "session_id", "runtime_boot_id", "connection_id")
+    }
+    require(
+        coordinates["profile_id"] == profile_id
+        and all(isinstance(value, str) and value for value in coordinates.values()),
+        "the held-session identity differs from the inventoried profile",
+    )
+    return {
+        "version": 1,
+        "owner_pid": owner_pid,
+        "owner_start_identity": owner_start_identity,
+        "owner_token": owner_token,
+        "storage_root": str(storage_root),
+        "secret_store_dir": str(secret_store),
+        "profile_id": profile_id,
+        "profile_inventory": [
+            {"name": name, "bucket_id": identity, "active": active} for name, identity, active in profile.inventory
+        ],
+        "held_session": coordinates,
+        "relay": str(relay),
+        "scenario": dict(scenario),
+    }
+
+
 def _await_runner(
     exchange: Exchange, gateway: dict[str, ProcessIdentity | None], gateway_image: Path, gateway_digest: str
 ) -> dict[str, Any]:
@@ -376,6 +483,21 @@ async def run(package: Path, scratch: Path) -> Receipt:
         )
         try:
             receipt.record("signed_in_and_held")
+            owner_start = _driver_process_start_identity(os.getpid())
+            if owner_start is None:
+                raise AcceptanceError("driver process identity unavailable")
+            evidence = _driver_profile_evidence(
+                profile,
+                holder.identity,
+                storage_root=root,
+                secret_store=secret_store,
+                relay=programs.mcp,
+                scenario=_SCENARIO,
+                owner_pid=os.getpid(),
+                owner_start_identity=owner_start,
+                owner_token=secrets.token_hex(24),
+            )
+            write_whole(directory / _DRIVER_PROFILE_FILE, evidence)
             gateway: dict[str, ProcessIdentity | None] = {"identity": None}
             async with _attending(holder, programs.mcp, gateway) as approved:
                 write_whole(

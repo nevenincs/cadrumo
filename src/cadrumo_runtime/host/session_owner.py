@@ -13,7 +13,8 @@ from uuid import UUID
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
+from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
+from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import HumanProof
@@ -119,7 +120,7 @@ class ProfileWorkerSessionOwner:
     def operation_worker(self) -> ProfileWorkerProcess:
         """Borrow an already admitted worker without holding the guard during callbacks."""
         with self._lifecycle_guard:
-            if self._lost or self._stopping.is_set() or self._worker is None:
+            if self._lost or self._worker is None:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             worker = self._worker
         worker.require_alive()

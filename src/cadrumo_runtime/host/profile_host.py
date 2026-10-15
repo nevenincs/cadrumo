@@ -33,7 +33,11 @@ from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPER
 from cadrumo.application.operations.disclosure_projections import registered_disclosure_projections
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicContractSetV1,
+    OperationRegistry,
+)
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessAllowed,
@@ -115,6 +119,9 @@ class ProfileConnection:
     recovery_generation: int | None = None
     bootstrap_digest: str | None = None
     requested_scope: AccessScope | None = None
+    owner_scope: tuple[OperationPublicContractSetV1, UUID, AccessScope] | None = field(
+        default=None, repr=False, compare=False
+    )
 
 
 @dataclass(frozen=True)
@@ -438,6 +445,17 @@ class RuntimeProfileHost:
 
     def scope(self, connection: ProfileConnection) -> AccessScope:
         """Derive the owner ceiling from the current canonical operation contracts."""
+        cached = connection.owner_scope
+        if (
+            connection.method != "api_key"
+            and cached is not None
+            and cached[0] is self._contracts
+            and cached[1] == connection.client_id
+        ):
+            # Only the immutable owner ceiling is reusable. facts() still reads
+            # current locks, custody, logins and availability at every boundary;
+            # delegated scopes always reread their live grants below.
+            return cached[2]
         categories = frozenset[DisclosureCategoryGrant]()
         registered = frozenset(str(item.definition_id) for item in self._contracts.definitions)
         operations = registered
@@ -477,7 +495,7 @@ class RuntimeProfileHost:
                     ),
                 )
             )
-        return AccessScope(
+        scope = AccessScope(
             operations=operations,
             actions=frozenset(AccessAction),
             disclosures=permissions,
@@ -486,6 +504,9 @@ class RuntimeProfileHost:
             allow_delegation=True,
             disclosure_categories=categories,
         )
+        if connection.method != "api_key":
+            connection.owner_scope = (self._contracts, connection.client_id, scope)
+        return scope
 
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
         """Observe committed profile fencing and current native dependencies per call."""

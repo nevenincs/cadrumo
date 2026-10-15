@@ -9,7 +9,36 @@ import pytest
 
 from dev.packaging.native.update_agent import wheel_files
 
+from ..hashing import digest
+from ..update_agent import _require_runtime_receipt
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize("change", ["none", "source", "staged", "missing", "unenrolled"])
+def test_wheel_update_requires_the_same_inventoried_runtime(tmp_path: Path, change: str) -> None:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    receipt = runtime / "runtime-receipt.json"
+    receipt.write_text('{"lock":"one"}')
+    root = tmp_path / "package"
+    staged = root / "lib/cadrumo/agent-runtime.json"
+    staged.parent.mkdir(parents=True)
+    staged.write_bytes(receipt.read_bytes())
+    files = {"lib/cadrumo/agent-runtime.json": digest(receipt)}
+    if change == "source":
+        receipt.write_text('{"lock":"two"}')
+    elif change == "staged":
+        staged.write_text('{"lock":"modified"}')
+    elif change == "missing":
+        staged.unlink()
+    elif change == "unenrolled":
+        files.clear()
+    if change == "none":
+        _require_runtime_receipt(root, runtime, "lib/cadrumo/site-packages", files)
+    else:
+        with pytest.raises(ValueError, match="build app-payload"):
+            _require_runtime_receipt(root, runtime, "lib/cadrumo/site-packages", files)
 
 
 def test_wheel_files_omits_every_canonical_test_source(tmp_path: Path) -> None:

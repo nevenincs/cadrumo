@@ -213,10 +213,10 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.root.app_tui_help"),
         short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter=None),
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget(".tui_launcher", "launch_tui", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".tui_request", "launch_tui", __package__)),
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(

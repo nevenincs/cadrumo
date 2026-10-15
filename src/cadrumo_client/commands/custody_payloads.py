@@ -36,6 +36,12 @@ class ConfigLoginResult(OutputSchema):
     closed_previous_profile: str | None = None
 
 
+class ConfigActivityResult(OutputSchema):
+    """Acknowledgement that authenticated person activity reached runtime authority."""
+
+    activity_recorded: Literal[True]
+
+
 class ConfigSignInStatusResult(OutputSchema):
     """Non-authoritative active-profile sign-in observation, without a session bearer."""
 

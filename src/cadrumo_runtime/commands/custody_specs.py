@@ -26,6 +26,7 @@ from cadrumo_client.contracts.command_ports import (
 )
 from cadrumo_runtime.commands.spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
+    BOOTSTRAP_WRITE,
     ENCRYPTED_DESTRUCTIVE,
     PROFILE_READ,
     STATE_FREE,
@@ -146,6 +147,24 @@ RUNTIME_CUSTODY_COMMAND_SPECS = (
                     ),
                 ),
             )
+        ),
+        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
+    ),
+    CommandSpec(
+        "config_activity",
+        "config",
+        "activity",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.activity.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(_OUTPUT_LANGUAGE,),
+        policy=BOOTSTRAP_WRITE,
+        handler=LazyBinding.available(DeferredTarget(".activity", "config_activity", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget("cadrumo_client.commands.custody_payloads", "ConfigActivityResult"),
+            identity="config.activity",
         ),
         profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
     ),

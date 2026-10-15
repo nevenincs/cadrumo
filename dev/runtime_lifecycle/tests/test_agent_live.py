@@ -9,12 +9,15 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import cast
+from uuid import UUID
 
 import pytest
 
 from ..agent_live import (
     Exchange,
     _attending,
+    _driver_process_start_identity,
+    _driver_profile_evidence,
     answer_for,
     is_announced_relay,
     read_document,
@@ -22,10 +25,20 @@ from ..agent_live import (
     write_whole,
 )
 from ..caller_owned_root import AcceptanceError
-from ..proof_support import ProcessIdentity
+from ..proof_support import ProcessIdentity, Profile
 from ..session_holder import AsyncRuntimeSessionHolder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def test_driver_owner_start_identity_is_stable_and_fails_closed() -> None:
+    identity = _driver_process_start_identity(os.getpid())
+    if sys.platform == "win32" or sys.platform.startswith("linux"):
+        assert identity
+        assert _driver_process_start_identity(os.getpid()) == identity
+    else:
+        assert identity is None
+    assert _driver_process_start_identity(0) is None
 
 
 def _request(tool: str | None, *kinds: str, server: str | None = "cadrumo") -> dict[str, object]:
@@ -116,6 +129,72 @@ def test_a_document_is_read_whole_absent_or_refused(tmp_path: Path) -> None:
     write_whole(path, {"version": 2})
     with pytest.raises(AcceptanceError, match="protocol 2"):
         read_document(path)
+
+
+def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_session() -> None:
+    profile_id = "250e54c8-ce41-4d97-82d2-dc47e9487d5f"
+    profile = Profile(
+        "agent-live-acceptance",
+        "not-exported-passphrase",
+        UUID(profile_id),
+        (("agent-live-acceptance", profile_id, True),),
+    )
+    session = {
+        "kind": "session_held",
+        "profile_id": profile_id,
+        "session_id": "250e54c8-ce41-4d97-82d2-dc47e9487d5f",
+        "runtime_boot_id": "9428607c-b8c6-4fcd-a52c-c916fd364d8f",
+        "connection_id": "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f",
+    }
+
+    evidence = _driver_profile_evidence(
+        profile,
+        session,
+        storage_root=Path("/tmp/agent-live-proof/storage"),
+        secret_store=Path("/tmp/agent-live-proof/secrets"),
+        relay=Path("/package/bin/cadrumo-mcp"),
+        scenario={"taxpayer": "Synthetic taxpayer"},
+        owner_pid=123,
+        owner_start_identity="owner-start",
+        owner_token="a" * 48,
+    )
+
+    assert evidence["profile_id"] == profile_id
+    assert evidence["profile_inventory"] == [{"name": "agent-live-acceptance", "bucket_id": profile_id, "active": True}]
+    assert evidence["held_session"] == {
+        name: session[name] for name in ("profile_id", "session_id", "runtime_boot_id", "connection_id")
+    }
+    assert "password" not in evidence and "not-exported-passphrase" not in repr(evidence)
+
+
+def test_driver_profile_evidence_refuses_more_than_the_exact_synthetic_profile() -> None:
+    profile_id = "250e54c8-ce41-4d97-82d2-dc47e9487d5f"
+    profile = Profile(
+        "agent-live-acceptance",
+        "not-exported-passphrase",
+        UUID(profile_id),
+        (
+            ("agent-live-acceptance", profile_id, True),
+            ("another-profile", "9428607c-b8c6-4fcd-a52c-c916fd364d8f", False),
+        ),
+    )
+    with pytest.raises(AcceptanceError, match="exactly the active synthetic profile"):
+        _driver_profile_evidence(
+            profile,
+            {
+                "profile_id": profile_id,
+                "session_id": "250e54c8-ce41-4d97-82d2-dc47e9487d5f",
+                "runtime_boot_id": "9428607c-b8c6-4fcd-a52c-c916fd364d8f",
+                "connection_id": "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f",
+            },
+            storage_root=Path("/tmp/agent-live-proof/storage"),
+            secret_store=Path("/tmp/agent-live-proof/secrets"),
+            relay=Path("/package/bin/cadrumo-mcp"),
+            scenario={"taxpayer": "Synthetic taxpayer"},
+            owner_pid=123,
+            owner_start_identity="owner-start",
+            owner_token="a" * 48,
+        )
 
 
 def test_each_filed_request_is_answered_once_in_its_own_answer_file(tmp_path: Path) -> None:

@@ -75,7 +75,9 @@ async def test_authority_retirement_exits_while_parent_keeps_stdin_open(tmp_path
     source_root = Path(__file__).resolve().parents[3]
     environment = os.environ.copy()
     existing_pythonpath = environment.get("PYTHONPATH")
-    environment["PYTHONPATH"] = os.pathsep.join(value for value in (str(source_root), existing_pythonpath) if value)
+    environment["PYTHONPATH"] = os.pathsep.join(
+        value for value in (str(source_root), existing_pythonpath) if value is not None and value != ""
+    )
     script = r"""
 import contextlib
 import sys
@@ -132,7 +134,8 @@ sys.exit(session_hold.main(["--profile-id", str(profile_id)]))
         held = await asyncio.wait_for(process.stdout.readline(), timeout=5)
         assert b'"kind":"session_held"' in held
         await asyncio.sleep(0.2)
-        assert process.returncode is None
+        exit_before_retirement = process.returncode
+        assert exit_before_retirement is None
         assert not process.stdin.is_closing()
         try:
             exit_code = await asyncio.wait_for(process.wait(), timeout=10)

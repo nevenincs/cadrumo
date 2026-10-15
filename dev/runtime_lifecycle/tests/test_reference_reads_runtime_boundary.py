@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _REPOSITORY = Path(__file__).resolve().parents[3]
 _COMMAND_LINES: Final = {
-    CommandProgram.AEAT: "from cadrumo.entrypoints.cli.bootstrap import main; main()",
+    CommandProgram.AEAT: "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()",
     CommandProgram.AUTHENTICATION: "from cadrumo_runtime.host.bootstrap import main; main()",
 }
 _AUTHENTICATION_CASES: Final = frozenset({"auth-providers", "apoderado-scopes"})

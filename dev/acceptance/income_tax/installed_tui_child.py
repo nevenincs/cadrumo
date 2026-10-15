@@ -329,10 +329,7 @@ async def _submit_visible_runtime_login(
     """Submit only the selected public profile and require its exact password handoff."""
     from textual.widgets import Input, Select
 
-    from cadrumo.entrypoints.tui.secret.runtime_login_contracts import (
-        RuntimeLoginHandoff,
-        RuntimeLoginMethod,
-    )
+    from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
 
     profile = query_public_selector(pilot, "#runtime-login-profile", Select).value
     if not isinstance(profile, str):
@@ -458,7 +455,7 @@ def run_admitted_installed_launcher(
     ``admission_polls`` bounds the wait for Home; a store whose first workbench
     generation projects two calendar years needs more than the default.
     """
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     exit_code = main(
         headless=True,
@@ -592,7 +589,7 @@ def run_bootstrap(*, workspace_root: Path, profile_label: str, passphrase: str) 
     # admission, which the visible Login/Home branch above handles.
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     with live_exchange_rate_composition(), profile_adapter_composition():
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))

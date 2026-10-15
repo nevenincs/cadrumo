@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import os
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -49,7 +52,9 @@ def _entry() -> ProviderStatusEntry:
     )
 
 
-@pytest.mark.parametrize("outcome", ("prepared", "revision_conflict", "revoked", "unsupported", "api_lane"))
+@pytest.mark.parametrize(
+    "outcome", ("prepared", "prepared_node", "revision_conflict", "revoked", "unsupported", "api_lane")
+)
 def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     outcome: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -63,6 +68,25 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     )
     image = AgentImage(tmp_path / "cadrumo-agent.exe", (), tmp_path / "agent")
     monkeypatch.setattr(service_module, "agent_image", lambda *_args, **_kwargs: image)
+    python = None
+    node_bin = None
+    if outcome == "prepared_node":
+        package = tmp_path / "package"
+        package.mkdir()
+        python = package / ("python.exe" if sys.platform == "win32" else "python")
+        python.touch()
+        packages = "cadrumo/site-packages" if sys.platform == "win32" else "lib/cadrumo/site-packages"
+        (package / packages).mkdir(parents=True)
+        node_bin = (package / packages).parent / "node"
+        if sys.platform != "win32":
+            node_bin /= "bin"
+        node_bin.mkdir(parents=True)
+        (node_bin / ("node.exe" if sys.platform == "win32" else "node")).touch()
+        (package / "data").mkdir()
+        (package / "data/package-manifest.json").write_text(
+            json.dumps({"layout": {"paths": {"executable": python.name, "packages": packages}}})
+        )
+    monkeypatch.setattr(service_module, "hosted_python", lambda: python)
     monkeypatch.setattr(service._catalog, "catalog", synthetic_catalog)
     monkeypatch.setattr(service._catalog, "sign_in_providers", lambda: () if outcome == "unsupported" else ("example",))
     calls: list[str] = []
@@ -104,6 +128,8 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
             "example",
         ]
         assert set(answer["launch"]["environment"]) == {HOSTED_ROOT_VARIABLE, EXTERNAL_BIN_DIRECTORIES_VARIABLE}
+        expected_directories = str(tmp_path) if node_bin is None else os.pathsep.join((str(node_bin), str(tmp_path)))
+        assert answer["launch"]["environment"][EXTERNAL_BIN_DIRECTORIES_VARIABLE] == expected_directories
         assert answer["launch"]["environment"][HOSTED_ROOT_VARIABLE].startswith(str(tmp_path / "agent"))
         assert "must-not-cross" not in str(answer)
 

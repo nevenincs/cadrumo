@@ -79,8 +79,8 @@ from cadrumo.core.operations import (
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
+from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileLockResult,
     ConfigProfileSessionsResult,

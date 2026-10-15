@@ -287,11 +287,21 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `agent-providers`
 
 - **Program:** `cadrumo-agent`
-- **Started with:** `-m cadrumo_agent.cli.main providers --declared --json`
+- **Started with:** `-m cadrumo_agent.cli.main providers --declared --json`; `-m cadrumo_agent.cli.main auth providers --json`
 - **Starts from:** only the operating-system group `system`
 - **Passes from its caller:** nothing beyond its operating-system groups
 - **Sets itself:** nothing
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+
+#### `agent-auth`
+
+- **Program:** `cadrumo-agent`
+- **Started with:** `-m cadrumo_agent.cli.main auth login --provider <provider:identifier>`
+- **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
+- **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS`
+- **Accepts from its parent:** `CADRUMO_AGENT_HOSTED_ROOT` (directory, required)
+- **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 ### Names only the package declares
 

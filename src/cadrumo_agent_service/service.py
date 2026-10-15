@@ -10,6 +10,7 @@ from dataclasses import replace
 from http.client import HTTPConnection, HTTPException
 from pathlib import Path
 from threading import Event, Lock, RLock, Thread
+from time import monotonic
 from typing import Any, override
 from urllib.parse import urlencode
 
@@ -36,6 +37,7 @@ from .adapters.agent_programs import (
 )
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
 from .adapters.provider_catalog_metadata import declared_provider_catalog_response
+from .contracts import HostedCertificationStatus
 from .host.controller import (
     AgentCredentialSource,
     AgentGenerations,
@@ -49,7 +51,12 @@ from .host.controller import (
 )
 from .host.credential_frame import wipe
 from .host.lane_root import is_marked_lane_root
-from .host.launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE, HOSTED_ROOT_VARIABLE, agent_launch_environment
+from .host.launch_environment import (
+    EXTERNAL_BIN_DIRECTORIES_VARIABLE,
+    HOSTED_ROOT_VARIABLE,
+    agent_binary_directories,
+    agent_launch_environment,
+)
 from .host.launcher_protocol import launcher_refusal_for
 from .host.store_lifecycle import AgentStoreLifecycle
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
@@ -57,9 +64,11 @@ from .providers.application.contracts import ProviderSettingsRefusal
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
+from .providers.domain.catalog import MAX_CATALOG_LANES
 from .providers.persistence.store import SecureProviderSettingsStore
 
 _LOGGER = get_logger(__name__)
+HOSTED_CERTIFICATION_CACHE_SECONDS = 5.0
 
 
 def service_failure(error: Exception) -> dict[str, Any]:
@@ -81,6 +90,11 @@ def service_failure(error: Exception) -> dict[str, Any]:
         code = "service_failed"
         _LOGGER.error("agent service failed error_type=%s", type(error).__name__)
     return {"event": "refused", "code": code}
+
+
+def _controller_is_ready(controller: AgentHostController) -> bool:
+    """Read the controller's live state without inferring readiness from credentials."""
+    return controller.state is AgentHostState.READY
 
 
 class _GatewayCredentials(AgentCredentialSource):
@@ -135,6 +149,10 @@ class AgentService:
             store=self._store, catalog_source=self._catalog, environment=os.environ, storage_mode=storage_mode().mode
         )
         self._controller: AgentHostController | None = None
+        self._hosted_certification_lock = Lock()
+        self._hosted_certification_snapshot: (
+            tuple[AgentHostController, AgentReady, tuple[HostedCertificationStatus, ...], float] | None
+        ) = None
         self._workspace: Path | None = None
         self._ownership = ExitStack()
         self._owned = False
@@ -154,16 +172,26 @@ class AgentService:
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         if action == "catalog":
+            self._clear_hosted_certifications()
             controller = self._controller
             if controller is not None and controller.state is AgentHostState.READY:
                 ready = controller.published()
                 if ready is not None:
-                    return self._served_catalog(ready)
+                    try:
+                        document = self._served_catalog(ready)
+                    except Exception:
+                        self._clear_hosted_certifications()
+                        raise
+                    self._remember_hosted_certifications(controller, ready, document)
+                    return document
+            self._clear_hosted_certifications()
             return declared_provider_catalog_response(agent_source=self._agent_source)
         if self.client.lease is None:
             return {"kind": "refused", "code": "signed_out"}
         if action == "status":
-            return self._providers.status().model_dump(mode="json")
+            status = self._providers.status().model_dump(mode="json")
+            status["hosted_certifications"] = self._hosted_certifications()
+            return status
         if action == "start":
             with self._start_request_guard:
                 if self._closing.is_set():
@@ -232,7 +260,7 @@ class AgentService:
                 return {"kind": "refused", "code": "signed_out"}
             root.mkdir(parents=True, exist_ok=True)
             environment = {HOSTED_ROOT_VARIABLE: str(root)}
-            external = os.environ.get(EXTERNAL_BIN_DIRECTORIES_VARIABLE)
+            external = agent_binary_directories(python=hosted_python(), received=os.environ)
             if external is not None and external != "":
                 environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
             return {
@@ -293,6 +321,7 @@ class AgentService:
             controller = AgentHostController(
                 launcher=WindowsAgentProcessLauncher(), credentials=self._credentials, launch=launch
             )
+            self._clear_hosted_certifications()
             self._controller = controller
             try:
                 ready = controller.start()
@@ -353,6 +382,68 @@ class AgentService:
         finally:
             connection.close()
 
+    def _hosted_certifications(self) -> list[dict[str, str]]:
+        """Return only a recently served snapshot bound to the controller's current generations."""
+        controller = self._controller
+        if self._closing.is_set() or controller is None or not _controller_is_ready(controller):
+            self._clear_hosted_certifications()
+            return []
+        with self._hosted_certification_lock:
+            snapshot = self._hosted_certification_snapshot
+            if (
+                snapshot is None
+                or snapshot[0] is not controller
+                or monotonic() - snapshot[3] >= HOSTED_CERTIFICATION_CACHE_SECONDS
+            ):
+                self._hosted_certification_snapshot = None
+                return []
+            certifications = snapshot[2]
+        ready = controller.published()
+        if (
+            ready is None
+            or ready != snapshot[1]
+            or self._closing.is_set()
+            or self._controller is not controller
+            or not _controller_is_ready(controller)
+        ):
+            self._clear_hosted_certifications()
+            return []
+        with self._hosted_certification_lock:
+            if self._hosted_certification_snapshot is not snapshot:
+                return []
+        return [certification.model_dump(mode="json") for certification in certifications]
+
+    def _remember_hosted_certifications(
+        self, controller: AgentHostController, ready: AgentReady, document: dict[str, Any]
+    ) -> None:
+        """Cache bounded facts only after the existing authenticated catalog request succeeds."""
+        lanes = document.get("providers")
+        certifications: tuple[HostedCertificationStatus, ...] = ()
+        if isinstance(lanes, list) and len(lanes) <= MAX_CATALOG_LANES:
+            parsed: list[HostedCertificationStatus] = []
+            seen: set[tuple[str, str]] = set()
+            try:
+                for raw_lane in lanes:
+                    certification = HostedCertificationStatus.model_validate(raw_lane, strict=True)
+                    identity = (certification.provider, certification.transport)
+                    if identity in seen:
+                        return
+                    seen.add(identity)
+                    parsed.append(certification)
+            except (TypeError, ValueError):
+                parsed = []
+            certifications = tuple(parsed)
+        with self._hosted_certification_lock:
+            if self._closing.is_set() or self._controller is not controller or not _controller_is_ready(controller):
+                self._hosted_certification_snapshot = None
+                return
+            self._hosted_certification_snapshot = (controller, ready, certifications, monotonic())
+
+    def _clear_hosted_certifications(self) -> None:
+        """Forget every cached hosted fact when its source may no longer be observed."""
+        with self._hosted_certification_lock:
+            self._hosted_certification_snapshot = None
+
     def observe(self) -> bool:
         """Revalidate exact generations and synchronously retire any stale tree."""
         with self._guard:
@@ -365,6 +456,7 @@ class AgentService:
         with self._guard:
             controller = self._controller
             if controller is not None:
+                self._clear_hosted_certifications()
                 controller.stop()
                 self._controller = None
                 self._emit({"event": "stopped", "code": "agent_retired"})
@@ -387,5 +479,6 @@ class AgentService:
     def request_close(self) -> None:
         """Invalidate startup publication immediately without waiting on lifecycle work."""
         self._closing.set()
+        self._clear_hosted_certifications()
         self.client.lease = None
         self.client.connection.close()

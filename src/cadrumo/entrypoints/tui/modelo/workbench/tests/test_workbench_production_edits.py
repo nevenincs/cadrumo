@@ -40,7 +40,7 @@ from ......core.casilla_id import validated_casilla_id
 from ......core.external_constants import OutputLanguage
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ....tests.modelo_workbench_session import RecordedSubmissions, application_workbench
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..ports import WorkbenchParsed
 from ..session import WorkbenchEditSession
 

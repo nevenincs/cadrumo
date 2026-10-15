@@ -2,9 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+
+from .providers.domain.catalog import ProviderId
+
+
+class HostedCertificationStatus(BaseModel):
+    """One bounded certification fact copied from a live hosted lane."""
+
+    model_config = ConfigDict(extra="ignore", strict=True, frozen=True, hide_input_in_errors=True)
+
+    provider: ProviderId = Field(validation_alias="provider_id")
+    transport: Literal["api", "cli"]
+    execution_mode: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
+    status: Literal["unknown", "pending", "proven"] = Field(default="unknown", validation_alias="hosted_certification")
 
 
 class ServiceStartupFrame(BaseModel):

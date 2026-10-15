@@ -24,10 +24,11 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
+from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest
 from cadrumo_client.contracts.operation_access import OperationManagementRequest

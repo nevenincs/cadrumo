@@ -23,7 +23,7 @@ from ......application.modelo.work_form_models import ModeloWorkForm, address_ke
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..navigator import looks_like_identifier
 from ..screen import ModeloWorkbenchScreen
 from ..search import WorkbenchSearchPanel

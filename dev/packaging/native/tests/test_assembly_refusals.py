@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
         ("target", "target/layout ABI"),
         ("agent-missing", "closure mismatch"),
         ("agent-version", "agent version"),
+        ("agent-runtime-missing", "built agent runtime closure"),
     ],
 )
 def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, message: str) -> None:

@@ -32,6 +32,7 @@ from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 if TYPE_CHECKING:
     import typer
 
+    from cadrumo_client.commands.compiler import InvocationDispatcher
     from cadrumo_client.commands.spec import CommandSpec
 
     from ._command_policy import CommandExecutionPolicy
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
 
 
 @cache
-def cli_app() -> typer.Typer:
+def cli_app(*, dispatcher: InvocationDispatcher | None = None) -> typer.Typer:
     """Build the root Typer app from the command graph, once per process."""
     from cadrumo_client.commands.compiler import build_command_app
     from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
@@ -63,7 +64,7 @@ def cli_app() -> typer.Typer:
     disable_rich_cli_rendering()
     app = build_command_app(
         _COMMAND_GRAPH,
-        dispatcher=dispatch_cli_behavior,
+        dispatcher=dispatcher or dispatch_cli_behavior,
         standalone_error_runner=run_standalone_with_error_contract,
     )
     decorate_typer_app(app)
@@ -108,7 +109,7 @@ def command_execution_policy_for_cli_path(
     return _declared_execution_policy_for_cli_path(cli_path)
 
 
-def main() -> None:
+def main(*, app: typer.Typer | None = None) -> None:
     """Console-script entry point.
 
     Pins ``prog_name`` so Typer's usage lines say ``aeat`` even when the
@@ -171,7 +172,7 @@ def main() -> None:
 
             progress_sink = operator_progress_sink(_emit_operator_progress)
         with _metadata_state_isolation(arguments), progress_sink:
-            cli_app()(prog_name=_PRODUCT_IDENTITY.cli_executable)
+            (app if app is not None else cli_app())(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 
 def _pointer_repair_scope(arguments: list[str]) -> AbstractContextManager[None]:

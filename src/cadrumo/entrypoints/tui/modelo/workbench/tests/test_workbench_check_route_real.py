@@ -44,7 +44,7 @@ from .....tests.profile_persistence.verification_repository_support import (
 )
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..progress import NextAction, WorkbenchProgress, next_action_text, workbench_progress
 from ..screen import ModeloWorkbenchScreen
 from .workbench_fixture import FakeActions

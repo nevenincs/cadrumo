@@ -159,3 +159,17 @@ def test_the_frontend_client_reuses_its_exact_explicit_scope(scope: AccessScope 
 
     assert [request.scope for request in connection.logins] == [scope, scope]
     assert {request.frontend for request in connection.logins} == {OperationFrontendProjection.EXTERNAL_CLIENT}
+
+
+@pytest.mark.parametrize("method", ["password", "receipt", "api_key"])
+def test_activity_only_is_an_explicit_receipt_intent(method: str) -> None:
+    document = _document_without_scope(uuid4(), uuid4(), method, OperationFrontendProjection.CLI)
+    payload = canonical_json_bytes(document | {"activity_only": True})
+    if method == "receipt":
+        decoded = decode_document(payload, Request).root
+        assert isinstance(decoded, ProfileLogin) and decoded.activity_only
+        assert json.loads(document_frame(decoded)[_HEADER_BYTES:])["activity_only"] is True
+    else:
+        with pytest.raises(RefusalError) as refused:
+            decode_document(payload, Request)
+        assert refused.value.reason is RefusalCode.INVALID_FRAME

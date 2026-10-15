@@ -27,7 +27,7 @@ The terminal funnel preserves exit codes while aligning parse failures with the 
 
 Startup forces plain Typer/Click rendering and best-effort UTF-8 streams, using replacement for unencodable output and debug logging when wrappers cannot be reconfigured. Windows console code-page changes are best-effort. TTY color resolution combines active CLI flags, explicit caller overrides, settings-backed `NO_COLOR`/force-color behavior, and the actual output stream probe. This centralizes presentation policy, but changing the process streams is global and the fallback intentionally may leave a custom stream unchanged (stdio setup (`src/cadrumo_client/commands/stdio.py`), TTY policy (`src/cadrumo/entrypoints/cli/_tty.py`)).
 
-The Windows secret wrapper converts supervisor-allowlisted inherited HANDLEs into CRT descriptors, places the root profile channel before the command and leaf/recovery channels after it, and closes owned descriptors after dispatch. A shared HANDLE used for both root and leaf is aliased rather than opened twice; partially opened descriptors are closed if a later conversion fails. HANDLE integers are Windows-specific and the wrapper itself relies on its launcher to enforce the inheritance allowlist. Root and leaf secret-channel shape, field limits, exclusivity, duplicate-key rejection, and extra-field rejection are also projected as value-free command metadata (shared HANDLE mechanics (`src/cadrumo_client/commands/windows_secret_channels.py`) and AEAT dispatch (`src/cadrumo/entrypoints/cli/_windows_profile_secret_bootstrap.py`), root option authority (`src/cadrumo/entrypoints/cli/_root_command_specs.py`), secret metadata projection (`src/cadrumo/entrypoints/cli/command_schema.py`)).
+The Windows secret wrapper converts supervisor-allowlisted inherited HANDLEs into CRT descriptors, places the root profile channel before the command and leaf/recovery channels after it, and closes owned descriptors after dispatch. A shared HANDLE used for both root and leaf is aliased rather than opened twice; partially opened descriptors are closed if a later conversion fails. HANDLE integers are Windows-specific and the wrapper itself relies on its launcher to enforce the inheritance allowlist. Root and leaf secret-channel shape, field limits, exclusivity, duplicate-key rejection, and extra-field rejection are also projected as value-free command metadata (shared HANDLE mechanics (`src/cadrumo_client/commands/windows_secret_channels.py`) and AEAT dispatch (`src/cadrumo_runtime/host/frontend/cli/windows_secret_bootstrap.py`), root option authority (`src/cadrumo/entrypoints/cli/_root_command_specs.py`), secret metadata projection (`src/cadrumo/entrypoints/cli/command_schema.py`)).
 
 ## Runtime and command graph
 
@@ -59,7 +59,7 @@ All 27 assigned files are linked below.
 - `src/cadrumo_client/commands/stdio.py`
 - `src/cadrumo/entrypoints/cli/_terminal_errors.py`
 - `src/cadrumo/entrypoints/cli/_tty.py`
-- `src/cadrumo/entrypoints/cli/_windows_profile_secret_bootstrap.py`
+- `src/cadrumo_runtime/host/frontend/cli/windows_secret_bootstrap.py`
 - `src/cadrumo/entrypoints/cli/_wire_scalars.py`
 - `src/cadrumo/entrypoints/cli/actividad_asset_receipts.py`
 - `src/cadrumo/entrypoints/cli/app_ledger_inventory_common_command_parameters.py`

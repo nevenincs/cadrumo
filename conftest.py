@@ -204,7 +204,7 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
     from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider
-    from cadrumo.tests.cli_fixture_ports import CliInvocation
+    from cadrumo.tests.cli_fixture_ports import CliInvocation, FreshCliInvocation
 
 # Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
@@ -218,15 +218,31 @@ def run_cadrumo_cli() -> Callable[..., Any]:
     """Invoke the public AEAT app through a session-owned Typer runner."""
     from typer.testing import CliRunner
 
-    from cadrumo.entrypoints.cli.main import cli_app
+    from cadrumo_runtime.host.frontend.cli.app import aeat_cli_app
 
     runner = CliRunner()
-    app = cli_app()
+    app = aeat_cli_app()
 
     def invoke(args: Sequence[str], **kwargs: Any) -> Any:
         return runner.invoke(app, list(args), **kwargs)
 
     return invoke
+
+
+@pytest.fixture(scope="module")
+def module_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[int | None, bytes]:
+    """Inject one real TUI host execution into product-owned startup assertions."""
+    from cadrumo_runtime.host.tests.frontend.tui.module_execution import run_tui_module
+
+    return run_tui_module(tmp_path_factory.mktemp("tui-module"))
+
+
+@pytest.fixture(scope="session")
+def fresh_cli() -> FreshCliInvocation:
+    """Inject real console process composition into product-owned assertions."""
+    from cadrumo_runtime.host.tests.frontend.cli.fresh_process import run_fresh_cli
+
+    return run_fresh_cli
 
 
 @pytest.fixture(scope="session")

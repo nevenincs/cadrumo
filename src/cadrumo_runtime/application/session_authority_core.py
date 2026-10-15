@@ -19,6 +19,8 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     ApiKeyRecord,
     AutomationGrant,
+    LoginEligibility,
+    OsLockState,
     ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.automation_custody_port import (
@@ -96,11 +98,19 @@ class SessionAuthorityCore:
             for login in facts.context.login_contexts
             if login.active and login.unlocked and login.os_owner_id == self.binding.os_owner_id
         }
+        uncertain_logins = {
+            login.login_id
+            for login in facts.context.login_contexts
+            if login.os_owner_id == self.binding.os_owner_id
+            and login.lock_state is OsLockState.UNKNOWN
+            and login.unattended is LoginEligibility.UNKNOWN
+        }
         self._retire(
             {
                 session.session_id
                 for session in self._sessions.values()
-                if session.originating_login_id is not None and session.originating_login_id not in live_logins
+                if session.originating_login_id is not None
+                and session.originating_login_id not in live_logins | uncertain_logins
             },
             reason=AccessDenialCode.OS_SESSION_UNAVAILABLE,
         )
@@ -157,9 +167,21 @@ class SessionAuthorityCore:
             isinstance(decision, AccessDenied)
             and session.session_id in self._sessions
             and decision.code not in {AccessDenialCode.CONNECTION_MISMATCH, AccessDenialCode.CLIENT_MISMATCH}
+            and not self._uncertain_login_denial(session, facts, decision)
         ):
             self._retire({session.session_id}, reason=decision.code)
         return decision
+
+    @staticmethod
+    def _uncertain_login_denial(session: AccessSession, facts: SessionAuthorityFacts, decision: AccessDenied) -> bool:
+        """Observation failure denies work without turning uncertainty into logout."""
+        return decision.code is AccessDenialCode.OS_SESSION_UNAVAILABLE and any(
+            login.login_id == session.originating_login_id
+            and login.os_owner_id == session.binding.os_owner_id
+            and login.lock_state is OsLockState.UNKNOWN
+            and login.unattended is LoginEligibility.UNKNOWN
+            for login in facts.context.login_contexts
+        )
 
     @contextmanager
     def _activation(self, session_id: UUID) -> Generator[None]:

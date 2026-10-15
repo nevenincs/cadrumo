@@ -86,6 +86,7 @@ from cadrumo_client.contracts.profile_access import (
     SessionRequest,
     SessionsLocked,
 )
+from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -110,6 +111,7 @@ class LoginObservation:
     login_id: str = "synthetic-native-login"
     active: bool = True
     lock_state: OsLockState = OsLockState.UNLOCKED
+    unattended: LoginEligibility | None = None
 
     def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
         return OsLoginContext(
@@ -117,7 +119,7 @@ class LoginObservation:
             os_owner_id=self.owner,
             active=self.active,
             lock_state=self.lock_state,
-            unattended=LoginEligibility.ELIGIBLE if self.active else LoginEligibility.INELIGIBLE,
+            unattended=self.unattended or (LoginEligibility.ELIGIBLE if self.active else LoginEligibility.INELIGIBLE),
             credential_facilities=credential_facilities,
         )
 
@@ -716,6 +718,83 @@ def test_fresh_native_host_reconciles_exact_surviving_denial_before_api_admissio
                 assert host.store.reconcile_denial() is None
             finally:
                 for client in clients:
+                    client.close()
+                stop.set()
+                running.result(timeout=12)
+                endpoint.close()
+
+
+def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not(tmp_path: Path) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsEndpoint(storage_root=root)
+    installed = installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
+    with administration_subject(
+        tmp_path, os_owner_id=owner_id(), installation_id=installed.installation_id
+    ) as enrollment:
+        profile = enrollment.store.binding.profile_id
+        close_active_bucket_session()
+        stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
+        profiles = RuntimeProfileConnections(
+            storage_root=root,
+            storage_identity=endpoint.storage_identity,
+            runtime_boot_id=boot,
+            stop=stop,
+            capture_login=lambda _channel: native_login,
+            secret_store=lambda: enrollment.native,
+        )
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
+        client = None
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            running = pool.submit(server.serve)
+            try:
+                assert server.ready.wait(3)
+                client = connect(endpoint)
+                admitted = login(client, profile, "password", PROFILE_INPUT.encode())
+                assert isinstance(admitted, ProfileStatus) and admitted.status.session_id is not None
+                session_id = admitted.status.session_id
+                native_login.lock_state = OsLockState.UNKNOWN
+                native_login.unattended = LoginEligibility.UNKNOWN
+                uncertain = client.session(
+                    SessionRequest(
+                        action="session_status", request_id=uuid4(), profile_id=profile, session_id=session_id
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(uncertain, ProfileStatus)
+                assert uncertain.status.denial is AccessDenialCode.OS_SESSION_UNAVAILABLE
+                native_login.lock_state = OsLockState.UNLOCKED
+                native_login.unattended = LoginEligibility.ELIGIBLE
+                recovered = client.session(
+                    SessionRequest(
+                        action="session_status", request_id=uuid4(), profile_id=profile, session_id=session_id
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(recovered, ProfileStatus)
+                assert recovered.status.denial is None
+                assert recovered.status.session_id == session_id
+                assert recovered.status.credential_authenticated
+                signed_out = client.session(
+                    SessionRequest(
+                        action="human_sign_out", request_id=uuid4(), profile_id=profile, session_id=session_id
+                    ),
+                    deadline=time.monotonic() + 12,
+                )
+                assert isinstance(signed_out, HumanSignedOut)
+                after_logout = client.session(
+                    SessionRequest(
+                        action="session_status", request_id=uuid4(), profile_id=profile, session_id=session_id
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(after_logout, AccessRefusal)
+                assert after_logout.code is AccessDenialCode.CONNECTION_MISMATCH
+            finally:
+                if client is not None:
                     client.close()
                 stop.set()
                 running.result(timeout=12)

@@ -460,7 +460,7 @@ def main() -> None:
             bootstrap = (
                 "cadrumo_runtime.host.windows_secret_bootstrap"
                 if runtime_command
-                else "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap"
+                else "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap"
             )
             argv = [sys.executable]
             if runtime_command:

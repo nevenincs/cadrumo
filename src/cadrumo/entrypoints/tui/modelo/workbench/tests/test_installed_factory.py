@@ -17,10 +17,7 @@ from ......core.external_constants import OutputLanguage
 from ......core.period import Period
 from ......domain.modelos.work_unit import WorkUnitState
 from ...lifecycle import ModeloWorkspaceLifecycleDoor
-from ..installed import (
-    ModeloWorkspaceDeclarationAdmissionError,
-    compose_installed_modelo_workbench_factory,
-)
+from ..factory import ModeloWorkspaceDeclarationAdmissionError, compose_installed_modelo_workbench_factory
 from ..screen import ModeloWorkbenchScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -7,6 +7,7 @@ import hashlib
 import json
 import sys
 import zipfile
+from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 
 from packaging.requirements import Requirement
@@ -24,6 +25,15 @@ from .layout import load_layout
 from .process_quiescence import quiesce
 from .stdlib import bytecode
 from .update_images import publish
+
+
+def _require_runtime_receipt(root: Path, runtime: Path, packages: str, files: Mapping[str, str]) -> None:
+    """Require a full payload rebuild when the agent's non-Python closure changes."""
+    member = (PurePosixPath(packages).parent / "agent-runtime.json").as_posix()
+    staged = root / member
+    expected = digest(runtime / "runtime-receipt.json")
+    if files.get(member) != expected or not staged.is_file() or digest(staged) != expected:
+        raise ValueError("Agent runtime differs from the staged package; build app-payload before updating the agent")
 
 
 def wheel_files(wheel: Path, *, version: str, prefix: str) -> dict[str, bytes]:
@@ -85,6 +95,7 @@ def update(build: Path, config: str) -> None:
             if installed is None or installed not in requirement.specifier:
                 raise ValueError(f"Agent requires a dependency update: {requirement.name}")
     prefix = contract["paths"]["packages"]
+    _require_runtime_receipt(root, paths["agent"] / "runtime", prefix, manifest["files"])
     prepared = wheel_files(wheel, version=receipt["version"], prefix=prefix)
     owned = (f"{prefix}/cadrumo_agent/", f"{prefix}/cadrumo_agent-{receipt['version']}.dist-info/")
     previous = {member for member in manifest["files"] if member.startswith(owned)}

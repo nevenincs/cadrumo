@@ -235,6 +235,17 @@ forbidden_modules =
     cadrumo_runtime
 allow_indirect_imports = False
 
+[importlinter:contract:tax-does-not-construct-its-managing-host]
+type = forbidden
+name = Tax interfaces receive services without constructing their managing host
+source_modules =
+    cadrumo
+forbidden_modules =
+    cadrumo_client.transport.installed_client
+    cadrumo_client.transport.credentials
+    cadrumo_client.commands.profile_admission
+allow_indirect_imports = False
+
 [importlinter:contract:shared-client-never-reaches-tax-frontends]
 type = forbidden
 name = Shared client code does not depend on tax frontends

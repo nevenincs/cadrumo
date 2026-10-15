@@ -108,6 +108,7 @@ class RuntimeProfileConnections(
         self._login_lifecycle_available = False
         self._worker_script, self._wall_clock = worker_script, wall_clock
         self._guard = RLock()
+        self._human_handover_guard = RLock()
         self._drain_guard = RuntimeLifecycleGuard()
         self._drain_records: dict[UUID, ProfileDrainRecord] | None = None
         self._drain_result: ProfileDrainResult | None = None

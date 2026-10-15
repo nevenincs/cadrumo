@@ -40,7 +40,7 @@ def run_tui_continuation_child(
     readback_error: str | None = None
     callback_entered = False
 
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     if direction == "tui_to_cli":
         from cadrumo.entrypoints.adapter_composition import profile_adapter_composition

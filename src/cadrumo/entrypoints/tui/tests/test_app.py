@@ -39,7 +39,6 @@ from ..navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
-from ..runtime_access_management import RuntimeAccessManagementScreen
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -506,7 +505,7 @@ async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admis
                 await pilot.pause(0.02)
         assert app.return_value == AccountRecomposeRequiredV1(
             reason=(
-                AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.EXPIRED
+                AccountRecomposeReasonV1.SIGNED_OUT if completion == "success" else AccountRecomposeReasonV1.UNAVAILABLE
             )
         )
         assert app._account_factories is None
@@ -618,7 +617,7 @@ async def test_failed_direct_action_exits_to_fresh_admission_and_hides_unavailab
         async with asyncio.timeout(5):
             while app.return_value is None:
                 await pilot.pause(0.02)
-        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE)
 
 
 @pytest.mark.asyncio
@@ -653,18 +652,20 @@ async def test_cancelled_direct_action_retains_completion_until_runtime_effect_s
             release.set()
         await asyncio.wait_for(completed.wait(), 5)
         await pilot.pause()
-        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE)
 
 
 @pytest.mark.asyncio
 async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_return() -> None:
+    class LostAccessScreen(Screen[None]):
+        access_lost = True
+
     app = CadrumoTuiApp(
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=_account_factories(access=Screen()),
     )
-    lost_screen = object.__new__(RuntimeAccessManagementScreen)
-    object.__setattr__(lost_screen, "_access_lost", True)
+    lost_screen = LostAccessScreen()
     async with app.run_test() as pilot:
         await _settle(app, pilot)
         assert app.account_action_available(AccountActionV1.ACCESS)

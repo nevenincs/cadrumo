@@ -128,7 +128,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.tui.launcher.TuiModuleArgumentError",
+        "cadrumo.entrypoints.tui.module_arguments.TuiModuleArgumentError",
         ErrorCode(
             code="REFUSED_TUI_MODULE_ARGUMENT",
             category=ErrorCategory.REFUSED,
@@ -148,7 +148,18 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.tui.profile.runtime_errors.ProfileManagerCompletedViewUnavailableError",
+        "cadrumo.entrypoints.tui.account.AccountSessionUnavailableError",
+        ErrorCode(
+            code="FAIL_TUI_ACCOUNT_SESSION_UNAVAILABLE",
+            category=ErrorCategory.FAIL,
+            message_key="tui.root.account.unavailable",
+            retryable=True,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.tui.profile.client_errors.ProfileManagerCompletedViewUnavailableError",
         ErrorCode(
             code="FAIL_TUI_PROFILE_COMPLETED_VIEW_UNAVAILABLE",
             category=ErrorCategory.FAIL,
@@ -169,7 +180,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.tui.modelo.workbench.installed.ModeloWorkspaceDeclarationAdmissionError",
+        "cadrumo.entrypoints.tui.modelo.workbench.factory.ModeloWorkspaceDeclarationAdmissionError",
         ErrorCode(
             code="REFUSED_TUI_MODELO_WORKSPACE_DECLARATION_ADMISSION",
             category=ErrorCategory.REFUSED,

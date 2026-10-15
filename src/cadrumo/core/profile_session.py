@@ -10,7 +10,24 @@ string literals per layer.
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
+
+from pydantic import BaseModel
+
+from .models import STRICT_FROZEN_CONFIG
+
+
+class ProfileHumanLoginReceipt(BaseModel):
+    """Nonsecret acknowledgement of human proof and optional bounded acceleration."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    authenticated_at: datetime
+    idle_deadline: datetime
+    absolute_deadline: datetime
+    session_persisted: bool
+    resumed: bool
 
 
 class ProfileSessionRefusalReason(StrEnum):
@@ -122,6 +139,7 @@ class ProfileRecordUnavailability(StrEnum):
 
 __all__ = [
     "KeychainUnavailability",
+    "ProfileHumanLoginReceipt",
     "ProfileRecordUnavailability",
     "ProfileSessionRefusalReason",
     "ReceiptBindingRefusal",

@@ -48,13 +48,12 @@ def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings(
 
     assert result.outcome in {UnreachableCodeOutcome.CLEAN, UnreachableCodeOutcome.FINDINGS}, result.reason
     assert result.headline()
-    assert "cadrumo.entrypoints.cli.bootstrap:main" in set(result.roots)
-    assert "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap (python -m)" in set(result.roots)
+    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main (workspace sibling)" in set(result.roots)
     assert "cadrumo_runtime.host.bootstrap:main (workspace sibling)" in set(result.roots)
     assert 0 < result.reachable_modules <= result.shipped_modules
 
     reported_modules = {finding.module for finding in result.modules}
-    assert reported_modules.isdisjoint({"cadrumo", "cadrumo.entrypoints.cli.bootstrap"})
+    assert reported_modules.isdisjoint({"cadrumo", "cadrumo_runtime.host.frontend.cli.bootstrap"})
 
     if result.outcome is UnreachableCodeOutcome.FINDINGS:
         for module in result.modules:

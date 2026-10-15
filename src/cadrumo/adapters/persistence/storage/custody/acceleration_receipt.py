@@ -10,7 +10,7 @@ The "logged in" state minted by ``aeat config login`` survives across CLI
 processes as two split-knowledge artefacts, either of which is useless
 alone:
 
-- an ephemeral 32-byte session key held ONLY in the OS keychain under the
+- an ephemeral 32-byte session key persisted ONLY in the OS keychain under the
   service ``cadrumo:profile-session:v2`` with the immutable profile UUID plus
   minted session UUID as account, and
 - an on-disk ``session.v2.json`` record in the separated profile keystore
@@ -79,6 +79,7 @@ from __future__ import annotations
 import binascii
 import json
 import secrets
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
@@ -928,6 +929,7 @@ def mint_profile_session(
     login_id: str,
     sign_in: SignInGenerationCustody,
     generation: SignInGeneration,
+    retain_sealing_key: Callable[[bytearray], None] | None = None,
 ) -> _crypto.PersistedProfileSession:
     """Mint a profile receipt under the custody-wide session lifecycle lock.
 
@@ -984,6 +986,7 @@ def mint_profile_session(
             absolute_minutes=absolute_minutes,
             login_id=login_id,
             sign_in=generation,
+            retain_sealing_key=retain_sealing_key,
         )
 
 
@@ -999,6 +1002,7 @@ def _mint_profile_session(
     absolute_minutes: int,
     login_id: str,
     sign_in: SignInGeneration,
+    retain_sealing_key: Callable[[bytearray], None] | None = None,
 ) -> _crypto.PersistedProfileSession:
     """Mint the persisted session for a freshly-authenticated login.
 
@@ -1020,6 +1024,7 @@ def _mint_profile_session(
         absolute_minutes: Immutable absolute cap; strict positive.
         login_id: Originating OS login, bound only as a salted commitment.
         sign_in: The durable sign-in generation the receipt is stamped with.
+        retain_sealing_key: Trusted worker callback borrowing the key after verified publication.
 
     Returns:
         The persisted :class:`~.acceleration_receipt_crypto.PersistedProfileSession`.
@@ -1111,9 +1116,84 @@ def _mint_profile_session(
                 # explicitly retryable through the journal, never an
                 # authentication failure or a global account sweep.
                 _log.debug("profile-session predecessor retirement deferred error_type=%s", type(exc).__name__)
+            if retain_sealing_key is not None:
+                retain_sealing_key(session_key_buffer)
             return record
         finally:
             _zeroise(session_key_buffer)
+
+
+def refresh_profile_session_with_key(
+    *,
+    sign_in: SignInGenerationCustody,
+    receipt_key: bytearray,
+    login_id: str,
+    now: datetime,
+    deadline: datetime,
+) -> bool:
+    """Reseal existing acceleration for an admitted live person, never mint it.
+
+    The caller holds live human custody. Only its retained sealing key is used;
+    generation and exact receipt bytes fence sign-out and receipt replacement.
+    No keychain operation is performed here, including retirement recovery.
+    """
+    now, deadline = validate_utc_aware(now), validate_utc_aware(deadline)
+    if deadline <= now:
+        return False
+    binding = sign_in.binding
+    path = profile_session_path(storage_root=sign_in.root, profile_id=binding.profile_id)
+    with profile_custody_root_lock(sign_in.root), profile_custody_local_lock(_profile_session_lock_path(path)):
+        if (
+            read_optional_profile_custody_local_record(
+                _profile_session_retirement_path(storage_root=sign_in.root, profile_id=binding.profile_id),
+                maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
+            )
+            is not None
+        ):
+            return False
+        captured = _read_receipt(path)
+        if captured is None:
+            return False
+        payload, decoded = captured
+        record = _current_record(decoded)
+        if (
+            record is None
+            or record.profile_id != binding.profile_id
+            or record.custody_generation != binding.custody_generation
+            or record.dek_epoch != b64_encode(binding.dek_epoch.bytes)
+            or now < record.issued_at
+            or _receipt_binding_refusal(record=record, login_id=login_id, generation=sign_in.observe()) is not None
+        ):
+            return False
+        try:
+            material = _crypto.unwrap_profile_session_dek(session_key=bytes(receipt_key), record=record)
+        except DecryptionError:
+            return False
+        try:
+            if min(record.idle_deadline, record.absolute_deadline) >= deadline:
+                return True
+            successor = _crypto.wrap_profile_session_dek(
+                session_key=bytes(receipt_key),
+                dek=bytes(material),
+                profile_id=record.profile_id,
+                session_id=record.session_id,
+                custody_generation=record.custody_generation,
+                dek_epoch=record.dek_epoch,
+                login_id=login_id,
+                sign_in=record.sign_in,
+                issued_at=record.issued_at,
+                idle_deadline=max(record.idle_deadline, deadline),
+                absolute_deadline=max(record.absolute_deadline, deadline),
+            )
+            _write_acceleration_receipt(
+                storage_root=sign_in.root,
+                profile_id=binding.profile_id,
+                record=successor,
+                predecessor=payload,
+            )
+            return True
+        finally:
+            _zeroise(material)
 
 
 def _refusal(

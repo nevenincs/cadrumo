@@ -7,7 +7,7 @@ use crate::{
     terminal::{self, TerminalState},
 };
 use cadrumo_application::{
-    diagnostics::{Diagnostics, EventKind},
+    diagnostics::{Diagnostics, EventKind, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
 use std::{collections::BTreeSet, sync::Arc};
@@ -196,30 +196,17 @@ pub fn run(
                 return;
             };
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // The launcher is a runtime client: it ends before the runtime's
-                // supervision does.
-                let agent = window.state::<Arc<agent::AgentHost>>();
-                if let Err(error) = tauri::async_runtime::block_on(agent.close()) {
-                    state.launch.diagnostics.failure(error);
-                }
-                let manager = window.state::<Arc<ManagerStart>>();
-                if let Err(error) = tauri::async_runtime::block_on(manager.close_checked()) {
+                state
+                    .launch
+                    .diagnostics
+                    .host_event(EventKind::WindowCloseRequested, HostStage::Shutdown);
+                if let Err(error) = close_clients_and_supervision(window.app_handle()) {
                     api.prevent_close();
                     state.launch.diagnostics.failure(error);
                     window.app_handle().exit(1);
-                    return;
-                }
-                let sign_in = window.state::<Arc<shell::sign_in::SignIn>>();
-                if let Err(error) = tauri::async_runtime::block_on(sign_in.stop()) {
-                    api.prevent_close();
-                    state.launch.diagnostics.failure(error);
-                }
-                if let Err(error) = state.stop() {
-                    api.prevent_close();
-                    state.launch.diagnostics.failure(error);
                 }
             } else if matches!(event, tauri::WindowEvent::Destroyed)
-                && let Err(error) = state.stop()
+                && let Err(error) = state.shutdown()
             {
                 state.launch.diagnostics.failure(error);
             }
@@ -229,37 +216,46 @@ pub fn run(
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
     let handle = app.handle().clone();
-    let code = app.run_return(|_, _| {});
+    let code = app.run_return(move |_, event| {
+        if matches!(event, tauri::RunEvent::ExitRequested { .. }) {
+            diagnostics.host_event(EventKind::HostExitRequested, HostStage::Shutdown);
+        }
+    });
     startup.cancel();
     tauri::async_runtime::block_on(startup.settle());
-    let agent_cleanup = if let Some(agent) = handle.try_state::<Arc<agent::AgentHost>>() {
-        tauri::async_runtime::block_on(agent.close())
-    } else {
-        Ok(())
-    };
-    let manager_cleanup = if let Some(manager) = handle.try_state::<Arc<ManagerStart>>() {
-        tauri::async_runtime::block_on(manager.close_checked())
-    } else {
-        Ok(())
-    };
-    let sign_in_cleanup = if let Some(sign_in) = handle.try_state::<Arc<shell::sign_in::SignIn>>() {
-        tauri::async_runtime::block_on(sign_in.stop())
-    } else {
-        Ok(())
-    };
-    let terminal_cleanup = if let Some(state) = handle.try_state::<Arc<TerminalState>>() {
-        state.stop()
-    } else {
-        Ok(())
-    };
-    agent_cleanup?;
-    manager_cleanup?;
-    sign_in_cleanup?;
-    terminal_cleanup?;
+    close_clients_and_supervision(&handle)?;
     if startup.failed() {
         return Ok(1);
     }
     Ok(code)
+}
+
+/// End runtime clients before asking their owned supervisor to drain. Attempt
+/// every cleanup even after a failure, including on run-loop exit without a
+/// window close event. Each owner keeps failed cleanup available for retry.
+fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Result<()> {
+    let agent_cleanup = handle
+        .try_state::<Arc<agent::AgentHost>>()
+        .map_or(Ok(()), |agent| {
+            tauri::async_runtime::block_on(agent.close())
+        });
+    let sign_in_cleanup = handle
+        .try_state::<Arc<shell::sign_in::SignIn>>()
+        .map_or(Ok(()), |sign_in| {
+            tauri::async_runtime::block_on(sign_in.stop())
+        });
+    let terminal_cleanup = handle
+        .try_state::<Arc<TerminalState>>()
+        .map_or(Ok(()), |terminal| terminal.shutdown());
+    let manager_cleanup = handle
+        .try_state::<Arc<ManagerStart>>()
+        .map_or(Ok(()), |manager| {
+            tauri::async_runtime::block_on(manager.close_checked())
+        });
+    agent_cleanup
+        .and(sign_in_cleanup)
+        .and(terminal_cleanup)
+        .and(manager_cleanup)
 }
 
 pub(crate) async fn assemble<R: Runtime>(

@@ -87,13 +87,13 @@ class _DeclaredExclusion:
 
 _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/installed_session.py",
+        path="src/cadrumo_runtime/host/frontend/tui/installed_session.py",
         owner="_run_runtime_session.requester_for_api.fresh_credential_client",
         construct="asyncio.run",
         reason="the requester calls this credential-client opener on its owned worker thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/installed_session.py",
+        path="src/cadrumo_runtime/host/frontend/tui/installed_session.py",
         owner="_attempt_runtime_session",
         construct="asyncio.run",
         reason=(
@@ -102,31 +102,31 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
         ),
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/runtime_account.py",
+        path="src/cadrumo_runtime/host/frontend/tui/runtime_account.py",
         owner="compose_runtime_account_factories.password.rotate",
         construct="asyncio.run",
         reason="PassphraseScreen.start_attempt invokes rotation on an owned worker thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py",
+        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_lifecycle.py",
         owner="_RuntimeModeloLifecycleBindings.admit",
         construct="asyncio.run",
         reason="the lifecycle door invokes attestation admission through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/runtime_actividad_asset.py",
+        path="src/cadrumo_runtime/host/frontend/tui/runtime_actividad_asset.py",
         owner="RuntimeActivityAssetTuiActionsV1._call",
         construct="asyncio.run",
         reason="the activity-asset screen dispatches these synchronous actions through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/runtime_evidence.py",
+        path="src/cadrumo_runtime/host/frontend/tui/runtime_evidence.py",
         owner="RuntimeEvidenceTuiDoorV1._call_sync",
         construct="asyncio.run",
         reason="the evidence screen reads records and reader readiness through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/secret/automation_requester_delivery.py",
+        path="src/cadrumo_runtime/host/frontend/tui/secret/automation_requester_delivery.py",
         owner="RequesterDeliveryMixin._reconcile_fresh",
         construct="asyncio.run",
         reason=(
@@ -135,31 +135,31 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
         ),
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py",
+        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_lifecycle.py",
         owner="_RuntimeModeloLifecycleBindings.read",
         construct="asyncio.run",
         reason="ModeloWorkspaceLifecycleDoor runs prerequisite, renewal and preflight reads through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py",
+        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_workbench_reads.py",
         owner="RuntimeModeloWorkbenchSource.read_form",
         construct="asyncio.run",
         reason="ModeloWorkbenchScreen loads its InstalledModeloWorkbench reader through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py",
+        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_workbench_reads.py",
         owner="RuntimeModeloWorkbenchSource.help_card",
         construct="asyncio.run",
         reason="WorkbenchHelpMixin reads InstalledModeloWorkbench.help_card through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/profile/runtime_auth_configuration.py",
-        owner="configure_runtime_auth",
+        path="src/cadrumo_runtime/host/frontend/tui/profile/auth_configuration_client.py",
+        owner="configure_profile_authentication",
         construct="asyncio.run",
-        reason="the profile field editor invokes RuntimeProfileManagerComposition._field on its owned worker thread",
+        reason="the profile field editor invokes ProfileManagerClientComposition._field on its owned worker thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py",
+        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_work_create.py",
         owner="compose_runtime_work_create_handoff.create",
         construct="asyncio.run",
         reason="declarations overview and calendar invoke the create handoff through asyncio.to_thread",

@@ -16,6 +16,7 @@ from textual.widgets import Button, Link, Static
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_controller import OperationController
 
 from ...application.export.google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
@@ -51,7 +52,6 @@ from ...core.time.clock import now
 from ..review_publication_labels import GoogleReviewLabels
 from .operations.interactions import OperationModalReviewInteractionV1
 from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
-from .operations.runtime_controller import RuntimeOperationController
 
 
 def validate_saved_google_review(
@@ -81,7 +81,7 @@ class GoogleSavedReviewModal(OperationModal):
 
     def __init__(
         self,
-        controller: RuntimeOperationController,
+        controller: OperationController,
         request: GoogleReviewRequest,
         reviewed: Callable[[GoogleReviewProjection], None],
     ) -> None:
@@ -186,7 +186,7 @@ class GoogleSavedReviewScreen(Screen[None]):
         )
         self._started = False
         self._review: GoogleReviewProjection | None = None
-        self._controller: RuntimeOperationController | None = None
+        self._controller: OperationController | None = None
         self._labels = GoogleReviewLabels(OutputLanguage(output_language()))
 
     @override
@@ -219,7 +219,7 @@ class GoogleSavedReviewScreen(Screen[None]):
     async def _prepare(self) -> None:
         try:
             self._require_session()
-            controller = await RuntimeOperationController.submit(
+            controller = await OperationController.submit(
                 self._client,
                 definition_id=GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(self._profile_id)),
@@ -309,7 +309,7 @@ class GoogleSavedReviewScreen(Screen[None]):
             await asyncio.sleep(0.1)
 
     async def _read_result(
-        self, controller: RuntimeOperationController, outcome: OperationModalSettledOutcomeV1
+        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1
     ) -> None:
         projection = outcome.view_model.projection
         if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:

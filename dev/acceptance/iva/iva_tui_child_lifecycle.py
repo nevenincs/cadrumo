@@ -70,7 +70,7 @@ def _capture_child(
 
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     with live_exchange_rate_composition(), profile_adapter_composition():
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
@@ -135,7 +135,7 @@ def _reopen_child(
 
     from textual.widgets import DataTable
 
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     async def drive(pilot: Any) -> None:
         nonlocal observed, reopen_error, reopen_stage

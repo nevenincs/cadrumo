@@ -11,6 +11,7 @@ import pytest
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.operation_controller import OperationController, await_terminal_projection
 
 from .....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
@@ -40,10 +41,6 @@ from .....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
-)
-from ..runtime_controller import (
-    RuntimeOperationController,
-    await_terminal_projection,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -121,7 +118,7 @@ class _Controller:
 
 async def _await(controller: _Controller, *, deadline: float | None = None) -> OperationPublicProjectionV1:
     return await await_terminal_projection(
-        cast(RuntimeOperationController, controller),
+        cast(OperationController, controller),
         definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
         subject_ref=_SUBJECT,
         request_schema=_REQUEST_SCHEMA,

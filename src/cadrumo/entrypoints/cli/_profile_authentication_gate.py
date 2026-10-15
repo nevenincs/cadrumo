@@ -34,6 +34,7 @@ from ._profile_authentication_contract import (
     profile_authentication_posture,
     root_profile_secret_model,
 )
+from .profile_connection import ProfileConnectionActivator, require_bound_profile_connection
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -610,6 +611,7 @@ def preflight_parsed_leaf(
     graph: CommandSpecGraph,
     spec: CommandSpec,
     arguments: Mapping[str, object],
+    activate_connection: ProfileConnectionActivator = require_bound_profile_connection,
 ) -> None:
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
     node = graph.node(spec.key)
@@ -673,6 +675,7 @@ def preflight_parsed_leaf(
         credential_reference,
         uses_profile_connection,
         node.path[1:],
+        activate_connection=activate_connection,
     ):
         return
     _activate_parsed_profile_session(
@@ -838,6 +841,8 @@ def _activate_profile_connection_leaf(
     credential_reference: UUID | None,
     uses_profile_connection: bool,
     command_path: tuple[str, ...],
+    *,
+    activate_connection: ProfileConnectionActivator = require_bound_profile_connection,
 ) -> bool:
     """Apply a profile-connection route before the ordinary session gate."""
     if _diagnose_unregistered_profile(spec=spec, root=root, credential_reference=credential_reference is not None):
@@ -845,8 +850,6 @@ def _activate_profile_connection_leaf(
     if _profile_status_has_no_target(spec, explicit_target, root, credential_reference):
         return True
     if uses_profile_connection:
-        from cadrumo_client.commands.profile_admission import activate_profile
-
         from ._profile_session_gate import enforce_explicit_database_route
 
         enforce_explicit_database_route(
@@ -861,7 +864,7 @@ def _activate_profile_connection_leaf(
 
             if resolve_active_bucket_id() is None:
                 raise _no_active_profile_refusal()
-        activate_profile(
+        activate_connection(
             ctx,
             target_bucket_id=explicit_target,
             target_profile_label=explicit_label,

@@ -81,7 +81,7 @@ impl Program {
             },
             Kind::Tui => Self {
                 executable: interpreter,
-                arguments: ["-I", "-m", "cadrumo.entrypoints.tui"]
+                arguments: ["-I", "-m", "cadrumo_runtime.host.frontend.tui"]
                     .into_iter()
                     .map(OsString::from)
                     .collect(),
@@ -121,6 +121,7 @@ struct Entry<S> {
 /// in its slot until a later settlement succeeds.
 pub struct Registry<S> {
     next: u64,
+    closed: bool,
     slots: [Option<Entry<S>>; 3],
 }
 
@@ -128,6 +129,7 @@ impl<S> Default for Registry<S> {
     fn default() -> Self {
         Self {
             next: 0,
+            closed: false,
             slots: [None, None, None],
         }
     }
@@ -137,6 +139,9 @@ impl<S: Settle> Registry<S> {
     /// Starts `kind`, replacing a session that exited or was stopped. A live
     /// session of the same kind is refused.
     pub fn open(&mut self, kind: Kind, start: impl FnOnce() -> Result<S>) -> Result<u64> {
+        if self.closed {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
         let slot = &mut self.slots[kind.slot()];
         if let Some(entry) = slot {
             if entry.session.live() {
@@ -198,6 +203,12 @@ impl<S: Settle> Registry<S> {
             }
         }
         failures
+    }
+
+    /// Permanently refuse new children under the same lock used for opening.
+    pub fn shutdown(&mut self) -> Vec<ApplicationError> {
+        self.closed = true;
+        self.close_all()
     }
 
     #[cfg(test)]
@@ -312,10 +323,19 @@ impl TerminalState {
         self.registry()?.close(id)
     }
 
-    /// Settles every session; used on window close, page load and host exit.
+    /// Settles every session for a page reload, allowing the new page to open.
     /// Returns the first failure; later ones go to diagnostics directly.
     pub fn stop(&self) -> Result<()> {
-        let mut failures = self.registry()?.close_all().into_iter();
+        self.report_cleanup(self.registry()?.close_all())
+    }
+
+    /// Host shutdown permanently closes admission; page reload only settles.
+    pub fn shutdown(&self) -> Result<()> {
+        self.report_cleanup(self.registry()?.shutdown())
+    }
+
+    fn report_cleanup(&self, errors: Vec<ApplicationError>) -> Result<()> {
+        let mut failures = errors.into_iter();
         let first = failures.next();
         for error in failures {
             self.launch.diagnostics.failure(error);

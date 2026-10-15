@@ -219,3 +219,8 @@ Amended 2026-10-13, extending the 2026-10-12 amendment above in the same decisio
 
 
 Amended 2026-10-14 under the operator's runtime separation directive: session authority and authentication administration are owned by `src/cadrumo_runtime`; the tax application `src/cadrumo` never imports that host. Shared client contracts and transports are defined once in `src/cadrumo_client`. AEAT retains direct human profile login, logout and creation. Session inventory, lock/resume, credential/grant administration and authentication-provider controls move to `cadrumo-runtime config` while preserving their existing authority and protected secret channels. Public tax-profile metadata listing and tax operations remain AEAT commands. Import-linter alone enforces the package boundary; no AST or text-matching boundary gate is introduced.
+
+
+## Active human lifetime refinement 2026-10-15
+
+The authorized active-use amendment in `2026-10-04-application-sign-in-adr` replaces this record's fixed human idle/absolute lifetime wording only when actual person input renews a still-live human sign-in. The original-login absolute cap does not interrupt active work. Agent, polling and service traffic never renew it; idle expiry and explicit revocation still apply. Live human siblings on the same originating login follow that renewal, while attended children retain their existing bounded deadlines and approval-based reissue. This does not turn agent activity into human activity, expand scopes, or restore expired authority. Earlier observations that no human extension exists describe the pre-repair implementation.

@@ -25,6 +25,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.operation_controller import OperationController
 
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.errors.error_codes import resolve_error_message
@@ -53,7 +54,6 @@ from .request_form import (
     validate_request,
 )
 from .run_result import receipt_text, result_pages, stopped_operation_text
-from .runtime_controller import RuntimeOperationController
 
 _CONTRACT_READ_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 _ACTION_MIN_COLUMN_WIDTH = 16
@@ -413,7 +413,7 @@ class OperationRunScreen(Screen[None]):
         subject: str,
         secret: bytearray | None,
         replay_key: str | None,
-    ) -> RuntimeOperationController | None:
+    ) -> OperationController | None:
         try:
             live = await await_cancellation_complete(
                 asyncio.to_thread(
@@ -425,7 +425,7 @@ class OperationRunScreen(Screen[None]):
                 # The form was built from another contract than the runtime now serves.
                 self._notice(tr("tui.operations.run.contract_changed"))
                 return None
-            return await RuntimeOperationController.submit(
+            return await OperationController.submit(
                 client,
                 definition_id=entry.definition_id,
                 subject_ref=subject,
@@ -461,7 +461,7 @@ class OperationRunScreen(Screen[None]):
         self._pages = ()
         self._show_page(0)
 
-    def _settled(self, controller: RuntimeOperationController, outcome: OperationModalOutcomeV1 | None) -> None:
+    def _settled(self, controller: OperationController, outcome: OperationModalOutcomeV1 | None) -> None:
         if isinstance(outcome, OperationModalSettledOutcomeV1):
             self.run_worker(self._show_result(controller, outcome), group="operation-run-result")
         elif isinstance(outcome, OperationModalDetachedOutcomeV1):
@@ -475,7 +475,7 @@ class OperationRunScreen(Screen[None]):
             )
 
     async def _show_result(
-        self, controller: RuntimeOperationController, outcome: OperationModalSettledOutcomeV1
+        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1
     ) -> None:
         projection = outcome.view_model.projection
         contract = projection.definition_contract

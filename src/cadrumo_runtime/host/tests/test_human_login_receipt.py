@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 from typing import NoReturn
 from uuid import uuid4
@@ -198,6 +199,52 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                 assert resumed_ack.absolute_deadline == acknowledged.absolute_deadline
                 assert custody.require(successor.session_id) == successor
                 assert path.read_bytes() == original and store.writes == 1
+                # Both password and resumed custody retain only a wipeable sealing key.
+                keys = tuple(human._sealing_keys.values())
+                assert len(keys) == 2 and all(any(key) for key in keys)
+                store.available = False
+                renewed = successor.model_copy(
+                    update={
+                        "issued_at": now(),
+                        "issued_monotonic": time.monotonic(),
+                        "expires_at": successor.expires_at + timedelta(hours=5),
+                    }
+                )
+                human.refresh(renewed)
+                updated = receipt.inspect_profile_session(storage_root=root, profile_id=identity.binding.profile_id)
+                assert updated is not None
+                assert updated.session_id == check.record.session_id
+                assert updated.idle_deadline == updated.absolute_deadline == renewed.expires_at
+                assert store.writes == 1
+                # A failed optional receipt write leaves current authority available.
+                with pytest.MonkeyPatch.context() as failed_write:
+                    events: list[str] = []
+
+                    def cannot_reseal(**_kwargs: object) -> NoReturn:
+                        raise ProfileCustodyRecordError("synthetic persistence failure")
+
+                    failed_write.setattr(profile_login, "refresh_profile_session_with_key", cannot_reseal)
+                    failed_write.setattr(
+                        profile_login,
+                        "diagnostic_event",
+                        lambda _log, event, **_kwargs: events.append(event),
+                    )
+                    human.refresh(renewed)
+                    assert custody.require(renewed.session_id) == renewed
+                    assert events == ["profile_receipt_refresh_failed"]
+                # Logout fences resealing even if the worker has not received retirement yet.
+                sign_in.advance()
+                fenced = path.read_bytes()
+                human.refresh(renewed)
+                assert path.read_bytes() == fenced
+                human.discard(lease.session_id)
+                custody.retire(lease.session_id)
+                human.discard(successor.session_id)
+                custody.retire(successor.session_id)
+                assert all(not any(key) for key in keys)
+                with pytest.raises(AutomationCustodyError):
+                    human.refresh(renewed)
+                store.available = True
             finally:
                 proof[:] = bytes(len(proof))
                 human.close()

@@ -33,6 +33,31 @@ fn from_document(document: Value) -> Result<Outcome> {
 }
 
 #[test]
+fn activity_requires_a_positive_typed_acknowledgement() {
+    for result in [
+        json!({"activity_recorded": false}),
+        json!({"activity_recorded": "true"}),
+        json!({"activity_recorded": true, "extra": true}),
+        json!({}),
+    ] {
+        assert!(
+            activity(Outcome::Success {
+                result,
+                active_profile: None
+            })
+            .is_err()
+        );
+    }
+    assert!(
+        activity(Outcome::Success {
+            result: json!({"activity_recorded": true}),
+            active_profile: None,
+        })
+        .is_ok()
+    );
+}
+
+#[test]
 fn python_login_refusals_project_only_the_shell_code_and_typed_countdown() {
     for (case, code, seconds) in [
         ("credential-rejected", "CREDENTIAL_REJECTED", None),

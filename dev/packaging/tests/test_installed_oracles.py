@@ -615,7 +615,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
         f"cadrumo-data-official=={version}",
         f"cadrumo-data-normatives=={version}",
     } <= requirements
-    assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints.cli.bootstrap:main"
+    assert metadata["console_scripts"]["aeat"] == "cadrumo_runtime.host.frontend.cli.bootstrap:main"
     # The package split is internal to one distribution: the wheel target packs
     # both source packages, so the root distribution declares the server script
     # and installing the root wheel is what puts `cadrumo_harness` on disk.

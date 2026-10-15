@@ -37,7 +37,7 @@ from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewModal, 
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
-from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
+from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient

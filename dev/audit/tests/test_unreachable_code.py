@@ -285,9 +285,12 @@ def test_repository_discovers_its_module_execution_roots() -> None:
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
     assert spec.package == "cadrumo"
-    assert "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" in spec.module_roots
-    assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
-    assert is_module_execution_surface(REPO_ROOT / "src/cadrumo/entrypoints/tui/__main__.py")
+    assert all(module.startswith("cadrumo.") for module in spec.module_roots)
+    assert "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap" not in spec.module_roots
+    assert is_module_execution_surface(REPO_ROOT / "src/cadrumo_runtime/host/frontend/cli/windows_secret_bootstrap.py")
+    runtime = next(companion for companion in spec.companions if companion.package == "cadrumo_runtime")
+    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
+    assert is_module_execution_surface(REPO_ROOT / "src/cadrumo_runtime/host/frontend/tui/__main__.py")
 
 
 def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(tmp_path: Path) -> None:
@@ -835,7 +838,7 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
 
     assert spec.package == "cadrumo"
     # Tax script roots and sibling consumer scripts retain separate ownership.
-    assert "cadrumo.entrypoints.cli.bootstrap:main" in {entry.spec for entry in spec.entry_points}
+    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main" in {entry.spec for entry in spec.entry_points}
     runtime = next(companion for companion in spec.companions if companion.package == "cadrumo_runtime")
     assert "cadrumo_runtime.host.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
@@ -847,10 +850,10 @@ def test_extra_roots_join_the_declared_console_scripts() -> None:
     """A ``python -m`` surface can be admitted as a root for one run without editing packaging."""
     spec = ShippedTreeSpec.from_repository(
         REPO_ROOT,
-        extra_roots=("cadrumo.entrypoints.tui.launcher:run_module",),
+        extra_roots=("cadrumo_runtime.host.frontend.tui.launcher:run_module",),
     )
 
-    assert spec.entry_points[-1] == EntryPoint("cadrumo.entrypoints.tui.launcher", "run_module")
+    assert spec.entry_points[-1] == EntryPoint("cadrumo_runtime.host.frontend.tui.launcher", "run_module")
 
 
 def test_entry_point_parse_rejects_malformed_specs() -> None:

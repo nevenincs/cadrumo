@@ -74,7 +74,7 @@ from cadrumo.adapters.persistence.storage.errors import KeyringUnavailableError
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.entrypoints.tui.profile.runtime_overview import read_runtime_profile_overview
+from cadrumo_runtime.host.frontend.tui.profile.overview_client import read_profile_overview
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo.application.operations.models import OperationId
 from cadrumo_client.contracts.contracts import RefusalError
@@ -84,7 +84,7 @@ async def read():
     try:
         await asyncio.to_thread(client.resume_receipt)
         view = await asyncio.to_thread(
-            read_runtime_profile_overview, client, profile_label='Lifecycle', output_language=OutputLanguage.EN
+            read_profile_overview, client, profile_label='Lifecycle', output_language=OutputLanguage.EN
         )
         print(json.dumps({'profile_id': str(client.profile_id), 'sections': len(view.sections)}))
     finally:

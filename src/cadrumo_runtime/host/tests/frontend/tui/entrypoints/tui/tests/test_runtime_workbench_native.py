@@ -81,22 +81,16 @@ from cadrumo.core.operations import (
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
-from cadrumo.entrypoints.tui import runtime_workbench as runtime_workbench_module
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp, RootPresentationV1
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
-from cadrumo.entrypoints.tui.launcher import main, run_precomposed_runtime_root_session
+from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloWorkspaceLifecycleDoor
-from cadrumo.entrypoints.tui.modelo.workbench.installed import InstalledModeloWorkbench
+from cadrumo.entrypoints.tui.modelo.workbench.factory import InstalledModeloWorkbench
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
-from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
 from cadrumo_client.contracts.operation_access import (
@@ -117,11 +111,20 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.operation_controller import OperationController
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.workbench_generation import read_workbench_generation
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+
+from .......frontend.tui import runtime_initial_root as runtime_initial_root_module
+from .......frontend.tui import runtime_workbench as runtime_workbench_module
+from .......frontend.tui.launcher import main, run_precomposed_runtime_root_session
+from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from .......frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
+from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
+from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
 pytestmark = [
     pytest.mark.integration,
@@ -222,10 +225,10 @@ async def _verify_from_installed_workspace(
     client: FrontendClient,
     profile_id: UUID,
     work_unit_id: str,
-) -> tuple[RuntimeOperationController, OperationPublicProjectionV1, ModeloWorkVerifyPublicResultV2]:
+) -> tuple[OperationController, OperationPublicProjectionV1, ModeloWorkVerifyPublicResultV2]:
     """Submit and read one verification through the installed workspace door."""
     controller = await actions.verify()
-    assert isinstance(controller, RuntimeOperationController)
+    assert isinstance(controller, OperationController)
     assert controller.client is client
     assert controller.session_id == client.session_id
     assert client.profile_id == profile_id
@@ -774,11 +777,15 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
 
     for phase, name in (
         ("generation", "read_workbench_generation"),
-        ("profile", "read_runtime_profile_overview"),
+        ("profile", "read_profile_overview"),
         ("status", "read_runtime_account_session"),
     ):
         monkeypatch.setattr(
             runtime_workbench_module, name, observed_read(phase, getattr(runtime_workbench_module, name))
+        )
+    for name in ("read_profile_overview", "read_runtime_account_session"):
+        monkeypatch.setattr(
+            runtime_initial_root_module, name, observed_read(name, getattr(runtime_initial_root_module, name))
         )
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
@@ -852,11 +859,20 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
                     is WorkbenchDestinationAdmissionState.AVAILABLE
                 )
                 assert not hasattr(root_app, "services")
+                async with asyncio.timeout(30):
+                    while not isinstance(root_app.screen, ProfileManagerScreen):
+                        await pilot.pause(0.05)
+                assert not any(read["phase"] == "generation" for read in reads)
                 await launched_session(kind=SessionKind.HUMAN)
                 if "root-change-user" not in stages:
                     stages.append("root-change-user")
                     root_app.run_account_action(AccountActionV1.CHANGE_USER)
                 else:
+                    root_app.screen.dismiss()
+                    async with asyncio.timeout(90):
+                        while not isinstance(root_app.screen, HomeScreen):
+                            await pilot.pause(0.05)
+                    assert any(read["phase"] == "generation" and read["state"] == "completed" for read in reads)
                     stages.append("root-close")
                     root_app.exit()
                 return

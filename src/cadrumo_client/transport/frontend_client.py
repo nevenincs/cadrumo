@@ -236,7 +236,15 @@ class FrontendClient(ProfileViewFrontend):
             return retained
         return TransportCleanup(self)
 
-    def _login(self, method: str, secret: bytearray, *, timeout: float, persist_receipt: bool = False) -> ProfileStatus:
+    def _login(
+        self,
+        method: str,
+        secret: bytearray,
+        *,
+        timeout: float,
+        persist_receipt: bool = False,
+        activity_only: bool = False,
+    ) -> ProfileStatus:
         try:
             if self._connection_purpose in {"recovery", "enrollment", "bootstrap"}:
                 raise FrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
@@ -249,6 +257,7 @@ class FrontendClient(ProfileViewFrontend):
                 "frontend": self.frontend,
                 "method": method,
                 "persist_receipt": persist_receipt,
+                "activity_only": activity_only,
             }
             if self._scope is not None:
                 document["scope"] = self._scope.model_dump(mode="python")
@@ -292,7 +301,9 @@ class FrontendClient(ProfileViewFrontend):
         """Consume an explicit key without attempting human receipt fallback."""
         return self._login("api_key", secret, timeout=timeout)
 
-    def resume_receipt(self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS) -> ProfileStatus:
+    def resume_receipt(
+        self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS, activity_only: bool = False
+    ) -> ProfileStatus:
         """Present the exact profile's keychain-held receipt proof on one verified frame.
 
         This process reads only the proof and the receipt locator. It never
@@ -300,7 +311,8 @@ class FrontendClient(ProfileViewFrontend):
         proof against this connection's login and the current sign-in
         generation, and deletes a receipt it refuses. A runtime refusal of the
         receipt returns as :class:`ProfileReceiptRefusedError`, like a local
-        one, so callers keep one fallback path.
+        one, so callers keep one fallback path. ``activity_only`` resumes without
+        selecting this profile or signing out another profile.
         """
         from cadrumo.application.user_profile.login_session import (
             ProfileReceiptRefusedError,
@@ -309,7 +321,7 @@ class FrontendClient(ProfileViewFrontend):
 
         with borrow_profile_receipt_key(bucket_id=self.profile_id) as proof:
             try:
-                return self._login("receipt", proof, timeout=timeout)
+                return self._login("receipt", proof, timeout=timeout, activity_only=activity_only)
             except FrontendRefusedError as error:
                 reason = (
                     error.sign_in.reason
@@ -461,7 +473,9 @@ class FrontendClient(ProfileViewFrontend):
         finally:
             secret[:] = bytes(len(secret))
 
-    def _session_status(self, action: Literal["session_status", "session_refresh"], *, timeout: float) -> ProfileStatus:
+    def _session_status(
+        self, action: Literal["session_status", "session_refresh", "session_activity"], *, timeout: float
+    ) -> ProfileStatus:
         session_id = self._session()
         reply = self._reply(
             self._connection.session(
@@ -480,6 +494,13 @@ class FrontendClient(ProfileViewFrontend):
     def status(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> ProfileStatus:
         """Recheck the current connection-bound session without refreshing it."""
         return self._session_status("session_status", timeout=timeout)
+
+    def note_activity(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> ProfileStatus:
+        """Report explicit person input; never call from polling or automation."""
+        reply = self._session_status("session_activity", timeout=timeout)
+        if reply.status.denial is not None:
+            raise FrontendRefusedError(reply.status.denial.value)
+        return reply
 
     def disclosure_page(
         self, request: DisclosurePageRequest, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS

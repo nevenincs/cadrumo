@@ -172,7 +172,7 @@ def test_repository_code_never_invokes_git() -> None:
             offenders.append(relative)
     assert checked, "the executable-source inventory is empty"
     required = {
-        "src/cadrumo/entrypoints/cli/bootstrap.py",
+        "src/cadrumo_runtime/host/frontend/cli/bootstrap.py",
         "dev/env/clean.py",
         "dev/ci/change_scope.py",
         "dev/packaging/smoke_scoop.ps1",

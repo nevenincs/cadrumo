@@ -54,8 +54,10 @@ struct Call {
     runtime: bool,
     slow: bool,
     command: &'static str,
+    reveal_identifiers: bool,
 }
 const STATUS: Call = Call {
+    reveal_identifiers: false,
     words: &["sign-in-status"],
     leaf: "sign-in-status",
     command: "config.sign-in-status",
@@ -63,7 +65,23 @@ const STATUS: Call = Call {
     runtime: true,
     slow: false,
 };
+// Only this private machine read needs the exact opaque profile identity.
+// Ordinary status observations keep the CLI's privacy defaults.
+const PROFILE_ID: Call = Call {
+    reveal_identifiers: true,
+    ..STATUS
+};
+const ACTIVITY: Call = Call {
+    reveal_identifiers: false,
+    words: &["activity"],
+    leaf: "activity",
+    command: "config.activity",
+    reads: false,
+    runtime: true,
+    slow: false,
+};
 const LOGIN: Call = Call {
+    reveal_identifiers: false,
     words: &["login"],
     leaf: "login",
     command: "config.login",
@@ -72,6 +90,7 @@ const LOGIN: Call = Call {
     slow: false,
 };
 const LOGOUT: Call = Call {
+    reveal_identifiers: false,
     words: &["logout"],
     leaf: "logout",
     command: "config.logout",
@@ -80,6 +99,7 @@ const LOGOUT: Call = Call {
     slow: false,
 };
 const LIST: Call = Call {
+    reveal_identifiers: false,
     words: &["profile", "list"],
     leaf: "profile.list",
     command: "config.profile.list",
@@ -88,6 +108,7 @@ const LIST: Call = Call {
     slow: false,
 };
 const CREATE: Call = Call {
+    reveal_identifiers: false,
     words: &["profile", "create", "--quiet"],
     leaf: "profile.create",
     command: "config.profile.create",
@@ -125,6 +146,8 @@ pub struct SignIn {
     runtime: Result<ChildConfiguration>,
     service: Result<ChildConfiguration>,
     pub children: Children,
+    // Person input must never occupy the nonqueueing credential mutation lane.
+    activity_children: Children,
     observation: observation::Observer,
     reads: Arc<reads::Reads>,
 }
@@ -136,6 +159,7 @@ impl SignIn {
             runtime: resolve_image(launch, "cadrumo-runtime"),
             service: resolve_image(launch, "cadrumo-agent-service"),
             children: Children::new(launch.diagnostics.clone()),
+            activity_children: Children::new(launch.diagnostics.clone()),
             observation: observation::Observer::default(),
             reads: Arc::new(reads::Reads::default()),
         }
@@ -149,22 +173,7 @@ impl SignIn {
     }
 
     pub(crate) fn profile_id(&self, label: &str) -> Result<String> {
-        let wire::Outcome::Success {
-            result,
-            active_profile,
-        } = self.run(&STATUS, None, None)?
-        else {
-            return Err(failure(ErrorCode::ReadFailed));
-        };
-        if active_profile.as_deref() != Some(label) {
-            return Err(failure(ErrorCode::ReadFailed));
-        }
-        let id = result
-            .get("profile_id")
-            .and_then(serde_json::Value::as_str)
-            .filter(|id| super::agent_access::wire::is_uuid(id))
-            .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
-        Ok(id.to_owned())
+        profile_identity(self.run(&PROFILE_ID, None, None)?, label)
     }
 
     pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {
@@ -182,9 +191,25 @@ impl SignIn {
     pub async fn stop(&self) -> Result<()> {
         self.observation.close();
         let result = self.children.stop();
+        let activity_result = self.activity_children.stop();
         let joined = self.observation.join().await;
         result?;
+        activity_result?;
         joined
+    }
+
+    fn record_activity(&self) -> Result<wire::Outcome> {
+        let mut command = self.runtime.as_ref().map_err(Clone::clone)?.command();
+        command.args(arguments(&ACTIVITY, None, false));
+        let output = self.activity_children.run(
+            HelperIdentity {
+                command: ACTIVITY.command,
+                executable: HelperExecutable::Runtime,
+            },
+            command,
+            None,
+        )?;
+        wire::decode(ACTIVITY.leaf, &output)
     }
 
     fn run(
@@ -209,6 +234,7 @@ impl SignIn {
             &self.child
         };
         let mut command = image.as_ref().map_err(Clone::clone)?.command();
+        configure_environment(call, &mut command);
         command.args(arguments(call, label, secret.is_some()));
         let identity = HelperIdentity {
             command: call.command,
@@ -227,6 +253,31 @@ impl SignIn {
             self.children.run(identity, command, secret)
         }
     }
+}
+
+fn configure_environment(call: &Call, command: &mut std::process::Command) {
+    if call.reveal_identifiers {
+        command.env("CADRUMO_CLI_REVEAL_IDENTIFIERS", "1");
+    }
+}
+
+fn profile_identity(outcome: wire::Outcome, label: &str) -> Result<String> {
+    let wire::Outcome::Success {
+        result,
+        active_profile,
+    } = outcome
+    else {
+        return Err(failure(ErrorCode::ReadFailed));
+    };
+    if active_profile.as_deref() != Some(label) {
+        return Err(failure(ErrorCode::ReadFailed));
+    }
+    let id = result
+        .get("profile_id")
+        .and_then(serde_json::Value::as_str)
+        .filter(|id| super::agent_access::wire::is_uuid(id))
+        .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
+    Ok(id.to_owned())
 }
 
 /// The arguments of one call. A label is the person's own text: it follows
@@ -296,6 +347,7 @@ fn supported() -> bool {
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
         sign_in_status,
+        sign_in_activity,
         sign_in_subscribe,
         sign_in_unsubscribe,
         sign_in_submit,
@@ -303,6 +355,18 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         profile_list,
         profile_create
     ]
+}
+
+#[tauri::command]
+pub async fn sign_in_activity(
+    state: State<'_, Arc<SignIn>>,
+) -> std::result::Result<(), wire::CommandFailure> {
+    if !supported() {
+        return Err(failure(ErrorCode::UnsupportedPlatform).into());
+    }
+    let state = state.inner().clone();
+    let outcome = super::blocking(move || state.record_activity()).await?;
+    wire::activity(outcome)
 }
 
 #[tauri::command]
@@ -476,6 +540,47 @@ fn encoded(body: &InvokeBody, confirmed: bool) -> Result<Zeroizing<Vec<u8>>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_private_identity_requires_the_exact_selected_profile_and_a_real_uuid() {
+        let id = "12345678-1234-4234-8234-123456789abc";
+        let outcome = |profile: &str, identity: &str| wire::Outcome::Success {
+            result: serde_json::json!({"profile_id": identity}),
+            active_profile: Some(profile.into()),
+        };
+        assert_eq!(profile_identity(outcome("Test", id), "Test").unwrap(), id);
+        for (profile, identity) in [("Other", id), ("Test", "<profile-id>")] {
+            assert_eq!(
+                profile_identity(outcome(profile, identity), "Test")
+                    .unwrap_err()
+                    .code,
+                ErrorCode::ReadFailed
+            );
+        }
+    }
+
+    #[test]
+    fn only_the_private_identity_read_requests_unredacted_identifiers() {
+        use std::{ffi::OsStr, process::Command};
+        let mut identity = Command::new("unused");
+        configure_environment(&PROFILE_ID, &mut identity);
+        assert_eq!(
+            identity.get_envs().collect::<Vec<_>>(),
+            vec![(
+                OsStr::new("CADRUMO_CLI_REVEAL_IDENTIFIERS"),
+                Some(OsStr::new("1"))
+            )]
+        );
+        for call in [&STATUS, &ACTIVITY, &LOGIN, &LOGOUT, &LIST, &CREATE] {
+            let mut ordinary = Command::new("unused");
+            configure_environment(call, &mut ordinary);
+            assert_eq!(ordinary.get_envs().count(), 0);
+        }
+        assert_eq!(
+            arguments(&PROFILE_ID, None, false),
+            arguments(&STATUS, None, false)
+        );
+    }
 
     fn status_observation(available: bool) -> Result<SignInStatus> {
         wire::status(if available {
@@ -692,6 +797,10 @@ mod tests {
         assert_eq!(
             arguments(&LOGOUT, None, false),
             ["--format", "json", "config", "logout"]
+        );
+        assert_eq!(
+            arguments(&ACTIVITY, None, false),
+            ["--format", "json", "config", "activity"]
         );
     }
 

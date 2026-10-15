@@ -131,7 +131,7 @@ _HARNESS = (
                     from cadrumo_runtime.commands.main import main
                     exit_code = main()
                 else:
-                    from cadrumo.entrypoints.cli.main import main
+                    from cadrumo_runtime.host.frontend.cli.bootstrap import main
                     main()
             except SystemExit as exc:
                 exit_code = int(exc.code or 0)
@@ -233,7 +233,7 @@ _WINDOWS_HANDLE_HARNESS = (
                     from cadrumo_runtime.commands.main import main
                     exit_code = main()
                 else:
-                    from cadrumo.entrypoints.cli.main import main
+                    from cadrumo_runtime.host.frontend.cli.bootstrap import main
                     main()
             except SystemExit as exc:
                 exit_code = int(exc.code or 0)

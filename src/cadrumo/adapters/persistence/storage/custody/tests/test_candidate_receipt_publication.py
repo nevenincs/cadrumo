@@ -21,8 +21,6 @@ from cadrumo.application.user_profile.custody_ports import bind_profile_custody_
 from cadrumo.application.user_profile.login_session import (
     ProfileReceiptRefusedError,
     authenticate_profile_candidate,
-    borrow_profile_receipt_key,
-    resume_profile_candidate,
 )
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
@@ -134,27 +132,6 @@ def test_password_candidate_publishes_once_without_promoting_custody(
             assert candidate.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
             assert target_path.read_bytes() == persisted_bytes
             assert keyring.entries == entries and keyring.writes == writes
-            assert current_active_bucket_session() is active
-            assert resolve_active_bucket_id() == selected
-            original = candidate.outcome
-        with (
-            borrow_profile_receipt_key(bucket_id=profile_id) as proof,
-            resume_profile_candidate(
-                bucket_id=profile_id,
-                receipt_key=proof,
-                profile_decode_context=authority.profile_decode_context(),
-                login_id=RECEIPT_LOGIN_ID,
-                sign_in_binding=binding,
-            ) as resumed,
-        ):
-            assert resumed.outcome.session_persisted
-            assert resumed.outcome.already_authenticated
-            assert resumed.outcome.authenticated_at == original.authenticated_at
-            assert resumed.outcome.idle_deadline == original.idle_deadline
-            assert resumed.outcome.absolute_deadline == original.absolute_deadline
-            assert resumed.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
-            assert target_path.read_bytes() == persisted_bytes
-            assert keyring.writes == writes
             assert current_active_bucket_session() is active
             assert resolve_active_bucket_id() == selected
     assert other_path.read_bytes() == other_bytes

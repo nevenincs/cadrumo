@@ -23,7 +23,7 @@ def test_bootstrap_prefix_survives_both_reopens_without_accepting_incomplete_ver
     executable.touch()
     prefix = (
         "-c",
-        "from cadrumo.entrypoints.cli.bootstrap import main; import sys; sys.argv=['aeat',*sys.argv[1:]]; main()",
+        "from cadrumo_runtime.host.frontend.cli.bootstrap import main; import sys; sys.argv=['aeat',*sys.argv[1:]]; main()",
     )
     clients: list[InstalledCli] = []
     receipts: list[cli_journey.SanitizedCommandReceipt] = []

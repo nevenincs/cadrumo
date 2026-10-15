@@ -470,7 +470,9 @@ export type DiagnosticsEventKind =
   | "helper_timing"
   | "helper_result"
   | "failure"
-  | "host_stopped";
+  | "host_stopped"
+  | "window_close_requested"
+  | "host_exit_requested";
 
 /** `ProcessPhase` in `native/application/src/process/status.rs`. */
 export type ProcessPhase = "running" | "exited" | "terminated" | "failed";
@@ -778,6 +780,7 @@ export interface HostCommands {
     result: null;
   };
   sign_in_status: { args: Authorized; result: SignInStatus };
+  sign_in_activity: { args: Authorized; result: void };
   sign_in_subscribe: {
     args: Authorized<{ updates: Channel<SignInSignal> }>;
     result: number;

@@ -105,9 +105,12 @@ class ProfileOverviewRenderingMixin:
             credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
             if self._aeat_auth_setup is not None and source.requires_aeat_authentication:
                 credential_ready = self._auth_readiness is not None and self._auth_readiness.ready
-            button = self.query_one(f"#source-{source.key.value}", SourceActionCard).query_one(Button)
-            button.display = door_ready
-            button.disabled = not (door_ready and credential_ready)
+            # A saved profile can rebuild the source cards while a readiness
+            # read settles. The redraw calls this again after mounting them.
+            for card in self.query(SourceActionCard).filter(f"#source-{source.key.value}"):
+                for button in card.query(Button):
+                    button.display = door_ready
+                    button.disabled = not (door_ready and credential_ready)
 
     async def _redraw(self: ProfileManagerScreen) -> None:
         """Rebuild the profile context and every schema section table.
@@ -116,7 +119,7 @@ class ProfileOverviewRenderingMixin:
         It is what ``on_mount`` needs, and what an action returning a fresh
         overview needs, because either can hand the page a structurally
         different profile. A single-field edit goes through
-        :meth:`_apply_overview` instead, which repaints only the cells whose
+        :meth:`apply_overview` instead, which repaints only the cells whose
         content actually moved — the same page, at a fraction of the work.
         """
         async with self._render_lock:
@@ -199,7 +202,7 @@ class ProfileOverviewRenderingMixin:
             )
         return self._section_title(section)
 
-    async def _apply_overview(
+    async def apply_overview(
         self: ProfileManagerScreen, updated: ProfileOverview, *, refresh_auth: bool = True
     ) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.

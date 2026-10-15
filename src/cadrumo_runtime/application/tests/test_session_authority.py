@@ -47,6 +47,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     AuthorityState,
     Availability,
+    LoginEligibility,
     OperationAccessPolicy,
     OperationAccessRequest,
     OsLockState,
@@ -1831,3 +1832,153 @@ def test_recovery_retries_after_grants_publish_but_unlock_fails(
     assert subject.store.enrollment_state().grants == published.grants
     assert not subject.store.profile_lock_state().globally_locked
     assert isinstance(subject.admit(), AccessSession)
+
+
+def test_human_activity_keeps_original_issuance_alive_beyond_four_hours(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    idle_window = human.expires_at - human.issued_at
+    step = min(idle_window.total_seconds() / 2, 600)
+    while subject.owner.current.context.now <= human.issued_at + timedelta(hours=5):
+        subject.advance(step)
+        renewed = subject.authority.note_human_activity(
+            connection_id=subject.connection, session_id=human.session_id, idle_window=idle_window
+        )
+        assert isinstance(renewed, AccessSession)
+        assert renewed.issued_at == human.issued_at
+        assert renewed.session_id == human.session_id
+        assert renewed.expires_at > subject.owner.current.context.now
+    assert _published(subject, human.session_id)
+    assert subject.owner.login_calls == 1
+    assert not subject.owner.retired
+
+
+def test_human_activity_debounces_input_but_later_input_refreshes_worker(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    idle_window = human.expires_at - human.issued_at
+    for _ in range(5):
+        subject.advance(1)
+        assert (
+            subject.authority.note_human_activity(
+                connection_id=subject.connection, session_id=human.session_id, idle_window=idle_window
+            )
+            == human
+        )
+    assert not subject.owner.refreshed
+    subject.advance(60)
+    renewed = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=human.session_id, idle_window=idle_window
+    )
+    assert isinstance(renewed, AccessSession)
+    assert renewed.expires_at == subject.owner.current.context.now + idle_window
+    assert subject.owner.refreshed == [renewed]
+    assert renewed.issued_at == human.issued_at
+
+
+def test_human_activity_cannot_revive_an_idle_expired_session(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    idle_window = human.expires_at - human.issued_at
+    subject.advance(idle_window.total_seconds() + 1)
+    result = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=human.session_id, idle_window=idle_window
+    )
+    assert isinstance(result, AccessDenied)
+    assert not _published(subject, human.session_id)
+    assert human.session_id not in subject.owner.active
+    assert not subject.owner.refreshed
+
+
+def test_human_activity_from_another_connection_cannot_refresh_or_retire_the_session(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    foreign = uuid4()
+    subject.owner.connections[foreign] = human.client_id
+    subject.advance(60)
+    result = subject.authority.note_human_activity(
+        connection_id=foreign, session_id=human.session_id, idle_window=human.expires_at - human.issued_at
+    )
+    assert isinstance(result, AccessDenied) and result.code is AccessDenialCode.CONNECTION_MISMATCH
+    assert not subject.owner.refreshed
+    assert not subject.owner.retired
+    assert _published(subject, human.session_id)
+
+
+def test_human_activity_after_logout_cannot_restore_authority(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    subject.authority.retire_human_sessions()
+    subject.advance(60)
+    result = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=human.session_id, idle_window=human.expires_at - human.issued_at
+    )
+    assert isinstance(result, AccessDenied) and result.code is AccessDenialCode.AUTHENTICATION_REQUIRED
+    assert not subject.owner.active
+    assert not subject.owner.refreshed
+    assert subject.owner.login_calls == 1
+
+
+def test_human_activity_renews_live_sibling_without_refreshing_api_authority(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    other = uuid4()
+    subject.owner.connections[other] = human.client_id
+    sibling = subject.authority.admit_human(connection_id=other)
+    api = subject.admit()
+    assert isinstance(sibling, AccessSession) and isinstance(api, AccessSession)
+    subject.advance(60)
+    renewed = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=human.session_id, idle_window=human.expires_at - human.issued_at
+    )
+    assert isinstance(renewed, AccessSession)
+    refreshed = {session.session_id: session for session in subject.owner.refreshed}
+    assert set(refreshed) == {human.session_id, sibling.session_id}
+    assert refreshed[sibling.session_id].expires_at == renewed.expires_at
+    assert refreshed[sibling.session_id].issued_at == sibling.issued_at
+    refused = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=api.session_id, idle_window=timedelta(minutes=15)
+    )
+    assert isinstance(refused, AccessDenied) and refused.code is AccessDenialCode.PERSON_ACT_REQUIRED
+
+
+def test_unknown_native_observation_denies_activity_without_retirement_and_recovers(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    subject.advance(60)
+    before = subject.owner.current.context
+    uncertain = changed(before.login_contexts[0], lock_state=OsLockState.UNKNOWN, unattended=LoginEligibility.UNKNOWN)
+    subject.owner.current = SessionAuthorityFacts(
+        subject.owner.current.profile, changed(before, login_contexts=(uncertain,))
+    )
+    result = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=human.session_id, idle_window=human.expires_at - human.issued_at
+    )
+    assert isinstance(result, AccessDenied) and result.code is AccessDenialCode.OS_SESSION_UNAVAILABLE
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=human.session_id,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert isinstance(status, ProfileAccessStatus)
+    assert status.denial is AccessDenialCode.OS_SESSION_UNAVAILABLE
+    assert status.credential_authenticated
+    assert subject.owner.active == {human.session_id}
+    assert not subject.owner.retired
+    assert not subject.owner.refreshed
+    subject.owner.current = SessionAuthorityFacts(subject.owner.current.profile, before)
+    assert _published(subject, human.session_id)
+    renewed = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=human.session_id, idle_window=human.expires_at - human.issued_at
+    )
+    assert isinstance(renewed, AccessSession) and renewed.expires_at > human.expires_at
+    assert subject.owner.login_calls == 1
+    _lock_native_login(subject)
+    refused = subject.authority.note_human_activity(
+        connection_id=subject.connection, session_id=human.session_id, idle_window=human.expires_at - human.issued_at
+    )
+    assert isinstance(refused, AccessDenied)
+    assert human.session_id in subject.owner.retired
+    subject.owner.current = SessionAuthorityFacts(subject.owner.current.profile, before)
+    assert not _published(subject, human.session_id)

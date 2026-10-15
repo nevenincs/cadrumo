@@ -10,10 +10,7 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import StorageMode
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ..boot_record import (
@@ -54,10 +51,7 @@ def _write_raw(root: Path, payload: bytes) -> Path:
 
 
 def test_the_record_lives_beside_the_installation_identity(tmp_path: Path) -> None:
-    assert runtime_boot_record_path(tmp_path) == storage_path(
-        StorageCategory.RUNTIME_BOOT_RECORD,
-        settings=Settings(cadrumo_local_storage_root=tmp_path),
-    )
+    assert runtime_boot_record_path(tmp_path) == tmp_path / ".runtime" / "boot.json"
     with pytest.raises(RefusalError) as refused:
         runtime_boot_record_path(Path("relative-root"))
     assert refused.value.reason is RefusalCode.ROOT_MISMATCH

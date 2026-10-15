@@ -11,6 +11,7 @@ import shutil
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from PIL import Image
@@ -133,6 +134,30 @@ def test_desktop_changes_do_not_invalidate_native_actions(action: str) -> None:
     assert action_toolchain(changed, action, "windows-x86-64") == baseline
     changed["builder_files"]["CADRUMO_UV"]["sha256"] = "uv-two"
     assert action_toolchain(changed, action, "windows-x86-64") != baseline
+
+
+def test_agent_runtime_tracks_node_and_npm_but_ignores_frontend_and_compiler_changes() -> None:
+    configured: dict[str, Any] = {
+        "desktop_tools": {"node": "node", "npm_cli": "npm-cli.js"},
+        "builder_files": {
+            "CADRUMO_UV": {"path": "uv", "sha256": "uv-one"},
+            "desktop/node": {"path": "node", "sha256": "node-one"},
+            "desktop/npm-cli": {"path": "npm-cli.js", "sha256": "npm-one"},
+            "desktop/npm-package": {"path": "npm-package.json", "sha256": "npm-package-one"},
+            "desktop/npm-lock": {"path": "frontend-lock", "sha256": "frontend-one"},
+            "CMAKE_C_COMPILER": {"path": "cc", "sha256": "cc-one"},
+        },
+    }
+    original = action_toolchain(configured, "agent", "windows-x86-64")
+    changed = copy.deepcopy(configured)
+    changed["builder_files"]["desktop/npm-lock"]["sha256"] = "frontend-two"
+    changed["builder_files"]["CMAKE_C_COMPILER"]["sha256"] = "cc-two"
+    assert action_toolchain(changed, "agent", "windows-x86-64") == original
+    changed["builder_files"]["desktop/node"]["sha256"] = "node-two"
+    assert action_toolchain(changed, "agent", "windows-x86-64") != original
+    changed = copy.deepcopy(configured)
+    changed["builder_files"]["desktop/npm-cli"]["sha256"] = "npm-two"
+    assert action_toolchain(changed, "agent", "windows-x86-64") != original
 
 
 def test_cargo_crate_types_and_consumer_preserve_sibling_artifacts(tmp_path: Path) -> None:

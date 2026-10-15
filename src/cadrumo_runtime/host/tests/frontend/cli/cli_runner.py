@@ -23,9 +23,9 @@ _PUBLIC_CLI: ContextVar[Callable[..., Result] | None] = ContextVar("runtime-test
 def cadrumo_click_command() -> click.Command:
     """Materialize the Typer app once for default-locale CLI tests."""
 
-    from cadrumo.entrypoints.cli.main import cli_app
+    from cadrumo_runtime.host.frontend.cli.app import aeat_cli_app
 
-    app = cli_app()
+    app = aeat_cli_app()
 
     # Typer vendors its own Click fork, so typer.main.get_command is typed to
     # return typer._click.core.Command; it is the same object family at runtime

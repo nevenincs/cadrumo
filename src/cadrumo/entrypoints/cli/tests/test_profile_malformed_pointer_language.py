@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.tests.audited_process import run_audited_process
-from cadrumo.tests.subprocess_cli import as_text_completed_process
+from cadrumo.tests.cli_fixture_ports import FreshCliInvocation
 
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....core.bucket_pointer import pointer_path
@@ -43,27 +40,9 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
     return env
 
 
-def _run_cli(*args: str, storage_root: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
-    """Execute the production entry point in a fresh interpreter."""
-    return as_text_completed_process(
-        run_audited_process(
-            [
-                sys.executable,
-                "-c",
-                "from cadrumo.entrypoints.cli.bootstrap import main; main()",
-                *args,
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            timeout=None,
-            check=False,
-            env=_profile_storage_env(storage_root=storage_root, tmp_path=tmp_path),
-        ),
-    )
-
-
-def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(tmp_path: Path) -> None:
+def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(
+    tmp_path: Path, fresh_cli: FreshCliInvocation
+) -> None:
     """A malformed active pointer has no trustworthy bucket from which to read Catalan."""
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
@@ -80,7 +59,10 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
         )
         pointer_path(storage_root).write_text("schema_version = 1\n", encoding="utf-8")
         clear_output_language_cache()
-        result = _run_cli("config", "profile", "view", storage_root=storage_root, tmp_path=tmp_path)
+        result = fresh_cli(
+            ["config", "profile", "view"],
+            env=_profile_storage_env(storage_root=storage_root, tmp_path=tmp_path),
+        ).completed
         clear_output_language_cache()
 
     output = result.stdout + result.stderr
@@ -91,14 +73,19 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
     assert "Traceback" not in output
 
 
-def test_malformed_active_pointer_projects_the_canonical_repair_action_to_json(tmp_path: Path) -> None:
+def test_malformed_active_pointer_projects_the_canonical_repair_action_to_json(
+    tmp_path: Path, fresh_cli: FreshCliInvocation
+) -> None:
     """The process boundary preserves the core observation through the live action resolver."""
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir(parents=True)
     pointer_file = pointer_path(storage_root)
     pointer_file.write_text("schema_version = 1\n", encoding="utf-8")
 
-    result = _run_cli("--format", "json", "config", "profile", "view", storage_root=storage_root, tmp_path=tmp_path)
+    result = fresh_cli(
+        ["--format", "json", "config", "profile", "view"],
+        env=_profile_storage_env(storage_root=storage_root, tmp_path=tmp_path),
+    ).completed
 
     assert result.returncode == 4, result.stderr
     error = json.loads(result.stderr)["error"]
@@ -124,7 +111,7 @@ def test_malformed_active_pointer_projects_the_canonical_repair_action_to_json(t
         "action": {
             "action_id": "operator.profile.repair_active_pointer",
             "target_command_key": "config.repair.profile",
-            "cli_path": ["config", "repair", "profile"],
+            "cli_path": ["aeat", "config", "repair", "profile"],
         },
         "argument_bindings": [
             {
@@ -147,4 +134,4 @@ def test_malformed_active_pointer_projects_the_canonical_repair_action_to_json(t
         "missing_argument_names": ["yes"],
         "conditionality": "requires_arguments",
         "no_recovery_outcome": None,
-    }
+    }, error["action"]

@@ -65,7 +65,9 @@ async def test_service_stops_cleanly_for_parent_lifetime_endings(ending: str, tm
     source_root = Path(__file__).resolve().parents[3]
     environment = os.environ.copy()
     existing_pythonpath = environment.get("PYTHONPATH")
-    environment["PYTHONPATH"] = os.pathsep.join(value for value in (str(source_root), existing_pythonpath) if value)
+    environment["PYTHONPATH"] = os.pathsep.join(
+        value for value in (str(source_root), existing_pythonpath) if value is not None and value != ""
+    )
     script = r"""
 import asyncio
 import sys

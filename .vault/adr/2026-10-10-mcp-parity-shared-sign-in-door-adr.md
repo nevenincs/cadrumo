@@ -325,3 +325,8 @@ adding a parallel one.
   that any of it is built.
 
 Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: the delegated-child option rejected here is now the chosen door for one case only. An MCP connection with no key and no stored sign-in to resume asks to be attended by a person's held sign-in, and is admitted only by that person's approval of the exact connection. Resuming the shared sign-in stays the default and is unchanged.
+
+
+## Active human lifetime refinement 2026-10-15
+
+The authorized active-use amendment in `2026-10-04-application-sign-in-adr` replaces this record's fixed human idle/absolute lifetime wording only when actual person input renews a still-live human sign-in. The original-login absolute cap does not interrupt active work. Agent, polling and service traffic never renew it; idle expiry and explicit revocation still apply. Live human siblings on the same originating login follow that renewal, while attended children retain their existing bounded deadlines and approval-based reissue. This does not turn agent activity into human activity, expand scopes, or restore expired authority. Earlier observations that no human extension exists describe the pre-repair implementation.

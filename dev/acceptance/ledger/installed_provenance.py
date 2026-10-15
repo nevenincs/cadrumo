@@ -379,7 +379,7 @@ async def _admit_installed_session(pilot: Any, *, passphrase: str) -> bool:
 
 def _run_installed_launcher(*, passphrase: str, drive_after_home: Any) -> None:
     """Run one ordinary headless installed launch and require a clean exit."""
-    from cadrumo.entrypoints.tui.launcher import main as launch
+    from cadrumo_runtime.host.frontend.tui.launcher import main as launch
 
     async def drive(pilot: Any) -> None:
         if await _admit_installed_session(pilot, passphrase=passphrase):

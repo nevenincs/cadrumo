@@ -1,0 +1,409 @@
+"""Installed TUI admission and exact-client runtime lifetime.
+
+Only profile discovery and first-profile registration use the local bootstrap
+adapters. Every existing-profile session proves its credential to the verified
+runtime. The frontend never inherits registration or ambient local custody.
+
+The installation area needs no session, so it is offered before any exists:
+from the sign-in screen, from first registration, and when the profiles cannot
+be listed at all. Whenever one of its acts may have changed the profile set,
+the profiles are read again before anything else is shown.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import sys
+from collections.abc import Callable
+from logging import DEBUG, ERROR
+from typing import TYPE_CHECKING
+from uuid import UUID
+
+from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicContractSetV1,
+    OperationRegistry,
+)
+from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
+from cadrumo.application.user_profile.login_interaction import (
+    ProfileLoginInventoryState,
+    ProfileLoginInventoryV1,
+    observe_profile_login_inventory,
+)
+from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language, tr
+from cadrumo.core.logging import get_logger
+from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
+from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport.credentials import open_installed_credential_client
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.installed_client import open_installed_client
+
+from .launcher import run_precomposed_runtime_root_session
+from .runtime_admission import runtime_login_session
+from .secret.automation_requester import RuntimeAutomationRequesterScreen
+from .secret.runtime_login_contracts import RuntimeLoginMethod
+
+if TYPE_CHECKING:
+    from textual.app import AutopilotCallbackType
+    from textual.screen import Screen
+
+SESSION_COMPLETED = 0
+"""The operator ended or abandoned the session."""
+
+SESSION_INVENTORY_UNAVAILABLE = 1
+"""Profile discovery or runtime admission could not be served truthfully."""
+
+_UNLISTED_STATES = frozenset({ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED})
+"""Observations that could not say which profiles exist."""
+
+_LOGGER = get_logger(__name__)
+
+
+def _release_bootstrap_custody() -> None:
+    """Drop local key/record ownership without altering another runtime lease."""
+    try:
+        close_active_profile_record_session()
+    finally:
+        close_active_bucket_session()
+
+
+class _ProfileSetWatch:
+    """Remember whether an installation act may have changed which profiles exist."""
+
+    def __init__(self) -> None:
+        self.changed = False
+
+    def note(self) -> None:
+        """Record that the profiles must be read again."""
+        self.changed = True
+
+    def installation_area(self, report_change: Callable[[], None], /, *, locale: str | None = None) -> Screen[None]:
+        """Build the installation area for a screen that has no session to offer it from."""
+
+        def changed() -> None:
+            self.note()
+            report_change()
+
+        return InstallationScreen(on_records_changed=changed, locale=locale)
+
+
+def _run_installation_area(reason_code: str) -> bool:
+    """Offer the installation area alone when the profiles cannot be listed.
+
+    Repairing an installation is most needed exactly when its profiles cannot
+    be read, and the acts need none of them. Returns whether an act may have
+    changed the profile set.
+    """
+    watch = _ProfileSetWatch()
+    notice = tr("tui.installation.inventory_unavailable", reason=reason_code)
+    ScreenHostApp(InstallationScreen(on_records_changed=watch.note, notice=notice)).run()
+    return watch.changed
+
+
+def _run_registration_screen() -> bool:
+    """Create the first profile, finish recovery, then release bootstrap custody.
+
+    Returns whether the profiles should be read again: a profile was created
+    here, or an installation act opened from this screen may have changed them.
+    """
+    from cadrumo.core.credentials import assess_profile_password
+    from cadrumo.entrypoints.tui.secret.credentials import run_credential_screen
+    from cadrumo.entrypoints.tui.secret.registration import (
+        RegistrationScreen,
+        build_profile_recovery_enrollment_attempt,
+        build_profile_registration_attempt,
+    )
+
+    watch = _ProfileSetWatch()
+    try:
+        diagnostic_event(_LOGGER, "tui_registration_opened", fields={"stage": "bootstrap_registration"})
+        outcome = run_credential_screen(
+            RegistrationScreen(
+                assess=assess_profile_password,
+                register=build_profile_registration_attempt,
+                enroll_recovery=build_profile_recovery_enrollment_attempt,
+                installation_factory=watch.installation_area,
+            )
+        )
+        diagnostic_event(
+            _LOGGER,
+            "tui_registration_closed",
+            fields={
+                "outcome": "profile_created" if outcome is not None else "abandoned",
+                "profile_persisted": outcome is not None,
+            },
+        )
+        return outcome is not None or watch.changed
+    finally:
+        _release_bootstrap_custody()
+
+
+async def _open_client(profile_id: UUID) -> FrontendClient:
+    return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+
+
+async def _open_credential_client(
+    profile_id: UUID,
+    credential_reference: UUID,
+    on_connected: Callable[[FrontendClient], None],
+) -> FrontendClient:
+    return await open_installed_credential_client(
+        profile_id=profile_id,
+        credential_reference=credential_reference,
+        frontend=OperationFrontendProjection.TUI,
+        on_connected=on_connected,
+    )
+
+
+async def _run_runtime_session(
+    inventory: ProfileLoginInventoryV1,
+    *,
+    operation_registry: Callable[[], OperationRegistry],
+    choose_profile: bool,
+    auto_resume: bool,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+) -> AccountRecomposeRequiredV1 | None:
+    """Own login, one immutable root and its cleanup before any fresh choice."""
+
+    def operation_contracts() -> OperationPublicContractSetV1:
+        return operation_registry().public_contract_set
+
+    def requester_for_login(profile_id: UUID) -> RuntimeAutomationRequesterScreen:
+        return RuntimeAutomationRequesterScreen(
+            profile_id=profile_id,
+            contracts=operation_contracts(),
+            secrets_store=installed_automation_secret_store(),
+            open_client=_open_client,
+        )
+
+    watch = _ProfileSetWatch()
+    async with runtime_login_session(
+        choices=inventory.choices,
+        open_client=_open_client,
+        open_credential_client=_open_credential_client,
+        requester_factory=requester_for_login,
+        installation_factory=watch.installation_area,
+        preselected=None if choose_profile else inventory.preselected_profile_id,
+        auto_resume=auto_resume,
+        headless=headless,
+        auto_pilot=auto_pilot,
+    ) as handoff:
+        if handoff is None:
+            # The sign-in screen closed itself because its profile list may be
+            # out of date: the choice is made again from a fresh reading.
+            return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER) if watch.changed else None
+        if handoff.method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE}:
+            from .runtime_session import RuntimeRestrictedSessionApp
+
+            def requester_for_api(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
+                store = installed_automation_secret_store()
+
+                def fresh_credential_client(
+                    profile_id: UUID, credential_reference: UUID, timeout: float
+                ) -> FrontendClient:
+                    return asyncio.run(
+                        open_installed_credential_client(
+                            profile_id=profile_id,
+                            credential_reference=credential_reference,
+                            frontend=OperationFrontendProjection.TUI,
+                            timeout=timeout,
+                            secrets_store=store,
+                        )
+                    )
+
+                return RuntimeAutomationRequesterScreen(
+                    profile_id=client.profile_id,
+                    contracts=operation_contracts(),
+                    secrets_store=store,
+                    client=client,
+                    fresh_credential_client=fresh_credential_client,
+                )
+
+            app = RuntimeRestrictedSessionApp(
+                handoff.client,
+                profile_label=handoff.profile_label,
+                operation_registry=operation_registry,
+                requester_factory=requester_for_api,
+            )
+            return await app.run_async(headless=headless, auto_pilot=auto_pilot)
+
+        async def open_recovery_client() -> FrontendClient:
+            return await _open_client(handoff.profile_id)
+
+        def requester_for_human(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
+            if client is not handoff.client:
+                raise ValueError("requester requires the original human client")
+            return RuntimeAutomationRequesterScreen(
+                profile_id=handoff.profile_id,
+                contracts=operation_contracts(),
+                secrets_store=installed_automation_secret_store(),
+                open_client=_open_client,
+                reviewer_client=client,
+            )
+
+        from .runtime_initial_root import RuntimeInitialRoot
+
+        root = RuntimeInitialRoot(
+            handoff.client,
+            profile_label=handoff.profile_label,
+            output_language=OutputLanguage(output_language()),
+            open_recovery_client=open_recovery_client,
+            operation_registry=operation_registry,
+            requester_factory=requester_for_human,
+        )
+        return await run_precomposed_runtime_root_session(load_root=root.load, headless=headless, auto_pilot=auto_pilot)
+
+
+def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
+    if inventory.state not in _UNLISTED_STATES:
+        return None
+    diagnostic_event(
+        _LOGGER,
+        "tui_inventory_refused",
+        fields={"outcome": "refused", "reason_code": inventory.reason_code},
+        level=ERROR,
+    )
+    sys.stderr.write(f"{inventory.reason_code}\n")
+    return SESSION_INVENTORY_UNAVAILABLE
+
+
+def _registration_completed(headless: bool) -> bool:
+    return False if headless else _run_registration_screen()
+
+
+def _runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
+    if any(
+        isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
+        for name in ("async_cleanup_error", "cleanup_error")
+    ):
+        # A numeric refusal cannot retain an unsettled native owner.
+        raise error
+    reason = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
+    diagnostic_event(
+        _LOGGER,
+        "tui_runtime_session_refused",
+        fields={**diagnostic_error_fields(error), "outcome": "refused", "reason_code": reason},
+        level=ERROR,
+        primary_error=error,
+    )
+    sys.stderr.write(f"{reason}\n")
+    if (remedy := connection_unavailable_remedy(reason)) is not None and remedy:
+        sys.stderr.write(f"{remedy}\n")
+    return SESSION_INVENTORY_UNAVAILABLE
+
+
+def _attempt_runtime_session(
+    inventory: ProfileLoginInventoryV1,
+    operation_registry: Callable[[], OperationRegistry],
+    choose_profile: bool,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+    auto_resume: bool = True,
+) -> AccountRecomposeRequiredV1 | int | None:
+    try:
+        return asyncio.run(
+            _run_runtime_session(
+                inventory,
+                operation_registry=operation_registry,
+                choose_profile=choose_profile,
+                auto_resume=auto_resume,
+                headless=headless,
+                auto_pilot=auto_pilot,
+            )
+        )
+    except (FrontendRefusedError, RefusalError) as error:
+        return _runtime_session_refusal(error)
+
+
+def run_installed_workbench_session(
+    *,
+    headless: bool = False,
+    auto_pilot: AutopilotCallbackType | None = None,
+) -> int:
+    """Alternate owned runtime sessions and fresh, non-authenticating inventory.
+
+    A bare headless self-test never waits for a credential. An explicit
+    autopilot may drive the same real login and root screens used interactively.
+    Profile switching discards the former connection before rereading choices.
+    """
+    registry: OperationRegistry | None = None
+
+    def operation_registry() -> OperationRegistry:
+        """Bind the manifest-backed registry once, on first use: it is the one place this interface does.
+
+        Contracts come from the generated manifest; an operation's definition
+        is composed only when a surface needs it.
+        """
+        nonlocal registry
+        if registry is None:
+            from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+
+            registry = build_manifest_operation_registry()
+        return registry
+
+    choose_profile = False
+    auto_resume = True
+    with profile_adapter_composition():
+        _release_bootstrap_custody()
+        while True:
+            inventory = observe_profile_login_inventory()
+            diagnostic_event(
+                _LOGGER,
+                "tui_inventory_observed",
+                fields={"inventory_state": inventory.state.value, "profile_count": len(inventory.choices)},
+                level=DEBUG,
+            )
+            if (
+                not headless
+                and inventory.state in _UNLISTED_STATES
+                and _run_installation_area(inventory.reason_code or inventory.state.value)
+            ):
+                continue
+            unavailable = _unavailable_inventory(inventory)
+            if unavailable is not None:
+                return unavailable
+            if inventory.state is ProfileLoginInventoryState.EMPTY:
+                if not _registration_completed(headless):
+                    return SESSION_COMPLETED
+                diagnostic_event(
+                    _LOGGER,
+                    "tui_registration_runtime_admission_pending",
+                    fields={"profile_persisted": True, "stage": "runtime_admission"},
+                )
+                continue
+            if headless and auto_pilot is None:
+                return SESSION_COMPLETED
+            recompose = _attempt_runtime_session(
+                inventory,
+                operation_registry,
+                choose_profile,
+                headless,
+                auto_pilot,
+                auto_resume=auto_resume,
+            )
+            if isinstance(recompose, int):
+                return recompose
+            if recompose is None:
+                return SESSION_COMPLETED
+            choose_profile = recompose.reason is AccountRecomposeReasonV1.CHANGE_USER
+            # After session loss or explicit logout, let the operator retry.
+            # Repeated receipt admission while the runtime is stopping loops
+            # back into an unavailable authority and hides the recovery form.
+            auto_resume = False
+            diagnostic_event(
+                _LOGGER, "tui_session_recompose_requested", fields={"reason_code": recompose.reason.value}, level=DEBUG
+            )
+
+
+__all__ = ["SESSION_COMPLETED", "SESSION_INVENTORY_UNAVAILABLE", "run_installed_workbench_session"]

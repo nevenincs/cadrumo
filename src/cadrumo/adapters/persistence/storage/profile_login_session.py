@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
@@ -112,6 +113,7 @@ class _PersistenceProfileLoginSession:
         login_id: str,
         sign_in_binding: ProfileAccessBinding,
         sign_in_generation: ProfileSignInGenerationPort,
+        retain_sealing_key: Callable[[bytearray], None] | None = None,
     ) -> ProfilePersistedSessionPort | None:
         try:
             return mint_profile_session(
@@ -125,6 +127,7 @@ class _PersistenceProfileLoginSession:
                 absolute_minutes=absolute_minutes,
                 login_id=login_id,
                 sign_in=SignInGenerationCustody(root=storage_root, binding=sign_in_binding),
+                retain_sealing_key=retain_sealing_key,
                 generation=SignInGeneration(
                     lineage=sign_in_generation.lineage, generation=sign_in_generation.generation
                 ),

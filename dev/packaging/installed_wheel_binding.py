@@ -43,7 +43,7 @@ _RESOURCE_TYPE_RCDATA = 10
 _UV_SCRIPT_RESOURCE_PATH = (("id", _RESOURCE_TYPE_RCDATA), ("name", "UV_SCRIPT_DATA"), ("id", 0))
 _MAX_RESOURCE_DIRECTORY_DEPTH = 16
 _WINDOWS_CONSOLE_ENTRY_POINTS = {
-    "aeat": "cadrumo.entrypoints.cli.bootstrap:main",
+    "aeat": "cadrumo_runtime.host.frontend.cli.bootstrap:main",
     "cadrumo-mcp": "cadrumo_harness.mcp.main:main",
 }
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:943001457aac0f1d20d67beb3bfb9ab36e83ea810c54bfc8593e16478ce3f325'
+body_hash: 'sha256:2a9a59bbcc039bd4e2961bed5845554096fddcabcafe5d3e7cc988d51aca3ab7'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -121,6 +121,52 @@ related:
 - `S06` `verify:` `independent corrective auth review` -> `pass`
 - `S06` `verify:` `ctest platform.resolver 57 tests including operator auth environment` -> `pass`
 - `S06` `verify:` `final Release app-payload assembly missing shared product receipt` -> `fail`
+- `S01` `verify:` `just check-code final aggregate` -> `fail`
+- `S06` `verify:` `new stdin shutdown tests Ruff ty and 8 focused subprocess tests` -> `pass`
+- `S07` `A` `dev/packaging/native/agent_runtime.py`
+- `S07` `A` `dev/packaging/native/tests/test_agent_runtime.py`
+- `S07` `A` `native/agent/runtime.json`
+- `S07` `M` `native/cmake/Agent.cmake`
+- `S07` `M` `native/cmake/Packaging.cmake`
+- `S07` `M` `dev/packaging/native/cmake_build.py`
+- `S07` `M` `dev/packaging/native/assemble.py`
+- `S07` `M` `dev/packaging/native/update_agent.py`
+- `S07` `M` `dev/packaging/native/tests/test_update_agent.py`
+- `S07` `M` `dev/packaging/native/tests/test_incremental_generation.py`
+- `S07` `M` `dev/packaging/native/tests/test_assembly_refusals.py`
+- `S07` `M` `src/cadrumo_agent_service/host/launch_environment.py`
+- `S07` `M` `src/cadrumo_agent_service/service.py`
+- `S07` `M` `native/tests/agent_smoke.py`
+- `S07` `M` `pyproject.toml`
+- `S07` `M` `native/CONTRACT.md`
+- `S07` `verify:` `combined service and packaging unit suite 324 tests` -> `pass`
+- `S07` `verify:` `service native process integration 24 tests` -> `pass`
+- `S07` `verify:` `changed-file Ruff format and ty` -> `pass`
+- `S07` `verify:` `CMake agent_project pinned Node and ACP construction` -> `pass`
+- `S07` `verify:` `Release payload agent input-stability admission` -> `fail`
+- `S07` `verify:` `Release app-payload=pass; packaged Node26.10.0 ACP0.85.1 exact-inventory smoke=pass; packaged launch environment probe=pass; auth providers and missing-root refusal` -> `pass`
+- `S06` `verify:` `packaged person service admission catalog status sign_in preparation=pass; isolated Claude auth baseline exit1` -> `pass`
+- `S03` `verify:` `final-copy real relay proof` -> `fail`
+- `S07` `verify:` `independent runtime closure source review` -> `pass`
+- `S03` `M` `src/cadrumo_agent_service/service.py`
+- `S05` `M` `src/cadrumo_agent_service/main.py`
+- `S05` `verify:` `final-package authority loss with parent stdin retained` -> `pass`
+- `S05` `verify:` `final-package whole-tree authority-loss teardown` -> `fail`
+- `S05` `verify:` `final-package retained-stdin authority-loss bounded whole-tree teardown` -> `pass`
+- `S03` `M` `src/cadrumo_agent_service/main.py`
+- `S03` `verify:` `packaged refusal-state authority-loss retained-stdin whole-tree shutdown` -> `pass`
+- `S06` `verify:` `isolated interactive Claude login` -> `fail`
+- `S03` `M` `.vault/audit/2026-10-14-startup-service-repair-audit.md`
+- `S03` `verify:` `proposed hosted-certification decision review and owning checks` -> `pass`
+- `S08` `M` `src/cadrumo_agent_service/service.py`
+- `S08` `M` `src/cadrumo_agent_service/contracts.py`
+- `S08` `A` `src/cadrumo_agent_service/host/tests/test_hosted_certification_status.py`
+- `S08` `verify:` `service hosted-certification status regressions10=pass; scoped service Ruff format ty` -> `pass`
+- `S08` `verify:` `entire agent service suite283` -> `pass`
+- `S03` `M` `dev/runtime_lifecycle/proof_support.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_agent_live.py`
+- `S03` `verify:` `full person proof driver suite17=pass; handoff client focused source checks` -> `pass`
+- `S08` `verify:` `status-cache focused12=pass; entire service285=pass; integrated source review=pass; agent focused188` -> `pass`
 
 ## Notes
 
@@ -141,3 +187,23 @@ related:
 - `S06` Independent review found credential kind does not imply an executable login action (for example another CLI lane had no handler). Corrected by querying agent-owned auth providers --json schema1 before CAS or launch preparation. Unsupported actions and API lanes now refuse without mode mutation. User selected Claude for the isolated login. Agent auth tests5 pass; package human login pending.
 - `S06` Claude selected. Agent capability list prevents unsupported login preparation; actual isolated login and final package checks remain pending. Independent review identified broader existing admin dispatch deadline mismatch for follow-up.
 - `S06` Concurrent Debug app-payload producer reset shared product output. Release retry queued behind that build. Agent wheel auth handler and MCP diagnostics text match current source. First new native auth test lacked the required OS environment fixture; corrected fixture, rerun passed.
+- `S01` Aggregate fails reachability/symbol/export checks outside the agent paths; style, format, data format, dependency declarations, write-paths, docstring references and operation-contract manifest pass. Full output retained in .tmp/check-code-agent-auth.log.
+- `S06` Corrected three type diagnostics in the new tests after aggregate gate; remaining aggregate findings include unrelated TUI journey/import/export paths.
+- `S07` Runtime assets follow later accepted bundled Cadrumo topology; no SDK platform Claude CLI is included. Independent source review accepts scope; fresh Node/ACP package smoke and authenticated live proof remain pending.
+- `S07` Separate agent project `provider_verify.py` changed during the full build; completion receipt correctly refused. Keep package verification pending and retry without bypassing source identity.
+- `S07` Verified copy fd8f2dc987159da9516245819ff661bb95e4449b94fd8fd56c280d7cb38b3541 contains38171 files. Real package relay proof is running; hosted authentication and shutdown remain pending. No CLI credentials imported.
+- `S06` Real package auth login script prepared for user-selected Claude in disposable profile-owned home; interactive login pending. No ordinary account imported. Full check-code passes nine categories including types; import/reachability/symbol/export gates fail in broader concurrently edited paths.
+- `S03` Before model: packaged path validation refused stale external runner dotenv program outside verified copy. Job owner reaped all members. Source inspection also finds runner replaces exact handoff profile/root/scenario with fresh profile and later provenance rejects driver context; no false proof or weakened fresh-profile check applied. Hosted certification is circular under current accepted startup gate; proposed decision pending.
+- `S07` Reviewer closes exact-inventory concern and finds no new high-confidence defect in service/runtime/Node-ACP repairs. Integrated review remains pending actual isolated login, real packaged relay effect, clean teardown and valid hosted certification decision/evidence. Handoff compatibility repair is within existing accepted package-verification coverage when fresh provenance is preserved.
+- `S03` Prepared proposed external ADR 2026-10-15-cadrumo-integration-hosted-certification-bootstrap-adr for user review: ordinary-turn-proven lanes may attempt normal hosted route with certification explicitly pending; no false proof, test-only route or credential import. User approval requested under accepted decision approval contract. Existing hosted gate remains intact until authorized.
+- `S05` Actual immutable package fd8f2dc987159da9: real runtime, held CLI person and admitted service; close person via public control while parent keeps both stdin pipes open. Holder exit0, service exit0; holder/runtime/service stderr empty. Outer owned job reports zero remaining members and coordinator0. This proves this refusal-state shutdown case; active model-worker retirement remains unproven.
+- `S05` Correction to prior row: holder and service exit0 with retained parent stdin and all three stderr empty ARE observed; wrapper actually required cleanup of ONE remaining job member and forced exit1, not coordinator0. No clean-whole-tree claim. Add bounded child identity attribution and retry to distinguish real survivor from process-exit race.
+- `S05` Fresh retry agent-authority-k62iosvi: actual holder and service exit0 while parent stdin pipes stay open; holder/runtime/service stderr empty. Immediately after coordinator exit one job member was already unavailable for identity lookup and disappeared naturally within the bounded2s reap grace. No forced cleanup, zero remaining job members, coordinator0. This proves refusal-state authority-loss shutdown; active model-worker retirement remains separate pending evidence.
+- `S03` Step attribution correction: the preceding S05 authority-loss probe rows are S03 packaged verification evidence, not external-CLI propagation work. Actual final-copy retry agent-authority-k62iosvi: holder/service exit0, all stderr empty, no forced cleanup, zero members after bounded natural reap, coordinator0. Active-model retirement still pending.
+- `S06` Before user completion, unrelated native Debug bundle build quiesced the held package session. Holder/runtime/service stderr empty, but coordinator detects lost holder/service and exits1; job cleaned allmembers. Prepared script invalidated to prevent stale login. No auth success claimed; reprepare only after build ends. Prior preparation and signed-out baseline remain valid scoped evidence.
+- `S03` Independent review accepted scoped direction but required reconciliation of older nothing-before-proof consequence. Proposed external ADR now includes exact scoped replacement retaining ordinary proof/allothercapabilityrules; root reviewed it and owning checks pass. Status remains proposed; accepted body and product admission unchanged; user approval pending.
+- `S08` User explicitly approved proposed hosted-certification startup repair on2026-10-15. Agent worker persists acceptance/exactolderwording reconciliation and implements ordinary-proof admission with distinct unknown/pending/proven catalog/frozen certification. Service worker projects actual authenticated live catalog certification into bounded adminstatus list. All runtime, credential, installed-version and permission controls remain. No successful hosted proof has been claimed.
+- `S08` Only authenticated READY current-generation catalog can supply certification list; unknown default, invalid/stale/overlimit/duplicate/unavailable `returns[],` credentialstatus retained. Native admin JSON/structuralfrontend tolerateadditivefield. Actual packaged hosted/model verification awaits updated agent source and no concurrentbuild.
+- `S08` Current service status projection passed all283 service tests in7.62s; test log20261015T084736.070515Z-pytest-68080-3c429b3f. Agent production admission/frozen-selection work and new packaged proof pending; source suite does not establish interactive login or hosted turn.
+- `S03` Handoff preserves exact driver profile/root/scenario with distinct nonsecret held-session provenance; standalonefreshprofile path retained. Root caught Optional narrowing and forbidden source-client Cadrumo imports; both corrected. Marker check uses inventory-verified packaged interpreter with restrictedenv and10sbound, never sourceproductimports. Real package relay proof pending afternativebuild and updatedagent.
+- `S08` Replaced status networkread with immutable5s currentgeneration snapshot fromnormal authenticatedcatalog; no newstatus HTTP latency versusnative6sdeadline. Reviewer finds no mustfix across ordinaryproof admission, catalog/frozen certification, cache and packaged marker helper. Release app-payload rebuild running; concurrentDebug build is read-only distribution preparation on separateDebugstage. No native live proof while builds remain.

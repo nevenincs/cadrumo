@@ -23,6 +23,7 @@ from ..google_oauth import build_client_json, client_build_identity
 from ..runtime_wheel_selection import plan_target_wheels
 from .action_cache import action_lock, completed, fingerprint, modified_inputs, staleness
 from .agent import agent_wheel, build_agent, validate_wheel_dependencies
+from .agent_runtime import build_agent_runtime
 from .assemble import assemble, image_artifact
 from .build_log import BuildLog, command_line, display_path
 from .build_paths import build_paths
@@ -55,7 +56,18 @@ def action_toolchain(configured: Mapping[str, object], action: str, target: str)
             selected["cpython_archive_decoder"] = configured["cpython_archive_decoder"]
     elif action == "tools":
         selected["pins"] = {"resvg_py": pins["resvg_py"]}
-    elif action not in {"product", "agent"}:
+    elif action == "agent":
+        tools = configured.get("desktop_tools")
+        if not isinstance(tools, dict) or not all(isinstance(tools.get(name), str) for name in ("node", "npm_cli")):
+            raise ValueError("Agent runtime construction requires configured Node/npm builders; reconfigure CMake")
+        selected["node"] = tools["node"]
+        selected["npm_cli"] = tools["npm_cli"]
+        selected["builder_files"] = {
+            name: record
+            for name, record in files.items()
+            if name in {"CADRUMO_UV", "desktop/node", "desktop/npm-cli", "desktop/npm-package"}
+        }
+    elif action != "product":
         raise ValueError(f"No shared producer selection for {action}")
     # Product wheels use Hatchling's Python/data hooks; native compilers and SDKs
     # never produce their contents. CMake enrolls their declared sources/backend,
@@ -334,6 +346,14 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             raise ValueError("Agent construction requires the configured source folder")
         destination = reset(build, str(paths["agent"].relative_to(build)))
         build_agent(destination, arguments.agent_source, selected_uv(configured))
+        tools = configured["desktop_tools"]
+        build_agent_runtime(
+            destination / "runtime",
+            arguments.agent_source,
+            arguments.target,
+            node=Path(tools["node"]),
+            npm_cli=Path(tools["npm_cli"]),
+        )
     elif arguments.action == "sdk":
         destination = reset(build, str(sdk_root.relative_to(build)))
         pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
@@ -429,6 +449,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             development=arguments.development,
             interpreter=arguments.interpreter,
             target=arguments.target,
+            agent_runtime=None if arguments.interpreter else paths["agent"] / "runtime",
             provenance={
                 "runtime": {}
                 if arguments.interpreter

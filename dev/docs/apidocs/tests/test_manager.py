@@ -14,13 +14,13 @@ from dev.first_party_source import CLIENT_PACKAGE, FIRST_PARTY_ROOTS
 
 from ..manager import (
     _NON_OWNER_GENERIC_IMPORTS,
-    _type_alias_declarations,
     API_SOURCE_PACKAGE,
     API_SOURCE_ROOTS,
     ApiDocsError,
     ApiStubManager,
     DriftResult,
     ScaffoldResult,
+    _type_alias_declarations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -59,9 +59,12 @@ def _bound_names(tree: ast.Module) -> set[str]:
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             names.add(node.name)
-        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
-            targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+        elif isinstance(node, ast.Assign):
+            targets = node.targets
             names.update(target.id for target in targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            if isinstance(node.target, ast.Name):
+                names.add(node.target.id)
         elif isinstance(node, ast.TypeAlias):
             names.add(node.name.id)
         elif isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -151,6 +154,13 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
 
     assert targets, "the canonical source roots contain no public PEP 695 aliases"
     assert ("cadrumo_client.transport.automation_decision", "AutomationDecision") in targets
+    deadline_window_projection = (tmp_path / "api" / "cadrumo.domain.deadlines.engine.rst").read_text(encoding="utf-8")
+    assert (
+        deadline_window_projection.count(
+            ".. py:type:: DeadlineWindowProjection\n   :module: cadrumo.domain.deadlines.engine"
+        )
+        == 1
+    )
     cli_program = (tmp_path / "api" / "cadrumo_agent_service.providers.domain.catalog.rst").read_text(encoding="utf-8")
     assert ".. py:type:: CliProgram\n   :module: cadrumo_agent_service.providers.domain.catalog" in cli_program
     assert "CliProgram = Annotated[str, StringConstraints" in cli_program
@@ -198,6 +208,144 @@ def test_pep604_alias_detection_rejects_value_unions(tmp_path: Path) -> None:
     assert set(aliases) == {"PublicUnion", "PrimitiveUnion"}
 
 
+def test_type_alias_factories_resolve_imports_and_reject_shadowed_values(tmp_path: Path) -> None:
+    """Generic factories need canonical type bindings, not matching attribute names."""
+    source_root = tmp_path / "src" / "fixture_api"
+    source_root.mkdir(parents=True)
+    (source_root / "__init__.py").write_text('"""Fixture API."""\n', encoding="utf-8")
+    canonical = source_root / "canonical.py"
+    canonical.write_text(
+        "from typing import Mapping, NewType, TypeAliasType\n"
+        "import typing as typing_module\n"
+        "import collections.abc as collections_abc\n\n"
+        "Mapping: object\n"
+        "ImportedMapping = Mapping[str, int]\n"
+        "QualifiedMapping = typing_module.Mapping[str, int]\n"
+        "CollectionsMapping = collections_abc.Mapping[str, int]\n"
+        "UserIdentifier = NewType('UserIdentifier', int)\n"
+        "TextAlias = TypeAliasType('TextAlias', str)\n",
+        encoding="utf-8",
+    )
+    (source_root / "generic_factory.py").write_text(
+        "class LocalGeneric:\n    pass\n\n"
+        "GenericAlias = LocalGeneric[str]\n"
+        "INSTANCE = LocalGeneric()\n"
+        "CONFIG = dict()\n",
+        encoding="utf-8",
+    )
+    shadowed = source_root / "shadowed.py"
+    shadowed.write_text(
+        "from typing import Mapping, NewType, TypeAliasType\n"
+        "Mapping = {'kind': str}\n"
+        "POLICY = Mapping['kind']\n"
+        "namespace = object()\n"
+        "NAMESPACE_POLICY = namespace.Mapping['kind']\n"
+        "NewType = lambda *args: args\n"
+        "NotAType = NewType('NotAType', str)\n"
+        "TypeAliasType = lambda *args: args\n"
+        "AnotherNotAType = TypeAliasType('AnotherNotAType', str)\n",
+        encoding="utf-8",
+    )
+
+    canonical_aliases = dict(_type_alias_declarations(canonical))
+    generic_aliases = dict(_type_alias_declarations(source_root / "generic_factory.py"))
+    shadowed_aliases = dict(_type_alias_declarations(shadowed))
+
+    assert set(canonical_aliases) == {
+        "ImportedMapping",
+        "QualifiedMapping",
+        "CollectionsMapping",
+        "UserIdentifier",
+        "TextAlias",
+    }
+    assert set(generic_aliases) == {"GenericAlias"}
+    assert shadowed_aliases == {}
+
+    manager = ApiStubManager(src_cadrumo=source_root, docs_api=tmp_path / "api")
+    manager.scaffold()
+    canonical_stub = (tmp_path / "api" / "fixture_api.canonical.rst").read_text(encoding="utf-8")
+    shadowed_stub = (tmp_path / "api" / "fixture_api.shadowed.rst").read_text(encoding="utf-8")
+    assert ".. py:type:: ImportedMapping" in canonical_stub
+    assert ".. py:type:: TextAlias" in canonical_stub
+    assert ":exclude-members: CollectionsMapping,ImportedMapping,QualifiedMapping,TextAlias,UserIdentifier" in (
+        canonical_stub
+    )
+    assert ".. py:type:: POLICY" not in shadowed_stub
+    assert ".. py:type:: NAMESPACE_POLICY" not in shadowed_stub
+    assert ".. py:type:: NotAType" not in shadowed_stub
+    assert ".. py:type:: AnotherNotAType" not in shadowed_stub
+    assert ":exclude-members:" not in shadowed_stub
+    generic_stub = (tmp_path / "api" / "fixture_api.generic_factory.rst").read_text(encoding="utf-8")
+    assert ".. py:type:: GenericAlias" in generic_stub
+    assert ".. py:type:: INSTANCE" not in generic_stub
+    assert ".. py:type:: CONFIG" not in generic_stub
+
+
+def test_type_checking_aliases_are_source_targets_only_for_canonical_guards(tmp_path: Path) -> None:
+    """Direct TYPE_CHECKING aliases are indexed without treating arbitrary branches as declarations."""
+    source_root = tmp_path / "src" / "fixture_api"
+    source_root.mkdir(parents=True)
+    (source_root / "__init__.py").write_text('"""Fixture API."""\n', encoding="utf-8")
+    guarded = source_root / "guarded.py"
+    guarded.write_text(
+        "from typing import TYPE_CHECKING as STATIC_ONLY\n"
+        "import typing as typing_module\n\n"
+        "STATIC_ONLY: object\n"
+        "typing_module: object\n\n"
+        "if STATIC_ONLY:\n"
+        "    type ImportedGuardAlias = tuple[int, str]\n"
+        "    if FEATURE_ENABLED:\n"
+        "        type NestedGuardAlias = tuple[int, str]\n\n"
+        "def local_types() -> None:\n"
+        "    if STATIC_ONLY:\n"
+        "        type FunctionLocalAlias = tuple[int, str]\n\n"
+        "if typing_module.TYPE_CHECKING:\n"
+        "    type QualifiedGuardAlias = tuple[int, str]\n\n"
+        "if FEATURE_ENABLED:\n"
+        "    type UnrelatedGuardAlias = tuple[int, str]\n\n"
+        "namespace = object()\n"
+        "if namespace.TYPE_CHECKING:\n"
+        "    type NamespaceGuardAlias = tuple[int, str]\n\n"
+        "if STATIC_ONLY:\n"
+        "    type ReboundAlias = tuple[int, str]\n"
+        "ReboundAlias = 'ordinary public value'\n",
+        encoding="utf-8",
+    )
+    shadowed = source_root / "shadowed_guard.py"
+    shadowed.write_text(
+        "from typing import TYPE_CHECKING as STATIC_ONLY\n"
+        "STATIC_ONLY = True\n"
+        "if STATIC_ONLY:\n"
+        "    type ShadowedGuardAlias = tuple[int, str]\n",
+        encoding="utf-8",
+    )
+
+    aliases = dict(_type_alias_declarations(guarded))
+    assert set(aliases) == {"ImportedGuardAlias", "QualifiedGuardAlias"}
+    assert _type_alias_declarations(shadowed) == ()
+
+    manager = ApiStubManager(source_root, tmp_path / "api")
+    manager.scaffold()
+    stub = (tmp_path / "api" / "fixture_api.guarded.rst").read_text(encoding="utf-8")
+    for alias in aliases:
+        target = f".. py:type:: {alias}\n   :module: fixture_api.guarded"
+        assert stub.count(target) == 1
+    excluded_members = next(line.strip() for line in stub.splitlines() if line.strip().startswith(":exclude-members:"))
+    assert excluded_members == ":exclude-members: ImportedGuardAlias,QualifiedGuardAlias"
+    for non_target in (
+        "NestedGuardAlias",
+        "FunctionLocalAlias",
+        "UnrelatedGuardAlias",
+        "NamespaceGuardAlias",
+        "ReboundAlias",
+    ):
+        assert f".. py:type:: {non_target}" not in stub
+        assert non_target not in excluded_members
+    shadowed_stub = (tmp_path / "api" / "fixture_api.shadowed_guard.rst").read_text(encoding="utf-8")
+    assert ".. py:type:: ShadowedGuardAlias" not in shadowed_stub
+    assert ":exclude-members:" not in shadowed_stub
+
+
 def test_alias_targets_require_type_syntax_not_a_suffix_match(tmp_path: Path) -> None:
     """Source-derived targets exclude same-suffix ordinary value aliases."""
     source_root = tmp_path / "src" / "fixture_api"
@@ -218,7 +366,19 @@ def test_alias_targets_require_type_syntax_not_a_suffix_match(tmp_path: Path) ->
         "Lookup = Mapping[str, str]\n"
         "BoundedText = Annotated[str, 'bounded']\n"
         "ExportedPolicy = CanonicalPolicy\n"
-        "PublicPolicy = DEFAULT_POLICY\n",
+        "PublicPolicy = DEFAULT_POLICY\n"
+        "AnnotationOnlyAlias = Mapping[str, str]\n"
+        "AnnotationOnlyAlias: object\n"
+        "ReboundAssignment = Mapping[str, str]\n"
+        "ReboundAssignment = 'ordinary public value'\n"
+        "ReboundAnnotation = Mapping[str, str]\n"
+        "ReboundAnnotation: object = 'ordinary public value'\n"
+        "ReboundImport = Mapping[str, str]\n"
+        "from typing import Any as ReboundImport\n"
+        "ReboundClass = Mapping[str, str]\n"
+        "class ReboundClass:\n    pass\n"
+        "ReboundFunction = Mapping[str, str]\n"
+        "def ReboundFunction():\n    pass\n",
         encoding="utf-8",
     )
     api_root = tmp_path / "api"
@@ -233,8 +393,21 @@ def test_alias_targets_require_type_syntax_not_a_suffix_match(tmp_path: Path) ->
     assert ".. py:type:: Lookup\n   :module: fixture_api.contracts" in stub
     assert ".. py:type:: BoundedText\n   :module: fixture_api.contracts" in stub
     assert ".. py:type:: ExportedPolicy\n   :module: fixture_api.contracts" in stub
+    assert ".. py:type:: AnnotationOnlyAlias\n   :module: fixture_api.contracts" in stub
     assert ".. py:type:: PublicPolicy" not in stub
     assert ".. py:type:: PublishedPolicy\n   :module: fixture_api" in package_stub
+    overwritten_names = {
+        "ReboundAssignment",
+        "ReboundAnnotation",
+        "ReboundImport",
+        "ReboundClass",
+        "ReboundFunction",
+    }
+    assert not any(f".. py:type:: {name}" in stub for name in overwritten_names)
+    excluded_members = next(
+        line.partition(":exclude-members:")[2] for line in stub.splitlines() if ":exclude-members:" in line
+    )
+    assert not overwritten_names.intersection(name.strip() for name in excluded_members.split(","))
 
 
 def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) -> None:

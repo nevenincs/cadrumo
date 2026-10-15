@@ -14,6 +14,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AutomationGrant,
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessState,
     SessionKind,
@@ -309,6 +310,8 @@ def _originating_login_refusal(
         None,
     )
     if login is None:
+        return AccessDenialCode.OS_SESSION_UNAVAILABLE
+    if login.lock_state is OsLockState.UNKNOWN:
         return AccessDenialCode.OS_SESSION_UNAVAILABLE
     if not login.unlocked:
         return AccessDenialCode.OS_LOCKED

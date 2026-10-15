@@ -111,6 +111,7 @@ export function tauriHost(): Host {
     },
     environment: () => call("desktop_environment", {}),
     signInStatus: () => call("sign_in_status", {}),
+    noteActivity: () => call("sign_in_activity", {}),
     managerStatus: () => call("manager_status", {}),
     async observeManager(listener) {
       const updates = new Channel<ManagerSignal>();

@@ -24,8 +24,6 @@ from cadrumo.application.user_profile.access_contracts import AuthorityState
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.core.config import override_settings
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginHandoff
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import SessionRequest
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -37,6 +35,9 @@ from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
+
+from ........frontend.tui.secret.runtime_login import RuntimeLoginScreen
+from ........frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff
 
 pytestmark = [
     pytest.mark.integration,

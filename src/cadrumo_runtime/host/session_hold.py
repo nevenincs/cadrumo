@@ -186,6 +186,9 @@ async def _hold(
                 elif action == "status":
                     reply = client.status()
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+                elif action == "activity":
+                    reply = client.note_activity()
+                    _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
                 else:
                     _emit_refusal("invalid", request_id)
                     return 1

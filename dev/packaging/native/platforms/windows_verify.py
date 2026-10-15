@@ -355,7 +355,7 @@ def verify(
         cli = run(
             [
                 "-c",
-                "from cadrumo.entrypoints.cli.bootstrap import main; import sys; sys.argv=['aeat','--version']; main()",
+                "from cadrumo_runtime.host.frontend.cli.bootstrap import main; import sys; sys.argv=['aeat','--version']; main()",
             ]
         )
         evidence["cli_version"] = cli.stdout.strip()

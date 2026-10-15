@@ -47,7 +47,6 @@ from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewSc
 from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
-from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -57,6 +56,8 @@ from cadrumo_client.transport.workbench_generation import read_workbench_generat
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+
+from ........frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 
 pytestmark = [
     pytest.mark.integration,

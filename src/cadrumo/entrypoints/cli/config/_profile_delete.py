@@ -116,30 +116,11 @@ def _retention_floor_refusal(preflight: ProfileDeletionPreflight) -> Exception:
     )
 
 
-def _destroy(assessment: BucketDeletionAssessment) -> str:
-    """Delegate the complete existing transaction without holding client locks."""
-    from uuid import UUID
+def _destroy(ctx: typer.Context, assessment: BucketDeletionAssessment) -> str:
+    """Request the owner-supplied deletion service after the product preflight."""
+    from ..invocation_services import invocation_services
 
-    from cadrumo_client.commands.profile_binding import open_cli_profile_client
-    from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-
-    if assessment.fingerprint is None:
-        raise CliRefusedBoundaryError("custody_changed")
-    client = open_cli_profile_client(UUID(assessment.bucket_id))
-    try:
-        try:
-            completed = client.delete_profile(assessment.fingerprint)
-        except FrontendRefusedError as error:
-            raise CliRefusedBoundaryError(error.reason, context=error.context) from error
-    except BaseException as primary:
-        try:
-            client.close()
-        except Exception:
-            primary.add_note("Profile client cleanup did not complete.")
-        raise
-    else:
-        client.close()
-    return completed.receipt.completed_at.isoformat()
+    return invocation_services(ctx).delete_profile(assessment)
 
 
 def _result_and_lines(
@@ -203,7 +184,7 @@ def config_profile_delete(
     assessment, label = preflight.assessment, preflight.label
     if assessment is None or label is None:
         raise CliRefusedBoundaryError("custody_changed")
-    completed_at = _destroy(assessment) if yes else None
+    completed_at = _destroy(ctx, assessment) if yes else None
     result, lines, notices = _result_and_lines(
         assessment,
         label=label,

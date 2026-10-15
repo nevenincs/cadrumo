@@ -88,6 +88,7 @@ _INVALID_FRAME: Final = RefusalCode.INVALID_FRAME.value
 
 _PERSONS_ACTS: Final = (
     "password_sign_in",
+    "session_activity",
     "session_inventory",
     "deny_automation",
     "enrollment_prepare",
@@ -194,6 +195,7 @@ def _doors(runtime: StoredSignInRuntime, frontend: OperationFrontendProjection, 
         resumed, locking, submitting = (_client(runtime, frontend) for _ in range(3))
         for client in (resumed, locking, submitting):
             client.resume_receipt()
+    answers["session_activity"] = _answer(resumed.note_activity)
     answers["session_inventory"] = _answer(resumed.sessions)
     answers["deny_automation"] = _answer(lambda: resumed.deny_automation(AutomationDenialKind.ALL))
     answers["enrollment_prepare"] = _answer(
@@ -340,7 +342,7 @@ def test_controlled_service_admission_never_confers_person_acts(tmp_path: Path) 
             )
             == _PERSON
         )
-        for action in ("session_lock", "human_sign_out"):
+        for action in ("session_activity", "session_lock", "human_sign_out"):
             assert (
                 _answer(
                     lambda action=action: connection.session(

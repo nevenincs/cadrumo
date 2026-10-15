@@ -2591,6 +2591,8 @@ cli:
         stays setup-incomplete; `aeat config profile complete-setup` names the facts
         it still needs. Sufficient on its own; combine with --accept-defaults to fill
         the rest from descriptor defaults.
+    activity:
+      help: "Record activity for the signed-in profile without requesting a password."
     sign_in_status:
       help: Check your sign-in status without resuming or extending it.
     status:

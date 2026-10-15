@@ -81,7 +81,7 @@ def run_protected_live_cli(root: Path, logs: Path, stage: str, arguments: Sequen
             [
                 sys.executable,
                 "-m",
-                "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
+                "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap",
                 "--profile-handle",
                 str(handle),
                 "--",

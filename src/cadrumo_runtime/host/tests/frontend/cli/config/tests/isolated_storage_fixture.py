@@ -100,8 +100,8 @@ def declare_operator_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
     time while the runtime admission module binds it at import, so each lookup
     site is declared where it is used.
     """
-    for owner in ("config.secure_input", "runtime_profile_admission"):
-        monkeypatch.setattr(f"cadrumo.entrypoints.cli.{owner}.terminal_can_prompt_for_secrets", lambda: True)
+    for owner in ("secure_input", "profile_admission"):
+        monkeypatch.setattr(f"cadrumo_client.commands.{owner}.terminal_can_prompt_for_secrets", lambda: True)
 
 
 @pytest.fixture

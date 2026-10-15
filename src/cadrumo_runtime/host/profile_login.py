@@ -11,28 +11,34 @@ from threading import RLock
 from typing import Final
 from uuid import UUID, uuid4
 
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import refresh_profile_session_with_key
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import ProfileKdfPrewarm
-from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
+from cadrumo.adapters.persistence.storage.errors import PersistenceError
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.login_session import (
-    ProfileHumanLoginReceipt,
     ProfileLoginCandidate,
     ProfileLoginOutcome,
     ProfileLoginThrottledError,
     ProfileReceiptRefusedError,
     authenticate_profile_candidate,
-    resume_profile_candidate,
 )
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
-from cadrumo.core.profile_session import ProfileSessionRefusalReason
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
+from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
+
+from .profile_receipt import resume_profile_candidate
+
+_log = get_logger(__name__)
 
 _RECEIPT_DENIAL: Final = AccessDenialCode.AUTHENTICATION_REQUIRED
 """A refused receipt no longer signs this login in; a fresh proof is required."""
@@ -78,6 +84,8 @@ class ProfileWorkerHumanLogin:
         self._lock = RLock()
         self._candidate: tuple[UUID, ProfileLoginCandidate, UtcInstant, float] | None = None
         self._resumed_login: str | None = None
+        self._candidate_sealing_key: bytearray | None = None
+        self._sealing_keys: dict[UUID, bytearray] = {}
         self._lifetime = ExitStack()
         self._pending: dict[UUID, _PendingReceipt] = {}
         # A password proof's key derivation runs in a fresh contained child;
@@ -149,6 +157,7 @@ class ProfileWorkerHumanLogin:
                 identity = uuid4()
                 self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
                 self._resumed_login = login_id
+                self._candidate_sealing_key = bytearray(receipt_key)
                 return identity, candidate.outcome
             except ProfileReceiptRefusedError as error:
                 self.cancel()
@@ -196,6 +205,9 @@ class ProfileWorkerHumanLogin:
                     session_persisted=outcome.session_persisted,
                     resumed=outcome.already_authenticated,
                 )
+                if self._candidate_sealing_key is not None:
+                    self._sealing_keys[lease.session_id] = self._candidate_sealing_key
+                    self._candidate_sealing_key = None
                 if not (persist_receipt and candidate.mints_receipt):
                     return acknowledgement, False
                 self._pending[lease.session_id] = _PendingReceipt(
@@ -210,6 +222,7 @@ class ProfileWorkerHumanLogin:
                 self._candidate = None
                 return acknowledgement, True
             except BaseException:
+                self.discard(lease.session_id)
                 self.custody.retire(lease.session_id)
                 raise
             finally:
@@ -232,16 +245,53 @@ class ProfileWorkerHumanLogin:
             try:
                 persisted = session_id in self.custody.live_sessions() and (
                     pending.candidate.persist_acceleration_receipt(
-                        login_id=pending.login_id, binding=pending.lease.binding, sign_in=sign_in
+                        login_id=pending.login_id,
+                        binding=pending.lease.binding,
+                        sign_in=sign_in,
+                        retain_sealing_key=lambda key: self._retain_sealing_key(session_id, key),
                     )
                 )
                 return pending.acknowledgement.model_copy(update={"session_persisted": persisted})
             finally:
                 pending.lifetime.close()
 
+    def _retain_sealing_key(self, session_id: UUID, key: bytearray) -> None:
+        previous = self._sealing_keys.pop(session_id, None)
+        if previous is not None:
+            previous[:] = bytes(len(previous))
+        self._sealing_keys[session_id] = bytearray(key)
+
+    def refresh(self, lease: AccessSession) -> None:
+        """Renew live custody and reseal its existing receipt using worker-held proof."""
+        with self._lock:
+            self.expire()
+            self.custody.refresh(lease)
+            key = self._sealing_keys.get(lease.session_id)
+            if key is not None and lease.originating_login_id is not None:
+                try:
+                    refresh_profile_session_with_key(
+                        sign_in=SignInGenerationCustody(root=self.custody.root, binding=lease.binding),
+                        receipt_key=key,
+                        login_id=lease.originating_login_id,
+                        now=lease.issued_at,
+                        deadline=lease.expires_at,
+                    )
+                except (PersistenceError, OSError) as error:
+                    # Durable acceleration is optional; its I/O cannot retire already
+                    # admitted live human custody or undo the activity deadline.
+                    diagnostic_event(
+                        _log,
+                        "profile_receipt_refresh_failed",
+                        fields={"error_type": type(error).__name__},
+                        level=30,
+                    )
+
     def discard(self, session_id: UUID) -> None:
         """Release a retired session's pending receipt proof without minting."""
         with self._lock:
+            key = self._sealing_keys.pop(session_id, None)
+            if key is not None:
+                key[:] = bytes(len(key))
             pending = self._pending.pop(session_id, None)
             if pending is not None:
                 pending.lifetime.close()
@@ -249,6 +299,10 @@ class ProfileWorkerHumanLogin:
     def expire(self) -> None:
         """Release abandoned candidate keys even when the command stream is idle."""
         with self._lock:
+            live = self.custody.live_sessions()
+            for session_id in tuple(self._sealing_keys):
+                if session_id not in live:
+                    self.discard(session_id)
             if self._candidate is not None:
                 _, candidate, deadline, monotonic_deadline = self._candidate
                 if _abandoned(candidate, deadline, monotonic_deadline):
@@ -262,11 +316,16 @@ class ProfileWorkerHumanLogin:
         with self._lock:
             self._candidate = None
             self._resumed_login = None
+            if self._candidate_sealing_key is not None:
+                self._candidate_sealing_key[:] = bytes(len(self._candidate_sealing_key))
+                self._candidate_sealing_key = None
             self._lifetime.close()
 
     def close(self) -> None:
         """Release all candidate and pending-receipt proof without closing admitted leases."""
         with self._lock:
+            for session_id in tuple(self._sealing_keys):
+                self.discard(session_id)
             pending, self._pending = tuple(self._pending.values()), {}
             with ExitStack() as release:
                 for item in pending:

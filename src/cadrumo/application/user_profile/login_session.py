@@ -1,16 +1,17 @@
-"""Local password custody and runtime-owned receipt admission.
+"""Local password custody and protected receipt publication.
 
 Explicit password authentication binds process-local custody without changing
 profile selection. Borrowed candidates leave publication to their runtime owner.
-Shared receipt minting and supplied-proof admission belong to the authenticated
-runtime lifecycle; custody deletion retains its exact-profile cleanup boundary.
+Runtime admission owns supplied-proof resume and lease lifetime. Protected
+receipt publication rechecks committed custody here; deletion retains its
+exact-profile cleanup boundary.
 """
 
 from __future__ import annotations
 
 import os
 from collections.abc import Callable, Generator
-from contextlib import ExitStack, contextmanager
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -38,7 +39,6 @@ from .custody_ports import (
     profile_is_keyring_unavailable,
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
-    verify_profile_custody_dek_against_sentinel,
 )
 from .language_resolver import refresh_active_profile_output_language
 from .login_session_port import (
@@ -176,9 +176,10 @@ class ProfileLoginCandidate:
 
     outcome: ProfileLoginOutcome
     session: ProfileBucketSessionPort = field(repr=False)
-    _publish_receipt: Callable[[str, ProfileAccessBinding, ProfileSignInGenerationPort], bool] | None = field(
-        default=None, repr=False, compare=False
-    )
+    _publish_receipt: (
+        Callable[[str, ProfileAccessBinding, ProfileSignInGenerationPort, Callable[[bytearray], None] | None], bool]
+        | None
+    ) = field(default=None, repr=False, compare=False)
 
     @property
     def mints_receipt(self) -> bool:
@@ -186,7 +187,12 @@ class ProfileLoginCandidate:
         return self._publish_receipt is not None
 
     def persist_acceleration_receipt(
-        self, *, login_id: str, binding: ProfileAccessBinding, sign_in: ProfileSignInGenerationPort
+        self,
+        *,
+        login_id: str,
+        binding: ProfileAccessBinding,
+        sign_in: ProfileSignInGenerationPort,
+        retain_sealing_key: Callable[[bytearray], None] | None = None,
     ) -> bool:
         """Publish bounded human acceleration from this still-live password proof.
 
@@ -201,19 +207,7 @@ class ProfileLoginCandidate:
         _require_live_receipt_candidate(self.session)
         if self._publish_receipt is None:
             return self.outcome.session_persisted
-        return self._publish_receipt(login_id, binding, sign_in)
-
-
-class ProfileHumanLoginReceipt(BaseModel):
-    """Nonsecret acknowledgement of human proof and optional bounded acceleration."""
-
-    model_config = _STRICT_FROZEN
-
-    authenticated_at: datetime
-    idle_deadline: datetime
-    absolute_deadline: datetime
-    session_persisted: bool
-    resumed: bool
+        return self._publish_receipt(login_id, binding, sign_in, retain_sealing_key)
 
 
 class ProfileReceiptRefusedError(CadrumoError):
@@ -484,8 +478,13 @@ def authenticate_profile_candidate(
                 closed_previous_bucket_id=None,
             ),
             session=candidate.session,
-            _publish_receipt=lambda login_id, binding, sign_in: _persist_candidate_receipt(
-                candidate, storage_root=storage_root, login_id=login_id, binding=binding, sign_in=sign_in
+            _publish_receipt=lambda login_id, binding, sign_in, retain_sealing_key: _persist_candidate_receipt(
+                candidate,
+                storage_root=storage_root,
+                login_id=login_id,
+                binding=binding,
+                sign_in=sign_in,
+                retain_sealing_key=retain_sealing_key,
             ),
         )
     finally:
@@ -510,6 +509,7 @@ def _persist_candidate_receipt(
     login_id: str,
     binding: ProfileAccessBinding,
     sign_in: ProfileSignInGenerationPort,
+    retain_sealing_key: Callable[[bytearray], None] | None = None,
 ) -> bool:
     """Recheck the proven capsule while holding its canonical publication lock."""
     with active_profile_pointer_transaction(storage_root):
@@ -533,6 +533,7 @@ def _persist_candidate_receipt(
                 login_id=login_id,
                 binding=binding,
                 sign_in=sign_in,
+                retain_sealing_key=retain_sealing_key,
             )
         return candidate.receipt_persisted
 
@@ -571,92 +572,6 @@ def borrow_profile_receipt_key(*, bucket_id: UUID) -> Generator[bytearray]:
         yield key
     finally:
         _profile_login_sessions().zeroise_owned_buffer(key)
-
-
-@contextmanager
-def resume_profile_candidate(
-    *,
-    bucket_id: UUID,
-    receipt_key: bytearray,
-    profile_decode_context: ProfileDecodeContext,
-    login_id: str,
-    sign_in_binding: ProfileAccessBinding,
-    now: datetime | None = None,
-) -> Generator[ProfileLoginCandidate]:
-    """Prove a supplied human receipt without binding or selecting a profile.
-
-    The runtime composes this with ``login_id``, the originating OS login of
-    the connection presenting the proof, and ``sign_in_binding``, its worker's
-    custody binding. The receipt must name that login and the current sign-in
-    generation; a receipt refused for its binding or its own metadata is
-    deleted by the reader, never by the presenting frontend, except that a
-    login mismatch deletes only when the supplied proof unwraps the receipt.
-    A valid proof inherits the receipt's original deadlines. It never reads
-    the OS keyring for a key, renews human life, or changes the active
-    frontend context.
-    """
-    instant = _now() if now is None else now
-    storage_root = effective_storage_root()
-    material = load_profile_custody_password_material(bucket_id, root=storage_root)
-    outcome, dek = _profile_login_sessions().resume_acceleration_receipt_with_key(
-        storage_root=storage_root,
-        profile_id=bucket_id,
-        custody_generation=material.envelope.password_generation,
-        dek_epoch=material.envelope.dek_epoch,
-        now=instant,
-        receipt_key=receipt_key,
-        login_id=login_id,
-        sign_in_binding=sign_in_binding,
-    )
-    if not outcome.resumed or outcome.record is None or dek is None:
-        if dek is not None:
-            _profile_login_sessions().zeroise_owned_buffer(dek)
-        raise ProfileReceiptRefusedError(outcome.refusal or ProfileSessionRefusalReason.ABSENT, binding=outcome.binding)
-    record = outcome.record
-    with ExitStack() as cleanup:
-        cleanup.callback(_profile_login_sessions().zeroise_owned_buffer, dek)
-        try:
-            verify_profile_custody_dek_against_sentinel(
-                dek=bytes(dek),
-                profile_id=bucket_id,
-                dek_epoch=material.envelope.dek_epoch,
-                sentinel=material.sentinel,
-            )
-        except CadrumoError as error:
-            raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.TAMPERED) from error
-        idle_minutes, _ = _bucket_session_windows()
-        session = _profile_login_sessions().open_resumed_session(
-            bucket_id=str(bucket_id),
-            dek=bytes(dek),
-            idle_minutes=idle_minutes,
-            opened_at=record.issued_at,
-            idle_deadline=record.idle_deadline,
-            absolute_deadline=record.absolute_deadline,
-            storage_root=storage_root,
-        )
-        cleanup.callback(session.close)
-        # Match password candidates' local record authority construction;
-        # actual record reads retain their own later authenticated boundary.
-        record_session = ProfileRecordSession.from_envelope(
-            envelope=material.envelope,
-            dek=bytes(dek),
-            profile_decode_context=profile_decode_context,
-        )
-        record_session.close()
-        target = resolve_login_target(str(bucket_id))
-        yield ProfileLoginCandidate(
-            outcome=ProfileLoginOutcome(
-                bucket_id=str(bucket_id),
-                label=target.label,
-                authenticated_at=record.issued_at,
-                idle_deadline=record.idle_deadline,
-                absolute_deadline=record.absolute_deadline,
-                session_persisted=True,
-                already_authenticated=True,
-                closed_previous_bucket_id=None,
-            ),
-            session=session,
-        )
 
 
 def authenticate_profile_for_invocation(
@@ -787,6 +702,7 @@ def _mint_or_warn(
     login_id: str,
     binding: ProfileAccessBinding,
     sign_in: ProfileSignInGenerationPort,
+    retain_sealing_key: Callable[[bytearray], None] | None = None,
 ) -> bool:
     """Mint the persisted session, or report a process-scoped login.
 
@@ -810,6 +726,7 @@ def _mint_or_warn(
             login_id=login_id,
             sign_in_binding=binding,
             sign_in_generation=sign_in,
+            retain_sealing_key=retain_sealing_key,
         )
     except BaseException as exc:
         if not profile_is_keyring_unavailable(exc):
@@ -830,7 +747,6 @@ def _mint_or_warn(
 
 __all__ = [
     "ProfileCustodySessionOwnerEffect",
-    "ProfileHumanLoginReceipt",
     "ProfileLoginCandidate",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
@@ -842,6 +758,5 @@ __all__ = [
     "profile_session_keychain_unavailability",
     "publish_created_profile_session",
     "remove_profile_session_acceleration_for_custody_delete",
-    "resume_profile_candidate",
     "revoke_live_profile_secret_for_custody_delete",
 ]

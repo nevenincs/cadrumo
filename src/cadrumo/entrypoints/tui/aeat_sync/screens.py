@@ -288,7 +288,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         if door is None:
             return True
         try:
-            _, self.controller.auth_readiness = await door.snapshot()
+            self.controller.auth_readiness = await door.read_readiness()
         except Exception:
             self.controller.auth_readiness = None
         if self.is_attached:
@@ -296,7 +296,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             self._set_operation_buttons_disabled(self._in_flight_id is not None)
         return self.controller.auth_readiness is not None and self.controller.auth_readiness.ready
 
-    async def _auth_edited(self, _outcome: None) -> None:
+    async def _auth_edited(self, _outcome: object) -> None:
         await self._refresh_auth()
 
     def _render_zone_status(self, rows: DataTable[str]) -> None:

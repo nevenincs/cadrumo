@@ -79,6 +79,8 @@ export interface Host {
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
   signInStatus(): Promise<SignInStatus>;
+  /** Reports a person gesture; background observations must never call it. */
+  noteActivity?(): Promise<void>;
   /** Public observations only; cleanup cannot remove a newer subscriber. */
   observeSignIn?(listener: (signal: SignInSignal) => void): Promise<() => void>;
   managerStatus?(): Promise<ManagerStatus>;

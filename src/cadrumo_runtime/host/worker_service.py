@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.drain import OperationDrainResult
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
@@ -164,7 +165,10 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
                 context.custody.install(request.lease, secret)
             context.operations.prepare()
         elif request.action == "refresh":
-            context.custody.refresh(request.lease)
+            if request.lease.kind is SessionKind.HUMAN:
+                context.human.refresh(request.lease)
+            else:
+                context.custody.refresh(request.lease)
         else:
             context.custody.share(request.lease)
         return "status"

@@ -40,6 +40,8 @@ pub enum EventKind {
     ServiceEvent,
     Failure,
     HostStopped,
+    WindowCloseRequested,
+    HostExitRequested,
 }
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]

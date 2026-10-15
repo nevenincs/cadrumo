@@ -120,3 +120,8 @@ Amended 2026-10-12 on implementation, within the operator's approval of this rec
 
 
 Amended 2026-10-14 under the operator's runtime separation directive: held sign-in and all authentication administration beyond direct AEAT profile login, logout and creation belong to `cadrumo_runtime`. The host and client API are separate canonical packages with no tax/client import of the host. The earlier 2026-10-12 command-channel refinement is history; the current holder uses the bounded native password frame and correlated decision grammar above. No AEAT hold alias remains. Runtime authority still requires exact native peer proof, current parent authorization and cascading retirement; a marker or known profile alone grants nothing.
+
+
+## Active human lifetime refinement 2026-10-15
+
+The authorized active-use amendment in `2026-10-04-application-sign-in-adr` replaces this record's fixed human idle/absolute lifetime wording only when actual person input renews a still-live human sign-in. The original-login absolute cap does not interrupt active work. Agent, polling and service traffic never renew it; idle expiry and explicit revocation still apply. Live human siblings on the same originating login follow that renewal, while attended children retain their existing bounded deadlines and approval-based reissue. This does not turn agent activity into human activity, expand scopes, or restore expired authority. Earlier observations that no human extension exists describe the pre-repair implementation.

@@ -285,7 +285,6 @@ class StorageCategory(StrEnum):
     # ── Fixed layout: runtime-written records under ``.runtime/`` ───────────
     # Distinct from ``CONNECTION_SOCKETS``: that directory holds POSIX endpoints;
     # these records sit beside the installation identity in ``.runtime/``.
-    RUNTIME_BOOT_RECORD = "runtime-boot-record"
     RUNTIME_COORDINATION = "runtime-coordination"
     RUNTIME_INSTALLATION_RECORD = "runtime-installation-record"
     RUNTIME_INSTALLATION_LOCK = "runtime-installation-lock"

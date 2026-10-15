@@ -72,8 +72,8 @@ def _login() -> App[Any]:
     from cadrumo.application.user_profile.login_interaction import preselected_profile_login_id, profile_login_choices
     from cadrumo.core.async_cleanup import close_async_resources
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-    from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginHandoff
+    from cadrumo_runtime.host.frontend.tui.secret.runtime_login import RuntimeLoginScreen
+    from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff
     from cadrumo_client.transport.frontend_client import FrontendClient
     from cadrumo_client.transport.installed_client import open_installed_client
 
@@ -316,7 +316,7 @@ SURFACES: dict[str, Surface] = {
             "The way back into a locked profile",
             _login,
             needs_profile=True,
-            interfaces=("cadrumo.entrypoints.tui.secret.runtime_login.RuntimeLoginScreen",),
+            interfaces=("cadrumo_runtime.host.frontend.tui.secret.runtime_login.RuntimeLoginScreen",),
         ),
         Surface(
             "manager",

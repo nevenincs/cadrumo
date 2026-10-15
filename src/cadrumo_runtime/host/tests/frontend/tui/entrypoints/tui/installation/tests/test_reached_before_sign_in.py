@@ -28,11 +28,11 @@ from cadrumo.entrypoints.tui.installation.area_factory import InstallationAreaFa
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.installation.door import InstallationClientOpener
 from cadrumo.entrypoints.tui.secret.registration import RegistrationAttempt, RegistrationScreen
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
 from cadrumo.tests.async_condition import until
 from cadrumo_client.contracts.installation_requests import InstallationAct
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from ........frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .runtime_support import ServedRuntime, serving_test_acts
 
 pytestmark = [

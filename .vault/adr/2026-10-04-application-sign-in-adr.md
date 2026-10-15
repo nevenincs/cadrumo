@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:0b30a2123f51f9d5042d21acc19f46bd24fac91c5138437d879024381ccf5e10'
+body_hash: 'sha256:2271baed26730fa6084df81088b1a3241397efac5153521fc218eec74d4ff6fe'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -290,3 +290,11 @@ Driving the canonical CLI login keeps the desktop free of runtime authority and 
 Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: the one live human sign-in of a profile may also be a held one, which is never persisted. It lives on the holding process's runtime connection, and ends when that connection closes, the person signs out, the profile is locked, the deadline passes or the runtime stops. `aeat config logout --secrets-stdin` proves the person by password to end a sign-in that no stored receipt can prove.
 
 Amended 2026-10-12 on the owner's first-hand ruling "i followw your recommedation", which accepted the recommendation on the receipt-sealing key: the named follow-on decision of the lifetime constraints is made, and the key lives in the profile worker's memory beside the session's DEK, only while a live session exists, zeroised with the DEK when the last lease ends; the runtime never reads the keychain. The same amendment records the owner's ruling of 2026-10-10 on activity: a message the person sends to the assistant counts as their activity, and the assistant's own calls, commands and scripts do not. Both are reworded in place under **Lifetime**, each with a note of what it said before. The ruling also confirmed that a sign-in to another profile signs the previous one out, reworded in place under **Profiles in the desktop view**. This records the decision; the extension itself is not yet built.
+
+## Authorized active-use lifetime amendment 2026-10-15
+
+Accepted under the user's requirement that a live profile must not time out while the person works, followed by explicit authorization to keep digging and fixing. Evidence is recorded in `2026-10-15-session-lifetime-repair-reference`. This supersedes the fixed original-login absolute cap under Lifetime only for actively renewed human sign-in. Explicit keyboard, pointer, scroll and assistant-send input on admitted person frontends extends the idle deadline at a bounded rate. Status polling, service traffic, assistant calls and scripts do not. The runtime checks the native nonhuman-peer fence as well as the frontend and live human session. Idle expiry, positive OS lock/logout, explicit sign-out, profile replacement, runtime stop and generation revocation still end authority. Expired or retired leases cannot be renewed.
+
+Renewal extends existing live human roots of the same profile and originating login, preserving their identities and original issuance for descendant compatibility. Existing attended descendants retain their own bounded deadlines and may be freshly issued through their existing approval. API leases and grant windows are unchanged. The worker retains only the supplied or minted receipt-sealing key while human custody is live, reseals the existing receipt with current generation and exact identity checks, and wipes the key when human custody ends. Receipt persistence failure is reported separately from live in-memory authority.
+
+An uncertain OS observation refuses private work without treating uncertainty as positive logout or destroying otherwise live human leases. Frontends distinguish unavailable authority from actual expiry, clear private presentation when authority cannot be confirmed, and remain open for explicit recovery. Shutdown settles frontend clients before stopping their owned runtime. This acceptance records policy and repair authorization, not successful package verification.

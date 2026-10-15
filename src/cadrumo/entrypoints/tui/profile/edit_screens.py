@@ -92,6 +92,8 @@ class FieldEditScreen(ModalScreen[str | None]):
 
     def on_mount(self) -> None:
         """Focus the editor and restore an exact current choice only."""
+        if not self.is_attached:
+            return
         if not self._field.choices:
             self.query_one("#edit-input", Input).focus()
             return

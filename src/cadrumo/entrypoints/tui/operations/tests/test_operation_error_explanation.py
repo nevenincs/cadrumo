@@ -11,6 +11,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_controller import OperationController
 
 from .....application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
@@ -41,7 +42,6 @@ from .....core.errors.hierarchy import RecordedRegisteredError
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ..controller_port import OperationErrorDetailPort
 from ..refusal_explanation import operation_error_explanation
-from ..runtime_controller import RuntimeOperationController
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -135,8 +135,8 @@ class _DetailWire:
         )
 
 
-def _controller(wire: _DetailWire) -> RuntimeOperationController:
-    return RuntimeOperationController(client=cast(FrontendClient, wire), operation_id=_OPERATION, session_id=_SESSION)
+def _controller(wire: _DetailWire) -> OperationController:
+    return OperationController(client=cast(FrontendClient, wire), operation_id=_OPERATION, session_id=_SESSION)
 
 
 def test_the_runtime_controller_reads_a_refused_operations_recorded_detail() -> None:

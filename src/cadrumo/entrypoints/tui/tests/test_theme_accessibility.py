@@ -29,7 +29,7 @@ from ..components.theme import (
     CADRUMO_LIGHT,
     CADRUMO_LIGHT_THEME_NAME,
 )
-from ..modelo.workbench.installed import InstalledModeloWorkbench
+from ..modelo.workbench.factory import InstalledModeloWorkbench
 from ..modelo.workbench.screen import ModeloWorkbenchScreen
 from .modelo_workbench_session import real_workbench
 

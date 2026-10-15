@@ -127,7 +127,7 @@ def test_fatal_command_keeps_sanitized_evidence_without_echoing_process_output(
         (),
         (
             "-c",
-            "from cadrumo.entrypoints.cli.bootstrap import main; import sys; sys.argv=['aeat',*sys.argv[1:]]; main()",
+            "from cadrumo_runtime.host.frontend.cli.bootstrap import main; import sys; sys.argv=['aeat',*sys.argv[1:]]; main()",
         ),
     ],
 )

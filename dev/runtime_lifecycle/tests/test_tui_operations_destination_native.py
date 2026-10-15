@@ -3,7 +3,7 @@
 One native runtime and one human session serve the whole journey: a read, a
 change that a second read then observes, and an operation that takes a
 one-shot secret. Every submission goes through the real request form and the
-real ``RuntimeOperationController``; nothing stands in for the runtime.
+real ``OperationController``; nothing stands in for the runtime.
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ from cadrumo.entrypoints.tui.operations.destination import (
 )
 from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProviderV1
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from cadrumo_client.transport.operation_controller import OperationController
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -219,7 +219,7 @@ class _McpConnection:
 
 async def _settled_projection(client: FrontendClient, operation_id: str) -> OperationPublicProjectionV1:
     """Observe one operation until it has settled, so nothing is left running when the runtime stops."""
-    controller = RuntimeOperationController(client=client, operation_id=operation_id, session_id=client.session_id)
+    controller = OperationController(client=client, operation_id=operation_id, session_id=client.session_id)
     async with asyncio.timeout(_SETTLE_SECONDS):
         while True:
             observed = await controller.observe(0, page_limit=1)
@@ -288,14 +288,14 @@ async def _journey(
         {"profile_id": client.profile_id, "name": "synthetic-certificate-source"}
     )
     with pytest.raises(RefusalError) as missing_secret:
-        await RuntimeOperationController.submit(
+        await OperationController.submit(
             client, definition_id=_GUARDED_OPERATION, subject_ref=subject, payload=named_source
         )
     assert missing_secret.value.reason is RefusalCode.INVALID_FRAME
     stray = bytearray(_TYPED_INPUT, "utf-8")
     view = ProfileViewOperationRequest(profile_id=client.profile_id, page_kind=ProfileViewPageKind.STATUS)
     with pytest.raises(RefusalError) as stray_secret:
-        await RuntimeOperationController.submit(
+        await OperationController.submit(
             client,
             definition_id=_VIEW,
             subject_ref=subject,

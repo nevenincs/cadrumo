@@ -11,6 +11,8 @@ from textual.widgets import Button, Static
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_controller import OperationController
+from cadrumo_client.transport.operation_reads import read_operation as read_operation
 
 from ...application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
@@ -30,16 +32,14 @@ from ...core.i18n.render import output_language, tr
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from .modelo.export_result import ModeloExportResultScreen
-from .modelo.runtime_workbench_reads import read_runtime_workbench_operation
 from .modelo.workbench.export import WorkbenchExportScreen
 from .modelo.workbench.ports import WorkbenchExportOffer, WorkbenchExportRequest
 from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
-from .operations.runtime_controller import RuntimeOperationController
 
 
 async def read_filing_view(client: FrontendClient, filing_record_id: str) -> ModeloFilingRecordViewProjection:
     """Read one filing view through the workbench read path, at the view's current result version."""
-    return await read_runtime_workbench_operation(
+    return await read_operation(
         client,
         definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(client.profile_id)),
@@ -112,7 +112,7 @@ class HistoricalFilingExportScreen(Screen[None]):
             self._notice(tr("cli.app.modelo.filing_record.export_missing"))
             return
         try:
-            controller = await RuntimeOperationController.submit(
+            controller = await OperationController.submit(
                 client,
                 definition_id=CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(client.profile_id)),
@@ -138,7 +138,7 @@ class HistoricalFilingExportScreen(Screen[None]):
         self.app.push_screen(OperationModal(controller), settled)
 
     async def _show_result(
-        self, controller: RuntimeOperationController, outcome: OperationModalSettledOutcomeV1, revision_id: str
+        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1, revision_id: str
     ) -> None:
         projection = outcome.view_model.projection
         if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:

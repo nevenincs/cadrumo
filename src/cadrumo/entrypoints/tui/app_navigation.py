@@ -14,10 +14,10 @@ from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .declarations.controller import calendar_address_focus_key
 from .home import HomeTarget, home_target_action_id, home_target_agenda_address, home_target_work_unit_id
 from .navigation import NavigationContractError, TuiFocusIdentityV1, TuiNavigationTargetV1
-from .secret.passphrase import PassphraseScreen
 
 if TYPE_CHECKING:
     from .app import CadrumoTuiApp
+    from .secret.passphrase import PassphraseScreen
 
 
 class RootNavigationMixin:
@@ -231,6 +231,7 @@ class RootNavigationMixin:
             if not self._navigation_is_current(navigation_revision):
                 return
         await self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
+        self.call_after_refresh(self._record_initial_screen_ready, screen)
 
     def _navigation_is_current(self: CadrumoTuiApp, navigation_revision: int) -> bool:
         """Recheck navigation and application lifetime across an awaited swap."""
@@ -245,7 +246,10 @@ class RootNavigationMixin:
         self._sever_profile_root()
         for screen in self.screen_stack[1:]:
             screen.display = False
-        if outcome.reason is AccountRecomposeReasonV1.EXPIRED and password_screen is not None:
+        if (
+            outcome.reason in {AccountRecomposeReasonV1.EXPIRED, AccountRecomposeReasonV1.UNAVAILABLE}
+            and password_screen is not None
+        ):
             self.run_worker(
                 self._settle_expired_password(password_screen, outcome),
                 name="password-expiry-settlement",
@@ -282,3 +286,4 @@ class RootNavigationMixin:
         self._home_semantic_focus = None
         self._home_request = None
         self._read_account_session = None
+        self._note_activity = None

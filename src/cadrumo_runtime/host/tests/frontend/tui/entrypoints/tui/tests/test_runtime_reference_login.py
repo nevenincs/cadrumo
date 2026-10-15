@@ -32,10 +32,6 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.tui.runtime_admission import runtime_login_session
-from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -45,6 +41,11 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+
+from .......frontend.tui.runtime_admission import runtime_login_session
+from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
+from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
 pytestmark = [
     pytest.mark.integration,

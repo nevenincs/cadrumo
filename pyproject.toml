@@ -141,7 +141,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "cadrumo.entrypoints.cli.bootstrap:main"
+aeat = "cadrumo_runtime.host.frontend.cli.bootstrap:main"
 cadrumo-mcp = "cadrumo_harness.mcp.main:main"
 cadrumo-runtime = "cadrumo_runtime.host.bootstrap:main"
 cadrumo-agent-service = "cadrumo_agent_service.main:main"
@@ -809,6 +809,9 @@ convention = "google"
 # repository-owned paths is not an injection surface.
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
+# This package smoke executes only the checksum-verified package's Node and ACP
+# entry with literal --version arguments and a credential-free OS environment.
+"native/tests/agent_smoke.py" = ["S603"]
 # `just bootstrap` runs every bootstrap step through a fixed argv declared as
 # data in `dev/init/plan.py` and resolved through `shutil.which`. Nothing
 # reaches it from a user, an environment variable, or a file: the argv is

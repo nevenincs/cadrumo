@@ -64,7 +64,7 @@ class ProfileWorkerCustody:
             and 0 <= elapsed < (lease.expires_at - lease.issued_at).total_seconds()
         )
 
-    def _validate(self, lease: AccessSession) -> None:
+    def _validate_lease(self, lease: AccessSession) -> None:
         if (
             self._closed
             or lease.binding != self.identity.binding
@@ -72,6 +72,9 @@ class ProfileWorkerCustody:
             or not self._live(lease)
         ):
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+
+    def _validate(self, lease: AccessSession) -> None:
+        self._validate_lease(lease)
         validate_automation_profile_binding(self.identity.binding, root=self.root)
 
     def install(self, lease: AccessSession, dek: bytearray) -> None:
@@ -102,11 +105,11 @@ class ProfileWorkerCustody:
             self._leases[lease.session_id] = lease
 
     def refresh(self, lease: AccessSession) -> None:
-        """Replace only a live root API deadline after runtime reauthorization."""
+        """Replace only a live root human or API deadline after runtime reauthorization."""
         with self._lock:
             previous = self.require(lease.session_id)
             self._validate(lease)
-            if lease.kind is not SessionKind.API_KEY or lease.parent_session_id is not None:
+            if lease.kind not in {SessionKind.HUMAN, SessionKind.API_KEY} or lease.parent_session_id is not None:
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             mutable = {"issued_at", "issued_monotonic", "expires_at"}
             if any(
@@ -124,14 +127,16 @@ class ProfileWorkerCustody:
     def require(self, session_id: UUID) -> AccessSession:
         """Revalidate exact custody and local lease lifetime before worker access."""
         with self._lock:
-            self.expire()
+            binding_validated = self._expire_locked()
             lease = self._leases.get(session_id)
             if lease is None:
                 if session_id in self._lapsed:
                     # Its lifetime ran out: the session ended, and nothing presented was wrong.
                     raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-            self._validate(lease)
+            self._validate_lease(lease)
+            if not binding_validated:
+                validate_automation_profile_binding(self.identity.binding, root=self.root)
             return lease
 
     @contextmanager
@@ -167,21 +172,31 @@ class ProfileWorkerCustody:
     def expire(self) -> None:
         """Release expired custody during idle polling as well as before requests."""
         with self._lock:
-            # A publication may replace its own envelope inside a held native
-            # fence. Revalidate at the last section exit; each new require still
-            # validates independently, so this cannot admit successor work.
-            if self._leases and not self._sections:
-                try:
-                    validate_automation_profile_binding(self.identity.binding, root=self.root)
-                except BaseException:
-                    self.close()
-                    raise
-            for identity in tuple(self._leases):
-                if identity in self._leases and not self._live(self._leases[identity]):
-                    for lapsed in self.retire(identity):
-                        self._lapsed[lapsed] = None
-            while len(self._lapsed) > _LAPSED_MEMORY:
-                del self._lapsed[next(iter(self._lapsed))]
+            self._expire_locked()
+
+    def _expire_locked(self) -> bool:
+        """Expire under the custody lock, reporting this call's binding proof.
+
+        require() consumes the proof only inside the same critical section.
+        Every later request, idle poll and final section exit revalidates afresh.
+        """
+        # A publication may replace its own envelope inside a held native
+        # fence. Revalidate at the last section exit; each new require still
+        # validates independently, so this cannot admit successor work.
+        binding_validated = bool(self._leases) and not self._sections
+        if binding_validated:
+            try:
+                validate_automation_profile_binding(self.identity.binding, root=self.root)
+            except BaseException:
+                self.close()
+                raise
+        for identity in tuple(self._leases):
+            if identity in self._leases and not self._live(self._leases[identity]):
+                for lapsed in self.retire(identity):
+                    self._lapsed[lapsed] = None
+        while len(self._lapsed) > _LAPSED_MEMORY:
+            del self._lapsed[next(iter(self._lapsed))]
+        return binding_validated
 
     def retire(self, session_id: UUID) -> frozenset[UUID]:
         """Drop one lineage and name the leases it held; the process remains pinned after its last lease ends."""

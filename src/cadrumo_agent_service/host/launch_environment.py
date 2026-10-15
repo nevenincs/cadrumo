@@ -124,6 +124,84 @@ def system_environment(received: Mapping[str, str], *, sys_platform: str | None 
     return {name: received[name] for name in names if name in received}
 
 
+def _packaged_node_bin_directory(python: Path | None, *, platform: str) -> Path | None:
+    """Return the packaged Node bin beside the manifest-declared packages, if present."""
+    if python is None or not python.is_absolute() or not python.is_file():
+        return None
+    try:
+        package_root = python.parent.resolve(strict=True)
+        resolved_python = python.resolve(strict=True)
+        if not resolved_python.is_relative_to(package_root):
+            return None
+
+        manifest_path = (package_root / "data" / "package-manifest.json").resolve(strict=True)
+        if not manifest_path.is_relative_to(package_root) or not manifest_path.is_file():
+            return None
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        layout = manifest.get("layout") if isinstance(manifest, dict) else None
+        paths = layout.get("paths") if isinstance(layout, dict) else None
+        if not isinstance(paths, dict):
+            return None
+
+        executable_parts = _package_relative_parts(paths.get("executable"))
+        package_parts = _package_relative_parts(paths.get("packages"))
+        if executable_parts is None or len(executable_parts) != 1 or package_parts is None:
+            return None
+        executable = package_root.joinpath(*executable_parts).resolve(strict=True)
+        if executable != resolved_python or not executable.is_file():
+            return None
+        packages = _resolve_package_path(package_root, package_parts)
+        if packages is None or not packages.is_dir():
+            return None
+
+        node_root = packages.parent / "node"
+        node_executable = node_root / "node.exe" if platform == "win32" else node_root / "bin" / "node"
+        node_executable = node_executable.resolve(strict=True)
+        if not node_executable.is_relative_to(package_root) or not node_executable.is_file():
+            return None
+        return node_executable.parent
+    except (OSError, RuntimeError, TypeError, ValueError, RecursionError):
+        return None
+
+
+def _package_relative_parts(value: object) -> tuple[str, ...] | None:
+    """Accept canonical slash-separated package paths without platform escapes."""
+    if not isinstance(value, str) or not value or "\\" in value or ":" in value:
+        return None
+    parts = tuple(value.split("/"))
+    return None if any(part in {"", ".", ".."} for part in parts) else parts
+
+
+def _resolve_package_path(package_root: Path, parts: tuple[str, ...]) -> Path | None:
+    try:
+        resolved = package_root.joinpath(*parts).resolve(strict=True)
+    except (OSError, RuntimeError):
+        return None
+    return resolved if resolved.is_relative_to(package_root) else None
+
+
+def agent_binary_directories(
+    *, python: Path | None, received: Mapping[str, str], sys_platform: str | None = None
+) -> str | None:
+    """Return public provider directories with the packaged Node directory prepended when present."""
+    platform = sys.platform if sys_platform is None else sys_platform
+    external = next(
+        (
+            value
+            for name, value in received.items()
+            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
+        ),
+        None,
+    )
+    node_bin = _packaged_node_bin_directory(python, platform=platform)
+    if node_bin is not None:
+        path_separator = ";" if platform == "win32" else ":"
+        external = (
+            str(node_bin) if external is None or external == "" else path_separator.join((str(node_bin), external))
+        )
+    return external if external is not None and external != "" else None
+
+
 def agent_launch_environment(
     *,
     storage_root: Path,
@@ -149,15 +227,8 @@ def agent_launch_environment(
         ChildEnvironmentProfile.STRICT, storage_root, received=received, base=base, sys_platform=platform
     )
     environment[STORAGE_ROOT.variable] = str(normalize_storage_path(storage_root))
-    external = next(
-        (
-            value
-            for name, value in received.items()
-            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
-        ),
-        None,
-    )
-    if external is not None and external != "":
+    external = agent_binary_directories(python=python, received=received, sys_platform=platform)
+    if external is not None:
         environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
     environment[HOSTED_ROOT_VARIABLE] = str(agent_root)
     # The agent binds ephemeral ports and reports the real one on its ready line.

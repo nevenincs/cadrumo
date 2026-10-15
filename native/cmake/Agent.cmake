@@ -12,20 +12,23 @@ if(NOT EXISTS "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}/pyproject.toml")
 endif()
 get_filename_component(agent_source "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
 file(GLOB_RECURSE agent_source_inputs CONFIGURE_DEPENDS "${agent_source}/src/*")
-foreach(agent_file pyproject.toml README.md LICENSE NOTICE .gitignore)
+foreach(agent_file pyproject.toml README.md LICENSE NOTICE .gitignore package.json package-lock.json .node-version)
   if(EXISTS "${agent_source}/${agent_file}")
     list(APPEND agent_source_inputs "${agent_source}/${agent_file}")
   endif()
 endforeach()
-list(FILTER agent_source_inputs EXCLUDE REGEX "/(tests|testing|\\.pytest[^/]*|\\.git|\\.venv|__pycache__|dist|build|\\.tmp[^/]*)/|\\.pyc$")
+list(FILTER agent_source_inputs EXCLUDE REGEX "/(tests|testing|service_tests|capability_tests|acceptance|\\.pytest[^/]*|\\.git|\\.venv|__pycache__|dist|build|\\.tmp[^/]*)/|/src/cadrumo_agent/conftest\\.py$|\\.pyc$")
 set(agent_inputs ${agent_source_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/archive.py"
+  "${PROJECT_SOURCE_DIR}/native/agent/runtime.json"
   "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/uv.lock"
   ${shared_inputs} "${CMAKE_COMMAND}")
 list(JOIN agent_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-agent.txt" CONTENT "${input_lines}\n")
 cadrumo_build_step(step_comment agent_project GROUP dependencies
-  SUMMARY "build the agent wheel from the configured project folder"
+  SUMMARY "build the agent wheel and its pinned Node/ACP runtime from the configured project folder"
   OUTPUTS "${CADRUMO_PATH_AGENT}")
 add_custom_target(agent_project
   COMMAND ${CADRUMO_HELPER} agent --build "${PROJECT_BINARY_DIR}"

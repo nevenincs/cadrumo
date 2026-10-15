@@ -30,7 +30,7 @@ from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import application_workbench
 from ..casilla_list_models import CasillaListEntry
 from ..editor import CasillaEditorPanel
-from ..installed import InstalledModeloWorkbench
+from ..factory import InstalledModeloWorkbench
 from ..page_items import page_items
 from ..screen import ModeloWorkbenchScreen
 

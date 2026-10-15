@@ -20,6 +20,7 @@ from dev._paths import REPO_ROOT
 from ..runtime_wheel_selection import active_requirements
 from ..runtime_wheelhouse_contract import target_platform
 from .agent import locked_requirements
+from .agent_runtime import stage_agent_runtime
 from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
@@ -189,6 +190,7 @@ def assemble(
     interpreter: bool = False,
     target: str,
     provenance: Mapping[str, object] | None = None,
+    agent_runtime: Path | None = None,
     timings: BuildTimings | None = None,
 ) -> None:
     """Relocate native modules while retaining their qualified import names."""
@@ -239,6 +241,10 @@ def assemble(
         build_identity["version"]
     }:
         raise ValueError("Product cohort versions differ from build metadata")
+    if not interpreter and agent_runtime is None:
+        raise ValueError("Application assembly requires the built agent runtime closure")
+    if interpreter and agent_runtime is not None:
+        raise ValueError("Standalone interpreter assembly does not consume an agent runtime")
     smoke_modules = {}
     for distribution in installed:
         name = canonicalize_name(distribution.metadata["Name"])
@@ -281,6 +287,9 @@ def assemble(
             packages.mkdir(parents=True)
         else:
             shutil.copytree(dependencies, packages, ignore=omit_development)
+    if agent_runtime is not None:
+        with timings.phase("agent-runtime-copy") if timings is not None else nullcontext():
+            stage_agent_runtime(agent_runtime, packages.parent)
     pruned = []
     for exclusion in [] if interpreter else contract.get("package_exclusions", []):
         matches = list(packages.glob(exclusion["pattern"]))
@@ -402,6 +411,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--python", type=Path, required=True)
     parser.add_argument("--dependencies", type=Path, required=True)
+    parser.add_argument("--agent-runtime", type=Path, required=True)
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument("--metadata", type=Path, required=True)
@@ -424,4 +434,5 @@ if __name__ == "__main__":
         binary_dir=args.binary_dir,
         development=args.development,
         target=args.target,
+        agent_runtime=args.agent_runtime,
     )

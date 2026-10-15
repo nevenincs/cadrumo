@@ -15,7 +15,7 @@ from .....application.operations.frontend_requests import (
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core.i18n.render import tr
 from ..modal import OperationModal
-from .test_runtime_access_loss import _NOW, _OPERATION_ID, _Controller, _Host, _until
+from .test_access_loss import _NOW, _OPERATION_ID, _Controller, _Host, _until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

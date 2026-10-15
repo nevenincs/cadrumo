@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f074c04111734948df7e1c4d50d57c9934ab04103be21112fece079fa30a4a8'
+body_hash: 'sha256:0f611df1ce80e261b5ecd0c2d68fd5ddacc7b22d80ec7706c9577f58c36cf869'
 related:
   - "[[2026-10-15-unit-suite-repair-plan]]"
 ---
@@ -237,6 +237,20 @@ related:
 - `S04` `verify:` `configured Linux Windows Darwin type runner and seven API file scoped ty` -> `pass`
 - `S04` `verify:` `fixed-checkpoint Windows Linux native frontend and six Rust formatting manifests` -> `pass`
 - `S04` `by:` `root and Luna max native_frontend_lint`
+- `S02` `M` `src/cadrumo/core/text_bounds.py`
+- `S02` `verify:` `strict focused Sphinx complete warning inventory` -> `pass`
+- `S02` `verify:` `final alias binding and annotation-only regressions` -> `pass`
+- `S02` `verify:` `frozen complete API docs-build and API-stub owner modules` -> `pass`
+- `S02` `verify:` `strict-full-scope-20261015T081800` -> `fail`
+- `S04` `M` `dev/docs/apidocs/manager.py`
+- `S04` `verify:` `v7-ruff-format-types` -> `pass`
+- `S02` `verify:` `v7-complete-doc-owner-modules` -> `pass`
+- `S02` `verify:` `final-strict-full-graph` -> `pass`
+- `S02` `verify:` `all-observed-tooling-failures-reconciled` -> `pass`
+- `S04` `M` `.vault/audit/2026-10-15-unit-suite-repair-audit.md`
+- `S04` `verify:` `exhaustive97-case-reconciliation` -> `pass`
+- `S04` `verify:` `final-integrated-review` -> `pass`
+- `S04` `verify:` `final-static-and-native-checkpoint` -> `pass`
 
 ## Notes
 
@@ -270,3 +284,10 @@ related:
 - `S02` Fullscope run20261015T050315.074505Z-pytest-48412-56d63adc exited1 after1379.84s; full streams retained in its canonical artifacts. Four authored docstrings corrected without runtime changes; delegated alias and metadata-rendering repair active. S02/S04 remain open; no green fullscope claim.
 - `S02` Final API source alias targets and literal constraint rendering are frozen as the seven-file overlay94e2722886b7f105a70f9c7b5af803183fd7d6b9e1dabeda6ed211c7c18ab4eb over immutable155f4d7f6520210c892b79512caec8e18bed4630. Complete API helpers24 and focused Sphinx/user-scope8 pass; final type-only refinements pass scoped ty7 and direct ForwardRef control. Whole strict fullscope run20261015T065912.729320Z-pytest-40347-8afbbdd0 remains active, so S02 is open pending its terminal result. Exact paths and hashes: .logs/unit-repair-20261015/docs/final-api-overlay.json.
 - `S04` Verification boundary is immutable155f4d7f6520210c892b79512caec8e18bed4630 plus final7-file API overlay94e2722886b7f105a70f9c7b5af803183fd7d6b9e1dabeda6ed211c7c18ab4eb. Final Ruff12622 already formatted, all-platform types and scopedty7 pass; proof static-checks-frozen-final.json. Fresh native Windows324desktop120application23driver10frontend, Linux271desktop23driver, zero filtered, six cargo fmt exits0; portable native-refresh-20261015/fixed-155f4d7f6520/final-evidence.txt. Later concurrent feature work is outside this fixed repair boundary. One actual Darwin SDK case remains unavailable and additional broad import-authority inventory remains separately red; no new skip or suppression. S04 remains open while strict fullscope065912 is active.
+- `S02` Fullscope065912 failed91warnings; artifact inventory preserved. Final8-file overlay84ae5bc35adb2cbaec5c15d2b10c24487a9ceaa0b7bca8b4578f8a276197477a overbase155f4d7f6520 adds unique source-derived alias ownership, canonical factory/referring-module binding proof, final runtime binding semantics and correct annotation-only preservation, exact Pydantic metadata prose, pickleable formatter and builtin annotation recorder normalization. Strict Sphinx074108 passes with exactly deliberateMissingFirstParty negativecontrol; Windows completeAPI28 pass074217 before final rebind refinements, latest2regressions075700 pass. Whole Ruff12622 and finalallplatformtypes/scopedty8 pass. Corrected Linux completeowner080018 active; initial075916 attempt lackedsubprocessPYTHONPATH and is not a source verdict. S02 remainsopenuntilfreshwholeowner and fullscopepass.
+- `S02` Final v6 owner run20261015T081116.742025Z-pytest-42310-3f12c600 passes103,exit0; exact snapshot and both root/src import paths verified, full portable evidence under docs/frozen-proof. Python3.13 multiprocessing fork DeprecationWarning is retained unsuppressed. Final8-file overlayfd15d669452ed68908cfc614cdf997a0450c87f2a645a4e66c65774b9f102cd0 includes portable generated-source-read witness with successful-build/count/nonpollution guards preserved. Reconciliation now92of93developer and4of4product; sole remainingcase fullscope active20261015T081800.776339Z-pytest-42452-34c3c719. S02remainsopen.
+- `S02` Frozen v6 full module completed in 809.30s: artifact retention passed, strict Sphinx graph failed with exactly two unresolved references to the real `TYPE_CHECKING-only` DeadlineWindowProjection alias. Complete streams, root metadata and exact input manifest retained in .logs/unit-repair-20261015/docs/frozen-proof/20261015T081800.776339Z-pytest-42452-34c3c719/. Luna owner is repairing canonical guarded-source discovery without runtime exports, suppressions or exceptions; S02 remains open.
+- `S04` Frozen v7 eight-file overlay c2a9570ada63a83ec573bc5c9dc22a5b3a88b86e038ee4eb5cea8b5b673cf6b8 at base155f4d7 passes whole Ruff lint/format (12622 files), whitespace, all-platform configured type runner and explicit-venv scoped ty for all eight Python paths. Static proof index is .logs/unit-repair-20261015/static-checks-frozen-final.json. Later concurrent docs/conf.py external-inventory work is preserved and explicitly outside this fixed verification boundary. Final 104-owner and strict full-graph runs are still active; no final unit verdict or S04 closure yet.
+- `S02` Complete frozen v7 API, docs-build and independent API-stub owner modules pass 104 tests, exit0, 341.05s: 20261015T083923.659695Z-pytest-43209-3031293d. Root verified exact primary v7 manifest and all104 call-PASSED records in portable frozen-proof bundle. Includes real `TYPE_CHECKING-only` DeadlineWindowProjection exactly-one-target control and synthetic guard/shadow/rebinding refusal controls. One unsuppressed Python3.13 multiprocessing-fork DeprecationWarning retained. Only final strict full graph 20261015T083902.145181Z-pytest-43182-b508746b remains active; S02 stays open.
+- `S02` Final frozen v7 fullscope 20261015T083902.145181Z-pytest-43182-b508746b passes both cases, exit0 in660.09s, strict graph656.25s. Root verified exact overlay manifest and archiveSHA c2a9570ada63a83ec573bc5c9dc22a5b3a88b86e038ee4eb5cea8b5b673cf6b8 plus complete artifacts. Full owner modules104PASS in083923. Exhaustive failure-resolution-current.json maps all93 unsuccessful developer nodes and all4 product nodes to passing runs, zero pending; original red broad runs remain historical. No new skips, suppressions or exceptions. Available-host repair scope complete; actual Darwin SDK case unavailable and broader import inventory debt explicitly retained outside this passing scope.
+- `S04` Final canonical audit updated after guarded proof validation. All93 unsuccessful developer nodes and4 product nodes have later passing exact or reviewed-name owner runs; original red full runs retained. Final104-owner and2-case strict fullgraph portable proofs share frozen v7 eight-file overlay c2a9570ada63a83ec573bc5c9dc22a5b3a88b86e038ee4eb5cea8b5b673cf6b8 at155f4d7. Ruff lint/format12622, six Rustfmt, allplatform types, scoped8 ty, Windows/Linux native desktop324/271 with zero filtered, applicationRust120, both driver23 and frontend10 pass. Independent guarded-alias review has no blocker. No new skips, suppressions or weakened assertions. One actual Darwin SDK case unavailable; broader import-authority inventory remains red and later concurrent feature/docs-conf edits are outside testedboundary, all disclosed in audit. No claim of a monolithic all-green broad rerun or current moving-tree verdict.

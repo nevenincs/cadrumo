@@ -19,6 +19,7 @@ from textual.widgets import Button, Link, Static
 
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_controller import OperationController
 
 from ....application.export.google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
@@ -57,7 +58,6 @@ from ...operation_composition import build_production_operation_registry
 from ...review_publication_labels import GoogleReviewLabels
 from ..google_saved_review import GoogleSavedReviewModal, GoogleSavedReviewScreen, validate_saved_google_review
 from ..operations.interactions import OperationModalReviewInteractionV1
-from ..operations.runtime_controller import RuntimeOperationController
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -267,9 +267,9 @@ async def test_installed_screen_requires_exact_human_review_before_showing_regis
         )
         controller = _Controller(payload, defect=defect, client=client)
         controllers.append(controller)
-        return cast(RuntimeOperationController, controller)
+        return cast(OperationController, controller)
 
-    monkeypatch.setattr(RuntimeOperationController, "submit", submit)
+    monkeypatch.setattr(OperationController, "submit", submit)
     screen = GoogleSavedReviewScreen(cast(FrontendClient, client), "c" * 64, filing_record_id="6" * 64)
     app: App[None] = App()
     async with app.run_test(size=(120, 45)) as pilot:
@@ -353,7 +353,7 @@ async def test_delayed_first_observation_does_not_offer_an_unverified_response()
             return await super().observe(after_cursor, page_limit=page_limit)
 
     controller = DelayedController(request, defect="none", client=SimpleNamespace(session_id=UUID(int=3)))
-    modal = GoogleSavedReviewModal(cast(RuntimeOperationController, controller), request, lambda _: None)
+    modal = GoogleSavedReviewModal(cast(OperationController, controller), request, lambda _: None)
     app: App[None] = App()
     async with app.run_test() as pilot:
         app.push_screen(modal)
@@ -386,9 +386,9 @@ async def test_prepublication_cleanup_rejects_only_original_untouched_review(
     async def submit(_client, *, definition_id, subject_ref, payload, expected_session_id):
         controller = _Controller(payload, defect="none", client=client)
         controllers.append(controller)
-        return cast(RuntimeOperationController, controller)
+        return cast(OperationController, controller)
 
-    monkeypatch.setattr(RuntimeOperationController, "submit", submit)
+    monkeypatch.setattr(OperationController, "submit", submit)
     screen = GoogleSavedReviewScreen(cast(FrontendClient, client), "c" * 64)
     app: App[None] = App()
     async with app.run_test() as pilot:

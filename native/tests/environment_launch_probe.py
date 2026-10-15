@@ -12,9 +12,10 @@ The probe starts programs from the package, never from a checkout:
   bring a synthetic hosted root to ``current``: ``stores-state`` answers, ``setup`` succeeds, and
   ``stores-state`` then reads ``current``.
 * The agent gateway, started through the service's composer with a hosted environment in that root and
-  the service's empty credential frame, answers on the hosting protocol. Until the agent records
-  a proof of its hosted lane, the answer is the refusal ``hosted_lane_unproven``, which also proves the
-  gateway received its hosted root. Once a lane proof exists the answer is ``agent_ready``.
+  the service's empty credential frame, answers on the hosting protocol. Without an admitted ordinary
+  turn proof for an installed lane, the answer is ``hosted_lane_unproven``. Otherwise it may answer
+  ``agent_ready`` while hosted-package certification remains pending. Readiness alone proves neither
+  provider sign-in nor model execution.
 * The agent worker, started through the image's worker invocation, reports the port it bound.
 * The generic interpreter image clears every name only the agent image admits, sets the declared ``PATH``
   and pins the storage root to the command line's own built-in default.

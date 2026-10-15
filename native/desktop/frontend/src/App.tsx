@@ -59,6 +59,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
 import { useMessages } from "./shell/messages";
 import { useSignIn } from "./shell/signIn";
+import { usePersonActivity } from "./shell/usePersonActivity";
 import {
   FilingCalendarView,
   type CalendarMemory,
@@ -284,6 +285,7 @@ export function App({ host }: { host: Host }) {
   const gated = account.gated;
   const phase = account.phase;
   const signedIn = phase === "signed-in";
+  usePersonActivity(host, signedIn);
   // Signed out, the agent is not there to fill the window.
   if (!signedIn && maximized === "agent") setMaximized(null);
   const accountRef = useRef(account);

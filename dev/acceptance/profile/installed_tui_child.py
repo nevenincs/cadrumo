@@ -220,7 +220,7 @@ def run_profile_tui_operation(
             await _observe_reopened_profile_absence(pilot=pilot, scenario=scenario, row_key=row_key, state=state)
         pilot.app.exit()
 
-    from cadrumo.entrypoints.tui.launcher import main
+    from cadrumo_runtime.host.frontend.tui.launcher import main
 
     exit_code = main(
         headless=True,

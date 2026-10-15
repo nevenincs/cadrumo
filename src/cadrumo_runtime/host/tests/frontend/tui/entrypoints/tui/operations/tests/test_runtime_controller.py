@@ -37,12 +37,12 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewPageKind,
 )
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
-from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.operation_controller import OperationController
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
@@ -88,9 +88,9 @@ def _client(endpoint: WindowsEndpoint, profile_id: UUID, secret: bytes) -> Front
     return client
 
 
-def _submit_view(client: FrontendClient) -> RuntimeOperationController:
+def _submit_view(client: FrontendClient) -> OperationController:
     return asyncio.run(
-        RuntimeOperationController.submit(
+        OperationController.submit(
             client,
             definition_id=PROFILE_VIEW_OPERATION_DEFINITION_ID,
             subject_ref=f"profile:{client.profile_id}",
@@ -99,7 +99,7 @@ def _submit_view(client: FrontendClient) -> RuntimeOperationController:
     )
 
 
-async def _inspect_unregistered_review(controller: RuntimeOperationController, *, revision: int) -> object:
+async def _inspect_unregistered_review(controller: OperationController, *, revision: int) -> object:
     control = await controller.response_control(interaction_id="a" * 64, revision=revision)
     return await control.inspect()
 
@@ -183,7 +183,7 @@ def test_native_tui_controller_keeps_start_and_review_authority_with_original_se
                 assert refreshed.effective_scope == before_refresh.effective_scope
                 assert original.session_id == controller.session_id
                 assert controller.actor_ref == f"session:{original.session_id}"
-                stolen = RuntimeOperationController(
+                stolen = OperationController(
                     client=another, operation_id=controller.operation_id, session_id=another.session_id
                 )
                 with pytest.raises(FrontendRefusedError):

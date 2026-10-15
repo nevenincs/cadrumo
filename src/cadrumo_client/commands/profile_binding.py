@@ -134,21 +134,6 @@ def subscribe_profile_notices(ctx: typer.Context, client: FrontendClient) -> Non
         subscriptions.clients.add(client)
 
 
-def open_cli_profile_client(profile_id: UUID, ctx: typer.Context | None = None) -> FrontendClient:
-    """Open an exact CLI client and optionally attach its notice lifetime to a command."""
-    from cadrumo_client.transport.installed_client import open_installed_client
-
-    client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
-    try:
-        if ctx is not None:
-            subscribe_profile_notices(ctx, client)
-    except BaseException as primary:
-        try:
-            client.close()
-        except Exception:
-            primary.add_note("Profile client cleanup did not complete.")
-        raise
-    return client
 
 
 def bound_profile_client(ctx: typer.Context) -> FrontendClient:

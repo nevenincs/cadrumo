@@ -6,6 +6,7 @@ import ast
 import importlib.util
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
@@ -111,6 +112,28 @@ _TYPE_ALIAS_FACTORIES = frozenset(
         "TypeAliasType",
     }
 )
+_TYPE_ALIAS_FACTORY_MODULES: dict[str, frozenset[str]] = {
+    "typing": _TYPE_ALIAS_FACTORIES,
+    "typing_extensions": _TYPE_ALIAS_FACTORIES,
+    "collections.abc": frozenset(
+        {
+            "AsyncIterator",
+            "Awaitable",
+            "Callable",
+            "Collection",
+            "Iterable",
+            "Iterator",
+            "Mapping",
+            "MutableMapping",
+            "Sequence",
+        }
+    ),
+}
+_TYPE_ALIAS_CALL_FACTORIES: dict[str, frozenset[str]] = {
+    "typing": frozenset({"NewType", "TypeAliasType"}),
+    "typing_extensions": frozenset({"NewType", "TypeAliasType"}),
+}
+_BUILTIN_GENERIC_FACTORIES = frozenset({"dict", "frozenset", "list", "set", "tuple", "type"})
 _BUILTIN_TYPE_EXPRESSIONS = frozenset(
     {
         "bool",
@@ -148,37 +171,207 @@ _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _type_alias_expression(value: ast.expr, path: Path | None = None) -> bool:
+def _type_alias_expression(
+    value: ast.expr,
+    path: Path | None = None,
+    seen: frozenset[tuple[Path, str]] = frozenset(),
+) -> bool:
     """Return whether *value* is a source expression that defines a type alias."""
     if isinstance(value, ast.Subscript):
-        factory = value.value
-        while isinstance(factory, ast.Attribute):
-            factory = factory.value
-        factory_name = value.value.attr if isinstance(value.value, ast.Attribute) else getattr(factory, "id", None)
-        return factory_name in _TYPE_ALIAS_FACTORIES
+        return _type_expression_factory(value.value, path, _TYPE_ALIAS_FACTORY_MODULES, seen)
     if isinstance(value, ast.BinOp):
-        return isinstance(value.op, ast.BitOr) and _union_operand_is_type(value.left, path) and _union_operand_is_type(
-            value.right, path
+        return (
+            isinstance(value.op, ast.BitOr)
+            and _union_operand_is_type(value.left, path, seen)
+            and _union_operand_is_type(value.right, path, seen)
         )
     if isinstance(value, ast.Call):
-        factory = value.func
-        while isinstance(factory, ast.Attribute):
-            factory = factory.value
-        factory_name = value.func.attr if isinstance(value.func, ast.Attribute) else getattr(factory, "id", None)
-        return factory_name in {"NewType", "TypeAliasType"}
+        return _type_expression_factory(
+            value.func,
+            path,
+            _TYPE_ALIAS_CALL_FACTORIES,
+            seen,
+            allow_source_type_factory=False,
+        )
     return False
 
 
-def _union_operand_is_type(value: ast.expr, path: Path | None) -> bool:
+def _dotted_expression(value: ast.expr) -> tuple[str, ...] | None:
+    """Return the dotted components of a name or attribute expression."""
+    parts: list[str] = []
+    while isinstance(value, ast.Attribute):
+        parts.append(value.attr)
+        value = value.value
+    if not isinstance(value, ast.Name):
+        return None
+    return (value.id, *reversed(parts))
+
+
+@lru_cache(maxsize=4096)
+def _module_import_context(
+    path: Path,
+    modified_ns: int,
+    size: int,
+) -> tuple[tuple[tuple[str, str, str | None, bool], ...], frozenset[str]]:
+    """Cache direct imports and shadowed names from one source module."""
+    del modified_ns, size  # The stat values participate in the cache key.
+    try:
+        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return (), frozenset[str]()
+
+    imports: list[tuple[str, str, str | None, bool]] = []
+    shadowed: set[str] = set()
+
+    def add_target_names(target: ast.expr) -> None:
+        if isinstance(target, ast.Name):
+            shadowed.add(target.id)
+        elif isinstance(target, (ast.Tuple, ast.List)):
+            for item in target.elts:
+                add_target_names(item)
+
+    for statement in tree.body:
+        if isinstance(statement, ast.Import):
+            for alias in statement.names:
+                local_name = alias.asname or alias.name.split(".", maxsplit=1)[0]
+                module_name = alias.name if alias.asname is not None else alias.name.split(".", maxsplit=1)[0]
+                imports.append((local_name, module_name, None, alias.asname is not None))
+        elif isinstance(statement, ast.ImportFrom):
+            source_root = _source_root(path)
+            package = _module_name(source_root, path) if source_root is not None else ""
+            package = package if path.name == "__init__.py" else package.rpartition(".")[0]
+            if statement.module is None:
+                module_name = package
+            else:
+                try:
+                    module_name = importlib.util.resolve_name(f"{'.' * statement.level}{statement.module}", package)
+                except ImportError:
+                    continue
+            for alias in statement.names:
+                if alias.name != "*":
+                    imports.append((alias.asname or alias.name, module_name, alias.name, True))
+        elif isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            shadowed.add(statement.name)
+        elif isinstance(statement, ast.Assign | ast.AnnAssign) and (
+            isinstance(statement, ast.Assign) or statement.value is not None
+        ):
+            targets = statement.targets if isinstance(statement, ast.Assign) else (statement.target,)
+            for target in targets:
+                add_target_names(target)
+        elif isinstance(statement, (ast.For, ast.AsyncFor)):
+            add_target_names(statement.target)
+        elif isinstance(statement, (ast.With, ast.AsyncWith)):
+            for item in statement.items:
+                if item.optional_vars is not None:
+                    add_target_names(item.optional_vars)
+
+    return tuple(imports), frozenset(shadowed)
+
+
+def _source_import_binding(path: Path, name: str) -> tuple[str, str, str | None, bool] | None:
+    """Resolve an unshadowed top-level name to its import statement."""
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    imports, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
+    if name in shadowed:
+        return None
+    matches = {binding for binding in imports if binding[0] == name}
+    return next(iter(matches)) if len(matches) == 1 else None
+
+
+def _is_type_checking_guard(test: ast.expr, path: Path) -> bool:
+    """Return whether *test* names an unshadowed canonical TYPE_CHECKING import."""
+    if isinstance(test, ast.Name):
+        binding = _source_import_binding(path, test.id)
+        return binding is not None and binding[1:3] in {
+            ("typing", "TYPE_CHECKING"),
+            ("typing_extensions", "TYPE_CHECKING"),
+        }
+
+    parts = _dotted_expression(test)
+    if parts is None or len(parts) != 2 or parts[1] != "TYPE_CHECKING":
+        return False
+    binding = _source_import_binding(path, parts[0])
+    return binding is not None and binding[1] in {"typing", "typing_extensions"} and binding[2] is None
+
+
+def _type_expression_factory(
+    factory: ast.expr,
+    path: Path | None,
+    canonical_modules: dict[str, frozenset[str]],
+    seen: frozenset[tuple[Path, str]],
+    *,
+    allow_source_type_factory: bool = True,
+) -> bool:
+    """Accept only canonical or source-resolved generic type factories."""
+    if path is None:
+        return False
+    if isinstance(factory, ast.Name):
+        name = factory.id
+        if allow_source_type_factory and name in _BUILTIN_GENERIC_FACTORIES:
+            try:
+                stat = path.stat()
+            except OSError:
+                return False
+            _, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
+            if name not in shadowed:
+                return True
+        binding = _source_import_binding(path, name)
+        if binding is not None:
+            _, module_name, imported_name, _ = binding
+            if imported_name is not None and imported_name in canonical_modules.get(module_name, ()):
+                return True
+        if not allow_source_type_factory:
+            return False
+        return _module_symbol_is_type(path, name, seen)
+
+    parts = _dotted_expression(factory)
+    if parts is None:
+        return False
+    binding = _source_import_binding(path, parts[0])
+    if binding is None:
+        return False
+    _, module_name, imported_name, has_alias = binding
+    if imported_name is not None:
+        return False
+    qualified = ".".join((module_name, *parts[1:])) if has_alias else ".".join(parts)
+    for owner, names in canonical_modules.items():
+        prefix = f"{owner}."
+        if qualified.startswith(prefix) and qualified[len(prefix) :] in names:
+            return True
+    return False
+
+
+def _source_name_is_shadowed(path: Path, name: str) -> bool:
+    """Return whether a top-level declaration shadows an imported or builtin name."""
+    try:
+        stat = path.stat()
+    except OSError:
+        return False
+    _, shadowed = _module_import_context(path, stat.st_mtime_ns, stat.st_size)
+    return name in shadowed
+
+
+def _union_operand_is_type(
+    value: ast.expr,
+    path: Path | None,
+    seen: frozenset[tuple[Path, str]] = frozenset(),
+) -> bool:
     """Recognize operands of PEP 604 type unions without treating value unions as types."""
     if isinstance(value, ast.Constant):
         return value.value is None
     if isinstance(value, ast.Name):
-        return value.id in _BUILTIN_TYPE_EXPRESSIONS or (path is not None and _module_symbol_is_type(path, value.id))
+        is_source_type = path is not None and _module_symbol_is_type(path, value.id, seen)
+        is_unshadowed_builtin = value.id in _BUILTIN_TYPE_EXPRESSIONS and (
+            path is None or not _source_name_is_shadowed(path, value.id)
+        )
+        return is_source_type or is_unshadowed_builtin
     if isinstance(value, ast.Subscript):
-        return _type_alias_expression(value, path) or _union_operand_is_type(value.value, path)
+        return _type_alias_expression(value, path, seen) or _union_operand_is_type(value.value, path, seen)
     if isinstance(value, ast.BinOp):
-        return _type_alias_expression(value, path)
+        return _type_alias_expression(value, path, seen)
     return False
 
 
@@ -218,31 +411,58 @@ def _module_symbol_is_type(path: Path, symbol: str, seen: frozenset[tuple[Path, 
     except (OSError, SyntaxError, UnicodeDecodeError):
         return False
 
-    source_root = _source_root(path)
-    module_name = _module_name(source_root, path) if source_root is not None else ""
-    for statement in tree.body:
-        if isinstance(statement, ast.ClassDef) and statement.name == symbol:
+    for statement in reversed(tree.body):
+        if not _statement_binds_name(statement, symbol):
+            continue
+        if isinstance(statement, ast.ClassDef):
             return True
-        if isinstance(statement, ast.TypeAlias) and statement.name.id == symbol:
+        if isinstance(statement, ast.TypeAlias):
             return True
-        if (
-            isinstance(statement, ast.AnnAssign)
-            and isinstance(statement.target, ast.Name)
-            and statement.target.id == symbol
-            and isinstance(statement.annotation, ast.Name)
-            and statement.annotation.id == "TypeAlias"
-        ):
-            return True
-        if isinstance(statement, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == symbol for target in statement.targets
-        ):
-            if _type_alias_expression(statement.value, path):
+        if isinstance(statement, ast.AnnAssign):
+            return isinstance(statement.annotation, ast.Name) and statement.annotation.id == "TypeAlias"
+        if isinstance(statement, ast.Assign):
+            if _type_alias_expression(statement.value, path, seen):
                 return True
-            if isinstance(statement.value, ast.Name) and source_root is not None and module_name:
-                return _module_symbol_is_type(path, statement.value.id, seen) or _imported_symbol_is_type(
-                    path, tree, statement.value.id, seen
-                )
+            if isinstance(statement.value, ast.Name):
+                return _module_symbol_is_type(path, statement.value.id, seen)
+            return False
+        if isinstance(statement, (ast.ImportFrom, ast.Import)):
+            return _imported_symbol_is_type(path, tree, symbol, seen, statement)
+        return False
     return _imported_symbol_is_type(path, tree, symbol, seen)
+
+
+def _target_binds_name(target: ast.expr, symbol: str) -> bool:
+    """Return whether an assignment target binds *symbol*."""
+    if isinstance(target, ast.Name):
+        return target.id == symbol
+    if isinstance(target, (ast.Tuple, ast.List)):
+        return any(_target_binds_name(item, symbol) for item in target.elts)
+    return False
+
+
+def _statement_binds_name(statement: ast.stmt, symbol: str) -> bool:
+    """Return whether a module-level statement binds *symbol*."""
+    if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        return statement.name == symbol
+    if isinstance(statement, ast.TypeAlias):
+        return statement.name.id == symbol
+    if isinstance(statement, ast.Assign):
+        return any(_target_binds_name(target, symbol) for target in statement.targets)
+    if isinstance(statement, ast.AnnAssign):
+        return statement.value is not None and _target_binds_name(statement.target, symbol)
+    if isinstance(statement, (ast.For, ast.AsyncFor)):
+        return _target_binds_name(statement.target, symbol)
+    if isinstance(statement, (ast.With, ast.AsyncWith)):
+        return any(
+            item.optional_vars is not None and _target_binds_name(item.optional_vars, symbol)
+            for item in statement.items
+        )
+    if isinstance(statement, ast.Import):
+        return any((alias.asname or alias.name.split(".", maxsplit=1)[0]) == symbol for alias in statement.names)
+    if isinstance(statement, ast.ImportFrom):
+        return any((alias.asname or alias.name) == symbol for alias in statement.names)
+    return False
 
 
 def _imported_symbol_is_type(
@@ -250,6 +470,7 @@ def _imported_symbol_is_type(
     tree: ast.Module,
     symbol: str,
     seen: frozenset[tuple[Path, str]] = frozenset(),
+    binding_statement: ast.stmt | None = None,
 ) -> bool:
     """Return whether a module imports *symbol* from a class or alias owner."""
     source_root = _source_root(path)
@@ -257,15 +478,17 @@ def _imported_symbol_is_type(
         return False
     module_name = _module_name(source_root, path)
     package = module_name if path.name == "__init__.py" else module_name.rpartition(".")[0]
-    for statement in tree.body:
-        if not isinstance(statement, ast.ImportFrom) or statement.module is None:
+    statements = (binding_statement,) if binding_statement is not None else tuple(tree.body)
+    for statement in statements:
+        if not isinstance(statement, ast.ImportFrom):
             continue
         for imported in statement.names:
             local_name = imported.asname or imported.name
             if local_name != symbol:
                 continue
             try:
-                module_name = importlib.util.resolve_name(f"{'.' * statement.level}{statement.module}", package)
+                imported_module = f"{'.' * statement.level}{statement.module or ''}"
+                module_name = importlib.util.resolve_name(imported_module, package)
             except ImportError:
                 continue
             imported_path = _module_source_path(source_root, module_name)
@@ -279,15 +502,52 @@ def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
     source = path.read_text(encoding=_UTF_8)
     tree = ast.parse(source, filename=str(path))
     aliases: dict[str, str] = {}
-    for statement in tree.body:
+
+    def target_names(target: ast.expr) -> set[str]:
+        if isinstance(target, ast.Name):
+            return {target.id}
+        if isinstance(target, (ast.Tuple, ast.List)):
+            return {name for item in target.elts for name in target_names(item)}
+        return set()
+
+    def bound_names(statement: ast.stmt) -> set[str]:
+        if isinstance(statement, ast.TypeAlias):
+            return {statement.name.id}
+        if isinstance(statement, ast.Assign | ast.AugAssign | ast.Delete):
+            targets = statement.targets if isinstance(statement, ast.Assign | ast.Delete) else (statement.target,)
+            return {name for target in targets for name in target_names(target)}
+        if isinstance(statement, ast.AnnAssign) and statement.value is not None:
+            return target_names(statement.target)
+        if isinstance(statement, ast.Import):
+            return {alias.asname or alias.name.split(".", maxsplit=1)[0] for alias in statement.names}
+        if isinstance(statement, ast.ImportFrom):
+            return {alias.asname or alias.name for alias in statement.names if alias.name != "*"}
+        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            return {statement.name}
+        if isinstance(statement, (ast.For, ast.AsyncFor)):
+            return target_names(statement.target)
+        if isinstance(statement, (ast.With, ast.AsyncWith)):
+            return {
+                target
+                for item in statement.items
+                if item.optional_vars is not None
+                for target in target_names(item.optional_vars)
+            }
+        return set()
+
+    def collect_statement(statement: ast.stmt) -> None:
+        for name in bound_names(statement):
+            aliases.pop(name, None)
+
         if isinstance(statement, ast.TypeAlias):
             if not statement.name.id.startswith("_"):
                 declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
                 aliases[statement.name.id] = declaration
-            continue
+            return
 
         if (
             isinstance(statement, ast.AnnAssign)
+            and statement.value is not None
             and isinstance(statement.target, ast.Name)
             and isinstance(statement.annotation, ast.Name)
             and statement.annotation.id == "TypeAlias"
@@ -295,15 +555,15 @@ def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
         ):
             declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
             aliases[statement.target.id] = declaration
-            continue
+            return
 
         if not isinstance(statement, ast.Assign):
-            continue
+            return
 
         targets = tuple(target.id for target in statement.targets if isinstance(target, ast.Name))
         public_targets = tuple(name for name in targets if not name.startswith("_"))
         if not public_targets:
-            continue
+            return
 
         value = statement.value
         is_type_expression = _type_alias_expression(value, path)
@@ -311,6 +571,13 @@ def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
         if is_type_expression or is_referenced_type_alias:
             declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
             aliases.update((name, declaration) for name in public_targets)
+
+    for statement in tree.body:
+        if isinstance(statement, ast.If) and _is_type_checking_guard(statement.test, path):
+            for guarded_statement in statement.body:
+                collect_statement(guarded_statement)
+            continue
+        collect_statement(statement)
 
     return tuple(sorted(aliases.items()))
 
@@ -644,7 +911,10 @@ class ApiStubManager:
             "   :ignore-module-all:",
         ]
         excluded_members = sorted(
-            {*_NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()), *(alias for alias, _ in _type_alias_declarations(source_path))}
+            {
+                *_NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()),
+                *(alias for alias, _ in _type_alias_declarations(source_path)),
+            }
         )
         if excluded_members:
             lines.append(f"   :exclude-members: {','.join(excluded_members)}")

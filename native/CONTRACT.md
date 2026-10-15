@@ -814,7 +814,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | --- | --- |
 | default / `bundle` | Build the application payload and, for Windows desktop deliveries, its matching background-services installation kit at `stage/<Config>/services` |
 | `app-distro` | Compatibility target for the complete `bundle` |
-| `agent_project` | Build and inventory the wheel from the local project folder configured with the cache-only variable `-DCADRUMO_PACKAGE_AGENT_SOURCE_DIR=<path>`, which no environment variable supplies; no download or source SHA pin is involved |
+| `agent_project` | Build and inventory the wheel and locked production ACP modules from the local project folder configured with the cache-only variable `-DCADRUMO_PACKAGE_AGENT_SOURCE_DIR=<path>`, and acquire the hash-pinned Node runtime; no environment variable supplies the source selection and no source SHA pin is involved |
 | `agent-install` | Build the complete bundle with the agent installed in `cadrumo/site-packages`; `cmake --install` copies that built payload to the selected prefix |
 | `agent-uninstall` | Remove generated product dependencies and the selected staged bundle; the next bundle build reconstructs the complete dependency set |
 | `agent-rebuild` | Remove the built agent wheel and dependent payloads, then rebuild the complete bundle from the configured project folder |
@@ -854,6 +854,23 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `clean-docs` | Remove documentation build roots, work state and the staged subset |
 | `clean-<target>` | Remove the target's owned outputs; keep shared prerequisites and other configurations |
 | `clean-all` | Remove enrolled outputs in every configuration and bounded cleanup groups; retain configuration, builder and installation receipts |
+
+The agent dependency also builds its production JavaScript closure from the selected
+project's `package.json`, `package-lock.json` and `.node-version`. The Node archives
+and their SHA-256 digests are pinned in `native/agent/runtime.json`. Construction
+uses the configured Node/npm builders with lifecycle scripts, dev dependencies,
+optional dependencies and executable links disabled. In particular, the adapter's
+optional platform packages containing Claude Code are absent. The user's installed
+provider CLI remains the only provider executable source.
+
+Assembly verifies the runtime receipt and stages `node` and `node_modules` beside
+`site-packages` under Windows `cadrumo/` or POSIX `lib/cadrumo/`, carrying Node and
+dependency license notices. That directory's `agent-runtime.json` records the runtime inputs and file digests; the package
+manifest inventories those files as well. The service adds the packaged Node
+directory to the declared external binary directories before the user's provider
+directories. It never uses the desktop-only capsule setting to select these assets.
+The agent-only wheel updater refuses a changed runtime receipt and requires
+`app-payload` to rebuild the complete dependency closure.
 
 `bundle.agent` runs `native/tests/agent_smoke.py` using the staged application's own
 interpreter. It refuses an interpreter or import outside that package, compares the

@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from .session_authority_access import SessionAuthorityAccess
+from .session_authority_activity import SessionAuthorityActivity
 from .session_authority_admission import SessionAuthorityAdmission
 from .session_authority_lifecycle import SessionAuthorityLifecycle
 
 
-class ProfileSessionAuthority(SessionAuthorityAdmission, SessionAuthorityAccess, SessionAuthorityLifecycle):
+class ProfileSessionAuthority(
+    SessionAuthorityAdmission, SessionAuthorityAccess, SessionAuthorityLifecycle, SessionAuthorityActivity
+):
     """One profile's ephemeral leases for one runtime boot, serialized by its owner."""

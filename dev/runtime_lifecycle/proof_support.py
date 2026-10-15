@@ -37,6 +37,7 @@ class Profile:
     name: str
     password: str = field(repr=False)
     profile_id: UUID | None = None
+    inventory: tuple[tuple[str, str, bool], ...] = field(default=(), repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,6 +126,7 @@ def identify_profile(programs: Programs, environment: Mapping[str, str], profile
     rows = listing.get("profiles") if isinstance(listing, dict) else None
     if not isinstance(rows, list):
         raise AcceptanceError("runtime profile listing has no committed rows")
+    require(len(rows) == 1, "disposable root does not contain exactly one profile")
     matching = [
         row for row in rows if isinstance(row, dict) and row.get("name") == profile.name and row.get("active") is True
     ]
@@ -135,7 +137,7 @@ def identify_profile(programs: Programs, environment: Mapping[str, str], profile
         profile_id = UUID(identity)
     except ValueError as error:
         raise AcceptanceError("runtime listing returned an invalid profile identity") from error
-    return Profile(profile.name, profile.password, profile_id)
+    return Profile(profile.name, profile.password, profile_id, ((profile.name, identity, True),))
 
 
 def state_taxpayer(programs: Programs, environment: Mapping[str, str], profile: Profile) -> None:

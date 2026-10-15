@@ -65,7 +65,7 @@ def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
     pyproject = parse_toml((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert pyproject["project"]["scripts"] == {
-        "aeat": "cadrumo.entrypoints.cli.bootstrap:main",
+        "aeat": "cadrumo_runtime.host.frontend.cli.bootstrap:main",
         "cadrumo-mcp": "cadrumo_harness.mcp.main:main",
         "cadrumo-runtime": "cadrumo_runtime.host.bootstrap:main",
         "cadrumo-agent-service": "cadrumo_agent_service.main:main",

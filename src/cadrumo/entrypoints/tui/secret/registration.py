@@ -33,8 +33,6 @@ See Also:
         The optional second door, driven from the offer that follows creation.
     :func:`~cadrumo.core.credentials.assess_profile_password`
         The canonical assessment behind validation and the live strength line.
-    :class:`~cadrumo.entrypoints.tui.secret.runtime_login.RuntimeLoginScreen`
-        Admission to an existing profile through the authenticated shared runtime.
 """
 
 from __future__ import annotations

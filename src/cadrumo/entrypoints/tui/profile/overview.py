@@ -405,9 +405,14 @@ class ProfileManagerScreen(
         if self._aeat_auth_setup is None:
             return
         try:
-            _overview, self._auth_readiness = await self._aeat_auth_setup.snapshot()
+            self._auth_readiness = await self._aeat_auth_setup.read_readiness()
         except Exception:
             self._auth_readiness = None
+        self.show_auth_readiness(self._auth_readiness)
+
+    def show_auth_readiness(self, readiness: AuthSyncReadiness | None) -> None:
+        """Keep the visible requirements and source buttons on the same saved state."""
+        self._auth_readiness = readiness
         if self.is_attached:
             for status in self.query("#manager-auth-readiness"):
                 if isinstance(status, Static):
@@ -419,21 +424,35 @@ class ProfileManagerScreen(
             return
         self.app.push_screen(AeatAuthSetupScreen(self._aeat_auth_setup), self._auth_edited)
 
-    def _auth_edited(self, _outcome: None) -> None:
+    def _auth_edited(self, outcome: tuple[ProfileOverview, AuthSyncReadiness] | None) -> None:
         """Refresh saved authentication without holding the screen's message queue."""
-        self.run_worker(self._reload_auth(), group="profile-auth-readiness", exclusive=True)
+        self.run_worker(self._reload_auth(outcome), group="profile-auth-readiness", exclusive=True)
 
-    async def _reload_auth(self) -> None:
+    async def _reload_auth(self, outcome: tuple[ProfileOverview, AuthSyncReadiness] | None) -> None:
         if self._aeat_auth_setup is None:
             return
         try:
-            overview, self._auth_readiness = await self._aeat_auth_setup.snapshot()
-            await self._apply_overview(overview, refresh_auth=False)
-            self._sync_source_actions()
+            if outcome is None:
+                # An interrupted readback may follow a committed partial save.
+                # Recover both facts and readiness instead of reusing old facts.
+                outcome = await self._aeat_auth_setup.snapshot()
+            overview, self._auth_readiness = outcome
+            if overview.profile_id != self.overview.profile_id:
+                self._auth_readiness = None
+                self.show_auth_readiness(self._auth_readiness)
+                return
+            if overview.record_revision > self.overview.record_revision or (
+                overview.record_revision == self.overview.record_revision
+                and overview.content_digest == self.overview.content_digest
+            ):
+                await self.apply_overview(overview, refresh_auth=False)
+            else:
+                await self._refresh_auth()
+                return
+            self.show_auth_readiness(self._auth_readiness)
         except Exception:
             self._auth_readiness = None
-            if self.is_attached:
-                self._sync_source_actions()
+            self.show_auth_readiness(self._auth_readiness)
 
     def _finish_mount(self) -> None:
         """Set focus and scrolling only while the asynchronously redrawn screen remains attached."""

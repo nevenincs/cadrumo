@@ -290,6 +290,25 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
     ("name", "module", "source", "targets"),
     (
         (
+            "tax-cli-to-runtime-direct",
+            "cadrumo.entrypoints.cli.bad",
+            "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+        ),
+        (
+            "tax-cli-to-runtime-function-local",
+            "cadrumo.entrypoints.cli.bad",
+            "def load():\n    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n    return VALUE\n",
+            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+        ),
+        (
+            "tax-cli-to-runtime-type-checking",
+            "cadrumo.entrypoints.cli.bad",
+            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n"
+            "    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+        ),
+        (
             "source-to-dev-production",
             "cadrumo.core.bad",
             "import dev.exit_codes\n",
@@ -418,6 +437,23 @@ def test_graph_defect_fails_through_real_gate(
         _write_module(root, target, "VALUE = 1\n")
     _write_module(root, module, source)
     _assert_graph_detection(root, module)
+
+
+def test_tax_runtime_transitive_import_fails_through_real_gate(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "cadrumo_runtime.host.frontend.cli.bootstrap", "VALUE = 1\n")
+    _write_module(
+        root,
+        "cadrumo_client.commands.bridge",
+        "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+    )
+    _write_module(root, "cadrumo.entrypoints.cli.bad", "from cadrumo_client.commands.bridge import VALUE\n")
+    returncode, output = _run_real_gate(root)
+    payload = _health_payload(output)
+    _assert_blocking_detection(returncode, output, payload)
+    graph_output = _component_block(output, "GRAPH_AUTHORITY")
+    assert "cadrumo.entrypoints.cli.bad -> cadrumo_client.commands.bridge" in graph_output, output
+    assert "cadrumo_client.commands.bridge -> cadrumo_runtime.host.frontend.cli.bootstrap" in graph_output, output
 
 
 def test_undeclared_source_root_fails_authority_preflight(tmp_path: Path) -> None:

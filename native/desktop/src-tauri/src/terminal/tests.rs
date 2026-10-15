@@ -709,3 +709,34 @@ fn every_kind_uses_workspace_and_bundled_command_search_path() {
         assert_eq!(paths.iter().filter(|path| *path == &bin).count(), 1);
     }
 }
+
+#[test]
+fn shutdown_refuses_new_children_and_retains_failed_cleanup_for_retry() {
+    let settles = Arc::new(AtomicBool::new(false));
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let mut registry = Registry::default();
+    registry
+        .open(Kind::Tui, scripted(&settles, &attempts))
+        .unwrap();
+    assert_eq!(registry.shutdown().len(), 1);
+    assert_eq!(registry.occupied(), [Kind::Tui]);
+    for kind in Kind::ALL {
+        assert_eq!(
+            registry
+                .open(kind, || panic!("shutdown must refuse spawning"))
+                .unwrap_err()
+                .code,
+            ErrorCode::SessionUnavailable
+        );
+    }
+    settles.store(true, Ordering::SeqCst);
+    assert!(registry.shutdown().is_empty());
+    assert!(registry.occupied().is_empty());
+    assert_eq!(
+        registry
+            .open(Kind::Tui, || panic!("shutdown is permanent"))
+            .unwrap_err()
+            .code,
+        ErrorCode::SessionUnavailable
+    );
+}

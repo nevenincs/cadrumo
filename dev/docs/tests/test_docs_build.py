@@ -589,7 +589,9 @@ def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
     output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
     assert result.returncode == 0, output[-6000:]
     assert "No existing documentation targets remained" not in output, output[-3000:]
-    assert f"writing output... [100%] {stub}" in output, output[-3000:]
+    # Parallel HTML writers may omit per-page write progress; the read event
+    # proves Sphinx consumed the generated target before the successful build.
+    assert f"reading sources... [100%] {stub}" in output, output[-3000:]
     # The other generated stubs exist only after conf.py lists what to exclude,
     # so reading exactly one source proves they stayed out of the read set.
     assert _environment_update(output)[0] == 1, output[-3000:]

@@ -487,7 +487,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         ModeloFormTextDisclosure,
     )
     from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
-    from cadrumo.entrypoints.tui.modelo.workbench.installed import WORDED_FINDING_CODES
+    from cadrumo.entrypoints.tui.modelo.workbench.factory import WORDED_FINDING_CODES
     from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
     from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, WorkbenchStep
     from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup

@@ -48,6 +48,7 @@ from ...profile_persistence_composition import composed_profile_persistence_port
 from ...runtime_repository import secure_object_repository_for_active_bucket
 from ...tests.profile_capsule_runtime import derive_test_bucket_key, publish_test_profile_capsule
 from ...tests.secure_sql import isolated_profile_storage_root
+from .. import profile_worker_custody
 from ..active_session import current_active_bucket_session, get_active_master_key
 from ..bucket_session import BucketSession
 from ..profile_worker_custody import ProfileWorkerCustody
@@ -288,7 +289,53 @@ def _attended_child_lapse(custody: ProfileWorkerCustody, clock: _Clock, key: byt
         _assert_expired(custody, child.session_id)
 
 
+def _human_activity(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    with clock.at(minutes=0):
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        custody.install(human, bytearray(key))
+    for minutes in range(10, 301, 10):
+        with clock.at(minutes=minutes):
+            human = human.model_copy(update={"expires_at": now() + timedelta(minutes=15)})
+            custody.refresh(human)
+            assert custody.require(human.session_id) == human
+            _read_storage()
+    with clock.at(minutes=316):
+        with pytest.raises(ProfileAccessRefusedError):
+            custody.refresh(_reissued(human, clock, minutes=15))
+        assert current_active_bucket_session() is None
+
+
+def _require_binding_once(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    with clock.at(minutes=0):
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        custody.install(human, bytearray(key))
+        validate = profile_worker_custody.validate_automation_profile_binding
+        calls = 0
+
+        def counted(binding: ProfileAccessBinding, *, root: Path, dek: bytes | None = None) -> None:
+            nonlocal calls
+            calls += 1
+            validate(binding, root=root, dek=dek)
+
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setattr(profile_worker_custody, "validate_automation_profile_binding", counted)
+            assert custody.require(human.session_id) == human
+            assert calls == 1
+            assert custody.require(human.session_id) == human
+            assert calls == 2
+            with custody.section(human.session_id):
+                assert calls == 3
+                assert custody.require(human.session_id) == human
+                assert calls == 4
+                _read_storage()
+            assert calls == 5  # final exit remains an independent currentness boundary
+            custody.expire()
+            assert calls == 6  # idle expiry also revalidates
+
+
 _CASES: dict[str, Callable[[ProfileWorkerCustody, _Clock, bytes], None]] = {
+    "require_binding_once": _require_binding_once,
+    "human_activity": _human_activity,
     "attended_child_lapse": _attended_child_lapse,
     "sign_in_lease": _sign_in_lease,
     "api_key_lease": _api_key_lease,
