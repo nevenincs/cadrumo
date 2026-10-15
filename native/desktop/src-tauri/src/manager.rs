@@ -43,6 +43,7 @@ async fn wait_for_readiness(ready: impl std::future::Future<Output = Result<()>>
 #[serde(rename_all = "snake_case")]
 pub enum StartOutcome {
     Dispatched,
+    #[cfg(not(windows))]
     Unsupported,
 }
 
@@ -227,12 +228,14 @@ impl ManagerStart {
             Ok(StartOutcome::Dispatched) => self
                 .diagnostics
                 .host_outcome(HostStage::Manager, HostOutcome::Dispatched),
+            #[cfg(not(windows))]
             Ok(StartOutcome::Unsupported) => self
                 .diagnostics
                 .host_outcome(HostStage::Manager, HostOutcome::Unavailable),
             Err(_) => {}
         }
         match &outcome {
+            #[cfg(not(windows))]
             Ok(StartOutcome::Unsupported) => {
                 if let Err(error) = self.observation.set_state(ManagerState::Unsupported) {
                     self.observation.observation_failed(error);

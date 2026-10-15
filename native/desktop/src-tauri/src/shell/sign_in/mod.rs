@@ -531,14 +531,14 @@ mod tests {
 
     #[test]
     fn successful_or_unsupported_dispatch_never_claims_runtime_readiness() {
-        for outcome in [
-            crate::manager::StartOutcome::Dispatched,
-            crate::manager::StartOutcome::Unsupported,
-        ] {
+        fn check(outcome: crate::manager::StartOutcome) {
             let status = status_after_manager(Ok(outcome), status_observation(false)).unwrap();
             assert!(!status.runtime_available);
             assert_eq!(status.refusal.unwrap().code, "runtime_unavailable");
         }
+        check(crate::manager::StartOutcome::Dispatched);
+        #[cfg(not(windows))]
+        check(crate::manager::StartOutcome::Unsupported);
     }
 
     #[test]
