@@ -1,5 +1,5 @@
 import { seedLayout } from "./support/layout";
-import { openPanelTab, panelToggle } from "./support/panel";
+import { openLogFilters, openPanelTab, panelToggle } from "./support/panel";
 import { expect, test, type Frame, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -344,15 +344,18 @@ for (const [severity, value] of [
   }) => {
     await signInHost(page, false, false, false, true, severity);
     await page.keyboard.press("Control+Shift+KeyL");
+    await openLogFilters(page);
     const selector = page.getByLabel(label("desktop.logs.minimum_level"));
     await expect(selector).toHaveValue(value);
     await selector.selectOption("2");
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Control+Shift+KeyK");
     await page.locator("[cmdk-input]").fill(label("desktop.action.logs_reset"));
     await page
       .locator("[cmdk-item]")
       .filter({ hasText: label("desktop.action.logs_reset") })
       .click();
+    await openLogFilters(page);
     await expect(selector).toHaveValue(value);
   });
 }

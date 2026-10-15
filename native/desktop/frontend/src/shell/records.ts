@@ -48,6 +48,10 @@ export function recordOrigin(record: LogRecord): string {
     : record.source;
 }
 
+export function matchesOrigin(record: LogRecord, origin?: string): boolean {
+  return !origin || record.source === origin || recordOrigin(record) === origin;
+}
+
 export function recordsText(records: readonly LogRecord[]): string {
   return records
     .map((record) =>

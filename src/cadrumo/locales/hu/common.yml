@@ -282,24 +282,6 @@ aggregation:
       unresolved_relation_ids_duplicate: 'Belső hiba: a feloldatlan reláció-azonosítók
         nem lehetnek duplikáltak.'
 auth:
-  sync:
-    requirement:
-      profile_tax_id_required: Adja meg az adózó NIF/NIE azonosítóját.
-      auth_method_required: Válasszon hitelesítési módot.
-      certificate_file_required: Válasszon egy létező PKCS#12 tanúsítványfájlt.
-      certificate_passphrase_required: Mentse el a tanúsítvány jelszavát.
-      clave_identity_required: Adjon meg érvényes Cl@ve DNI/NIE azonosítót.
-      profile_identity_must_match: A Cl@ve DNI/NIE és az adózó NIF/NIE azonosítójának egyeznie kell.
-      nie_support_required: Adja meg a NIE támogatási számát az alkalmazáskéréshez.
-      dni_validity_required: Adja meg a DNI érvényességi dátumát az alkalmazáskéréshez.
-      clave_password_required: Mentse el a Cl@ve Permanente jelszavát.
-      file_missing: A tanúsítványfájl nem létezik.
-      unreadable: A tanúsítványfájl nem olvasható.
-      corrupt: A tanúsítvány nem nyitható meg. Ellenőrizze a fájlt és a jelszót.
-      expired: A tanúsítvány lejárt.
-      expiring: A tanúsítvány hamarosan lejár.
-      ok: A helyi ellenőrzés sikeres.
-      unavailable: A szükséges helyi ellenőrzés nem fejezhető be.
   catalogue:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
       bármely elismert hatóság). Minden Sede-folyamatot támogat.
@@ -311,6 +293,25 @@ auth:
       személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható
       felügyelet nélkül; DNI/NIE és jelszó szükséges.
     clave_permanente_label: Cl@ve Permanente
+  sync:
+    requirement:
+      auth_method_required: Válasszon hitelesítési módot.
+      certificate_file_required: Válasszon egy létező PKCS#12 tanúsítványfájlt.
+      certificate_passphrase_required: Mentse el a tanúsítvány jelszavát.
+      clave_identity_required: Adjon meg érvényes Cl@ve DNI/NIE azonosítót.
+      clave_password_required: Mentse el a Cl@ve Permanente jelszavát.
+      corrupt: A tanúsítvány nem nyitható meg. Ellenőrizze a fájlt és a jelszót.
+      dni_validity_required: Adja meg a DNI érvényességi dátumát az alkalmazáskéréshez.
+      expired: A tanúsítvány lejárt.
+      expiring: A tanúsítvány hamarosan lejár.
+      file_missing: A tanúsítványfájl nem létezik.
+      nie_support_required: Adja meg a NIE támogatási számát az alkalmazáskéréshez.
+      ok: A helyi ellenőrzés sikeres.
+      profile_identity_must_match: A Cl@ve DNI/NIE és az adózó NIF/NIE azonosítójának
+        egyeznie kell.
+      profile_tax_id_required: Adja meg az adózó NIF/NIE azonosítóját.
+      unavailable: A szükséges helyi ellenőrzés nem fejezhető be.
+      unreadable: A tanúsítványfájl nem olvasható.
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -702,6 +703,7 @@ desktop:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
   logs:
+    all_loggers: Minden naplózó
     all_origins: Minden forrás
     clear_logger: Loggerszűrő törlése
     copy_all: Összes másolása
@@ -709,18 +711,22 @@ desktop:
     dropped: 'A nézetből elvetett régebbi bejegyzések: {count}'
     empty: A napló üres.
     errors: 'Hibák: {count}'
+    export: Naplók exportálása
     export_all: Összes exportálása
     export_failed: A naplók exportálása sikertelen.
     export_visible: Láthatók exportálása
     exported: 'Exportálva ide: {path}'
     filter: Szűrés
+    filters: Naplószűrők
     follow: Követés
     follow_hint: A legújabb bejegyzés maradjon látható
     level_all: Minden szint
+    level_critical: Csak kritikus
     level_error: Csak hibák
     level_info: Info és súlyosabb
     level_warning: Figyelmeztetés és súlyosabb
     loading: A napló betöltése…
+    logger: Naplózó
     minimum_level: Minimális szint
     no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
     origin: Forrás
@@ -729,11 +735,11 @@ desktop:
     selected: '{count} bejegyzés kijelölve'
     source_host: Asztali alkalmazás
     source_python: Python
-    sources: Források
     state_available: cadrumo.log
     state_missing_detail: Még nincs naplófájl. A bejegyzések akkor jelennek meg, amikor
       egy Cadrumo-folyamat naplózni kezd.
     state_unreadable: A napló nem olvasható
+    visible_count: '{visible} / {total} bejegyzés'
     warnings: 'Figyelmeztetések: {count}'
   menu:
     clear: Törlés
@@ -1606,23 +1612,24 @@ transactions:
     verified: Az import sikeresen ellenőrizve.
 tui:
   aeat_auth:
-    document_hint: Alkalmazáskéréshez adja meg a DNI érvényességi dátumát vagy a NIE támogatási számát az
-      okmánya szerint.
-    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra.'
-    title: AEAT-hitelesítés
-    edit: AEAT-hitelesítés beállítása / szerkesztése
-    ready: Szinkronizálásra kész
     blocked: 'A szinkronizálás előtt teljesítse ezeket a feltételeket:'
-    unknown: A hitelesítés állapota nem olvasható. Nyissa meg újra a beállításokat.
-    save: Hitelesítés mentése
-    saved: Mentve. A feltételek a tárolt profilt tükrözik.
-    failed: A hitelesítés nem menthető. Ellenőrizze a kötelező mezőket, és próbálja újra.
     certificate_path: Tanúsítványfájl útvonala (üresen a mentett érték marad)
     certificate_secret: Tanúsítvány jelszava (üresen a mentett érték marad)
-    password: Cl@ve Permanente jelszó (üresen a mentett érték marad)
     close: Vissza
+    document_hint: Alkalmazáskéréshez adja meg a DNI érvényességi dátumát vagy a NIE
+      támogatási számát az okmánya szerint.
+    edit: AEAT-hitelesítés beállítása / szerkesztése
+    failed: A hitelesítés nem menthető. Ellenőrizze a kötelező mezőket, és próbálja
+      újra.
+    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra.'
     method: Hitelesítési mód
+    password: Cl@ve Permanente jelszó (üresen a mentett érték marad)
+    ready: Szinkronizálásra kész
     route: Cl@ve Móvil útvonal
+    save: Hitelesítés mentése
+    saved: Mentve. A feltételek a tárolt profilt tükrözik.
+    title: AEAT-hitelesítés
+    unknown: A hitelesítés állapota nem olvasható. Nyissa meg újra a beállításokat.
   aeat_sync:
     action:
       pull_filed: Benyújtott bevallások lekérése

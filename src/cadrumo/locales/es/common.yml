@@ -303,24 +303,6 @@ aggregation:
       unresolved_relation_ids_duplicate: 'Error interno: los ids de relación sin resolver
         no pueden estar duplicados.'
 auth:
-  sync:
-    requirement:
-      profile_tax_id_required: Introduce el NIF/NIE del contribuyente.
-      auth_method_required: Elige un método de autenticación.
-      certificate_file_required: Selecciona un archivo de certificado PKCS#12 existente.
-      certificate_passphrase_required: Guarda la contraseña del certificado.
-      clave_identity_required: Introduce un DNI/NIE válido para Cl@ve.
-      profile_identity_must_match: El DNI/NIE de Cl@ve debe coincidir con el NIF/NIE del contribuyente.
-      nie_support_required: Introduce el número de soporte del NIE para la solicitud en la app.
-      dni_validity_required: Introduce la fecha de validez del DNI para la solicitud en la app.
-      clave_password_required: Guarda la contraseña de Cl@ve Permanente.
-      file_missing: El archivo del certificado no existe.
-      unreadable: No se puede leer el archivo del certificado.
-      corrupt: No se puede abrir el certificado. Revisa el archivo y la contraseña.
-      expired: El certificado ha caducado.
-      expiring: El certificado caduca pronto.
-      ok: La comprobación local es correcta.
-      unavailable: No se ha podido completar la comprobación local requerida.
   catalogue:
     certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
       u otra autoridad reconocida). Compatible con todos los flujos de la sede electrónica.
@@ -332,6 +314,27 @@ auth:
       del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención
       para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.
     clave_permanente_label: Cl@ve Permanente
+  sync:
+    requirement:
+      auth_method_required: Elige un método de autenticación.
+      certificate_file_required: Selecciona un archivo de certificado PKCS#12 existente.
+      certificate_passphrase_required: Guarda la contraseña del certificado.
+      clave_identity_required: Introduce un DNI/NIE válido para Cl@ve.
+      clave_password_required: Guarda la contraseña de Cl@ve Permanente.
+      corrupt: No se puede abrir el certificado. Revisa el archivo y la contraseña.
+      dni_validity_required: Introduce la fecha de validez del DNI para la solicitud
+        en la app.
+      expired: El certificado ha caducado.
+      expiring: El certificado caduca pronto.
+      file_missing: El archivo del certificado no existe.
+      nie_support_required: Introduce el número de soporte del NIE para la solicitud
+        en la app.
+      ok: La comprobación local es correcta.
+      profile_identity_must_match: El DNI/NIE de Cl@ve debe coincidir con el NIF/NIE
+        del contribuyente.
+      profile_tax_id_required: Introduce el NIF/NIE del contribuyente.
+      unavailable: No se ha podido completar la comprobación local requerida.
+      unreadable: No se puede leer el archivo del certificado.
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -720,6 +723,7 @@ desktop:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
   logs:
+    all_loggers: Todos los registradores
     all_origins: Todos los orígenes
     clear_logger: Quitar el filtro de logger
     copy_all: Copiar todo
@@ -727,18 +731,22 @@ desktop:
     dropped: 'Registros antiguos descartados de esta vista: {count}'
     empty: El registro está vacío.
     errors: 'Errores: {count}'
+    export: Exportar registros
     export_all: Exportar todo
     export_failed: No se pudieron exportar los registros.
     export_visible: Exportar visibles
     exported: Exportado a {path}
     filter: Filtrar
+    filters: Filtros de registros
     follow: Seguir
     follow_hint: Mantener visible el registro más reciente
     level_all: Todos los niveles
+    level_critical: Solo críticos
     level_error: Solo errores
     level_info: Info y más graves
     level_warning: Avisos y más graves
     loading: Cargando el registro…
+    logger: Registrador
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
     origin: Origen
@@ -747,11 +755,11 @@ desktop:
     selected: '{count} entradas seleccionadas'
     source_host: Escritorio
     source_python: Python
-    sources: Orígenes
     state_available: cadrumo.log
     state_missing_detail: Aún no hay archivo de registro. Los registros aparecerán
       cuando un proceso de Cadrumo escriba uno.
     state_unreadable: No se puede leer el registro
+    visible_count: '{visible} de {total} entradas'
     warnings: 'Avisos: {count}'
   menu:
     clear: Limpiar
@@ -1625,23 +1633,24 @@ transactions:
     verified: Importación verificada con éxito
 tui:
   aeat_auth:
-    document_hint: Para solicitar el acceso en la app, introduce la fecha de validez del DNI o el número de
-      soporte del NIE, según tu documento.
-    field_failed: No se pudo guardar {field}. Revisa su formato y reintenta.
-    title: Autenticación AEAT
-    edit: Configurar / editar autenticación AEAT
-    ready: Listo para sincronizar
     blocked: 'Completa estos requisitos antes de sincronizar:'
-    unknown: No se pudo comprobar la autenticación. Vuelve a abrir los ajustes para reintentar.
-    save: Guardar autenticación
-    saved: Guardado. Los requisitos reflejan el perfil almacenado.
-    failed: No se pudo guardar la autenticación. Revisa los campos requeridos y reintenta.
     certificate_path: Ruta del certificado (en blanco conserva la guardada)
     certificate_secret: Contraseña del certificado (en blanco conserva la guardada)
-    password: Contraseña de Cl@ve Permanente (en blanco conserva la guardada)
     close: Volver
+    document_hint: Para solicitar el acceso en la app, introduce la fecha de validez
+      del DNI o el número de soporte del NIE, según tu documento.
+    edit: Configurar / editar autenticación AEAT
+    failed: No se pudo guardar la autenticación. Revisa los campos requeridos y reintenta.
+    field_failed: No se pudo guardar {field}. Revisa su formato y reintenta.
     method: Método de autenticación
+    password: Contraseña de Cl@ve Permanente (en blanco conserva la guardada)
+    ready: Listo para sincronizar
     route: Vía de Cl@ve Móvil
+    save: Guardar autenticación
+    saved: Guardado. Los requisitos reflejan el perfil almacenado.
+    title: Autenticación AEAT
+    unknown: No se pudo comprobar la autenticación. Vuelve a abrir los ajustes para
+      reintentar.
   aeat_sync:
     action:
       pull_filed: Obtener declaraciones presentadas

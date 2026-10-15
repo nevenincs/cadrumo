@@ -3,7 +3,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import type { LogLevel, LogRecord } from "@/ipc/contract";
-import { recordContext, recordTime, shortLogger } from "@/shell/records";
+import {
+  recordContext,
+  recordOrigin,
+  recordTime,
+  shortLogger,
+} from "@/shell/records";
 
 const LEVEL_TONE: Partial<Record<LogLevel, string>> = {
   WARNING: "text-warning",
@@ -133,6 +138,21 @@ export const RecordRow = memo(function RecordRow({
           )}
         >
           {record.message}
+          <span
+            className="record-origin ml-2 text-xs text-muted-foreground"
+            title={recordOrigin(record)}
+          >
+            {record.source}
+            {record.process && (
+              <>
+                {" "}
+                /{" "}
+                <span className="record-process">
+                  {record.process.role}:{record.process.pid}
+                </span>
+              </>
+            )}
+          </span>
           {hasDetails && (
             <Button
               variant="ghost"
@@ -155,11 +175,6 @@ export const RecordRow = memo(function RecordRow({
             summary ||
             typeof context.diagnostic_id === "string") && (
             <span className="ml-2 inline-flex flex-wrap gap-x-2 text-xs text-muted-foreground">
-              {record.process && (
-                <span className="record-process">
-                  {record.process.role}:{record.process.pid}
-                </span>
-              )}
               {summary && (
                 <span className="record-context-summary" title={summary}>
                   {summary}

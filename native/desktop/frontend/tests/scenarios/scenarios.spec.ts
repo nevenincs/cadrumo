@@ -1,4 +1,4 @@
-import { openPanelTab } from "../support/panel";
+import { openLogFilters, openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
@@ -341,9 +341,11 @@ test("fixture records list every level, an unnamed source and a dropped count", 
 }) => {
   await open(target, "signed-in");
   await openLogs(target);
+  await openLogFilters(target);
   await target
     .getByLabel(label("desktop.logs.minimum_level"))
     .selectOption({ label: label("desktop.logs.level_all") });
+  await target.keyboard.press("Escape");
   for (const level of ["debug", "info", "warning", "error", "critical", "none"])
     await expect(
       target.locator(`.record.level-${level}`).first(),
@@ -530,15 +532,20 @@ test("the smallest window keeps the newest record in view", async ({
         )
         .map((control) => {
           const box = control.getBoundingClientRect();
-          return { left: box.left, right: box.right, width: box.width };
+          return {
+            left: box.left,
+            right: box.right,
+            width: box.width,
+            top: box.top,
+          };
         })
-        .sort((a, b) => a.left - b.left),
+        .sort((a, b) => a.top - b.top || a.left - b.left),
     );
   expect(controls.length).toBeGreaterThan(4);
   for (const [index, control] of controls.entries()) {
-    expect(control.width, `control ${index}`).toBeGreaterThan(40);
+    expect(control.width, `control ${index}`).toBeGreaterThanOrEqual(24);
     const next = controls[index + 1];
-    if (next)
+    if (next && Math.abs(next.top - control.top) < 4)
       expect(control.right, `control ${index}`).toBeLessThanOrEqual(
         next.left + 1,
       );
@@ -556,54 +563,19 @@ test("the smallest window keeps the newest record in view", async ({
   ).toBeLessThanOrEqual(1);
 });
 
-test("a bar that scrolls sideways shows that it goes on", async ({
+test("a short log toolbar exposes every icon without sideways scrolling", async ({
   page: target,
 }) => {
   await target.setViewportSize({ width: 520, height: 400 });
   await open(target, "signed-in");
   await openLogs(target);
-  const bar = target.locator(".logview > div").first();
-  const state = () =>
-    bar.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        more: element.scrollWidth > element.clientWidth,
-        start: parseFloat(style.getPropertyValue("--scroll-cue-start")),
-        end: parseFloat(style.getPropertyValue("--scroll-cue-end")),
-      };
-    });
-  // At its start there is more to the right only, and only that edge fades.
-  expect(await state()).toMatchObject({ more: true, start: 0 });
-  expect((await state()).end).toBeGreaterThan(0);
-  // Part way along, both edges do.
-  await bar.evaluate((element) => {
-    element.scrollLeft = element.scrollWidth / 3;
-  });
-  await expect.poll(async () => (await state()).start).toBeGreaterThan(0);
-  expect((await state()).end).toBeGreaterThan(0);
-  // At its end, only the left.
-  await bar.evaluate((element) => {
-    element.scrollLeft = element.scrollWidth;
-  });
-  await expect.poll(async () => (await state()).end).toBe(0);
-  expect((await state()).start).toBeGreaterThan(0);
-  // A bar with nothing beyond it fades nowhere.
-  await target.setViewportSize({ width: 1440, height: 900 });
-  await expect
-    .poll(async () => {
-      const wide = await target
-        .locator(".logview > div")
-        .first()
-        .evaluate((element) => {
-          const style = getComputedStyle(element);
-          return (
-            parseFloat(style.getPropertyValue("--scroll-cue-start") || "0") +
-            parseFloat(style.getPropertyValue("--scroll-cue-end") || "0")
-          );
-        });
-      return wide;
-    })
-    .toBe(0);
+  const bar = target.locator(".log-toolbar");
+  expect(
+    await bar.evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  for (const button of await bar.getByRole("button").all())
+    await expect(button).toBeInViewport({ ratio: 1 });
+  await expect(target.locator(".logview-list")).toBeVisible();
 });
 
 test("a reader who has left the end keeps their place while records arrive", async ({
@@ -824,9 +796,11 @@ test("a filter that still shows the reader's record keeps their place", async ({
     .toBeGreaterThan(2000);
   const before = await logPlace(target);
   // Every level: more records than before, the reader's among them.
+  await openLogFilters(target);
   await target
     .getByLabel(label("desktop.logs.minimum_level"))
     .selectOption("0");
+  await target.keyboard.press("Escape");
   await expect(follow).toHaveAttribute("aria-pressed", "false");
   await expect.poll(async () => (await logPlace(target)).seq).toBe(before.seq);
   expect(
@@ -1430,73 +1404,37 @@ test("Follow keeps the keyboard when the bar changes shape under it", async ({
   await expect(follow).toBeFocused();
 });
 
-test("Follow is reached by the keyboard where the eye finds it, in each shape of the bar", async ({
+test("log controls keep a consistent keyboard order as the toolbar wraps", async ({
   page: target,
 }) => {
-  const order = async () => {
-    const follow = target.getByRole("button", {
-      name: label("desktop.logs.follow"),
-    });
-    // One Follow is shown, however many places the bar keeps for it.
-    await expect(follow).toHaveCount(1);
-    return target.locator(".logview").evaluate((view, name) => {
-      const controls = [
-        ...view.querySelectorAll<HTMLElement>(
-          ":scope > div:first-child :is(input, select, button)",
-        ),
-      ].filter((control) => control.offsetParent !== null);
-      const at = controls.findIndex(
-        (control) => control.textContent?.trim() === name,
-      );
-      const lefts = controls.map((control) =>
-        Math.round(control.getBoundingClientRect().left),
-      );
-      const tops = controls.map((control) =>
-        Math.round(control.getBoundingClientRect().top),
-      );
-      return {
-        at,
-        count: controls.length,
-        // Among the controls of its own row, how many stand to its left.
-        before: controls.filter(
-          (_, index) =>
-            Math.abs((tops[index] ?? 0) - (tops[at] ?? 0)) < 8 &&
-            (lefts[index] ?? 0) < (lefts[at] ?? 0),
-        ).length,
-        rowmates: controls.filter(
-          (_, index) => Math.abs((tops[index] ?? 0) - (tops[at] ?? 0)) < 8,
-        ).length,
-      };
-    }, label("desktop.logs.follow"));
-  };
-  // A wide bar: one row, Follow last on it and last for the keyboard.
-  await target.setViewportSize({ width: 1600, height: 900 });
   await open(target, "signed-in");
   await openLogs(target);
-  await expect(target.locator(".logview-list .record").first()).toBeVisible();
-  let found = await order();
-  expect(found.at).toBe(found.count - 1);
-  expect(found.before).toBe(found.rowmates - 1);
-  // A narrow bar: two rows, Follow at the end of the first, after the level.
-  await target.setViewportSize({ width: 700, height: 900 });
-  found = await order();
-  expect(found.at).toBe(2);
-  expect(found.before).toBe(2);
-  expect(found.rowmates).toBe(3);
-  // A short panel: one row again, Follow first on it and first for the
-  // keyboard, and still on screen when the keyboard has gone to the far end
-  // of a bar that scrolls sideways.
-  await target.setViewportSize({ width: 700, height: 420 });
-  found = await order();
-  expect(found.at).toBe(0);
-  expect(found.before).toBe(0);
-  const follow = target.getByRole("button", {
-    name: label("desktop.logs.follow"),
-  });
-  await follow.focus();
-  for (let press = 1; press < found.count; press++)
-    await target.keyboard.press("Tab");
-  await expect(follow).toBeInViewport({ ratio: 1 });
+  for (const size of [
+    { width: 1600, height: 900 },
+    { width: 700, height: 900 },
+    { width: 700, height: 420 },
+  ]) {
+    await target.setViewportSize(size);
+    const controls = target.locator(".log-toolbar").getByRole("button");
+    expect(
+      await controls.evaluateAll((buttons) =>
+        buttons.map((button) => button.getAttribute("aria-label")),
+      ),
+    ).toEqual([
+      label("desktop.logs.filters"),
+      label("desktop.logs.follow"),
+      label("desktop.menu.select_all"),
+      label("desktop.menu.copy"),
+      label("desktop.logs.export"),
+      label("desktop.logs.reveal"),
+    ]);
+    await controls.first().focus();
+    for (let at = 1; at < (await controls.count()); at++) {
+      await target.keyboard.press("Tab");
+      await expect(controls.nth(at)).toBeFocused();
+      await expect(controls.nth(at)).toBeInViewport({ ratio: 1 });
+    }
+  }
 });
 
 test("maximizing the bottom panel over the pane that holds the keyboard takes it into the panel", async ({

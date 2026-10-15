@@ -290,7 +290,7 @@ test("a tap reaches the rail, the tabs and the log filters", async ({
   expect(await overflowing(target)).toBe(false);
 });
 
-test("a finger drawn down the log leaves its end, and the bar is one row", async ({
+test("a finger drawn down the log leaves its end, and the controls fit in two rows", async ({
   page: target,
 }) => {
   await target.goto(
@@ -303,8 +303,7 @@ test("a finger drawn down the log leaves its end, and the bar is one row", async
   });
   await expect(list.locator(".record").last()).toBeVisible();
   await expect(follow).toHaveAttribute("aria-pressed", "true");
-  // Under a finger, two rows of controls would leave the records two lines:
-  // the bar is one row, and the list has most of the panel.
+  // Six finger-sized actions and search use at most two rows without hiding controls.
   const sizes = await target.evaluate(() => {
     const bar = document.querySelector(".logview > div");
     const rows = document.querySelector(".logview-list");
@@ -313,8 +312,8 @@ test("a finger drawn down the log leaves its end, and the bar is one row", async
       list: rows?.getBoundingClientRect().height ?? 0,
     };
   });
-  expect(sizes.bar).toBeLessThan(70);
-  expect(sizes.list).toBeGreaterThan(sizes.bar * 2);
+  expect(sizes.bar).toBeLessThan(110);
+  expect(sizes.list).toBeGreaterThanOrEqual(60);
   // A real drag, sent as touch input.
   const box = (await list.boundingBox())!;
   const client = await target.context().newCDPSession(target);

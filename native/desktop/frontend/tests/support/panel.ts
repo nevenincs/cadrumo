@@ -7,6 +7,12 @@ export const panelToggle = (page: Page, locale = "en") =>
     .getByRole("navigation", { name: label("desktop.rail.label", {}, locale) })
     .getByRole("button", { name: label("desktop.panel.label", {}, locale) });
 
+export async function openLogFilters(page: Page) {
+  await page
+    .getByRole("button", { name: label("desktop.logs.filters"), exact: true })
+    .click();
+}
+
 export async function openPanelTab(
   page: Page,
   tab: PanelTab,

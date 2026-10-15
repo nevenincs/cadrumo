@@ -1,4 +1,5 @@
 import { RecordRow } from "./records/RecordRow";
+import { RecordToolbar } from "./records/RecordToolbar";
 import {
   useCallback,
   memo,
@@ -12,11 +13,9 @@ import {
 } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import type { LogRecord, LogSourceStates } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
@@ -26,8 +25,8 @@ import {
   levelRank,
   recordLine,
   recordOrigin,
+  matchesOrigin,
   recordsText,
-  shortLogger,
   type RecordFilters,
 } from "../shell/records";
 import type { MenuAnchor } from "./ContextMenu";
@@ -189,6 +188,15 @@ export const RecordList = memo(function RecordList({
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
+  const counts = useMemo(
+    () => ({
+      errors: all.filter(
+        (record) => record.level === "ERROR" || record.level === "CRITICAL",
+      ).length,
+      warnings: all.filter((record) => record.level === "WARNING").length,
+    }),
+    [all],
+  );
   const selected = useMemo(() => {
     const retained = new Set(all);
     return selectedRecords.filter((record) => retained.has(record));
@@ -198,16 +206,6 @@ export const RecordList = memo(function RecordList({
     [selected],
   );
 
-  const sources = useMemo(() => {
-    const seen = new Set(["python", "host"]);
-    for (const record of all) seen.add(record.source);
-    return [...seen];
-  }, [all]);
-  const origins = useMemo(
-    () => [...new Set(all.map(recordOrigin))].sort(),
-    [all],
-  );
-
   const visible = useMemo(() => {
     const text = filters.text.trim().toLowerCase();
     return all.filter(
@@ -215,9 +213,9 @@ export const RecordList = memo(function RecordList({
         !filters.hiddenSources.includes(record.source) &&
         levelRank(record.level) >= filters.minLevel &&
         (!filters.logger || record.logger === filters.logger) &&
-        (!filters.origin || recordOrigin(record) === filters.origin) &&
+        matchesOrigin(record, filters.origin) &&
         (!text ||
-          `${recordLine(record)} ${record.detail ?? ""}`
+          `${recordOrigin(record)} ${recordLine(record)} ${record.detail ?? ""}`
             .toLowerCase()
             .includes(text)),
     );
@@ -420,17 +418,6 @@ export const RecordList = memo(function RecordList({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-
-  const counts = useMemo(() => {
-    let warnings = 0;
-    let errors = 0;
-    for (const record of all) {
-      if (record.level === "WARNING") warnings += 1;
-      else if (record.level === "ERROR" || record.level === "CRITICAL")
-        errors += 1;
-    }
-    return { warnings, errors };
-  }, [all]);
 
   const sourceLabel = (source: string) =>
     source === "python"
@@ -637,45 +624,6 @@ export const RecordList = memo(function RecordList({
     states.length > 0 &&
     states.every(([, state]) => state.kind === "available") &&
     visible.length === 0;
-  // Follow stands where each shape of the bar wants it: last in a wide bar,
-  // after the level in a narrow one, and first in the one-row bar of a short
-  // panel, where it also stays put while the rest scrolls sideways under it.
-  // It is drawn once in each place and shown in one, so the keyboard reaches
-  // it in the order the eye does.
-  const followButton = (place: string) => (
-    <Button
-      variant="pill"
-      size="sm"
-      className={place}
-      data-follow=""
-      aria-pressed={follow}
-      title={t("desktop.logs.follow_hint")}
-      // The bar has changed shape under the keyboard and this place is no
-      // longer the one shown: focus goes to the one that is.
-      onBlur={(event) => {
-        const left = event.currentTarget;
-        if (event.relatedTarget || left.getClientRects().length > 0) return;
-        [
-          ...(left
-            .closest(".logview")
-            ?.querySelectorAll<HTMLElement>("[data-follow]") ?? []),
-        ]
-          .find((place) => place.getClientRects().length > 0)
-          ?.focus();
-      }}
-      onClick={() => {
-        if (follow) leaveEnd();
-        else {
-          anchor.current = null;
-          setFirst(null);
-          setFollow(true);
-        }
-      }}
-    >
-      {t("desktop.logs.follow")}
-    </Button>
-  );
-
   return (
     <div
       className="logview @container flex min-h-0 flex-1 flex-col bg-background"
@@ -684,195 +632,76 @@ export const RecordList = memo(function RecordList({
       id="panel-logs"
       aria-labelledby="tab-logs"
     >
-      {/* One row where there is room. In a narrow panel: the filter, the
-          level and Follow on a first row, and everything else on a second
-          that scrolls sideways, so the bar is never taller than two rows.
-          In a panel near its floor it is one row again, all of it scrolling
-          sideways, so the records keep their room. */}
-      <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:scroll-cue-x panel-short:overflow-x-auto panel-short:[scrollbar-width:none] panel-short:[&::-webkit-scrollbar]:hidden">
-        <div className="flex min-w-0 items-center gap-1.5 @4xl:contents panel-short:contents panel-short:*:shrink-0">
-          {followButton(
-            "sticky left-0 z-(--layer-separator) hidden panel-short:inline-flex",
+      <RecordToolbar
+        all={all}
+        visible={visible}
+        filters={filters}
+        defaultFilters={defaultFilters}
+        setFilters={setFilters}
+        filterInput={filterInput}
+        follow={follow}
+        onFollow={() => {
+          if (follow) leaveEnd();
+          else {
+            anchor.current = null;
+            setFirst(null);
+            setFollow(true);
+          }
+        }}
+        onSelectAll={() => {
+          setSelected(visible);
+          list.current?.focus({ preventScroll: true });
+        }}
+        onCopy={onCopy}
+        onExport={onExport}
+        onReveal={onReveal}
+      />
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 px-3 py-1 text-xs text-muted-foreground panel-short:hidden">
+        <span>
+          {t("desktop.logs.visible_count", {
+            visible: visible.length,
+            total: all.length,
+          })}
+        </span>
+        {states.length > 0 &&
+          states.every(([, state]) => state.kind === "available") && (
+            <span>{t("desktop.logs.state_available")}</span>
           )}
-          <Input
-            ref={filterInput}
-            className="filter-text min-w-20 flex-1 @4xl:w-field @4xl:flex-none panel-short:w-field panel-short:flex-none"
-            controlSize="sm"
-            type="search"
-            placeholder={t("desktop.logs.filter")}
-            aria-label={t("desktop.logs.filter")}
-            value={filters.text}
-            onChange={(event) =>
-              setFilters({ ...filters, text: event.target.value })
-            }
-          />
-          <NativeSelect
-            className="min-w-0 shrink panel-short:shrink-0"
-            controlSize="sm"
-            aria-label={t("desktop.logs.minimum_level")}
-            value={filters.minLevel}
-            onChange={(event) =>
-              setFilters({ ...filters, minLevel: Number(event.target.value) })
-            }
-          >
-            <option value={levelRank("DEBUG")}>
-              {t("desktop.logs.level_all")}
-            </option>
-            <option value={levelRank("INFO")}>
-              {t("desktop.logs.level_info")}
-            </option>
-            <option value={levelRank("WARNING")}>
-              {t("desktop.logs.level_warning")}
-            </option>
-            <option value={levelRank("ERROR")}>
-              {t("desktop.logs.level_error")}
-            </option>
-          </NativeSelect>
-          {followButton("@4xl:hidden panel-short:hidden")}
-        </div>
-        <div className="flex min-w-0 items-center gap-1.5 scroll-cue-x overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden @4xl:flex-1 panel-short:contents">
-          <div
-            className="flex shrink-0 gap-1"
-            role="group"
-            aria-label={t("desktop.logs.sources")}
-          >
-            {sources.map((source) => (
-              <Button
-                key={source}
-                variant="pill"
-                size="sm"
-                aria-pressed={!filters.hiddenSources.includes(source)}
-                onClick={() =>
-                  setFilters({
-                    ...filters,
-                    hiddenSources: filters.hiddenSources.includes(source)
-                      ? filters.hiddenSources.filter((s) => s !== source)
-                      : [...filters.hiddenSources, source],
-                  })
-                }
-              >
-                {sourceLabel(source)}
-              </Button>
-            ))}
-          </div>
-          {filters.logger && (
-            <Button
-              variant="pill"
-              size="sm"
-              aria-pressed="true"
-              aria-label={`${t("desktop.logs.clear_logger")}: ${shortLogger(filters.logger)}`}
-              title={t("desktop.logs.clear_logger")}
+        {filters.origin && <span>{filters.origin}</span>}
+        {filters.logger && (
+          <>
+            <span className="max-w-field truncate" title={filters.logger}>
+              {filters.logger}
+            </span>
+            <IconButton
+              label={`${t("desktop.logs.clear_logger")}: ${filters.logger}`}
               onClick={() => {
                 setFilters({ ...filters, logger: null });
-                // The chip goes with its filter: the keyboard goes to the
-                // filter field, not to nothing.
                 filterInput.current?.focus();
               }}
             >
-              {shortLogger(filters.logger)}
-              <Icon name="close" size="xs" />
-            </Button>
-          )}
-          <span className="flex-1" />
-          <div className="w-field shrink-0">
-            <NativeSelect
-              controlSize="sm"
-              aria-label={t("desktop.logs.origin")}
-              value={filters.origin ?? ""}
-              onChange={(event) =>
-                setFilters({ ...filters, origin: event.target.value })
-              }
-            >
-              <option value="">{t("desktop.logs.all_origins")}</option>
-              {origins.map((origin) => (
-                <option key={origin} value={origin}>
-                  {origin}
-                </option>
-              ))}
-            </NativeSelect>
-          </div>
-          <Button
-            variant="pill"
-            size="sm"
-            disabled={!visible.length}
-            onClick={() => {
-              setSelected(visible);
-              list.current?.focus({ preventScroll: true });
-            }}
-          >
-            {t("desktop.menu.select_all")}
-          </Button>
-          {onCopy && (
-            <>
-              <Button
-                variant="pill"
-                size="sm"
-                disabled={!visible.length}
-                onClick={() => onCopy(recordsText(visible))}
-              >
-                {t("desktop.menu.copy_visible")}
-              </Button>
-              <Button
-                variant="pill"
-                size="sm"
-                disabled={!all.length}
-                onClick={() => onCopy(recordsText(all))}
-              >
-                {t("desktop.logs.copy_all")}
-              </Button>
-            </>
-          )}
-          {onExport && (
-            <>
-              <Button
-                variant="pill"
-                size="sm"
-                disabled={!visible.length}
-                onClick={() => onExport(recordsText(visible))}
-              >
-                {t("desktop.logs.export_visible")}
-              </Button>
-              <Button
-                variant="pill"
-                size="sm"
-                disabled={!all.length}
-                onClick={() => onExport(recordsText(all))}
-              >
-                {t("desktop.logs.export_all")}
-              </Button>
-            </>
-          )}
-          {selected.length > 0 && (
-            <span className="shrink-0 text-xs" role="status">
-              {t("desktop.logs.selected", { count: selected.length })}
-            </span>
-          )}
-          <Button
-            variant="pill"
-            size="sm"
-            disabled={!onReveal}
-            onClick={onReveal}
-          >
-            {t("desktop.logs.reveal")}
-          </Button>
-          {states.length > 0 &&
-            states.every(([, state]) => state.kind === "available") && (
-              <span className="shrink-0 text-xs text-faint">
-                {t("desktop.logs.state_available")}
-              </span>
-            )}
-          {counts.errors > 0 && (
-            <Badge variant="danger" className="shrink-0">
-              {t("desktop.logs.errors", { count: counts.errors })}
-            </Badge>
-          )}
-          {counts.warnings > 0 && (
-            <Badge variant="warning" className="shrink-0">
-              {t("desktop.logs.warnings", { count: counts.warnings })}
-            </Badge>
-          )}
-          {followButton("hidden @4xl:inline-flex panel-short:hidden!")}
-        </div>
+              <Icon name="close" />
+            </IconButton>
+          </>
+        )}
+        <span>
+          {["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][filters.minLevel]}+
+        </span>
+        {counts.errors > 0 && (
+          <Badge variant="danger">
+            {t("desktop.logs.errors", { count: counts.errors })}
+          </Badge>
+        )}
+        {counts.warnings > 0 && (
+          <Badge variant="warning">
+            {t("desktop.logs.warnings", { count: counts.warnings })}
+          </Badge>
+        )}
+        {selected.length > 0 && (
+          <span role="status">
+            {t("desktop.logs.selected", { count: selected.length })}
+          </span>
+        )}
       </div>
       {sourceStates === "unavailable" && (
         <Alert
@@ -1068,16 +897,17 @@ export const RecordList = memo(function RecordList({
                 : t("desktop.logs.empty")}
             </EmptyDescription>
             {all.length > 0 && (
-              <Button
+              <IconButton
                 variant="outline"
                 size="sm"
+                label={t("desktop.action.logs_reset")}
                 onClick={() => {
                   setFilters(defaultFilters);
                   filterInput.current?.focus();
                 }}
               >
-                {t("desktop.action.logs_reset")}
-              </Button>
+                <Icon name="reset" />
+              </IconButton>
             )}
           </Empty>
         )}

@@ -7,6 +7,32 @@ import { label } from "../support/strings";
 
 test.use({ timezoneId: "Europe/Madrid" });
 
+test.beforeEach(async ({ page }) => {
+  // Exercise the download fallback without opening an OS dialog in the runner.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "showSaveFilePicker", {
+      value: undefined,
+      configurable: true,
+    });
+  });
+});
+
+async function openFilters(page: import("@playwright/test").Page) {
+  await page
+    .getByRole("button", { name: label("desktop.logs.filters"), exact: true })
+    .click();
+}
+
+async function exportSelection(
+  page: import("@playwright/test").Page,
+  key: string,
+) {
+  await page
+    .getByRole("button", { name: label("desktop.logs.export"), exact: true })
+    .click();
+  await page.getByRole("menuitem", { name: label(key), exact: true }).click();
+}
+
 test("reveal log location is available from the log bar and command palette", async ({
   page,
 }) => {
@@ -89,7 +115,10 @@ test("log diagnostics show process identity and filter correlation metadata", as
 }) => {
   await page.goto("/scenarios.html?scenario=signed-in&latency=0");
   await openPanelTab(page, "logs");
-  const filter = page.getByLabel(label("desktop.logs.filter"));
+  const filter = page.getByRole("searchbox", {
+    name: label("desktop.logs.filter"),
+    exact: true,
+  });
   await filter.fill("fixture-attempt-9");
   const row = page.locator(".record");
   await expect(row).toHaveCount(1);
@@ -123,11 +152,15 @@ test("origin filter and exports distinguish all retained entries from visible en
 }) => {
   await page.goto("/scenarios.html?scenario=signed-in&latency=0");
   await openPanelTab(page, "logs");
+  await openFilters(page);
   await page
     .getByLabel(label("desktop.logs.origin"))
     .selectOption("python / tui:4208");
+  await page.keyboard.press("Escape");
   await expect(page.locator(".record.source-host")).toHaveCount(0);
-  await page.getByLabel(label("desktop.logs.filter")).fill("fixture-attempt-9");
+  await page
+    .getByRole("searchbox", { name: label("desktop.logs.filter"), exact: true })
+    .fill("fixture-attempt-9");
   await expect(page.locator(".record")).toHaveCount(1);
   for (const [key, expected] of [
     [
@@ -137,7 +170,7 @@ test("origin filter and exports distinguish all retained entries from visible en
     ["desktop.logs.export_all", recordsText(FIXTURE_RECORDS)],
   ]) {
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: label(key!), exact: true }).click();
+    await exportSelection(page, key!);
     const download = await downloadPromise;
     expect(await readFile((await download.path())!, "utf8")).toBe(expected);
   }
@@ -151,9 +184,11 @@ for (const modifier of ["Control", "Meta"]) {
       "/scenarios.html?scenario=signed-in&latency=0&records=1600",
     );
     await openPanelTab(page, "logs");
+    await openFilters(page);
     await page
       .getByLabel(label("desktop.logs.minimum_level"))
       .selectOption("0");
+    await page.keyboard.press("Escape");
     await expect(page.locator(".record")).toHaveCount(400);
     await page
       .getByRole("button", {
@@ -179,12 +214,7 @@ for (const modifier of ["Control", "Meta"]) {
       ),
     ).toEqual([`writeClipboard ${expected.length} characters`]);
     const downloadPromise = page.waitForEvent("download");
-    await page
-      .getByRole("button", {
-        name: label("desktop.logs.export_visible"),
-        exact: true,
-      })
-      .click();
+    await exportSelection(page, "desktop.logs.export_visible");
     const text = await readFile(
       (await (await downloadPromise).path())!,
       "utf8",
@@ -193,22 +223,136 @@ for (const modifier of ["Control", "Meta"]) {
     expect(text).toContain("Generated record 1600 for");
     expect(text).toContain("Traceback");
     await page
-      .getByLabel(label("desktop.logs.filter"))
+      .getByRole("searchbox", {
+        name: label("desktop.logs.filter"),
+        exact: true,
+      })
       .fill("nonexistent-record");
     await expect(
       page.getByText(label("desktop.logs.selected", { count: 1600 })),
     ).toHaveCount(0);
+    await page
+      .getByRole("button", { name: label("desktop.menu.copy"), exact: true })
+      .click();
     await expect(
-      page.getByRole("button", {
+      page.getByRole("menuitem", {
         name: label("desktop.menu.copy_visible"),
         exact: true,
       }),
     ).toBeDisabled();
     await expect(
-      page.getByRole("button", {
+      page.getByRole("menuitem", {
         name: label("desktop.logs.copy_all"),
         exact: true,
       }),
     ).toBeEnabled();
+  });
+}
+
+test("origins include whole sources and exact processes, and match the row identity", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html?scenario=signed-in&latency=0");
+  await openPanelTab(page, "logs");
+  await openFilters(page);
+  const origin = page.getByLabel(label("desktop.logs.origin"), { exact: true });
+  await origin.selectOption("python");
+  await expect(page.locator(".record.source-python")).toHaveCount(
+    FIXTURE_RECORDS.filter(
+      (record) => record.source === "python" && record.level !== "DEBUG",
+    ).length,
+  );
+  await expect(page.locator('.record[data-seq="14"]')).toHaveCount(1);
+  await origin.selectOption("python / tui:4208");
+  await expect(page.locator('.record[data-seq="14"]')).toHaveCount(0);
+  for (const identity of await page.locator(".record-origin").allTextContents())
+    expect(identity).toBe("python / tui:4208");
+  await origin.selectOption("host / console:4188");
+  await expect(page.locator(".record")).toHaveCount(1);
+  await expect(page.locator(".record-origin")).toHaveText(
+    "host / console:4188",
+  );
+  await origin.selectOption("manager");
+  await expect(page.locator(".record")).toHaveCount(1);
+  await expect(page.locator(".record-origin")).toHaveText("manager");
+  await origin.selectOption("");
+  await expect(page.locator(".record")).toHaveCount(FIXTURE_RECORDS.length - 1);
+});
+
+test("browser Save As starts in Downloads, writes the chosen file and allows cancellation", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html?scenario=signed-in&latency=0");
+  await openPanelTab(page, "logs");
+  await page.evaluate(() => {
+    const state = {
+      options: null as unknown,
+      text: "",
+      closed: false,
+      cancel: false,
+    };
+    Object.assign(window, { __logSave: state });
+    Object.defineProperty(window, "showSaveFilePicker", {
+      configurable: true,
+      value: async (options: unknown) => {
+        state.options = options;
+        if (state.cancel) throw new DOMException("Cancelled", "AbortError");
+        return {
+          createWritable: async () => ({
+            write: async (text: string) => {
+              state.text = text;
+            },
+            close: async () => {
+              state.closed = true;
+            },
+            abort: async () => {},
+          }),
+        };
+      },
+    });
+  });
+  await exportSelection(page, "desktop.logs.export_all");
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "__logSave").closed))
+    .toBe(true);
+  const saved = await page.evaluate(() => Reflect.get(window, "__logSave"));
+  expect(saved.options.startIn).toBe("downloads");
+  expect(saved.options.suggestedName).toMatch(/^cadrumo-session-.*\.log$/);
+  expect(saved.text).toBe(recordsText(FIXTURE_RECORDS));
+  await page.evaluate(() => {
+    Reflect.get(window, "__logSave").cancel = true;
+  });
+  await exportSelection(page, "desktop.logs.export_all");
+  await expect(
+    page.getByText(label("desktop.logs.export_failed"), { exact: true }),
+  ).toHaveCount(0);
+});
+
+for (const width of [400, 800, 1440]) {
+  test(`log controls are icons and fit without horizontal scrolling at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/scenarios.html?scenario=signed-in&latency=0");
+    await openPanelTab(page, "logs");
+    const bar = page.locator(".log-toolbar");
+    expect(
+      await bar.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    for (const button of await bar.getByRole("button").all()) {
+      await expect(button.locator("svg")).toHaveCount(1);
+      expect((await button.textContent())?.trim()).toBe("");
+      const bounds = await button.boundingBox();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    }
+    await expect(
+      bar.getByRole("button", {
+        name: label("desktop.logs.follow"),
+        exact: true,
+      }),
+    ).toHaveCount(1);
   });
 }

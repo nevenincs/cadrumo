@@ -75,40 +75,30 @@ test("calendar labels and windows share the canonical pill surface", async ({
   await expect(label).toHaveCSS("padding-left", "16px");
 });
 
-test("log filter pills stay solid and borderless when toggled", async ({
+test("log follow icon uses the shared toggle surface and density", async ({
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
   await openPanelTab(page, "logs");
-  const pill = page.locator("[data-follow]:visible");
-  await expect(pill).toHaveAttribute("aria-pressed", "true");
-  const selected = await pill.evaluate(
+  const follow = page.locator("[data-follow]");
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  const selected = await follow.evaluate(
     (element) => getComputedStyle(element).backgroundColor,
   );
-  await pill.click();
-  await expect(pill).toHaveAttribute("aria-pressed", "false");
+  await follow.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await page.mouse.move(0, 0);
+  await follow.blur();
   await expect
     .poll(() =>
-      pill.evaluate((element) => getComputedStyle(element).backgroundColor),
+      follow.evaluate((element) => getComputedStyle(element).backgroundColor),
     )
     .not.toBe(selected);
-  const unselected = await pill.evaluate(
-    (element) => getComputedStyle(element).backgroundColor,
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty("--spacing-control-sm", "40px"),
   );
-  expect(unselected).not.toBe(selected);
-  expect(unselected).not.toBe("rgba(0, 0, 0, 0)");
-  await pill.hover();
-  const opaque = () =>
-    pill.evaluate((element) => {
-      const context = document.createElement("canvas").getContext("2d")!;
-      context.fillStyle = getComputedStyle(element).backgroundColor;
-      context.fillRect(0, 0, 1, 1);
-      return context.getImageData(0, 0, 1, 1).data[3];
-    });
-  await expect.poll(opaque).toBe(255);
-  await page.mouse.down();
-  await expect.poll(opaque).toBe(255);
-  await page.mouse.up();
+  await expect(follow).toHaveCSS("width", "40px");
+  await expect(follow).toHaveCSS("height", "40px");
   for (const side of ["top", "right", "bottom", "left"])
-    await expect(pill).toHaveCSS(`border-${side}-width`, "0px");
+    await expect(follow).toHaveCSS(`border-${side}-width`, "0px");
 });

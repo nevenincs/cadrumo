@@ -1,3 +1,4 @@
+import { saveLogs } from "./shell/saveLogs";
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
 import { useWindowPresentation } from "./shell/useWindowPresentation";
 import {
@@ -519,16 +520,11 @@ export function App({ host }: { host: Host }) {
           const path = await host.exportLogs(text);
           say(t("desktop.logs.exported", { path }));
         } else {
-          const url = URL.createObjectURL(
-            new Blob([text], { type: "text/plain;charset=utf-8" }),
-          );
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `cadrumo-session-${Date.now()}.log`;
-          link.click();
-          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+          await saveLogs(text);
         }
-      } catch {
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
         say(t("desktop.logs.export_failed"));
       }
     },
