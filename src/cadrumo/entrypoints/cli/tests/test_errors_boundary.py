@@ -53,7 +53,7 @@ def test_malformed_cli_input_surfaces_input_time_validation_boundary(
 
 
 def test_an_unexpected_error_names_its_type_and_raising_frame_but_not_its_message() -> None:
-    from ..errors import CliUnexpectedBoundaryError
+    from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
 
     def fail() -> None:
         raise ValueError("timeout must be at most 120 seconds for https://x/?nif=X1234567L")

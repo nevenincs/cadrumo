@@ -5,18 +5,22 @@
 //! open: closing it is the stop request.
 
 use super::launcher::{self, Event, LINE_LIMIT};
+#[cfg(windows)]
+use cadrumo_application::process::status::ProcessRole;
 use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    process::status::{ProcessPhase, ProcessRole},
+    process::status::ProcessPhase,
 };
 use std::{
-    io::{Read, Write},
-    process::{Child, ChildStdin, Command, Stdio},
+    io::Read,
+    process::{Child, ChildStdin, Command},
     sync::Arc,
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
+#[cfg(windows)]
+use std::{io::Write, process::Stdio};
 
 /// How long the launcher has to stop its agent and exit after its standard
 /// input closes, before the job ends it.

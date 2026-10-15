@@ -168,7 +168,9 @@ def test_cli_session_lock_global_resume_and_key_denial_use_native_authority(tmp_
                         inventory = _successful(
                             _human(root, profile_id, "config", "profile", "sessions"), "config.profile.sessions"
                         )
-                        assert any(item["session_id"] == str(api_session_id) for item in inventory["sessions"]), inventory
+                        assert any(item["session_id"] == str(api_session_id) for item in inventory["sessions"]), (
+                            inventory
+                        )
 
                         selected = _successful(
                             _human(root, profile_id, "config", "profile", "lock", "--session", str(api_session_id)),

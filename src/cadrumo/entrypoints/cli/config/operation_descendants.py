@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
@@ -18,7 +19,6 @@ from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
-from ..errors import CliRefusedBoundaryError
 from ._profile_mutation import execute_profile_mutation, read_mutation_baseline
 
 

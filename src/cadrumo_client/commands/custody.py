@@ -20,6 +20,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo.core.output_rendering import OutputFormat, render_command_output
+from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.secure_input import (
     MachineSecretPayload,
@@ -30,6 +31,7 @@ from cadrumo_client.commands.secure_input import (
     terminal_can_prompt_for_secrets,
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
@@ -48,6 +50,24 @@ class LoginSecrets(MachineSecretPayload):
     """
 
     passphrase: SecretStr
+
+
+def _config_logout_result(
+    outcome: HumanSignedOut | None,
+    *,
+    logged_out_profile: str | None,
+    already_logged_out: bool,
+) -> ConfigLogoutResult:
+    """Project the runtime's sign-out facts without inferring remaining access."""
+    return ConfigLogoutResult(
+        logged_out_profile=logged_out_profile,
+        already_logged_out=already_logged_out,
+        human_receipt_revoked=outcome is not None,
+        receipt_removed=None if outcome is None else outcome.receipt_removed,
+        keychain_removed=None if outcome is None else outcome.keychain_removed,
+        automation_enabled=None if outcome is None else outcome.automation_enabled,
+        automation_access_remains=None if outcome is None else outcome.automation_access_remains,
+    )
 
 
 def _settings_has_explicit_output_language() -> bool:
@@ -233,7 +253,12 @@ def _login_through_the_prompt(
             elif interactive:
                 proof = bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")), "utf-8")
             else:
-                raise CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent")
+                from cadrumo.application.profile_preconditions import profile_password_channel_failure_verdict
+
+                raise attach_cli_policy_verdict(
+                    CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent"),
+                    verdict=profile_password_channel_failure_verdict(profile_name=target.label),
+                )
             try:
                 admitted = client.login_password(proof, persist_receipt=True)
             finally:
@@ -324,10 +349,10 @@ def config_logout(
     _activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     captured = observe_active_profile_pointer()
-    target = read_profile_bucket(captured.bucket_id) if captured.bucket_id is not None else None
+    target = read_profile_bucket_by_id(captured.bucket_id) if captured.bucket_id is not None else None
     outcome = None
     if captured.bucket_id is not None:
         client = asyncio.run(
@@ -370,15 +395,10 @@ def config_logout(
     signed_out = captured.bucket_id
     logged_out_profile = target.label if target is not None else signed_out
 
-    from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
-
-    result = ConfigLogoutResult(
+    result = _config_logout_result(
+        outcome,
         logged_out_profile=logged_out_profile,
         already_logged_out=signed_out is None,
-        human_receipt_revoked=outcome is not None,
-        receipt_removed=None if outcome is None else outcome.receipt_removed,
-        keychain_removed=None if outcome is None else outcome.keychain_removed,
-        automation_enabled=None if outcome is None else outcome.automation_enabled,
     )
     notices: tuple[Notice, ...] = ()
     if signed_out is None:
@@ -399,6 +419,7 @@ def config_logout(
             f"receipt_removed\t{result.receipt_removed}",
             f"keychain_removed\t{result.keychain_removed}",
             f"automation_enabled\t{result.automation_enabled}",
+            f"automation_access_remains\t{result.automation_access_remains}",
             *(notice.message for notice in notices),
         ),
         notices=notices,

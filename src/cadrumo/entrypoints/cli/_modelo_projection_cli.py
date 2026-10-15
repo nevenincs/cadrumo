@@ -7,6 +7,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ...application.modelo.projection import ModeloCompareNeedTwoYearsError
 from ...application.modelo.projection_operation import (
     CompareDeltaRowProjection,
@@ -33,7 +35,6 @@ from ._modelo_payloads import (
     ModeloProjectResult,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .errors import CliRefusedBoundaryError
 from .operation_modelo_projection import run_modelo_compare, run_modelo_project
 
 _PROJECT_RECOVERY_LOCALE_KEYS = {

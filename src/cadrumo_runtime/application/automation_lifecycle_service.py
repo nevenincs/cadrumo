@@ -38,9 +38,13 @@ from cadrumo.application.user_profile.automation_lifecycle import (
 from cadrumo.application.user_profile.automation_password import prove_automation_administration
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.automation_lifecycle import (
-    AutomationResumeReceipt,
-    AutomationResumeRequest,
-    HumanSignInRevocationResult,
+    AutomationResumeReceipt as _AutomationResumeReceipt,
+)
+from cadrumo_client.contracts.automation_lifecycle import (
+    AutomationResumeRequest as _AutomationResumeRequest,
+)
+from cadrumo_client.contracts.automation_lifecycle import (
+    HumanSignInRevocationResult as _HumanSignInRevocationResult,
 )
 
 from .session_authority import ProfileSessionAuthority
@@ -61,7 +65,7 @@ class AutomationLifecycleOwner(Protocol):
         """Hold the same fence as session admission and private effects."""
         ...
 
-    def revoke_human_sign_in(self) -> HumanSignInRevocationResult:
+    def revoke_human_sign_in(self) -> _HumanSignInRevocationResult:
         """Fence saved human proof and retire human/attended sessions before recovery."""
         ...
 
@@ -132,7 +136,7 @@ def _deny_automation(
 
 
 def _resume_request(
-    selection: AutomationResumeRequest,
+    selection: _AutomationResumeRequest,
     facts: AdministrationFacts,
     session_binding: ProfileAccessBinding,
 ) -> AccessAdministrationRequest:
@@ -155,7 +159,7 @@ def _resume_request(
 def _require_resume_authority(
     *,
     custody: AutomationLifecycleCustody,
-    selection: AutomationResumeRequest,
+    selection: _AutomationResumeRequest,
     request: AccessAdministrationRequest,
     current: AdministrationFacts,
     proof: FreshPasswordAuthorization,
@@ -225,7 +229,7 @@ def _reactivated_enrollment_grant(
 
 def _selected_enrollment_state(
     custody: AutomationLifecycleCustody,
-    selection: AutomationResumeRequest,
+    selection: _AutomationResumeRequest,
     *,
     binding: ProfileAccessBinding,
     now: datetime,
@@ -250,13 +254,13 @@ def _selected_enrollment_state(
 def _unlock_without_automation(
     custody: AutomationLifecycleCustody,
     owner: AutomationLifecycleOwner,
-    selection: AutomationResumeRequest,
-) -> AutomationResumeReceipt:
+    selection: _AutomationResumeRequest,
+) -> _AutomationResumeReceipt:
     # Human unlock is independent of optional automation custody. Pending denial
     # still blocks every key until reconciliation and explicit selection complete.
     custody.unlock_profile(generation=selection.lock_generation)
     owner.set_profile_lock(generation=selection.lock_generation, locked=False)
-    return AutomationResumeReceipt(
+    return _AutomationResumeReceipt(
         request_id=selection.request_id,
         profile_id=selection.profile_id,
         revision=None,
@@ -269,14 +273,14 @@ def _publish_selected_resume(
     *,
     custody: AutomationLifecycleCustody,
     owner: AutomationLifecycleOwner,
-    selection: AutomationResumeRequest,
+    selection: _AutomationResumeRequest,
     state: EnrollmentControlState,
     dek: SecretBytes,
-) -> AutomationResumeReceipt:
+) -> _AutomationResumeReceipt:
     revision = custody.publish_enrollment(state, fresh_dek=dek)
     custody.unlock_profile(generation=selection.lock_generation)
     owner.set_profile_lock(generation=selection.lock_generation, locked=False)
-    return AutomationResumeReceipt(
+    return _AutomationResumeReceipt(
         request_id=selection.request_id,
         profile_id=selection.profile_id,
         revision=revision,
@@ -289,11 +293,11 @@ def _finish_resume(
     *,
     custody: AutomationLifecycleCustody,
     owner: AutomationLifecycleOwner,
-    selection: AutomationResumeRequest,
+    selection: _AutomationResumeRequest,
     request: AccessAdministrationRequest,
     proof: FreshPasswordAuthorization,
     dek: SecretBytes,
-) -> AutomationResumeReceipt:
+) -> _AutomationResumeReceipt:
     with owner.administration_guard():
         current = owner.facts()
         _require_resume_authority(
@@ -343,7 +347,7 @@ class AutomationLifecycleService:
         """Authorize a reduction, fence live leases, then persist before acknowledging."""
         return _deny_automation(custody=self.custody, owner=self.owner, sessions=self.sessions, change=change)
 
-    def resume(self, selection: AutomationResumeRequest, *, password: SecretBytes) -> AutomationResumeReceipt:
+    def resume(self, selection: _AutomationResumeRequest, *, password: SecretBytes) -> _AutomationResumeReceipt:
         """Prove the password for this selection; API possession cannot unlock globally."""
         with self.owner.administration_guard():
             facts = self.owner.facts()

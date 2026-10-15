@@ -10,10 +10,11 @@ import typing
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+
 from ....core.json_contract import strict_round_trip
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ..common import emit_envelope, resolve_cli_precondition_action
-from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .status_rendering import precondition_action_lines
 
 if typing.TYPE_CHECKING:

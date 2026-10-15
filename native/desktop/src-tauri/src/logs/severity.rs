@@ -6,6 +6,23 @@ use cadrumo_application::diagnostics::{
     service::{AgentRefusal, ServiceFact},
 };
 
+const PROJECT_LOGGER_ROOTS: [&str; 5] = [
+    "cadrumo",
+    "cadrumo_client",
+    "cadrumo_harness",
+    "cadrumo_runtime",
+    "cadrumo_agent_service",
+];
+
+fn is_project_python_logger(name: &str) -> bool {
+    PROJECT_LOGGER_ROOTS.iter().any(|root| {
+        name == *root
+            || name
+                .strip_prefix(root)
+                .is_some_and(|suffix| suffix.starts_with('.'))
+    })
+}
+
 pub fn level(event: &Event) -> Level {
     if event.failure.is_some() || event.webview_failure.is_some() {
         return Level::Error;
@@ -26,6 +43,15 @@ pub fn level(event: &Event) -> Level {
                 Level::Info
             }
             _ => Level::Debug,
+        };
+    }
+    if let Some(fact) = &event.helper_result {
+        return if fact.envelope_decode
+            == cadrumo_application::diagnostics::helper::HelperDecode::Success
+        {
+            Level::Debug
+        } else {
+            Level::Error
         };
     }
     match event.kind {
@@ -72,7 +98,7 @@ pub fn python_level(
     message: &str,
     context: &std::collections::BTreeMap<String, serde_json::Value>,
 ) -> Option<Level> {
-    if !logger.is_some_and(|name| name == "cadrumo" || name.starts_with("cadrumo."))
+    if !logger.is_some_and(is_project_python_logger)
         || matches!(original, Some(Level::Error | Level::Critical))
     {
         return original;
@@ -180,6 +206,29 @@ mod tests {
         diagnostics::{Diagnostics, HostStage},
         process::status::ProcessRole,
     };
+
+    #[test]
+    fn owned_python_logger_families_are_closed_at_the_package_boundary() {
+        for name in [
+            "cadrumo",
+            "cadrumo.application.workflow",
+            "cadrumo_client.commands.stdio",
+            "cadrumo_harness.mcp",
+            "cadrumo_runtime.adapters.server",
+            "cadrumo_agent_service.host.controller",
+        ] {
+            assert!(is_project_python_logger(name), "{name}");
+        }
+        for name in [
+            "cadrumo_clientish.commands",
+            "cadrumo_harness_vendor.mcp",
+            "cadrumo_runtimeish.adapters.server",
+            "cadrumo_agent_service_vendor.host.controller",
+            "foreign_runtime.adapters.server",
+        ] {
+            assert!(!is_project_python_logger(name), "{name}");
+        }
+    }
 
     #[test]
     fn retained_python_failures_and_trace_rows_are_corrected_without_demoting_real_info() {

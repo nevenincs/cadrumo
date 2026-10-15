@@ -12,6 +12,7 @@ import pytest
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -30,7 +31,6 @@ from .. import _app_live_justificante_cli as handler
 from .. import operation_justificante_read as bridge
 from .. import operation_profile_operation as profile_operation
 from .._app_live_justificante_payloads import JustificanteListResult, JustificanteViewResult
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

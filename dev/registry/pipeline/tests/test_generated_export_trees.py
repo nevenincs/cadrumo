@@ -23,12 +23,14 @@ from __future__ import annotations
 import filecmp
 import shutil
 from collections.abc import Iterable
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
@@ -46,7 +48,7 @@ from .._tree_validation import (
     ValidatedHistoricalStaticGeneratedExportTree,
     validate_generated_export_tree,
 )
-from ..cli import stage_published_modelo
+from ..cli import GeneratedTreeInvocation, prepare_generated_tree_invocation
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
@@ -122,12 +124,9 @@ def _expected_filing_grade_refusals() -> dict[str, str]:
 _EXPECTED_FILING_GRADE_REFUSALS = _expected_filing_grade_refusals()
 
 
-def _published_layout(tree: GeneratedExportTree, root: Path) -> ExportLayoutDefinition:
-    """Load the committed tree's layout exactly as check mode loads its published witness."""
-    staged = stage_published_modelo(
-        root, modelo=tree.modelo, revision=tree.revision, inheritance=tree_inheritance(tree)
-    )
-    definition = load_modelo_directory(staged or bundled_path("registry", "aeat", "modelos", tree.modelo))
+def _published_layout(tree: GeneratedExportTree, authority: ValidatedRegistryAuthority) -> ExportLayoutDefinition:
+    """Read the committed target from its complete, validated source chain."""
+    definition = authority.modelo(tree.modelo)
     (layout,) = definition.revisions[tree.revision].export_layouts
     return layout
 
@@ -143,7 +142,7 @@ def _stale_loader_attestations(entries: Iterable[tuple[str, Path, ExportLayoutDe
     return stale
 
 
-def test_every_committed_manifest_attests_the_current_loader_semantics(tmp_path: Path) -> None:
+def test_every_committed_manifest_attests_the_current_loader_semantics() -> None:
     """Each committed manifest's loader digest equals the digest of the layout it ships.
 
     The reproduction gate reaches this question only after a full render and
@@ -151,8 +150,9 @@ def test_every_committed_manifest_attests_the_current_loader_semantics(tmp_path:
     at once, so a projection or loader change that re-attests the corpus reads
     as one list of trees to republish.
     """
+    authority = compiled_bundled_authority()
     stale = _stale_loader_attestations(
-        (str(tree), tree.committed, _published_layout(tree, tmp_path / str(tree))) for tree in _GENERATED_TREES
+        (str(tree), tree.committed, _published_layout(tree, authority)) for tree in _GENERATED_TREES
     )
 
     assert stale == [], (
@@ -165,7 +165,7 @@ def test_every_committed_manifest_attests_the_current_loader_semantics(tmp_path:
 def test_a_manifest_attesting_other_loader_semantics_is_named(tmp_path: Path) -> None:
     """Detector: a tree whose manifest attests a different loader digest is reported by name."""
     tree = next(item for item in _GENERATED_TREES if str(item) == "m347-2025-y-siguientes")
-    layout = _published_layout(tree, tmp_path / "published")
+    layout = _published_layout(tree, compiled_bundled_authority())
     stale_root = tmp_path / "stale" / "export"
     shutil.copytree(tree.committed, stale_root)
     manifest_path = export_fragment_provenance_path(stale_root)
@@ -373,38 +373,19 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         )
 
     candidate_root = tmp_path / "candidate"
-    registry_root = isolated_authority(tree, candidate_root)
-    continuity_metadata_modelo_root = stage_continuity_metadata(
-        bundled_path("registry", "aeat", "modelos", tree.modelo),
+    prepared = prepare_generated_tree_invocation(
+        GeneratedTreeInvocation(tree.modelo, tree.revision, tree.source_ref, tree.filing_year, tree.period),
         candidate_root,
-        revision=tree.revision,
-    )
-    # The published layout load must see exactly the target revision, so a
-    # multi-revision modelo is staged through the same isolation the CLI uses.
-    published_modelo_root = stage_published_modelo(
-        candidate_root, modelo=tree.modelo, revision=tree.revision, inheritance=inheritance
+        authority=compiled_bundled_authority(),
     )
     context = GeneratedExportTreeCheckContext(
-        validation=GeneratedExportTreeValidationContext(
-            registry_root=registry_root,
-            source_root=bundled_path(),
-            target=ExportFragmentTarget(
-                modelo=tree.modelo,
-                revision_id=tree.revision,
-                design_epoch=tree.epoch,
-            ),
-            filing_year=tree.filing_year,
-            period=tree.period,
-            supporting_modelos=supporting_modelos(tree),
-            continuity_metadata_modelo_root=continuity_metadata_modelo_root,
-            scope_authority=compiled_bundled_authority(),
-            historical_static_source_ref=tree.source_ref if tree.historical_static else None,
-            inheritance=inheritance,
-        ),
+        # Publication derives safe source-chain staging at the declared grade;
+        # this gate additionally proves ordinary check-mode filing admission.
+        validation=replace(prepared.validation, required_grade=RegistryAuthorityGrade.FILING),
         temporary_root=candidate_root,
-        target_registry_root=bundled_path("registry", "aeat"),
-        target_export_root=tree.committed,
-        published_modelo_root=published_modelo_root,
+        target_registry_root=prepared.target_root,
+        target_export_root=prepared.target_export_root,
+        published_modelo_root=prepared.published_modelo_root,
     )
     expected = _EXPECTED_FILING_GRADE_REFUSALS.get(str(tree))
     try:
@@ -499,29 +480,29 @@ def test_m184_sheet_type_literals_replace_the_blank_capable_casilla_path(
 def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tmp_path: Path) -> None:
     """A strict 2026 landing revision cannot validate against invented predecessors.
 
-    The 2026 M303 target declares transitions from five real revisions.  It is
+    The 2026 M303 target needs the modelo's real sibling declarations. It is
     the generic target-only isolation regression: the fresh candidate succeeds
-    only when those source-copied predecessor metadata fragments are supplied;
+    only when those source-copied sibling metadata fragments are supplied;
     absent, missing, or structurally mismatched predecessor declarations still
     refuse through the ordinary strict-continuity validator.
     """
     tree = next(item for item in _GENERATED_TREES if item.modelo == "303" and item.revision == "2026-y-siguientes")
+    declared_revisions = compiled_bundled_authority().validate_modelo(tree.modelo).revisions
+    expected_siblings = {str(revision_id) for revision_id in declared_revisions if str(revision_id) != tree.revision}
+    assert {"2022", "2023"} <= expected_siblings, "the missing and mismatched predecessor controls must be real"
     joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     candidate_root = tmp_path / "candidate"
     registry_root = isolated_authority(tree, candidate_root)
+    assert {child.name for child in (registry_root / "modelos" / tree.modelo / "revisions").iterdir()} == {
+        tree.revision
+    }, "the continuity refusal controls require a genuinely target-only candidate"
     metadata_modelo_root = stage_continuity_metadata(
         bundled_path("registry", "aeat", "modelos", tree.modelo),
         candidate_root,
         revision=tree.revision,
     )
     assert metadata_modelo_root is not None
-    assert set(child.name for child in (metadata_modelo_root / "revisions").iterdir()) == {
-        "2022",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-    }
+    assert set(child.name for child in (metadata_modelo_root / "revisions").iterdir()) == expected_siblings
 
     rendered = render_complete_export_tree(
         registry_root / "modelos" / tree.modelo / "revisions" / tree.revision / "export",

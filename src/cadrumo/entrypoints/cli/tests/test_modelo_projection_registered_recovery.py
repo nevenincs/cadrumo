@@ -10,9 +10,9 @@ import typer
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 from .. import _modelo_projection_cli
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

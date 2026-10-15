@@ -62,7 +62,7 @@ from dev.packaging.command_execution import run_command
 
 from .harness import Connection, LifecycleHarness, Profile
 from .proof_support import ProcessIdentity, verified_relay
-from .session_holder import RuntimeSessionHolder
+from .session_holder import AsyncRuntimeSessionHolder
 
 # The package interpreter imports the production TUI adapter without mounting Textual.
 _TUI_READ = """
@@ -258,14 +258,18 @@ async def _mcp_settle(
 
 
 async def attend_mcp(
-    holder: RuntimeSessionHolder, client: ClientSession, *, harness: LifecycleHarness, invocation: ProcessIdentity
+    holder: AsyncRuntimeSessionHolder,
+    client: ClientSession,
+    *,
+    harness: LifecycleHarness,
+    invocation: ProcessIdentity,
 ) -> None:
     """Review only this retained packaged relay's ask through the held person session."""
     asking = asyncio.create_task(_call(client, "describe", {"definition_id": "auth.local-read"}))
     deadline = time.monotonic() + 90
     try:
         while True:
-            inventory = await asyncio.to_thread(holder.command, "attendance_inventory")
+            inventory = await holder.command("attendance_inventory")
             candidates = inventory.get("candidates")
             if not isinstance(candidates, list):
                 raise AssertionError("Held runtime returned no attendance inventory")
@@ -281,9 +285,7 @@ async def attend_mcp(
                 attendance_id = matching[0].get("attendance_id")
                 if not isinstance(attendance_id, str):
                     raise AssertionError("Owned relay ask has no identity")
-                decided = await asyncio.to_thread(
-                    holder.command, "attendance_decision", attendance_id=attendance_id, approve=True
-                )
+                decided = await holder.command("attendance_decision", attendance_id=attendance_id, approve=True)
                 if decided.get("kind") != "attendance_decided" or decided.get("approved") is not True:
                     raise AssertionError("Runtime did not approve the reviewed relay")
                 await asking

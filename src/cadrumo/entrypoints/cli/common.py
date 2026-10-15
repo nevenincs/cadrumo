@@ -937,9 +937,10 @@ def _no_active_profile_refusal() -> Exception:
     second one. ``list_profile_buckets`` reads only manifest files and
     never unlocks a bucket, so this check is cheap.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import inspect_active_profile_precondition
     from ...application.workflow.profile_bucket_scan import list_profile_buckets
-    from .errors import CliRefusedBoundaryError
 
     registered_profile_count = len(list_profile_buckets())
     verdict = inspect_active_profile_precondition(

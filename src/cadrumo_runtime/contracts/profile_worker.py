@@ -37,7 +37,7 @@ from cadrumo_client.contracts.submission_payload import (
     SubmissionPayloadChunk,
     SubmissionPayloadDescriptor,
 )
-from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity as _ProfileWorkerIdentity
 
 from .worker_authorization import WorkerAuthorityRequest
 
@@ -318,7 +318,7 @@ class ProfileWorkerStatus(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["status"] = "status"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     sessions: tuple[UUID, ...]
     in_flight_operations: int | None = Field(default=None, ge=0)
@@ -329,7 +329,7 @@ class ProfileWorkerDrained(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["drained"] = "drained"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     unresolved: tuple[OperationId, ...]
     recovery_required: tuple[OperationId, ...]
@@ -340,7 +340,7 @@ class ProfileWorkerSettlement(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_settlement"] = "operation_settlement"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     operation_identity: OperationIdentity
     settled: bool
@@ -351,7 +351,7 @@ class ProfileWorkerHumanOutcome(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["human_candidate"] = "human_candidate"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     candidate_id: UUID
     login: ProfileLoginOutcome
@@ -366,7 +366,7 @@ class ProfileWorkerHumanBound(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["human_bound"] = "human_bound"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     session_id: UUID
     receipt: ProfileHumanLoginReceipt
@@ -384,7 +384,7 @@ class ProfileWorkerRefusal(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["refusal"] = "refusal"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     reason: AutomationCustodyCode | AccessDenialCode
     sign_in: SignInRefusal | None = None
@@ -406,7 +406,7 @@ class ProfileWorkerOperationContract(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_contract"] = "operation_contract"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     contract: OperationPublicDefinitionContractV1
     request_json_schema: dict[str, JsonValue]
@@ -417,7 +417,7 @@ class ProfileWorkerSubmission(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_submission"] = "operation_submission"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     receipt: OperationSubmissionReceiptV1
     release: WorkerAuthorityRequest
@@ -429,7 +429,7 @@ class ProfileWorkerUploadAccepted(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["operation_upload_accepted"] = "operation_upload_accepted"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     upload_id: UUID
 
@@ -439,7 +439,7 @@ class ProfileWorkerOperationReceipt(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_receipt"] = "operation_receipt"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     operation_id: OperationId
     release: WorkerAuthorityRequest
@@ -450,7 +450,7 @@ class ProfileWorkerObservation(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_observation"] = "operation_observation"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     observation: OperationObservationResultV1
     release: WorkerAuthorityRequest
@@ -461,7 +461,7 @@ class ProfileWorkerProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_projection"] = "operation_projection"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     document: dict[str, JsonValue]
     release: WorkerAuthorityRequest
@@ -472,7 +472,7 @@ class ProfileWorkerProjectionPage(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_projection_page"] = "operation_projection_page"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     page: ProjectionPage
     release: WorkerAuthorityRequest
@@ -483,7 +483,7 @@ class ProfileWorkerExtensionRecordReply(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["worker_extension_record_result"] = "worker_extension_record_result"
-    identity: ProfileWorkerIdentity
+    identity: _ProfileWorkerIdentity
     request_id: UUID
     result: ExtensionRecordReply
 

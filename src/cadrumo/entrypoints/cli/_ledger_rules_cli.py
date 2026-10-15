@@ -8,6 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
@@ -21,7 +22,6 @@ from ...application.ledger.rule_contracts import (
 from ...core.i18n.render import tr
 from ...domain.transactions.enums import BusinessClassification
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .errors import CliRefusedBoundaryError
 from .operation_ledger_rules import submit_ledger_rule_add, submit_ledger_rule_apply, submit_ledger_rule_list
 
 

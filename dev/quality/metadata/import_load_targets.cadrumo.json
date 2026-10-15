@@ -2734,7 +2734,6 @@
         "cadrumo.entrypoints.cli.config.descendiente",
         "cadrumo.entrypoints.cli.config.errors",
         "cadrumo.entrypoints.cli.config.google",
-        "cadrumo.entrypoints.cli.config.google_configuration_folder_correlation",
         "cadrumo.entrypoints.cli.config.operation_censal_contracts",
         "cadrumo.entrypoints.cli.config.operation_censal_exchange",
         "cadrumo.entrypoints.cli.config.operation_censal_file_import",

@@ -70,6 +70,7 @@ impl HostEvents {
                 notice.lifecycle = None;
                 notice.service = None;
                 notice.helper_timing = None;
+                notice.helper_result = None;
                 notice.webview_failure = None;
                 notice.outcome = None;
                 notice.host_exit_code = None;
@@ -178,6 +179,27 @@ pub(super) fn entry(event: &Event) -> Entry {
             ("output_join_ms", fact.output_join_ms),
         ] {
             context.insert(name.into(), elapsed.map_or(Value::Null, Value::from));
+        }
+    }
+    if let Some(fact) = &event.helper_result {
+        context.insert("command".into(), Value::from(fact.command));
+        context.insert("executable".into(), Value::from(token(fact.executable)));
+        context.insert(
+            "envelope_decode".into(),
+            Value::from(token(fact.envelope_decode)),
+        );
+        context.insert("stdout_bytes".into(), Value::from(fact.stdout_bytes));
+        context.insert("stderr_bytes".into(), Value::from(fact.stderr_bytes));
+        for (name, value) in [
+            ("code", &fact.code),
+            ("reason", &fact.reason),
+            ("exception_type", &fact.exception_type),
+            ("raised_at", &fact.raised_at),
+            ("native_subject", &fact.native_subject),
+        ] {
+            if let Some(value) = value {
+                context.insert(name.into(), Value::from(value.clone()));
+            }
         }
     }
     if let Some(fact) = event.service {
@@ -350,6 +372,183 @@ mod tests {
         error::application::{ApplicationError, ErrorCode, Operation},
         process::status::{ProcessPhase, ProcessRole, Stream},
     };
+
+    #[cfg(windows)]
+    #[test]
+    fn helper_envelope_failure_reaches_persisted_logs_and_view_without_private_payloads() {
+        use crate::shell::sign_in::process::Children;
+        use cadrumo_application::diagnostics::helper::{HelperExecutable, HelperIdentity};
+        use std::sync::Arc;
+        let identity = HelperIdentity {
+            command: "config.login",
+            executable: HelperExecutable::Cli,
+        };
+        let powershell = |script: &str| {
+            let mut command = std::process::Command::new(
+                std::path::Path::new(&std::env::var_os("SystemRoot").unwrap())
+                    .join("System32/WindowsPowerShell/v1.0/powershell.exe"),
+            );
+            command.args([
+                "-NoLogo",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                script,
+            ]);
+            command
+        };
+        use cadrumo_application::diagnostics::helper::HelperDecode;
+        let directory = std::env::temp_dir().join(format!(
+            "cadrumo-helper-diagnostics-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir(&directory).unwrap();
+        let diagnostics = Arc::new(Diagnostics::default());
+        diagnostics.configure(&directory, 64 * 1024, 1).unwrap();
+        let children = Children::new(diagnostics.clone());
+        let envelope = serde_json::json!({
+            "schema_version":"2", "command":"config.login", "status":"error",
+            "active_profile":"PRIVATE-PROFILE-CANARY",
+            "error":{"code":"INTERNAL", "message":"PRIVATE-MESSAGE-CANARY",
+                "context":{"reason":"unexpected_failure", "exception_type":"AttributeError",
+                    "raised_at":"cadrumo_runtime.host.connection:submit:42",
+                    "private":"PRIVATE-CONTEXT-CANARY"}}
+        });
+        let script = format!(
+            "[Console]::Out.Write('PRIVATE-STDOUT-CANARY'); [Console]::Error.Write('{envelope}'); exit 1"
+        );
+        let output = children.run(identity, powershell(&script), None).unwrap();
+        let snapshot = diagnostics.snapshot(0);
+        let event = snapshot
+            .events
+            .iter()
+            .find(|event| event.helper_result.is_some())
+            .unwrap();
+        let fact = event.helper_result.as_ref().unwrap();
+        assert_eq!(fact.envelope_decode, HelperDecode::Refused);
+        assert_eq!(fact.code.as_deref(), Some("INTERNAL"));
+        assert_eq!(fact.exception_type.as_deref(), Some("AttributeError"));
+        assert_eq!(
+            fact.raised_at.as_deref(),
+            Some("cadrumo_runtime.host.connection:submit:42")
+        );
+        assert_eq!(fact.stdout_bytes, output.stdout.len() as u64);
+        assert_eq!(fact.stderr_bytes, output.stderr.len() as u64);
+        assert_eq!(event.process, Some(snapshot.processes[0].id));
+        assert_eq!(
+            event.status.as_ref().unwrap().pid,
+            snapshot.processes[0].pid
+        );
+        assert_eq!(
+            event.status.as_ref().unwrap().stderr_bytes,
+            fact.stderr_bytes
+        );
+        assert!(snapshot.output.is_empty());
+        let records = HostEvents::default().poll(&diagnostics);
+        let record = records
+            .iter()
+            .find(|entry| entry.context.contains_key("envelope_decode"))
+            .unwrap();
+        assert_eq!(record.level, Some(Level::Error));
+        assert_eq!(record.context["command"], "config.login");
+        assert_eq!(record.context["executable"], "cli");
+        assert_eq!(record.context["exception_type"], "AttributeError");
+        assert_eq!(record.context["stderr_bytes"], fact.stderr_bytes);
+        let persisted = std::fs::read_to_string(snapshot.paths.unwrap().current).unwrap();
+        for text in [
+            persisted,
+            serde_json::to_string(&snapshot.events).unwrap(),
+            format!("{records:?}"),
+        ] {
+            assert!(
+                !text.contains("CANARY"),
+                "private helper output reached diagnostics"
+            );
+            assert!(text.contains("AttributeError"));
+        }
+        let malformed = children
+            .read(
+                identity,
+                powershell("[Console]::Error.Write('PRIVATE-MALFORMED-CANARY'); exit 1"),
+            )
+            .unwrap();
+        let snapshot = diagnostics.snapshot(0);
+        let fact = snapshot
+            .events
+            .iter()
+            .rev()
+            .find_map(|event| event.helper_result.as_ref())
+            .unwrap();
+        assert_eq!(fact.envelope_decode, HelperDecode::Malformed);
+        assert_eq!(fact.stderr_bytes, malformed.stderr.len() as u64);
+        assert!(fact.code.is_none() && fact.raised_at.is_none());
+        let success = serde_json::json!({"schema_version":"2","command":"config.login","status":"success","result":{"private":"PRIVATE-RESULT-CANARY"}});
+        children
+            .read(
+                identity,
+                powershell(&format!("[Console]::Out.Write('{success}')")),
+            )
+            .unwrap();
+        let records = HostEvents::default().poll(&diagnostics);
+        assert_eq!(
+            records
+                .iter()
+                .rev()
+                .find(|record| record
+                    .context
+                    .get("envelope_decode")
+                    .is_some_and(|v| v == "success"))
+                .unwrap()
+                .level,
+            Some(Level::Debug)
+        );
+        assert!(!format!("{records:?}").contains("CANARY"));
+        children.stop().unwrap();
+        let process_count = diagnostics.snapshot(0).processes.len();
+        let error = children
+            .read(identity, powershell("throw 'PRIVATE-UNREACHED-CANARY'"))
+            .err()
+            .unwrap();
+        assert_eq!(error.code, ErrorCode::SessionUnavailable);
+        let snapshot = diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes.len(), process_count);
+        let event = snapshot
+            .events
+            .iter()
+            .rev()
+            .find(|event| event.helper_result.is_some())
+            .unwrap();
+        assert!(event.process.is_none());
+        assert_eq!(
+            event.failure.as_ref().unwrap().code,
+            ErrorCode::SessionUnavailable
+        );
+        assert_eq!(
+            event.helper_result.as_ref().unwrap().command,
+            "config.login"
+        );
+        let records = HostEvents::default().poll(&diagnostics);
+        let record = records
+            .iter()
+            .rev()
+            .find(|record| {
+                record
+                    .context
+                    .get("command")
+                    .is_some_and(|value| value == "config.login")
+            })
+            .unwrap();
+        assert_eq!(record.context["reason_code"], "session_unavailable");
+        assert_eq!(record.context["envelope_decode"], "unavailable");
+        let persisted =
+            std::fs::read_to_string(diagnostics.snapshot(0).paths.unwrap().current).unwrap();
+        assert!(!persisted.contains("CANARY"));
+        std::fs::remove_dir_all(directory).unwrap();
+    }
 
     #[test]
     fn helper_phase_durations_project_as_closed_scalars_without_child_output() {

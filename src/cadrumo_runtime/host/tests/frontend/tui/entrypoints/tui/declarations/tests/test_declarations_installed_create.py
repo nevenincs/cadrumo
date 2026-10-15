@@ -41,6 +41,13 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_work_unit
+from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
+from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
+from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
+from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
+from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
+from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -49,13 +56,6 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.workbench_generation import read_workbench_generation
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
-from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
-from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
-from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
-from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 pytestmark = [

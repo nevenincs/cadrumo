@@ -31,8 +31,6 @@ from typing import Any
 import pytest
 
 from cadrumo.application.operator_surface.contract import get_operator_surface_contract
-from cadrumo_client.contracts.command_ports import CommandRegistrationMetadata
-from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.json_contract import (
     Notice,
@@ -42,9 +40,11 @@ from cadrumo.core.json_contract import (
 )
 from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
 from cadrumo.entrypoints.cli.command_schema import command_registration_projection
+from cadrumo_client.contracts.command_ports import CommandRegistrationMetadata
+from cadrumo_client.contracts.command_program import CommandProgram
+from cadrumo_harness.resources import iter_operator_rules, iter_skill_documents
 
 from ._real_cli_support import command_graph, command_program_path
-from cadrumo_harness.resources import iter_operator_rules, iter_skill_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

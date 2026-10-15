@@ -72,11 +72,12 @@ def _refuse_an_archive_target_the_writer_would_reject(target: Path) -> None:
     where the archive is written. Making it here first means the operator
     learns the exact required suffix before a profile session is asked for.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ....application.user_profile.capsule_archive import (
         ProfileCapsuleArchiveError,
         refuse_unwritable_profile_capsule_archive_target,
     )
-    from ..errors import CliRefusedBoundaryError
 
     try:
         refuse_unwritable_profile_capsule_archive_target(target)

@@ -90,10 +90,7 @@ def _producer_source_paths() -> dict[str, Path]:
     Built by applying the generator's OWN naming rule forward over its
     discovered inventory, so the mapping cannot drift from what it writes.
     """
-    manager = ApiStubManager(
-        src_cadrumo=REPO_ROOT / "src" / API_SOURCE_PACKAGE,
-        docs_api=_DOCS / "api",
-    )
+    manager = ApiStubManager.for_repository(REPO_ROOT, docs_api=_DOCS / "api")
     paths: dict[str, Path] = {}
     for dotted, is_package in manager.discover_modules():
         parts = dotted.split(".")
@@ -136,12 +133,23 @@ def test_changed_cli_source_plans_the_generated_command_reference() -> None:
     assert not plan.api_scaffold_required, "the CLI subtree is documented by the generator, not autodoc"
 
 
+def test_changed_client_owner_source_plans_its_api_stub() -> None:
+    """Changes in sibling first-party packages reach their generated target too."""
+    source = Path("src", "cadrumo_client", "transport", "frontend_client.py")
+    plan = planned_doc_targets(REPO_ROOT, [source])
+
+    assert plan.api_scaffold_required
+    assert not plan.cli_reference_required
+    assert _DOCS / "api" / stub_filename("cadrumo_client.transport.frontend_client") in plan.targets
+
+
 def test_changed_source_the_generator_excludes_plans_nothing() -> None:
     """Paths the stub generator refuses must not plan an API scaffold either."""
     excluded = [
         Path("src", API_SOURCE_PACKAGE, "core", "tests", "test_thing.py"),
         Path("src", API_SOURCE_PACKAGE, "core", "conftest.py"),
         Path("src", API_SOURCE_PACKAGE, "core", "_data", "table.py"),
+        Path("src", "cadrumo_client", "tests", "test_transport.py"),
     ]
     for rel_path in excluded:
         plan = planned_doc_targets(REPO_ROOT, [rel_path])

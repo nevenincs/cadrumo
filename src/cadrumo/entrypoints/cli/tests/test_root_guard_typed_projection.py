@@ -9,6 +9,7 @@ import typer
 from typer.main import get_command
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -24,7 +25,6 @@ from ..common import (
     preserve_requested_cli_leaf,
     project_cli_policy_refusal,
 )
-from ..errors import CliRefusedBoundaryError
 from ..main import cli_app
 from .cli_runner import cadrumo_click_command
 from .error_boundary_scope import suspend_error_boundary
@@ -84,7 +84,7 @@ def test_root_fallback_verdict_projects_the_catalogue_action_and_missing_input(t
     assert projection.precondition_action.action.model_dump(mode="json") == {
         "action_id": "operator.profile.create",
         "target_command_key": "config.profile.create",
-        "cli_path": ["config", "profile", "create"],
+        "cli_path": ["aeat", "config", "profile", "create"],
     }
     assert projection.precondition_action.missing_argument_names == ("profile_name",)
     assert projection.precondition_action.argument_bindings[0].model_dump(mode="json") == {
@@ -101,7 +101,7 @@ def test_root_fallback_verdict_projects_the_catalogue_action_and_missing_input(t
 
 
 def test_explicit_database_verdict_projects_a_closed_operator_decision(tmp_path: Path) -> None:
-    leaf = _resolve_real_leaf("config", "google", "login")
+    leaf = _resolve_real_leaf("app", "ledger", "add")
     decision = inspect_storage_write_policy(
         "profile-bound",
         settings=Settings(
@@ -117,7 +117,7 @@ def test_explicit_database_verdict_projects_a_closed_operator_decision(tmp_path:
     )
 
     assert projection.requested_leaf is not None
-    assert projection.requested_leaf.subject_leaf_key == "config.google.login"
+    assert projection.requested_leaf.subject_leaf_key == "ledger.add"
     assert projection.precondition_action.failed_condition_id == "storage.route.active_bucket"
     assert projection.precondition_action.action is None
     assert projection.precondition_action.argument_bindings == ()
@@ -159,7 +159,19 @@ def test_real_explicit_database_refusal_attaches_the_closed_projection(tmp_path:
         pytest.raises(CliRefusedBoundaryError) as raised,
     ):
         cadrumo_click_command().main(
-            args=["config", "google", "login"],
+            args=[
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                "2026-01-01",
+                "--amount",
+                "1.00",
+                "--direction",
+                "OUTGOING",
+                "--description",
+                "row",
+            ],
             prog_name="aeat",
             standalone_mode=False,
         )
@@ -167,7 +179,7 @@ def test_real_explicit_database_refusal_attaches_the_closed_projection(tmp_path:
     projection = cli_policy_refusal_projection(raised.value)
     assert projection is not None
     assert projection.requested_leaf is not None
-    assert projection.requested_leaf.subject_leaf_key == "config.google.login"
+    assert projection.requested_leaf.subject_leaf_key == "ledger.add"
     assert projection.precondition_action.failed_condition_id == "storage.route.active_bucket"
     assert projection.precondition_action.action is None
     assert projection.precondition_action.no_recovery_outcome == "operator_decision"
@@ -268,7 +280,22 @@ def test_requested_leaf_binding_clears_between_sequential_root_invocations(tmp_p
     """A completed root Context cannot donate its leaf to the next refusal."""
     cases = (
         (("app", "ledger", "list"), "ledger.list"),
-        (("config", "google", "login"), "config.google.login"),
+        (
+            (
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                "2026-01-01",
+                "--amount",
+                "1.00",
+                "--direction",
+                "OUTGOING",
+                "--description",
+                "row",
+            ),
+            "ledger.add",
+        ),
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
         for arguments, expected_leaf in cases:

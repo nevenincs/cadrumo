@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..analysis import generated_tree_state as _generated_tree_state_module
@@ -129,10 +130,12 @@ def test_selected_candidate_record_drift_cannot_borrow_bundled_currentness(tmp_p
         / "export"
         / "0001-record-modelo-111-page-01.toml"
     )
-    original = record.read_text(encoding="utf-8")
-    altered = original.replace("id = 'modelo-111-page-01'", "id = 'modelo-111-page-01-corrupt'", 1)
-    assert altered != original
-    record.write_text(altered, encoding="utf-8")
+    document = load_toml(record)
+    records = document["revisions"]["2019-y-siguientes"]["export_layouts"][0]["records"]
+    selected_record = next(item for item in records if item["id"] == "modelo-111-page-01")
+    assert selected_record["id"] == "modelo-111-page-01"
+    selected_record["id"] = "modelo-111-page-01-corrupt"
+    record.write_text(render_toml(document), encoding="utf-8", newline="\n")
     states, excluded = generated_state_inventory(
         authority, ("111",), registry_root=candidate, source_root=bundled_path()
     )

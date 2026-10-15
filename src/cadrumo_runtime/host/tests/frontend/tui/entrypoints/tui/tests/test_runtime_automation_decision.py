@@ -33,6 +33,14 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect
+from cadrumo.entrypoints.tui.app import CadrumoTuiApp
+from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+from cadrumo.entrypoints.tui.launcher import main
+from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
+from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
+from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.profile_access import AccessRefusal
@@ -42,14 +50,6 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo.entrypoints.tui.app import CadrumoTuiApp
-from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
-from cadrumo.entrypoints.tui.launcher import main
-from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
-from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -171,7 +171,9 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                             submit = screen.query_one("#runtime-login-submit", Button)
                             await _until(
                                 pilot,
-                                lambda: screen._worker is not None and screen._worker.is_finished and not submit.disabled,
+                                lambda: (
+                                    screen._worker is not None and screen._worker.is_finished and not submit.disabled
+                                ),
                             )
                             screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
                             await pilot.pause()

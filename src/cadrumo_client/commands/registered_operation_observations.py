@@ -112,7 +112,7 @@ def _render_operation_notice(event: OperationPublicNoticeEventV1) -> None:
     """Write one localized notice to stderr, keeping the structured result channel pure."""
     message = operation_notice_message(event.notice_code, event.display_code)
     if message is not None:
-        write_stderr(message + "\n")
+        write_stderr(message)
 
 
 def wait_registered_settlement[ReviewT: BaseModel](

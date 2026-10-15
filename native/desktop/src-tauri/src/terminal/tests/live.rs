@@ -971,7 +971,7 @@ mod relocated {
     use std::collections::BTreeMap;
 
     // Reports the storage root this process resolves through both owners.
-    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import configured_storage_root; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_local_storage_root), os.getcwd()]))";
+    const PROBE: &str = "import json, os, sys; from cadrumo.core.config import load_settings; from cadrumo.core.storage_environment import StorageMode, configured_storage_root, storage_mode; assert storage_mode().mode is StorageMode.INSTALLED; open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps([str(configured_storage_root()), str(load_settings().cadrumo_local_storage_root), os.getcwd()]))";
 
     struct Scratch(PathBuf);
     impl Drop for Scratch {
@@ -986,9 +986,9 @@ mod relocated {
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap()
     }
 
-    /// A fresh directory outside any project, so the package resolves in
-    /// installed mode.
-    fn outside_project(label: &str) -> Scratch {
+    /// A fresh directory under the runner's configured temporary root.
+    /// The probe verifies installed mode from the imported package itself.
+    fn relocation_scratch(label: &str) -> Scratch {
         let base = std::env::temp_dir().join(format!(
             "cadrumo-{label}-{}-{}",
             std::process::id(),
@@ -997,10 +997,6 @@ mod relocated {
                 .unwrap()
                 .as_nanos()
         ));
-        assert!(
-            !inside_project(&base),
-            "the temporary directory must lie outside any project for an installed-mode layout"
-        );
         Scratch(base)
     }
 
@@ -1016,11 +1012,6 @@ mod relocated {
 
     fn storage_name(key: &OsString, names: &[String]) -> bool {
         names.contains(&key.to_string_lossy().to_ascii_uppercase())
-    }
-
-    fn inside_project(path: &Path) -> bool {
-        path.ancestors()
-            .any(|ancestor| ancestor.join("pyproject.toml").is_file())
     }
 
     // Hard links keep relocation cheap on one volume; copies cover the rest.
@@ -1094,7 +1085,7 @@ mod relocated {
 
     #[tokio::test]
     async fn every_child_kind_resolves_the_explicit_storage_root_from_any_directory() {
-        let scratch = outside_project("relocated");
+        let scratch = relocation_scratch("relocated");
         let package_root = scratch.0.join("package");
         relocate(&package(), &package_root);
         let explicit = scratch.0.join("storage");
@@ -1248,7 +1239,7 @@ mod relocated {
     async fn the_webview_profile_and_window_state_live_at_the_declared_location() {
         use crate::shell::window_state::{self, Placement};
 
-        let scratch = outside_project("webview");
+        let scratch = relocation_scratch("webview");
         let package_root = scratch.0.join("package");
         relocate(&package(), &package_root);
         let explicit = scratch.0.join("storage");

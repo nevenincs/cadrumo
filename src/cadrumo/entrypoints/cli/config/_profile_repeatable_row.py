@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 
 from ....application.user_profile.profile_operation_contracts import (
@@ -17,7 +18,6 @@ from ....application.user_profile.profile_operation_contracts import (
 from ....application.user_profile.section_rows import validate_profile_repeatable_row_fields
 from ....core.external_constants import OutputLanguage
 from ..common import activate_subcommand_output_language, emit_envelope
-from ..errors import CliRefusedBoundaryError
 from ..state_projection_support import authority_operation
 from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 

@@ -15,10 +15,11 @@ from ..client_probes import _call, _mcp_read, _mcp_refuse_profile, _tui, attend_
 from ..harness import LifecycleHarness, Profile
 from ..mcp_proof_support import owned_stdio
 from ..proof_support import ProcessIdentity
-from ..session_holder import RuntimeSessionHolder
+from ..session_holder import AsyncRuntimeSessionHolder
 
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.native_package,
     pytest.mark.hex_entrypoint,
     pytest.mark.serial,
     pytest.mark.windows_only,
@@ -76,10 +77,10 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
                 harness.cli, "login", "Client A", "--secrets-stdin", secret={"passphrase": first.password}
             )
             await _signed_in_reads(harness, first, "Client A")
-            first_holder = await asyncio.to_thread(
-                RuntimeSessionHolder, harness.runtime_image, profile_id=first.profile_id, environment=environment
+            first_holder = await AsyncRuntimeSessionHolder.start(
+                harness.runtime_image, profile_id=first.profile_id, environment=environment, frontend="cli"
             )
-            holders.push_async_callback(asyncio.to_thread, first_holder.close)
+            holders.push_async_callback(first_holder.close)
             await attend_mcp(first_holder, mcp, harness=harness, invocation=invocations[0])
             await _mcp_read(mcp, first)
             await _mcp_refuse_profile(mcp, second)
@@ -89,7 +90,7 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             await _signed_in_reads(harness, second, "Client B")
             # Closing A's held session retires its attended lease. B requires a
             # separate held session and exact review of the new relay.
-            await asyncio.to_thread(first_holder.close)
+            await first_holder.close()
             await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
             b_reader, b_writer = await b_stack.enter_async_context(
                 owned_stdio(
@@ -103,10 +104,10 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             )
             mcp = await b_stack.enter_async_context(ClientSession(b_reader, b_writer, read_timeout_seconds=90))
             await mcp.initialize()
-            second_holder = await asyncio.to_thread(
-                RuntimeSessionHolder, harness.runtime_image, profile_id=second.profile_id, environment=environment
+            second_holder = await AsyncRuntimeSessionHolder.start(
+                harness.runtime_image, profile_id=second.profile_id, environment=environment, frontend="cli"
             )
-            holders.push_async_callback(asyncio.to_thread, second_holder.close)
+            holders.push_async_callback(second_holder.close)
             await attend_mcp(second_holder, mcp, harness=harness, invocation=b_invocations[0])
             await _mcp_read(mcp, second)
             await _mcp_refuse_profile(mcp, first)
@@ -138,6 +139,15 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             await _mcp_read(key_mcp, first)
             # The agent reads and changes A's own values while no person is signed in to A.
             await mcp_edit_profile(key_mcp, first, path="identity.name", previous=None, value="Lifecycle Agent")
+            # Returning to B starts a new sign-in: its previous attended relay
+            # remains retired until the person reviews it under this sign-in.
+            await _call(mcp, "describe", {"definition_id": "auth.local-read"}, admitted=False)
+            await second_holder.close()
+            second_holder = await AsyncRuntimeSessionHolder.start(
+                harness.runtime_image, profile_id=second.profile_id, environment=environment, frontend="cli"
+            )
+            holders.push_async_callback(second_holder.close)
+            await attend_mcp(second_holder, mcp, harness=harness, invocation=b_invocations[0])
             await _mcp_read(mcp, second)
             await _mcp_refuse_profile(key_mcp, second)
             retained = harness.connect(second.profile_id)
@@ -149,11 +159,11 @@ async def test_packaged_client_authentication_and_profile_scope(harness: Lifecyc
             view = (await asyncio.to_thread(harness.cli, "profile", "view", profile_secret=second.password))["result"]
             assert view["display_name"] == "Client B"
             await asyncio.to_thread(_tui, harness, second, admitted=True)
-            await asyncio.to_thread(second_holder.close)
-            second_holder = await asyncio.to_thread(
-                RuntimeSessionHolder, harness.runtime_image, profile_id=second.profile_id, environment=environment
+            await second_holder.close()
+            second_holder = await AsyncRuntimeSessionHolder.start(
+                harness.runtime_image, profile_id=second.profile_id, environment=environment, frontend="cli"
             )
-            holders.push_async_callback(asyncio.to_thread, second_holder.close)
+            holders.push_async_callback(second_holder.close)
             await attend_mcp(second_holder, mcp, harness=harness, invocation=b_invocations[0])
             await _mcp_read(mcp, second)
             # The key session was lost with the runtime; the launch reference admits it again.

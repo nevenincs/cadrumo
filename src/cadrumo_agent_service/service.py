@@ -17,12 +17,14 @@ from pydantic import SecretStr
 
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.locks_errors import LockAcquisitionError
+from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from .adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from .adapters.agent_programs import (
     AGENT_COMMAND_LINE,
+    AgentProgramRefusalError,
     HostedStoresAside,
     agent_image,
     hosted_aeat,
@@ -47,12 +49,33 @@ from .host.controller import (
 from .host.credential_frame import wipe
 from .host.lane_root import is_marked_lane_root
 from .host.launch_environment import agent_launch_environment
+from .host.launcher_protocol import launcher_refusal_for
 from .host.store_lifecycle import AgentStoreLifecycle
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
 from .providers.persistence.store import SecureProviderSettingsStore
+
+_LOGGER = get_logger(__name__)
+
+
+def service_failure(error: Exception) -> dict[str, Any]:
+    """Keep typed launch refusals and log only bounded operational metadata."""
+    if isinstance(error, AgentHostError):
+        code = launcher_refusal_for(error).value
+        _LOGGER.warning(
+            "agent startup refused reason=%s agent_code=%s",
+            error.reason.value,
+            error.agent_code,
+        )
+    elif isinstance(error, AgentProgramRefusalError):
+        code = error.code.value
+        _LOGGER.warning("agent program unavailable code=%s", code)
+    else:
+        code = "service_failed"
+        _LOGGER.error("agent service failed error_type=%s", type(error).__name__)
+    return {"event": "refused", "code": code}
 
 
 class _GatewayCredentials(AgentCredentialSource):
@@ -226,7 +249,7 @@ class AgentService:
             except AgentHostError as error:
                 if controller.state is AgentHostState.DETACHED:
                     self._controller = None
-                return {"event": "refused", "code": error.reason.value}
+                return service_failure(error)
             event = self._ready_event(ready)
             self._emit(event)
             return event
@@ -234,8 +257,8 @@ class AgentService:
     def _background_start(self) -> None:
         try:
             result = self.start()
-        except Exception:
-            result = {"event": "refused", "code": "service_failed"}
+        except Exception as error:
+            result = service_failure(error)
         if result.get("event") != "agent_ready" and not self._closing.is_set():
             self._emit(result)
 

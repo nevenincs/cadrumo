@@ -8,7 +8,6 @@ from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 from typing import override
-from uuid import uuid4
 
 import pytest
 
@@ -215,7 +214,7 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
 ) -> None:
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
     adapter = admitted_adapter()
-    held = adapter.client
+    assert adapter.client is not None
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
             await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_unavailable")
@@ -250,7 +249,7 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
 
     adapter = admitted_adapter()
-    held = adapter.client
+    assert adapter.client is not None
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
             await _assert_all_advertised_authority_queries_refuse(adapter, "published_authority_invalid")
@@ -284,7 +283,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
 
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
     adapter = admitted_adapter()
-    held = adapter.client
+    assert adapter.client is not None
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
             authority.armed = True

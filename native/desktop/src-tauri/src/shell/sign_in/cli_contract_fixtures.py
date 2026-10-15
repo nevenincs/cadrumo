@@ -86,7 +86,7 @@ def documents() -> dict[str, object]:
                 already_authenticated=False,
             ),
         ).model_dump(mode="json")
-    for automation in (True, False, None):
+    for automation, access_remains in ((True, True), (False, False), (None, None)):
         cases[f"logout-{str(automation).lower()}"] = SchemaEnvelope(
             command="config.logout",
             active_profile="Test profile",
@@ -98,6 +98,7 @@ def documents() -> dict[str, object]:
                 receipt_removed=True,
                 keychain_removed=True,
                 automation_enabled=automation,
+                automation_access_remains=access_remains,
                 automation_revoked=False,
             ),
         ).model_dump(mode="json")

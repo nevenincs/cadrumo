@@ -124,12 +124,13 @@ def normalize_root_active_profile(ctx: typer.Context) -> None:
 
     verb_path = _resolve_invocation_verb_path(ctx)
     if not is_bootstrap_exempt(verb_path):
+        from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
         from ...application.profile_preconditions import (
             FormerProductDetectionScope,
             former_product_state_verdict,
         )
         from ...core.config_state_root import FormerProductStateError
-        from .errors import CliRefusedBoundaryError
 
         try:
             _normalize_active_profile_label_to_uuid(ctx)
@@ -217,11 +218,12 @@ def activate_profile_override(ctx: typer.Context, profile: str) -> None:
     ``--profile`` value may be either the operator display label or the UUID
     bucket id, then pins the override to the resolved UUID.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
     from ...application.workflow.errors import ProfileLabelAmbiguousError
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.config import override_settings
-    from .errors import CliRefusedBoundaryError
 
     requested = profile.strip()
     if not requested:
@@ -253,8 +255,9 @@ def activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
 def unresolved_profile_override_refusal(ctx: typer.Context, *, profile: str, blank: bool) -> Exception:
     """Build the typed refusal for a blank or unknown root ``--profile`` selection."""
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
-    from .errors import CliRefusedBoundaryError
 
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
@@ -290,13 +293,14 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     ambiguous label (more than one live match) raises a clear refusal rather than
     an arbitrary pick.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
     from ...application.workflow.errors import ProfileLabelAmbiguousError
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors.hierarchy import CadrumoError
-    from .errors import CliRefusedBoundaryError
 
     active = resolve_active_bucket_id()
     if active is None:

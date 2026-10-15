@@ -18,12 +18,12 @@ from cadrumo.application.storage_management.errors import StorageReclaimUnconfir
 from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.storage_taxonomy import StorageArea
-from cadrumo.entrypoints.cli.errors import (
+from cadrumo.entrypoints.cli.operation_installation import run_installation_act_if_runtime
+from cadrumo_client.commands.errors import (
     CliRecordedOperationError,
     CliRefusedBoundaryError,
     CliUnexpectedBoundaryError,
 )
-from cadrumo.entrypoints.cli.operation_installation import run_installation_act_if_runtime
 from cadrumo_client.contracts.installation_requests import (
     StorageCheckReply,
     StorageCheckRequest,

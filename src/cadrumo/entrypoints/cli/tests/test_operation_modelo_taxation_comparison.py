@@ -11,6 +11,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.modelo.taxation_comparison import TaxationRecommendation
@@ -23,7 +24,6 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from .. import operation_modelo_taxation_comparison as bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

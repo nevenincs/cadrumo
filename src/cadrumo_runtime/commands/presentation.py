@@ -99,7 +99,6 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
 
 def _runtime_action_target_reconciliation(graph: CommandSpecGraph, command_key: str) -> OperatorSurfaceReconciliation:
     """Reconcile one recovery target from the runtime's actual command graph."""
-    from cadrumo.application.operator_surface.contract import get_operator_surface_contract
     from cadrumo.application.operator_surface.manifest import (
         InputSchemaInventoryRow,
         LiveLeafInventoryRow,
@@ -129,14 +128,12 @@ def _runtime_action_target_reconciliation(graph: CommandSpecGraph, command_key: 
         if not parameter.hidden and parameter.default.kind is DefaultKind.REQUIRED
     )
     family_identity = command_path[:2]
-    mounted_families = tuple(
+    mounted_families = (
         MountedFamilyInventoryRow(
-            root=family.root.value,
-            child=family.child,
-            provenance="OperatorSurfaceContract.command_families",
-        )
-        for family in get_operator_surface_contract().command_families
-        if (family.root.value, family.child) == family_identity
+            root=family_identity[0],
+            child=family_identity[1],
+            provenance="RUNTIME_COMMAND_GRAPH",
+        ),
     )
     profile_bound_write = getattr(spec.policy.write_route, "value", spec.policy.write_route) == "profile-bound"
     return reconcile_operator_surface_inventory(

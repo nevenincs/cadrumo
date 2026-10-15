@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.profile_mutations import ProfileMutationCompletion, ProfileMutationRunError
@@ -16,7 +17,6 @@ from .....application.user_profile.profile_operation_contracts import (
     ProfileMutationOperationProjection,
 )
 from .....core.operations import OperationEffect, OperationTerminalCondition
-from ...errors import CliRefusedBoundaryError
 from .._profile_mutation import execute_profile_mutation
 from .._profile_repeatable_row import _parse_row_key, _parse_values
 

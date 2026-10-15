@@ -9,6 +9,7 @@ import pytest
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 
 from ..analysis import m200_semantic_casilla_candidates as subject
@@ -88,7 +89,8 @@ def test_review_toml_is_deterministic_and_serializes_disposition() -> None:
     rendered = subject.render_m200_casilla_candidates_toml((_candidate(),))
 
     assert rendered == subject.render_m200_casilla_candidates_toml((_candidate(),))
-    assert "disposition = 'segment_qualified_identity'" in rendered
+    parsed = parse_toml(rendered)
+    assert parsed["candidate"][0]["disposition"] == "segment_qualified_identity"
     assert "registry_data_type" not in rendered
     assert "legal_refs" not in rendered
 

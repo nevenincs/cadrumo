@@ -34,7 +34,8 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..workflow_run_text import executed_lines
+from ..lane_marker_inventory import expression_selects
+from ..lane_recipe_commands import _pytest_invocations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -42,14 +43,26 @@ _MARKER: Final = "os_keychain"
 _PACKAGE_ROOT: Final = REPO_ROOT / "src" / "cadrumo"
 
 
-def _lane_paths() -> tuple[Path, ...]:
+def _lane_paths(justfile_text: str | None = None) -> tuple[Path, ...]:
     """Return the path arguments the os-keychain recipe selects."""
-    justfile = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
-    selecting = [line for line in executed_lines(justfile) if f"-m {_MARKER}" in line and "pytest" in line]
+    justfile = justfile_text if justfile_text is not None else (REPO_ROOT / "justfile").read_text(encoding="utf-8")
+    selecting = [
+        lane
+        for lane in _pytest_invocations(justfile, source="justfile", default_paths=())
+        if lane.marker_expression is not None and expression_selects(lane.marker_expression, frozenset({_MARKER}))
+    ]
     assert selecting, "no recipe selects the os_keychain marker; this gate would measure nothing"
-    tokens = list(dict.fromkeys(token for line in selecting for token in line.split() if token.startswith("src/")))
+    tokens = list(dict.fromkeys(path for lane in selecting for path in lane.paths))
     assert tokens, "the os_keychain selectors name no package paths"
     return tuple(REPO_ROOT / token for token in tokens)
+
+
+def test_quoted_keychain_expression_is_selected_without_admitting_its_exclusion() -> None:
+    justfile = (
+        'selected:\n    uv run pytest -m "os_keychain and not native_package" src/selected\n'
+        'portable:\n    uv run pytest -m "unit and not os_keychain" src/excluded\n'
+    )
+    assert _lane_paths(justfile) == (REPO_ROOT / "src/selected",)
 
 
 def _marked_files() -> tuple[Path, ...]:

@@ -9,6 +9,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_deadlines import provider_login_settlement_seconds
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -22,7 +23,6 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from .. import _app_live_notifications_cli as handler
 from .. import operation_notifications_capture as bridge
 from .._app_live_notifications_payloads import NotificationsCaptureResult
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

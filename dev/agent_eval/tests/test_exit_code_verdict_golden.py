@@ -9,13 +9,14 @@ the live operator surface.  No test owns an expected action or a recovery comman
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
+from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -23,7 +24,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
 )
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure
 from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -34,9 +35,12 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo_client.contracts.command_program import CommandProgram
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
+from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
+from .. import _runner as evaluation_runner
 from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from .._models import ExitCodeScenario
 from .._runner import check_exit_code_scenario
@@ -45,24 +49,37 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FILING_YEAR = 2025
 _PERIOD = "1T"
-_PROFILE_ID = "0ac1e000-0000-4000-8000-000000000344"
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_cli_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Exit-code golden-eval test profile",
-    ) as profile:
-        yield profile
+def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
+    with (
+        bind_public_cli_runner(run_cadrumo_cli),
+        runtime_cli_profile(
+            tmp_path=tmp_path,
+            label="Exit-code golden-eval test profile",
+        ) as profile,
+    ):
+        original_invoker = evaluation_runner._invoke_canonical_cli
+
+        def invoke_as_operator(argv: Sequence[str]) -> object:
+            program, path = evaluation_runner._command_program_path(tuple(argv))
+            if program is CommandProgram.AEAT:
+                return invoke_cached_cli(["--format", "json", *path])
+            return original_invoker(argv)
+
+        # The evaluator still chooses and validates every command. Only this
+        # fixture's Tax invocations inherit its real enrolled operator context.
+        with pytest.MonkeyPatch.context() as invocation_context:
+            invocation_context.setattr(evaluation_runner, "_invoke_canonical_cli", invoke_as_operator)
+            yield profile
 
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     seed_test_profile_record(
         create_user_profile_record(
             context=profile_authority_contexts()[0],
-            profile_id=_PROFILE_ID,
+            profile_id=runtime_profile.bucket_id,
             setup_state=ProfileSetupState.COMPLETE,
             facts=(
                 UserProfileFact(path="identity.name", value="Exit Code Operator"),

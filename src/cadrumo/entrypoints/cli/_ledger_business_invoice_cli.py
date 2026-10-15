@@ -21,6 +21,7 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -79,7 +80,6 @@ from .common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
 from .common import bad, emit_envelope
-from .errors import CliRefusedBoundaryError
 from .operation_invoice_catalogue import (
     add_invoice_catalogue,
     read_invoice_catalogue,

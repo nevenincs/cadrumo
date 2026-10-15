@@ -546,6 +546,27 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         schemas = _render_schemas_page(language, schema_registry, group_entries)
     rendered["cli/schemas.rst"] = schemas
     _write_text_if_changed(output_dir / "schemas.rst", schemas)
+
+    # The command graph can lose a group while the generated source tree still
+    # contains its old page. Leaving that page behind makes it an orphan in the
+    # Sphinx toctree and can fail strict documentation builds. Every RST page
+    # beneath ``docs/cli`` is owned by this projection; keep unrelated assets
+    # and directories, and remove only stale RST files within this output root.
+    output_root = output_dir.resolve()
+    expected_pages = set(rendered)
+    for candidate in scan_directory(output_dir, pattern="*.rst", recursive=True):
+        relative = candidate.relative_to(output_dir).as_posix()
+        if f"cli/{relative}" in expected_pages:
+            continue
+        if candidate.is_symlink():
+            raise RuntimeError(f"refusing to prune symlink from generated CLI reference: {candidate}")
+        resolved_candidate = candidate.resolve()
+        try:
+            resolved_candidate.relative_to(output_root)
+        except ValueError as exc:
+            raise RuntimeError(f"refusing to prune CLI page outside generated output root: {candidate}") from exc
+        if candidate.is_file():
+            candidate.unlink()
     return rendered
 
 

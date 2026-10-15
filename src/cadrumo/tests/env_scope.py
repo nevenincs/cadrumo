@@ -151,7 +151,7 @@ def isolated_aeat_env(**overrides: str) -> Generator[None]:
     AEAT authority settings.
 
     Snapshots both the upper-case and lower-case slot for each Settings
-    field name (pydantic-settings consults both), pops them from
+    field name and explicit override (pydantic-settings consults both), pops them from
     ``os.environ``, applies the explicit ``overrides`` mapping, and
     restores the prior values on exit — including on exception.
 
@@ -175,7 +175,7 @@ def isolated_aeat_env(**overrides: str) -> Generator[None]:
         ...     assert settings.cadrumo_auth_provider is AuthProviderKind.CLAVE_MOVIL
     """
     saved: dict[str, str | None] = {}
-    for name in Settings.env_var_names():
+    for name in Settings.env_var_names() | overrides.keys():
         saved[name] = os.environ.pop(name, None)
         saved[name.lower()] = os.environ.pop(name.lower(), None)
     for name, value in overrides.items():

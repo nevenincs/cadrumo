@@ -2,7 +2,7 @@ use super::failure;
 use cadrumo_application::{
     diagnostics::{
         Diagnostics,
-        helper::{HelperKind, HelperOutcome, HelperTiming},
+        helper::{HelperIdentity, HelperKind, HelperOutcome, HelperResult, HelperTiming},
     },
     error::application::{ApplicationError, ErrorCode, Result},
     process::status::{ProcessPhase, ProcessRole},
@@ -12,7 +12,7 @@ use std::{
     process::{Child, Command, ExitStatus, Stdio},
     sync::{
         Arc, Condvar, Mutex, MutexGuard,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
     thread,
     time::{Duration, Instant},
@@ -36,6 +36,8 @@ fn milliseconds(duration: Duration) -> u64 {
 
 struct Measurement {
     process: Option<u64>,
+    stdout_bytes: u64,
+    stderr_bytes: u64,
     started: Instant,
     timing: HelperTiming,
 }
@@ -43,6 +45,8 @@ impl Measurement {
     fn new(kind: HelperKind) -> Self {
         Self {
             process: None,
+            stdout_bytes: 0,
+            stderr_bytes: 0,
             started: Instant::now(),
             timing: HelperTiming {
                 helper_kind: kind,
@@ -193,8 +197,14 @@ impl Children {
         first_error.map_or(Ok(()), Err)
     }
 
-    pub fn run(&self, command: Command, secret: Option<Zeroizing<Vec<u8>>>) -> Result<Output> {
+    pub fn run(
+        &self,
+        identity: HelperIdentity,
+        command: Command,
+        secret: Option<Zeroizing<Vec<u8>>>,
+    ) -> Result<Output> {
         self.execute(
+            identity,
             command,
             secret,
             HelperKind::Mutation,
@@ -206,11 +216,13 @@ impl Children {
     /// Run a mutation under the caller's existing command-specific deadline.
     pub fn run_within(
         &self,
+        identity: HelperIdentity,
         command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
         deadline: Duration,
     ) -> Result<Output> {
         self.execute(
+            identity,
             command,
             secret,
             HelperKind::Mutation,
@@ -220,8 +232,15 @@ impl Children {
     }
 
     /// Read-only commands wait only for another read, independently of mutations.
-    pub fn read(&self, command: Command) -> Result<Output> {
-        self.execute(command, None, HelperKind::Read, SLOT_WAIT, DEADLINE)
+    pub fn read(&self, identity: HelperIdentity, command: Command) -> Result<Output> {
+        self.execute(
+            identity,
+            command,
+            None,
+            HelperKind::Read,
+            SLOT_WAIT,
+            DEADLINE,
+        )
     }
 
     fn admit(&self, kind: HelperKind, slot_wait: Duration) -> Result<MutexGuard<'_, Active>> {
@@ -294,6 +313,7 @@ impl Children {
 
     fn execute(
         &self,
+        identity: HelperIdentity,
         command: Command,
         secret: Option<Zeroizing<Vec<u8>>>,
         kind: HelperKind,
@@ -303,6 +323,25 @@ impl Children {
         let mut measurement = Measurement::new(kind);
         let outcome =
             self.execute_measured(command, secret, kind, slot_wait, deadline, &mut measurement);
+        {
+            let mut fact = match &outcome {
+                Ok(output) => {
+                    HelperResult::inspect(identity, output.success, &output.stdout, &output.stderr)
+                }
+                Err(_) => HelperResult::unavailable(
+                    identity,
+                    measurement.stdout_bytes,
+                    measurement.stderr_bytes,
+                ),
+            };
+            fact.stdout_bytes = measurement.stdout_bytes;
+            fact.stderr_bytes = measurement.stderr_bytes;
+            self.diagnostics.helper_result(
+                measurement.process,
+                fact,
+                outcome.as_ref().err().cloned(),
+            );
+        }
         if let Ok(output) = &outcome {
             measurement.timing.outcome = if output.success {
                 HelperOutcome::Completed
@@ -408,6 +447,8 @@ impl Children {
         };
         // The child's own time, from its start: not the wait for its turn.
         let overflow = AtomicBool::new(false);
+        let stdout_bytes = AtomicU64::new(0);
+        let stderr_bytes = AtomicU64::new(0);
         let outcome: Result<Output> = thread::scope(|scope| {
             let writer = scope.spawn(move || -> Result<()> {
                 if let (Some(mut stdin), Some(secret)) = (stdin, secret) {
@@ -418,8 +459,8 @@ impl Children {
                 }
                 Ok(())
             });
-            let out = scope.spawn(|| read(stdout, &overflow));
-            let err = scope.spawn(|| read(stderr, &overflow));
+            let out = scope.spawn(|| read(stdout, &overflow, &stdout_bytes));
+            let err = scope.spawn(|| read(stderr, &overflow, &stderr_bytes));
             let status = self.wait(lane, &overflow, start, deadline);
             measurement.timing.execution_ms = Some(milliseconds(start.elapsed()));
             // Always terminate/reap before joining pipe threads, including limit,
@@ -452,6 +493,8 @@ impl Children {
                 stderr: stderr?,
             })
         });
+        measurement.stdout_bytes = stdout_bytes.load(Ordering::Relaxed);
+        measurement.stderr_bytes = stderr_bytes.load(Ordering::Relaxed);
         let mut active = lane
             .active
             .lock()
@@ -537,13 +580,18 @@ fn settle(child: &mut Child) -> Result<(ExitStatus, ProcessPhase)> {
     ))
 }
 
-fn read(mut pipe: impl Read, overflow: &AtomicBool) -> Result<Zeroizing<Vec<u8>>> {
+fn read(
+    mut pipe: impl Read,
+    overflow: &AtomicBool,
+    bytes: &AtomicU64,
+) -> Result<Zeroizing<Vec<u8>>> {
     let mut output = Zeroizing::new(Vec::with_capacity(OUTPUT_LIMIT));
     let mut buffer = Zeroizing::new([0u8; 4096]);
     loop {
         let count = pipe
             .read(&mut *buffer)
             .map_err(|cause| failure(ErrorCode::ReadFailed).caused_by(cause))?;
+        bytes.fetch_add(count as u64, Ordering::Relaxed);
         if count == 0 {
             return Ok(output);
         }
@@ -558,6 +606,10 @@ fn read(mut pipe: impl Read, overflow: &AtomicBool) -> Result<Zeroizing<Vec<u8>>
 #[cfg(test)]
 mod tests {
     use super::*;
+    pub(super) const TEST_IDENTITY: HelperIdentity = HelperIdentity {
+        command: "config.login",
+        executable: cadrumo_application::diagnostics::helper::HelperExecutable::Cli,
+    };
 
     #[test]
     fn timing_milliseconds_saturate_and_early_phase_errors_still_record_elapsed() {
@@ -577,13 +629,19 @@ mod tests {
     fn bounded_reader_refuses_output_above_the_limit() {
         let overflow = AtomicBool::new(false);
         assert_eq!(
-            read(&vec![0; OUTPUT_LIMIT][..], &overflow).unwrap().len(),
+            read(&vec![0; OUTPUT_LIMIT][..], &overflow, &AtomicU64::new(0))
+                .unwrap()
+                .len(),
             OUTPUT_LIMIT
         );
         assert_eq!(
-            read(&vec![0; OUTPUT_LIMIT + 1][..], &overflow)
-                .unwrap_err()
-                .code,
+            read(
+                &vec![0; OUTPUT_LIMIT + 1][..],
+                &overflow,
+                &AtomicU64::new(0)
+            )
+            .unwrap_err()
+            .code,
             ErrorCode::OutputLimit
         );
         assert!(overflow.load(Ordering::Acquire));
@@ -611,6 +669,7 @@ mod tests {
         let children = Children::default();
         let output = children
             .run(
+                TEST_IDENTITY,
                 powershell("$value=[Console]::In.ReadToEnd(); [Console]::Out.Write($value)"),
                 Some(Zeroizing::new(b"secret-channel-probe".to_vec())),
             )
@@ -652,7 +711,9 @@ mod tests {
             "error": {"code": "REFUSED_CLI", "context": {"reason": "THROTTLED", "seconds": "9"}}
         });
         let script = format!("[Console]::Error.WriteLine('{envelope}'); exit 2");
-        let output = children.run(powershell(&script), None).unwrap();
+        let output = children
+            .run(TEST_IDENTITY, powershell(&script), None)
+            .unwrap();
         assert!(!output.success);
         let wire::SignInResult::Refused { refusal } =
             wire::login(wire::decode("login", &output).unwrap()).unwrap()
@@ -690,7 +751,7 @@ mod tests {
     fn status_reads_independently_and_duplicate_mutations_never_replay_a_password() {
         let children = Children::default();
         thread::scope(|scope| {
-            let mutation = scope.spawn(|| children.run(
+            let mutation = scope.spawn(|| children.run(TEST_IDENTITY,
                 powershell("$value=[Console]::In.ReadToEnd(); Start-Sleep -Milliseconds 600; [Console]::Out.Write($value)"),
                 Some(Zeroizing::new(b"one-password".to_vec())),
             ));
@@ -699,11 +760,13 @@ mod tests {
                 assert!(Instant::now() < deadline);
                 thread::sleep(Duration::from_millis(10));
             }
-            let status =
-                scope.spawn(|| children.read(powershell("[Console]::Out.Write('status')")));
+            let status = scope.spawn(|| {
+                children.read(TEST_IDENTITY, powershell("[Console]::Out.Write('status')"))
+            });
             assert_eq!(
                 children
                     .run(
+                        TEST_IDENTITY,
                         powershell("exit 0"),
                         Some(Zeroizing::new(b"duplicate".to_vec()))
                     )
@@ -724,7 +787,8 @@ mod tests {
     fn close_reaps_a_real_blocked_child_and_fences_new_commands() {
         let children = Children::default();
         thread::scope(|scope| {
-            let running = scope.spawn(|| children.run(powershell("Start-Sleep -Seconds 60"), None));
+            let running = scope
+                .spawn(|| children.run(TEST_IDENTITY, powershell("Start-Sleep -Seconds 60"), None));
             let deadline = Instant::now() + Duration::from_secs(5);
             while children.mutation.active.lock().unwrap().child.is_none() {
                 assert!(Instant::now() < deadline);
@@ -732,7 +796,7 @@ mod tests {
             }
             let start = Instant::now();
             children.stop().unwrap();
-            let stopped_read = children.read(powershell("exit 0"));
+            let stopped_read = children.read(TEST_IDENTITY, powershell("exit 0"));
             assert!(running.join().unwrap().is_err());
             assert_eq!(
                 stopped_read.err().unwrap().code,
@@ -741,7 +805,11 @@ mod tests {
             assert!(start.elapsed() < Duration::from_secs(5));
         });
         assert!(children.mutation.active.lock().unwrap().child.is_none());
-        assert!(children.run(powershell("exit 0"), None).is_err());
+        assert!(
+            children
+                .run(TEST_IDENTITY, powershell("exit 0"), None)
+                .is_err()
+        );
         let snapshot = children.diagnostics.snapshot(0);
         assert_eq!(snapshot.processes[0].phase, ProcessPhase::Terminated);
         assert!(snapshot.output.is_empty());
@@ -754,6 +822,7 @@ mod tests {
         // Longer than the one it is given: stopped, reaped, and said so.
         let start = Instant::now();
         let late = children.run_within(
+            TEST_IDENTITY,
             powershell("Start-Sleep -Seconds 60"),
             None,
             Duration::from_millis(400),
@@ -779,6 +848,7 @@ mod tests {
         // Within the one it is given: it runs to its end.
         let output = children
             .run_within(
+                TEST_IDENTITY,
                 powershell("Start-Sleep -Milliseconds 900; [Console]::Out.Write('made')"),
                 None,
                 Duration::from_secs(30),
@@ -793,9 +863,10 @@ mod tests {
         let children = Children::default();
         thread::scope(|scope| {
             let slow = scope.spawn(|| {
-                children.read(powershell(
-                    "Start-Sleep -Seconds 4; [Console]::Out.Write('made')",
-                ))
+                children.read(
+                    TEST_IDENTITY,
+                    powershell("Start-Sleep -Seconds 4; [Console]::Out.Write('made')"),
+                )
             });
             let seen = Instant::now() + Duration::from_secs(5);
             while children.read.active.lock().unwrap().child.is_none() {
@@ -804,6 +875,7 @@ mod tests {
             }
             // Its deadline is shorter than the wait for its turn.
             let read = children.execute(
+                TEST_IDENTITY,
                 powershell("[Console]::Out.Write('status')"),
                 None,
                 HelperKind::Read,
@@ -815,13 +887,15 @@ mod tests {
         });
         // And it does not wait for its turn beyond the bound it was given.
         thread::scope(|scope| {
-            let slow = scope.spawn(|| children.read(powershell("Start-Sleep -Seconds 3")));
+            let slow =
+                scope.spawn(|| children.read(TEST_IDENTITY, powershell("Start-Sleep -Seconds 3")));
             let seen = Instant::now() + Duration::from_secs(5);
             while children.read.active.lock().unwrap().child.is_none() {
                 assert!(Instant::now() < seen);
                 thread::sleep(Duration::from_millis(10));
             }
             let read = children.execute(
+                TEST_IDENTITY,
                 powershell("[Console]::Out.Write('status')"),
                 None,
                 HelperKind::Read,
@@ -839,6 +913,7 @@ mod tests {
     fn real_flood_is_bounded_and_the_child_is_reaped() {
         let children = Children::default();
         let result = children.run(
+            TEST_IDENTITY,
             powershell("while ($true) { [Console]::Out.Write(('x' * 8192)) }"),
             None,
         );

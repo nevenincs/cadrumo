@@ -364,11 +364,18 @@ def test_only_code_quality_primitives_are_enrolled() -> None:
         "-m",
         "dev.quality.import_gate",
     )
-    assert commands["check-dependency-declarations"][:3] == (
-        "deptry",
+    dependency_command = commands["check-dependency-declarations"]
+    assert dependency_command[0] == "deptry"
+    roots = dependency_command[1 : dependency_command.index("--known-first-party")]
+    assert set(roots) == {
         "src/cadrumo",
         "src/cadrumo_harness",
-    )
+        "src/cadrumo_agent_service",
+        "src/cadrumo_client",
+        "src/cadrumo_runtime",
+        "dev/registry",
+    }
+    assert len(roots) == len(set(roots))
     assert commands["check-persistence-write-paths"] == (
         sys.executable,
         "-m",

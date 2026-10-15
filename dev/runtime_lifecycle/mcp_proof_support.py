@@ -26,7 +26,7 @@ from pydantic import TypeAdapter
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from dev.runtime_lifecycle.caller_owned_root import AcceptanceError, Programs, Receipt, require
-from dev.runtime_lifecycle.session_holder import RuntimeSessionHolder
+from dev.runtime_lifecycle.session_holder import AsyncRuntimeSessionHolder
 
 from .proof_support import ProcessIdentity, verified_relay
 
@@ -156,14 +156,14 @@ async def owned_stdio(
 
 
 async def ask_and_decide(
-    holder: RuntimeSessionHolder, session: McpSession, *, approve: bool, receipt: Receipt, step: str
+    holder: AsyncRuntimeSessionHolder, session: McpSession, *, approve: bool, receipt: Receipt, step: str
 ) -> tuple[bool, dict[str, Any]]:
     """Approve one verified relay's pending ask through correlated runtime commands."""
     call = asyncio.create_task(session.call("describe", {"definition_id": "user-profile.view"}))
     deadline = time.monotonic() + _CALL_SECONDS
     try:
         while True:
-            inventory = await asyncio.to_thread(holder.command, "attendance_inventory")
+            inventory = await holder.command("attendance_inventory")
             require(inventory.get("kind") == "attendance_inventory", "runtime returned no attendance inventory")
             candidates = inventory.get("candidates")
             if not isinstance(candidates, list):
@@ -179,8 +179,8 @@ async def ask_and_decide(
             if owned:
                 ask = owned[0]
                 require(isinstance(ask.get("attendance_id"), str), "runtime candidate omitted its ask identity")
-                decision = await asyncio.to_thread(
-                    holder.command, "attendance_decision", attendance_id=ask["attendance_id"], approve=approve
+                decision = await holder.command(
+                    "attendance_decision", attendance_id=ask["attendance_id"], approve=approve
                 )
                 require(
                     decision.get("kind") == "attendance_decided" and decision.get("approved") is approve,

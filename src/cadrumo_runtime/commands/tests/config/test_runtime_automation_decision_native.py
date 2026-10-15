@@ -32,6 +32,7 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLockState,
     OsLoginContext,
 )
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
@@ -79,9 +80,7 @@ def _requester(
         deadline=time.monotonic() + 3,
     )
     prepared = connection.enrollment_prepare(
-        EnrollmentPrepare(
-            request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
-        ),
+        EnrollmentPrepare(request_id=uuid4(), profile_id=profile_id, frontend=OperationFrontendProjection.TUI),
         deadline=time.monotonic() + 5,
     )
     assert isinstance(prepared, EnrollmentPrepared), prepared
@@ -169,7 +168,9 @@ def test_installed_cli_inspect_approve_and_decline_preserve_two_proof_channels(t
                 assert server.ready.wait(3)
                 untrusted = VerifiedConnection(
                     endpoint.connect(timeout=3),
-                    expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
+                    expected=ClientHello(
+                        product_version=version("cadrumo"), storage_identity=endpoint.storage_identity
+                    ),
                     deadline=time.monotonic() + 3,
                 )
                 try:
@@ -183,8 +184,13 @@ def test_installed_cli_inspect_approve_and_decline_preserve_two_proof_channels(t
                     )
                     assert isinstance(refused, AccessRefusal), refused
                     assert refused.code is AccessDenialCode.PERSON_ACT_REQUIRED
-                    assert store.enrollment_state().requests == ()
-                    assert store.snapshot().grants == ()
+                    untouched = store.enrollment_state()
+                    assert untouched.revision == 0
+                    assert untouched.requests == ()
+                    assert untouched.grants == ()
+                    with pytest.raises(AutomationCustodyError) as missing:
+                        store.snapshot()
+                    assert missing.value.reason is AutomationCustodyCode.MISSING
                     assert client_native.items == {}
                     assert server_native.items == {}
                 finally:

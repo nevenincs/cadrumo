@@ -14,6 +14,7 @@ use crate::environment::Launch;
 use cadrumo_application::{
     binary::{self, BinaryExpectation},
     child::ChildConfiguration,
+    diagnostics::helper::{HelperExecutable, HelperIdentity},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     package::PackageManifest,
     value::RelativePath,
@@ -52,10 +53,12 @@ struct Call {
     reads: bool,
     runtime: bool,
     slow: bool,
+    command: &'static str,
 }
 const STATUS: Call = Call {
     words: &["sign-in-status"],
     leaf: "sign-in-status",
+    command: "config.sign-in-status",
     reads: true,
     runtime: true,
     slow: false,
@@ -63,6 +66,7 @@ const STATUS: Call = Call {
 const LOGIN: Call = Call {
     words: &["login"],
     leaf: "login",
+    command: "config.login",
     reads: false,
     runtime: false,
     slow: false,
@@ -70,6 +74,7 @@ const LOGIN: Call = Call {
 const LOGOUT: Call = Call {
     words: &["logout"],
     leaf: "logout",
+    command: "config.logout",
     reads: false,
     runtime: false,
     slow: false,
@@ -77,6 +82,7 @@ const LOGOUT: Call = Call {
 const LIST: Call = Call {
     words: &["profile", "list"],
     leaf: "profile.list",
+    command: "config.profile.list",
     reads: true,
     runtime: false,
     slow: false,
@@ -84,6 +90,7 @@ const LIST: Call = Call {
 const CREATE: Call = Call {
     words: &["profile", "create", "--quiet"],
     leaf: "profile.create",
+    command: "config.profile.create",
     reads: false,
     runtime: false,
     slow: true,
@@ -203,13 +210,21 @@ impl SignIn {
         };
         let mut command = image.as_ref().map_err(Clone::clone)?.command();
         command.args(arguments(call, label, secret.is_some()));
+        let identity = HelperIdentity {
+            command: call.command,
+            executable: if call.runtime {
+                HelperExecutable::Runtime
+            } else {
+                HelperExecutable::Cli
+            },
+        };
         if call.reads {
-            self.children.read(command)
+            self.children.read(identity, command)
         } else if call.slow {
             self.children
-                .run_within(command, secret, process::CREATION_DEADLINE)
+                .run_within(identity, command, secret, process::CREATION_DEADLINE)
         } else {
-            self.children.run(command, secret)
+            self.children.run(identity, command, secret)
         }
     }
 }

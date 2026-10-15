@@ -78,6 +78,9 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
+from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
+from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileLockResult,
     ConfigProfileSessionsResult,
@@ -95,9 +98,6 @@ from cadrumo_harness.mcp.tests.session import connected_server_and_client_sessio
 from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 pytestmark = [

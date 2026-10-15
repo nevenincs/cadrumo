@@ -11,7 +11,7 @@ from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import ExitStack, contextmanager, suppress
 from pathlib import Path
 from textwrap import dedent
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 import pytest
@@ -123,12 +123,16 @@ _HARNESS = (
         asserted_closed = {
             descriptor: descriptor_identity(descriptor) for descriptor in payload.get("assert_closed_descriptors", [])
         }
-        sys.argv = ["cadrumo", *sys.argv[2:]]
+        sys.argv = [payload.get("program", "aeat"), *sys.argv[2:]]
         defer_logging_configuration()
         try:
-            from cadrumo.entrypoints.cli.main import main
             try:
-                main()
+                if payload.get("program", "aeat") == "cadrumo-runtime":
+                    from cadrumo_runtime.commands.main import main
+                    exit_code = main()
+                else:
+                    from cadrumo.entrypoints.cli.main import main
+                    main()
             except SystemExit as exc:
                 exit_code = int(exc.code or 0)
         finally:
@@ -199,7 +203,7 @@ _WINDOWS_HANDLE_HARNESS = (
     composition = ExitStack()
     composition.enter_context(composed_profile_persistence_ports())
     argv, opened_descriptors = prepare_windows_secret_argv(
-        program="aeat",
+        program=payload.get("program", "aeat"),
         profile_handle=payload.get("profile_handle"),
         secrets_handle=payload.get("secrets_handle"),
         recovery_handoff_handle=payload.get("recovery_handoff_handle"),
@@ -224,9 +228,13 @@ _WINDOWS_HANDLE_HARNESS = (
         sys.argv[:] = argv
         defer_logging_configuration()
         try:
-            from cadrumo.entrypoints.cli.main import main
             try:
-                main()
+                if payload.get("program", "aeat") == "cadrumo-runtime":
+                    from cadrumo_runtime.commands.main import main
+                    exit_code = main()
+                else:
+                    from cadrumo.entrypoints.cli.main import main
+                    main()
             except SystemExit as exc:
                 exit_code = int(exc.code or 0)
         finally:
@@ -376,6 +384,7 @@ def _run(
     storage_root: Path,
     args: Sequence[str],
     *,
+    program: Literal["aeat", "cadrumo-runtime"] = "aeat",
     stdin: str | None = None,
     inherited_payloads: Sequence[str | bytes] = (),
     assert_closed_index: int | None = None,
@@ -394,6 +403,7 @@ def _run(
         return _run_windows_handles(
             storage_root,
             args,
+            program=program,
             stdin=stdin,
             inherited_payloads=inherited_payloads,
             hostile_env=hostile_env,
@@ -408,6 +418,7 @@ def _run(
         rendered_args = _render_fd_args(args, readers)
         payload = {
             "settings": _settings(storage_root, output_language=output_language),
+            "program": program,
             "assert_closed_descriptors": [
                 *(() if assert_closed_index is None else (readers[assert_closed_index],)),
                 *(readers[index] for index in assert_closed_indices),
@@ -447,6 +458,7 @@ def _run_windows_handles(
     storage_root: Path,
     args: Sequence[str],
     *,
+    program: Literal["aeat", "cadrumo-runtime"],
     stdin: str | None,
     inherited_payloads: Sequence[str | bytes],
     hostile_env: dict[str, str] | None,
@@ -465,6 +477,7 @@ def _run_windows_handles(
         startup = _windows_startup(handles)
         payload = {
             "settings": _settings(storage_root, output_language=output_language),
+            "program": program,
             "profile_handle": profile_handle,
             "secrets_handle": secrets_handle,
             "preauthenticate_label": preauthenticate_label,
@@ -607,6 +620,7 @@ def _register_certificate_source(storage_root: Path, *, name: str) -> None:
             str(certificate_path),
         ],
         stdin=json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),
+        program="cadrumo-runtime",
     )
     assert result.returncode == 0, _combined(result)
 

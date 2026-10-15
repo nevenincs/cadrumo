@@ -17,8 +17,9 @@ from dataclasses import dataclass
 
 import pytest
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from .._modelo_discovery_cli import guard_ceded_autonomic_modelo
-from ..errors import CliRefusedBoundaryError
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

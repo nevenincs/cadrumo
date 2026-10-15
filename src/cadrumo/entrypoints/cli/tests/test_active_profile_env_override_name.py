@@ -26,10 +26,10 @@ __all__ = ["_isolated_backend"]
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.custody.tests.support import forge_colliding_capsule_label
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 from ....core.config import override_settings
 from ..common import cli_policy_refusal_projection
-from ..errors import CliRefusedBoundaryError
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
 from .error_boundary_scope import suspend_error_boundary
 

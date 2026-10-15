@@ -88,17 +88,8 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
     assert {node.spec.result_schema.identity for node in adopters} == {
         "config.login",
         "config.logout",
-        "config.passphrase.change",
-        "config.passphrase.reset",
         "config.profile.create",
-        "config.profile.recovery.enable",
-        "config.profile.recovery.disable",
         "config.profile.archive.import",
-        "config.profile.resume",
-        "config.profile.automation.approve",
-        "config.profile.automation.create",
-        "config.profile.automation.change",
-        "config.auth.certificate.secret.set",
         "ledger.account.add",
         "ledger.account.update",
         "modelo.m360.declare",
@@ -160,7 +151,7 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     postures = {
         node.spec.result_schema.identity: profile_authentication_posture(node) for node in COMMAND_GRAPH.nodes()
     }
-    assert postures["config.passphrase.change"] is ProfileAuthenticationPosture.SELF_AUTHENTICATING
+    assert "config.passphrase.change" not in postures
     assert postures["config.login"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["config.profile.create"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["config.profile.archive.import"] is ProfileAuthenticationPosture.NOT_APPLICABLE

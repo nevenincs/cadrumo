@@ -60,7 +60,7 @@ _logger = get_logger(__name__)
 class WorkflowEnvelopeReasonClass(StrEnum):
     """Classification of the workflow-state envelope's readability.
 
-    Carried in :attr:`~._events.WorkflowStateResetFingerprint.reason_class`
+    Carried in ``reason_class`` on :class:`WorkflowStateResetFingerprint`
     to distinguish a healthy envelope (``READABLE``), a row that cannot
     be decrypted (``UNREADABLE``), and an absent row (``ABSENT``).
     """

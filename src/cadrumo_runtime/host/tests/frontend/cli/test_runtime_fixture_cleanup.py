@@ -29,7 +29,6 @@ from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeF
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 
 from . import native_api_cli_support
-from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.hex_entrypoint]
 
@@ -435,8 +434,8 @@ def _api_context(
         )
 
     monkeypatch.setattr(native_api_cli_support, "owner_id", lambda: "synthetic-owner")
-    monkeypatch.setattr(native_api_cli_support, "WindowsRuntimeEndpoint", endpoint)
-    monkeypatch.setattr(native_api_cli_support, "PosixRuntimeEndpoint", endpoint)
+    monkeypatch.setattr(native_api_cli_support, "WindowsEndpoint", endpoint)
+    monkeypatch.setattr(native_api_cli_support, "PosixEndpoint", endpoint)
     monkeypatch.setattr(native_api_cli_support, "RetainedRuntimeTransportServer", ControlledServer)
     monkeypatch.setattr(native_api_cli_support, "NativeRuntimeFixtureOwner", ShortOwner)
     native = MemoryNativePort()

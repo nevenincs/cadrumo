@@ -24,10 +24,12 @@ MANIFEST = "data/linux-desktop-runtime.json"
 # Comments/line endings do not change dependency semantics. Refresh only together
 # with resolved feature/provider evidence; imported APIs still require artifact proof.
 DEPENDENCY_INPUTS = {
-    # Windows-only manager enrollment and direct ureq use with no extra features
-    # preserve the reviewed GTK/WebKit crates and native provider envelope.
+    # The desktop now depends directly on the local platform crate for Linux. That
+    # crate has no default features or Linux-target native dependencies; WebView2
+    # remains enabled only by the Windows-target dependency. Direct ureq use also
+    # adds no features, preserving the reviewed GTK/WebKit provider envelope.
     "native/desktop/src-tauri/Cargo.lock": "01932c758e2ad80cedf79b8401077054564aabc7fac3888f98c70c89ca9f0d2c",
-    "native/desktop/src-tauri/Cargo.toml": "8f8474d67268da7b0f253da78a407f0eb11571bd362e7135d9ff21d82453e76d",
+    "native/desktop/src-tauri/Cargo.toml": "ad78a4c00a3f6415e6d92e1ab12e98253f13d84b2fd7623a6c9ea8e21184876e",
     "native/application/Cargo.toml": "22705f29eda1d68f6c0adfba39665f5112cba9c0971135aa1b4b8d389d645a29",
     "native/platform/Cargo.toml": "34225e76a1da73fbb4dcf6654896d5ae85beebf12200cb5b72d0eea5ffa9675d",
 }

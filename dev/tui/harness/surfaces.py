@@ -71,11 +71,11 @@ def _login() -> App[Any]:
     from cadrumo.application.operations.registry import OperationFrontendProjection
     from cadrumo.application.user_profile.login_interaction import preselected_profile_login_id, profile_login_choices
     from cadrumo.core.async_cleanup import close_async_resources
-    from cadrumo_client.transport.frontend_client import FrontendClient
-    from cadrumo_client.transport.installed_client import open_installed_client
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
     from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginHandoff
+    from cadrumo_client.transport.frontend_client import FrontendClient
+    from cadrumo_client.transport.installed_client import open_installed_client
 
     async def open_client(profile_id: UUID) -> FrontendClient:
         return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)

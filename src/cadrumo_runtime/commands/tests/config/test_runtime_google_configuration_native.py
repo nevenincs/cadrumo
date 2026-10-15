@@ -43,6 +43,7 @@ from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.tests.cli_fixture_ports import CliInvocation
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.contracts.operation_access import (
     OperationObserved,
@@ -72,10 +73,10 @@ pytestmark = [
 ]
 
 
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
+def _invoke(profile: NativeCliProfileFixture, *command: str, invoke_cli: CliInvocation = invoke_runtime_cli) -> Result:
     assert profile.label is not None
     close_active_bucket_session()
-    result = invoke_runtime_cli(
+    result = invoke_cli(
         (
             "--language",
             "en",
@@ -98,6 +99,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
+    run_cadrumo_cli: CliInvocation,
 ) -> None:
     """Retain complete local state through real CLI leaves; no leaf accepts a client from the operator."""
     refresh_value = "native-refresh-" + uuid4().hex
@@ -173,8 +175,8 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         assert profile.label is not None
         owner_profile = UUID(resolve_login_target(profile.label).bucket_id)
 
-        def invoke(*command: str) -> Result:
-            reply = _invoke(profile, *command)
+        def invoke(*command: str, invoke_cli: CliInvocation = invoke_runtime_cli) -> Result:
+            reply = _invoke(profile, *command, invoke_cli=invoke_cli)
             assert refresh_value not in reply.output
             compact = tuple(
                 dict.fromkeys(
@@ -194,12 +196,12 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         removed = _invoke(profile, "register", "--client-json", str(tmp_path / "client.json"))
         assert removed.exit_code == 2, removed.output
         assert not any(definition.endswith(".register") for definition in definitions.values())
-        assert unwrap_cli_result(invoke("folder", "view"))["configured"] is False
+        assert unwrap_cli_result(invoke("folder", "view", invoke_cli=run_cadrumo_cli))["configured"] is False
         # No command accepts a Drive folder from the operator.
         folder_id = "synthetic-native-root-folder"
-        removed_folder_set = _invoke(profile, "folder", "set", folder_id)
+        removed_folder_set = _invoke(profile, "folder", "set", folder_id, invoke_cli=run_cadrumo_cli)
         assert removed_folder_set.exit_code == 2, removed_folder_set.output
-        assert unwrap_cli_result(invoke("folder", "view"))["configured"] is False
+        assert unwrap_cli_result(invoke("folder", "view", invoke_cli=run_cadrumo_cli))["configured"] is False
 
         close_active_bucket_session()
         authenticate_profile_for_invocation(
@@ -234,7 +236,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
             )
         finally:
             close_active_bucket_session()
-        assert unwrap_cli_result(invoke("folder", "view"))["root_folder_id"] == folder_id
+        assert unwrap_cli_result(invoke("folder", "view", invoke_cli=run_cadrumo_cli))["root_folder_id"] == folder_id
         linked = unwrap_cli_result(invoke("status"))
         assert linked["session_present"] is True
         definition, effect, outcome = completions[-1]

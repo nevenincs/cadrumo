@@ -13,6 +13,7 @@ from queue import Empty, Queue
 from threading import Event, Thread
 from uuid import UUID, uuid4
 
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
@@ -38,8 +39,13 @@ def _emit_refusal(code: str, request_id: UUID | None = None) -> None:
     _emit(document)
 
 
-async def _hold(profile_id: UUID, *, password_stdin: bool) -> int:
-    client = await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.DESKTOP)
+async def _hold(
+    profile_id: UUID,
+    *,
+    password_stdin: bool,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.DESKTOP,
+) -> int:
+    client = await open_installed_client(profile_id=profile_id, frontend=frontend)
     try:
         if password_stdin:
             header = sys.stdin.buffer.read(4)
@@ -168,9 +174,18 @@ def main(arguments: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="cadrumo-runtime session hold", allow_abbrev=False)
     parser.add_argument("--profile-id", type=UUID, required=True)
     parser.add_argument("--password-stdin", action="store_true")
+    parser.add_argument(
+        "--frontend",
+        type=OperationFrontendProjection,
+        choices=(OperationFrontendProjection.DESKTOP, OperationFrontendProjection.CLI),
+        default=OperationFrontendProjection.DESKTOP,
+    )
     options = parser.parse_args(arguments)
     try:
-        return asyncio.run(_hold(options.profile_id, password_stdin=options.password_stdin))
+        with composed_profile_persistence_ports():
+            return asyncio.run(
+                _hold(options.profile_id, password_stdin=options.password_stdin, frontend=options.frontend)
+            )
     except Exception:
         _emit({"kind": "session_refused", "request_id": str(uuid4()), "code": "unavailable"})
         return 1

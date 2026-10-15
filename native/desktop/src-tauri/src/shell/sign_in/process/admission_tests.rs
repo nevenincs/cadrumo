@@ -1,3 +1,4 @@
+use super::tests::TEST_IDENTITY;
 use super::{tests::powershell, *};
 use std::{
     fs,
@@ -105,12 +106,13 @@ fn a_mutation_completes_while_a_read_is_held_without_replaying_its_password() {
     let children = Children::default();
     let barrier = BarrierChild::new();
     thread::scope(|scope| {
-        let reading = scope.spawn(|| children.read(barrier.command()));
+        let reading = scope.spawn(|| children.read(TEST_IDENTITY, barrier.command()));
         barrier.wait_ready();
         let (send, receive) = mpsc::channel();
         let shared = &children;
         scope.spawn(move || {
             send.send(shared.run(
+                TEST_IDENTITY,
                 powershell("$value=[Console]::In.ReadToEnd(); [Console]::Out.Write($value)"),
                 Some(Zeroizing::new(b"independent-password-once".to_vec())),
             ))
@@ -166,18 +168,20 @@ fn a_read_completes_while_creation_is_held_and_duplicate_mutations_are_refused()
     let children = Children::default();
     let barrier = BarrierChild::new();
     thread::scope(|scope| {
-        let mutation =
-            scope.spawn(|| children.run_within(barrier.command(), None, CREATION_DEADLINE));
+        let mutation = scope.spawn(|| {
+            children.run_within(TEST_IDENTITY, barrier.command(), None, CREATION_DEADLINE)
+        });
         barrier.wait_ready();
         let (send, receive) = mpsc::channel();
         let shared = &children;
         let read_barrier = &barrier;
         scope.spawn(move || {
-            send.send(shared.read(read_barrier.record("independent-status")))
+            send.send(shared.read(TEST_IDENTITY, read_barrier.record("independent-status")))
                 .unwrap()
         });
         let completed_before_release = receive.recv_timeout(Duration::from_secs(10));
         let refused = children.run(
+            TEST_IDENTITY,
             barrier.record("duplicate-must-not-run"),
             Some(Zeroizing::new(b"duplicate-private-password".to_vec())),
         );
@@ -220,13 +224,19 @@ fn at_most_two_children_and_eight_pending_reads_are_owned_and_close_wakes_every_
         .unwrap();
     let children = Children::new(diagnostics.clone());
     thread::scope(|scope| {
-        let reading = scope.spawn(|| children.read(read_barrier.command()));
+        let reading = scope.spawn(|| children.read(TEST_IDENTITY, read_barrier.command()));
         read_barrier.wait_ready();
-        let mutation = scope.spawn(|| children.run(mutation_barrier.command(), None));
+        let mutation =
+            scope.spawn(|| children.run(TEST_IDENTITY, mutation_barrier.command(), None));
         mutation_barrier.wait_ready();
         let readers: Vec<_> = (0..PENDING_READERS)
             .map(|_| {
-                scope.spawn(|| children.read(read_barrier.record("closed-reader-must-not-run")))
+                scope.spawn(|| {
+                    children.read(
+                        TEST_IDENTITY,
+                        read_barrier.record("closed-reader-must-not-run"),
+                    )
+                })
             })
             .collect();
         wait_state(&children, HelperKind::Read, |active| {
@@ -235,12 +245,13 @@ fn at_most_two_children_and_eight_pending_reads_are_owned_and_close_wakes_every_
         let mut refused = Command::new(read_barrier.directory.join("private-path-must-not-spawn"));
         refused.arg("private-profile-must-not-log");
         assert_eq!(
-            children.read(refused).err().unwrap().code,
+            children.read(TEST_IDENTITY, refused).err().unwrap().code,
             ErrorCode::CliBusy
         );
         assert_eq!(
             children
                 .run(
+                    TEST_IDENTITY,
                     mutation_barrier.record("duplicate-must-not-run"),
                     Some(Zeroizing::new(b"private-duplicate-password".to_vec()))
                 )
@@ -310,11 +321,19 @@ fn at_most_two_children_and_eight_pending_reads_are_owned_and_close_wakes_every_
             && !log.contains("private-duplicate-password")
     );
     assert_eq!(
-        children.read(powershell("exit 0")).err().unwrap().code,
+        children
+            .read(TEST_IDENTITY, powershell("exit 0"))
+            .err()
+            .unwrap()
+            .code,
         ErrorCode::SessionUnavailable
     );
     assert_eq!(
-        children.run(powershell("exit 0"), None).err().unwrap().code,
+        children
+            .run(TEST_IDENTITY, powershell("exit 0"), None)
+            .err()
+            .unwrap()
+            .code,
         ErrorCode::SessionUnavailable
     );
 }
@@ -325,10 +344,11 @@ fn queued_read_measurements_and_timeouts_release_all_waiting_slots() {
     let barrier = BarrierChild::new();
     let mut held_ms = 0;
     thread::scope(|scope| {
-        let reading = scope.spawn(|| children.read(barrier.command()));
+        let reading = scope.spawn(|| children.read(TEST_IDENTITY, barrier.command()));
         barrier.wait_ready();
         for _ in 0..PENDING_READERS + 2 {
             let timed_out = children.execute(
+                TEST_IDENTITY,
                 barrier.record("timed-out-reader-must-not-run"),
                 None,
                 HelperKind::Read,
@@ -338,7 +358,7 @@ fn queued_read_measurements_and_timeouts_release_all_waiting_slots() {
             assert_eq!(timed_out.err().unwrap().code, ErrorCode::CliWaitTimedOut);
             assert_eq!(children.read.active.lock().unwrap().pending_readers, 0);
         }
-        let queued = scope.spawn(|| children.read(barrier.record("queued-read")));
+        let queued = scope.spawn(|| children.read(TEST_IDENTITY, barrier.record("queued-read")));
         wait_state(&children, HelperKind::Read, |active| {
             active.pending_readers == 1
         });
@@ -382,17 +402,18 @@ fn a_failed_mutation_spawn_does_not_reserve_a_slot_or_affect_a_held_read() {
     let children = Children::default();
     let barrier = BarrierChild::new();
     thread::scope(|scope| {
-        let reading = scope.spawn(|| children.read(barrier.command()));
+        let reading = scope.spawn(|| children.read(TEST_IDENTITY, barrier.command()));
         barrier.wait_ready();
         let mut missing = Command::new(barrier.directory.join("synthetic-private-launch-path"));
         missing.arg("private-profile-argument");
         let failed = children.run(
+            TEST_IDENTITY,
             missing,
             Some(Zeroizing::new(b"private-spawn-password".to_vec())),
         );
         assert_eq!(failed.err().unwrap().code, ErrorCode::SpawnFailed);
         assert!(!children.mutation.active.lock().unwrap().busy);
-        let replacement = children.run(barrier.record("replacement"), None);
+        let replacement = children.run(TEST_IDENTITY, barrier.record("replacement"), None);
         let read_still_running = children
             .read
             .active
@@ -480,8 +501,8 @@ fn both_lanes_are_fenced_before_cleanup_and_first_error_does_not_skip_the_second
             HelperKind::Read
         };
         let refused = match opposite {
-            HelperKind::Read => children.read(powershell("exit 0")),
-            HelperKind::Mutation => children.run(powershell("exit 0"), None),
+            HelperKind::Read => children.read(TEST_IDENTITY, powershell("exit 0")),
+            HelperKind::Mutation => children.run(TEST_IDENTITY, powershell("exit 0"), None),
         };
         assert_eq!(refused.err().unwrap().code, ErrorCode::SessionUnavailable);
         if settled == 1 {
@@ -605,7 +626,11 @@ fn a_poisoned_fence_still_fences_and_reaps_both_children() {
         );
     }
     assert_eq!(
-        children.run(powershell("exit 0"), None).err().unwrap().code,
+        children
+            .run(TEST_IDENTITY, powershell("exit 0"), None)
+            .err()
+            .unwrap()
+            .code,
         ErrorCode::LockPoisoned
     );
 }
@@ -619,7 +644,11 @@ fn refused_mutation_runs_once_without_retrying_a_failed_stdin_write() {
     );
     command.env("CADRUMO_TEST_ORDER", barrier.directory.join("order"));
     let output = children
-        .run(command, Some(Zeroizing::new(vec![b'k'; 1024 * 1024])))
+        .run(
+            TEST_IDENTITY,
+            command,
+            Some(Zeroizing::new(vec![b'k'; 1024 * 1024])),
+        )
         .unwrap();
     assert!(!output.success);
     assert_eq!(&*output.stdout, b"refused");
@@ -642,7 +671,7 @@ fn refused_mutation_runs_once_without_retrying_a_failed_stdin_write() {
             .helper_timing
             .unwrap()
             .outcome,
-        HelperOutcome::Completed
+        HelperOutcome::NonzeroExit
     );
 }
 
@@ -660,6 +689,7 @@ fn failed_timing_sink_does_not_change_native_output_or_retry_the_password() {
     command.env("CADRUMO_TEST_ORDER", barrier.directory.join("order"));
     let output = children
         .run(
+            TEST_IDENTITY,
             command,
             Some(Zeroizing::new(b"unlogged-private-password".to_vec())),
         )

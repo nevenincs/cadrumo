@@ -10,6 +10,7 @@ import pytest
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_deadlines import provider_login_settlement_seconds
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -21,7 +22,6 @@ from ....application.live.notification_document_capture_operation import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_notification_document_capture as bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

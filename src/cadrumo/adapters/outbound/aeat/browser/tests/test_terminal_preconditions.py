@@ -60,6 +60,11 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("playwright_runtime_stoppable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
+    "factory:DefaultBrowserSession._stop_playwright_runtime:BrowserError:Failed to clean browser profile after Playwright runtime stop": _contract(
+        BrowserPreconditionCondition.BROWSER_CLOSEABLE,
+        (("browser_closeable", "False"),),
+        NoRecoveryOutcome.SAFETY,
+    ),
     "factory:_start_playwright:BrowserError:Browser optional extra is unavailable": _contract(
         BrowserPreconditionCondition.OPTIONAL_EXTRA_AVAILABLE,
         (("browser_extra_available", "False"),),

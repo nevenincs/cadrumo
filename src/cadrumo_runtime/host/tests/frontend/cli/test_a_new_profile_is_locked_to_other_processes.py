@@ -9,8 +9,8 @@ stripped from its environment, so nothing but the storage root reaches it.
 
 The decisive case gives that reader a working, empty keychain, so the only
 thing it lacks is authentication and the refusal must say so. Two keychain-
-less hosts are kept as well: there the reader is refused for want of a
-keychain, which alone would not prove the lock on a host that has one.
+less hosts are kept as well: a missing saved sign-in requires human proof
+before keychain usability can grant the reader any authority.
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ def _english(key: str) -> str:
 
 _UNAUTHENTICATED_REFUSALS = frozenset(
     {
-        # The creating process minted no receipt: its own keychain refused.
+        # Registration minted no receipt, independently of keychain usability.
         ProfileSessionRefusalReason.ABSENT.value,
         # The creating process's keychain holds the receipt's key; the reader's does not.
         ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING.value,
@@ -80,9 +80,9 @@ _UNAUTHENTICATED_REFUSALS = frozenset(
 def _refused_as_unauthenticated(listed: subprocess.CompletedProcess[str]) -> bool:
     """Whether a fresh process was refused for holding no credential, and read nothing.
 
-    Which of the two reasons it gives depends on the creating host: its login
-    mints an acceleration receipt wherever its own keychain works. Either way the
-    reader holds no key and must be sent to log in.
+    A profile registration has no receipt. If a later explicit login stored
+    one, a reader without that native key still lacks authentication. Either
+    reason must send the reader to log in before any record is read.
     """
     if listed.returncode != 2 or listed.stdout != "":
         return False
@@ -143,9 +143,8 @@ def test_another_process_on_a_keychain_less_host_is_refused_before_it_reads(
 
     listed = _list_in_a_fresh_process(tmp_path, keychain_backend=keychain_backend, credential=None)
 
-    assert listed.returncode == 3, listed.stdout + listed.stderr
-    assert listed.stdout == ""
+    assert _refused_as_unauthenticated(listed), listed.stdout + listed.stderr
     envelope = json.loads(listed.stderr)
-    assert envelope["status"] == "error"
-    assert envelope["error"]["code"] == "AUTH_STORAGE_KEYRING_UNAVAILABLE"
+    assert envelope["error"]["context"]["reason"] == ProfileSessionRefusalReason.ABSENT.value
+    assert envelope["error"]["action"]["action"]["action_id"] == "operator.profile.login"
     assert envelope["active_profile"] == _LABEL

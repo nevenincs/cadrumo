@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 from cadrumo_client.contracts.command_program import CommandProgram
 
 from ...core.errors.hierarchy import pydantic_validation_boundary

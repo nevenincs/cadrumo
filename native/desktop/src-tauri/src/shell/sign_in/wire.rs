@@ -147,13 +147,11 @@ pub enum Outcome {
 }
 
 pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
-    let bytes = if output.success {
-        &output.stdout
+    let envelope: Envelope = if output.success {
+        serde_json::from_slice(&output.stdout).map_err(|_| failure(ErrorCode::ReadFailed))?
     } else {
-        &output.stderr
+        error_envelope(&output.stderr)?
     };
-    let envelope: Envelope =
-        serde_json::from_slice(bytes).map_err(|_| failure(ErrorCode::ReadFailed))?;
     if envelope.schema_version != "2" {
         return Err(failure(ErrorCode::ReadFailed));
     }
@@ -227,6 +225,25 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
         }
         _ => Err(failure(ErrorCode::ReadFailed)),
     }
+}
+
+fn error_envelope(bytes: &[u8]) -> Result<Envelope> {
+    if let Ok(envelope) = serde_json::from_slice(bytes) {
+        return Ok(envelope);
+    }
+    // CLI stderr also carries startup diagnostics and operator progress. Its
+    // final nonempty line is the compact error envelope; prose never crosses IPC.
+    let mut lines = bytes
+        .split(|byte| *byte == b'\n')
+        .filter(|line| line.iter().any(|byte| !byte.is_ascii_whitespace()));
+    let last = lines
+        .next_back()
+        .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
+    let envelope = serde_json::from_slice(last).map_err(|_| failure(ErrorCode::ReadFailed))?;
+    if lines.any(|line| serde_json::from_slice::<Envelope>(line).is_ok()) {
+        return Err(failure(ErrorCode::ReadFailed));
+    }
+    Ok(envelope)
 }
 
 pub fn status(outcome: Outcome) -> Result<SignInStatus> {

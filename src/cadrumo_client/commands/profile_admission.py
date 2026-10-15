@@ -49,6 +49,8 @@ def require_automation_change_credential_reference(ctx: typer.Context) -> UUID:
 
 
 def _password(client: FrontendClient, *, selection: ProfileSecretSelection | None) -> None:
+    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+
     if selection is None:
         secret = bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")).encode("utf-8"))
     else:
@@ -64,7 +66,21 @@ def _password(client: FrontendClient, *, selection: ProfileSecretSelection | Non
         finally:
             del payload
     try:
+        if not secret:
+            raise CliRefusedBoundaryError(
+                AutomationCustodyCode.CREDENTIAL_REJECTED.value,
+                context={"reason": AutomationCustodyCode.CREDENTIAL_REJECTED.value},
+                translated_message="application.user_profile.errors.profile_authentication_refused",
+            )
         admitted = client.login_password(secret)
+    except FrontendRefusedError as error:
+        if error.reason != AutomationCustodyCode.CREDENTIAL_REJECTED.value:
+            raise
+        raise CliRefusedBoundaryError(
+            error.reason,
+            context=error.context,
+            translated_message="application.user_profile.errors.profile_authentication_refused",
+        ) from None
     finally:
         secret[:] = bytes(len(secret))
     if admitted.human_login is None or not admitted.human_login.session_persisted:
@@ -150,6 +166,13 @@ def activate_profile(
         if root_selection is not None or credential_reference is not None:
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_missing_target")
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
+    profile_label = target_profile_label
+    if profile_label is None and credential_reference is None:
+        from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+
+        pointer = read_profile_bucket_by_id(bucket_id)
+        if pointer is not None:
+            profile_label = pointer.label
     if credential_reference is not None:
         client = _open_profile_credential_client(bucket_id, credential_reference, root_selection, method, ctx)
     else:
@@ -159,7 +182,7 @@ def activate_profile(
     try:
         if credential_reference is None:
             subscribe_profile_notices(ctx, client)
-            _authenticate(ctx, client, root_selection=root_selection, profile_label=target_profile_label, method=method)
+            _authenticate(ctx, client, root_selection=root_selection, profile_label=profile_label, method=method)
         bind_profile_target(ctx, bucket_id=bucket_id)
         bind_profile_client(ctx, client, profile_id=UUID(bucket_id))
     except FrontendRefusedError as error:

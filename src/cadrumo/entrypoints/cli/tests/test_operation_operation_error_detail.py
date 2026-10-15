@@ -80,13 +80,13 @@ from cadrumo.application.operations.registry import (
 from cadrumo.core.errors.error_codes import build_error_envelope, get_registered_error_code
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from cadrumo.entrypoints.cli.errors import (
+from cadrumo.entrypoints.cli.operation_modelo_verification import run_modelo_work_filing, run_modelo_work_verification
+from cadrumo_client.commands.errors import (
     CliOperationStillRunningError,
     CliOutboundPayloadBoundaryError,
     CliRecordedOperationError,
     CliUnexpectedBoundaryError,
 )
-from cadrumo.entrypoints.cli.operation_modelo_verification import run_modelo_work_filing, run_modelo_work_verification
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationProgress
 from cadrumo_client.commands.registered_operation_errors import (

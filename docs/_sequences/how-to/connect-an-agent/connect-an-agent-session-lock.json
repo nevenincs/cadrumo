@@ -2,7 +2,7 @@
   "frames": [
     {
       "argv": [
-        "aeat",
+        "cadrumo-runtime",
         "config",
         "profile",
         "sessions"
@@ -17,7 +17,7 @@
     },
     {
       "argv": [
-        "aeat",
+        "cadrumo-runtime",
         "config",
         "profile",
         "lock"
@@ -32,7 +32,7 @@
     },
     {
       "argv": [
-        "aeat",
+        "cadrumo-runtime",
         "config",
         "profile",
         "lock",

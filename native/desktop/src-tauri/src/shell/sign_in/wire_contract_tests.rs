@@ -52,6 +52,32 @@ fn python_login_refusals_project_only_the_shell_code_and_typed_countdown() {
 }
 
 #[test]
+fn diagnostic_stderr_keeps_one_final_refusal_without_accepting_ambiguous_envelopes() {
+    let envelope = serde_json::to_vec(&fixture("credential-rejected")).unwrap();
+    let mut stderr = b"ERROR runtime startup refused\r\n".to_vec();
+    stderr.extend_from_slice(&envelope);
+    stderr.extend_from_slice(b"\r\n");
+    let mut output = Output {
+        success: false,
+        stdout: Zeroizing::new(Vec::new()),
+        stderr: Zeroizing::new(stderr),
+    };
+    assert_eq!(
+        serde_json::to_value(login(decode("login", &output).unwrap()).unwrap()).unwrap(),
+        json!({"kind": "refused", "code": "CREDENTIAL_REJECTED", "retryAfterSeconds": null})
+    );
+    output.stderr.extend_from_slice(&envelope);
+    assert!(decode("login", &output).is_err());
+    output.stderr = Zeroizing::new(envelope.clone());
+    output.stderr.extend_from_slice(b"\ntrailing diagnostic");
+    assert!(decode("login", &output).is_err());
+    output.success = true;
+    output.stdout = Zeroizing::new(b"unexpected prefix\n".to_vec());
+    output.stdout.extend_from_slice(&envelope);
+    assert!(decode("login", &output).is_err());
+}
+
+#[test]
 fn throttle_metadata_is_required_and_never_inferred_from_a_message_or_wait_alone() {
     for seconds in [
         Value::Null,
@@ -183,21 +209,18 @@ fn persisted_login_observation_requires_a_coherent_authenticated_label() {
 
 #[test]
 fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refusal() {
-    for (case, enabled) in [
-        ("logout-true", json!(true)),
-        ("logout-false", json!(false)),
-        ("logout-none", Value::Null),
+    for (case, enabled, access_remains) in [
+        ("logout-true", json!(true), json!(true)),
+        ("logout-false", json!(false), json!(false)),
+        ("logout-none", Value::Null, Value::Null),
     ] {
-        // The access a sign-out leaves is whatever the producer wrote, carried
-        // as it is: the setting and the access are separate facts.
-        let access = fixture(case)["result"]["automation_access_remains"].clone();
         let outcome = logout(from_document(fixture(case)).unwrap()).ok().unwrap();
         assert_eq!(
             serde_json::to_value(outcome).unwrap(),
             json!({
                 "remainingAccess":{
                     "automationEnabled":enabled,
-                    "automationAccessRemains":access,
+                    "automationAccessRemains":access_remains,
                     "automationRevoked":false
                 }
             }),

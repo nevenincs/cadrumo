@@ -52,7 +52,9 @@ def dispatch_runtime_behavior(
         from cadrumo.application.user_profile.profile_summary import summary_inventory_snapshot
 
         state["cadrumo.runtime.command_spec"] = spec
-        listing_scope = summary_inventory_snapshot() if spec.policy.side_effects == frozenset({"none"}) else nullcontext()
+        listing_scope = (
+            summary_inventory_snapshot() if spec.policy.side_effects == frozenset({"none"}) else nullcontext()
+        )
         with (
             bind_profile_custody_port(build_profile_custody_port()),
             _governed_fact_scope(spec, runtime_context),

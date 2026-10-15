@@ -11,6 +11,7 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -54,7 +55,6 @@ from ._decimal_parsing import parse_optional_decimal_amount
 from ._evidence_field_notices import field_degradation_notices, label_reading_fallback_notices
 from ._ledger_evidence_review_cli import parse_finding_resolution
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
-from .errors import CliRefusedBoundaryError
 from .ledger_business_payloads import (
     EvidenceAddResult,
     EvidenceConfirmResult,

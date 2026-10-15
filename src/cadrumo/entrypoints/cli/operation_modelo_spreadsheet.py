@@ -8,6 +8,7 @@ from typing import Never
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRecordedOperationError
 from cadrumo_client.commands.profile_binding import bound_profile_client, require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
@@ -28,7 +29,6 @@ from ...application.modelo.modelo_spreadsheet_operation_projections import (
 )
 from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .errors import CliRecordedOperationError
 
 _OUTPUT_PATH_REFUSAL_CODE = "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
 _OUTPUT_PATH_REASONS = {

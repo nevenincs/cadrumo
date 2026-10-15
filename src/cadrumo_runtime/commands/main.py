@@ -25,7 +25,7 @@ from cadrumo_client.logging import register_client_logging_namespace
 
 from .command_specs import RUNTIME_COMMAND_GRAPH
 from .lifecycle import dispatch_runtime_behavior
-from .presentation import resolve_cli_precondition_action, runtime_error_context
+from .presentation import precondition_action_lines, resolve_cli_precondition_action, runtime_error_context
 
 
 def main(arguments: Sequence[str] | None = None) -> int:
@@ -98,7 +98,10 @@ def _render_error(error: CadrumoError, arguments: Sequence[str], *, click_contex
             )
         )
     else:
-        write_stderr(render_error_text(error))
+        text = render_error_text(error)
+        if action is not None:
+            text = "\n".join((text.rstrip("\n"), *precondition_action_lines(action))) + "\n"
+        write_stderr(text)
     return get_error_exit_code(code.category)
 
 

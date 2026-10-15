@@ -568,24 +568,6 @@ desktop:
     zoom_in: Dokumentáció nagyítása
     zoom_out: Dokumentáció kicsinyítése
     zoom_reset: Dokumentáció nagyításának visszaállítása
-  attendance:
-    actions: Tevékenységek
-    all_periods: Minden időszak
-    changes: Rekordok módosítása
-    delegation: Delegálás
-    disclosures: Adatközlések
-    executable: Futtatható fájl
-    expires: Lejárat
-    failed: 'A hozzáférési döntés nem érhető el: {code}'
-    network: Hálózati hozzáférés
-    'no': Nem
-    none: Nincs
-    operations: Műveletek
-    period_independent: Időszak nélküli munka
-    periods: Időszakok
-    process: Folyamat
-    title: Egy külső folyamat hozzáférést kér
-    'yes': Igen
   automation_access:
     cancel: Mégse
     cleanup_pending: Visszavonva. A tárolt kulcsot még törlik erről a számítógépről.

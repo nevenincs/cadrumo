@@ -17,8 +17,8 @@ from cadrumo.application.modelo.verification_repository_ports import Verificatio
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 from cadrumo.entrypoints.cli.operation_modelo_verification import read_modelo_work_revision
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationReply,

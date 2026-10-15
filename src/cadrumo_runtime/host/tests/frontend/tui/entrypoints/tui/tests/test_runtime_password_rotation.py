@@ -31,6 +31,14 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLoginContext,
 )
 from cadrumo.core.config import override_settings
+from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from cadrumo.entrypoints.tui.app import CadrumoTuiApp
+from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+from cadrumo.entrypoints.tui.launcher import main
+from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
+from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -39,13 +47,6 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from cadrumo.entrypoints.tui.app import CadrumoTuiApp
-from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
-from cadrumo.entrypoints.tui.launcher import main
-from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -150,6 +151,15 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                 while root_app.account_session is None:
                     await pilot.pause(0.05)
             assert root_app.account_session.profile_label == "Enrollment tests"
+            async with asyncio.timeout(90):
+                while True:
+                    current_screen = root_app.screen
+                    if not isinstance(current_screen, ProfileManagerScreen):
+                        await pilot.pause(0.05)
+                        continue
+                    if current_screen.query("#manager-search"):
+                        break
+                    await pilot.pause(0.05)
             if "password-changed" in stages:
                 stages.append("fresh-root")
                 root_app.exit()
@@ -157,6 +167,9 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
 
             assert stages == ["login-original"]
             root_app.run_account_action(AccountActionV1.PASSWORD)
+            async with asyncio.timeout(90):
+                while not isinstance(root_app.screen, PassphraseScreen):
+                    await pilot.pause(0.05)
             await pilot.pause()
             screen = root_app.screen
             assert isinstance(screen, PassphraseScreen)

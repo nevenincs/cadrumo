@@ -9,6 +9,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ...application import reference_catalogue as catalogue
 from ...application.modelo.query_read_contracts import (
     ModeloBindingOverride,
@@ -48,7 +50,6 @@ from ._modelo_cli_support import bad_parameter_from_error, parse_binding_overrid
 from ._modelo_payloads import ModeloRequiresResult
 from ._modelo_rendering import binding_encoded_option_lines
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .errors import CliRefusedBoundaryError
 from .operation_modelo_query_read import (
     read_modelo_bindings_list,
     read_modelo_bindings_resolve,

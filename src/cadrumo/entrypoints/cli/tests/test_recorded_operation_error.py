@@ -8,13 +8,14 @@ import sys
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 
 from ....application.operations.models import OperationId
 from ....core.config import override_settings
 from ....core.errors.error_codes import get_error_exit_code, get_registered_error_code_by_code
 from ....core.operations import OperationEffect, OperationTerminalCondition
-from ..errors import CliRefusedBoundaryError, emit_error_and_exit
+from ..errors import emit_error_and_exit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

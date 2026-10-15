@@ -99,6 +99,7 @@ def _verify_generated_revision(
             modelo=str(entry.modelo),
             revision=str(entry.revision),
             source_root=source_root,
+            retain_source_chain=True,
         )
     elif manifest.generated_export_inheritance is not None:
         verify_generated_export_inheritance_storage(

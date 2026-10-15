@@ -546,7 +546,7 @@ def test_native_bus_constructor_preserves_primary_when_socket_close_fails(
     cleanup = OSError("synthetic consumed socket close failure")
     port = _ConsumedSocketClosePort(primary, cleanup)
     monkeypatch.setattr(
-        native,
+        secret_transport,
         "socket",
         SimpleNamespace(AF_UNIX=socket.AF_UNIX, SOCK_STREAM=socket.SOCK_STREAM, socket=lambda *_: port),
     )

@@ -154,7 +154,7 @@ def test_record_drift_is_reported_as_such(tmp_path: Path) -> None:
     shutil.copytree(real, drifted)
     declarado = drifted / "0002-record-m347-declarado.toml"
     original = declarado.read_text(encoding="utf-8")
-    declarado.write_text(original.replace("repeat = 'binding_rows'\n", ""), encoding="utf-8")
+    declarado.write_text(original.replace('repeat = "binding_rows"\n', ""), encoding="utf-8")
     assert declarado.read_text(encoding="utf-8") != original
 
     comparison = compare_export_tree_roots(

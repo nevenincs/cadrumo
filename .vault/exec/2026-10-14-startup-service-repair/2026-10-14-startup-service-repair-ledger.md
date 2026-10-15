@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#startup-service-repair'
 date: '2026-10-14'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:847256f185293eef25df5b4c88c2480eea0fb6568c0347616ccec74a301c3e10'
+body_hash: 'sha256:2e991186eb7c4b723de0823e1160616f72caf1f25d88e5720904d4130cc2a321'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -71,6 +71,16 @@ related:
 - `S03` `verify:` `just test-gate collection (run stopped after confirmed unrelated failure)` -> `fail`
 - `S03` `verify:` `cmake app-agent incremental wheel update46 files (no dependencies or native rebuild)` -> `pass`
 - `S03` `verify:` `ctest bundle.environment-launch20.42s after incremental agent update` -> `pass`
+- `S01` `M` `src/cadrumo_agent_service/main.py`
+- `S01` `M` `src/cadrumo_agent_service/service.py`
+- `S01` `A` `src/cadrumo_agent_service/host/tests/test_service_failure.py`
+- `S01` `verify:` `service unit suite 243 tests` -> `pass`
+- `S01` `verify:` `service Windows integration suite 23 tests` -> `pass`
+- `S01` `verify:` `manual packaged service admission and protected credential CAS set/remove/reset` -> `pass`
+- `S02` `verify:` `native desktop Release compilation` -> `pass`
+- `S03` `M` `dev/runtime_lifecycle/agent_live.py`
+- `S03` `verify:` `live person driver and holder 20 unit tests` -> `pass`
+- `S03` `verify:` `just check-registry-gate` -> `pass`
 
 ## Notes
 
@@ -79,3 +89,4 @@ related:
 - `S02` Review correction preserves exhausted retries through failed status observations. New nonzero helper exit outcome regression and final native build pending.
 - `S03` Original uppercase agent loglevel corrected: packaged stores-state/setup/current pass. Gateway/worker blocked by missing `lane_effort_control` import in bundled agent; GUI session owns incremental artifact investigation via build/message.txt. No dependency changes. User requires affected-artifact incremental builds only.
 - `S03` Resolved stale mixed staged agent selection/effort import using existing app-agent target. Full real GUI sign-in verification handed to coordinating session through build/message.txt; historical KDF cleanup and worker stall remain evidence questions.
+- `S01` Hosted gateway still refuses `hosted_lane_unproven;` provider CLI auth is absent from its hosted provider home.

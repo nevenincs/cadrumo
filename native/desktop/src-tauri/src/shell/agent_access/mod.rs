@@ -20,6 +20,7 @@ use crate::shell::sign_in::{
     process::Children,
     wire::{self as envelope, Outcome},
 };
+use cadrumo_application::diagnostics::helper::{HelperExecutable, HelperIdentity};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use std::{process::Command, sync::Arc};
 use tauri::State;
@@ -89,7 +90,13 @@ fn after_revoke(error: ApplicationError) -> CommandFailure {
 /// Runs a built listing on the read lane and decodes the one envelope it
 /// prints. The child is settled on every path.
 fn read_list(children: &Children, command: Command) -> std::result::Result<Answer, CommandFailure> {
-    let output = children.read(command)?;
+    let output = children.read(
+        HelperIdentity {
+            command: "config.profile.automation.list",
+            executable: HelperExecutable::Runtime,
+        },
+        command,
+    )?;
     wire::list(envelope::decode(LIST_LEAF, &output)?)
 }
 
@@ -101,7 +108,14 @@ fn run_revoke(
     grant: &str,
 ) -> std::result::Result<Revoked, CommandFailure> {
     let outcome: Outcome = children
-        .run(command, None)
+        .run(
+            HelperIdentity {
+                command: "config.profile.automation.deny",
+                executable: HelperExecutable::Runtime,
+            },
+            command,
+            None,
+        )
         .and_then(|output| envelope::decode(DENY_LEAF, &output))
         .map_err(after_revoke)?;
     wire::revoked(outcome, grant)

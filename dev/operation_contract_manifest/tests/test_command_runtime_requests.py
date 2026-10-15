@@ -116,22 +116,34 @@ def test_the_tui_launcher_and_root_send_no_connection_request() -> None:
     ("program", "cli_path", "expected"),
     [
         pytest.param(
-            CommandProgram.AEAT, ("config", "profile", "delete"),
-            {"profile_delete_prepare", "profile_delete"}, id="delete",
+            CommandProgram.AEAT,
+            ("config", "profile", "delete"),
+            {"profile_delete_prepare", "profile_delete"},
+            id="delete",
         ),
         pytest.param(
-            CommandProgram.AUTHENTICATION, ("config", "passphrase", "reset"),
-            {"password_reset_prepare", "password_reset"}, id="reset",
+            CommandProgram.AUTHENTICATION,
+            ("config", "passphrase", "reset"),
+            {"password_reset_prepare", "password_reset"},
+            id="reset",
         ),
         pytest.param(
-            CommandProgram.AUTHENTICATION, ("config", "profile", "resume"),
-            {"profile_recovery_prepare", "profile_resume"}, id="resume",
+            CommandProgram.AUTHENTICATION,
+            ("config", "profile", "resume"),
+            {"profile_recovery_prepare", "profile_resume"},
+            id="resume",
         ),
         pytest.param(
-            CommandProgram.AUTHENTICATION, ("config", "profile", "sessions"), {"session_inventory"}, id="sessions",
+            CommandProgram.AUTHENTICATION,
+            ("config", "profile", "sessions"),
+            {"session_inventory"},
+            id="sessions",
         ),
         pytest.param(
-            CommandProgram.AUTHENTICATION, ("config", "profile", "automation", "deny"), {"automation_deny"}, id="deny",
+            CommandProgram.AUTHENTICATION,
+            ("config", "profile", "automation", "deny"),
+            {"automation_deny"},
+            id="deny",
         ),
     ],
 )

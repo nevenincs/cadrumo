@@ -18,8 +18,6 @@ from typing import Final
 import pytest
 
 from cadrumo.core.type_guards import is_str_keyed_dict
-from cadrumo.tests.audited_process import run_audited_process
-from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo.entrypoints.tui.reference.filters import ReferenceFilterError, filters_of, query_from_form
 from cadrumo.entrypoints.tui.reference.reads import (
     ReferenceQuery,
@@ -27,6 +25,8 @@ from cadrumo.entrypoints.tui.reference.reads import (
     ReferenceReadRefusedError,
     read_reference,
 )
+from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.contracts.command_program import CommandProgram
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

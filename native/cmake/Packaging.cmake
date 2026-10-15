@@ -293,12 +293,12 @@ endif()
 if(BUILD_TESTING AND WIN32)
   # Exercise the assembled clients and real supervisor through the existing harness.
   add_test(NAME bundle.runtime-lifecycle COMMAND "${CADRUMO_DEV_PYTHON}" -B -m pytest
-    -n 0 -m integration "${PROJECT_SOURCE_DIR}/dev/runtime_lifecycle/tests"
+    -n 0 -m "integration and native_package" "${PROJECT_SOURCE_DIR}/dev/runtime_lifecycle/tests"
     --lifecycle-manager "${CADRUMO_PATH_CARGO}/manager-lifecycle/${CADRUMO_PIN_rust_target}/debug/cadrumo-manager-lifecycle.exe"
     --lifecycle-package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     --junitxml "${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle.xml" -o junit_family=legacy)
   set_tests_properties(bundle.runtime-lifecycle PROPERTIES RESOURCE_LOCK package_inventory
-    RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" LABELS external_tool)
   if(desktop_image_staged)
     set_tests_properties(bundle.runtime-lifecycle PROPERTIES FIXTURES_REQUIRED "desktop_package_ready;desktop_runtime_ready")
   endif()
@@ -329,6 +329,9 @@ set(CPACK_POST_BUILD_SCRIPTS "${PROJECT_BINARY_DIR}/Artifact.cmake")
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_BINARY_DIR}/CPackProject.cmake")
 include(CPack)
 set(native_verification_targets rust_platform rust_platform_consumer rust_application)
+if(BUILD_TESTING AND TARGET cadrumo_python_d)
+  list(APPEND native_verification_targets cadrumo_python_d)
+endif()
 if(BUILD_TESTING AND WIN32)
   list(APPEND native_verification_targets rust_manager_lifecycle)
 endif()
@@ -338,17 +341,26 @@ foreach(consumer platform_static_consumer platform_dll_consumer)
   endif()
 endforeach()
 cadrumo_build_step(step_comment verify GROUP verification
-  SUMMARY "build the bundle and native verification targets, then run every CTest test")
+  SUMMARY "build the bundle and native verification targets, then run ordinary CTest tests")
 add_custom_target(verify
-  COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure --no-tests=error
+  COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure --no-tests=error -LE external_tool
   DEPENDS bundle ${native_verification_targets}
   COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 cadrumo_build_step(step_comment verify-app-distro GROUP verification
-  SUMMARY "run the bundle and application package CTest tests")
+  SUMMARY "run ordinary bundle and application package CTest tests")
 add_custom_target(verify-app-distro
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
-    --output-on-failure --no-tests=error -R "^(bundle[.]|application[.]package$)"
+    --output-on-failure --no-tests=error -R "^(bundle[.]|application[.]package$)" -LE external_tool
   DEPENDS bundle COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+if(BUILD_TESTING AND WIN32)
+  cadrumo_build_step(step_comment verify-native-live GROUP verification
+    SUMMARY "run the opt-in CTest cases that assert the staged native application package")
+  add_custom_target(verify-native-live
+    COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
+      --output-on-failure --no-tests=error -L external_tool
+    DEPENDS bundle ${native_verification_targets}
+    COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+endif()
 if(BUILD_TESTING AND WIN32)
   add_dependencies(verify-app-distro rust_manager_lifecycle)
 endif()

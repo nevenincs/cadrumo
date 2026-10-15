@@ -6,6 +6,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import bound_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
@@ -18,7 +19,6 @@ from ...application.modelo.taxation_comparison_operation import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.modelos.work_unit import WorkUnit
-from .errors import CliRefusedBoundaryError
 from .operation_modelo_metadata import read_modelo_work_unit
 
 

@@ -67,7 +67,7 @@ PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
 PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
-#: Wall-clock bound on one wrap or unwrap: waiting for the installation's single
+#: Wall-clock bound on one wrap or unwrap. Includes waiting for the installation's single
 #: KDF permit, launching and attesting a fresh child, then the derivation. The
 #: derivation's own cost is bounded by the child's operating-system CPU-time and
 #: memory ceilings; this bound only guarantees a stalled child is abandoned. The

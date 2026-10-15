@@ -48,8 +48,6 @@ from cadrumo.core.i18n.render import output_language
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -69,6 +67,8 @@ from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILIT
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo.entrypoints.tui.tests.frame import capture
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.installed_client import open_installed_client
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden

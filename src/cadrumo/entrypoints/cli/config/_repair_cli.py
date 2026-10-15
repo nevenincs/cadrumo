@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+
 from ....adapters.outbound.aeat.browser.connectivity import (
     probe_browser_connectivity as _probe_browser_connectivity,
 )
@@ -38,7 +40,6 @@ from ....application.diagnostics_repair_documents import (
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.json_contract import strict_round_trip
 from ..common import emit_envelope, resolve_cli_precondition_action
-from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .connectivity_rendering import render_browser_connectivity_text as _render_browser_connectivity_text
 
 if TYPE_CHECKING:

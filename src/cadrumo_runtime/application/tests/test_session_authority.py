@@ -70,11 +70,10 @@ from cadrumo.application.user_profile.operations import (
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.profile_session import ReceiptBindingRefusal
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest, HumanSignInRevocationResult
 
 from ..automation_lifecycle_service import (
     AutomationLifecycleService,
-    AutomationResumeRequest,
-    HumanSignInRevocationResult,
 )
 from ..session_authority import ProfileSessionAuthority
 from ..session_authority_contracts import SessionAuthorityFacts

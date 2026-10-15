@@ -78,13 +78,6 @@ _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
         "whether deadline values are present, without comparing the submitting frontend"
     ),
     (
-        "src/cadrumo_runtime/host/session_hold.py",
-        "_hold",
-    ): (
-        "alias propagation carries DESKTOP through the retained human client; this holder checks current "
-        "session retirement and denial before admissions, without comparing an operation's frontend"
-    ),
-    (
         "src/cadrumo/application/operations/person_acts.py",
         "is_persons_frontend",
     ): "the one predicate naming the person's frontends, on which alone a person's act is taken",

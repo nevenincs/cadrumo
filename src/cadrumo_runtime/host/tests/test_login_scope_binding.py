@@ -104,7 +104,9 @@ def test_a_key_connection_cannot_change_its_requested_scope_after_its_first_logi
     channel = MemoryChannel()
     context = ConnectionContext(uuid4(), boot, channel.peer)
     connections = _connections(tmp_path, boot)
-    operation_ids = tuple(item.definition_id for item in connections.prepare_registry().definitions[:2])
+    operation_ids = tuple(
+        item.definition_id for item in connections.prepare_registry().public_contract_set.definitions[:2]
+    )
     assert len(operation_ids) == 2 and operation_ids[0] != operation_ids[1]
     original_scope, changed_scope = (_scope(item) for item in operation_ids)
     connection = _admitted_connection(context, profile_id, original_scope)
@@ -129,7 +131,7 @@ def test_a_key_connection_cannot_change_its_requested_scope_after_its_first_logi
 def test_a_narrow_key_scope_carries_no_disclosure_wildcard(tmp_path: Path) -> None:
     profile_id = uuid4()
     connections = _connections(tmp_path, uuid4())
-    operation_id = connections.prepare_registry().definitions[0].definition_id
+    operation_id = connections.prepare_registry().public_contract_set.definitions[0].definition_id
     scope = _scope(operation_id)
 
     request = _login(profile_id, scope=scope)

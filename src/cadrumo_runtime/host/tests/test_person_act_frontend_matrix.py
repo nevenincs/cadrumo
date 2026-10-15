@@ -1,16 +1,17 @@
-"""Every door of the runtime and every person's act, crossed with every frontend.
+"""Frontend policy, real person acts and separated automation admission doors.
 
-The command line and the terminal interface are the person's frontends. external client
-and the automation host are an automation's, and neither reaches a person's act: signing
+The command line, terminal interface and verified desktop are the person's
+frontends. External clients and installed services never reach a person's act: signing
 in by password, listing, locking or denying sessions, signing the person out,
 requesting a key, recovering a profile, resetting a password, deciding who
 follows the person's sign-in, installation acts, and every operation whose
-contract needs a secret. Each is refused there with the one code that sends
-the automation to the person, and each stays open on the person's frontends.
+contract needs a secret. CLI/TUI exercise genuine person acts; external attendance
+exercises their refusals. Desktop exercises the unverified-holder fence. The
+controlled service fixture exercises admission and supported session-act refusals.
 
-The admission doors differ by frontend as well. Every frontend resumes the
-person's stored sign-in. Only external client asks to be attended, and the automation host is
-admitted by nothing but the resumed sign-in: a key login on it is refused.
+Human frontends resume the person's stored sign-in. An external client instead
+asks for exact attendance, and an installed service uses its own connection
+and human-admission protocol. An unverified desktop holder is refused.
 
 The frontends an automation works on are written out here rather than read from the
 predicate under test, and a frontend added later fails this file until it is
@@ -25,6 +26,7 @@ test.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from collections.abc import Callable
@@ -37,19 +39,23 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessScope, SessionKind
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo_client.contracts.access_management import AutomationDeny, SessionInventory
+from cadrumo_client.contracts.attendance import AttendanceDecide, AttendancePending
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import ProfileListReply, ProfileListRequest
 from cadrumo_client.contracts.operation_access import OperationSubmit
-from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus
+from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
+from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation_client import InstallationClient
 
 from .stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
+from .test_service_records import service_record_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -61,11 +67,20 @@ pytestmark = [
 
 _CLI = OperationFrontendProjection.CLI
 _TUI = OperationFrontendProjection.TUI
+_DESKTOP = OperationFrontendProjection.DESKTOP
 _EXTERNAL_CLIENT = OperationFrontendProjection.EXTERNAL_CLIENT
-_AGENT_HOST = OperationFrontendProjection.INSTALLED_SERVICE
+_SERVICE = OperationFrontendProjection.INSTALLED_SERVICE
 
-_PERSONS: Final = frozenset({_CLI, _TUI})
-_AGENTS: Final = frozenset({_EXTERNAL_CLIENT, _AGENT_HOST})
+_PERSONS: Final = frozenset({_CLI, _TUI, _DESKTOP})
+_AUTOMATED: Final = frozenset({_EXTERNAL_CLIENT, _SERVICE})
+_ATTENDANCE_SCOPE = AccessScope(
+    operations=frozenset({PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID}),
+    actions=frozenset({AccessAction.SUBMIT}),
+    disclosures=frozenset(),
+    periods=frozenset(),
+    allow_period_independent=True,
+    allow_delegation=False,
+)
 
 _SERVED: Final = "served"
 _PERSON: Final = AccessDenialCode.PERSON_ACT_REQUIRED.value
@@ -106,8 +121,30 @@ def _answer(call: Callable[[], object]) -> str:
     return _SERVED
 
 
-def _client(runtime: StoredSignInRuntime, frontend: OperationFrontendProjection) -> FrontendClient:
-    return FrontendClient(runtime.connect(), profile_id=runtime.profile_id, frontend=frontend)
+def _client(
+    runtime: StoredSignInRuntime, frontend: OperationFrontendProjection, *, scope: AccessScope | None = None
+) -> FrontendClient:
+    return FrontendClient(runtime.connect(), profile_id=runtime.profile_id, frontend=frontend, scope=scope)
+
+
+def _attended(runtime: StoredSignInRuntime, person: FrontendClient) -> FrontendClient:
+    client = _client(runtime, _EXTERNAL_CLIENT, scope=_ATTENDANCE_SCOPE)
+    pending = client.request_attendance()
+    assert isinstance(pending, AttendancePending)
+    (candidate,) = person.attendance_inventory().candidates
+    assert candidate.attendance_id == pending.attendance_id
+    assert candidate.process_id == os.getpid() and candidate.image_path is not None
+    assert candidate.frontend is _EXTERNAL_CLIENT and candidate.scope == _ATTENDANCE_SCOPE
+    assert person.decide_attendance(pending.attendance_id, approve=True).approved
+    admitted = client.attendance_status(pending.attendance_id)
+    assert isinstance(admitted, ProfileStatus) and admitted.status.denial is None
+    assert admitted.status.profile_id == runtime.profile_id and admitted.status.session_id == client.session_id
+    lease = runtime.lease(client.session_id)
+    assert lease.kind is SessionKind.ATTENDED and lease.parent_session_id == person.session_id
+    assert lease.scope.operations == _ATTENDANCE_SCOPE.operations and lease.scope.actions == _ATTENDANCE_SCOPE.actions
+    assert lease.scope.periods == frozenset() and lease.scope.allow_period_independent
+    assert not lease.scope.allow_delegation and lease.originating_login_id == runtime.native_login.login_id
+    return client
 
 
 def _bundle_export(runtime: StoredSignInRuntime, session: UUID, destination: Path) -> OperationSubmit:
@@ -138,19 +175,25 @@ def _doors(runtime: StoredSignInRuntime, frontend: OperationFrontendProjection, 
     answers["key_sign_in"] = _answer(
         lambda: _client(runtime, frontend).login_api_key(bytearray(b"synthetic-not-a-key-0000000000000000"))
     )
-    answers["attendance_ask"] = _answer(_client(runtime, frontend).request_attendance)
     answers["password_sign_in"] = _answer(
         lambda: _client(runtime, frontend).login_password(bytearray(PROFILE_INPUT.encode()), timeout=120)
     )
 
-    # Held from the start, since an act the person takes on the way may end the stored sign-in.
-    resumed = _client(runtime, frontend)
-    resumed.resume_receipt()
-    locking = _client(runtime, frontend)
-    locking.resume_receipt()
-    # On the person's frontends the submission starts the operation, so it holds a connection of its own.
-    submitting = _client(runtime, frontend)
-    submitting.resume_receipt()
+    # Attendance is registered by a real human connection, never by fixture state.
+    if frontend is _EXTERNAL_CLIENT:
+        person = _client(runtime, _CLI)
+        person.resume_receipt()
+        assert person.attendance_inventory().candidates == ()
+        resumed = _attended(runtime, person)
+        answers["attendance_ask"] = _SERVED
+        locking = _attended(runtime, person)
+        submitting = _attended(runtime, person)
+    else:
+        answers["attendance_ask"] = _answer(_client(runtime, frontend, scope=_ATTENDANCE_SCOPE).request_attendance)
+        # Held before the person's later acts end sessions. Submission owns its connection.
+        resumed, locking, submitting = (_client(runtime, frontend) for _ in range(3))
+        for client in (resumed, locking, submitting):
+            client.resume_receipt()
     answers["session_inventory"] = _answer(resumed.sessions)
     answers["deny_automation"] = _answer(lambda: resumed.deny_automation(AutomationDenialKind.ALL))
     answers["enrollment_prepare"] = _answer(
@@ -185,11 +228,11 @@ def _doors(runtime: StoredSignInRuntime, frontend: OperationFrontendProjection, 
 
 
 def test_every_frontend_is_on_exactly_one_side() -> None:
-    assert frozenset(OperationFrontendProjection) == _PERSONS | _AGENTS
-    assert not _PERSONS & _AGENTS
+    assert frozenset(OperationFrontendProjection) == _PERSONS | _AUTOMATED
+    assert not _PERSONS & _AUTOMATED
 
 
-@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection), ids=lambda frontend: frontend.value)
+@pytest.mark.parametrize("frontend", (_CLI, _TUI, _EXTERNAL_CLIENT), ids=lambda frontend: frontend.value)
 def test_each_door_answers_each_frontend_by_whose_frontend_it_is(
     frontend: OperationFrontendProjection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -197,21 +240,16 @@ def test_each_door_answers_each_frontend_by_whose_frontend_it_is(
         answers = _doors(runtime, frontend, tmp_path)
         stored_after = runtime.stored_sign_in()
 
-    # Every frontend resumes the person's stored sign-in.
-    assert answers["receipt_resume"] == _SERVED, answers
-    # Only external client asks to be attended; a person signs in with their own proof, and the automation host only resumes.
+    assert answers["receipt_resume"] == (_PERSON if frontend is _EXTERNAL_CLIENT else _SERVED), answers
+    # An external client follows only the person's exact decision, without human receipt proof.
     if frontend is _EXTERNAL_CLIENT:
-        assert answers["attendance_ask"] != _INVALID_FRAME, answers
+        assert answers["attendance_ask"] == _SERVED, answers
     else:
         assert answers["attendance_ask"] == _INVALID_FRAME, answers
-    # A key admits every frontend but the automation host, which is admitted by the resumed sign-in alone.
-    if frontend is _AGENT_HOST:
-        assert answers["key_sign_in"] == _INVALID_FRAME, answers
-    else:
-        assert answers["key_sign_in"] not in {_INVALID_FRAME, _PERSON, _SERVED}, answers
+    assert answers["key_sign_in"] not in {_INVALID_FRAME, _PERSON, _SERVED}, answers
 
     acts = {act: answers[act] for act in _PERSONS_ACTS}
-    if frontend in _AGENTS:
+    if frontend in _AUTOMATED:
         assert acts == dict.fromkeys(_PERSONS_ACTS, _PERSON), answers
         # Refusing the automation took nothing from the person: the stored sign-in stands.
         assert stored_after is not None
@@ -229,3 +267,94 @@ def test_each_door_answers_each_frontend_by_whose_frontend_it_is(
         "human_sign_out",
     }
     assert {act: acts[act] for act in served} == dict.fromkeys(served, _SERVED), answers
+
+
+@pytest.mark.parametrize("frontend", (_DESKTOP, _SERVICE), ids=lambda frontend: frontend.value)
+def test_generic_login_cannot_claim_a_desktop_holder_or_installed_service(
+    frontend: OperationFrontendProjection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        expected_human = RefusalCode.PEER_UNTRUSTED.value if frontend is _DESKTOP else _PERSON
+        assert _answer(_client(runtime, frontend).resume_receipt) == expected_human
+        assert (
+            _answer(lambda: _client(runtime, frontend).login_password(bytearray(PROFILE_INPUT.encode())))
+            == expected_human
+        )
+        expected_key = RefusalCode.PEER_UNTRUSTED.value if frontend is _DESKTOP else _INVALID_FRAME
+        assert (
+            _answer(
+                lambda: _client(runtime, frontend).login_api_key(bytearray(b"synthetic-not-a-key-0000000000000000"))
+            )
+            == expected_key
+        )
+        assert _answer(_client(runtime, frontend, scope=_ATTENDANCE_SCOPE).request_attendance) == _INVALID_FRAME
+        assert runtime.stored_sign_in() is not None
+
+
+def test_controlled_service_admission_never_confers_person_acts(tmp_path: Path) -> None:
+    # The existing fixture controls installed-image verification; native transport,
+    # actual worker custody and human approval are real. This is no installed-image proof.
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        approved = runtime.admit(service)
+        assert isinstance(approved, ServiceConnected)
+        lease = service.claim()
+        assert lease is not None and lease.parent_session_id == runtime.person_session_id
+        assert lease.profile_id == runtime.profile_id
+        assert service.connected is not None and lease.connection_id == service.connected.connection_id
+        connection = service.connection
+        assert (
+            _answer(
+                lambda: connection.session_inventory(
+                    SessionInventory(request_id=uuid4(), profile_id=runtime.profile_id, session_id=lease.session_id),
+                    deadline=time.monotonic() + 30,
+                )
+            )
+            == _PERSON
+        )
+        assert (
+            _answer(
+                lambda: connection.deny_automation(
+                    AutomationDeny(
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=lease.session_id,
+                        kind=AutomationDenialKind.ALL,
+                    ),
+                    deadline=time.monotonic() + 30,
+                )
+            )
+            == _PERSON
+        )
+        assert (
+            _answer(
+                lambda: connection.attendance(
+                    AttendanceDecide(
+                        action="attendance_inventory",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=lease.session_id,
+                    ),
+                    deadline=time.monotonic() + 30,
+                )
+            )
+            == _PERSON
+        )
+        for action in ("session_lock", "human_sign_out"):
+            assert (
+                _answer(
+                    lambda action=action: connection.session(
+                        SessionRequest(
+                            action=action,
+                            request_id=uuid4(),
+                            profile_id=runtime.profile_id,
+                            session_id=lease.session_id,
+                        ),
+                        deadline=time.monotonic() + 30,
+                    )
+                )
+                == _PERSON
+            )
+        status = service.status()
+        assert isinstance(status, ProfileStatus) and status.status.denial is None
+        assert status.status.session_id == lease.session_id

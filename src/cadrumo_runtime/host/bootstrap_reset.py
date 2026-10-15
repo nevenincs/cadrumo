@@ -20,6 +20,7 @@ from cadrumo.application.user_profile.recovery_custody import (
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_client.contracts.automation_lifecycle import HumanSignInRevocationResult
 from cadrumo_client.contracts.bootstrap import (
     PasswordReset,
     PasswordResetCompleted,
@@ -32,8 +33,6 @@ from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, Refusal
 from cadrumo_client.contracts.profile_access import AccessRefusal, SecretReady
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import decode_document, read_secret, write_document
-
-from ..application.automation_lifecycle_service import HumanSignInRevocationResult
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections

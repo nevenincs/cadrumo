@@ -12,10 +12,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-
 from ...core.json_contract import strict_round_trip
 from ...domain.auth.apoderamientos.catalogue import ApoderadoScope, load_default_catalogue
+from ...domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ..reference_catalogue_contracts import ApoderadoScopesListResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

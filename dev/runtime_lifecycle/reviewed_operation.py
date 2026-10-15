@@ -68,7 +68,7 @@ from .proof_support import (
     started_processes,
     state_taxpayer,
 )
-from .session_holder import RuntimeSessionHolder
+from .session_holder import AsyncRuntimeSessionHolder
 
 _PROFILE = "reviewed-operation-acceptance"
 _REJECTED = "ledger.transaction.llm_suggestion.rejected"
@@ -292,7 +292,7 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, models
             else:
                 if profile.profile_id is None:
                     raise AcceptanceError("created profile has no verified identity")
-                holder = RuntimeSessionHolder(
+                holder = await AsyncRuntimeSessionHolder.start(
                     programs.runtime,
                     profile_id=profile.profile_id,
                     environment=environment,
@@ -310,10 +310,10 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, models
                             receipt.unproven.append(
                                 "reviewed operation: the package was built without the optional llm extra"
                             )
-                    closed = holder.command("close")
+                    closed = await holder.command("close")
                     require(closed.get("kind") == "session_closed", "runtime did not acknowledge held-session closure")
                 finally:
-                    holder.close()
+                    await holder.close()
         stopped = runtime.stop()
         require(stopped == 64, f"runtime exit: {stopped}")
         receipt.record("runtime_stopped", exit_code=stopped)

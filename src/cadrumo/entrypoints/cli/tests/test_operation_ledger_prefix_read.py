@@ -10,13 +10,13 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_ledger_prefix_read as prefix_read
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

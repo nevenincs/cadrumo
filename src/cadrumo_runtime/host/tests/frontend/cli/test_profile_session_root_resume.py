@@ -32,7 +32,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -40,10 +39,10 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now as _now
-from cadrumo.entrypoints.cli.common import cli_policy_refusal_projection
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo.entrypoints.cli.common import boundary_requested_leaf_scope, cli_policy_refusal_projection
 from cadrumo.entrypoints.cli.tests.error_boundary_scope import suspend_error_boundary
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
@@ -76,6 +75,13 @@ def _bucket_id_or_none(label: str = _LABEL) -> str | None:
 
     pointer = read_profile_bucket(label)
     return pointer.bucket_id if pointer is not None else None
+
+
+@pytest.fixture
+def native_runtime(_isolated_root: Path) -> Iterator[None]:
+    """Keep the actual native profile owner available for each command's admission."""
+    with native_profile_view_server(_isolated_root):
+        yield
 
 
 def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
@@ -241,7 +247,7 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
         # the label the operator came for.
         assert [row for row in document["result"]["profiles"] if row["name"] == _LABEL], document
 
-    def test_the_login_gate_still_refuses_a_decrypting_verb(self) -> None:
+    def test_the_login_gate_still_refuses_a_decrypting_verb(self, native_runtime: None) -> None:
         """The exemption opened one door, not the gate.
 
         Same logged-out state as above, driven through a verb that genuinely
@@ -290,11 +296,10 @@ class TestFailClosedRefusals:
         assert document["command"] == "config.profile.validate", document
         assert "error" not in document, document
 
-    def test_unnamed_history_reads_the_authenticated_active_profile(self) -> None:
-        bucket_id = _create_profile()
+    def test_unnamed_history_reads_the_authenticated_active_profile(self, native_runtime: None) -> None:
+        _create_profile()
 
-        with open_test_profile_session(bucket_id):
-            result = invoke_cached_cli(["--format", "json", "config", "profile", "history"])
+        result = _invoke_with_root_profile_secret(["--format", "json", "config", "profile", "history"])
 
         assert result.exit_code == 0, result.output
         document = json.loads(semantic_cli_output(result))
@@ -302,7 +307,7 @@ class TestFailClosedRefusals:
         assert document["active_profile"] == _LABEL, document
         assert document["result"]["bucket_id"] == "<bucket-id>", document
 
-    def test_explicit_history_reads_the_requested_profile_repository(self) -> None:
+    def test_explicit_history_reads_the_requested_profile_repository(self, native_runtime: None) -> None:
         # A credential-registered profile's bucket key is its own, so it is
         # opened through the real login door rather than a test-derived key,
         # which would read a different (empty) history.
@@ -319,8 +324,7 @@ class TestFailClosedRefusals:
         first_event = next(iter(first_catalogue.events.values()))
 
         _create_profile("history-second", tax_id="87654321X")
-        _login("history-first")
-        result = invoke_cached_cli(
+        result = _invoke_with_root_profile_secret(
             [
                 "--format",
                 "json",
@@ -339,7 +343,7 @@ class TestFailClosedRefusals:
         assert document["result"]["bucket_id"] == "<bucket-id>", document
         assert document["result"]["events"], document
 
-    def test_absent_session_refuses_naming_login(self) -> None:
+    def test_absent_session_refuses_naming_login(self, native_runtime: None) -> None:
         _create_profile()
         # Never logged in: no persisted session exists at all.
         close_active_bucket_session()
@@ -349,7 +353,7 @@ class TestFailClosedRefusals:
         assert result.exit_code != 0
         assert "aeat config login" in semantic_cli_output(result)
 
-    def test_a_newly_profile_bound_verb_still_offers_login_rather_than_create(self) -> None:
+    def test_a_newly_profile_bound_verb_still_offers_login_rather_than_create(self, native_runtime: None) -> None:
         """A registered-but-logged-out operator is told to log in, not to create a second profile.
 
         This is the regression a prior write-route review recorded: moving a
@@ -399,7 +403,7 @@ class TestFailClosedRefusals:
             f"{action['failed_condition_id']}"
         )
 
-    def test_absent_session_login_action_keeps_the_executable_profile_label(self) -> None:
+    def test_absent_session_login_action_keeps_the_executable_profile_label(self, native_runtime: None) -> None:
         """The typed login action carries the public label, never the bucket UUID."""
         bucket_id = _create_profile()
         close_active_bucket_session()
@@ -437,29 +441,30 @@ class TestFailClosedRefusals:
         )
         assert dispatched.exit_code == 0, dispatched.output
 
-    def test_absent_session_root_refusal_carries_the_login_action(self) -> None:
+    def test_absent_session_root_refusal_carries_the_login_action(self, native_runtime: None) -> None:
         _create_profile()
         close_active_bucket_session()
 
-        with (
-            override_settings(cadrumo_secret_passphrase=None),
-            suspend_error_boundary(),
-            pytest.raises(CliRefusedBoundaryError) as raised,
-        ):
-            cadrumo_click_command().main(
-                args=["--format", "json", "app", "ledger", "list"],
-                prog_name="aeat",
-                standalone_mode=False,
-            )
+        with boundary_requested_leaf_scope():
+            with (
+                override_settings(cadrumo_secret_passphrase=None),
+                suspend_error_boundary(),
+                pytest.raises(CliRefusedBoundaryError) as raised,
+            ):
+                cadrumo_click_command().main(
+                    args=["--format", "json", "app", "ledger", "list"],
+                    prog_name="aeat",
+                    standalone_mode=False,
+                )
 
-        projection = cli_policy_refusal_projection(raised.value)
-        assert projection is not None
-        assert projection.requested_leaf is not None
-        assert projection.requested_leaf.subject_leaf_key == "ledger.list"
-        assert projection.precondition_action.failed_condition_id == "profile.session.logged_in"
-        assert projection.precondition_action.action is not None
-        assert projection.precondition_action.action.action_id == "operator.profile.login"
-        assert projection.precondition_action.argument_bindings[0].value == _LABEL
+            projection = cli_policy_refusal_projection(raised.value)
+            assert projection is not None
+            assert projection.requested_leaf is not None
+            assert projection.requested_leaf.subject_leaf_key == "ledger.list"
+            assert projection.precondition_action.failed_condition_id == "profile.session.logged_in"
+            assert projection.precondition_action.action is not None
+            assert projection.precondition_action.action.action_id == "operator.profile.login"
+            assert projection.precondition_action.argument_bindings[0].value == _LABEL
 
     @pytest.mark.os_keychain
     def test_idle_expiry_refuses(self, _isolated_root: Path) -> None:
@@ -569,7 +574,7 @@ class TestFailClosedRefusals:
 class TestAmbientSecretIsNotACliChannel:
     """Configured substrate material cannot authenticate a CLI invocation."""
 
-    def test_configured_passphrase_is_ignored_without_an_explicit_root_channel(self) -> None:
+    def test_configured_passphrase_is_ignored_without_an_explicit_root_channel(self, native_runtime: None) -> None:
         _create_profile()
         close_active_bucket_session()
         assert load_settings().cadrumo_secret_passphrase is not None

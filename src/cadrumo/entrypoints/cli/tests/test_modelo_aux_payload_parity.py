@@ -20,10 +20,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.aggregation import RetencionClave
-
 from ....application.evidence.models import BundleVerificationState
 from ....application.evidence.payloads import EvidenceRecordRefPayload
+from ....core.aggregation import RetencionClave
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..modelo_aux_payloads import (
     ModeloAuditViewResult,

@@ -28,7 +28,9 @@ from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 def _graph_action_target(target: ActionTarget, graph: CommandSpecGraph) -> OperatorSurfaceReconciliation:
     """Project one declared target from its actual program, schema, policy and parents."""
     if graph.root().token != target.program.executable_name:
-        raise OperatorSurfaceContractError("operator_action_program", reason=f"wrong executable for {target.command_key}")
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"wrong executable for {target.command_key}"
+        )
     matches = tuple(node for node in graph.nodes() if node.spec.result_schema.identity == target.command_key)
     if len(matches) != 1:
         raise OperatorSurfaceContractError(
@@ -37,38 +39,67 @@ def _graph_action_target(target: ActionTarget, graph: CommandSpecGraph) -> Opera
     node = matches[0]
     metadata = command_registration_for_node(node, graph=graph)
     if metadata is None or metadata.cli_path is None or metadata.policy is None:
-        raise OperatorSurfaceContractError("operator_action_program", reason=f"unregistered action target: {target.command_key}")
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"unregistered action target: {target.command_key}"
+        )
     if not node.path or node.path[0] != target.program.executable_name or metadata.cli_path != node.path[1:]:
-        raise OperatorSurfaceContractError("operator_action_program", reason=f"wrong projected program path for {target.command_key}")
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"wrong projected program path for {target.command_key}"
+        )
     path = metadata.cli_path
     if len(path) < 2:
-        raise OperatorSurfaceContractError("operator_action_program", reason=f"unmounted action target: {target.command_key}")
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"unmounted action target: {target.command_key}"
+        )
     parent = graph.resolve_path(node.path[:2])
     family = graph.resolve_path(node.path[:3])
-    if parent.kind not in NON_LEAF_COMMAND_KINDS or family.kind not in NON_LEAF_COMMAND_KINDS or family.parent_key != parent.key:
-        raise OperatorSurfaceContractError("operator_action_program", reason=f"invalid mounted parents for {target.command_key}")
+    if (
+        parent.kind not in NON_LEAF_COMMAND_KINDS
+        or family.kind not in NON_LEAF_COMMAND_KINDS
+        or family.parent_key != parent.key
+    ):
+        raise OperatorSurfaceContractError(
+            "operator_action_program", reason=f"invalid mounted parents for {target.command_key}"
+        )
     provenance = f"{target.program.executable_name} CommandSpecGraph metadata"
     root_landing = node.spec.kind in NON_LEAF_COMMAND_KINDS and metadata.command.startswith("root.")
     return reconcile_operator_surface_inventory(
-        live_leaves=(LiveLeafInventoryRow(
-            subject_leaf_key=metadata.command, canonical_cli_path=path, program=target.program, provenance=provenance
-        ),),
-        result_schemas=(ResultSchemaInventoryRow(
-            subject_leaf_key=metadata.command, schema_name=metadata.schema_name, provenance=provenance
-        ),),
-        input_schemas=(InputSchemaInventoryRow(
-            subject_leaf_key=metadata.command, required_input_names=command_required_input_names(node.spec), provenance=provenance
-        ),),
+        live_leaves=(
+            LiveLeafInventoryRow(
+                subject_leaf_key=metadata.command,
+                canonical_cli_path=path,
+                program=target.program,
+                provenance=provenance,
+            ),
+        ),
+        result_schemas=(
+            ResultSchemaInventoryRow(
+                subject_leaf_key=metadata.command, schema_name=metadata.schema_name, provenance=provenance
+            ),
+        ),
+        input_schemas=(
+            InputSchemaInventoryRow(
+                subject_leaf_key=metadata.command,
+                required_input_names=command_required_input_names(node.spec),
+                provenance=provenance,
+            ),
+        ),
         mounted_families=(MountedFamilyInventoryRow(root=parent.token, child=family.token, provenance=provenance),),
-        profile_policies=(ProfilePolicyInventoryRow(
-            subject_leaf_key=metadata.command,
-            classification="profile_bound_write" if not root_landing and metadata.policy.write_route == "profile-bound" else "non_profile_bound",
-            should_expose_externally=not root_landing,
-            provenance=provenance,
-        ),),
-        surface_exposures=(SurfaceExposureInventoryRow(
-            subject_leaf_key=metadata.command, exposed=is_exposable_command_spec(node.spec), provenance=provenance
-        ),),
+        profile_policies=(
+            ProfilePolicyInventoryRow(
+                subject_leaf_key=metadata.command,
+                classification="profile_bound_write"
+                if not root_landing and metadata.policy.write_route == "profile-bound"
+                else "non_profile_bound",
+                should_expose_externally=not root_landing,
+                provenance=provenance,
+            ),
+        ),
+        surface_exposures=(
+            SurfaceExposureInventoryRow(
+                subject_leaf_key=metadata.command, exposed=is_exposable_command_spec(node.spec), provenance=provenance
+            ),
+        ),
     )
 
 
@@ -93,7 +124,8 @@ def current_program_action_reconciliation() -> OperatorSurfaceReconciliation:
         leaf = live_by_key.get(target.command_key)
         if leaf is None or ActionTarget.of_leaf(leaf) != target:
             raise OperatorSurfaceContractError(
-                "operator_action_program", reason=f"recorded action target differs from live program evidence: {target.command_key}"
+                "operator_action_program",
+                reason=f"recorded action target differs from live program evidence: {target.command_key}",
             )
     return reconciliation
 

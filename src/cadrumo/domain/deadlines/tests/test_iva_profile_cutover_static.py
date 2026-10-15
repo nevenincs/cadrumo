@@ -54,14 +54,9 @@ class _ProfileShapeExclusion:
     expected_count: int = 1
 
 
-# These are deliberately non-profile maps: censo-source labels, legal-reference
+# These are deliberately non-profile maps: legal-reference
 # metadata, blank-IVA refusal input, warning metadata, and raw calendar diagnostics.
 _LITERAL_NON_PROFILE_EXCLUSIONS = (
-    _ProfileShapeExclusion(
-        "src/cadrumo/entrypoints/cli/tests/_overview_calendar_support.py",
-        "_stamp_calendar_enrolment_from_censo",
-        "censo source-label map",
-    ),
     _ProfileShapeExclusion(
         "src/cadrumo/domain/user_profile/tests/test_taxpayer_type_schema_fields.py",
         "test_iva_profile_selector_legal_refs_resolve_against_catalogue",

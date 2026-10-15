@@ -33,14 +33,13 @@ from cadrumo.application.user_profile.automation_enrollment import Administratio
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest, HumanSignInRevocationResult
 from cadrumo_client.contracts.contracts import Peer
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepared
 from cadrumo_client.contracts.transport import ConnectionContext
 
 from ...application.automation_lifecycle_service import (
     AutomationLifecycleService,
-    AutomationResumeRequest,
-    HumanSignInRevocationResult,
 )
 from ..enrollment_offer import RuntimeEnrollmentOffer
 from ..profile_host import ProfileConnection, RuntimeProfileHost

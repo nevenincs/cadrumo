@@ -7,6 +7,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
@@ -27,7 +28,6 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from .common import no_active_profile_refusal
-from .errors import CliRefusedBoundaryError
 
 
 @dataclass(frozen=True, slots=True)

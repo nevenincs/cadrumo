@@ -1,0 +1,19 @@
+desktop:
+  attendance:
+    actions: Acciones
+    all_periods: Todos los periodos
+    changes: Cambios de registros
+    delegation: Delegación
+    disclosures: Divulgaciones
+    executable: Ejecutable
+    expires: Caduca
+    failed: 'Decisión de acceso no disponible: {code}'
+    network: Acceso a la red
+    'no': 'No'
+    none: Ninguno
+    operations: Operaciones
+    period_independent: Trabajo sin periodo
+    periods: Periodos
+    process: Proceso
+    title: Un proceso externo solicita acceso
+    'yes': Sí

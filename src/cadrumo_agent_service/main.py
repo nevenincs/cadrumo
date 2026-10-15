@@ -17,7 +17,7 @@ from .admin import AdminServer
 from .contracts import ServiceStartupFrame
 from .host.credential_frame import wipe
 from .installed_client import SERVICE_ID, open_service_client
-from .service import AgentService
+from .service import AgentService, service_failure
 
 _OUTPUT_GUARD = Lock()
 
@@ -38,7 +38,7 @@ def main() -> None:
 
 
 def _serve() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog=SERVICE_ID, description=__doc__)
     parser.add_argument("command", choices=("serve",))
     parser.add_argument("--profile-id", required=True, type=UUID)
     parser.add_argument("--agent-source")
@@ -109,13 +109,13 @@ def _serve() -> None:
                     result = service.start()
                     if result["event"] != "agent_ready":
                         _publish(result)
-                except Exception:
-                    _publish({"event": "refused", "code": "service_failed"})
+                except Exception as error:
+                    _publish(service_failure(error))
                 started = True
             elif not service.observe():
                 service.stop()
-    except Exception:
-        _publish({"event": "refused", "code": "service_failed"})
+    except Exception as error:
+        _publish(service_failure(error))
     finally:
         cleanup_failed = False
         if service is not None:

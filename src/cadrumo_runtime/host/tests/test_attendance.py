@@ -110,9 +110,9 @@ def _client(
             launch,
             profile_id=profile_id,
             frontend=frontend,
-            scope=scope if scope is not None else (
-                _ATTENDANCE_SCOPE if frontend is OperationFrontendProjection.EXTERNAL_CLIENT else None
-            ),
+            scope=scope
+            if scope is not None
+            else (_ATTENDANCE_SCOPE if frontend is OperationFrontendProjection.EXTERNAL_CLIENT else None),
         )
     )
 

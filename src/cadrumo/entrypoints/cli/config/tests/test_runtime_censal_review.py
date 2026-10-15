@@ -57,7 +57,7 @@ from cadrumo.application.user_profile.censal_operation import (
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.entrypoints.cli.config.operation_censal_review import review_censal_operation
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,

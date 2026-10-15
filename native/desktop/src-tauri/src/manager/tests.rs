@@ -651,7 +651,7 @@ fn manager_path_is_taken_from_the_package_projection_and_is_unambiguous() {
     }];
     assert_eq!(
         contract.manager_member().unwrap().as_str(),
-        "fixture-manager.exe"
+        format!("fixture-manager{}", contract.layout.entrypoint_suffix)
     );
     contract.layout.application_images[0].name = "../foreign".into();
     assert!(contract.manager_member().is_err());

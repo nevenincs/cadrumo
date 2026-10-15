@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ...compiler.loader import load_modelo_directory
@@ -31,7 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REVISION = "2024-2025"
 _PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"
-_SHIPPED_SECOND_FIELD = "id = 'm296-2024.perceptor.f002'\noffset = 2\nlength = 3\n"
 
 
 def _status(*, export_placement: ExportPlacementCensus) -> RegistryStatus:
@@ -58,15 +58,15 @@ def _modelo_296(tmp_path: Path, *, second_field_length: int | None = None) -> Mo
     shutil.copytree(bundled_registry_root() / "modelos" / "296", modelo_dir)
     if second_field_length is not None:
         record = modelo_dir / _PERCEPTOR_RECORD
-        text = record.read_text(encoding="utf-8")
-        assert _SHIPPED_SECOND_FIELD in text
-        record.write_text(
-            text.replace(
-                _SHIPPED_SECOND_FIELD,
-                _SHIPPED_SECOND_FIELD.replace("length = 3", f"length = {second_field_length}"),
-            ),
-            encoding="utf-8",
+        document = load_toml(record)
+        export_layouts = document["revisions"][_REVISION]["export_layouts"]
+        perceptor = next(
+            item for layout in export_layouts for item in layout["records"] if item["id"] == "m296-perceptor"
         )
+        second_field = next(field for field in perceptor["fields"] if field["id"] == "m296-2024.perceptor.f002")
+        assert (second_field["offset"], second_field["length"]) == (2, 3)
+        second_field["length"] = second_field_length
+        record.write_text(render_toml(document), encoding="utf-8", newline="\n")
     return load_modelo_directory(modelo_dir)
 
 

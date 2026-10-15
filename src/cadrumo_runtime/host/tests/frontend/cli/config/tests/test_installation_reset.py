@@ -729,7 +729,7 @@ def test_a_connection_whose_endpoint_could_not_be_released_is_reported_and_nothi
     _forbid_the_in_process_reset(monkeypatch)
     with _installed(tmp_path) as installation:
         capsules = [_capsule(installation, profile) for profile in installation.profiles]
-        monkeypatch.setattr(installation_client, "WindowsRuntimeEndpoint", _EndpointThatCannotBeReleasedOnceConnected)
+        monkeypatch.setattr(installation_client, "WindowsEndpoint", _EndpointThatCannotBeReleasedOnceConnected)
 
         printed = _invoke("start", "--yes")
         with pytest.raises(CliRefusedBoundaryError) as refused:

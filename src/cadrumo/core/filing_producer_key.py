@@ -83,7 +83,7 @@ class FilingProducerKey(StrEnum):
     )
     M111_COLEGIO_CONCERTADO = "m111.colegio_concertado"
     #: Modelo 360's solicitante: an empresario not established in the territory
-    #: of application of the tax, asking to recover Spanish input VAT. Its address
+    #: of application of the tax, asking to recover Spanish input IVA. Its address
     #: Deliberately NOT merged with `irnr.representante.domicilio.*`. AEAT asks
     #: Modelo 210 for the municipio's five-digit INE CODE and the provincia's
     #: two-digit code; it asks Modelo 360 for the municipio's NAME in thirty

@@ -60,12 +60,14 @@ def test_projection_environment_preserves_the_published_authority_dependency(
 
 
 def _collect_all_path_keys_in_subprocess() -> set[str]:
-    """Return every command path authored by the immutable graph."""
+    """Return every command path authored by the immutable graphs."""
     code = textwrap.dedent(
         """
         from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-        for node in COMMAND_GRAPH.nodes():
-            print(' '.join(node.path))
+        from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+        for graph in (COMMAND_GRAPH, RUNTIME_COMMAND_GRAPH):
+            for node in graph.nodes():
+                print(' '.join(node.path))
         """,
     )
     with TemporaryDirectory(prefix="cadrumo-cli-tree-cov-") as storage_root:
@@ -168,29 +170,33 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
         assert node.profile_authentication == row.profile_authentication
         if node.machine_secret_payloads:
             secret_paths.add(path)
+    # Interactive profile-authentication metadata is projected separately;
+    # these are the seven commands with machine-secret payload contracts.
     assert secret_paths == {
         ("aeat", "app", "ledger", "account", "add"),
         ("aeat", "app", "ledger", "account", "update"),
         ("aeat", "app", "modelo", "m360", "declare"),
         ("aeat", "config", "login"),
         ("aeat", "config", "logout"),
-        ("aeat", "config", "passphrase", "change"),
-        ("aeat", "config", "passphrase", "reset"),
-        ("aeat", "config", "profile", "create"),
-        ("aeat", "config", "profile", "resume"),
-        ("aeat", "config", "profile", "automation", "create"),
-        ("aeat", "config", "profile", "automation", "change"),
-        ("aeat", "config", "profile", "automation", "approve"),
-        ("aeat", "config", "profile", "recovery", "enable"),
-        ("aeat", "config", "profile", "recovery", "disable"),
         ("aeat", "config", "profile", "archive", "import"),
-        ("aeat", "config", "auth", "certificate", "secret", "set"),
-        ("aeat", "config", "provider", "set"),
+        ("aeat", "config", "profile", "create"),
     }
 
     root = resolve_command_path(cli_tree, "aeat")
     assert root.profile_authentication_contract == registration.profile_authentication_contract
-    assert all(node.profile_authentication_contract is None for key, node in cli_tree.root.items() if key != "aeat")
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+    from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+
+    for graph in (COMMAND_GRAPH, RUNTIME_COMMAND_GRAPH):
+        graph_registration = command_registration_projection(graph=graph)
+        root_path = (graph.root().token,)
+        for graph_node in graph.nodes():
+            projected = resolve_command_path(cli_tree, graph_node.path)
+            expected_contract = (
+                graph_registration.profile_authentication_contract if graph_node.path == root_path else None
+            )
+            assert projected.profile_authentication_contract == expected_contract
+
     rendered = serialise_cli_tree(cli_tree).lower()
     assert all(token not in rendered for token in ('"value"', '"example"', "secretstr"))
 

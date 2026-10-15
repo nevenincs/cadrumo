@@ -36,7 +36,7 @@ from cadrumo.application.operations.access_resolution import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
+from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -51,7 +51,6 @@ from dev.operation_contract_manifest.tests.test_operation_frontend_parity import
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (
     _ALLOWED,
     _CLIENT,
-    _SCOPE_DENIED,
     _registry,
     answer_for_resolved_access,
 )
@@ -131,7 +130,7 @@ def _assert_the_surface_would_catch_a_commit(
     assert AccessAction.COMMIT in committing.policy.actions
     assert answer_for_resolved_access(committing, None, registry=registry, human=human) == _ALLOWED, definition_id
     refused = answer_for_resolved_access(committing, _READ_ONLY_LOCAL, registry=registry, human=human)
-    assert refused == _SCOPE_DENIED, definition_id
+    assert refused == AccessDenialCode.OPERATION_DENIED.value, definition_id
 
 
 @pytest.mark.parametrize("definition_id", _listed())

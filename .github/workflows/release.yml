@@ -938,6 +938,39 @@ jobs:
         if: ${{ !cancelled() }}
         run: just test-powershell-literal
 
+  test-native-ci:
+    name: "Test: Native package verification (Windows)"
+    needs: [check-prove-ref, publish-authority]
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 150
+    env:
+      CADRUMO_PACKAGE_AGENT_SOURCE_DIR: ${{ vars.CADRUMO_PACKAGE_AGENT_SOURCE_DIR }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority
+
+      - name: Require the repository agent-source variable
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR)) {
+            throw 'Repository variable CADRUMO_PACKAGE_AGENT_SOURCE_DIR must name the cadrumo-agent project directory.'
+          }
+
+      - name: Native package verification
+        shell: pwsh
+        run: |
+          just test-native-ci "$env:CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
   check-proven:
     name: "Check: Release proven (Linux)"
     needs:
@@ -953,6 +986,7 @@ jobs:
       - test-homebrew
       - test-scoop
       - test-windows-only
+      - test-native-ci
       - test-runtime-smoke
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]

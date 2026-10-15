@@ -31,9 +31,6 @@ from cadrumo.core.hashing import sha256_file
 from cadrumo.core.i18n.render import output_language
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.review_publication_labels import GoogleReviewLabels
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.profile_access import status_admits_session
-from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
 from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewModal, GoogleSavedReviewScreen
@@ -41,6 +38,9 @@ from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
 from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.transport.frontend_client import FrontendClient
 
 
 class GoogleReviewTuiAcceptanceError(RuntimeError):

@@ -11,6 +11,7 @@ import pytest
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -43,7 +44,6 @@ from ....application.operations.models import OperationId
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.attachments.enums import AttachmentSource
 from .. import operation_ledger_evidence_followup as bridge
-from ..errors import CliRefusedBoundaryError
 from ..ledger_business_payloads import (
     AttachmentReviewQueueResult,
     AttachmentReviewViewResult,

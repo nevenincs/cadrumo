@@ -53,4 +53,5 @@ class ConfigLogoutResult(OutputSchema):
     receipt_removed: bool | None = None
     keychain_removed: bool | None = None
     automation_enabled: bool | None = None
+    automation_access_remains: bool | None
     automation_revoked: Literal[False] = False

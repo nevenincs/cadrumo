@@ -286,7 +286,7 @@ def test_repository_discovers_its_module_execution_roots() -> None:
 
     assert spec.package == "cadrumo"
     assert "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" in spec.module_roots
-    assert "cadrumo.entrypoints.tui.__main__" not in spec.module_roots
+    assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
     assert is_module_execution_surface(REPO_ROOT / "src/cadrumo/entrypoints/tui/__main__.py")
 
 

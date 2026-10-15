@@ -60,17 +60,16 @@ def test_write_retries_a_windows_sharing_refusal_during_atomic_publication(
     from .. import atomic_write, bucket_pointer
 
     calls = 0
-    original = atomic_write.atomic_write_hardened_bytes
 
-    def temporarily_contended(path: Path, data: bytes) -> None:
+    def temporarily_contended(staged: atomic_write.StagedPublication) -> None:
         nonlocal calls
         calls += 1
         if calls == 1:
             raise PermissionError(13, "transient Windows sharing refusal")
-        original(path, data)
+        staged.publish()
 
     monkeypatch.setattr(bucket_pointer.sys, "platform", "win32")
-    monkeypatch.setattr(atomic_write, "atomic_write_hardened_bytes", temporarily_contended)
+    monkeypatch.setattr(atomic_write.StagedPublication, "publish_with_open_readers", temporarily_contended)
     write_pointer(tmp_path, _selected("alpha", 1))
 
     assert calls == 2

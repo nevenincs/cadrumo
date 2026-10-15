@@ -196,6 +196,8 @@ def _admit_authority_at_startup() -> None:
     parsing has accepted it, so help, a bare group and a parse-time refusal
     write nothing.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.cli_provisioning import admit_cli_authority
     from ...application.profile_preconditions import (
         FormerProductDetectionScope,
@@ -204,7 +206,7 @@ def _admit_authority_at_startup() -> None:
     from ...core.config_state_root import FormerProductStateError
     from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
     from .common import attach_cli_policy_verdict
-    from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error
+    from .errors import emit_error_and_exit, project_cli_boundary_error
 
     try:
         admit_cli_authority()
@@ -310,13 +312,12 @@ def _jsonable_command_surface_value(value: object) -> object:
 
 
 def _emit_command_surface_manifest() -> None:
-    """Emit the graph-owned command surface for an independent outer root.
+    """Emit the graph-owned Tax command surface through its process interface.
 
-    This is a process boundary, not an import bridge: the retained harness
-    invokes the installed ``aeat`` executable and consumes this closed JSON
-    projection.  The graph, result schemas, policies, and input projections
-    therefore remain authoritative in the CLI composition root without making
-    the harness import a sibling entrypoint.
+    External command consumers invoke the installed ``aeat`` executable and
+    read this closed JSON projection. The graph, result schemas, policies and
+    input projections remain authoritative in the Tax CLI composition root;
+    consumers read its process output without importing the entrypoint.
     """
     import json
 

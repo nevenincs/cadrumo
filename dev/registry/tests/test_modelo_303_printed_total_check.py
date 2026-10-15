@@ -25,6 +25,7 @@ import re
 import tomllib
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -66,16 +67,6 @@ _TOTAL_FORMULA = 'id = "modelo-303-iva-cuota-devengada-total"'
 _DESIGN_TOTAL_ROW = re.compile(r"Total cuota devengada\s*\((?P<addends>[^)]*)\)\s*\[27\]")
 _DESIGN_BOX = re.compile(r"\[(\d+)\]")
 
-#: One filing context per revision that carries the promotor's autoconsumo base.
-_AUTOCONSUMO_CONTEXTS: tuple[tuple[int, str], ...] = (
-    (2022, "1T"),
-    (2023, "1T"),
-    (2024, "1T"),
-    (2024, "3T"),
-    (2025, "1T"),
-    (2026, "1T"),
-)
-
 #: The editions that state the printed-total predicate; every other edition inherits it.
 _DECLARING_EDITIONS = ("2022", "2023", "2024-desde-09-y-3t")
 
@@ -86,6 +77,73 @@ _STATUTORY_GENERAL_RATE = Decimal("0.21")
 _AUTOCONSUMO_CUOTA = _AUTOCONSUMO_BASE * _STATUTORY_GENERAL_RATE
 #: An amount the mutated total adds outside every printed box.
 _UNPRINTED_AMOUNT = Decimal("210.00")
+_QUARTERLY_PERIOD_PREFERENCE = ("1T", "2T", "3T", "4T")
+
+
+@lru_cache(maxsize=1)
+def _autoconsumo_contexts() -> tuple[tuple[int, str], ...]:
+    """Choose a declared quarterly filing coordinate that canonically selects each carrying revision."""
+    modelo, catalogues = load_modelo_303()
+    support = catalogues.require_supported_filing_years()
+    contexts: list[tuple[int, str]] = []
+
+    carrying_revisions = sorted(
+        (
+            revision
+            for revision in modelo.revisions.values()
+            if any(binding.id == _AUTOCONSUMO_BASE_BINDING for binding in revision.bindings)
+        ),
+        key=lambda revision: (revision.valid_from, revision.id),
+    )
+    for revision in carrying_revisions:
+        selector = revision.period_selector
+        if selector.years:
+            years = sorted(year for year in selector.years if support.floor <= year <= support.horizon)
+        else:
+            assert selector.year_from is not None
+            first_year = max(selector.year_from, support.floor)
+            last_year = min(selector.year_to or support.horizon, support.horizon)
+            years = range(first_year, last_year + 1)
+
+        selected_context = None
+        for year in years:
+            declared_periods = selector.periods_for_year(year)
+            candidate_periods = (
+                *(period for period in _QUARTERLY_PERIOD_PREFERENCE if period in declared_periods),
+                *(period for period in declared_periods if period not in _QUARTERLY_PERIOD_PREFERENCE),
+            )
+            for period in candidate_periods:
+                snapshot = build_snapshot(
+                    modelo,
+                    catalogues,
+                    source_root=bundled_path(),
+                    filing_year=year,
+                    period=period,
+                )
+                if snapshot.revision.id == revision.id:
+                    selected_context = (year, str(period))
+                    break
+            if selected_context is not None:
+                break
+        assert selected_context is not None, (
+            f"{revision.id}: no supported declared filing coordinate selects the revision carrying "
+            f"{_AUTOCONSUMO_BASE_BINDING}"
+        )
+        contexts.append(selected_context)
+
+    assert contexts, f"no Modelo 303 revision carries {_AUTOCONSUMO_BASE_BINDING}"
+    return tuple(contexts)
+
+
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
+    """Parametrize behavioral checks from canonical filing coordinates, not a frozen revision list."""
+    if metafunc.definition.name in {
+        "test_an_autoconsumo_base_stated_at_the_general_rate_lands_in_the_printed_boxes",
+        "test_an_autoconsumo_base_not_stated_per_rate_is_refused_not_left_out",
+        "test_an_amount_the_total_adds_outside_the_printed_boxes_refuses_with_the_printed_sum",
+        "test_the_same_declaration_without_autoconsumo_raises_no_blocking_finding",
+    }:
+        metafunc.parametrize(("filing_year", "period"), _autoconsumo_contexts())
 
 
 def _design_addends(revision: ModeloRevision, catalogues: RegistryCatalogues) -> tuple[str, ...]:
@@ -243,14 +301,13 @@ def test_the_autoconsumo_contexts_cover_every_revision_that_carries_the_autocons
     }
     selected = {
         build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=year, period=period).revision.id
-        for year, period in _AUTOCONSUMO_CONTEXTS
+        for year, period in _autoconsumo_contexts()
     }
 
     assert carrying
     assert selected == carrying
 
 
-@pytest.mark.parametrize(("filing_year", "period"), _AUTOCONSUMO_CONTEXTS)
 def test_an_autoconsumo_base_stated_at_the_general_rate_lands_in_the_printed_boxes(
     filing_year: int, period: str
 ) -> None:
@@ -276,7 +333,6 @@ def test_an_autoconsumo_base_stated_at_the_general_rate_lands_in_the_printed_box
     assert _blocking(findings) == [], revision_id
 
 
-@pytest.mark.parametrize(("filing_year", "period"), _AUTOCONSUMO_CONTEXTS)
 def test_an_autoconsumo_base_not_stated_per_rate_is_refused_not_left_out(filing_year: int, period: str) -> None:
     modelo, catalogues = load_modelo_303()
     revision_id, values, findings = _calculated_findings(
@@ -299,7 +355,6 @@ def test_an_autoconsumo_base_not_stated_per_rate_is_refused_not_left_out(filing_
     )
 
 
-@pytest.mark.parametrize(("filing_year", "period"), _AUTOCONSUMO_CONTEXTS)
 def test_an_amount_the_total_adds_outside_the_printed_boxes_refuses_with_the_printed_sum(
     unprinted_amount_tree: Path, filing_year: int, period: str
 ) -> None:
@@ -329,7 +384,6 @@ def test_an_amount_the_total_adds_outside_the_printed_boxes_refuses_with_the_pri
     assert finding.message_facts["printed_sum"] == _GENERAL_CUOTA
 
 
-@pytest.mark.parametrize(("filing_year", "period"), _AUTOCONSUMO_CONTEXTS)
 def test_the_same_declaration_without_autoconsumo_raises_no_blocking_finding(filing_year: int, period: str) -> None:
     modelo, catalogues = load_modelo_303()
     revision_id, values, findings = _calculated_findings(
@@ -426,6 +480,8 @@ def test_mutation_removing_the_predicate_lets_the_unprinted_total_through(tmp_pa
 
 
 def test_mutation_dropping_a_design_addend_breaks_design_parity(tmp_path: Path) -> None:
+    original, original_catalogues = load_modelo_303()
+    assert _design_parity_failures(original, original_catalogues) == []
     scratch_root = scratch_registry_tree(tmp_path, "303")
     directory = scratch_root / "modelos" / "303" / "revisions" / "2024-desde-09-y-3t"
     mutated = 0
@@ -455,9 +511,27 @@ def test_mutation_dropping_a_design_addend_breaks_design_parity(tmp_path: Path) 
     mutant = next(modelo for modelo in modelos if modelo.id == "303")
     failures = _design_parity_failures(mutant, catalogues)
 
-    # The edition stating the list and the two that inherit it all diverge from their designs.
-    assert sorted(failure.split(":", 1)[0] for failure in failures) == [
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ]
+    # The source design is independent of the declaration. Derive every affected
+    # effective revision from the before/after predicate delta, including any
+    # later revision that inherits this declaration, then require exact parity
+    # failures for precisely those changed revisions.
+    expected_affected: set[str] = set()
+    for revision_id, original_revision in original.revisions.items():
+        original_addends = _declared_addends(original_revision)
+        source_addends = _design_addends(original_revision, original_catalogues)
+        assert original_addends == source_addends, revision_id
+
+        mutant_revision = mutant.revisions[revision_id]
+        mutant_addends = _declared_addends(mutant_revision)
+        if mutant_addends == original_addends:
+            continue
+
+        assert original_addends is not None
+        assert original_addends.count("26") == 1, revision_id
+        assert mutant_addends == tuple(box for box in original_addends if box != "26"), revision_id
+        expected_affected.add(revision_id)
+
+    actual_affected = {failure.split(":", 1)[0] for failure in failures}
+    assert expected_affected
+    assert actual_affected == expected_affected
+    assert len(failures) == len(expected_affected)

@@ -558,24 +558,6 @@ desktop:
     zoom_in: Zoom docs in
     zoom_out: Zoom docs out
     zoom_reset: Reset docs zoom
-  attendance:
-    actions: Actions
-    all_periods: All periods
-    changes: Record changes
-    delegation: Delegation
-    disclosures: Disclosures
-    executable: Executable
-    expires: Expires
-    failed: 'Access decision unavailable: {code}'
-    network: Network access
-    'no': 'No'
-    none: None
-    operations: Operations
-    period_independent: Work without a period
-    periods: Periods
-    process: Process
-    title: External process requests access
-    'yes': 'Yes'
   automation_access:
     cancel: Cancel
     cleanup_pending: Revoked. Its stored key is still being removed from this computer.

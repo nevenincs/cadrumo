@@ -15,6 +15,7 @@ from .._casilla_keys import is_delta_keyed_leaf
 from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 from .._registry_scanner import scan_form_layout_heading_keys
 from ..cli import app
+from ..desktop_chrome import DESKTOP_CHROME_KEYS, desktop_chrome_strings
 from ..errors import LocaleError
 from ..locale_nodes import LocaleNode
 from ..locale_yaml import locale_catalogue_source
@@ -97,13 +98,13 @@ def _assert_identity_contract(
 _ROOT_HEADING_IDENTITY_TOKENS = frozenset({"CADRUMO", "AEAT"})
 _LANDING_HEADLINE_IDENTITY_TOKENS = frozenset({"CADRUMO"})
 
-# A command family's own catalogue strings live under ``cli.<root>.<child>``.
+# The passphrase catalogue namespace remains for runtime copy, but its CLI family
+# is intentionally unmounted while passphrase rotation is unavailable. Keep its
+# naming contract without treating the copy as a live command surface.
 _CUSTODY_PASSPHRASE_NAMESPACE = ("cli", "config", "passphrase")
-# The `config rekey` -> `config passphrase change` rename moved this family's
-# prompts to `cli.config.custody` and `cli.config.profile`. Only the namespace's
-# own surviving leaves belong here, and they split by identity contract, so each
-# group is asserted separately -- one `expected` set applies to every leaf named
-# in a single call.
+# The namespace's surviving leaves split by identity contract, so each group is
+# asserted separately -- one `expected` set applies to every leaf named in a
+# single call.
 _CUSTODY_PASSPHRASE_HELP_LEAVES = ("help", "change_help")
 # Command help is a label, not operator-addressed prose: it names no product.
 _CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS: frozenset[str] = frozenset[str]()
@@ -140,6 +141,19 @@ def _assert_command_family_catalogue_strings(
     """
 
     _assert_declared_command_family(namespace)
+    _assert_catalogue_strings(data, namespace, leaves=leaves, expected=expected)
+
+
+def _assert_unmounted_catalogue_strings(
+    data: dict[str, LocaleNode],
+    namespace: tuple[str, ...],
+    *,
+    leaves: tuple[str, ...],
+    expected: frozenset[str],
+) -> None:
+    """Keep identity coverage for retained catalogue copy outside mounted CLI families."""
+    matches = [family for family in MOUNTED_COMMAND_FAMILIES if ("cli", family.root.value, family.child) == namespace]
+    assert not matches, f"{'.'.join(namespace)} is intentionally unmounted but appears in the family register."
     _assert_catalogue_strings(data, namespace, leaves=leaves, expected=expected)
 
 
@@ -193,18 +207,26 @@ def _committed_catalogues(manager) -> dict[str, Path]:
 def locales_state(manager):
     codebase_keys = manager.get_codebase_keys()
     sources = _committed_catalogues(manager)
+    # Desktop shell keys are projected from the app, runtime, and service owners
+    # into one generated locale resource. Compare those concrete references with
+    # the same composed output, not only the app catalogue directory.
+    desktop_strings = desktop_chrome_strings(manager.locales_dir, keys=DESKTOP_CHROME_KEYS)
     # Casilla leaves are stored only where a locale holds distinct text, so their key sets differ
     # by design; their coverage is judged through resolution by the casilla catalogue.
     # Form layout headings are optional registry-declared translations, judged by the layout heading tests.
     layout_headings = scan_form_layout_heading_keys()
-    locale_keys_map = {
-        code: {
+    locale_keys_map: dict[str, set[str]] = {}
+    for code, path in sources.items():
+        keys = {
             key
             for key in manager.get_yaml_keys(manager.load_locale(path))
             if not is_delta_keyed_leaf(key) and key not in layout_headings
         }
-        for code, path in sources.items()
-    }
+        if code in desktop_strings:
+            # The codebase projection intentionally excludes service-owned keys;
+            # only compose desktop keys that belong to this parity surface.
+            keys.update(desktop_strings[code].keys() & codebase_keys)
+        locale_keys_map[code] = keys
     return codebase_keys, locale_keys_map, sources
 
 
@@ -244,13 +266,13 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Google Drive vault folder {vault_folder_name} belongs to the former product and cannot be used; "
         "use the Cadrumo vault instead."
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
         expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
@@ -321,13 +343,13 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "headline",
         expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
         expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
@@ -351,13 +373,13 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "La carpeta vault de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
         "usa la carpeta vault de Cadrumo."
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
         expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,
@@ -429,13 +451,13 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
         "headline",
         expected=_LANDING_HEADLINE_IDENTITY_TOKENS,
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
         expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
     )
-    _assert_command_family_catalogue_strings(
+    _assert_unmounted_catalogue_strings(
         data,
         _CUSTODY_PASSPHRASE_NAMESPACE,
         leaves=_CUSTODY_PASSPHRASE_NOTICE_LEAVES,

@@ -6,6 +6,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ...application.modelo.m036_operation import M036DeclarationSnapshot
 from ...core.i18n.render import tr
 from ...core.parsing.dates import parse_iso8601_date
@@ -18,7 +20,6 @@ from ._modelo_payloads_m036 import (
     M036DeclarationShowResult,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .errors import CliRefusedBoundaryError
 from .operation_modelo_m036 import read_modelo_m036, record_modelo_m036
 
 

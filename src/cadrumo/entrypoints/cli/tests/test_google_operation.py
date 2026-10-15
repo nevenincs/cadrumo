@@ -14,6 +14,8 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -41,7 +43,6 @@ from ....core.operations import (
 )
 from ...operation_composition import compose_operation_dependencies
 from .._modelo_spreadsheet_payloads import ModeloSpreadsheetPushResult
-from ..errors import CliRefusedBoundaryError
 from ..operation_modelo_spreadsheet_push import google_operation_error
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

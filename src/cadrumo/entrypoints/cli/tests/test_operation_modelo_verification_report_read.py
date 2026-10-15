@@ -10,6 +10,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.modelo.verification_report_public_facts import ModeloVerificationReportProjection
@@ -36,7 +37,6 @@ from ....domain.modelos.verification_report import (
 from .. import operation_modelo_verification_report_read as bridge
 from .._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
 from .._modelo_rendering import verification_report_lines, verification_report_payload
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

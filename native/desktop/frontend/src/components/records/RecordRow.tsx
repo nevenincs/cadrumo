@@ -46,6 +46,12 @@ export const RecordRow = memo(function RecordRow({
   const hasDetails = !!record.detail || hasContext;
   const retryDelay = context.delay_ms ?? context.service_delay_ms;
   const summary = [
+    context.command,
+    context.envelope_decode,
+    context.code,
+    context.exception_type,
+    context.raised_at,
+    context.native_subject,
     context.stage,
     context.startup_phase,
     context.phase,

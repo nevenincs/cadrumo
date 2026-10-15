@@ -18,6 +18,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -26,10 +27,34 @@ from cadrumo_client.transport.windows_channel import WindowsChannel
 from cadrumo_client.transport.windows_native_io import owned_windows_handle
 from cadrumo_runtime.adapters.boot_record import RuntimeBootRecord, read_runtime_boot_record
 from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
+from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from dev.packaging.command_execution import run_command
 
 _REVEAL_IDENTIFIERS = "CADRUMO_CLI_REVEAL_IDENTIFIERS"
 """The command line's operator opt-in to print the identifiers its output otherwise hides."""
+
+
+def _cli_document(output: str, *, success: bool) -> dict[str, Any]:
+    """Read one result, or a final refusal after stderr diagnostics."""
+    try:
+        document = json.loads(output)
+    except json.JSONDecodeError:
+        if success:
+            raise
+        lines = [line for line in output.splitlines() if line.strip()]
+        if not lines:
+            raise RuntimeError("Lifecycle CLI returned no error envelope") from None
+        document = json.loads(lines[-1])
+        for line in lines[:-1]:
+            try:
+                prior = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(prior, dict) and prior.get("schema_version") == "2" and "status" in prior:
+                raise RuntimeError("Lifecycle CLI returned multiple envelopes") from None
+    if not isinstance(document, dict) or document.get("schema_version") != "2":
+        raise RuntimeError("Lifecycle CLI returned no versioned envelope")
+    return document
 
 
 @dataclass(frozen=True, repr=False)
@@ -209,14 +234,16 @@ class LifecycleHarness:
         if reveal_identifiers:
             environment[_REVEAL_IDENTIFIERS] = "1"
         payload = None if secret is None else bytearray(json.dumps(secret), "utf-8")
-        direct_tax_auth = arguments[:1] in {("login",), ("logout",)} or arguments[:2] in {
-            ("profile", "create"),
-            ("profile", "list"),
-        }
-        image = self.cli_image if direct_tax_auth else self.runtime_image
+        invocation = ["--format", "json", *profile_arguments, "config", *arguments]
+        if COMMAND_GRAPH.resolve_invocation(invocation) is not None:
+            image = self.cli_image
+        elif RUNTIME_COMMAND_GRAPH.resolve_invocation(invocation) is not None:
+            image = self.runtime_image
+        else:
+            raise ValueError("Lifecycle command has no declared owning graph")
         try:
             result = run_command(
-                [str(image), "--format", "json", *profile_arguments, "config", *arguments],
+                [str(image), *invocation],
                 environment=environment,
                 cwd=self.root,
                 input_text=None if payload is None else payload.decode("utf-8"),
@@ -225,7 +252,9 @@ class LifecycleHarness:
         finally:
             if payload is not None:
                 payload[:] = bytes(len(payload))
-        document = json.loads(result.stdout if result.returncode == 0 else result.stderr)
+        document = _cli_document(
+            result.stdout if result.returncode == 0 else result.stderr, success=result.returncode == 0
+        )
         if expect_success and result.returncode != 0:
             detail = document.get("error")
             code = detail.get("code") if isinstance(detail, dict) else None

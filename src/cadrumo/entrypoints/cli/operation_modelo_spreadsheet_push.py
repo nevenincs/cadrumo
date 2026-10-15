@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import NoReturn
 from uuid import UUID
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
@@ -18,7 +19,6 @@ from ...application.export.google_operation import (
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code_by_code
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .errors import CliRefusedBoundaryError
 
 
 def google_operation_error(code: str, *, diagnostic_ref: str | None) -> Exception:

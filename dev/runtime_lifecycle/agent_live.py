@@ -42,16 +42,16 @@ held, 1 names the step that did not.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import hashlib
 import json
 import os
 import shutil
 import sys
 import tempfile
-import threading
 import time
-from collections.abc import Generator, Mapping
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Mapping
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
@@ -78,7 +78,7 @@ from .proof_support import (
     state_taxpayer,
     verified_relay,
 )
-from .session_holder import RuntimeSessionHolder
+from .session_holder import AsyncRuntimeSessionHolder
 
 _PROFILE: Final = "agent-live-acceptance"
 _PROTOCOL: Final = 1
@@ -215,31 +215,35 @@ class Exchange:
         return rejected
 
 
-@contextmanager
-def _attending(
-    holder: RuntimeSessionHolder, relay: Path, gateway: Mapping[str, ProcessIdentity | None]
-) -> Generator[list[int]]:
+@asynccontextmanager
+async def _attending(
+    holder: AsyncRuntimeSessionHolder, relay: Path, gateway: Mapping[str, ProcessIdentity | None]
+) -> AsyncGenerator[list[int]]:
     """Approve, for the life of the block, each attendance ask from the announced gateway's relay."""
-    stop = threading.Event()
+    stop = asyncio.Event()
     approved: list[int] = []
     failures: list[str] = []
 
-    def attend() -> None:
+    async def attend() -> None:
         while not stop.is_set():
             try:
-                inventory = holder.command("attendance_inventory")
+                inventory = await holder.command("attendance_inventory")
                 require(inventory.get("kind") == "attendance_inventory", "runtime returned no attendance inventory")
                 candidates = inventory.get("candidates")
                 if not isinstance(candidates, list):
                     raise AcceptanceError("runtime attendance inventory has no candidate list")
+                if stop.is_set():
+                    return
                 for ask in candidates:
+                    if stop.is_set():
+                        return
                     require(isinstance(ask, dict), "runtime attendance candidate is not an object")
                     require(isinstance(ask.get("attendance_id"), str), "runtime candidate omitted its ask identity")
                     process_id = ask.get("process_id")
                     relay_ask = type(process_id) is int and is_announced_relay(
                         process_id, relay, gateway.get("identity")
                     )
-                    decision = holder.command(
+                    decision = await holder.command(
                         "attendance_decision", attendance_id=str(ask["attendance_id"]), approve=relay_ask
                     )
                     require(
@@ -251,16 +255,15 @@ def _attending(
             except (AcceptanceError, OSError, ValueError) as refusal:
                 failures.append(str(refusal))
                 return
-            stop.wait(_POLL_SECONDS)
+            with suppress(TimeoutError):
+                await asyncio.wait_for(stop.wait(), timeout=_POLL_SECONDS)
 
-    watcher = threading.Thread(target=attend, name="agent-live-attendance", daemon=True)
-    watcher.start()
+    watcher = asyncio.create_task(attend(), name="agent-live-attendance")
     try:
         yield approved
     finally:
         stop.set()
-        watcher.join(timeout=35)
-        require(not watcher.is_alive(), "attendance observer did not release its holder exchange")
+        await watcher
     require(not failures, f"attendance: {failures}")
 
 
@@ -333,7 +336,7 @@ def _judge(receipt: Mapping[str, Any], exchange: Exchange, root: Path, after: st
     }
 
 
-def run(package: Path, scratch: Path) -> Receipt:
+async def run(package: Path, scratch: Path) -> Receipt:
     """Serve one runner on a fresh root below ``scratch``."""
     programs = Programs.of(package)
     gateway_image = package / "bin" / ("cadrumo-agent.exe" if sys.platform == "win32" else "cadrumo-agent")
@@ -361,16 +364,17 @@ def run(package: Path, scratch: Path) -> Receipt:
         require(_SCENARIO["ledger"]["description"] not in before, "the ledger already holds the scenario row")
         if profile.profile_id is None:
             raise AcceptanceError("created profile has no verified identity")
-        holder = RuntimeSessionHolder(
+        holder = await AsyncRuntimeSessionHolder.start(
             programs.runtime,
             profile_id=profile.profile_id,
             environment=environment,
             password=bytearray(profile.password, "utf-8"),
+            frontend="cli",
         )
         try:
             receipt.record("signed_in_and_held")
             gateway: dict[str, ProcessIdentity | None] = {"identity": None}
-            with _attending(holder, programs.mcp, gateway) as approved:
+            async with _attending(holder, programs.mcp, gateway) as approved:
                 write_whole(
                     directory / "handoff.json",
                     {
@@ -383,13 +387,15 @@ def run(package: Path, scratch: Path) -> Receipt:
                     },
                 )
                 receipt.record("exchange_ready", exchange=str(directory))
-                runner = _await_runner(exchange, gateway, gateway_image.resolve(strict=True), expected_digest)
+                runner = await asyncio.to_thread(
+                    _await_runner, exchange, gateway, gateway_image.resolve(strict=True), expected_digest
+                )
                 after = _ledger_text(programs, environment, profile)
                 receipt.record("agent_judged", attended_relays=len(approved), **_judge(runner, exchange, root, after))
-            closed = holder.command("close")
+            closed = await holder.command("close")
             require(closed.get("kind") == "session_closed", "runtime did not acknowledge held-session closure")
         finally:
-            holder.close()
+            await holder.close()
         stopped = runtime.stop()
         require(stopped == 64, f"runtime exit: {stopped}")
         receipt.record("runtime_stopped", exit_code=stopped)
@@ -410,7 +416,7 @@ def main(arguments: list[str] | None = None) -> int:
     base.mkdir(parents=True, exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=base))
     try:
-        run(package, scratch)
+        asyncio.run(run(package, scratch))
     except (AcceptanceError, BaseExceptionGroup) as failure:
         reason = acceptance_failure(failure)
         if reason is None:

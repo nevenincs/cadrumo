@@ -223,7 +223,7 @@ def test_the_search_path_reaches_the_agent_as_received(tmp_path: Path, platform:
     assert environment["PATH"] == search_path
 
 
-@pytest.mark.parametrize("override,expected", [(None, "DEBUG"), ("info", "INFO"), ("ERROR", "ERROR"), ("bad", "DEBUG")])
+@pytest.mark.parametrize("override,expected", [(None, "debug"), ("info", "info"), ("ERROR", "error"), ("bad", "debug")])
 def test_agent_diagnostic_capture_level(tmp_path: Path, override: str | None, expected: str) -> None:
     environment = agent_launch_environment(
         storage_root=tmp_path / "storage",

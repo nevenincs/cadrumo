@@ -263,14 +263,14 @@ impl Supervisor {
         if lock(&self.shared.admin).is_some() {
             self.person_request(serde_json::json!({"action":"status"}))?;
             let reply = self.administer(serde_json::json!({"action":"start"}), None)?;
-            if reply["event"] == "refused" {
+            if reply["kind"] == "refused" {
                 publish(
                     &self.shared,
                     State::Refused {
                         code: service_refusal(reply["code"].as_str().unwrap_or("service_failed")),
                     },
                 );
-            } else if reply["event"] != "agent_ready" {
+            } else if reply["kind"] != "starting" {
                 return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli));
             }
         } else {
@@ -1171,10 +1171,7 @@ mod tests {
 
         /// Controlled holder-protocol evidence over real child pipes, not an
         /// installed runtime or a proof of native person authentication.
-        fn held_protocol_fixture(
-            profile: &str,
-            ignore_end: bool,
-        ) -> (Prepared, HolderFixture) {
+        fn held_protocol_fixture(profile: &str, ignore_end: bool) -> (Prepared, HolderFixture) {
             let profile_id = match profile {
                 "A" => "11111111-1111-4111-8111-111111111111",
                 "B" => "22222222-2222-4222-8222-222222222222",
@@ -1220,8 +1217,8 @@ mod tests {
                      [Console]::Out.Flush(); \
                  }} }}"
             );
-            let person = crate::agent::person::Person::hold(powershell(&holder_script), profile_id)
-                .unwrap();
+            let person =
+                crate::agent::person::Person::hold(powershell(&holder_script), profile_id).unwrap();
             assert_eq!(person.identity, identity);
             let witness = HolderFixture {
                 pid: person.child_id(),
@@ -1331,7 +1328,9 @@ mod tests {
             assert_eq!(gateway.port, 4000);
             let admin_bearer = {
                 let admin = lock(&rig.supervisor.shared.admin);
-                let endpoint = admin.as_ref().expect("service admitted before agent readiness");
+                let endpoint = admin
+                    .as_ref()
+                    .expect("service admitted before agent readiness");
                 assert_eq!(endpoint.port, 4001);
                 assert_eq!(endpoint.generation, gateway.generation);
                 assert_eq!(endpoint.bearer.len(), 64);
@@ -1378,9 +1377,15 @@ mod tests {
             };
             let person = lock(&person);
             let holders = lock(&rig.holders);
-            let witness = holders.iter().find(|holder| holder.pid == person.child_id()).unwrap();
+            let witness = holders
+                .iter()
+                .find(|holder| holder.pid == person.child_id())
+                .unwrap();
             assert_eq!(person.identity, witness.identity);
-            assert!(alive(witness.pid), "the original held-protocol child is retained");
+            assert!(
+                alive(witness.pid),
+                "the original held-protocol child is retained"
+            );
             (launcher, grandchild, witness.pid)
         }
 
@@ -1413,7 +1418,11 @@ mod tests {
                 ("another profile", observed(true, true, Some("B")), "ready"),
             ] {
                 let rig = rig(false);
-                assert_eq!(rig.supervisor.status().lane, None, "the service reports no invented lane");
+                assert_eq!(
+                    rig.supervisor.status().lane,
+                    None,
+                    "the service reports no invented lane"
+                );
                 let first = serving(&rig, 0).await;
                 let changed = rig.statuses.lock().unwrap().len();
                 *rig.observation.lock().unwrap() = observation;

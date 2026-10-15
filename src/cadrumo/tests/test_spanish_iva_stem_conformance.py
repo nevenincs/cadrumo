@@ -232,7 +232,7 @@ def stem_scan() -> _StemScan:
 
 
 def test_python_paths_and_identifiers_use_the_canonical_iva_stem(stem_scan: _StemScan) -> None:
-    assert list(stem_scan.path_and_identifier) == []
+    assert list(stem_scan.path_and_identifier) == [], "\n".join(stem_scan.path_and_identifier)
 
 
 def test_non_python_package_paths_use_the_canonical_iva_stem() -> None:
@@ -245,15 +245,15 @@ def test_non_python_package_paths_use_the_canonical_iva_stem() -> None:
             or _DUPLICATED_IVA.search(relative)
         )
     ]
-    assert violations == []
+    assert violations == [], "\n".join(violations)
 
 
 def test_internal_identity_tokens_use_the_canonical_iva_stem(stem_scan: _StemScan) -> None:
-    assert list(stem_scan.identity_tokens) == []
+    assert list(stem_scan.identity_tokens) == [], "\n".join(stem_scan.identity_tokens)
 
 
 def test_internal_prose_does_not_duplicate_or_alias_the_iva_stem(stem_scan: _StemScan) -> None:
-    assert list(stem_scan.prose) == []
+    assert list(stem_scan.prose) == [], "\n".join(stem_scan.prose)
     assert stem_scan.used_external_values == {
         (relative, value) for relative, values in _EXTERNAL_VAT_PROSE_VALUES.items() for value in values
     }

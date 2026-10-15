@@ -1,0 +1,19 @@
+desktop:
+  attendance:
+    actions: Actions
+    all_periods: All periods
+    changes: Record changes
+    delegation: Delegation
+    disclosures: Disclosures
+    executable: Executable
+    expires: Expires
+    failed: 'Access decision unavailable: {code}'
+    network: Network access
+    'no': 'No'
+    none: None
+    operations: Operations
+    period_independent: Work without a period
+    periods: Periods
+    process: Process
+    title: External process requests access
+    'yes': 'Yes'

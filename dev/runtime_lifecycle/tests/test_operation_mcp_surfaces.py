@@ -240,14 +240,15 @@ def _answer(
     """Put one access to the real policy and name what it answered.
 
     ``resolved`` is the action set the operation's policy document holds.
-    ``delegated`` evaluates an unrestricted child under a parent whose generic
-    operation/effect ceiling is narrowed by ``parent_surface``.
+    ``delegated`` evaluates an admitted child that inherits its parent's generic
+    operation/effect ceiling, narrowed by ``parent_surface``.
     """
     contract = _registry().lookup_public_contract(definition_id)
     session = _lease(surface, parent_session_id=_PARENT_SESSION if delegated else None)
     ancestors: tuple[AccessSession, ...] = ()
     if delegated:
         ancestors = (_lease(parent_surface, session_id=_PARENT_SESSION, connection_id=_PARENT_CONNECTION),)
+        session = session.model_copy(update={"scope": intersect_scopes((session.scope, ancestors[0].scope))})
     return _evaluate(
         OperationAccessRequest(
             profile_id=_BINDING.profile_id,

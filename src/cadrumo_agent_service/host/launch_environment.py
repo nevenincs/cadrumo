@@ -154,10 +154,10 @@ def agent_launch_environment(
     # Keep DEBUG available in the application viewer. An explicit agent override
     # can reduce producer output without changing the app's INFO default view.
     level = next(
-        (value for name, value in received.items() if name.upper() == AGENT_LOG_LEVEL_VARIABLE), "DEBUG"
-    ).upper()
+        (value for name, value in received.items() if name.upper() == AGENT_LOG_LEVEL_VARIABLE), "debug"
+    ).lower()
     environment[AGENT_LOG_LEVEL_VARIABLE] = (
-        level if level in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"} else "DEBUG"
+        level if level in {"debug", "info", "warning", "error", "critical"} else "debug"
     )
     if aeat is not None:
         environment[PROGRAM_AEAT_VARIABLE] = str(aeat)

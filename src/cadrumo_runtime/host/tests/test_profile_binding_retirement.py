@@ -195,18 +195,18 @@ def test_admission_arriving_while_polling_contains_the_old_worker_waits_for_the_
         root, ((identity, key), _) = profiles
         manager, host, context = _running_host(root=root, identity=identity, key=key)
         profile_id = identity.binding.profile_id
-        worker = host.owner.operation_worker()
-        _commit_successor(root, identity)
-        actual_drain = worker.drain
         release, started = Event(), Event()
-
-        def delayed_drain(*, deadline: float | None = None) -> ProfileWorkerDrained:
-            started.set()
-            assert release.wait(5)
-            return actual_drain(deadline=deadline)
-
-        monkeypatch.setattr(worker, "drain", delayed_drain)
         try:
+            worker = host.owner.operation_worker()
+            _commit_successor(root, identity)
+            actual_drain = worker.drain
+
+            def delayed_drain(*, deadline: float | None = None) -> ProfileWorkerDrained:
+                started.set()
+                assert release.wait(5)
+                return actual_drain(deadline=deadline)
+
+            monkeypatch.setattr(worker, "drain", delayed_drain)
             with ThreadPoolExecutor(max_workers=2) as pool:
                 manager._last_poll = 0
                 polling = pool.submit(manager.poll)

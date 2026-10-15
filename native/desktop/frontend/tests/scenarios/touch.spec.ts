@@ -470,9 +470,11 @@ test("the profile choice and the form that creates one fit the screen under a fi
   await fields.nth(2).tap();
   await target.keyboard.type("correct horse");
   await form.locator("button[type=submit]").tap();
-  // The submit button, under the keyboard's reach or not, is in the window.
-  await expect(target.locator("#profile-password")).toBeFocused();
-  await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
-    "Marta Ruiz Ferrer",
-  );
+  // The submitted passphrase authenticates the created profile.
+  await expect(dialog).toHaveCount(0);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(
+    target.locator('.titlebar [title="Marta Ruiz Ferrer"]'),
+  ).toBeVisible();
+  expect(await overflowing(target)).toBe(false);
 });

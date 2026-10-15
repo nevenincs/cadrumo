@@ -15,6 +15,7 @@ import pytest
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationCompletion,
     RegisteredOperationReviewCompletion,
@@ -49,7 +50,6 @@ from ....domain.iva.schema import IvaCategory
 from .. import _ledger_llm_cli as classify
 from .. import ledger_lifecycle_cli as lifecycle
 from .. import operation_ledger_classify as operator_bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

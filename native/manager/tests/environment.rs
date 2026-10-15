@@ -114,6 +114,16 @@ fn fixture_children_do_not_receive_a_package_authority_pin() {
         .collect();
     inherited.extend(system());
     inherited.push((OsString::from("PATH"), OsString::from("os-path")));
+    let service_files = located_fixed_values("cadrumo-agent-service");
+    assert!(
+        !service_files.is_empty(),
+        "the service owns its program paths"
+    );
+    inherited.extend(
+        service_files
+            .iter()
+            .map(|name| (OsString::from(name), OsString::from("untrusted"))),
+    );
     let environment = runtime_environment(&root.0, None, inherited).unwrap();
     assert!(
         !environment
@@ -123,7 +133,7 @@ fn fixture_children_do_not_receive_a_package_authority_pin() {
     // A fixture image has no package composition; it keeps its caller's PATH.
     assert!(environment.contains(&(OsString::from("PATH"), OsString::from("os-path"))));
     // Nor does it receive a package fact that locates a file in a package it does not have.
-    for fixed in located_fixed_values() {
+    for fixed in service_files {
         assert!(
             !environment.iter().any(|(name, _)| name == fixed),
             "fixture received {fixed}"
@@ -131,40 +141,41 @@ fn fixture_children_do_not_receive_a_package_authority_pin() {
     }
 }
 
-/// The runtime profile's fixed values that name a file inside its package.
-fn located_fixed_values() -> Vec<&'static str> {
-    let runtime = LAUNCH_PROFILES
+/// The selected profile's fixed values that name a file inside its package.
+fn located_fixed_values(profile_name: &str) -> Vec<&'static str> {
+    let profile = LAUNCH_PROFILES
         .iter()
-        .find(|profile| profile.name == "cadrumo-runtime")
-        .expect("the runtime image declares a launch profile");
-    let located: Vec<&str> = runtime
+        .find(|profile| profile.name == profile_name)
+        .expect("the image declares a launch profile");
+    profile
         .fixed
         .iter()
         .filter(|fixed| matches!(fixed.source, "package" | "image"))
         .map(|fixed| fixed.name)
-        .collect();
-    assert!(
-        !located.is_empty(),
-        "the runtime profile fixes package files"
-    );
-    located
+        .collect()
 }
 
 #[test]
-fn package_children_receive_the_package_files_their_profile_fixes() {
+fn package_runtime_children_exclude_service_program_paths() {
     let root = Root::new();
     let storage = root.0.join("storage");
     let package = root.0.join("package");
-    let environment = runtime_environment(&storage, Some(&package), system()).unwrap();
-    for fixed in located_fixed_values() {
-        let value = environment
+    let service_files = located_fixed_values("cadrumo-agent-service");
+    assert!(
+        !service_files.is_empty(),
+        "the service owns its program paths"
+    );
+    let mut inherited = system();
+    inherited.extend(
+        service_files
             .iter()
-            .find(|(name, _)| name == fixed)
-            .map(|(_, value)| PathBuf::from(value))
-            .unwrap_or_else(|| panic!("package child lacks {fixed}"));
+            .map(|name| (OsString::from(name), OsString::from("untrusted"))),
+    );
+    let environment = runtime_environment(&storage, Some(&package), inherited).unwrap();
+    for fixed in service_files {
         assert!(
-            value.starts_with(&package),
-            "{fixed} is outside the package"
+            !environment.iter().any(|(name, _)| name == fixed),
+            "runtime received service program path {fixed}"
         );
     }
 }

@@ -31,7 +31,9 @@ stays untouched.
 
 from __future__ import annotations
 
+import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -135,3 +137,51 @@ def run_nitpicky_dummy_build(
         cwd=REPO_ROOT,
         environment=env,
     )
+
+
+def persist_sphinx_build_output(
+    result: CommandResult,
+    *,
+    artifacts_directory: Path,
+    label: str,
+) -> tuple[Path, Path, Path]:
+    """Retain the complete Sphinx streams and invocation beside the test-run log.
+
+    The assertion message intentionally shows only a short tail for readable
+    failures. These artifacts preserve every byte captured by ``run_command``
+    so a later reviewer can inventory the full warning set without repeating
+    an expensive build.
+
+    Args:
+        result: The complete captured Sphinx subprocess result.
+        artifacts_directory: The current ``dev.test_runs`` run's artifacts
+            directory.
+        label: A short, filename-safe name for this build within the run.
+
+    Returns:
+        Paths to the UTF-8 stdout, stderr, and command metadata artifacts.
+    """
+    if re.fullmatch(r"[a-z0-9][a-z0-9-]*", label) is None:
+        raise ValueError(f"unsafe Sphinx artifact label: {label!r}")
+    if not artifacts_directory.is_dir():
+        raise FileNotFoundError(f"test-run artifact directory does not exist: {artifacts_directory}")
+
+    prefix = f"sphinx-{label}"
+    stdout_path = artifacts_directory / f"{prefix}.stdout.log"
+    stderr_path = artifacts_directory / f"{prefix}.stderr.log"
+    metadata_path = artifacts_directory / f"{prefix}.command.json"
+    for path, content in ((stdout_path, result.stdout), (stderr_path, result.stderr)):
+        with path.open("w", encoding="utf-8", newline="") as stream:
+            stream.write(content)
+    metadata = {
+        "argv": list(result.argv),
+        "completed_at": result.completed_at.isoformat(),
+        "cwd": result.cwd,
+        "duration_seconds": result.duration_seconds,
+        "returncode": result.returncode,
+        "started_at": result.started_at.isoformat(),
+        "stderr": str(stderr_path),
+        "stdout": str(stdout_path),
+    }
+    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8", newline="")
+    return stdout_path, stderr_path, metadata_path

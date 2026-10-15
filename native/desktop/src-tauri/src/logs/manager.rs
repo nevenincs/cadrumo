@@ -151,6 +151,7 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         lifecycle: wire.lifecycle,
         webview_failure: None,
         helper_timing: None,
+        helper_result: None,
         service: wire.service,
     });
     if let Some(kind) = io_kind {

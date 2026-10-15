@@ -9,9 +9,9 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo_client.contracts.access_management import ProfileResumed
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.profile_access import Reply
 
-from ...application.automation_lifecycle_service import AutomationResumeReceipt
 from ..access_management import RuntimeLifecycleOwner
 from ..profile_host import ProfileConnection, RuntimeProfileHost
 

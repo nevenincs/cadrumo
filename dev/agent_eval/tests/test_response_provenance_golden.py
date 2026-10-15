@@ -28,11 +28,6 @@ from typing import Any
 
 import pytest
 from click.testing import Result
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
-    bind_public_cli_runner,
-    invoke_cached_cli,
-    operator_runtime_scope,
-)
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -40,7 +35,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
 )
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -48,6 +43,11 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
+    bind_public_cli_runner,
+    invoke_cached_cli,
+)
+from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
 from .._models import GoldenScenario
 from .._runner import load_scenario, run_golden_scenario
@@ -55,7 +55,6 @@ from ._real_cli_support import create_m130_work_unit, valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-000000000099"
 _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
 _SCENARIO_PATH = _SCENARIOS_DIR / "modelo_130.toml"
 _REVISION = "2019-y-siguientes"
@@ -64,13 +63,14 @@ _REVISION = "2019-y-siguientes"
 @pytest.fixture
 def runtime_profile(tmp_path: Path, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
     """Real-session backend (real KEK/DEK, real SQLite per active bucket)."""
-    with bind_public_cli_runner(run_cadrumo_cli), isolated_cli_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Response-provenance golden-eval test profile",
-    ) as profile:
-        with operator_runtime_scope():
-            yield profile
+    with (
+        bind_public_cli_runner(run_cadrumo_cli),
+        runtime_cli_profile(
+            tmp_path=tmp_path,
+            label="Response-provenance golden-eval test profile",
+        ) as profile,
+    ):
+        yield profile
 
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
@@ -83,7 +83,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """
     record = create_user_profile_record(
         context=profile_authority_contexts()[0],
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Response Provenance Operator"),
@@ -180,7 +180,6 @@ def _dispatch_real_m130_calculate(
     engine and the real CLI envelope serializer produced — not a hand-rolled dict.
     """
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=_REVISION)
     _seed_ledger_row(
         direction=TransactionDirection.INCOMING,
         amount=Decimal("12000.00"),
@@ -193,6 +192,8 @@ def _dispatch_real_m130_calculate(
         filing_year=filing_year,
         label="gastos",
     )
+
+    work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=_REVISION)
 
     result = invoke_cached_cli(
         [

@@ -8,6 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.errors import CliOutboundPayloadBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -44,7 +45,6 @@ from ._modelo_rendering import (
     work_plazo_lines_from_posture,
 )
 from .common import activate_subcommand_output_language, emit_envelope, no_active_profile_refusal
-from .errors import CliOutboundPayloadBoundaryError
 from .modelo_revision_rendering import calculation_revision_state_label
 from .operation_modelo_calculation import (
     calculation_snapshot_lines,

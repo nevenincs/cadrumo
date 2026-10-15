@@ -25,21 +25,29 @@ import re
 import shutil
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
+from functools import cache
 from pathlib import Path
 
 import pytest
 
+import cadrumo.core.i18n.render as i18n_render
+from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
+    casilla_occurrence_locale_key,
+)
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
+from dev.locales.manager import LocaleManager
 from dev.test_runs.paths import test_log_root as development_log_root
 
 from ..analysis.delta_minimality import restatement_differences
 from ..compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
-from ..compiler.edition_materialisation import materialise_edition
+from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -138,6 +146,62 @@ def _build_registry(destination: Path, modelo_id: str) -> Path:
                 render_toml({"revisions": {edition.revision_id: {section: table[section]}}}), encoding="utf-8"
             )
     return root
+
+
+def _carried_labels(edition: MaterialisedEdition, catalogue: Mapping[str, str | None]) -> dict[str, str]:
+    """Project inherited text to a full copy's own key, as the standalone schema requires."""
+    rows = edition.table.get("casillas", ())
+    origins = edition.label_origins
+    if not isinstance(rows, tuple | list) or origins is None or len(rows) != len(origins):
+        raise AssertionError(f"edition {edition.revision_id!r} has no complete label-origin projection")
+    carried: dict[str, str] = {}
+    for raw_row, origin in zip(rows, origins, strict=True):
+        row = raw_row if isinstance(raw_row, Mapping) else None
+        casilla_id = None if row is None else row.get("id")
+        if origin is None or not isinstance(casilla_id, str):
+            continue
+        own_key = casilla_occurrence_locale_key(
+            edition.modelo_id, edition.revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
+        )
+        origin_key = casilla_occurrence_locale_key(
+            edition.modelo_id, origin, casilla_id, ModeloLocalizationFieldKind.LABEL
+        )
+        origin_text = _authored_locale_text(catalogue.get(origin_key), origin_key)
+        own_text = _authored_locale_text(catalogue.get(own_key), own_key)
+        if origin_text is not None and own_text is None:
+            carried[own_key] = origin_text
+    return carried
+
+
+def _authored_locale_text(value: str | None, key: str) -> str | None:
+    """Match locale resolution's rule that a missing key or key echo has no authored text."""
+    return None if value is None or value == key else value
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _flattened_edition_locale_catalogues(tmp_path_factory: pytest.TempPathFactory):
+    """Keep each standalone full copy's labels equal to its materialised source text."""
+    source_locales = bundled_path().parent / "locales"
+    fixture_locales = tmp_path_factory.mktemp("edition-migration-locales") / "locales"
+    shutil.copytree(source_locales / "es", fixture_locales / "es")
+    editions = [
+        materialise_edition(_BUNDLED / "modelos" / _PILOT, path.name)
+        for path in sorted((_BUNDLED / "modelos" / _PILOT / "revisions").iterdir())
+    ]
+    manager = LocaleManager(src_dir=fixture_locales, locales_dir=fixture_locales)
+    with override_locales_root(source_locales):
+        catalogue = locale_map("es")
+        carried: dict[str, str | None] = {}
+        for edition in editions:
+            if edition.label_origins is not None:
+                carried.update(_carried_labels(edition, catalogue))
+    if carried:
+        manager.set_locale_values("es", carried)
+    with override_locales_root(fixture_locales), pytest.MonkeyPatch.context() as monkeypatch:
+        # The copied catalogue is immutable while this module runs. Reusing
+        # its public lazy mapping avoids rescanning every shard for each key.
+        monkeypatch.setattr(i18n_render, "locale_map", cache(i18n_render.locale_map))
+        yield
 
 
 def _load(root: Path, modelo_id: str) -> ModeloDefinition:
@@ -415,7 +479,7 @@ def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
 
 
 def test_a_rerun_is_a_no_op_and_a_restated_default_is_lifted_without_changing_the_chain(
-    pilot: MigrationOutcome, tmp_path: Path
+    pilot: MigrationOutcome, pilot_before: ModeloDefinition, tmp_path: Path
 ) -> None:
     assert pilot.staged_registry is not None
     again = migrate_modelo(registry_root=pilot.staged_registry, modelo_id=_PILOT, work_dir=tmp_path / "again")
@@ -423,16 +487,29 @@ def test_a_rerun_is_a_no_op_and_a_restated_default_is_lifted_without_changing_th
     assert again.staged_registry is None
     assert not (tmp_path / "again").exists()
 
-    edition = _last_edition(pilot)
-    assert edition.source_default is not None and len(edition.source_default) == 1
     planted = shutil.copytree(pilot.staged_registry, tmp_path / "planted" / "registry" / "aeat")
+    candidate: tuple[EditionPlan, str] | None = None
+    for candidate_edition in reversed(pilot.plan.editions):
+        source_default = candidate_edition.source_default
+        if source_default is None or len(source_default) != 1:
+            continue
+        edition_dir = _edition_dir(planted, _PILOT, candidate_edition.revision_id)
+        before_rows = {str(row.id): row for row in pilot_before.revisions[candidate_edition.revision_id].casillas}
+        for row_id in candidate_edition.stated_ids:
+            block = _row_block(edition_dir, row_id)[1]
+            if (
+                "\nsource_refs = " not in block
+                and "additional_source_refs" not in block
+                and tuple(before_rows[row_id].source_refs) == source_default
+            ):
+                candidate = candidate_edition, row_id
+                break
+        if candidate is not None:
+            break
+    assert candidate is not None, "no stated row resolves exactly to its edition's source default"
+    edition, lifted_row = candidate
+    assert edition.source_default is not None and len(edition.source_default) == 1
     edition_dir = _edition_dir(planted, _PILOT, edition.revision_id)
-    lifted_row = next(
-        row_id
-        for row_id in edition.stated_ids
-        if "\nsource_refs = " not in (block := _row_block(edition_dir, row_id)[1])
-        and "additional_source_refs" not in block
-    )
     fragment, block = _row_block(edition_dir, lifted_row)
     restated = block.replace(
         f'id = "{lifted_row}"\n',
@@ -898,7 +975,9 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     assert " equivalence_status=passed " in summary, output
     assert " minimality_status=passed " in summary, output
     assert " source_status=accepted " in summary, output
-    assert " publication_readiness_status=failed " in summary, output
+    # This source-only proof found no publication-readiness failure; it does not
+    # claim to have performed the separate authority publication assessment.
+    assert " publication_readiness_status=not_checked " in summary, output
     assert " publication_execution_status=not_performed " in summary, output
     assert " applied=False " in summary, output
     assert persisted.is_relative_to((development_log_root() / ".logs" / "audit-runs").resolve())

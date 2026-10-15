@@ -16,11 +16,11 @@ from types import GenericAlias
 from typing import Any, Final, cast, override
 
 import typer
-from click import Choice
 from pydantic import TypeAdapter, ValidationError
 from typer._click.core import Context as TyContext
 from typer._click.core import Parameter as TyParameter
 from typer._click.types import ParamType as TyParamType
+from typer._types import TyperChoice
 
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.i18n.render import tr
@@ -164,7 +164,7 @@ def _parameter_value_projection(
         annotation = GenericAlias(list, (annotation,))
     parser = None if spec.value.parser is None else resolve_deferred_target(spec.value.parser)
     click_type = (
-        Choice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
+        TyperChoice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
         if spec.value.choices
         else None
         if spec.value.click_type is None

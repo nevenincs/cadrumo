@@ -32,6 +32,7 @@ from ..harness import LifecycleHarness
 
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.native_package,
     pytest.mark.hex_entrypoint,
     pytest.mark.serial,
     pytest.mark.windows_only,

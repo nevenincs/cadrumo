@@ -65,6 +65,7 @@ def test_annual_volume_formula_is_inherited_only_in_grounded_editions() -> None:
             "2024-hasta-08-y-2t": "boe-modelo-303-2023-form-pdf",
             "2024-desde-09-y-3t": "boe-modelo-303-2024-form-pdf",
             "2025": "boe-modelo-303-2024-form-pdf",
+            "2026-hasta-01-y-1t": "boe-modelo-303-2024-form-pdf",
             "2026-y-siguientes": "boe-modelo-303-2026-form-pdf",
         }[revision_id]
         assert source in formula.source_refs

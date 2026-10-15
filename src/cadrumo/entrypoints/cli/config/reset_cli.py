@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.payloads import (
     ConfigResetResumeResult,
     ConfigResetStartResult,
@@ -14,7 +15,6 @@ from cadrumo_client.commands.payloads import (
 
 from ....application.config_reset_documents import ConfigResetOperationPayload
 from ..common import emit_envelope
-from ..errors import CliRefusedBoundaryError
 
 
 def _retention_override(

@@ -126,6 +126,7 @@ def test_logout_retains_selection(monkeypatch: pytest.MonkeyPatch, run_cadrumo_c
         "receipt_removed": True,
         "keychain_removed": True,
         "automation_enabled": True,
+        "automation_access_remains": False,
         "automation_revoked": False,
     }
     assert observe_active_profile_pointer() == captured

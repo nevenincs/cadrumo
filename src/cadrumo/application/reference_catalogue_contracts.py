@@ -4,7 +4,7 @@ Every frontend that reads the published tax authority, the category
 vocabularies, the portal catalogue, the provider list or the representative
 scopes receives these projections and no other. They are strict
 :class:`~cadrumo.core.json_contract.OutputSchema` subclasses so that the
-command line's result envelope, the harness's authority tool and the terminal
+command line's result envelope, external clients and the terminal
 interface carry one shape.
 
 The domain reports and catalogues stay authoritative; these classes pin the

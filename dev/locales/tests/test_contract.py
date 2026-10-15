@@ -37,6 +37,8 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.operator_surface.tests.contract_locale_fixture import pin_english_locale
+from cadrumo_client.contracts.command_program import CommandProgram
+from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
@@ -198,7 +200,11 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     custody_children = {
         family.child for family in contract.command_families if family.domain is MountedCommandDomain.CUSTODY
     }
-    assert custody_children == {"login", "sign-in-status", "logout", "passphrase"}
+    # This is the public ``aeat config`` surface. Runtime-owned credential,
+    # passphrase, and recovery paths are declared by the separate
+    # ``cadrumo-runtime`` command graph and are checked against that owner in
+    # the help-row reconciliation below.
+    assert custody_children == {"login", "logout"}
     # The append-only event-history verb merged into the `config profile` group
     # as `config profile history` (D1 family rename); the standalone
     # `config bucket` group was retired, so there is no BUCKET family.
@@ -208,7 +214,12 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     assert by_domain[MountedCommandDomain.REVIEW].service_owner == "cadrumo.application.review"
 
     mounted_pairs = {(family.root.value, family.child) for family in contract.command_families}
-    assert ("config", "auth") in mounted_pairs
+    runtime_paths = tuple(node.path for node in RUNTIME_COMMAND_GRAPH.nodes())
+    assert (
+        CommandProgram.AUTHENTICATION.executable_name,
+        "config",
+        "auth",
+    ) in runtime_paths
     assert ("config", "bucket") not in mounted_pairs
     assert ("config", "profile") in mounted_pairs
     assert ("app", "modelo") in mounted_pairs
@@ -322,6 +333,7 @@ def test_help_documents_build_in_every_shipped_locale(locale: OutputLanguage) ->
 def test_help_command_rows_are_backed_by_mounted_command_families(locale: OutputLanguage) -> None:
     contract = get_operator_surface_contract()
     mounted = {(family.root.value, family.child) for family in contract.command_families}
+    runtime_paths = tuple(node.path for node in RUNTIME_COMMAND_GRAPH.nodes())
 
     with override_settings(cadrumo_output_language=locale.value):
         for surface in ("root", "config", "app"):
@@ -331,7 +343,11 @@ def test_help_command_rows_are_backed_by_mounted_command_families(locale: Output
                     if " -> " in entry.command or "rejected" in entry.command:
                         continue
                     tokens = entry.command.split()
-                    assert tokens[0] == "aeat"
+                    program = CommandProgram(tokens[0])
+                    if program is CommandProgram.AUTHENTICATION:
+                        assert any(tuple(tokens[: len(path)]) == path for path in runtime_paths)
+                        continue
+                    assert program is CommandProgram.AEAT
                     if all(token.startswith("-") for token in tokens[1:]):
                         continue
                     if len(tokens) == 2:

@@ -1,0 +1,19 @@
+desktop:
+  attendance:
+    actions: Accions
+    all_periods: Tots els períodes
+    changes: Canvis de registres
+    delegation: Delegació
+    disclosures: Divulgacions
+    executable: Executable
+    expires: Caduca
+    failed: 'Decisió d’accés no disponible: {code}'
+    network: Accés a la xarxa
+    'no': 'No'
+    none: Cap
+    operations: Operacions
+    period_independent: Treball sense període
+    periods: Períodes
+    process: Procés
+    title: Un procés extern sol·licita accés
+    'yes': Sí

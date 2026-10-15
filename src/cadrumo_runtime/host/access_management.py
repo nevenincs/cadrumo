@@ -28,6 +28,7 @@ from cadrumo_client.contracts.access_management import (
     ProfileResumed,
     SessionInventoryReply,
 )
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest, HumanSignInRevocationResult
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.profile_access import AccessRefusal, SecretReady
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -35,8 +36,6 @@ from cadrumo_client.transport.frame_io import read_secret, write_document, write
 
 from ..application.automation_lifecycle_service import (
     AutomationLifecycleService,
-    AutomationResumeRequest,
-    HumanSignInRevocationResult,
 )
 from .profile_host import ProfileConnection, RuntimeProfileHost
 

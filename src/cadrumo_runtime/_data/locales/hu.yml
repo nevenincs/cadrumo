@@ -1,0 +1,19 @@
+desktop:
+  attendance:
+    actions: Tevékenységek
+    all_periods: Minden időszak
+    changes: Rekordok módosítása
+    delegation: Delegálás
+    disclosures: Adatközlések
+    executable: Futtatható fájl
+    expires: Lejárat
+    failed: 'A hozzáférési döntés nem érhető el: {code}'
+    network: Hálózati hozzáférés
+    'no': Nem
+    none: Nincs
+    operations: Műveletek
+    period_independent: Időszak nélküli munka
+    periods: Időszakok
+    process: Folyamat
+    title: Egy külső folyamat hozzáférést kér
+    'yes': Igen

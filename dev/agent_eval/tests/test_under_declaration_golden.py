@@ -47,27 +47,26 @@ from typing import Any
 
 import pytest
 from click.testing import Result
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
-    bind_public_cli_runner,
-    invoke_cached_cli,
-    operator_runtime_scope,
-)
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
     seed_test_profile_record,
 )
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import (
+    bind_public_cli_runner,
+    invoke_cached_cli,
+)
 from cadrumo_runtime.host.tests.frontend.cli.modelo_cli import create_modelo_work_unit_via_cli
+from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
 from .._models import UnderDeclarationScenario
 from .._runner import check_under_declaration_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-0000000002bb"
 _FILING_YEAR = 2025
 _PERIOD = "0A"
 _REVISION = "2025-y-siguientes"
@@ -79,13 +78,14 @@ _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")
 @pytest.fixture
 def runtime_profile(tmp_path: Any, run_cadrumo_cli: Callable[..., Result]) -> Iterator[TestRuntimeProfile]:
     """Real-session backend (real KEK/DEK, real SQLite per active bucket)."""
-    with bind_public_cli_runner(run_cadrumo_cli), isolated_cli_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Under-declaration golden-eval test profile",
-    ) as profile:
-        with operator_runtime_scope():
-            yield profile
+    with (
+        bind_public_cli_runner(run_cadrumo_cli),
+        runtime_cli_profile(
+            tmp_path=tmp_path,
+            label="Under-declaration golden-eval test profile",
+        ) as profile,
+    ):
+        yield profile
 
 
 def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
@@ -102,7 +102,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     """
     record = create_user_profile_record(
         context=profile_authority_contexts()[0],
-        profile_id=_PROFILE_ID,
+        profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
             UserProfileFact(path="identity.name", value="Under Declaration Operator"),

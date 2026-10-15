@@ -31,9 +31,10 @@ from cadrumo.application.user_profile.access_contracts import Availability, Logi
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.login import LoginInventory
 
+from .. import windows_login
 from ..windows_desktop_observation import windows_desktop_observation
 from ..windows_login import WindowsLoginBinding, capture_windows_login, windows_login_inventory
-from ..windows_login_native import read_windows_logon, windows_desktop_sessions, windows_logon_ids
+from ..windows_login_native import WindowsLogonRecord, read_windows_logon, windows_desktop_sessions, windows_logon_ids
 
 pytestmark = [
     pytest.mark.integration,
@@ -167,31 +168,36 @@ def _inventory_with_bookends(binding: WindowsLoginBinding, facts: dict[str, obje
     return inventory
 
 
-def _record_metadata_readability(facts: dict[str, object]) -> None:
-    """Retain numeric native failures only; discard each actual metadata row."""
+@contextmanager
+def _record_metadata_readability(monkeypatch: pytest.MonkeyPatch, facts: dict[str, object]) -> Generator[None]:
+    """Observe the inventory's real metadata reads without changing their results."""
     import pywintypes
 
-    deadline = time.monotonic() + 2.0
-    identifiers = windows_logon_ids()
+    original_read = windows_login.read_windows_logon
     read_count = 0
     failure_count = 0
     errors: list[int] = []
-    for identifier in identifiers:
-        if time.monotonic() >= deadline:
-            break
+
+    def observe(identifier: int) -> WindowsLogonRecord:
+        nonlocal read_count, failure_count
         read_count += 1
         try:
-            read_windows_logon(identifier)
+            return original_read(identifier)
         except (pywintypes.error, RefusalError, KeyError, TypeError, ValueError, OverflowError) as error:
             failure_count += 1
             number = _native_error_number(error)
             if number is not None:
                 errors.append(number)
-    facts["metadata_luid_count"] = len(identifiers)
-    facts["metadata_read_count"] = read_count
-    facts["metadata_failure_count"] = failure_count
-    facts["metadata_scan_complete"] = read_count == len(identifiers)
-    facts["metadata_native_error_numbers"] = errors
+            raise
+
+    with monkeypatch.context() as observation:
+        observation.setattr(windows_login, "read_windows_logon", observe)
+        try:
+            yield
+        finally:
+            facts["metadata_read_count"] = read_count
+            facts["metadata_failure_count"] = failure_count
+            facts["metadata_native_error_numbers"] = errors
 
 
 def test_normal_desktop_current_login_is_a_fresh_inventory_witness() -> None:
@@ -225,13 +231,17 @@ def test_normal_desktop_current_login_is_a_fresh_inventory_witness() -> None:
         assert refused.login_id == altered.login_id != binding.login_id
 
 
-def test_normal_limited_desktop_inventory_is_complete_at_stable_native_bookends() -> None:
-    with _evidence("complete") as facts:
+def test_normal_limited_desktop_inventory_retains_uncertainty_for_observed_unreadable_rows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with _evidence("readability") as facts:
         require_selected_normal_desktop()
         facts["normal_limited_desktop_verified"] = True
         binding = _current_binding(facts)
-        _record_metadata_readability(facts)
-        inventory = _inventory_with_bookends(binding, facts)
+        with _record_metadata_readability(monkeypatch, facts):
+            inventory = _inventory_with_bookends(binding, facts)
         assert binding in inventory.logins
         assert inventory.eligibility is LoginEligibility.ELIGIBLE
-        assert inventory.complete, "limited-token native inventory has unreadable or uncorrelated rows"
+        assert facts["metadata_read_count"], "native inventory did not exercise the observed metadata reader"
+        if facts["metadata_failure_count"]:
+            assert not inventory.complete, "unreadable native rows cannot establish a complete inventory"

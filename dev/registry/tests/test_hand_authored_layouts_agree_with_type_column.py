@@ -16,10 +16,12 @@ current list of unresolved rows.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
+from typing import Any
 
 import pytest
+
+from cadrumo.core.toml import load_toml
 
 from ..analysis.hand_authored_type_column import (
     Alignment,
@@ -114,19 +116,24 @@ def _planted_revision(tmp_path: Path, modelo: str, revision: str) -> Path:
     return planted
 
 
-def _first_live_signed_field(export_layouts: Path) -> tuple[Path, int, str]:
-    """Return the file, line index and field id of the first live ``signed = true``."""
+def _layout_fields(document: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return parsed fields from the revision's canonical export-layout document."""
+    return [
+        field
+        for revision in document["revisions"].values()
+        for layout in revision.get("export_layouts", ())
+        for record in layout.get("records", ())
+        for field in record.get("fields", ())
+    ]
+
+
+def _first_live_signed_field(export_layouts: Path) -> tuple[Path, str]:
+    """Return the file and field id of the first parsed live field marked signed."""
     for layout in sorted(export_layouts.glob("*.toml")):
-        field_id: str | None = None
-        for index, line in enumerate(layout.read_text("utf-8").splitlines()):
-            stripped = line.strip()
-            if stripped.startswith("#"):
-                continue
-            match = re.fullmatch(r"id = ['\"]([^'\"]+)['\"]", stripped)
-            if match is not None:
-                field_id = str(match.group(1))
-            elif stripped == "signed = true" and field_id is not None:
-                return layout, index, field_id
+        fields = _layout_fields(load_toml(layout))
+        field = next((item for item in fields if item.get("signed") is True), None)
+        if field is not None:
+            return layout, str(field["id"])
     raise AssertionError(f"no live signed field under {export_layouts}")
 
 
@@ -134,15 +141,12 @@ def test_a_planted_unsigned_field_is_reported_by_name(tmp_path: Path) -> None:
     """Unsigning one aligned N field is caught as exactly that field, and nothing else."""
     authority = compiled_bundled_authority()
     planted = _planted_revision(tmp_path, "490", "2021")
-    # Live declarations only. These layout files carry commented reference
-    # blocks of the same shape, and a substring search finds the comment first:
-    # the id scan behind it then sees no live field at all and the planting
-    # raises instead of planting, which is a broken tooth rather than a clean
-    # corpus.
-    layout, line_number, field_id = _first_live_signed_field(planted / "export_layouts")
-    lines = layout.read_text("utf-8").splitlines(keepends=True)
-    lines[line_number] = lines[line_number].replace("signed = true", "signed = false")
-    layout.write_text("".join(lines), "utf-8")
+    layout, field_id = _first_live_signed_field(planted / "export_layouts")
+    document = load_toml(layout)
+    field = next(item for item in _layout_fields(document) if item["id"] == field_id)
+    assert field["signed"] is True
+    field["signed"] = False
+    layout.write_bytes(render_toml_bytes(layout.name, document))
 
     _clean_alignments, clean = revision_findings(
         authority, modelo="490", revision="2021", revision_root=_planted_revision(tmp_path / "clean", "490", "2021")
@@ -158,10 +162,11 @@ def test_a_record_that_fits_no_sheet_is_unchecked_not_passed(tmp_path: Path) -> 
     authority = compiled_bundled_authority()
     planted = _planted_revision(tmp_path, "490", "2021")
     layout = sorted((planted / "export_layouts").glob("*.toml"))[0]
-    text = layout.read_text("utf-8")
-    marker = text.index("\noffset = ") + len("\noffset = ")
-    end = text.index("\n", marker)
-    layout.write_text(text[:marker] + "999999" + text[end:], "utf-8")
+    document = load_toml(layout)
+    field = _layout_fields(document)[0]
+    assert field["offset"] != 999999
+    field["offset"] = 999999
+    layout.write_bytes(render_toml_bytes(layout.name, document))
 
     alignments, _found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
 
@@ -172,16 +177,14 @@ def test_a_planted_schema_blocked_field_retains_its_reason(tmp_path: Path) -> No
     """Migration of the live blocked inventory cannot silence the blocked detector."""
     authority = compiled_bundled_authority()
     planted = _planted_revision(tmp_path, "490", "2021")
-    layout, line_number, field_id = _first_live_signed_field(planted / "export_layouts")
-    lines = layout.read_text("utf-8").splitlines(keepends=True)
-    field_start = max(index for index in range(line_number) if lines[index].startswith("[["))
-    field_end = next(
-        (index for index in range(line_number + 1, len(lines)) if lines[index].startswith("[[")), len(lines)
-    )
-    block = "".join(lines[field_start:field_end])
-    assert "data_type = 'money'" in block
-    block = block.replace("signed = true", "signed = false").replace("data_type = 'money'", "data_type = 'integer'")
-    layout.write_text("".join(lines[:field_start]) + block + "".join(lines[field_end:]), "utf-8")
+    layout, field_id = _first_live_signed_field(planted / "export_layouts")
+    document = load_toml(layout)
+    field = next(item for item in _layout_fields(document) if item["id"] == field_id)
+    assert field["data_type"] == "money"
+    assert field["signed"] is True
+    field["signed"] = False
+    field["data_type"] = "integer"
+    layout.write_bytes(render_toml_bytes(layout.name, document))
 
     alignments, found = revision_findings(authority, modelo="490", revision="2021", revision_root=planted)
 

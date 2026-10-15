@@ -6,6 +6,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -18,7 +19,6 @@ from ....core.capabilities import ServiceCapability
 from ....core.config import load_settings
 from ....core.i18n.render import tr
 from ..common import emit_envelope
-from ..errors import CliRefusedBoundaryError
 from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 from ._profile_support import resolve_active_profile_pointer
 from .capabilities_payloads import CapabilitiesViewResult, CapabilitySetResult

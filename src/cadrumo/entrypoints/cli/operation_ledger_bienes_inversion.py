@@ -8,6 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
@@ -39,7 +40,6 @@ from ._bienes_inversion_payloads import (
     BienInversionDisposalPayload,
     BienInversionRecordPayload,
 )
-from .errors import CliRefusedBoundaryError
 
 
 def _client(ctx: typer.Context, profile_id: UUID) -> FrontendClient:

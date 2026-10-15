@@ -395,7 +395,7 @@ check-import-boundaries:
 [doc('Verify dependency declarations against the source tree; read-only and blocking.')]
 [group('check')]
 check-dependency-declarations:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude '(?:^|[\\/])test_.*[.]py$' --extend-exclude '(?:^|[\\/])_test_.*[.]py$' --extend-exclude '.*[\\/]tests[\\/].*' --extend-exclude '(?:^|[\\/])_data[\\/]' --extend-exclude '(?:^|[\\/])conftest[.]py$'
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_client src/cadrumo_runtime src/cadrumo_harness src/cadrumo_agent_service dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party cadrumo_agent_service --known-first-party cadrumo_client --known-first-party cadrumo_runtime --known-first-party dev --non-dev-dependency-groups registry --extend-exclude '(?:^|[\\/])test_.*[.]py$' --extend-exclude '(?:^|[\\/])_test_.*[.]py$' --extend-exclude '.*[\\/]tests[\\/].*' --extend-exclude '(?:^|[\\/])_data[\\/]' --extend-exclude '(?:^|[\\/])conftest[.]py$'
 
 [doc('Verify product module reachability; read-only and blocking.')]
 [group('check')]
@@ -683,10 +683,28 @@ _native-configure CONFIGURATION: (_native-selection CONFIGURATION)
 build-native CONFIGURATION="Release" TARGET="bundle": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target {{quote(TARGET)}}
 
-[doc('Build the native bundle and run its CTest verification.')]
+[doc('Build the native bundle and run ordinary CTest verification, excluding the opt-in live lane.')]
 [group('test')]
 test-native-bundle CONFIGURATION="Release": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify
+
+# These package-stage acceptance tests are deliberately opt-in. They assert
+# behavior of the real staged application programs and require an interactive
+# Windows credential store; ordinary verification excludes their CTest label.
+[doc('Run the opt-in CTest cases that assert the staged native package on Windows.')]
+[group('test')]
+test-native-live CONFIGURATION="Release": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify-native-live
+
+# CI gets the per-machine agent checkout from a repository variable. It must be
+# passed as a CMake cache argument, because CMake deliberately ignores the
+# process environment for this selection.
+[doc('Configure the native package from the repository agent-source variable and run ordinary native verification.')]
+[group('test')]
+test-native-ci AGENT_SOURCE_DIR CONFIGURATION="Release": (_native-selection CONFIGURATION)
+    @{{ if trim(AGENT_SOURCE_DIR) == "" { error("AGENT_SOURCE_DIR must name the cadrumo-agent project directory") } else { "" } }}
+    cmake --preset {{native_preset}} -D{{ if os() == "windows" { "'CADRUMO_PACKAGE_AGENT_SOURCE_DIR=" + replace(AGENT_SOURCE_DIR, "'", "''") + "'" } else { quote("CADRUMO_PACKAGE_AGENT_SOURCE_DIR=" + AGENT_SOURCE_DIR) } }}
+    just test-native-bundle {{CONFIGURATION}}
 
 [doc('Build the native bundle and package it as the distributable ZIP.')]
 [group('build')]
@@ -1073,8 +1091,8 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, documentation-build, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/runtime_lifecycle/tests/test_installed_linux_refusal_stdio.py
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
@@ -1281,12 +1299,12 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
 [group('test')]
 test-native-host:
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo_runtime/adapters/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
 
 # The opt-in native-host cases, which need a facility no runner provides: an
 # explicitly selected native macOS peer fixture, and a disposable GNOME Secret
@@ -1296,17 +1314,17 @@ test-native-host:
 [doc('Run the opt-in native macOS peer and Linux GNOME Secret Service cases on their owning host.')]
 [group('test')]
 test-native-host-facilities:
-    uv run --no-sync pytest -v -n0 -m "external_tool and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
+    uv run --no-sync pytest -v -n0 -m "external_tool and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo_runtime/adapters/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
 
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
 test-os-keychain:
-    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/entrypoints/cli/config/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/agent_eval/tests
+    uv run --no-sync pytest -v -n0 -m "os_keychain and not native_package" src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/entrypoints/cli/config/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests dev/agent_eval/tests src/cadrumo_runtime/host/tests/frontend/cli dev/runtime_lifecycle/tests
 
 [doc('Test current-source password login and logout against the real runtime (signed-in Windows desktop).')]
 [group('test')]
 test-runtime-auth:
-    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py
+    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_runtime_sign_in_native.py
 
 # The live agent lane runs against a verified, unmodified copy of the bundle
 # `build-native Release bundle` stages. It is opt-in and reached only from these
@@ -1349,7 +1367,7 @@ test-resident-service:
 [doc('Run the opt-in registry live-read tests serially outside portable aggregates.')]
 [group('test')]
 test-registry-live:
-    @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo dev/corpus/tests
+    @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo dev/corpus/tests src/cadrumo_runtime/host/tests/frontend/cli/test_live_notifications_pull_route.py
 
 [doc('Run the end-to-end smoke journey: the installed CLI calculates, verifies and exports an ordinary Modelo 303 quarter.')]
 [group('test')]

@@ -14,6 +14,7 @@ from cadrumo.application.workflow import profile_bucket_scan
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import OutputSchema
+from cadrumo.core.output_rendering import OutputFormat
 from cadrumo_client.commands import custody
 from cadrumo_client.commands.custody_payloads import ConfigSignInStatusResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
@@ -27,9 +28,28 @@ from cadrumo_client.transport import installed_client
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_runtime.commands import sign_in_status
+from cadrumo_runtime.commands.profile_admission import bind_runtime_root_context
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli, unwrap_cli_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _runtime_context() -> typer.Context:
+    ctx = typer.Context(typer.main.TyperCommand("test"))
+    bind_runtime_root_context(
+        ctx,
+        language=None,
+        profile=None,
+        profile_secrets_stdin=False,
+        profile_secrets_fd=None,
+        profile_auth_method="password",
+        profile_credential_ref=None,
+        format_=OutputFormat.TEXT,
+        quiet=False,
+        verbose=False,
+        debug=False,
+    )
+    return ctx
 
 
 class _ObservationClient(FrontendClient):
@@ -66,7 +86,7 @@ def test_status_keeps_unknown_distinct_and_never_borrows_proof(monkeypatch: pyte
         if selected
         else BucketPointer.absent(transition_revision=0)
     )
-    monkeypatch.setattr(profile_pointer, "observe_active_profile_pointer", lambda: pointer)
+    monkeypatch.setattr(sign_in_status, "observe_active_profile_pointer", lambda: pointer)
     monkeypatch.setattr(sign_in_status, "activate_subcommand_output_language", lambda *_: None)
     emitted: list[OutputSchema] = []
 
@@ -80,7 +100,7 @@ def test_status_keeps_unknown_distinct_and_never_borrows_proof(monkeypatch: pyte
 
     monkeypatch.setattr(installed_client, "open_installed_client", open_client)
     monkeypatch.setattr(sign_in_status, "emit_envelope", emit)
-    sign_in_status.config_sign_in_status(typer.Context(typer.main.TyperCommand("test")))
+    sign_in_status.config_sign_in_status(_runtime_context())
     assert len(emitted) == 1 and isinstance(emitted[0], ConfigSignInStatusResult)
     assert emitted[0].status.presence is (SignInPresence.UNKNOWN if selected else SignInPresence.ABSENT)
     assert client.observed == client.closed == int(selected)
@@ -91,7 +111,7 @@ def test_runtime_parser_reports_the_selected_profile_without_borrowing_proof(
 ) -> None:
     client = _ObservationClient()
     pointer = BucketPointer.selected(bucket_id=str(client.profile_id), transition_revision=1)
-    monkeypatch.setattr(profile_pointer, "observe_active_profile_pointer", lambda: pointer)
+    monkeypatch.setattr(sign_in_status, "observe_active_profile_pointer", lambda: pointer)
 
     async def open_client(*, profile_id: object, frontend: OperationFrontendProjection) -> FrontendClient:
         assert profile_id == client.profile_id and frontend is OperationFrontendProjection.CLI
@@ -111,10 +131,12 @@ def test_runtime_parser_reports_the_selected_profile_without_borrowing_proof(
 def test_refused_global_sign_out_closes_connection_without_clearing_pointer(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _ObservationClient()
     pointer = BucketPointer.selected(bucket_id=str(client.profile_id), transition_revision=1)
-    monkeypatch.setattr(profile_pointer, "observe_active_profile_pointer", lambda: pointer)
+    monkeypatch.setattr(custody, "observe_active_profile_pointer", lambda: pointer)
     monkeypatch.setattr(profile_bucket_scan, "read_profile_bucket", lambda _: None)
     monkeypatch.setattr(custody, "_activate_subcommand_output_language", lambda *_: None)
-    monkeypatch.setattr(profile_pointer, "active_profile_pointer_transaction", lambda: pytest.fail("premature clear"))
+    monkeypatch.setattr(
+        profile_pointer, "active_profile_pointer_transaction", lambda *_: pytest.fail("premature clear")
+    )
 
     async def open_client(*, profile_id: object, frontend: OperationFrontendProjection) -> FrontendClient:
         assert profile_id == client.profile_id and frontend is OperationFrontendProjection.CLI

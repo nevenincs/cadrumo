@@ -69,7 +69,16 @@ _SDIST_PROFILE_SCHEMA = "src/cadrumo/_data/registry/cadrumo/user_profile/schema.
 _DATABASE_NAME = re.compile(r"authority-[0-9a-f]{64}\.sqlite3")
 _DESCRIPTOR_MEMBERS = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
 _PROJECT_VERSION = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
-_ALLOWED_WHEEL_ROOTS = frozenset({"cadrumo", "cadrumo_harness", f"cadrumo-{_PROJECT_VERSION}.dist-info"})
+_ALLOWED_WHEEL_ROOTS = frozenset(
+    {
+        "cadrumo",
+        "cadrumo_client",
+        "cadrumo_runtime",
+        "cadrumo_harness",
+        "cadrumo_agent_service",
+        f"cadrumo-{_PROJECT_VERSION}.dist-info",
+    },
+)
 _ALLOWED_SDIST_FILES = frozenset(
     {
         ".gitignore",
@@ -90,7 +99,14 @@ _ALLOWED_SDIST_FILES = frozenset(
         "dev/packaging/google_oauth.py",
     }
 )
-_ALLOWED_SDIST_PREFIXES = ("src/cadrumo/", "src/cadrumo_harness/", "packaging/authority/")
+_ALLOWED_SDIST_PREFIXES = (
+    "src/cadrumo/",
+    "src/cadrumo_client/",
+    "src/cadrumo_runtime/",
+    "src/cadrumo_harness/",
+    "src/cadrumo_agent_service/",
+    "packaging/authority/",
+)
 
 # The publication lock sidecar is retained after every publish by design, and a
 # publication in flight stages under `authority-candidate-*`. Both live beside
@@ -412,7 +428,7 @@ def test_distributions_ship_only_the_product_package(
     wheel_members: frozenset[str],
     sdist_members: frozenset[str],
 ) -> None:
-    """Every archive member belongs to the product package or its own build metadata.
+    """Archive members belong to the five-package product cohort or build inputs.
 
     Stated as a closed allowlist rather than a list of excluded repository
     roots. An allowlist cannot fall behind the repository: a new top-level
@@ -513,25 +529,26 @@ def test_wheel_ships_every_calculation_summary_pdf_asset(wheel_members: frozense
 
 
 def test_wheel_ships_exact_local_runtime_assets(wheel_archive: Path, wheel_members: frozenset[str]) -> None:
-    """Ship every live native runtime asset byte-for-byte, with no stale siblings.
+    """Ship every runtime-owned GNOME asset byte-for-byte, with no stale siblings.
 
-    GNOME producer installation and verification consume both files in the
-    current asset contract. The complete expected set comes from the source
-    tree, so future assets are covered without a maintained inventory.
+    GNOME producer installation and verification consume both files from the
+    runtime package's data root. The complete expected set comes from the
+    canonical owner, so future assets are covered without a maintained
+    inventory.
     """
 
-    source_root = "src/cadrumo/_data/local_runtime"
+    source_root = "src/cadrumo_runtime/_data/gnome_login"
     source_paths = repository_files(REPO_ROOT, under=(source_root,))
-    expected = {f"{_WHEEL_PREFIX}/{path.removeprefix('src/cadrumo/')}": path for path in source_paths}
+    expected = {f"cadrumo_runtime/{path.removeprefix('src/cadrumo_runtime/')}": path for path in source_paths}
     expected_members = frozenset(expected)
-    producer_prefix = f"{_WHEEL_DATA_PREFIX}/local_runtime/gnome_login/"
+    producer_prefix = "cadrumo_runtime/_data/gnome_login/"
     required = {f"{producer_prefix}extension.js", f"{producer_prefix}metadata.json"}
     assert required <= expected_members, f"the source tree is missing a required GNOME producer asset: {required!r}"
 
-    asset_prefix = f"{_WHEEL_DATA_PREFIX}/local_runtime/"
+    asset_prefix = "cadrumo_runtime/_data/gnome_login/"
     actual = {member for member in wheel_members if member.startswith(asset_prefix) and not member.endswith("/")}
     assert actual == expected_members, (
-        "the wheel's local runtime assets must match the live source set exactly; "
+        "the wheel's GNOME runtime assets must match the live owner source set exactly; "
         f"missing={sorted(expected_members - actual)!r}, foreign_or_stale={sorted(actual - expected_members)!r}"
     )
     with zipfile.ZipFile(wheel_archive) as archive:

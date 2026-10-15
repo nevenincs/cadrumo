@@ -178,6 +178,11 @@ class DefaultBrowserSession:
         """The :class:`Profile` associated with the underlying session."""
         return self.session.profile
 
+    @property
+    def cleanup_complete(self) -> bool:
+        """Whether the session and its Playwright runtime are both settled."""
+        return self.session_closed and self._playwright_stopped
+
     # ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PROVISIONER: provisioner is an
     # optional duck-typed adapter that exposes build_context_kwargs(); Playwright
     # ships no stub for the caller-defined provisioner contract.
@@ -217,6 +222,14 @@ class DefaultBrowserSession:
             session_error = await self._close_browser_session()
             stop_error = await self._stop_playwright_runtime()
             if session_error is not None:
+                if isinstance(session_error, Exception) and self.cleanup_complete:
+                    _log_teardown_failure(
+                        message="default_browser_session: browser close failed; runtime stop settled resources",
+                        resource=self.session.profile.name,
+                        exc=session_error,
+                        warning=True,
+                    )
+                    return
                 if stop_error is not None:
                     session_error.add_note(
                         "Playwright runtime teardown also failed "
@@ -261,8 +274,27 @@ class DefaultBrowserSession:
                 ),
             )
         self._playwright_stopped = True
-        # A stopped Playwright runtime has reaped every browser it
-        # owns even when Browser.close() raised first.
+        try:
+            # A stopped Playwright runtime has reaped every browser it owns.
+            # Finish the session owner's remaining profile cleanup as well.
+            self.session.settle_after_runtime_stop()
+        except Exception as exc:
+            _log_teardown_failure(
+                message="default_browser_session: browser profile cleanup failed after runtime stop",
+                resource=self.session.profile.name,
+                exc=exc,
+                warning=True,
+            )
+            return BrowserError(
+                "Failed to clean browser profile after Playwright runtime stop",
+                failure_mode=BrowserFailureMode.BROWSER_CLOSE_FAILED,
+                context={"profile": self.session.profile.name, "cause_type": type(exc).__name__},
+                precondition_verdict=browser_no_action_verdict(
+                    condition=BrowserPreconditionCondition.BROWSER_CLOSEABLE,
+                    facts={"browser_closeable": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
+            )
         self.session_closed = True
         return None
 

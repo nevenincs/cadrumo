@@ -280,8 +280,8 @@ _YEAR_N_PLUS_1_1T_INPUTS = {
 # LIVA art. 99 permits a negative settlement to be carried into the following
 # period. The official 2024 early M303 design (``aeat-dr-303-2024-early``)
 # supplies the 2T form context. These independently grounded inputs make the
-# expected source settlement and available carry 42.00: 63.00 deductible VAT
-# minus 21.00 accrued VAT, rather than an amount echoed back from the engine.
+# expected source settlement and available carry 42.00: 63.00 deductible IVA
+# minus 21.00 accrued IVA, rather than an amount echoed back from the engine.
 _EARLY_DESIGN_CREDIT_INPUTS = {
     "modelo-303-iva-repercutido-general-cuota": Decimal("21.00"),
     "modelo-303-iva-soportado-interiores-cuota": Decimal("63.00"),

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from importlib import import_module
 from typing import TYPE_CHECKING, Never, cast
 
 import typer
@@ -324,8 +323,9 @@ def _require_profile_credential_posture(
 
 
 def _refuse(key: str) -> Never:
-    error = import_module(".errors", __package__).CliRefusedBoundaryError
-    raise error(translated_message=f"cli.config.custody.errors.{key}")
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
+    raise CliRefusedBoundaryError(translated_message=f"cli.config.custody.errors.{key}")
 
 
 def _leaf_selection(spec: CommandSpec, arguments: Mapping[str, object]) -> MachineSecretSelection | None:
@@ -396,6 +396,8 @@ def _resolve_login_target_or_refuse(raw: str) -> ProfileBucketPointer:
     after that fix, and it did not carry the conversion, so the escape returned
     on `config profile view <label>` and `config profile validate <label>`.
     """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...application.profile_preconditions import (
         ProfileSelectionFailure,
         profile_selection_failure_verdict,
@@ -404,7 +406,6 @@ def _resolve_login_target_or_refuse(raw: str) -> ProfileBucketPointer:
     from ...application.workflow.errors import ProfileLabelAmbiguousError
     from ...domain.user_profile.errors import ProfileNotFoundError
     from .common import attach_cli_policy_verdict
-    from .errors import CliRefusedBoundaryError
 
     try:
         return resolve_login_target(raw)
@@ -854,6 +855,12 @@ def _activate_profile_connection_leaf(
             target_bucket_id=explicit_target,
         )
         _require_resume_target(root, explicit_target, credential_reference=credential_reference is not None)
+        if explicit_target is None:
+            from ...core.bucket_pointer import resolve_active_bucket_id
+            from .common import _no_active_profile_refusal
+
+            if resolve_active_bucket_id() is None:
+                raise _no_active_profile_refusal()
         activate_profile(
             ctx,
             target_bucket_id=explicit_target,

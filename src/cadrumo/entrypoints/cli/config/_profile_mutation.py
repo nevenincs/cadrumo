@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, remaining_budget
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -17,7 +18,6 @@ from cadrumo_client.transport.profile_mutations import (
 
 from ....application.user_profile.view_operation import ProfileViewPageKind
 from ....domain.user_profile.values import ProfileSetupState
-from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from cadrumo_client.transport.frontend_client import FrontendClient

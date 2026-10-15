@@ -117,13 +117,6 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "render-and-echo pair -- which is how one of them came to bypass the "
         "boundary while its sibling did not."
     ),
-    ("entrypoints/cli/config/secure_input.py", "write_to_controlling_terminal", "write"): (
-        "Recovery-code display writes directly to the controlling terminal "
-        "device (CONOUT$ / /dev/tty), deliberately BYPASSING stdout so the "
-        "candidate code can never land in a redirected stream, JSON "
-        "envelope, or log. Routing it through the envelope renderer would be "
-        "the secret-serialization defect the channel exists to prevent."
-    ),
     ("entrypoints/cli/_terminal_errors.py", "_render_click_exception_text", "write"): (
         "Last-resort crash-boundary fallback used only when typer/rich "
         "rendering is unavailable; it cannot route through the rich path it is "

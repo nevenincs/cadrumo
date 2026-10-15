@@ -40,7 +40,7 @@ def _runtime_command() -> click.Command:
         context_settings={
             "allow_extra_args": True,
             "ignore_unknown_options": True,
-        }
+        },
     )
     @click.argument("runtime_args", nargs=-1, type=click.UNPROCESSED)
     def invoke(runtime_args: tuple[str, ...]) -> None:

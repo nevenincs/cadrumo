@@ -379,52 +379,50 @@ impl ManagerStart {
         self.closed.load(Ordering::Acquire)
     }
 
-    async fn dispatch(&self, retry: bool, _provision: bool) -> Result<StartOutcome> {
-        if !cfg!(windows) {
+    async fn dispatch(&self, _retry: bool, _provision: bool) -> Result<StartOutcome> {
+        #[cfg(not(windows))]
+        {
             return Ok(StartOutcome::Unsupported);
         }
-        let Some(package_root) = self.package_root.as_ref().map_err(Clone::clone)? else {
-            return Err(failure(ErrorCode::ManagerUnavailable));
-        };
-        let package_root = package_root.clone();
-        #[cfg(windows)]
-        let default_root = cadrumo_manager::supervision::environment::ManagedLocations::for_host(
-            &std::env::current_exe()
-                .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?,
-            &package_root,
-            &self.storage_root,
-        )
-        .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
-        .is_default_root();
-        #[cfg(not(windows))]
-        let default_root = false;
-        #[cfg(windows)]
-        if retry {
-            let finished = self
-                .host
-                .lock()
-                .map_err(|_| failure(ErrorCode::Panic))?
-                .as_ref()
-                .is_some_and(cadrumo_manager::desktop_host::DesktopHost::finished);
-            if finished {
-                // A failed worker has already drained its owned runtime. Retain
-                // its failure evidence, then allow an explicit retry to re-admit.
-                if let Err(error) = self.stop_owned().await {
-                    self.diagnostics.host_failure(HostStage::Manager, error);
-                }
-                cadrumo_manager::failed_versions::FailedVersions::retry(&self.storage_root)
-                    .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
-            }
-        }
-        // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
-        let manager = self
-            .activate_installed(default_root, package_root.clone(), retry)
-            .await?;
         #[cfg(windows)]
         {
+            let Some(package_root) = self.package_root.as_ref().map_err(Clone::clone)? else {
+                return Err(failure(ErrorCode::ManagerUnavailable));
+            };
+            let package_root = package_root.clone();
+            let default_root =
+                cadrumo_manager::supervision::environment::ManagedLocations::for_host(
+                    &std::env::current_exe()
+                        .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?,
+                    &package_root,
+                    &self.storage_root,
+                )
+                .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
+                .is_default_root();
+            if _retry {
+                let finished = self
+                    .host
+                    .lock()
+                    .map_err(|_| failure(ErrorCode::Panic))?
+                    .as_ref()
+                    .is_some_and(cadrumo_manager::desktop_host::DesktopHost::finished);
+                if finished {
+                    // A failed worker has already drained its owned runtime. Retain
+                    // its failure evidence, then allow an explicit retry to re-admit.
+                    if let Err(error) = self.stop_owned().await {
+                        self.diagnostics.host_failure(HostStage::Manager, error);
+                    }
+                    cadrumo_manager::failed_versions::FailedVersions::retry(&self.storage_root)
+                        .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
+                }
+            }
+            // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
+            let manager = self
+                .activate_installed(default_root, package_root.clone(), _retry)
+                .await?;
             let mut host = self.host.lock().map_err(|_| failure(ErrorCode::Panic))?;
             if let Some(host) = host.as_ref() {
-                if retry {
+                if _retry {
                     host.retry()
                         .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
                 }
@@ -439,8 +437,8 @@ impl ManagerStart {
                     .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?,
                 );
             }
+            Ok(StartOutcome::Dispatched)
         }
-        Ok(StartOutcome::Dispatched)
     }
 
     async fn activate_installed(

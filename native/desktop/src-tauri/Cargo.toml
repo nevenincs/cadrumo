@@ -21,6 +21,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 cadrumo-application = { path = "../../application" }
+cadrumo-platform = { path = "../../platform" }
 portable-pty = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

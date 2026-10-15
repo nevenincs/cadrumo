@@ -35,6 +35,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
@@ -42,7 +44,6 @@ from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.meses_trabajo import serialise_meses_trabajo
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
-from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._profile_support import require_active_profile_pointer as _active_profile_pointer
 
 if TYPE_CHECKING:

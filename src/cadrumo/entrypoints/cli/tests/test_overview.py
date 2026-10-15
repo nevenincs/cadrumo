@@ -8,6 +8,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -18,7 +19,6 @@ from ....application.overview.read_result import OverviewReadProjection
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from .. import _overview
-from ..errors import CliRefusedBoundaryError
 from ..operation_overview import OverviewReadCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

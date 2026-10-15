@@ -6,6 +6,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
@@ -20,7 +21,6 @@ from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
-from .errors import CliRefusedBoundaryError
 
 
 def read_ledger_check_for_cli(

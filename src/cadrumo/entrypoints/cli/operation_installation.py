@@ -15,6 +15,12 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
+from cadrumo_client.commands.errors import (
+    CliOperationStillRunningError,
+    CliRecordedOperationError,
+    CliRefusedBoundaryError,
+    CliUnexpectedBoundaryError,
+)
 from cadrumo_client.contracts.contracts import EndpointPresence, RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -27,12 +33,6 @@ from cadrumo_client.contracts.installation_requests import (
 )
 
 from ...core.errors.hierarchy import CadrumoError
-from .errors import (
-    CliOperationStillRunningError,
-    CliRecordedOperationError,
-    CliRefusedBoundaryError,
-    CliUnexpectedBoundaryError,
-)
 
 if TYPE_CHECKING:
     from cadrumo_client.transport.installation_client import InstallationClient, InstallationSecretHolder

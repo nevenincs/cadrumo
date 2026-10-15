@@ -23,13 +23,14 @@ import sqlalchemy.exc as sa_exc
 import typer
 from pydantic import TypeAdapter, ValidationError
 
+from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+
 from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
 from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
 from ....core.errors.error_codes import build_error_envelope, render_error_text
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ..errors import (
-    CliUnexpectedBoundaryError,
     _project_validation_error,
     _unwrap_cadrumo_error,
     command_error_boundary,

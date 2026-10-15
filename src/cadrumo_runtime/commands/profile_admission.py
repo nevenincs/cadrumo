@@ -9,6 +9,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo.application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError, resolve_login_target
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -19,7 +20,7 @@ from cadrumo.core.i18n.render import clear_output_language_cache, tr
 from cadrumo.core.output_rendering import OutputFormat
 from cadrumo.core.profile_session import ProfileSessionRefusalReason as ReceiptRefusalReason
 from cadrumo.core.profile_session import ReceiptBindingRefusal
-from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod, ProfileAuthenticationSecrets
 from cadrumo_client.commands.secure_input import (
     ProfileSecretSelection,
@@ -138,6 +139,14 @@ def runtime_root_context(ctx: typer.Context) -> RuntimeCommandContext:
 
 
 def _refuse(key: str) -> NoReturn:
+    if key == "profile_secrets_inapplicable":
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(translated_message=f"cli.config.custody.errors.{key}"),
+            verdict=cli_exception_no_recovery_verdict(
+                CliExceptionPrecondition.CONFIG_BOUNDARY,
+                facts={"profile_authentication_input": "not_applicable", "input_read": False},
+            ),
+        )
     raise CliRefusedBoundaryError(translated_message=f"cli.config.custody.errors.{key}")
 
 
@@ -356,6 +365,10 @@ def preflight_runtime_command(ctx: typer.Context, spec: CommandSpec, arguments: 
     if spec.kind.value != "leaf":
         return
     selection, method, credential_reference = _root_profile_source(ctx)
+    if spec.key == "config_profile_automation_change" and (
+        method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None
+    ):
+        _refuse("automation_change_credential_ref_required")
     if spec.key in {"config_auth_providers", "config_auth_apoderado_scopes_list", "config_sign_in_status"}:
         if _root_profile_options_are_supplied(ctx):
             _refuse("profile_secrets_inapplicable")

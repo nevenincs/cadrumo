@@ -11,6 +11,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.exchange_rate_provider import exchange_rate_provider
@@ -34,7 +35,6 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from .. import _ledger_business_invoice_cli as handler
 from .. import operation_invoice_catalogue as bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

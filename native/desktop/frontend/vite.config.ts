@@ -23,7 +23,7 @@ const GENERATED_INPUTS: Record<string, string> = {
   "virtual:desktop-palette.css": "palette.css",
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const identity = readIdentity();
   const generated = buildPath("desktop_frontend_generated");
   const ports = server();
@@ -120,11 +120,12 @@ export default defineConfig(({ mode }) => {
         },
         load(id) {
           if (id !== "\0desktop-content") return;
-          this.emitFile({
-            type: "asset",
-            fileName: "identity.json",
-            source: JSON.stringify(identity),
-          });
+          if (command === "build")
+            this.emitFile({
+              type: "asset",
+              fileName: "identity.json",
+              source: JSON.stringify(identity),
+            });
           return `export const identity = ${JSON.stringify(identity)};`;
         },
       },

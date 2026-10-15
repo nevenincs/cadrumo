@@ -272,12 +272,12 @@ if _ONLY_SOURCES:
         # The API stubs are written at builder-inited, after this list is taken,
         # so the ones the build will generate are named by the generator rather
         # than found on disk; otherwise every stub would join the read set.
-        from dev.docs.apidocs.manager import API_SOURCE_PACKAGE, ApiStubManager, stub_filename
+        from dev.docs.apidocs.manager import ApiStubManager, stub_filename
 
         _discovered_sources |= {
             f"api/{stub_filename(_name)}"
-            for _name, _ in ApiStubManager(
-                src_cadrumo=_PROJECT_ROOT / "src" / API_SOURCE_PACKAGE,
+            for _name, _ in ApiStubManager.for_repository(
+                _PROJECT_ROOT,
                 docs_api=_DOCS_ROOT / "api",
             ).discover_modules()
         }
@@ -1769,10 +1769,10 @@ def setup(app):
         generate_cli_reference(Path(__file__).resolve().parent)
 
     def _generate_api_stubs(app):
-        """Write the ``api/*.rst`` automodule stubs fresh from the module tree.
+        """Write the ``api/*.rst`` automodule stubs from every canonical source root.
 
-        The stubs are a pure function of the ``src/cadrumo`` module tree, so they
-        are build output: written into the source tree this build reads
+        The stubs are a pure function of the canonical ``src/`` package roots,
+        so they are build output: written into the source tree this build reads
         (``app.srcdir``, which is a private copy when the build isolates its
         source), gitignored, and never committed. Unchanged stubs keep their
         bytes and mtime, so an incremental build re-reads only the pages whose
@@ -1784,12 +1784,9 @@ def setup(app):
         """
         if _skip_generated_output_for_i18n("api_stubs") or not _should_generate_api_stubs():
             return
-        from dev.docs.apidocs.manager import API_SOURCE_PACKAGE, ApiStubManager
+        from dev.docs.apidocs.manager import ApiStubManager
 
-        ApiStubManager(
-            src_cadrumo=_PROJECT_ROOT / "src" / API_SOURCE_PACKAGE,
-            docs_api=Path(app.srcdir) / "api",
-        ).scaffold()
+        ApiStubManager.for_repository(_PROJECT_ROOT, docs_api=Path(app.srcdir) / "api").scaffold()
 
     def _generate_glossary_reference(app):
         """Render the glossary fresh from the approved Handbook concepts.

@@ -31,17 +31,39 @@ TARGETS = {
 
 @pytest.fixture(scope="module", params=["2024", "2025"])
 def pair(request):
-    before = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/390")).revisions[request.param]
-    # Reconstruct the old defect explicitly after the live exports are repaired.
-    # Historical declarations remain available; no production source is changed.
+    source = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/390"))
+    before = source.revisions[request.param]
+    # These output positions were manual inputs in the last pre-handoff
+    # revision. Borrow those authored definitions to reconstruct the old
+    # export shape while keeping each tested revision's current casillas and
+    # form draft as the receiving state.
+    legacy = source.revisions["2022"]
     old_bindings = {
-        b.provider.offset: b.id
-        for b in before.bindings
-        if isinstance(b.provider, ManualInputProvider)
-        and b.provider.record == "page_5"
-        and b.provider.offset in TARGETS
+        binding.provider.offset: binding.id
+        for binding in legacy.bindings
+        if isinstance(binding.provider, ManualInputProvider)
+        and binding.provider.record == "page_5"
+        and binding.provider.offset in TARGETS
     }
-    assert len(old_bindings) == 9
+    assert set(old_bindings) == set(TARGETS)
+    current_bindings = {str(binding.id): binding for binding in before.bindings}
+    legacy_bindings = {
+        str(binding.id): binding
+        for binding in legacy.bindings
+        if str(binding.id) in {str(binding_id) for binding_id in old_bindings.values()}
+    }
+    assert set(legacy_bindings) == {str(binding_id) for binding_id in old_bindings.values()}
+    for binding_id, binding in legacy_bindings.items():
+        existing = current_bindings.get(binding_id)
+        assert existing is None or existing == binding
+    before = before.model_copy(
+        update={
+            "bindings": (
+                *before.bindings,
+                *(binding for binding_id, binding in legacy_bindings.items() if binding_id not in current_bindings),
+            )
+        }
+    )
     old_layouts = tuple(
         layout.model_copy(
             update={

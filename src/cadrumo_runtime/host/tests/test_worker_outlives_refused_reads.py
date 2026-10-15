@@ -9,6 +9,7 @@ removes one: discarding a unit keeps its record.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from collections.abc import Callable, Generator
@@ -48,13 +49,14 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessScope, SessionKind
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from cadrumo_client.contracts.attendance import AttendancePending
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (
     OperationContract,
@@ -76,6 +78,7 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
@@ -188,15 +191,54 @@ async def test_a_read_of_an_operation_that_does_not_exist_or_is_another_sessions
         stored_sign_in_runtime(tmp_path, monkeypatch) as runtime,
         override_settings(cadrumo_active_profile=str(runtime.profile_id)),
     ):
-
-        def admitted(frontend: OperationFrontendProjection) -> _Session:
-            connection = runtime.connect()
-            reply = runtime.resume(connection, frontend)
-            assert isinstance(reply, ProfileStatus), reply
-            assert reply.status.session_id is not None
-            return _Session(connection, runtime.profile_id, reply.status.session_id)
-
-        owner, other = admitted(OperationFrontendProjection.EXTERNAL_CLIENT), admitted(OperationFrontendProjection.TUI)
+        person_connection, external_connection = runtime.connect(), runtime.connect()
+        person = FrontendClient(
+            person_connection, profile_id=runtime.profile_id, frontend=OperationFrontendProjection.TUI
+        )
+        person.resume_receipt()
+        assert person.attendance_inventory().candidates == ()
+        scope = AccessScope(
+            operations=frozenset({definition_id}),
+            actions=frozenset(
+                {
+                    AccessAction.SUBMIT,
+                    AccessAction.OBSERVE,
+                    AccessAction.RESULT,
+                    AccessAction.REVIEW,
+                    AccessAction.RESPOND,
+                }
+            ),
+            disclosures=frozenset(),
+            periods=frozenset(),
+            allow_period_independent=True,
+            allow_delegation=False,
+            allow_changes_records=False,
+            allow_network=False,
+        )
+        external = FrontendClient(
+            external_connection,
+            profile_id=runtime.profile_id,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+            scope=scope,
+        )
+        pending = external.request_attendance()
+        assert isinstance(pending, AttendancePending), pending
+        (candidate,) = person.attendance_inventory().candidates
+        assert candidate.attendance_id == pending.attendance_id
+        assert candidate.process_id == os.getpid() and candidate.image_path is not None
+        assert candidate.frontend is OperationFrontendProjection.EXTERNAL_CLIENT and candidate.scope == scope
+        assert person.decide_attendance(pending.attendance_id, approve=True).approved
+        admitted = external.attendance_status(pending.attendance_id)
+        assert isinstance(admitted, ProfileStatus) and admitted.status.denial is None
+        lease = runtime.lease(external.session_id)
+        assert lease.kind is SessionKind.ATTENDED and lease.parent_session_id == person.session_id
+        assert lease.scope.operations == scope.operations and lease.scope.actions == scope.actions
+        assert lease.scope.periods == frozenset() and lease.scope.allow_period_independent
+        assert (
+            not lease.scope.allow_delegation and not lease.scope.allow_changes_records and not lease.scope.allow_network
+        )
+        owner = _Session(external_connection, runtime.profile_id, external.session_id)
+        other = _Session(person_connection, runtime.profile_id, person.session_id)
         contract = owner.contract(definition_id)
         submitted = owner.ask(
             OperationSubmit,

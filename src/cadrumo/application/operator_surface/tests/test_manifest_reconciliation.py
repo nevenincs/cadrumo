@@ -6,6 +6,7 @@ from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
+
 from cadrumo_client.contracts.command_program import CommandProgram
 
 from ..errors import OperatorSurfaceContractError
@@ -239,8 +240,12 @@ def test_equal_paths_belong_to_their_program_and_canonical_identities_remain_uni
     inventory["live_leaves"] = (first, second)
     inventory["result_schemas"] += (inventory["result_schemas"][0].model_copy(update={"subject_leaf_key": other_key}),)
     inventory["input_schemas"] += (inventory["input_schemas"][0].model_copy(update={"subject_leaf_key": other_key}),)
-    inventory["profile_policies"] += (inventory["profile_policies"][0].model_copy(update={"subject_leaf_key": other_key}),)
-    inventory["surface_exposures"] += (inventory["surface_exposures"][0].model_copy(update={"subject_leaf_key": other_key}),)
+    inventory["profile_policies"] += (
+        inventory["profile_policies"][0].model_copy(update={"subject_leaf_key": other_key}),
+    )
+    inventory["surface_exposures"] += (
+        inventory["surface_exposures"][0].model_copy(update={"subject_leaf_key": other_key}),
+    )
 
     report = reconcile_operator_surface_inventory(**inventory)
     assert {leaf.live_leaf.program for leaf in report.leaves} == {CommandProgram.AEAT, CommandProgram.AUTHENTICATION}

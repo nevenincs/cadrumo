@@ -11,6 +11,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.calculations.observations_repository import ObservationSourceKind
@@ -34,7 +35,6 @@ from ....core.operations import (
 from ....core.period import Period
 from .. import operation_modelo_local_observation as bridge
 from .._filing_chain_payloads import ObservationLayersPayload
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

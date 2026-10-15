@@ -33,11 +33,12 @@ from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_harness.mcp.access_scope import surface_scope
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
-
-from .stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
+from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -126,8 +127,13 @@ def test_native_person_and_attended_agent_sessions_refuse_provider_administratio
             finally:
                 person.close()
         person = _resumed(runtime, OperationFrontendProjection.CLI)
+        initial_inventory = person.attendance_inventory()
+        assert initial_inventory.profile_id == runtime.profile_id and initial_inventory.candidates == ()
         automation = FrontendClient(
-            runtime.connect(), profile_id=runtime.profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+            runtime.connect(),
+            profile_id=runtime.profile_id,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+            scope=surface_scope(MCP_SURFACES[McpSurfaceName.FULL]),
         )
         try:
             pending = automation.request_attendance()

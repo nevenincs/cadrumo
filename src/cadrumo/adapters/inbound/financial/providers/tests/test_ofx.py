@@ -75,15 +75,16 @@ def test_ofx_provider_refuses_non_finite_transaction_amounts(
     )
 
     provider = OfxProvider()
-    validation = provider.validate_source(source)
+    with caplog.at_level(logging.WARNING, logger="cadrumo.adapters.inbound.financial.providers.ofx"):
+        validation = provider.validate_source(source)
 
-    assert not validation.is_valid
-    assert validation.warnings == ("OFX transaction 1 could not be parsed: unsupported amount value",)
-    with pytest.raises(
-        InvalidFinancialSourceError,
-        match="OFX transaction 1 could not be parsed: unsupported amount value",
-    ):
-        tuple(provider.ingest(source))
+        assert not validation.is_valid
+        assert validation.warnings == ("OFX transaction 1 could not be parsed: unsupported amount value",)
+        with pytest.raises(
+            InvalidFinancialSourceError,
+            match="OFX transaction 1 could not be parsed: unsupported amount value",
+        ):
+            tuple(provider.ingest(source))
     parse_warnings = [record for record in caplog.records if "ofx_provider: parse error" in record.message]
     assert parse_warnings
     assert all(record.exc_info is None and amount_token not in record.message for record in parse_warnings)

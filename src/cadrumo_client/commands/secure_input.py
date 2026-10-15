@@ -553,7 +553,7 @@ def prompt_secret_no_echo(prompt: str) -> str:
     read or displayed, covering every fallback route including ones this module
     cannot predict.
 
-    :func:`warnings.catch_warnings` is not thread-safe, which is sound here: this
+    :class:`warnings.catch_warnings` is not thread-safe, which is sound here: this
     is a blocking interactive read on a single-threaded CLI process.
     """
     if not terminal_can_prompt_for_secrets():

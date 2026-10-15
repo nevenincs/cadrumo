@@ -68,6 +68,18 @@ Follow-up review found no defects in the preserved retry budget or nonzero helpe
 
 The configured `just test-gate` found a collection failure at `dev/registry/tests/test_record_design_source_selection.py:111`: one expected exercise unpacked multiple values. The run was stopped after establishing this failure to release resources for package acceptance. It is not passing evidence. `just check-registry-gate` passes. Package and remaining code-quality verification are still pending.
 
+### service-start-reply | medium | Asynchronous startup acknowledgement was rejected as unreadable
+
+Direct inspection found `AgentService.admin("start")` returns `kind=starting` while `native/desktop/src-tauri/src/agent/supervisor.rs:262` expected an immediate lifecycle `event`. Corrected the caller to accept the administration acknowledgement and leave readiness/refusal to the existing service event stream. The rebuilt package's manual admin start acknowledged in 0.001 seconds and subsequently emitted the agent refusal, independently of a GUI.
+
+### startup-refusal-cause | medium | Typed startup causes were lost at the service boundary
+
+`src/cadrumo_agent_service/main.py` and `service.py` reduced preflight exceptions to generic failure and discarded the inner agent refusal detail. Corrected both paths to use the existing launcher categories and log the agent's validated refusal code without serializing exception payloads. Six focused regression cases pass. In the rebuilt package, `build/acceptance/agent-manual-fecjpz6t/storage/logs/cadrumo.log:31` now states `hosted_lane_unproven`, including on asynchronous retry at line 33. Runtime readiness, password-authenticated CLI holder, exact service admission, twelve-provider catalog/status, protected credential set/remove/reset with CAS, and contained close all completed without a GUI.
+
+### cli-auth-homes | medium | Ordinary CLI sign-in is not hosted provider sign-in
+
+Two user-requested Luna max investigations traced the service and agent separately. A packaged-interpreter composer probe confirms custom `CODEX_HOME` and `CADRUMO_AGENT_CODEX_HOME` are absent, while OS home variables remain. The agent seats hosted Codex at `providers/codex`, then creates a fresh per-turn home and copies only that provider home's `auth.json`; a synthetic production-helper probe confirmed present/absent source behavior. Hosted Claude uses a persistent per-provider `CLAUDE_CONFIG_DIR`, with no automatic import from the user's home. The real Codex CLI reports login status exit 0 in the selected account, but exit 1 with no auth file in the manual hosted provider home. Provider settings' sign-in mode is not credential provisioning. No credentials were imported as a workaround. Hosted authentication provisioning and recorded hosted-package proof remain separate requirements; no working hosted conversation is claimed.
+
 ## Recommendations
 
 <!-- Actionable recommendations, each tied to a finding above. An

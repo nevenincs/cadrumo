@@ -21,13 +21,12 @@ from cadrumo_client.contracts.access_management import (
     SessionInventory,
     SessionInventoryReply,
 )
+from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.contracts import ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.profile_access import Request, SecretReady
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
-
-from ...application.automation_lifecycle_service import AutomationResumeReceipt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

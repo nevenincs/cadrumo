@@ -68,7 +68,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # packages it measures, so the roots come from the shared checkout derivation.
 _SRC_ROOT = SRC_DIR
 _LOCALES_ROOT = SRC_DIR / "locales"
-_RUNTIME_TUI_ROOT = SRC_DIR.parent / "cadrumo" / "entrypoints" / "tui"
 _RUNTIME_COMMANDS_ROOT = SRC_DIR.parent / "cadrumo_runtime" / "commands"
 _CLIENT_COMMANDS_ROOT = SRC_DIR.parent / "cadrumo_client" / "commands"
 
@@ -561,7 +560,10 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # The terminal interface's installation area returns the override as a context
         # manager its callers enter only around synchronous rendering, never across a wait,
         # so the first-profile page can word an area before any profile holds a language.
-        ("runtime/tui/installation/texts.py", "worded_in"),
+        ("entrypoints/tui/installation/texts.py", "worded_in"),
+        # The runtime entrypoint can outlive the command callback while it renders a
+        # captured refusal; it restores the request language only inside that render.
+        ("runtime/commands/main.py", "_emit_error"),
     },
 )
 
@@ -623,13 +625,12 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     found: set[tuple[str, str]] = set()
     ctx_wrapped: set[tuple[str, str]] = set()
     projection_wrapped: set[tuple[str, str]] = set()
-    for root in (_CLIENT_COMMANDS_ROOT, _RUNTIME_COMMANDS_ROOT, _RUNTIME_TUI_ROOT):
+    for root in (_CLIENT_COMMANDS_ROOT, _RUNTIME_COMMANDS_ROOT):
         assert root.is_dir(), f"moved locale-aware source root is missing: {root}"
     source_roots = (
         (_SRC_ROOT, ""),
         (_CLIENT_COMMANDS_ROOT, "client/commands/"),
         (_RUNTIME_COMMANDS_ROOT, "runtime/commands/"),
-        (_RUNTIME_TUI_ROOT, "runtime/tui/"),
     )
     for source_root, rel_prefix in source_roots:
         for module in scan_directory(source_root, pattern="*.py", recursive=True):

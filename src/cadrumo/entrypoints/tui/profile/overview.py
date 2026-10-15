@@ -375,6 +375,10 @@ class ProfileManagerScreen(
 
     async def on_mount(self) -> None:
         """Install the presentation theme and render the supplied overview."""
+        # Closing the app can detach this screen before its queued mount
+        # handler runs. Its removed children no longer need presentation.
+        if not self.is_attached:
+            return
         install_cadrumo_themes(self.app)
         # The shared theme sizes every Input to the full row, which would push
         # the required-only switch beside the search box off the screen.
@@ -387,6 +391,12 @@ class ProfileManagerScreen(
                 button.styles.border = ("none", "transparent")
                 button.styles.height = 1
         await self._redraw()
+        self._finish_mount()
+
+    def _finish_mount(self) -> None:
+        """Set focus and scrolling only while the asynchronously redrawn screen remains attached."""
+        if not self.is_attached:
+            return
         if self._onboarding:
             self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
         # Whatever took focus while the page was building may have scrolled

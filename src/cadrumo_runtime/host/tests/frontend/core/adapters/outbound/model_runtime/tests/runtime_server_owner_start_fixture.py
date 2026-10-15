@@ -12,8 +12,8 @@ from pydantic import BaseModel
 
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.adapters.worker_authorization_client import WorkerAuthorizationClient
-from cadrumo_runtime.contracts.profile_worker import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationRequest
 
 

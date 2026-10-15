@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -39,17 +40,17 @@ def _cleanup_keychain(tmp_path: Path) -> None:
 
 
 _FIVE_LEAF_CONFLICT_COMMANDS = (
-    ("config", "login", "unread-target"),
-    ("config", "profile", "create", "unread-created", "--quiet"),
-    ("config", "passphrase", "change"),
-    ("config", "profile", "archive", "import", "unread-restored", "--file", "unread-capsule"),
-    ("config", "auth", "certificate", "secret", "set", "--name", "unread-certificate"),
+    ("aeat", ("config", "login", "unread-target")),
+    ("aeat", ("config", "profile", "create", "unread-created", "--quiet")),
+    ("cadrumo-runtime", ("config", "passphrase", "change")),
+    ("aeat", ("config", "profile", "archive", "import", "unread-restored", "--file", "unread-capsule")),
+    ("cadrumo-runtime", ("config", "auth", "certificate", "secret", "set", "--name", "unread-certificate")),
 )
 
 
-@pytest.mark.parametrize("command", _FIVE_LEAF_CONFLICT_COMMANDS)
+@pytest.mark.parametrize(("program", "command"), _FIVE_LEAF_CONFLICT_COMMANDS)
 def test_each_leaf_refuses_same_scope_channel_conflict_before_state_or_read(
-    tmp_path: Path, command: tuple[str, ...]
+    tmp_path: Path, program: Literal["aeat", "cadrumo-runtime"], command: tuple[str, ...]
 ) -> None:
     root = tmp_path / "same-scope"
     result = _run(
@@ -59,6 +60,7 @@ def test_each_leaf_refuses_same_scope_channel_conflict_before_state_or_read(
         inherited_payloads=(_REFUSAL_INPUT,),
         assert_unread_indices=(0,),
         assert_stdin_unread=True,
+        program=program,
     )
     combined = _assert_refused(result, root, before={})
     assert '"status":"error"' in combined
@@ -138,6 +140,7 @@ def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(
         inherited_payloads=inherited,
         assert_unread_indices=(0,) if inherited else (),
         assert_stdin_unread=stdin is not None,
+        program="cadrumo-runtime",
     )
     combined = _assert_refused(result, root, before=before)
     assert '"status":"error"' in combined
@@ -362,6 +365,7 @@ def test_retired_certificate_secret_field_is_refused_without_mutation(
         stdin=json.dumps({"secret": _REFUSAL_INPUT}),
         inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
         assert_closed_index=0,
+        program="cadrumo-runtime",
     )
     assert "unexpected ones" in _assert_refused(result, root, before=before)
 
@@ -378,11 +382,12 @@ def test_hostile_environment_secret_is_ignored_by_leaf_cli(tmp_path: Path) -> No
     assert "No passphrase channel is available." in combined
 
 
-def test_live_session_makes_root_source_unused_and_leaves_it_unread(
-    tmp_path: Path,
+def test_explicit_root_source_is_read_despite_a_live_local_session(
+    tmp_path: Path, host_profile_runtime: Callable[[Path], None]
 ) -> None:
     root = tmp_path / "live-session-unused"
     register_password_only_profile(root, label="live-session-operator")
+    host_profile_runtime(root)
     result = _run(
         root,
         [
@@ -398,11 +403,12 @@ def test_live_session_makes_root_source_unused_and_leaves_it_unread(
         inherited_payloads=(_REFUSAL_INPUT,),
         preauthenticate_label="live-session-operator",
         assert_dispatch_state_unchanged=True,
-        assert_unread_indices=(0,),
+        assert_closed_index=0,
     )
     combined = _assert_refused(result, root)
     assert '"status":"error"' in combined
-    assert "S14_DESCRIPTOR_UNREAD" in result.stderr
+    assert "one strict UTF-8 JSON object" in combined
+    assert "S13_DESCRIPTOR_CLOSED" in result.stderr
     assert "S14_STATE_UNCHANGED" in result.stderr
 
 
@@ -467,7 +473,7 @@ def test_root_wrong_blank_target_or_secret_refuses_without_secret_disclosure(
     combined = _assert_refused(result, root, before=before)
     assert ("S13_DESCRIPTOR_CLOSED" if consumed else "S14_DESCRIPTOR_UNREAD") in result.stderr
     if expected:
-        assert expected in combined
+        assert expected in combined, combined
 
 
 def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
@@ -498,6 +504,7 @@ def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
         stdin=leaf_payload,
         inherited_payloads=(_REFUSAL_INPUT,),
         assert_unread_indices=(0,),
+        program="cadrumo-runtime",
     )
     combined = _assert_refused(result, root, before=before)
     assert '"status":"error"' in combined

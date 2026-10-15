@@ -4,8 +4,8 @@ A frontend process must bind the persistence and outbound adapters the
 application layer resolves through explicitly composed ports before it serves
 any work. That inventory is a property of the product, not of the frontend, so
 it is declared once here and entered by the CLI root and the TUI devtools
-fixture. The separately shipped external client harness owns its independent composition
-root and does not import this entrypoint module.
+fixture. The separately shipped external client distribution owns its independent
+composition root and does not import this entrypoint module.
 
 An entrypoint that forgets this scope fails on every custody-touching verb,
 which is exactly the symptom that made the original external client gap visible.

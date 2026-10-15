@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from dev.first_party_source import FIRST_PARTY_ROOTS
 
 
 class ApiDocsError(RuntimeError):
@@ -50,10 +52,14 @@ class DriftResult:
         return not self.missing_stubs and not self.orphan_stubs and not self.stale_stubs
 
 
-#: Directory name of the source package this generator documents, under
-#: ``src/``. The incremental docs planner reads it rather than repeating
-#: the literal, so a package rename cannot leave the planner addressing a
-#: tree that no longer exists.
+#: Every shipped first-party Python package, as declared by the canonical
+#: source-root inventory. Development tooling and packaging hooks remain
+#: outside the public product API reference.
+API_SOURCE_ROOTS: tuple[str, ...] = tuple(root for root in FIRST_PARTY_ROOTS if root.startswith("src/"))
+
+#: Primary tax application package; its command subtree has a separately
+#: generated reference and the authored API overview starts its reading path
+#: here. Keep this semantic owner explicit rather than relying on root order.
 API_SOURCE_PACKAGE: str = "cadrumo"
 
 #: Package-relative subtree documented through the generated command
@@ -69,10 +75,10 @@ CLI_REFERENCE_SUBTREE: tuple[str, ...] = ("entrypoints", "cli")
 #: caught by that derivation rather than by a committed copy of the output.
 EXCLUDED_PACKAGE_SEGMENTS: frozenset[str] = frozenset({"tests", "_data"})
 
-#: Package-relative subtrees excluded from autodoc stubs. The CLI is documented
-#: through the generated command reference rather than autodoc; importing the
-#: cli command/payload modules under autodoc also fails on pydantic model
-#: construction, so the cli implementation is not stubbed.
+#: Primary-application package-relative subtrees excluded from autodoc stubs.
+#: The application CLI is documented through the generated command reference
+#: rather than autodoc; importing its command/payload modules under autodoc also
+#: fails on pydantic model construction, so that implementation is not stubbed.
 EXCLUDED_SUBTREES: frozenset[tuple[str, ...]] = frozenset({CLI_REFERENCE_SUBTREE})
 
 #: Filenames excluded from stub coverage even inside included packages.
@@ -99,6 +105,7 @@ _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.core.identity.digest": ("ContentDigest",),
     "cadrumo.core.identity.tax_id": ("TaxIdIdentityToken",),
     "cadrumo.domain.calculations.registry.tax_id_format": ("SubjectTaxId",),
+    "cadrumo_client.transport.automation_decision": ("AutomationDecision",),
 }
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 
@@ -190,15 +197,45 @@ class ApiStubManager:
       without writing anything.
     """
 
-    def __init__(self, src_cadrumo: Path, docs_api: Path) -> None:
-        """Initialise the manager with the source root and the docs API directory.
+    def __init__(
+        self,
+        src_cadrumo: Path,
+        docs_api: Path,
+        *,
+        source_roots: Sequence[Path] | None = None,
+    ) -> None:
+        """Initialise with one fixture/source root or an explicit package cohort.
 
         Args:
-            src_cadrumo: Absolute path to ``src/cadrumo/``.
+            src_cadrumo: The primary application package root. Kept as the
+                one-root seam for hermetic tests and existing callers.
             docs_api: Absolute path to ``docs/api/``.
+            source_roots: Optional package roots to document together. When
+                omitted, only ``src_cadrumo`` is scanned; repository builds use
+                :meth:`for_repository` to require the canonical five-root set.
         """
         self.src_cadrumo = src_cadrumo
+        self.source_roots = tuple(source_roots) if source_roots is not None else (src_cadrumo,)
+        if not self.source_roots:
+            raise ApiDocsError("At least one API source root must be configured")
+        if len({root.parent.resolve() for root in self.source_roots}) != 1:
+            raise ApiDocsError("API source roots must share one src/ parent directory")
         self.docs_api = docs_api
+
+    @classmethod
+    def for_repository(cls, repo_root: Path, docs_api: Path) -> ApiStubManager:
+        """Create a manager for every configured first-party package under ``src/``.
+
+        Missing canonical roots are a configuration error rather than an
+        invitation to publish a partial API tree.
+        """
+        source_roots = tuple(repo_root.joinpath(*Path(root).parts) for root in API_SOURCE_ROOTS)
+        missing = [root for root in source_roots if not root.is_dir()]
+        if missing:
+            missing_paths = ", ".join(str(root) for root in missing)
+            raise ApiDocsError(f"Configured first-party API roots are missing: {missing_paths}")
+        primary_source_root = repo_root / "src" / API_SOURCE_PACKAGE
+        return cls(src_cadrumo=primary_source_root, docs_api=docs_api, source_roots=source_roots)
 
     # ── Discovery ────────────────────────────────────────────────────────────
 
@@ -212,12 +249,15 @@ class ApiStubManager:
         deleted path can still be classified.
 
         Args:
-            path: An absolute ``Path`` to a Python file under ``src_cadrumo``.
+            path: An absolute ``Path`` to a Python file under a configured source root.
 
         Returns:
             True when the file should be skipped.
         """
-        relative = path.relative_to(self.src_cadrumo)
+        source_root = next((root for root in self.source_roots if path.is_relative_to(root)), None)
+        if source_root is None:
+            raise ValueError(f"API source path is outside configured roots: {path}")
+        relative = path.relative_to(source_root)
         parts = relative.parts
 
         filename = path.name
@@ -226,14 +266,15 @@ class ApiStubManager:
         if filename in EXCLUDED_FILENAMES:
             return True
 
-        for prefix in EXCLUDED_SUBTREES:
-            if parts[: len(prefix)] == prefix:
-                return True
+        if source_root.name == API_SOURCE_PACKAGE:
+            for prefix in EXCLUDED_SUBTREES:
+                if parts[: len(prefix)] == prefix:
+                    return True
 
         return any(part in EXCLUDED_PACKAGE_SEGMENTS for part in parts)
 
     def discover_modules(self) -> list[tuple[str, bool]]:
-        """Walk ``src_cadrumo`` and collect ``(dotted_module_name, is_package)`` pairs.
+        """Walk configured source roots and collect module/package pairs.
 
         Returns:
             Sorted list of ``(dotted_name, is_package)`` tuples.
@@ -241,22 +282,23 @@ class ApiStubManager:
         """
         results: list[tuple[str, bool]] = []
 
-        for py_file in scan_directory(self.src_cadrumo, pattern="*.py", recursive=True):
-            if self.excludes_source(py_file):
-                continue
+        for source_root in self.source_roots:
+            for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
+                if self.excludes_source(py_file):
+                    continue
 
-            relative = py_file.relative_to(self.src_cadrumo.parent)
-            parts = list(relative.parts)
+                relative = py_file.relative_to(source_root.parent)
+                parts = list(relative.parts)
 
-            if parts[-1] == "__init__.py":
-                dotted = ".".join(parts[:-1])
-                results.append((dotted, True))
-            else:
-                parts[-1] = parts[-1][: -len(".py")]
-                dotted = ".".join(parts)
-                results.append((dotted, False))
+                if parts[-1] == "__init__.py":
+                    dotted = ".".join(parts[:-1])
+                    results.append((dotted, True))
+                else:
+                    parts[-1] = parts[-1][: -len(".py")]
+                    dotted = ".".join(parts)
+                    results.append((dotted, False))
 
-        return results
+        return sorted(results)
 
     # ── Content builders ─────────────────────────────────────────────────────
 
@@ -420,7 +462,7 @@ class ApiStubManager:
             all_modules: Optional discovery result to reuse.
 
         Returns:
-            Mapping of ``cadrumo.some.module.rst`` filenames to their generated RST.
+            Mapping of ``some_package.some.module.rst`` filenames to generated RST.
         """
         modules = self.discover_modules() if all_modules is None else all_modules
         expected: dict[str, str] = {}

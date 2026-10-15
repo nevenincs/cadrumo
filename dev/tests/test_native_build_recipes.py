@@ -41,6 +41,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 _CHAIN = {
     "build-native": "bundle",
     "test-native-bundle": "verify",
+    "test-native-live": "verify-native-live",
     "build-native-package": "zip",
     "test-native-package": "verify-package",
 }
@@ -55,6 +56,15 @@ _CMAKE_MODULES = REPO_ROOT / "native" / "cmake"
 _AGENT_SOURCE_VARIABLE = "CADRUMO_PACKAGE_AGENT_SOURCE_DIR"
 # Joined so the agent-prefix spelling gate does not read this test as Cadrumo defining the name.
 _RETIRED_AGENT_SOURCE_VARIABLE = "CADRUMO_AGENT" + "_SOURCE_DIR"
+_POWERSHELL_CMAKE_ARGUMENT_CAPTURE = """
+function cmake {
+    & $env:CADRUMO_NATIVE_AGENT_PYTHON -c 'import json, sys; print(json.dumps(sys.argv[1:]))' @args
+}
+Invoke-Expression $env:CADRUMO_NATIVE_AGENT_COMMAND
+if ($env:CADRUMO_NATIVE_AGENT_MARKER -ne 'unchanged') {
+    throw 'the agent source path was evaluated by PowerShell'
+}
+"""
 
 
 def _just(*arguments: str) -> tuple[int, str]:
@@ -67,6 +77,10 @@ def _just(*arguments: str) -> tuple[int, str]:
         timeout_seconds=None,
     )
     return completed.returncode, completed.stdout + completed.stderr
+
+
+def _just_for_native_host(*arguments: str) -> tuple[int, str]:
+    return _just("--set", "native_host", "windows-x86_64", *arguments)
 
 
 def _evaluated(name: str) -> str:
@@ -187,6 +201,61 @@ def test_a_recipe_hands_cmake_no_interpreter_no_agent_source_and_no_environment(
         assert not any("=" in argument and not argument.startswith("-") for argument in arguments), line
         assert ".venv" not in line, line
         assert "AGENT" not in line.upper(), line
+
+
+def test_native_ci_passes_the_agent_checkout_as_one_quoted_cmake_cache_value() -> None:
+    source = str(REPO_ROOT / "agent project with spaces")
+
+    status, output = _just_for_native_host("--dry-run", "test-native-ci", source)
+
+    assert status == 0, output
+    lines = _commands(output)
+    assert len(lines) == 2, lines
+    configure = shlex.split(lines[0])
+    assert configure[:3] == ["cmake", "--preset", "windows-x64"]
+    assert configure[3] == f"-D{_AGENT_SOURCE_VARIABLE}={source}", configure
+    assert lines[1] == "just test-native-bundle Release"
+    assert all("test-native-live" not in line for line in lines)
+
+
+def test_native_ci_rejects_a_blank_agent_checkout_before_configuring() -> None:
+    status, output = _just_for_native_host("--dry-run", "test-native-ci", "   ")
+
+    assert status != 0
+    assert "AGENT_SOURCE_DIR must name the cadrumo-agent project directory" in output
+    assert not [line for line in _commands(output) if line.startswith(("cmake ", "just "))]
+
+
+@pytest.mark.windows_only
+def test_native_ci_powershell_passes_special_path_characters_as_one_cmake_argument() -> None:
+    source = r"C:\agent O'Neil $env:CADRUMO_NATIVE_AGENT_MARKER = 'changed'; `literal`"
+    status, output = _just_for_native_host("--dry-run", "test-native-ci", source)
+    assert status == 0, output
+    command, *_ = _commands(output)
+
+    powershell = shutil.which("pwsh.exe")
+    assert powershell is not None, "the Windows justfile requires PowerShell Core"
+    environment = dict(os.environ)
+    environment.update(
+        {
+            "CADRUMO_NATIVE_AGENT_COMMAND": command,
+            "CADRUMO_NATIVE_AGENT_MARKER": "unchanged",
+            "CADRUMO_NATIVE_AGENT_PYTHON": sys.executable,
+        }
+    )
+    result = run_command(
+        [powershell, "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", _POWERSHELL_CMAKE_ARGUMENT_CAPTURE],
+        cwd=REPO_ROOT,
+        environment=environment,
+        timeout_seconds=30,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout) == [
+        "--preset",
+        "windows-x64",
+        f"-D{_AGENT_SOURCE_VARIABLE}={source}",
+    ]
 
 
 def test_no_committed_preset_names_the_agent_source() -> None:

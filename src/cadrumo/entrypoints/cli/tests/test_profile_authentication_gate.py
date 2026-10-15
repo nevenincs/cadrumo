@@ -92,11 +92,10 @@ def test_cross_scope_same_descriptor_refuses_but_distinct_descriptors_pass() -> 
     )
 
 
-def test_graph_postures_keep_rotation_self_authenticating() -> None:
-    rotation = _leaf("config.passphrase.change")
+def test_tax_graph_excludes_runtime_rotation_and_keeps_profile_view_admitted() -> None:
+    assert "config.passphrase.change" not in COMMAND_GRAPH.by_schema_identity()
     show = _leaf("config.profile.view")
 
-    assert rotation.profile_authentication is ProfileAuthenticationPosture.SELF_AUTHENTICATING
     assert show.profile_authentication is not ProfileAuthenticationPosture.SELF_AUTHENTICATING
 
 

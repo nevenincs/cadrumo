@@ -7,6 +7,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import remaining_budget
@@ -34,7 +35,6 @@ from ...domain.modelos.work_unit import WorkUnit
 from ._modelo_behavior_support import work_address_for_cli
 from ._modelo_cli_support import selector_bad_parameter
 from .common import no_active_profile_refusal
-from .errors import CliRefusedBoundaryError
 
 _TIMEOUT_SECONDS = 120.0
 

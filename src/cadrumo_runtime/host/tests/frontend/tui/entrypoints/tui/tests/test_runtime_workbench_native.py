@@ -6,6 +6,7 @@ import asyncio
 import logging
 import sys
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from importlib.metadata import version
@@ -17,7 +18,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 from textual.pilot import Pilot
-from textual.widgets import Input, Select, Static
+from textual.widgets import Button, Input, Select, Static
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -80,6 +81,7 @@ from cadrumo.core.operations import (
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
+from cadrumo.entrypoints.tui import runtime_workbench as runtime_workbench_module
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp, RootPresentationV1
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
@@ -96,7 +98,7 @@ from cadrumo.entrypoints.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
 from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
-from cadrumo_client.contracts.contracts import ClientHello
+from cadrumo_client.contracts.contracts import ClientHello, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -739,8 +741,45 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                     endpoint.close()
 
 
-def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(tmp_path: Path) -> None:
+def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """The default launcher logs in through native IPC, then recomposes fresh roots."""
+    reads: list[dict[str, str | float | None]] = []
+
+    def observed_read[**P, Result](phase: str, callback: Callable[P, Result]) -> Callable[P, Result]:
+        def read(*args: P.args, **kwargs: P.kwargs) -> Result:
+            started = time.monotonic()
+            observation: dict[str, str | float | None] = {"phase": phase, "state": "pending", "elapsed_seconds": None}
+            reads.append(observation)
+            try:
+                result = callback(*args, **kwargs)
+            except BaseException as error:
+                observation["state"] = "refused"
+                observation["error_type"] = type(error).__name__
+                if isinstance(error, RefusalError):
+                    observation["code"] = error.reason.value
+                elif isinstance(error, FrontendRefusedError) and error.reason in {
+                    code.value for code in AccessDenialCode
+                }:
+                    observation["code"] = error.reason
+                raise
+            else:
+                observation["state"] = "completed"
+                return result
+            finally:
+                observation["elapsed_seconds"] = round(time.monotonic() - started, 3)
+
+        return read
+
+    for phase, name in (
+        ("generation", "read_workbench_generation"),
+        ("profile", "read_runtime_profile_overview"),
+        ("status", "read_runtime_account_session"),
+    ):
+        monkeypatch.setattr(
+            runtime_workbench_module, name, observed_read(phase, getattr(runtime_workbench_module, name))
+        )
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
     endpoint = WindowsEndpoint(storage_root=storage_root)
@@ -797,9 +836,16 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(tm
             assert current_active_bucket_session() is None
             if isinstance(app, CadrumoTuiApp):
                 root_app = _require_runtime_app(pilot.app)
-                async with asyncio.timeout(90):
-                    while root_app.account_session is None:
-                        await pilot.pause(0.05)
+                try:
+                    async with asyncio.timeout(90):
+                        while root_app.account_session is None:
+                            assert root_app._home_refresh_refusal_code is None, (
+                                f"root_refusal={root_app._home_refresh_refusal_code}, reads={reads!r}"
+                            )
+                            await pilot.pause(0.05)
+                except TimeoutError as error:
+                    error.add_note(f"Initial root reads: {reads!r}")
+                    raise
                 assert root_app.account_session.profile_label == "Enrollment tests"
                 assert (
                     root_app.destination_catalogue.resolve("workbench.profile").admission.state
@@ -826,6 +872,14 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(tm
 
             screen = pilot.app.screen
             assert isinstance(screen, RuntimeLoginScreen)
+            submit = screen.query_one("#runtime-login-submit", Button)
+            async with asyncio.timeout(90):
+                while (
+                    (screen._resume_preselected is not None and screen._worker is None)
+                    or (screen._worker is not None and not screen._worker.is_finished)
+                    or submit.disabled
+                ):
+                    await pilot.pause(0.05)
             method = (
                 RuntimeLoginMethod.API_KEY
                 if "root-change-user" in stages and "restricted-change-user" not in stages
@@ -840,6 +894,8 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(tm
             credential.value = (
                 possession.get_secret_value().decode("utf-8") if method is RuntimeLoginMethod.API_KEY else PROFILE_INPUT
             )
+            submit.scroll_visible(animate=False)
+            await pilot.pause()
             await pilot.click("#runtime-login-submit")
             assert credential.value == ""
 

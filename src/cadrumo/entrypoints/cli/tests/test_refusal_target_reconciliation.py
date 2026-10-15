@@ -10,8 +10,10 @@ import pytest
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import SchemaState
+from cadrumo_client.contracts.command_program import CommandProgram
 
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, next_action
+from ....application.operator_surface.action_targets import ACTION_TARGETS, recorded_action_target_reconciliation
 from ....application.operator_surface.verb_input_contracts import SchemaResolutionError
 from ..command_specs import COMMAND_GRAPH
 from ..operator_surface_reconciliation import (
@@ -29,7 +31,15 @@ def test_target_reconciliation_equals_the_full_leaf_for_every_catalogue_target()
 
     assert targets
     for target in targets:
-        assert operator_surface_target_reconciliation(target).leaves == (full_leaves[target],), target
+        owner = next(row for row in ACTION_TARGETS if row.command_key == target)
+        if owner.program is CommandProgram.AEAT:
+            assert operator_surface_target_reconciliation(target).leaves == (full_leaves[target],), target
+        else:
+            assert owner.program is CommandProgram.AUTHENTICATION
+            assert target not in full_leaves
+            with pytest.raises(LookupError, match="unknown command schema identity"):
+                operator_surface_target_reconciliation(target)
+            assert recorded_action_target_reconciliation(target).leaves[0].live_leaf.program is owner.program
 
 
 def test_target_reconciliation_refuses_an_unknown_identity() -> None:
@@ -89,7 +99,7 @@ print(json.dumps({
     completed = run_audited_process([sys.executable, "-c", source], check=True, capture_output=True, text=True)
     result = json.loads(completed.stdout)
 
-    assert result["cli_path"] == ["config", "profile", "create"]
+    assert result["cli_path"] == ["aeat", "config", "profile", "create"]
     assert result["loaded_families"] == ["cadrumo.entrypoints.cli.config.command_specs"]
     assert len(result["all_families"]) > len(result["loaded_families"])
     assert result["full_schema_projection_built"] is False
@@ -97,10 +107,21 @@ print(json.dumps({
 
 def test_single_input_schema_equals_the_full_projection_for_every_catalogue_target() -> None:
     targets = tuple(sorted({entry.target_command_key for entry in OPERATOR_ACTION_CATALOGUE.entries}))
-    full = build_verb_input_schemas(targets)
+    tax_targets = tuple(
+        target
+        for target in targets
+        if next(row for row in ACTION_TARGETS if row.command_key == target).program is CommandProgram.AEAT
+    )
+    full = build_verb_input_schemas(tax_targets)
 
     for target in targets:
-        assert build_verb_input_schema(target) == full[target], target
+        if target in tax_targets:
+            assert build_verb_input_schema(target) == full[target], target
+        else:
+            with pytest.raises(SchemaResolutionError, match="no CommandSpec result-schema identity"):
+                build_verb_input_schema(target)
+            with pytest.raises(SchemaResolutionError, match="no CommandSpec result-schema identity"):
+                build_verb_input_schemas((target,))
 
 
 def test_an_argument_free_catalogue_claim_is_true_of_the_live_verb() -> None:

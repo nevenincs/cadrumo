@@ -7,6 +7,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.live.filed_single_capture_operation import (
@@ -22,7 +23,6 @@ from ....application.modelo.filing_chain_reconciliation import (
 from ....core.json_contract import NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
-from ..errors import CliRefusedBoundaryError
 from ..operation_filed_projection import (
     capture_evidence_effect,
     capture_notice,

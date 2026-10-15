@@ -227,9 +227,26 @@ class LocaleManager:
             Immutable structured findings for CLI rendering and quality gates.
         """
         locale_leaves = self._load_audit_leaves()
+        codebase_keys = self.get_codebase_keys()
+        from ._paths import LOCALES_DIR
+
+        if self.locales_dir == LOCALES_DIR:
+            # The desktop shell's catalogue is composed from the product,
+            # runtime, and service owners. Audit the same projected values the
+            # generated consumer receives, while keeping each source catalogue
+            # in its owning package and preserving the service-key exclusion
+            # from the product codebase set.
+            from .desktop_chrome import DESKTOP_CHROME_KEYS, desktop_chrome_strings
+
+            composed = desktop_chrome_strings(self.locales_dir, keys=DESKTOP_CHROME_KEYS)
+            for locale, strings in composed.items():
+                catalogue = locale_leaves.get(f"{locale}.yml")
+                if catalogue is None:
+                    raise LocaleError(f"desktop catalogue locale {locale!r} has no product audit row")
+                catalogue.update({key: value for key, value in strings.items() if key in codebase_keys})
+
         key_sets = {name: set(leaves) for name, leaves in locale_leaves.items()}
         all_locale_keys = set().union(*key_sets.values()) if key_sets else set()
-        codebase_keys = self.get_codebase_keys()
         namespace_prefixes = self._audit_namespace_prefixes()
 
         file_results = tuple(

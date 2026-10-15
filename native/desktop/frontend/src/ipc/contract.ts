@@ -468,6 +468,7 @@ export type DiagnosticsEventKind =
   | "child_exited"
   | "child_terminated"
   | "helper_timing"
+  | "helper_result"
   | "failure"
   | "host_stopped";
 
@@ -513,6 +514,21 @@ export type DiagnosticsEvent = {
   hostExitCode?: number;
   webviewFailure?: WebviewFailure;
   helperTiming?: HelperTiming;
+  helperResult?: HelperResult;
+};
+
+export type HelperResult = {
+  command: string;
+  executable: "cli" | "runtime" | "agent_service";
+  envelopeDecode:
+    "success" | "refused" | "native_refused" | "malformed" | "unavailable";
+  stdoutBytes: number;
+  stderrBytes: number;
+  code: string | null;
+  reason: string | null;
+  exceptionType: string | null;
+  raisedAt: string | null;
+  nativeSubject: string | null;
 };
 
 /** One native helper attempt; CLI envelope decoding happens after this summary. */

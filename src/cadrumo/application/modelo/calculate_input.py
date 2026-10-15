@@ -1126,9 +1126,8 @@ def _maternidad_ambiguous_relacion_advisory(
     and export — a repeated refusal on every recalculation of the ordinary case
     would obstruct the majority for the sake of a minority this application
     cannot itself distinguish. The Notice channel this advisory rides is the
-    operator harness's own structured, machine-readable surface (never a
-    scrolled terminal line an autonomous operator might miss), matching the
-    established shape of every other unmodelled-eligibility-condition advisory
+    structured operator surface, where it remains available for filer review,
+    matching the established shape of every other unmodelled-eligibility-condition advisory
     on this same casilla (the cotizaciones ceiling above, and the DT 12ª
     antiquity condition elsewhere): disclose rather than silently grant, and
     disclose rather than silently block a filer this application cannot prove

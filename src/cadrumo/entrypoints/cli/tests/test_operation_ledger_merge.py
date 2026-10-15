@@ -11,6 +11,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.ledger.merge_operation import (
@@ -22,7 +23,6 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from .. import _profile_authentication_gate, command_lifecycle, ledger_lifecycle_cli
 from .. import operation_ledger_merge as bridge
 from ..command_specs import COMMAND_GRAPH
-from ..errors import CliRefusedBoundaryError
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

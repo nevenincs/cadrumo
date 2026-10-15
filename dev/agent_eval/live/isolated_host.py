@@ -33,7 +33,7 @@ from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 from dev.packaging.command_execution import run_command
 from dev.runtime_lifecycle.caller_owned_root import AcceptanceError
 from dev.runtime_lifecycle.proof_support import ProcessIdentity, verified_relay
-from dev.runtime_lifecycle.session_holder import RuntimeSessionHolder
+from dev.runtime_lifecycle.session_holder import WindowsRuntimeSessionHolder
 
 from .capture import Scrubber
 from .outcome import UnavailableError
@@ -256,7 +256,7 @@ class PackageHost:
         self._resources = ExitStack()
         self.environment: dict[str, str] = {}
         self.ready: dict[str, Any] = {}
-        self._holder: RuntimeSessionHolder | None = None
+        self._holder: WindowsRuntimeSessionHolder | None = None
         self._attendance_stop: threading.Event | None = None
         self._attendance_thread: threading.Thread | None = None
         self._invocation: ProcessIdentity | None = None
@@ -490,7 +490,7 @@ class PackageHost:
             result = self.cli("config", "login", secret={"passphrase": person.password})
             classify_sign_in(result)
         self._stop_attendance()
-        holder = RuntimeSessionHolder(
+        holder = WindowsRuntimeSessionHolder(
             self.runtime_image,
             profile_id=uuid.UUID(person.profile_id),
             environment=self.environment,

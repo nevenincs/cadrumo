@@ -17,6 +17,7 @@ inspects the on-disk sidecar the production writer produced.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -238,7 +239,8 @@ def test_unreadable_sidecar_emits_bounded_diagnostic_without_path_or_payload(
     path.parent.mkdir(parents=True)
     payload = "synthetic-private-sidecar-content"
     path.write_text(payload, encoding="utf-8")
-    assert not _evaluate(tmp_path, _NOW).throttled
+    with caplog.at_level(logging.WARNING):
+        assert not _evaluate(tmp_path, _NOW).throttled
     messages = [record.getMessage() for record in caplog.records if "sidecar unreadable" in record.getMessage()]
     assert messages == ["login throttle sidecar unreadable; treating as cleared"]
     assert str(path) not in messages[0] and payload not in messages[0]

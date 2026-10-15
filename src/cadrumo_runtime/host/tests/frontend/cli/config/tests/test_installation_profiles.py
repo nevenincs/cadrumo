@@ -64,6 +64,7 @@ from cadrumo_client.contracts.installation_requests import (
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation_client import installation_passphrase_document
 from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.commands.tests.config.scripted_registration_channels import scripted_registration_descriptors
 
 from .installation_profile_support import (
@@ -368,9 +369,9 @@ def test_enrolment_hands_out_a_code_that_resets_the_passphrase_and_answers_what_
         profile, root = installation.profile_id, installation.root
         # Each run of the command enrols the profile; the enrolment is removed so the next run, and then
         # the act, is asked for the same work on the same storage.
-        default = _enable_recovery(reveal_identifiers=False, invoke_cli=invoke_cli)
+        default = _enable_recovery(reveal_identifiers=False, invoke_cli=invoke_runtime_cli)
         revoke_profile_recovery(profile_id=profile, current_passphrase=PROFILE_INPUT, root=root)
-        revealed = _enable_recovery(reveal_identifiers=True, invoke_cli=invoke_cli)
+        revealed = _enable_recovery(reveal_identifiers=True, invoke_cli=invoke_runtime_cli)
         revoke_profile_recovery(profile_id=profile, current_passphrase=PROFILE_INPUT, root=root)
         secret = _secret()
         # No profile is named: the act enrols the selected one, as the command does.

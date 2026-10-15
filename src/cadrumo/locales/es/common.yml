@@ -584,24 +584,6 @@ desktop:
     zoom_in: Ampliar la documentación
     zoom_out: Reducir la documentación
     zoom_reset: Restablecer el zoom de la documentación
-  attendance:
-    actions: Acciones
-    all_periods: Todos los periodos
-    changes: Cambios de registros
-    delegation: Delegación
-    disclosures: Divulgaciones
-    executable: Ejecutable
-    expires: Caduca
-    failed: 'Decisión de acceso no disponible: {code}'
-    network: Acceso a la red
-    'no': 'No'
-    none: Ninguno
-    operations: Operaciones
-    period_independent: Trabajo sin periodo
-    periods: Periodos
-    process: Proceso
-    title: Un proceso externo solicita acceso
-    'yes': Sí
   automation_access:
     cancel: Cancelar
     cleanup_pending: Revocada. Su clave guardada aún se está eliminando de este equipo.

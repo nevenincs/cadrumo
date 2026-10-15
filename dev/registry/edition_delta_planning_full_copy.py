@@ -14,6 +14,8 @@ from . import edition_delta_planning_counts as _edition_delta_planning_counts
 from . import edition_delta_planning_predecessor as _edition_delta_planning_predecessor
 from . import edition_delta_planning_state as _edition_delta_planning_state
 from . import edition_delta_row_delta as _edition_delta_row_delta
+from . import edition_delta_row_delta_common as _edition_delta_row_delta_common
+from . import edition_delta_row_delta_reconstruction as _edition_delta_row_delta_reconstruction
 from . import edition_delta_source as _edition_delta_source
 from . import edition_delta_types as _edition_delta_types
 
@@ -101,21 +103,54 @@ def _block_copy(result: _FullCopyResult, full_rows: list[_edition_delta_source._
 def _seed_materialised(
     run: _edition_delta_planning_state.PlanningRun,
     revision_id: str,
-    basis: _edition_delta_types.PredecessorBasis,
-    full_rows: list[_edition_delta_source._Row],
-    lifts: Mapping[str, _edition_delta_source._Lift],
-    reconstructed_order: tuple[str, ...],
+    source: _edition_delta_source._EditionSource,
+    lift: _edition_delta_source._EditionLift,
+    result: _FullCopyResult,
 ) -> None:
-    if basis is _edition_delta_types.PredecessorBasis.BLOCKED:
-        full_by_id = {_edition_delta_source._row_id(row): row for row in full_rows}
-        run.materialised[revision_id] = [
-            _edition_delta_source._Placed(full_by_id[row_id], revision_id) for row_id in reconstructed_order
+    """Seed descendants from the storage rows this plan will actually write and merge."""
+    plan = result
+    if plan.basis is _edition_delta_types.PredecessorBasis.BLOCKED:
+        placed = [
+            _edition_delta_source._Placed(row, origin or revision_id)
+            for row, origin in zip(source.rows, source.origins, strict=True)
         ]
-        return
-    # The loader replay already proved this target, including storage overrides.
-    run.materialised[revision_id] = [
-        _edition_delta_source._Placed(lifts[row_id].row, revision_id) for row_id in reconstructed_order
-    ]
+    elif plan.predecessor is None:
+        placed = [
+            _edition_delta_source._Placed(lift.lifts[_edition_delta_source._row_id(row)].row, revision_id)
+            for row in lift.rows
+        ]
+    else:
+        stated = frozenset(_edition_delta_source._row_id(row) for row in lift.rows) - plan.drops
+        layout = _edition_delta_source._stated_layout(source, stated)
+        stated_rows = [
+            lift.lifts[_edition_delta_source._row_id(block.row)].row for _, blocks in layout for block in blocks
+        ]
+        inherited = run.materialised[plan.predecessor]
+        overrides = (
+            *_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_overrides"),
+            *plan.overrides,
+        )
+        removals = (
+            *_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_removals"),
+            *plan.removals,
+        )
+        positions = (
+            *_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_positions"),
+            *plan.positions,
+        )
+        placed = _edition_delta_row_delta_reconstruction._simulate_storage_output(
+            revision_id=revision_id,
+            predecessor=plan.predecessor,
+            inherited=inherited,
+            source=source,
+            stated_rows=stated_rows,
+            overrides=overrides,
+            removals=removals,
+            positions=positions,
+        )
+        by_id = {_edition_delta_source._row_id(item.row): item for item in placed}
+        placed = [by_id[row_id] for row_id in plan.reconstructed_order]
+    run.materialised[revision_id] = placed
 
 
 def _overridden_ids(overrides: tuple[_edition_delta_source._Row, ...]) -> set[str]:
@@ -212,6 +247,6 @@ def plan_full_copy_edition(
         _block_copy(result, full_rows)
     if result.normalised:
         run.order_normalised.add(revision_id)
-    _seed_materialised(run, revision_id, result.basis, full_rows, lift.lifts, result.reconstructed_order)
+    _seed_materialised(run, revision_id, source, lift, result)
     plan = _build_full_copy_plan(revision_id, source, lift, full_rows, result)
     return _edition_delta_source._EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None)

@@ -31,6 +31,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from .errors.hierarchy import CadrumoError
 
+if sys.platform == "win32":
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
 POINTER_SCHEMA_VERSION: Final[Literal[2]] = 2
 
 
@@ -106,11 +111,93 @@ def pointer_path(root: Path) -> Path:
     return root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
 
 
+if sys.platform == "win32":
+
+    def _open_windows_pointer_descriptor(target: Path) -> int:
+        """Open the pointer without blocking replacement of its directory entry."""
+        handle = _WINDOWS_CREATE_FILE(
+            str(target),
+            _WINDOWS_GENERIC_READ,
+            _WINDOWS_FILE_SHARE_ALL,
+            None,
+            _WINDOWS_OPEN_EXISTING,
+            _WINDOWS_FILE_FLAG_OPEN_REPARSE_POINT,
+            None,
+        )
+        handle_value = getattr(handle, "value", handle)
+        if handle_value is None or handle_value == _WINDOWS_INVALID_HANDLE:
+            raise ctypes.WinError(ctypes.get_last_error())
+
+        descriptor: int | None = None
+        handle_owned_by_descriptor = False
+        try:
+            attributes = _WindowsFileAttributeTagInfo()
+            if not _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX(
+                handle_value,
+                _WINDOWS_FILE_ATTRIBUTE_TAG_INFO,
+                ctypes.byref(attributes),
+                ctypes.sizeof(attributes),
+            ):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if attributes.file_attributes & _WINDOWS_FILE_ATTRIBUTE_REPARSE_POINT:
+                raise OSError("active-profile pointer must not be link-like")
+
+            descriptor = msvcrt.open_osfhandle(handle_value, os.O_RDONLY | os.O_BINARY)
+            handle_owned_by_descriptor = True
+            metadata = os.fstat(descriptor)
+            if not stat.S_ISREG(metadata.st_mode):
+                raise OSError("active-profile pointer must be a bounded regular file")
+            result = descriptor
+            descriptor = None
+            return result
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            elif not handle_owned_by_descriptor:
+                _WINDOWS_CLOSE_HANDLE(handle_value)
+
+
 _POINTER_READ_RETRY_SECONDS = 1.0
 _POINTER_READ_POLL_SECONDS = 0.02
 _POINTER_READ_MAX_WAIT_SECONDS = 15.0
 _POINTER_WRITE_RETRY_SECONDS = 1.0
 _POINTER_MAXIMUM_BYTES = 1024
+
+if sys.platform == "win32":
+    _WINDOWS_GENERIC_READ: Final = 0x80000000
+    _WINDOWS_FILE_SHARE_ALL: Final = 0x00000007
+    _WINDOWS_OPEN_EXISTING: Final = 3
+    _WINDOWS_FILE_FLAG_OPEN_REPARSE_POINT: Final = 0x00200000
+    _WINDOWS_FILE_ATTRIBUTE_TAG_INFO: Final = 9
+    _WINDOWS_FILE_ATTRIBUTE_REPARSE_POINT: Final = 0x00000400
+    _WINDOWS_INVALID_HANDLE: Final = ctypes.c_void_p(-1).value
+
+    class _WindowsFileAttributeTagInfo(ctypes.Structure):
+        _fields_ = [("file_attributes", wintypes.DWORD), ("reparse_tag", wintypes.DWORD)]
+
+    _WINDOWS_KERNEL32: Final = ctypes.WinDLL("kernel32", use_last_error=True)
+    _WINDOWS_CREATE_FILE = _WINDOWS_KERNEL32.CreateFileW
+    _WINDOWS_CREATE_FILE.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    ]
+    _WINDOWS_CREATE_FILE.restype = wintypes.HANDLE
+    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX = _WINDOWS_KERNEL32.GetFileInformationByHandleEx
+    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX.argtypes = [
+        wintypes.HANDLE,
+        ctypes.c_int,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+    ]
+    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX.restype = wintypes.BOOL
+    _WINDOWS_CLOSE_HANDLE = _WINDOWS_KERNEL32.CloseHandle
+    _WINDOWS_CLOSE_HANDLE.argtypes = [wintypes.HANDLE]
+    _WINDOWS_CLOSE_HANDLE.restype = wintypes.BOOL
 
 
 #: A missing record, or a path whose ancestor is a file so no record can be
@@ -133,6 +220,8 @@ def _open_pointer_descriptor(target: Path) -> int:
 
     if is_link_like(target):
         raise OSError("active-profile pointer must not be link-like")
+    if sys.platform == "win32":
+        return _open_windows_pointer_descriptor(target)
     return os.open(target, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
 
 
@@ -280,12 +369,11 @@ def _await_uncontended(operation: Callable[[], None]) -> None:
 
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
     """Atomically replace the one strict pointer record under its owner lock."""
-    from .atomic_write import atomic_write_hardened_bytes
-    from .fsync import fsync_parent_dir
+    from .atomic_write import hardened_staged_bytes_publication
 
     target = pointer_path(root)
-    _await_uncontended(lambda: atomic_write_hardened_bytes(target, pointer.to_toml().encode("utf-8")))
-    fsync_parent_dir(target)
+    with hardened_staged_bytes_publication(target, pointer.to_toml().encode("utf-8")) as staged:
+        _await_uncontended(staged.publish_with_open_readers)
 
 
 def resolve_active_bucket_id() -> str | None:

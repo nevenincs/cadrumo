@@ -33,7 +33,7 @@ from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n.render import extract_placeholders
 
-from ._paths import LOCALES_DIR, SRC_DIR
+from ._paths import LOCALES_DIR, RUNTIME_SRC_DIR, SRC_DIR
 from ._status import CatalogueLeafState, classify_catalogue_leaf
 from .errors import LocaleError
 from .locale_tree import _flatten_raw_locale_leaves
@@ -43,6 +43,7 @@ from .service_catalogues import SERVICE_LOCALES_DIR
 
 #: The shell's locales, source locale first.
 DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
+RUNTIME_LOCALES_DIR: Final[Path] = RUNTIME_SRC_DIR / "_data" / "locales"
 
 #: Keys the shell composes at runtime, as ``prefix -> members``: a template
 #: such as ```desktop.example.kind_${kind}``` names ``desktop.example.kind_``
@@ -645,12 +646,15 @@ def desktop_chrome_strings(
     strings: dict[str, dict[str, str]] = {}
     for locale in locales:
         leaves = _catalogue_leaves(locales_dir, locale)
-        if locales_dir == LOCALES_DIR and SERVICE_LOCALES_DIR.is_dir():
-            service_leaves = _catalogue_leaves(SERVICE_LOCALES_DIR, locale)
-            collisions = leaves.keys() & service_leaves.keys()
-            if collisions:
-                raise LocaleError(f"Tax and service catalogue keys overlap: {sorted(collisions)}")
-            leaves.update(service_leaves)
+        if locales_dir == LOCALES_DIR:
+            for owner, owned_locales in (("runtime", RUNTIME_LOCALES_DIR), ("service", SERVICE_LOCALES_DIR)):
+                if not owned_locales.is_dir():
+                    continue
+                owned_leaves = _catalogue_leaves(owned_locales, locale)
+                collisions = leaves.keys() & owned_leaves.keys()
+                if collisions:
+                    raise LocaleError(f"Desktop and {owner} catalogue keys overlap: {sorted(collisions)}")
+                leaves.update(owned_leaves)
         values: dict[str, str] = {}
         for key in sorted(keys):
             leaf = leaves.get(key)

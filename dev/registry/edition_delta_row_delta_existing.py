@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 
+from . import edition_delta_errors as _edition_delta_errors
 from . import edition_delta_payload as _edition_delta_payload
 from . import edition_delta_row_delta_common as _edition_delta_row_delta_common
 from . import edition_delta_source as _edition_delta_source
@@ -205,3 +206,226 @@ def choose_existing_drops(
     for authored in source.stated_rows():
         _process_authored_row(context, result, authored, effective_by_id, by_lineage, by_storage_id, claimed)
     return result.drops, result.kept, result.not_exact, tuple(result.overrides), tuple(result.attestations)
+
+
+def preserve_inherited_rows(
+    *,
+    revision_id: str,
+    predecessor: str,
+    inherited: Sequence[_edition_delta_source._Placed],
+    full_rows: Sequence[_edition_delta_source._Row],
+    source: _edition_delta_source._EditionSource,
+    defaults: _edition_delta_source._Defaults,
+    current_output: Sequence[_edition_delta_source._Placed],
+) -> tuple[tuple[_edition_delta_source._Row, ...], tuple[_edition_delta_source._Row, ...]]:
+    """Patch inherited rows whose planned raw predecessor would pick up a different edition default."""
+    by_lineage, by_storage_id = _edition_delta_row_delta_common.candidate_indexes(inherited)
+    authored_ids = {_edition_delta_source._row_id(row) for row in source.stated_rows()}
+    authored_overrides = _edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_overrides")
+    claimed = _edition_delta_row_delta_common.authored_override_selectors(source.manifest)
+    current_by_id = {_edition_delta_source._row_id(placed.row): placed for placed in current_output}
+    new_overrides: list[_edition_delta_source._Row] = []
+    replacements: list[_edition_delta_source._Row] = []
+    context = f"edition {revision_id!r} against predecessor {predecessor!r}"
+    for target in full_rows:
+        row_id = _edition_delta_source._row_id(target)
+        if row_id in authored_ids:
+            continue
+        candidate = _candidate_for_authored(target, by_lineage, by_storage_id, frozenset())
+        if candidate is None:
+            continue
+        selector_id = _edition_delta_source._row_id(candidate.row)
+        raw_baseline = _edition_delta_source._as_row(without_lineage_claims(candidate.row))
+        current = current_by_id.get(row_id)
+        if current is None:
+            current = current_by_id.get(selector_id)
+        if current is None:
+            if selector_id in claimed:
+                raise _edition_delta_errors.MigrationRefusedError(
+                    f"{context}: authored operation removes or relocates inherited casilla {row_id!r} "
+                    "that the target edition retains"
+                )
+            continue
+        effective = _edition_delta_source._effective(
+            current.row,
+            origin=current.origin,
+            revision_id=revision_id,
+            defaults=defaults,
+            declarations=source.declarations,
+        )
+        if effective is None:
+            raise _edition_delta_errors.MigrationRefusedError(
+                f"{context}: inherited casilla {row_id!r} references do not resolve in the planned successor"
+            )
+        target_payload = _edition_delta_source._as_row(without_lineage_claims(target))
+        if effective == target_payload:
+            continue
+        selector = {"revision": predecessor, "id": selector_id}
+        existing = [operation for operation in authored_overrides if operation.get("selector") == selector]
+        if existing:
+            if len(existing) != 1:
+                raise _edition_delta_errors.MigrationRefusedError(
+                    f"{context}: multiple authored overrides claim predecessor casilla {selector_id!r}"
+                )
+            replacements.append(
+                _compose_preserving_override(
+                    revision_id=revision_id,
+                    candidate=candidate,
+                    target=target_payload,
+                    validated_target=target,
+                    defaults=defaults,
+                    existing=existing[0],
+                )
+            )
+            continue
+        if selector_id in claimed:
+            raise _edition_delta_errors.MigrationRefusedError(
+                f"{context}: an authored removal claims predecessor casilla {selector_id!r} "
+                "that the target edition retains"
+            )
+        override = _preserving_override(
+            revision_id=revision_id,
+            predecessor=predecessor,
+            candidate=candidate,
+            effective_baseline=effective,
+            raw_baseline=raw_baseline,
+            target=target_payload,
+            defaults=defaults,
+        )
+        if override is not None:
+            new_overrides.append(override)
+    return tuple(new_overrides), tuple(replacements)
+
+
+def normalize_authored_override_removals(
+    *,
+    revision_id: str,
+    predecessor: str,
+    inherited: Sequence[_edition_delta_source._Placed],
+    full_rows: Sequence[_edition_delta_source._Row],
+    source: _edition_delta_source._EditionSource,
+    defaults: _edition_delta_source._Defaults,
+) -> tuple[_edition_delta_source._Row, ...]:
+    """Recompose retained overrides whose removals no longer address planned predecessor storage."""
+    by_storage_id = _edition_delta_row_delta_common.candidate_indexes(inherited)[1]
+    targets = {_edition_delta_source._row_id(row): row for row in full_rows}
+    authored_ids = {_edition_delta_source._row_id(row) for row in source.stated_rows()}
+    replacements: list[_edition_delta_source._Row] = []
+    for operation in _edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_overrides"):
+        selector = operation.get("selector")
+        if not isinstance(selector, Mapping) or str(selector.get("revision")) != predecessor:
+            continue
+        selector_id = str(selector.get("id"))
+        fields = operation.get("fields", {})
+        if not isinstance(fields, Mapping):
+            continue
+        target_id = str(fields.get("id", selector_id))
+        if target_id in authored_ids or target_id not in targets:
+            continue
+        candidates = by_storage_id.get(selector_id, ())
+        if len(candidates) != 1:
+            continue
+        baseline = _edition_delta_source._as_row(without_lineage_claims(candidates[0].row))
+        removed = operation.get("removed_fields", ())
+        if not isinstance(removed, list | tuple):
+            continue
+        valid_removals = _edition_delta_payload._existing_storage_removals(
+            baseline, tuple(str(path) for path in removed)
+        )
+        normalized = _edition_delta_row_delta_common.reconcile_source_removals(fields, valid_removals, baseline)
+        if tuple(removed) == normalized:
+            continue
+        replacements.append(
+            _compose_preserving_override(
+                revision_id=revision_id,
+                candidate=candidates[0],
+                target=_edition_delta_source._as_row(without_lineage_claims(targets[target_id])),
+                validated_target=targets[target_id],
+                defaults=defaults,
+                existing=operation,
+            )
+        )
+    return tuple(replacements)
+
+
+def _compose_preserving_override(
+    *,
+    revision_id: str,
+    candidate: _edition_delta_source._Placed,
+    target: _edition_delta_source._Row,
+    validated_target: _edition_delta_source._Row,
+    defaults: _edition_delta_source._Defaults,
+    existing: _edition_delta_source._Row,
+) -> _edition_delta_source._Row:
+    """Amend a claimed selector to produce the exact target storage row."""
+    raw_baseline = _edition_delta_source._as_row(without_lineage_claims(candidate.row))
+    target_storage = _edition_delta_source._lift(target, source_default=defaults.source_refs, orden=defaults.orden).row
+    fields, removed_fields = _edition_delta_payload._storage_difference(raw_baseline, target_storage)
+    removed_fields = _edition_delta_payload._existing_storage_removals(raw_baseline, removed_fields)
+    removed_fields = _edition_delta_row_delta_common.reconcile_source_removals(
+        fields, tuple(removed_fields), raw_baseline
+    )
+    unsupported = _edition_delta_row_delta_common.unsupported_nested_removals(removed_fields)
+    if unsupported:
+        raise _edition_delta_errors.MigrationRefusedError(
+            f"edition {revision_id!r}: inherited row {_edition_delta_source._row_id(candidate.row)!r} "
+            "needs unrepresentable nested removals: " + ", ".join(unsupported)
+        )
+    existing_fields = existing.get("fields", {})
+    if not isinstance(existing_fields, Mapping):
+        raise _edition_delta_errors.MigrationRefusedError(
+            f"edition {revision_id!r}: authored override for "
+            f"{_edition_delta_source._row_id(candidate.row)!r} has invalid fields"
+        )
+    for claim_field in sorted(LINEAGE_CLAIM_FIELDS):
+        if claim_field not in existing_fields:
+            continue
+        claim_value = existing_fields[claim_field]
+        if validated_target.get(claim_field) != claim_value:
+            raise _edition_delta_errors.MigrationRefusedError(
+                f"edition {revision_id!r}: authored override for "
+                f"{_edition_delta_source._row_id(candidate.row)!r} has a {claim_field!r} claim "
+                "that differs from its validated effective target"
+            )
+        fields[claim_field] = claim_value
+    replacement = dict(existing)
+    replacement["fields"] = fields
+    replacement["removed_fields"] = list(removed_fields)
+    return replacement
+
+
+def _preserving_override(
+    *,
+    revision_id: str,
+    predecessor: str,
+    candidate: _edition_delta_source._Placed,
+    effective_baseline: _edition_delta_source._Row,
+    raw_baseline: _edition_delta_source._Row,
+    target: _edition_delta_source._Row,
+    defaults: _edition_delta_source._Defaults,
+) -> _edition_delta_source._Row | None:
+    comparison = _edition_delta_source._lift(
+        effective_baseline, source_default=defaults.source_refs, orden=defaults.orden
+    ).row
+    target_storage = _edition_delta_source._lift(target, source_default=defaults.source_refs, orden=defaults.orden).row
+    fields, removed_fields = _edition_delta_payload._storage_difference(comparison, target_storage)
+    removed_fields = _edition_delta_payload._existing_storage_removals(raw_baseline, removed_fields)
+    removed_fields = _edition_delta_row_delta_common.reconcile_source_removals(
+        fields, tuple(removed_fields), raw_baseline
+    )
+    unsupported = _edition_delta_row_delta_common.unsupported_nested_removals(removed_fields)
+    if unsupported:
+        raise _edition_delta_errors.MigrationRefusedError(
+            f"edition {revision_id!r}: inherited row {_edition_delta_source._row_id(candidate.row)!r} "
+            "needs unrepresentable nested removals: " + ", ".join(unsupported)
+        )
+    if not fields and not removed_fields:
+        raise _edition_delta_errors.MigrationRefusedError(
+            f"edition {revision_id!r}: inherited row {_edition_delta_source._row_id(candidate.row)!r} "
+            "differs after defaults but has no representable preserving patch"
+        )
+    return {
+        "selector": {"revision": predecessor, "id": _edition_delta_source._row_id(candidate.row)},
+        "fields": fields,
+        "removed_fields": list(removed_fields),
+    }

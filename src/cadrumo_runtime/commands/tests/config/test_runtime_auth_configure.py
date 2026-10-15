@@ -236,19 +236,30 @@ def test_clave_movil_route_travels_in_the_registered_request(monkeypatch: pytest
     assert request.clave_movil_route is ClaveMovilRoute.QR
 
 
-def test_unknown_provider_keeps_cli_message_without_resolving_profile_or_runtime(
+def test_unknown_provider_refuses_without_echo_or_profile_or_runtime_lookup(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def no_profile_lookup() -> object:
         raise AssertionError("provider syntax is validated before resolving a profile")
 
+    def no_runtime(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("invalid provider must not reach runtime admission or submission")
+
     monkeypatch.setattr(bridge, "resolve_active_profile_pointer", no_profile_lookup)
+    monkeypatch.setattr(bridge, "require_profile_client", no_runtime)
+    monkeypatch.setattr(bridge, "run_registered_operation", no_runtime)
 
+    invalid = "private-provider-input-must-not-appear"
     with pytest.raises(CliRefusedBoundaryError) as error:
-        bridge.run_auth_configure(_context(), provider="unknown_provider")
+        bridge.run_auth_configure(_context(), provider=invalid)
 
-    assert error.value.translated_message == "cli.config.auth.unknown_provider"
-    assert error.value.context == {"provider": "unknown_provider"}
+    assert error.value.translated_message == "errors.refused.refused_cli_validation_boundary"
+    assert error.value.context == {
+        "field": "provider",
+        "choices": tuple(provider.value for provider in AuthProviderKind),
+    }
+    assert invalid not in str(error.value)
+    assert invalid not in repr(error.value.context)
 
 
 def test_no_active_profile_keeps_configure_refusal_before_runtime_submission(

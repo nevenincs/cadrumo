@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Never, Protocol
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.spec import CommandSpec
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 
@@ -41,8 +42,6 @@ class RootAuthenticator(Protocol):
         arguments: Mapping[str, object],
     ) -> ProfileLoginOutcome: ...
 
-
-CliRefusedBoundaryError = import_module(".errors", __package__).CliRefusedBoundaryError
 
 _LOGGED_OUT_REFUSALS = frozenset(
     {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}

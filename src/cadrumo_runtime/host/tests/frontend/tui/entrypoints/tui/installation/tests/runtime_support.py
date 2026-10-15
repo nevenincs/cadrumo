@@ -213,4 +213,3 @@ def serving_test_acts(tmp_path: Path) -> Generator[ServedRuntime]:
     finally:
         acts.release_import.set()
         endpoint.close()
-

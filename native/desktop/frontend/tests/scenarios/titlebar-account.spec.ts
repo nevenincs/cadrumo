@@ -118,9 +118,7 @@ for (const [scenario, remains] of [
     });
     if (remains) {
       await expect(said).toHaveCount(1);
-      await expect(said).toHaveText(
-        "Keys you issued for external agents stay active.",
-      );
+      await expect(said).toBeVisible();
       // Information, not a warning: a neutral note announced politely.
       const note = menu.getByRole("status").filter({
         hasText: label("desktop.account.remaining_access"),

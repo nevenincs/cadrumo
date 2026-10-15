@@ -10,6 +10,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -32,7 +33,6 @@ from .._app_live_filed_payloads import FiledCaptureResult
 from .._filing_chain_payloads import filing_reconciliation_notices
 from .._profile_authentication_gate import _uses_profile_connection
 from ..command_specs import COMMAND_GRAPH
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

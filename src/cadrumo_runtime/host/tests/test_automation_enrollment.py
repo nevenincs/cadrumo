@@ -415,8 +415,14 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
                             .projection
                         )
                     finally:
+                        primary = sys.exception()
                         done.set()
-                        polling.result()
+                        try:
+                            polling.result()
+                        except Exception as error:
+                            if primary is None:
+                                raise
+                            primary.add_note(f"Requester polling cleanup also failed: {type(error).__name__}")
                     assert completed.stage is EnrollmentStage.COMPLETE
                     assert completed.request_id == submitted.request_id
                     assert completed.review_digest == submitted.review_digest

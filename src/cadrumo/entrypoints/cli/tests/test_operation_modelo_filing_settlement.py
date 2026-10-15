@@ -58,10 +58,8 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecord,
     derive_filing_record_id,
 )
-from cadrumo.entrypoints.cli.errors import (
-    CliOperationStillRunningError,
-)
 from cadrumo.entrypoints.cli.operation_modelo_verification import run_modelo_work_filing
+from cadrumo_client.commands.errors import CliOperationStillRunningError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,

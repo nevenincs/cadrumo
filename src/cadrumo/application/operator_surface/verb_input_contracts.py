@@ -1,8 +1,8 @@
 """Validated verb-input records an outer command adapter supplies to the application.
 
 The command graph projects each executable leaf onto a :class:`VerbInputSchema`;
-the surface manifest, the reconciliation projection and automation harnesses consume
-it. The plain declaration vocabulary these records reuse lives in
+the surface manifest, the reconciliation projection and external command adapters
+consume it. The plain declaration vocabulary these records reuse lives in
 :mod:`.command_ports`, which the command graph imports at startup and which
 therefore carries no pydantic model.
 """

@@ -8,12 +8,12 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...core.operations import OperationEffect, profile_operation_subject
-from .errors import CliRefusedBoundaryError
 from .operation_ledger_prefix import attach_submitted_ledger_prefix_verdict
 
 _LEDGER_READ_TIMEOUT_SECONDS = 60

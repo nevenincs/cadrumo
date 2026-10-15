@@ -48,11 +48,11 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.cli import operation_modelo_query_read as bridge
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 from cadrumo.entrypoints.cli.operation_modelo_query_read import (
     to_data_inventory_checklist,
     to_modelo_readiness_report,
 )
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 

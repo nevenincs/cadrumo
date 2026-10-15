@@ -339,7 +339,6 @@ def main() -> None:
         verify_health(Path(sys.argv[2]), sys.argv[3])
         return
     executable = Path(sys.argv[1]).resolve(strict=True)
-    verify_installation_kit(executable.parent)
     version, storage_variable = sys.argv[2:4]
     directory = Path(sys.argv[4]).resolve()
     directory.mkdir(parents=True, exist_ok=True)

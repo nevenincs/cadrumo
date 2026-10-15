@@ -9,6 +9,7 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
@@ -39,7 +40,6 @@ from ...application.inventory.registered_requests import (
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .errors import CliRefusedBoundaryError
 from .ledger_business_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,

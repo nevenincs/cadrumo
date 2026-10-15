@@ -46,7 +46,7 @@ class RequestFault(BaseModel):
     location: Annotated[tuple[_LocationItem, ...], Field(max_length=_MAX_LOCATION_ITEMS)]
     """The path to the faulted member: field names, and positions within a sequence."""
     type: Annotated[str, StringConstraints(min_length=1, max_length=_MAX_TYPE_CHARACTERS)]
-    """The kind of fault: the request model's name for it, or a registered error's code."""
+    """The request model's fault name or a registered error's code."""
     message: Annotated[str, StringConstraints(min_length=1, max_length=_MAX_MESSAGE_CHARACTERS)]
     """What the validator said, as the command line shows it."""
 

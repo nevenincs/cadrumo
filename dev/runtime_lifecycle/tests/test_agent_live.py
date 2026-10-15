@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 import sys
 from dataclasses import replace
 from pathlib import Path
+from typing import cast
 
 import pytest
 
 from ..agent_live import (
     Exchange,
+    _attending,
     answer_for,
     is_announced_relay,
     read_document,
@@ -20,6 +23,7 @@ from ..agent_live import (
 )
 from ..caller_owned_root import AcceptanceError
 from ..proof_support import ProcessIdentity
+from ..session_holder import AsyncRuntimeSessionHolder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -152,3 +156,48 @@ def test_only_the_relay_program_under_the_announced_gateway_is_attended() -> Non
     finally:
         child.kill()
         child.wait(timeout=10)
+
+
+@pytest.mark.asyncio
+async def test_attendance_task_finishes_correlated_decisions_before_stopping(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    completed = asyncio.Event()
+
+    class FakeHolder:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, dict[str, object]]] = []
+
+        async def command(self, action: str, **fields: object) -> dict[str, object]:
+            self.calls.append((action, fields))
+            if action == "attendance_inventory":
+                return {
+                    "kind": "attendance_inventory",
+                    "candidates": [
+                        {"attendance_id": "relay-ask", "process_id": 42},
+                        {"attendance_id": "other-ask", "process_id": 43},
+                    ],
+                }
+            if action == "attendance_decision":
+                if len([call for call, _ in self.calls if call == action]) == 2:
+                    completed.set()
+                    await asyncio.sleep(0)
+                return {
+                    "kind": "attendance_decided",
+                    "approved": fields["approve"],
+                }
+            raise AssertionError(f"unexpected holder command: {action}")
+
+    monkeypatch.setattr("dev.runtime_lifecycle.agent_live.is_announced_relay", lambda pid, *_: pid == 42)
+    holder = FakeHolder()
+    gateway: dict[str, ProcessIdentity | None] = {"identity": None}
+
+    async with _attending(cast("AsyncRuntimeSessionHolder", holder), Path("cadrumo-mcp.exe"), gateway) as approved:
+        await asyncio.wait_for(completed.wait(), timeout=2)
+
+    assert approved == [42]
+    assert holder.calls == [
+        ("attendance_inventory", {}),
+        ("attendance_decision", {"attendance_id": "relay-ask", "approve": True}),
+        ("attendance_decision", {"attendance_id": "other-ask", "approve": False}),
+    ]

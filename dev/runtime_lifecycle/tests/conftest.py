@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.core.config import override_settings
 from cadrumo.core.storage_environment import STORAGE_ROOT
 
 from ..harness import LifecycleHarness
@@ -41,7 +42,13 @@ def harness(
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(package / "data/authority"))
     instance = LifecycleHarness(manager, package, root)
     try:
-        with instance:
+        with (
+            override_settings(
+                cadrumo_local_storage_root=root,
+                cadrumo_authority_root=package / "data/authority",
+            ),
+            instance,
+        ):
             probe = instance.connect(uuid4())
             instance.metrics["startup_seconds"] = time.monotonic() - instance.started
             probe.client.close()

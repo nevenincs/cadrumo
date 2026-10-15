@@ -10,10 +10,14 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
+from dev.first_party_source import CLIENT_PACKAGE, FIRST_PARTY_ROOTS
 
 from ..manager import (
     _NON_OWNER_GENERIC_IMPORTS,
     _PUBLIC_DATA_ALIASES,
+    API_SOURCE_PACKAGE,
+    API_SOURCE_ROOTS,
+    ApiDocsError,
     ApiStubManager,
     DriftResult,
     ScaffoldResult,
@@ -190,6 +194,97 @@ def test_imported_journal_repository_base_is_excluded_only_at_consumers(tmp_path
     )
     assert ":exclude-members: JournalRepositoryBase" in config_reset
     assert ":exclude-members: JournalRepositoryBase" in bundle_export
+
+
+def test_repository_api_scope_covers_every_canonical_package_and_cross_package_owner(tmp_path: Path) -> None:
+    """The published API tree includes each first-party package and the missing type owners."""
+    canonical_roots = tuple(root for root in FIRST_PARTY_ROOTS if root.startswith("src/"))
+    assert canonical_roots == API_SOURCE_ROOTS
+
+    manager = ApiStubManager.for_repository(REPO_ROOT, docs_api=tmp_path / "api")
+    assert manager.src_cadrumo == REPO_ROOT / "src" / API_SOURCE_PACKAGE
+    discovered = manager.discover_modules()
+    assert discovered == sorted(discovered)
+    modules = set(discovered)
+    package_roots = {name for name, is_package in modules if is_package and "." not in name}
+    expected_package_roots = {Path(root).name for root in canonical_roots}
+    assert package_roots == expected_package_roots
+
+    owners = {
+        "cadrumo_client.transport.frontend_client",
+        "cadrumo_client.transport.automation_decision",
+        "cadrumo_client.contracts.profile_access",
+        "cadrumo_client.transport.profile_password_rotation",
+        "cadrumo_runtime.commands.main",
+        "cadrumo_harness.mcp.main",
+        "cadrumo_agent_service.main",
+    }
+    discovered_names = {name for name, _ in modules}
+    assert owners <= discovered_names, f"missing API owner modules: {sorted(owners - discovered_names)}"
+
+    manager.scaffold()
+    for package_name in expected_package_roots:
+        page = tmp_path / "api" / f"{package_name}.rst"
+        assert page.is_file(), f"canonical package root has no generated page: {package_name}"
+        assert f".. automodule:: {package_name}" in page.read_text(encoding="utf-8")
+
+    automation_decision = (tmp_path / "api" / "cadrumo_client.transport.automation_decision.rst").read_text(
+        encoding="utf-8"
+    )
+    all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
+    assert (
+        ".. py:data:: AutomationDecision\n   :module: cadrumo_client.transport.automation_decision"
+        in automation_decision
+    )
+    assert all_stub_text.count(".. py:data:: AutomationDecision\n") == 1
+
+    index = (REPO_ROOT / "docs" / "api" / "index.md").read_text(encoding="utf-8")
+    toctree = index.split("```{toctree}", maxsplit=1)[1].split("```", maxsplit=1)[0]
+    entries = {line.strip() for line in toctree.splitlines() if line.strip() and not line.strip().startswith(":")}
+    assert entries == expected_package_roots, f"the authored API index does not reach every package root: {entries}"
+
+
+def test_repository_api_scope_refuses_a_missing_canonical_package_root(tmp_path: Path) -> None:
+    """A broken checkout cannot silently publish a partial first-party API tree."""
+    repo_root = tmp_path / "repo"
+    missing = Path("src/cadrumo_client")
+    for source_root in API_SOURCE_ROOTS:
+        if Path(source_root) != missing:
+            (repo_root / source_root).mkdir(parents=True)
+
+    with pytest.raises(ApiDocsError) as raised:
+        ApiStubManager.for_repository(repo_root, docs_api=tmp_path / "api")
+
+    assert str(repo_root / missing) in str(raised.value)
+
+
+def test_cli_reference_exclusion_is_limited_to_the_primary_application(tmp_path: Path) -> None:
+    """A sibling package's similarly named CLI modules remain API documentation."""
+    source_parent = tmp_path / "src"
+    application_root = source_parent / API_SOURCE_PACKAGE
+    client_root = tmp_path.joinpath(*Path(CLIENT_PACKAGE).parts)
+    for root in (application_root, client_root):
+        for relative in (
+            "__init__.py",
+            "entrypoints/__init__.py",
+            "entrypoints/cli/__init__.py",
+            "entrypoints/cli/main.py",
+        ):
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('"""Fixture module."""\n', encoding="utf-8", newline="\n")
+
+    manager = ApiStubManager(
+        src_cadrumo=application_root,
+        docs_api=tmp_path / "api",
+        source_roots=(application_root, client_root),
+    )
+    modules = set(manager.discover_modules())
+
+    assert ("cadrumo.entrypoints.cli", True) not in modules
+    assert ("cadrumo.entrypoints.cli.main", False) not in modules
+    assert ("cadrumo_client.entrypoints.cli", True) in modules
+    assert ("cadrumo_client.entrypoints.cli.main", False) in modules
 
 
 def test_scaffold_produces_conformant_tree(tmp_path: Path) -> None:

@@ -12,6 +12,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -34,7 +35,7 @@ from ....core.config import override_settings
 from ....core.errors.error_codes import get_error_exit_code, get_registered_error_code
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_ledger_evidence_read as bridge
-from ..errors import CliRefusedBoundaryError, emit_error_and_exit
+from ..errors import emit_error_and_exit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -9,13 +9,13 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....application.modelo.work_inventory_operation import ModeloWorkListProjection, ModeloWorkListRequest
 from ....core.operations import OperationEffect
 from .. import operation_modelo_work_inventory as bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

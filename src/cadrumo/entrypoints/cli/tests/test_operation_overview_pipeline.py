@@ -9,6 +9,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.operations.public_period import PublicPeriod
@@ -19,7 +20,6 @@ from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
 from .. import _overview as handler
 from .. import operation_overview_pipeline as bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

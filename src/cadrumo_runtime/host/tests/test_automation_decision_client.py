@@ -188,8 +188,14 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
                         approved = run_automation_decision(human, review, decision="approve", password=password)
                         assert not any(password)
                     finally:
+                        primary = sys.exception()
                         done.set()
-                        polling.result()
+                        try:
+                            polling.result()
+                        except Exception as error:
+                            if primary is None:
+                                raise
+                            primary.add_note(f"Requester polling cleanup also failed: {type(error).__name__}")
                     assert approved.operation_id != wrong.value.operation_id
                     assert approved.effect is OperationEffect.UPDATED
                     assert approved.receipt.stage is EnrollmentStage.COMPLETE

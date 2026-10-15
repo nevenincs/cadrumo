@@ -445,6 +445,18 @@ class BrowserSession:
         async with self._lifecycle_lock:
             await self._close_browser_locked()
 
+    def settle_after_runtime_stop(self) -> None:
+        """Release session state after its owning Playwright runtime has stopped.
+
+        The runtime owner may need to stop Playwright after a graceful browser
+        close is cancelled or fails. Once that stop succeeds, no browser can
+        still use this launch's profile, so discard its handle and remove the
+        temporary profile directory. This method is only for that terminal
+        owner path; normal callers should use :meth:`close`.
+        """
+        self._browser = None
+        self._cleanup_working_directory()
+
     async def navigate(self, page: Page, url: str) -> Response | None:
         """Navigate ``page`` to ``url`` and probe the response health.
 

@@ -15,13 +15,13 @@ from cadrumo.application.operations.models import OperationIdentity
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationRequest, OperationSubmitted
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")

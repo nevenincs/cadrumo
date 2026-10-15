@@ -7,7 +7,7 @@ import sys
 import time
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import AbstractContextManager, ExitStack, contextmanager
+from contextlib import AbstractContextManager, ExitStack, contextmanager, suppress
 from datetime import timedelta
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -497,10 +497,8 @@ async def test_admitted_worker_browser_descendants_end_on_owner_death(tmp_path: 
         assert win32process.GetProcessTimes(parent_handle)["CreationTime"].isoformat() == parent.created
         ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=100)
         if ready not in (b"ready\n", b"ready\r\n"):
-            try:
+            with suppress(TimeoutError):
                 await asyncio.wait_for(owner.process.wait(), timeout=5)
-            except TimeoutError:
-                pass
             if owner.process.returncode is not None and owner.process.stderr is not None:
                 owner.stderr = await owner.process.stderr.read()
             assert ready in (b"ready\n", b"ready\r\n"), (
@@ -617,10 +615,8 @@ async def test_idle_admitted_worker_death_retires_browser_without_frontend_reque
         assert win32process.GetProcessTimes(parent_handle)["CreationTime"].isoformat() == parent.created
         ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=100)
         if ready not in (b"ready\n", b"ready\r\n"):
-            try:
+            with suppress(TimeoutError):
                 await asyncio.wait_for(owner.process.wait(), timeout=5)
-            except TimeoutError:
-                pass
             if owner.process.returncode is not None and owner.process.stderr is not None:
                 owner.stderr = await owner.process.stderr.read()
             assert ready in (b"ready\n", b"ready\r\n"), (

@@ -160,7 +160,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
     """Return one source-owned live DP30305 value arrival, without a test layout."""
     filing_year = snapshot.filing_year
     authority = compiled_bundled_authority()
-    period = Period.from_year_and_code(filing_year, "1T")
+    period = Period.from_year_and_code(filing_year, "2T")
     prior_snapshot_ref = authority.snapshot(
         "303",
         filing_year=filing_year - 1,
@@ -278,7 +278,7 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
 
 def _m303_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOperation):
     """Build two official 691.9 rows so the real f022 field carries their wire identity."""
-    period = Period.from_year_and_code(snapshot.filing_year, "1T")
+    period = Period.from_year_and_code(snapshot.filing_year, "2T")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
@@ -368,7 +368,7 @@ def _m303_committed_snapshot(tmp_path: Path):
         catalogues,
         source_root=bundled_path(),
         filing_year=tree.filing_year,
-        period="1T",
+        period="2T",
     )
     assert snapshot.revision.id == tree.revision
     assert snapshot.revision.export_layouts == committed_revision.export_layouts
@@ -654,7 +654,7 @@ def test_m303_untouched_generated_layout_renders_official_6919_f022(
         ("m303-domiciliacion", 1),
     )
     assert rendered.prefix == (
-        f"<T3030{_DESIGN_EXERCISE}1T0000><AUX>".encode()
+        f"<T3030{_DESIGN_EXERCISE}2T0000><AUX>".encode()
         + (b" " * 70)
         + b"C303"
         + (b" " * 4)
@@ -662,7 +662,7 @@ def test_m303_untouched_generated_layout_renders_official_6919_f022(
         + (b" " * 213)
         + b"</AUX>"
     )
-    assert rendered.closer == f"</T3030{_DESIGN_EXERCISE}1T0000>".encode()
+    assert rendered.closer == f"</T3030{_DESIGN_EXERCISE}2T0000>".encode()
     assert len(rendered.prefix) == layout.filing_envelope.prefix_extent
     assert tuple(item.occurrence for item in regimen_occurrences) == (1,)
     assert all(item.payload[f022.offset - 1 : f022.offset - 1 + f022.length] == b"6919" for item in regimen_occurrences)
@@ -698,10 +698,10 @@ def test_m303_untouched_generated_layout_renders_official_6919_f022(
             "cross-period",
             lambda request: {
                 "draft": request.draft.model_copy(
-                    update={"period": Period.from_year_and_code(request.draft.period.filing_year, "2T")}
+                    update={"period": Period.from_year_and_code(request.draft.period.filing_year, "3T")}
                 ),
             },
-            "draft period token '2T' does not match its snapshot_ref period '1T'",
+            "draft period token '3T' does not match its snapshot_ref period '2T'",
         ),
         ("opaque-bytes", lambda _request: {"opaque_bytes": b"not-an-envelope"}, "Extra inputs are not permitted"),
         ("open-map", lambda _request: {"open_map": {}}, "Extra inputs are not permitted"),

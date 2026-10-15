@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.profile.tests.password_only_profile import (
     FIXTURE_PROFILE_INPUT,
     register_password_only_profile,
 )
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_ALPHABET,
@@ -27,11 +28,14 @@ from cadrumo.adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_SEPARATOR,
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 from cadrumo.tests.inventory import SRC_CADRUMO
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
+from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, native_python
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import (
     COMPLETE_NATURAL_PERSON_FLAGS,
     native_profile_view_server,
@@ -151,6 +155,7 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
             startup.lpAttributeList = {"handle_list": handles}
             harness_payload = {
                 "settings": settings,
+                "program": "cadrumo-runtime",
                 "secrets_handle": secrets_handle,
                 "recovery_handoff_handle": handles[0],
                 "recovery_verification_handle": handles[1],
@@ -179,7 +184,11 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
                 "--recovery-verification-fd",
                 str(verification_reader),
             ]
-            harness_payload = {"settings": settings, "assert_closed_descriptors": descriptors}
+            harness_payload = {
+                "settings": settings,
+                "program": "cadrumo-runtime",
+                "assert_closed_descriptors": descriptors,
+            }
             result = run_audited_process(
                 [sys.executable, "-c", _HARNESS, json.dumps(harness_payload), *args],
                 cwd=SRC_CADRUMO,
@@ -262,9 +271,15 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
     args = ["--format", "json", "config", "passphrase", "change"]
     with native_profile_view_server(root):
         result = (
-            _run(root, [*args, "--secrets-stdin"], stdin=payload)
+            _run(root, [*args, "--secrets-stdin"], stdin=payload, program="cadrumo-runtime")
             if channel == "stdin"
-            else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
+            else _run(
+                root,
+                [*args, "--secrets-fd", "{fd:0}"],
+                inherited_payloads=(payload,),
+                assert_closed_index=0,
+                program="cadrumo-runtime",
+            )
         )
         document = _assert_success(result, root)
         reopened = _run(
@@ -382,6 +397,7 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
         stdin=stdin,
         inherited_payloads=inherited,
         assert_closed_indices=tuple(range(len(inherited))),
+        program="cadrumo-runtime",
     )
     document = _assert_success(result, root)
     assert document["command"] == "config.auth.certificate.secret.set"
@@ -443,18 +459,20 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(
         )
         result = run_audited_process(
             [
-                bootstrap_interpreter(),
-                "-m",
-                "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-                "--profile-handle",
-                str(handle),
-                "--",
-                "--format",
-                "json",
-                "config",
-                "profile",
-                "history",
-                "windows-reader",
+                str(native_python()),
+                "-I",
+                *fixture_arguments(
+                    "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
+                    "--profile-handle",
+                    str(handle),
+                    "--",
+                    "--format",
+                    "json",
+                    "config",
+                    "profile",
+                    "history",
+                    "windows-reader",
+                ),
             ],
             cwd=SRC_CADRUMO,
             env=env,
@@ -557,21 +575,23 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
     try:
         result = run_audited_process(
             [
-                bootstrap_interpreter(),
-                "-m",
-                "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-                "--recovery-handoff-handle",
-                str(handoff_handle),
-                "--recovery-verification-handle",
-                str(verification_handle),
-                "--",
-                "--format",
-                "json",
-                "config",
-                "profile",
-                "recovery",
-                "enable",
-                "--secrets-stdin",
+                str(native_python()),
+                "-I",
+                *fixture_arguments(
+                    "cadrumo_runtime.host.windows_secret_bootstrap",
+                    "--recovery-handoff-handle",
+                    str(handoff_handle),
+                    "--recovery-verification-handle",
+                    str(verification_handle),
+                    "--",
+                    "--format",
+                    "json",
+                    "config",
+                    "profile",
+                    "recovery",
+                    "enable",
+                    "--secrets-stdin",
+                ),
             ],
             cwd=SRC_CADRUMO,
             env=env,
@@ -637,8 +657,9 @@ def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path
         result = run_audited_process(
             [
                 sys.executable,
-                "-c",
-                "from cadrumo.entrypoints.cli.main import main; main()",
+                "-I",
+                "-m",
+                "cadrumo_runtime.host",
                 "--format",
                 "json",
                 "config",
@@ -708,6 +729,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             stdin=json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT}),
             inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
             assert_closed_index=0,
+            program="cadrumo-runtime",
         )
         document = _assert_success(result, root)
         assert document["command"] == "config.auth.certificate.secret.set"
@@ -742,22 +764,24 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
         )
         result = run_audited_process(
             [
-                bootstrap_interpreter(),
-                "-m",
-                "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-                "--profile-handle",
-                str(handle),
-                "--",
-                "--format",
-                "json",
-                "config",
-                "auth",
-                "certificate",
-                "secret",
-                "set",
-                "--name",
-                "s13-windows-cert",
-                "--secrets-stdin",
+                str(native_python()),
+                "-I",
+                *fixture_arguments(
+                    "cadrumo_runtime.host.windows_secret_bootstrap",
+                    "--profile-handle",
+                    str(handle),
+                    "--",
+                    "--format",
+                    "json",
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "s13-windows-cert",
+                    "--secrets-stdin",
+                ),
             ],
             cwd=SRC_CADRUMO,
             env=env,
@@ -877,10 +901,17 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
 #: The leaves that refuse by contract rather than succeed, per setup state:
 #: an unfinished record cannot pass ``validate`` or be promoted, the profile
 #: has no descendant at index 0 and no average workforce declared for 2099,
-#: and the selected profile cannot be deleted.
+#: the selected profile cannot be deleted, and logout has no saved proof.
 _COLD_REFUSALS = {
-    "incomplete": {"validate", "complete-setup", "descendiente-remove", "plantilla-media-remove", "delete-preflight"},
-    "complete": {"descendiente-remove", "plantilla-media-remove", "delete-preflight"},
+    "incomplete": {
+        "validate",
+        "complete-setup",
+        "descendiente-remove",
+        "plantilla-media-remove",
+        "delete-preflight",
+        "logout",
+    },
+    "complete": {"descendiente-remove", "plantilla-media-remove", "delete-preflight", "logout"},
 }
 
 
@@ -932,6 +963,15 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
 
     shutil.copytree(template, root, ignore=omit_template_runtime)
     host_profile_runtime(root)
+    logout_before = None
+    if leaf == "logout":
+        # Registration and invocation-scoped completion mint no saved sign-in.
+        # A selected profile alone cannot prove a strong sign-out.
+        selected_before = observe_active_profile_pointer(root)
+        assert selected_before.bucket_id is not None
+        receipt = profile_session_path(storage_root=root, profile_id=UUID(selected_before.bucket_id))
+        assert not receipt.exists()
+        logout_before = receipt, selected_before
     archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
     if leaf == "archive-inspect":
         exported = _run(
@@ -962,6 +1002,17 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
     assert not error_code.startswith("INTERNAL"), _combined(result)
     expected = 2 if leaf in _COLD_REFUSALS[state] else 0
     assert result.returncode == expected, _combined(result)
+    if leaf == "logout":
+        assert logout_before is not None
+        receipt, selected_before = logout_before
+        assert envelope["command"] == "config.logout" and envelope["status"] == "error"
+        error = envelope["error"]
+        assert error["code"] == "REFUSED_CLI_BOUNDARY" and error["context"] == {"reason": "absent"}
+        assert error["message"] == lookup_translation(
+            "cli.config.errors.profile_session_logout_unproven", locale="en"
+        ), _combined(result)
+        assert not receipt.exists()
+        assert observe_active_profile_pointer(root) == selected_before
     if stdin is _PROFILE_AUTHENTICATION and expected == 0:
         # No keychain is usable here, so authenticating spent the passphrase on
         # this process alone. Reproduction: ``config profile edit`` succeeded

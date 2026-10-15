@@ -11,6 +11,7 @@ import pytest
 import typer
 from pydantic import ValidationError
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.calculations.observations_repository import ObservationSourceKind
@@ -40,7 +41,6 @@ from .._filing_chain_payloads import (
     ObservationLayersPayload,
     ObservationOverridePayload,
 )
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

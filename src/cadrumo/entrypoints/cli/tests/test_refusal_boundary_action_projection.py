@@ -13,6 +13,7 @@ import typer
 from pydantic import TypeAdapter
 
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -39,7 +40,7 @@ from ....core.operator_action_enums import (
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
 from ....core.redaction.rules import redact_for_log
 from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
-from ..errors import CliRefusedBoundaryError, command_error_boundary
+from ..errors import command_error_boundary
 from .cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 
 __all__ = ["english_locale_fixture"]
@@ -106,7 +107,7 @@ def test_workflow_gate_refusal_projects_its_persisted_action_to_json() -> None:
     assert action["action"] == {
         "action_id": "operator.modelo.work.calculate",
         "target_command_key": "modelo.work.calculate",
-        "cli_path": ["app", "modelo", "work", "calculate"],
+        "cli_path": ["aeat", "app", "modelo", "work", "calculate"],
     }
     assert action["conditionality"] == "requires_arguments"
     assert action["missing_argument_names"] == ["work_unit_id"]
@@ -153,7 +154,7 @@ def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp
         "action": {
             "action_id": "operator.profile.repair_active_pointer",
             "target_command_key": "config.repair.profile",
-            "cli_path": ["config", "repair", "profile"],
+            "cli_path": ["aeat", "config", "repair", "profile"],
         },
         "argument_bindings": [
             {
@@ -341,7 +342,7 @@ def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path
         "action": {
             "action_id": "operator.profile.create",
             "target_command_key": "config.profile.create",
-            "cli_path": ["config", "profile", "create"],
+            "cli_path": ["aeat", "config", "profile", "create"],
         },
         "argument_bindings": [
             {
@@ -374,7 +375,7 @@ def test_real_root_refusal_derives_text_from_the_same_action_projection(tmp_path
     assert '  action.failed_condition_id: "profile.active.available"' in output
     assert '"evidence_id":"profile.active.state"' in output
     assert (
-        '  action.action: {"action_id":"operator.profile.create","cli_path":["config","profile","create"],'
+        '  action.action: {"action_id":"operator.profile.create","cli_path":["aeat","config","profile","create"],'
         '"target_command_key":"config.profile.create"}'
     ) in output
     assert '"argument_name":"profile_name"' in output
@@ -394,13 +395,27 @@ def test_real_root_no_recovery_refusal_projects_the_closed_outcome(tmp_path: Pat
         ),
     ):
         result = invoke_cached_cli(
-            ["--format", "json", "config", "google", "login"],
+            [
+                "--format",
+                "json",
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                "2026-01-01",
+                "--amount",
+                "1.00",
+                "--direction",
+                "OUTGOING",
+                "--description",
+                "row",
+            ],
             catch_exceptions=False,
         )
 
     assert result.exit_code == get_error_exit_code(ErrorCategory.REFUSED), result.output
     document = json.loads(result.stderr)
-    assert document["command"] == "config.google.login"
+    assert document["command"] == "ledger.add"
     action = document["error"]["action"]
     assert action["failed_condition_id"] == "storage.route.active_bucket"
     assert action["action"] is None

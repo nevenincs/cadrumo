@@ -11,10 +11,10 @@ Two narrow boundary exceptions wrap unexpected failures so they reach
 
 - :exc:`CliValidationBoundaryError` wraps a leaked
   :exc:`~pydantic.ValidationError`.
-- :exc:`CliUnexpectedBoundaryError` wraps any
+- :exc:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError` wraps any
   other non-control-flow exception.
 
-A third type, :exc:`CliRefusedBoundaryError`, is
+A third type, :exc:`~cadrumo_client.commands.errors.CliRefusedBoundaryError`, is
 reserved for refusals emitted in JSON mode whose payload is intentionally
 stderr-only.
 
@@ -44,13 +44,8 @@ import click
 import typer
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.commands.errors import (
-    CliOperationStillRunningError,
-    CliOutboundPayloadBoundaryError,
-    CliRecordedOperationError,
-    CliRefusedBoundaryError,
-    CliUnexpectedBoundaryError,
-)
+from cadrumo_client.commands import errors as _client_commands_errors
+from cadrumo_client.commands.errors import CliUnexpectedBoundaryError as _CliUnexpectedBoundaryError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions.models import PreconditionVerdict
@@ -122,7 +117,7 @@ class CliValidationBoundaryError(CadrumoError):
     document is such a field: the operator's arguments are all correct and
     re-reading them discovers nothing. Splitting the two channels keeps the
     sentence readable and makes the failure diagnosable, which is the same split
-    :exc:`CliOutboundPayloadBoundaryError` and
+    :exc:`~cadrumo_client.commands.errors.CliOutboundPayloadBoundaryError` and
     :exc:`CliStoredDataValidationBoundaryError` already use.
 
     The context names the failing record, the field path and the rule broken,
@@ -234,7 +229,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     - :exc:`~pydantic.ValidationError` is wrapped in
       :exc:`CliValidationBoundaryError`.
     - Any other non-control-flow exception is wrapped in
-      :exc:`CliUnexpectedBoundaryError`.
+      :exc:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError`.
 
     Typer/Click control-flow exceptions (e.g. :exc:`~click.exceptions.Exit`,
     :exc:`~click.Abort`, :exc:`~typer.Exit`) propagate untouched so the
@@ -517,7 +512,7 @@ def render_error_payload(
     reason = getattr(error, "reason", None)
     if reason is None and isinstance(error, CadrumoError):
         reason = (error.context or {}).get("reason")
-    if reason is None and isinstance(error, CliRefusedBoundaryError) and error.args:
+    if reason is None and isinstance(error, _client_commands_errors.CliRefusedBoundaryError) and error.args:
         reason = error.args[0]
     remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
     remedy_context = {"remedy": remedy} if remedy is not None else None
@@ -605,7 +600,7 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
 
     if isinstance(error, CliValidationBoundaryError):
         condition = CliExceptionPrecondition.VALIDATION_BOUNDARY
-    elif isinstance(error, CliUnexpectedBoundaryError):
+    elif isinstance(error, _CliUnexpectedBoundaryError):
         condition = CliExceptionPrecondition.UNEXPECTED_BOUNDARY
     elif isinstance(error, CliStoredDataValidationBoundaryError):
         condition = CliExceptionPrecondition.STORED_DATA_VALID
@@ -615,7 +610,7 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         condition = CliExceptionPrecondition.CONFIG_BOUNDARY
     elif isinstance(error, NonTtyRefusedError):
         condition = CliExceptionPrecondition.STDIN_INTERACTIVE
-    elif isinstance(error, CliRefusedBoundaryError):
+    elif isinstance(error, _client_commands_errors.CliRefusedBoundaryError):
         condition = CliExceptionPrecondition.REFUSAL_RETRIED
     else:
         return None
@@ -857,7 +852,7 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
     from .common import attach_cli_policy_verdict
 
     return attach_cli_policy_verdict(
-        CliRefusedBoundaryError(str(error)),
+        _client_commands_errors.CliRefusedBoundaryError(str(error)),
         verdict=former_product_state_verdict(FormerProductDetectionScope.STARTUP),
     )
 
@@ -1025,7 +1020,7 @@ def _project_unexpected(error: Exception, callback: Callable[..., object]) -> Ca
         getattr(callback, "__name__", type(callback).__name__),
         type(error).__name__,
     )
-    return CliUnexpectedBoundaryError(error)
+    return _CliUnexpectedBoundaryError(error)
 
 
 def _project_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
@@ -1050,15 +1045,11 @@ def project_cli_boundary_error(error: Exception, callback: Callable[..., object]
         if projected is not None:
             return projected
     wrapped = _unwrap_cadrumo_error(error)
-    return _project_cadrumo_error(wrapped, callback) if wrapped is not None else CliUnexpectedBoundaryError(error)
+    return _project_cadrumo_error(wrapped, callback) if wrapped is not None else _CliUnexpectedBoundaryError(error)
 
 
 __all__ = [
     "CliCommandGroupUnavailableError",
-    "CliOperationStillRunningError",
-    "CliOutboundPayloadBoundaryError",
-    "CliRecordedOperationError",
-    "CliRefusedBoundaryError",
     "CliStoredDataValidationBoundaryError",
     "CliValidationBoundaryError",
     "boundary_no_recovery_verdict",

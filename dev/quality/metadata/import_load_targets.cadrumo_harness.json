@@ -21,7 +21,6 @@
         "cadrumo_harness._workspace",
         "cadrumo_harness.access",
         "cadrumo_harness.access.automation_key",
-        "cadrumo_harness.access.legacy_provenance",
         "cadrumo_harness.mcp",
         "cadrumo_harness.mcp.access_scope",
         "cadrumo_harness.mcp.admitted_operations",

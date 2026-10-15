@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import bound_profile_client
 
 from ...application.operations.public_period import PublicPeriod
@@ -18,7 +19,6 @@ from ._modelo_spreadsheet_payloads import (
     ModeloSpreadsheetPushResult,
 )
 from .common import emit_envelope
-from .errors import CliRefusedBoundaryError
 from .operation_modelo_spreadsheet import (
     export_modelo_spreadsheet,
 )

@@ -10,6 +10,7 @@ import pytest
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.inventory.registered_projections import (
@@ -26,7 +27,6 @@ from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.contribuyente.inventory.records import ValuationMethod
 from .. import operation_ledger_inventory as bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

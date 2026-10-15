@@ -105,13 +105,7 @@ export const FIXTURE_RECORDS: readonly LogRecord[] = [
   host(1, 0, "INFO", "host_started", "console", 4120),
   host(2, 40, "INFO", "child_started", "console", 4188),
   host(3, 95, "INFO", "child_started", "repl", 4204),
-  python(
-    4,
-    1300,
-    "INFO",
-    "cadrumo.entrypoints.tui.app",
-    "Workbench ready",
-  ),
+  python(4, 1300, "INFO", "cadrumo.entrypoints.tui.app", "Workbench ready"),
   python(
     5,
     1420,

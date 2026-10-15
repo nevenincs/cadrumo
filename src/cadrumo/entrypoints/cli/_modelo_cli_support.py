@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING, cast, get_args
 import typer
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
 from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
@@ -53,7 +55,6 @@ from ...domain.modelos.row_models import (
 )
 from ._modelo_rendering import short_id
 from .common import active_bucket_id_or_refuse, active_profile_label
-from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     pass

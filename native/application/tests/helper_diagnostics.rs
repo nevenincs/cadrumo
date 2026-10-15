@@ -95,3 +95,49 @@ fn unavailable_sink_does_not_lose_timing_or_claim_a_spawn_for_admission_refusal(
     }
     assert_eq!(diagnostics.snapshot(u64::MAX).events.len(), 512);
 }
+
+#[test]
+fn helper_projection_rejects_forged_sources_and_preserves_native_refusal_codes() {
+    use cadrumo_application::diagnostics::helper::{
+        HelperDecode, HelperExecutable, HelperIdentity, HelperResult,
+    };
+    let identity = HelperIdentity {
+        command: "config.login",
+        executable: HelperExecutable::Runtime,
+    };
+    for source in [
+        "private.module:submit:42",
+        "C:/private/file.py:submit:42",
+        "cadrumo_private:submit:42",
+        "cadrumo_runtime.host:submit:0",
+        "cadrumo_runtime.host:submit:999999999999",
+        "cadrumo_runtime.host:submit:42:extra",
+    ] {
+        let envelope = json!({"schema_version":"2", "command":"config.login", "status":"error", "error":{"code":"INTERNAL", "context":{"exception_type":"Private value\ncanary", "raised_at":source, "reason":"private reason"}}});
+        let fact = HelperResult::inspect(
+            identity,
+            false,
+            &[],
+            &serde_json::to_vec(&envelope).unwrap(),
+        );
+        assert_eq!(fact.envelope_decode, HelperDecode::Refused);
+        assert!(fact.raised_at.is_none() && fact.exception_type.is_none() && fact.reason.is_none());
+    }
+    for code in [
+        "launch_value_missing",
+        "launch_value_malformed",
+        "invocation_undeclared",
+    ] {
+        let native = json!({"native_refusal":code,"subject":"PRIVATE-SUBJECT-CANARY"});
+        let fact =
+            HelperResult::inspect(identity, false, &[], &serde_json::to_vec(&native).unwrap());
+        assert_eq!(fact.envelope_decode, HelperDecode::NativeRefused);
+        assert_eq!(fact.code.as_deref(), Some(code));
+        assert!(!serde_json::to_string(&fact).unwrap().contains("CANARY"));
+    }
+    for bytes in [b"not an envelope PRIVATE-CANARY".as_slice(), br#"{"schema_version":"2","command":"config.logout","status":"error","error":{"code":"INTERNAL"}}"#.as_slice()] {
+        let fact = HelperResult::inspect(identity, false, &[], bytes);
+        assert_eq!(fact.envelope_decode, HelperDecode::Malformed);
+        assert!(fact.code.is_none());
+    }
+}

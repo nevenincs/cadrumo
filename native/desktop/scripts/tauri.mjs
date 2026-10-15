@@ -31,8 +31,11 @@ const backendOnly = ["test-unit", "test-package", "clippy-backend"].includes(
   action,
 );
 const filter = process.argv[3];
-if (backendOnly && (process.argv.length > 4 || filter?.startsWith("-")))
-  throw new Error("Backend tests accept one optional Rust test-name filter.");
+if (
+  (backendOnly || action === "test") &&
+  (process.argv.length > 4 || filter?.startsWith("-"))
+)
+  throw new Error("Host tests accept one optional Rust test-name filter.");
 if (action === "run") {
   const result = spawnSync(executable(), process.argv.slice(3), {
     stdio: "inherit",
@@ -204,10 +207,16 @@ if (action === "build") {
         ...(selectedProfile.debug ? [] : ["--release"]),
         "--locked",
         ...(live ? ["--features", "live-package-tests"] : []),
-        ...(backendOnly && filter ? [filter] : []),
+        ...(filter ? [filter] : []),
         "--",
         "--nocapture",
         "--test-threads=1",
+        ...(environment.CADRUMO_PACKAGE_USER_DOCS === "0"
+          ? [
+              "--skip",
+              "docs::tests::staged_documentation_serves_pages_search_and_worker_with_the_policy",
+            ]
+          : []),
       ]
     : [
         "clippy",

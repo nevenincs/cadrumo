@@ -7,6 +7,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -53,7 +54,6 @@ from .common import (
     emit_envelope,
     resolve_notice_action,
 )
-from .errors import CliRefusedBoundaryError
 from .operation_overview import OverviewReadCompletion, read_overview
 from .operation_overview_pipeline import read_overview_pipeline
 from .period_parsing import _canonical_period

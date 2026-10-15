@@ -4,11 +4,12 @@ import json
 
 import pytest
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....core.config import override_settings
-from ..errors import CliRefusedBoundaryError, render_error_payload
+from ..errors import render_error_payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

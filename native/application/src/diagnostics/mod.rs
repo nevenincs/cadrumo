@@ -6,7 +6,7 @@ pub mod webview;
 
 use crate::{
     diagnostics::{
-        helper::HelperTiming,
+        helper::{HelperResult, HelperTiming},
         lifecycle::LifecycleFact,
         logging::{LogFile, LogPaths},
         service::ServiceFact,
@@ -36,6 +36,7 @@ pub enum EventKind {
     ChildExited,
     ChildTerminated,
     HelperTiming,
+    HelperResult,
     ServiceEvent,
     Failure,
     HostStopped,
@@ -98,6 +99,8 @@ pub struct Event {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub helper_timing: Option<HelperTiming>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub helper_result: Option<HelperResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub service: Option<ServiceFact>,
 }
 #[derive(Serialize)]
@@ -134,6 +137,7 @@ struct Context {
     lifecycle: Option<LifecycleFact>,
     webview_failure: Option<WebviewFailure>,
     helper_timing: Option<HelperTiming>,
+    helper_result: Option<HelperResult>,
     service: Option<ServiceFact>,
 }
 #[derive(Default)]
@@ -236,6 +240,7 @@ impl Diagnostics {
             lifecycle: context.lifecycle,
             webview_failure: context.webview_failure,
             helper_timing: context.helper_timing,
+            helper_result: context.helper_result,
             service: context.service,
         };
         state.first_event_ms.get_or_insert(event.timestamp_ms);
@@ -246,6 +251,36 @@ impl Diagnostics {
             state.events.pop_front();
         }
         state.events.push_back(event);
+    }
+    pub fn helper_result(
+        &self,
+        process: Option<u64>,
+        fact: HelperResult,
+        failure: Option<ApplicationError>,
+    ) {
+        // Count privately captured output without retaining any of its bytes.
+        {
+            let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+            if let Some(status) = state
+                .tracker
+                .processes
+                .iter_mut()
+                .find(|p| Some(p.id) == process)
+            {
+                status.stdout_bytes = fact.stdout_bytes;
+                status.stderr_bytes = fact.stderr_bytes;
+            }
+        }
+        self.record(
+            EventKind::HelperResult,
+            process,
+            failure,
+            Context {
+                role: Some(ProcessRole::SignIn),
+                helper_result: Some(fact),
+                ..Context::default()
+            },
+        );
     }
     pub fn helper_timing(&self, process: Option<u64>, fact: HelperTiming) {
         self.record(

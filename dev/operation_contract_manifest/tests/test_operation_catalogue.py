@@ -458,8 +458,14 @@ def test_the_census_denominator_is_the_repository_visible_tree() -> None:
     sources = _source_files()
     assert all(
         path.startswith(
-            (_PACKAGE_PREFIX, _MCP_PACKAGE_PREFIX, _TUI_PACKAGE_PREFIX,
-             _RUNTIME_CLI_PACKAGE_PREFIX, _CLIENT_CLI_PACKAGE_PREFIX, _RUNTIME_HOST_PACKAGE_PREFIX)
+            (
+                _PACKAGE_PREFIX,
+                _MCP_PACKAGE_PREFIX,
+                _TUI_PACKAGE_PREFIX,
+                _RUNTIME_CLI_PACKAGE_PREFIX,
+                _CLIENT_CLI_PACKAGE_PREFIX,
+                _RUNTIME_HOST_PACKAGE_PREFIX,
+            )
         )
         for path in sources
     )

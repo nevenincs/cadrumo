@@ -15,24 +15,23 @@ from typing import Final
 import pytest
 from pydantic import SecretStr
 
-from cadrumo_client.contracts.service_access import ServiceConnected
-from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
-
+from cadrumo.core.storage_environment import StorageMode
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.adapters.agent_provider_catalog import AgentProviderCatalogSource
 from cadrumo_agent_service.providers.application.contracts import (
+    ProviderCredentialSource,
+    ProviderReadiness,
+    ProviderSettingsActionAccepted,
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
     ProviderSettingsStatus,
-    ProviderSettingsActionAccepted,
-    ProviderCredentialSource,
-    ProviderReadiness,
 )
 from cadrumo_agent_service.providers.application.service import ProviderSettingsService
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
 from cadrumo_agent_service.providers.domain.catalog import parse_provider_catalog
 from cadrumo_agent_service.providers.persistence.store import SecureProviderSettingsStore
-from cadrumo.core.storage_environment import StorageMode
+from cadrumo_client.contracts.service_access import ServiceConnected
+from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
 
 from .provider_catalog_support import provider_record_capability, stand_in_agent_image
 
@@ -44,12 +43,12 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROVIDER_SECRET_NAME: Final = "CADRUMO_LLM_EXAMPLE_API_KEY"
+_PROVIDER_ENVIRONMENT_VARIABLE: Final = "CADRUMO_LLM_EXAMPLE_API_KEY"
 
 
 def _received_environment(image: Path | None) -> dict[str, str]:
     received = dict(os.environ)
-    received[_PROVIDER_SECRET_NAME] = "synthetic-secret-that-must-not-reach-the-agent"
+    received[_PROVIDER_ENVIRONMENT_VARIABLE] = "synthetic-secret-that-must-not-reach-the-agent"
     if image is None:
         received.pop(PACKAGE_AGENT_VARIABLE, None)
     else:
@@ -70,14 +69,19 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         assert client.claim() is not None
         store = SecureProviderSettingsStore(client=client)
         settings = ProviderSettingsService(
-            store=store, catalog_source=source, environment={}, storage_mode=StorageMode.INSTALLED,
+            store=store,
+            catalog_source=source,
+            environment={},
+            storage_mode=StorageMode.INSTALLED,
         )
         status = settings.status()
         assert isinstance(status, ProviderSettingsStatus), status
         assert sorted(entry.id for entry in status.providers) == expected
         initial = next(entry for entry in status.providers if entry.id == KEY_LANE)
         accepted = settings.set_credential(
-            KEY_LANE, secret=SecretStr("synthetic-provider-secret"), expected_revision=initial.revision,
+            KEY_LANE,
+            secret=SecretStr("synthetic-provider-secret"),
+            expected_revision=initial.revision,
         )
         assert isinstance(accepted, ProviderSettingsActionAccepted), accepted
         assert accepted.entry.source is ProviderCredentialSource.PROFILE
@@ -87,7 +91,9 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         assert isinstance(reread, ProviderSettingsStatus), reread
         assert next(entry for entry in reread.providers if entry.id == KEY_LANE) == accepted.entry
         stale = settings.set_credential(
-            KEY_LANE, secret=SecretStr("synthetic-rejected-stale-secret"), expected_revision=initial.revision,
+            KEY_LANE,
+            secret=SecretStr("synthetic-rejected-stale-secret"),
+            expected_revision=initial.revision,
         )
         assert isinstance(stale, ProviderSettingsRefusal)
         assert stale.code is ProviderSettingsRefusalCode.REVISION_CONFLICT
@@ -108,8 +114,10 @@ def test_a_service_without_a_declared_agent_returns_typed_catalog_unavailability
         assert isinstance(runtime.admit(client), ServiceConnected)
         assert client.claim() is not None
         status = ProviderSettingsService(
-            store=SecureProviderSettingsStore(client=client), catalog_source=source,
-            environment={}, storage_mode=StorageMode.INSTALLED,
+            store=SecureProviderSettingsStore(client=client),
+            catalog_source=source,
+            environment={},
+            storage_mode=StorageMode.INSTALLED,
         ).status()
         assert isinstance(status, ProviderSettingsRefusal), status
         assert status.code is ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE

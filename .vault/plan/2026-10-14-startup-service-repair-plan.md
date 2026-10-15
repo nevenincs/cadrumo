@@ -7,9 +7,9 @@ tier: L1
 related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: body-v2
-body_hash: 'sha256:1955abe576babbe3476226f22be62df0efa8acf371340fbff945d50fd240cb08'
+body_hash: 'sha256:4b0947044b59292d2daccbc40e27e03aa05bad42e9d125a959b26029d733769f'
 ---
 
 <!-- LINK RULES:
@@ -126,9 +126,9 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 
 ## Steps
 
-- [ ] `S01` - Preserve actionable agent CLI and native startup errors and invocation timing; `src/cadrumo/adapters/local_runtime/agent_diagnostics.py, src/cadrumo/application/agent_host/store_lifecycle.py, src/cadrumo/core/diagnostic_log.py, native/application/src/diagnostics/service.rs, native/desktop frontend records and agent retry surfaces, owning tests`.
+- [ ] `S01` - Preserve actionable agent CLI and native startup errors and invocation timing; `src/cadrumo_agent_service/main.py, src/cadrumo_agent_service/service.py, src/cadrumo_agent_service/host/store_lifecycle.py, src/cadrumo_agent_service/host/tests/test_service_failure.py, native/application/src/diagnostics/service.rs, native/desktop frontend records and agent retry surfaces, owning tests`.
 - [ ] `S02` - Coalesce sign-in observations and make agent retry supervision responsive and bounded; `native/desktop/src-tauri/src/shell/sign_in, native/desktop/src-tauri/src/agent/supervisor.rs`.
-- [ ] `S03` - Verify corrected launch environment and service diagnostics in the rebuilt Windows package; `native/tests/environment_launch_probe.py, build/windows-x64, focused validation`.
+- [ ] `S03` - Verify corrected launch environment and service diagnostics in the rebuilt Windows package; `native/tests/environment_launch_probe.py, dev/runtime_lifecycle/agent_live.py, build/windows-x64, direct non-GUI service/runtime/provider-home and live-provider validation`.
 - [ ] `S04` - Diagnose and repair profile worker deadline cascades and distinguish ordinary client closes from refusals; `src/cadrumo/adapters/local_runtime/profile_worker_transport.py, src/cadrumo/adapters/local_runtime/server_connection_handling.py, src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, owning tests`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or

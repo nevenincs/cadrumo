@@ -41,6 +41,12 @@ from cadrumo.application.user_profile.profile_operation_contracts import PROFILE
 from cadrumo.core.async_cleanup import AsyncCloseable, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
+from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
+from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
+from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
+from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.contracts.access_management import AccessManagementRequest
 from cadrumo_client.contracts.contracts import ByteChannel
@@ -61,12 +67,6 @@ from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
     observe_native_runtime_failures,
     runtime_failure_observation,
 )
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
-from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
-from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
-from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
 

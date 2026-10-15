@@ -4,7 +4,7 @@ The published tax authority, the category vocabularies, the portal catalogue,
 the authentication providers and the representative scopes are public data that
 ships with the product. Each read here takes only the pinned authority
 operation it needs, reads no profile and no private state, and contacts no
-network, so the command line, the harness and the terminal interface answer the
+network, so the command line, external clients and the terminal interface answer the
 same question with the same typed projection and no session. Portal reads
 return :class:`PortalMetadata` records filtered by :class:`PortalCategory`.
 

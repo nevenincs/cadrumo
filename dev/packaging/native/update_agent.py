@@ -12,6 +12,8 @@ from pathlib import Path, PurePosixPath
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
+from dev.first_party_source import is_test_source
+
 from ..runtime_wheel_selection import marker_environment
 from ..runtime_wheelhouse_contract import target_platform
 from ..wheel_metadata import read_wheel_metadata
@@ -42,7 +44,7 @@ def wheel_files(wheel: Path, *, version: str, prefix: str) -> dict[str, bytes]:
                 or (entry.external_attr >> 16) & 0o170000 == 0o120000
             ):
                 raise ValueError("Agent wheel contains an unowned or linked member")
-            if entry.is_dir() or "tests" in name.parts or "__pycache__" in name.parts:
+            if entry.is_dir() or is_test_source(name) or "__pycache__" in name.parts:
                 continue
             member = f"{prefix}/{name}"
             if member.casefold() in aliases:

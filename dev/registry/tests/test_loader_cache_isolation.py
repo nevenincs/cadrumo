@@ -348,6 +348,11 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
 
     scratch_pkg = tmp_path / "purge_isolation_proof_pkg"
     scratch_pkg.mkdir()
+    scratch_config_path = scratch_pkg / "pytest.ini"
+    scratch_config_path.write_text(
+        "[pytest]\ntestpaths = .\nmarkers =\n    unit: isolated unit proof\n    hex_domain: registry-domain proof\n",
+        encoding="utf-8",
+    )
     (scratch_pkg / "conftest.py").write_text(
         "from __future__ import annotations\n"
         "\n"
@@ -387,21 +392,21 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
                 "--no-header",
                 "-p",
                 "no:cacheprovider",
-                # Pin rootdir to the throwaway scratch package so collection
-                # NEVER walks the shared OS temp tree. Without this, pytest
-                # infers a rootdir across the Y:-drive cwd and the C:\Temp
-                # scratch node, and the inherited testpaths=["src/cadrumo"]
-                # drives a broad collection walk that lstat()s sibling temp
-                # dirs -- a concurrent agent deleting its own transient
-                # ``cli-sequence-*`` temp dir mid-walk then surfaces here as a
-                # spurious collection FileNotFoundError, flaking this proof.
+                # Use a scratch config and conftest boundary so the real child
+                # pytest session collects only this explicit proof. The repo
+                # config and ancestor conftest can walk shared temporary roots;
+                # a concurrent test deleting a sibling there then makes this
+                # cache proof fail during unrelated collection.
+                "-c",
+                str(scratch_config_path),
                 "--rootdir",
                 str(scratch_pkg),
-                "--override-ini",
-                "testpaths=",
+                "--confcutdir",
+                str(scratch_pkg),
                 "-n0",
                 "-m",
                 "unit",
+                "--strict-markers",
                 node_id,
             ],
             # Keep the process CWD on the live checkout. The scratch package

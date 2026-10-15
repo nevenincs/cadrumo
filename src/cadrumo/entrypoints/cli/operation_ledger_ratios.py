@@ -7,6 +7,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
@@ -35,7 +36,6 @@ from ...application.ledger.ratios_contracts import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
-from .errors import CliRefusedBoundaryError
 
 
 def _client(ctx: typer.Context) -> FrontendClient:

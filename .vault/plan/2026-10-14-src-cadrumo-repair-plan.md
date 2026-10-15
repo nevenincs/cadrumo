@@ -9,9 +9,9 @@ related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-07-25-bucket-event-payload-bounding-adr]]'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: body-v2
-body_hash: 'sha256:1c98cc6df8b0d857391d77700d84ad81533e1efd50ade42e31c6eacbafe630a5'
+body_hash: 'sha256:0db7c5bcc9bbf3941411a33c0bacd2552902c4d5ba89909c9a3d84a23a0398e4'
 ---
 
 <!-- LINK RULES:
@@ -128,14 +128,16 @@ The user corrected role conflation on 2026-10-15 and authorized continued repair
 
 ## Steps
 
-- [ ] `S01` - Restore source parsing and resolve moved test and fixture ownership without compatibility imports; `src/cadrumo/entrypoints and affected application tests, canonical runtime or harness-owned destination tests where relocation is required`.
-- [ ] `S02` - Reconcile complete source inventories, canonical references and operation surface coverage with current ownership; `src/cadrumo core and cross-cutting source audit tests, shared inventory helpers and affected source docstrings`.
+- [x] `S01` - Restore source parsing and resolve moved test and fixture ownership without compatibility imports; `src/cadrumo/entrypoints and affected application tests, canonical runtime or harness-owned destination tests where relocation is required`.
+- [x] `S02` - Reconcile complete source inventories, canonical references and operation surface coverage with current ownership; `src/cadrumo core and cross-cutting source audit tests, shared inventory helpers and affected source docstrings`.
 - [x] `S03` - Restore consistent diagnostic logging format and side-effect-free import behavior; `src/cadrumo/core/logging.py, diagnostic_log.py and their owning tests`.
-- [ ] `S04` - Repair storage setting enrollment, documented environment controls and producer liveness receipts; `src/cadrumo/core storage configuration and taxonomy modules, .env.example and storage policy tests`.
-- [ ] `S05` - Prove bounded optional decimal event payloads without weakening payload refusal; `src/cadrumo/application/ledger/actions_common.py and actions_lifecycle.py, domain/buckets/tests/test_payload_value_bounding.py`.
+- [x] `S04` - Repair storage setting enrollment, documented environment controls and producer liveness receipts; `src/cadrumo/core storage configuration and taxonomy modules, .env.example and storage policy tests`.
+- [x] `S05` - Prove bounded optional decimal event payloads without weakening payload refusal; `src/cadrumo/application/ledger/actions_common.py and actions_lifecycle.py, domain/buckets/tests/test_payload_value_bounding.py`.
 - [ ] `S06` - Run focused and complete product verification, regenerate affected owner-generated contracts and review the integrated repair; `src/cadrumo unit selection, affected canonical destination tests, configured code gates and repair evidence`.
 - [x] `S07` - Separate corpus evidence from Python controls and republish verified authority; `dev/registry compiler and receipt tests, dev/quality/tests/test_corpus_provenance.py, src/cadrumo/_data/corpus/tests, src/cadrumo/adapters/outbound/aeat/sede/tests/test_groi_check.py, .authority/authority.current.json`.
 - [x] `S08` - Resolve IVA evidence duties against the filing frame and enforce canonical IVA names; `src/cadrumo/application/aggregation/evidence_advisory.py, application/aggregation/tests/test_calculation_revision_iva_evidence_authority.py, application/tests/test_reference_catalogue.py, application/tests/test_apoderado_scopes_payload.py, tests/test_spanish_iva_stem_conformance.py`.
+- [x] `S09` - Repair typed profile recovery and canonical operation notice output at frontend seams; `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py, its refusal and command-ownership tests, src/cadrumo_runtime/commands/tests/test_tax_action_target_ownership.py, src/cadrumo_client/commands/registered_operation_observations.py, entrypoint settlement fixture tests`.
+- [x] `S10` - Remove reexports and bind every consumer to the canonical defining module; `src/cadrumo reexport sites, their first-party direct and dynamic consumers, defining client modules, configured import-boundary controls`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

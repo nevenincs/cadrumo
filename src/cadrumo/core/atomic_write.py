@@ -77,6 +77,8 @@ from __future__ import annotations
 
 import os
 import secrets
+import stat
+import sys
 import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -86,6 +88,11 @@ from .descriptor_write import write_all
 from .errors.hierarchy import InternalInvariantError
 from .fsync import fsync_parent_dir
 from .logging import get_logger
+
+if sys.platform == "win32":
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
 
 __all__ = [
     "DurableWriteBatch",
@@ -103,6 +110,183 @@ __all__ = [
 _log = get_logger(__name__)
 
 _HARDENED_DEFAULT_MODE = 0o600
+
+if sys.platform == "win32":
+    _WINDOWS_DELETE = 0x00010000
+    _WINDOWS_FILE_READ_ATTRIBUTES = 0x00000080
+    _WINDOWS_FILE_SHARE_ALL = 0x00000007
+    _WINDOWS_OPEN_EXISTING = 3
+    _WINDOWS_FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+    _WINDOWS_FILE_ATTRIBUTE_TAG_INFO = 9
+    _WINDOWS_FILE_ATTRIBUTE_DIRECTORY = 0x00000010
+    _WINDOWS_FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400
+    _WINDOWS_FILE_RENAME_INFO_EX = 22
+    _WINDOWS_FILE_RENAME_REPLACE_IF_EXISTS = 0x00000001
+    _WINDOWS_FILE_RENAME_POSIX_SEMANTICS = 0x00000002
+    _WINDOWS_FILE_RENAME_INFO_EX_MINIMUM_BUILD = 14393
+    _WINDOWS_ERROR_INVALID_FUNCTION = 1
+    _WINDOWS_ERROR_NOT_SUPPORTED = 50
+    _WINDOWS_INVALID_HANDLE = ctypes.c_void_p(-1).value
+
+    class _WindowsFileAttributeTagInfo(ctypes.Structure):
+        _fields_ = [("file_attributes", wintypes.DWORD), ("reparse_tag", wintypes.DWORD)]
+
+    class _WindowsFileRenameInfoEx(ctypes.Structure):
+        _fields_ = [
+            ("flags", wintypes.DWORD),
+            ("root_directory", wintypes.HANDLE),
+            ("file_name_length", wintypes.DWORD),
+            ("file_name", wintypes.WCHAR * 1),
+        ]
+
+    _WINDOWS_KERNEL32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    _WINDOWS_CREATE_FILE = _WINDOWS_KERNEL32.CreateFileW
+    _WINDOWS_CREATE_FILE.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    ]
+    _WINDOWS_CREATE_FILE.restype = wintypes.HANDLE
+    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX = _WINDOWS_KERNEL32.GetFileInformationByHandleEx
+    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX.argtypes = [
+        wintypes.HANDLE,
+        ctypes.c_int,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+    ]
+    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX.restype = wintypes.BOOL
+    _WINDOWS_SET_FILE_INFORMATION_BY_HANDLE = _WINDOWS_KERNEL32.SetFileInformationByHandle
+    _WINDOWS_SET_FILE_INFORMATION_BY_HANDLE.argtypes = [
+        wintypes.HANDLE,
+        ctypes.c_int,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+    ]
+    _WINDOWS_SET_FILE_INFORMATION_BY_HANDLE.restype = wintypes.BOOL
+    _WINDOWS_CLOSE_HANDLE = _WINDOWS_KERNEL32.CloseHandle
+    _WINDOWS_CLOSE_HANDLE.argtypes = [wintypes.HANDLE]
+    _WINDOWS_CLOSE_HANDLE.restype = wintypes.BOOL
+
+
+def _file_identity(metadata: os.stat_result) -> tuple[int, int]:
+    """Return the volume and file identity captured for a staged file."""
+    return int(metadata.st_dev), int(metadata.st_ino)
+
+
+if sys.platform == "win32":
+
+    def _windows_file_rename_info_ex_supported_by_os() -> bool:
+        """Report whether Windows 10 build 14393 (RS1) or newer is running."""
+        version = sys.getwindowsversion()
+        return (version.major, version.minor, version.build) >= (
+            10,
+            0,
+            _WINDOWS_FILE_RENAME_INFO_EX_MINIMUM_BUILD,
+        )
+
+    def _windows_rename_staged_handle(handle: int, target_path: Path) -> None:
+        """Rename one open staged file handle with Windows POSIX replacement semantics."""
+        target_name = os.fsdecode(os.fspath(target_path.absolute())).encode("utf-16-le")
+        name_offset = _WindowsFileRenameInfoEx.file_name.offset
+        information_size = max(
+            ctypes.sizeof(_WindowsFileRenameInfoEx),
+            name_offset + len(target_name) + ctypes.sizeof(wintypes.WCHAR),
+        )
+        information = ctypes.create_string_buffer(information_size)
+        structure = ctypes.cast(information, ctypes.POINTER(_WindowsFileRenameInfoEx)).contents
+        structure.flags = _WINDOWS_FILE_RENAME_REPLACE_IF_EXISTS | _WINDOWS_FILE_RENAME_POSIX_SEMANTICS
+        structure.root_directory = None
+        structure.file_name_length = len(target_name)
+        ctypes.memmove(ctypes.addressof(information) + name_offset, target_name, len(target_name))
+
+        if not _WINDOWS_SET_FILE_INFORMATION_BY_HANDLE(
+            handle,
+            _WINDOWS_FILE_RENAME_INFO_EX,
+            ctypes.byref(information),
+            len(information),
+        ):
+            raise ctypes.WinError(ctypes.get_last_error())
+
+    def _windows_replace_staged_file(staging_path: Path, target_path: Path, identity: tuple[int, int]) -> None:
+        """Publish the exact reserved stage by handle, falling back only if unsupported."""
+        access = _WINDOWS_DELETE | _WINDOWS_FILE_READ_ATTRIBUTES
+        handle = _WINDOWS_CREATE_FILE(
+            str(staging_path),
+            access,
+            _WINDOWS_FILE_SHARE_ALL,
+            None,
+            _WINDOWS_OPEN_EXISTING,
+            _WINDOWS_FILE_FLAG_OPEN_REPARSE_POINT,
+            None,
+        )
+        handle_value = getattr(handle, "value", handle)
+        if handle_value is None or handle_value == _WINDOWS_INVALID_HANDLE:
+            raise ctypes.WinError(ctypes.get_last_error())
+
+        descriptor: int | None = None
+        handle_owned_by_descriptor = False
+        try:
+            attributes = _WindowsFileAttributeTagInfo()
+            if not _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX(
+                handle_value,
+                _WINDOWS_FILE_ATTRIBUTE_TAG_INFO,
+                ctypes.byref(attributes),
+                ctypes.sizeof(attributes),
+            ):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if attributes.file_attributes & _WINDOWS_FILE_ATTRIBUTE_REPARSE_POINT:
+                raise OSError("hardened staging file must not be link-like")
+            if attributes.file_attributes & _WINDOWS_FILE_ATTRIBUTE_DIRECTORY:
+                raise OSError("hardened staging file must be a regular file")
+
+            descriptor = msvcrt.open_osfhandle(handle_value, os.O_RDONLY | os.O_BINARY)
+            handle_owned_by_descriptor = True
+            metadata = os.fstat(descriptor)
+            if not stat.S_ISREG(metadata.st_mode) or _file_identity(metadata) != identity:
+                raise InternalInvariantError("hardened staging file identity changed before publication")
+
+            if not _windows_file_rename_info_ex_supported_by_os():
+                _replace_staged_path_after_identity_check(staging_path, target_path, identity)
+                return
+
+            try:
+                _windows_rename_staged_handle(msvcrt.get_osfhandle(descriptor), target_path)
+                return
+            except OSError as exc:
+                if getattr(exc, "winerror", None) not in {
+                    _WINDOWS_ERROR_INVALID_FUNCTION,
+                    _WINDOWS_ERROR_NOT_SUPPORTED,
+                }:
+                    raise
+
+            # The class or POSIX replacement flag is not supported by this
+            # filesystem. Check that the reserved name still denotes the exact
+            # file we opened before using the repository's canonical path replace.
+            _replace_staged_path_after_identity_check(staging_path, target_path, identity)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            elif not handle_owned_by_descriptor:
+                _WINDOWS_CLOSE_HANDLE(handle_value)
+
+
+def _replace_staged_path_after_identity_check(
+    staging_path: Path,
+    target_path: Path,
+    identity: tuple[int, int],
+) -> None:
+    """Use canonical replacement only while the reserved path still names our stage."""
+    try:
+        path_identity = _file_identity(os.stat(staging_path, follow_symlinks=False))
+    except OSError as exc:
+        raise InternalInvariantError("hardened staging path changed before fallback publication") from exc
+    if path_identity != identity:
+        raise InternalInvariantError("hardened staging path identity changed before fallback publication")
+    os.replace(staging_path, target_path)
 
 
 def _hardened_staging_path(path: Path) -> Path:
@@ -304,10 +488,14 @@ def _hardened_staged_bytes(
     """Stage ``data`` through its exclusive descriptor and clean it if unpublished."""
     path.parent.mkdir(parents=True, exist_ok=True)
     staging_path = _hardened_staging_path(path)
-    staged = StagedPublication(staging_path=staging_path, target_path=path)
     descriptor = os.open(staging_path, _hardened_staging_flags(), mode)
     try:
         try:
+            staged = StagedPublication(
+                staging_path=staging_path,
+                target_path=path,
+                staging_identity=_file_identity(os.fstat(descriptor)),
+            )
             write_all(descriptor, data)
             if sync_file:
                 os.fsync(descriptor)
@@ -431,12 +619,19 @@ class StagedPublication:
     from a failure in its own body.
     """
 
-    __slots__ = ("_published", "_staging_path", "_target_path")
+    __slots__ = ("_published", "_staging_identity", "_staging_path", "_target_path")
 
-    def __init__(self, *, staging_path: Path, target_path: Path) -> None:
+    def __init__(
+        self,
+        *,
+        staging_path: Path,
+        target_path: Path,
+        staging_identity: tuple[int, int],
+    ) -> None:
         """Bind a reserved ``staging_path`` to the ``target_path`` it publishes onto."""
         self._staging_path = staging_path
         self._target_path = target_path
+        self._staging_identity = staging_identity
         self._published = False
 
     @property
@@ -481,6 +676,31 @@ class StagedPublication:
             self._staging_path.unlink()
             fsync_parent_dir(self._target_path)
             self._published = True
+
+    def publish_with_open_readers(self) -> None:
+        """Atomically replace the target while delete-sharing readers retain snapshots.
+
+        Windows refuses replacement while any open reader did not request
+        delete sharing. On Windows this method uses the staged file's handle
+        and POSIX rename semantics, which leave already-open delete-sharing
+        handles attached to their old file while new opens resolve to the new
+        target. Filesystems that explicitly report this rename capability as
+        unsupported use the canonical ``os.replace`` fallback. Other errors
+        propagate unchanged. On POSIX, this is the ordinary staged replace.
+
+        The native rename binds publication to the verified reserved file
+        handle. If an older Windows build or filesystem requires canonical
+        path replacement, the current staging path identity is checked first
+        and the existing path-based replacement semantics are retained.
+        """
+        if self._published:
+            raise InternalInvariantError("staged publication has already been published")
+        if sys.platform == "win32":
+            _windows_replace_staged_file(self._staging_path, self._target_path, self._staging_identity)
+        else:
+            os.replace(self._staging_path, self._target_path)
+        self._published = True
+        fsync_parent_dir(self._target_path)
 
     def publish_in_batch(self, batch: DurableWriteBatch) -> None:
         """Replace the destination and defer its parent sync to ``batch``."""
@@ -593,8 +813,20 @@ def hardened_staged_publication(
     """
     target_path.parent.mkdir(parents=True, exist_ok=True)
     staging_path = _hardened_staging_path(target_path)
-    os.close(os.open(staging_path, _hardened_staging_flags(), mode))
-    staged = StagedPublication(staging_path=staging_path, target_path=target_path)
+    descriptor = os.open(staging_path, _hardened_staging_flags(), mode)
+    try:
+        try:
+            staging_identity = _file_identity(os.fstat(descriptor))
+        finally:
+            os.close(descriptor)
+    except BaseException:
+        staging_path.unlink(missing_ok=True)
+        raise
+    staged = StagedPublication(
+        staging_path=staging_path,
+        target_path=target_path,
+        staging_identity=staging_identity,
+    )
     try:
         yield staged
     except BaseException as exc:

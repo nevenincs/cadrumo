@@ -279,6 +279,7 @@ class _EditionWork:
     source: _EditionSource
     lifts: Mapping[str, _Lift]
     root_declaration: _Row | None
+    casilla_override_replacements: tuple[_Row, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

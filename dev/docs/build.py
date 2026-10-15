@@ -28,7 +28,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT
 
-from .apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
+from .apidocs.manager import API_SOURCE_PACKAGE, API_SOURCE_ROOTS, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from .build_paths import DOCS_BASE_URL_ENV, docs_build_root, docs_html_root, pin_docs_build_root
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path
@@ -74,13 +74,15 @@ def _executable(name: str) -> str:
 
 
 _SOURCE_PACKAGE_PARTS: Final[tuple[str, ...]] = ("src", API_SOURCE_PACKAGE)
+_SOURCE_ROOT_PARTS: Final[tuple[tuple[str, ...], ...]] = tuple(Path(root).parts for root in API_SOURCE_ROOTS)
 
 
 def _is_package_source(rel_path: Path) -> bool:
-    """Return whether a changed path is a Python file inside the source package."""
+    """Return whether a changed path is a Python file in a documented source package."""
     parts = rel_path.parts
-    depth = len(_SOURCE_PACKAGE_PARTS)
-    return len(parts) > depth and parts[:depth] == _SOURCE_PACKAGE_PARTS and rel_path.suffix == PY_SUFFIX
+    return rel_path.suffix == PY_SUFFIX and any(
+        len(parts) > len(root) and parts[: len(root)] == root for root in _SOURCE_ROOT_PARTS
+    )
 
 
 def _is_documentable_source(repo_root: Path, rel_path: Path) -> bool:
@@ -95,16 +97,15 @@ def _is_documentable_source(repo_root: Path, rel_path: Path) -> bool:
     """
     if not _is_package_source(rel_path):
         return False
-    manager = ApiStubManager(
-        src_cadrumo=repo_root.joinpath(*_SOURCE_PACKAGE_PARTS),
-        docs_api=repo_root / "docs" / "api",
-    )
+    manager = ApiStubManager.for_repository(repo_root, docs_api=repo_root / "docs" / "api")
     return not manager.excludes_source(repo_root / rel_path)
 
 
 def _is_cli_reference_source(rel_path: Path) -> bool:
     """Return whether a changed path feeds the generated CLI command reference."""
     if not _is_package_source(rel_path):
+        return False
+    if rel_path.parts[: len(_SOURCE_PACKAGE_PARTS)] != _SOURCE_PACKAGE_PARTS:
         return False
     package_parts = rel_path.parts[len(_SOURCE_PACKAGE_PARTS) :]
     return package_parts[: len(CLI_REFERENCE_SUBTREE)] == CLI_REFERENCE_SUBTREE
@@ -445,10 +446,7 @@ def _targets_for_docs_root(
 
 def _generated_api_stub_names(repo_root: Path) -> frozenset[str]:
     """Return the filenames of every stub a full-scope build generates."""
-    manager = ApiStubManager(
-        src_cadrumo=repo_root.joinpath(*_SOURCE_PACKAGE_PARTS),
-        docs_api=repo_root / "docs" / "api",
-    )
+    manager = ApiStubManager.for_repository(repo_root, docs_api=repo_root / "docs" / "api")
     return frozenset(stub_filename(name) for name, _ in manager.discover_modules())
 
 

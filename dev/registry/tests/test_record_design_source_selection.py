@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import inspect
-from itertools import pairwise
 
 import pytest
 
@@ -16,7 +15,7 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from .. import maintenance_support as _maintenance_support
 from ..compiler import corpus_catalogue as _corpus_catalogue
 from ..maintenance_support import resolve_record_design_binary
-from .authored_edition_support import authored_revisions, source_first_exercise, source_with_sha256
+from .authored_edition_support import source_first_exercise, source_with_sha256
 from .catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -106,32 +105,68 @@ def test_rejects_modelo_390_hash_drift() -> None:
         )
 
 
-# The exercise the official Modelo 303 design splits into an early and a late
-# edition: the one exercise two authored revisions share.
-(_M303_SPLIT_DESIGN_EXERCISE,) = (
-    earlier.valid_from.year
-    for earlier, later in pairwise(authored_revisions("303"))
-    if earlier.valid_from.year == later.valid_from.year
+def _m303_split_design_sources() -> tuple[tuple[int, str, str, str, str], ...]:
+    """Derive each complete early/late pair from the record-design catalogue."""
+    epochs_by_year: dict[int, dict[str, list[SourceReference]]] = {}
+    for source in _catalogues().sources.values():
+        if not str(source.id).startswith("aeat-dr-303-") or source.record_design_epoch is None:
+            continue
+        year_text, separator, suffix = source.record_design_epoch.partition("-")
+        if not separator or not year_text.isdecimal() or suffix not in {"early", "late"}:
+            continue
+        epochs_by_year.setdefault(int(year_text), {}).setdefault(suffix, []).append(source)
+
+    pairs: list[tuple[int, str, str, str, str]] = []
+    for filing_year, epochs in sorted(epochs_by_year.items()):
+        if set(epochs) != {"early", "late"} or any(len(sources) != 1 for sources in epochs.values()):
+            raise LookupError(f"Modelo 303 {filing_year}: split design epochs must have one early and one late source")
+        (early,) = epochs["early"]
+        (late,) = epochs["late"]
+        if early.record_design_epoch is None or late.record_design_epoch is None:
+            raise LookupError(f"Modelo 303 {filing_year}: split design source lost its declared epoch")
+        pairs.append(
+            (
+                filing_year,
+                str(early.id),
+                early.record_design_epoch,
+                str(late.id),
+                late.record_design_epoch,
+            )
+        )
+    if not pairs:
+        raise LookupError("Modelo 303 source catalogue declares no complete split design epoch")
+    return tuple(pairs)
+
+
+_M303_SPLIT_DESIGN_SOURCES = _m303_split_design_sources()
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "early_source_ref", "early_epoch", "late_source_ref", "late_epoch"),
+    _M303_SPLIT_DESIGN_SOURCES,
 )
-
-
-def test_verifies_both_explicit_modelo_303_split_design_epochs_without_date_only_selection() -> None:
-    year = _M303_SPLIT_DESIGN_EXERCISE
+def test_verifies_both_explicit_modelo_303_split_design_epochs_without_date_only_selection(
+    filing_year: int,
+    early_source_ref: str,
+    early_epoch: str,
+    late_source_ref: str,
+    late_epoch: str,
+) -> None:
     sources = _catalogues().sources
 
     early = resolve_record_design_binary(
         bundled_path(),
         sources,
-        source_ref=f"aeat-dr-303-{year}-early",
-        filing_year=year,
-        design_epoch=f"{year}-early",
+        source_ref=early_source_ref,
+        filing_year=filing_year,
+        design_epoch=early_epoch,
     )
     late = resolve_record_design_binary(
         bundled_path(),
         sources,
-        source_ref=f"aeat-dr-303-{year}-late",
-        filing_year=year,
-        design_epoch=f"{year}-late",
+        source_ref=late_source_ref,
+        filing_year=filing_year,
+        design_epoch=late_epoch,
     )
 
     assert early.source.id != late.source.id

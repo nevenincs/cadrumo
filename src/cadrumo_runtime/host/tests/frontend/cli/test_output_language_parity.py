@@ -21,12 +21,14 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from cadrumo_runtime.host.tests.frontend.cli._isolated_profile_storage_fixtures import _isolated_state
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli, semantic_cli_output
@@ -78,7 +80,7 @@ _REVIEW_COMMANDS = (
     ("app", "review", "queue"),
     ("app", "review", "view"),
 )
-_SUB_NOUN_GROUP_COMMANDS = (
+_RUNTIME_SUB_NOUN_GROUP_COMMANDS = (
     ("config", "auth", "diagnostics", "list"),
     ("config", "auth", "diagnostics", "view"),
     ("config", "auth", "diagnostics", "report"),
@@ -87,6 +89,8 @@ _SUB_NOUN_GROUP_COMMANDS = (
     ("config", "auth", "apoderado", "configure"),
     ("config", "auth", "apoderado", "clear"),
     ("config", "auth", "apoderado", "check"),
+)
+_SUB_NOUN_GROUP_COMMANDS = (
     ("config", "profile", "history"),
     ("app", "ledger", "ratios", "list"),
     ("app", "ledger", "ratios", "set"),
@@ -96,10 +100,12 @@ _SUB_NOUN_GROUP_COMMANDS = (
 )
 
 
-def _assert_output_language_registered(args: Sequence[str]) -> None:
+def _assert_output_language_registered(
+    args: Sequence[str], *, invoke: Callable[[Sequence[str]], Result] = invoke_cached_cli
+) -> None:
     """Invoke ``--help`` for *args* and assert ``--output-language`` is present."""
     help_args = [*args, "--help"]
-    result = invoke_cached_cli(help_args)
+    result = invoke(help_args)
     assert result.exit_code == 0, f"`{' '.join(help_args)}` exited {result.exit_code}:\n{result.output}"
     help_output = semantic_cli_output(result)
     assert _OPTION_FLAG in help_output, (
@@ -126,10 +132,12 @@ def _assert_output_language_effective(args: Sequence[str], fixture: NativeCliPro
     profile_label = fixture.label
 
     def invoke(command: Sequence[str]):
-        return invoke_cached_cli(
+        result = invoke_runtime_cli(
             ["--profile", profile_label, "--profile-secrets-stdin", *command],
             input=json.dumps({"profile_passphrase": fixture.passphrase}),
         )
+        assert fixture.passphrase not in result.output
+        return result
 
     leaf_en = invoke([*args, "--output-language", "en"])
     leaf_hu = invoke([*args, "--output-language", "hu"])
@@ -146,6 +154,8 @@ def _assert_output_language_effective(args: Sequence[str], fixture: NativeCliPro
     )
     root_en = invoke(["--language", "en", *args])
     root_hu = invoke(["--language", "hu", *args])
+    assert root_en.exit_code == 0, root_en.output
+    assert root_hu.exit_code == 0, root_hu.output
     assert root_en.output != root_hu.output, (
         f"`--language ... {' '.join(args)}` output is identical under `en` and `hu`; "
         f"the root flag is accepted but INEFFECTIVE.\nOutput:\n{root_en.output}"
@@ -177,7 +187,7 @@ def test_output_language_is_effective_not_just_accepted(tmp_path: Path) -> None:
 def test_auth_commands_accept_output_language() -> None:
     """Config auth commands must accept ``--output-language``."""
     for argv in _AUTH_COMMANDS:
-        _assert_output_language_registered(argv)
+        _assert_output_language_registered(argv, invoke=invoke_runtime_cli)
 
 
 def test_config_profile_commands_accept_output_language() -> None:
@@ -202,3 +212,5 @@ def test_sub_noun_group_commands_accept_output_language() -> None:
     """Every enrolled sub-noun-group verb accepts ``--output-language``."""
     for argv in _SUB_NOUN_GROUP_COMMANDS:
         _assert_output_language_registered(argv)
+    for argv in _RUNTIME_SUB_NOUN_GROUP_COMMANDS:
+        _assert_output_language_registered(argv, invoke=invoke_runtime_cli)

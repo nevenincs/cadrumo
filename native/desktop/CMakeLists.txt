@@ -86,12 +86,31 @@ add_custom_target(desktop-frontend-build
 add_custom_target(clean-desktop-frontend-install
   COMMAND "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/frontend-install.mjs" clean
   WORKING_DIRECTORY "${desktop_frontend}" VERBATIM)
+set(CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS "" CACHE STRING
+  "Optional Playwright worker count for desktop-frontend-test")
+option(CADRUMO_DESKTOP_FRONTEND_TEST_LAST_FAILED "Rerun only the last failed frontend tests" OFF)
+if(NOT CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS STREQUAL ""
+    AND NOT CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS MATCHES "^[1-9][0-9]*$")
+  message(FATAL_ERROR "CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS must be a positive integer")
+endif()
 foreach(action IN ITEMS check test)
+  set(desktop_frontend_script_arguments)
+  if(action STREQUAL "test")
+    if(NOT CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS STREQUAL "")
+      list(APPEND desktop_frontend_script_arguments "--workers=${CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS}")
+    endif()
+    if(CADRUMO_DESKTOP_FRONTEND_TEST_LAST_FAILED)
+      list(APPEND desktop_frontend_script_arguments --last-failed)
+    endif()
+    if(desktop_frontend_script_arguments)
+      list(PREPEND desktop_frontend_script_arguments --)
+    endif()
+  endif()
   cadrumo_build_step(step_comment desktop-frontend-${action} GROUP verification
     SUMMARY "run the frontend's npm ${action} script")
   add_custom_target(desktop-frontend-${action}
     COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" ${desktop_node_path_arguments}
-      "${CADRUMO_NODE}" "${CADRUMO_NPM_CLI}" run ${action}
+      "${CADRUMO_NODE}" "${CADRUMO_NPM_CLI}" run ${action} ${desktop_frontend_script_arguments}
     WORKING_DIRECTORY "${desktop_frontend}" COMMENT "${step_comment}" VERBATIM)
   add_dependencies(desktop-frontend-${action} desktop-frontend-install)
 endforeach()
@@ -105,6 +124,7 @@ set(desktop_generator "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_b
   "${CADRUMO_DEV_PYTHON}" -B -m)
 file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*.yml"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo_runtime/_data/locales/*.yml"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo_agent_service/locales/*.yml"
   "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py")
 list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
@@ -203,12 +223,19 @@ endif()
 
 # Host tests and lint read the staged documentation only when the package bundles it.
 set(desktop_user_docs)
+set(desktop_test_user_docs 0)
 if(NOT DEFINED CADRUMO_PACKAGE_USER_DOCS OR CADRUMO_PACKAGE_USER_DOCS)
   set(desktop_user_docs user_docs)
+  set(desktop_test_user_docs 1)
 endif()
+set(CADRUMO_DESKTOP_HOST_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for desktop-host-test")
 foreach(action IN ITEMS test clippy)
+  set(host_test_arguments)
   if(action STREQUAL "test")
     set(host_summary "run the desktop host Rust tests")
+    if(NOT CADRUMO_DESKTOP_HOST_TEST_FILTER STREQUAL "")
+      list(APPEND host_test_arguments "${CADRUMO_DESKTOP_HOST_TEST_FILTER}")
+    endif()
   else()
     set(host_summary "lint the desktop host with clippy")
   endif()
@@ -218,8 +245,9 @@ foreach(action IN ITEMS test clippy)
       "${desktop_environment}" "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
+      "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
-      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${action}
+      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${action} ${host_test_arguments}
     DEPENDS desktop-frontend-build ${desktop_user_docs}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
   if(TARGET native_contract)

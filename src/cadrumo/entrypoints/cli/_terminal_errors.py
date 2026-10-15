@@ -18,7 +18,7 @@ dispatch:
   Rich rendering is preserved. The Click exit code (2 for usage errors)
   is preserved in both modes.
 - **Unexpected exceptions**: wrapped in
-  :class:`CliUnexpectedBoundaryError`
+  :class:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError`
   (INTERNAL, exit 6) and rendered through the same JSON/text funnel —
   never a raw traceback.
 - **Abort** keeps the interactive text rendering: it is an operator
@@ -43,9 +43,10 @@ import click
 if TYPE_CHECKING:
     from typer._click.exceptions import ClickException
 
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
     from ...core.errors.error_codes import ErrorCode
     from ...core.errors.hierarchy import CadrumoError
-    from .errors import CliRefusedBoundaryError
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
 from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json
@@ -407,7 +408,7 @@ def _build_parse_time_refusal(exc: BaseException) -> CliRefusedBoundaryError:
     carries a purpose-built localised message, so re-keying it would discard the
     more specific text.
     """
-    from .errors import CliRefusedBoundaryError
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
     format_message = getattr(exc, "format_message", None)
     detail = str(format_message()) if callable(format_message) else str(exc)
@@ -444,7 +445,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
     """Emit a failure that escaped dispatch, preferring its own registered code.
 
     Most failures reaching here are genuine crashes and are wrapped in
-    :class:`CliUnexpectedBoundaryError` (INTERNAL, exit 6). A typed
+    :class:`~cadrumo_client.commands.errors.CliUnexpectedBoundaryError` (INTERNAL, exit 6). A typed
     :class:`~core.errors.hierarchy.CadrumoError` is different: it is an *expected*,
     already-classified refusal that simply had no callback boundary to catch it,
     because it was raised during command resolution rather than inside a command
@@ -453,9 +454,10 @@ def _emit_crash(exc: Exception) -> NoReturn:
     remedy, and would report an operator-actionable condition as a program
     defect. Forward it verbatim instead, with its own exit code.
     """
+    from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
     from .errors import (
-        CliUnexpectedBoundaryError,
         project_cli_boundary_error,
         write_stderr,
     )

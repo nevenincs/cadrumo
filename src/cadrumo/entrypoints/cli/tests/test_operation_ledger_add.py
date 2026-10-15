@@ -10,6 +10,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.ledger.ledger_add_contracts import (
@@ -22,7 +23,6 @@ from ....application.review.filter import LedgerReviewStatus
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .. import operation_ledger_add as bridge
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
 from ...application.cli_exception_preconditions import (
     CliExceptionPrecondition,
     cli_exception_no_recovery_verdict,
@@ -12,7 +14,6 @@ from ...application.ledger.id_resolution import normalise_transaction_id_prefix
 from ...core.errors.error_codes import get_registered_error_code
 from ...domain.transactions.errors import TransactionIdPrefixError
 from .common import attach_cli_policy_verdict
-from .errors import CliRefusedBoundaryError
 
 
 def _transaction_id_resolves_verdict():

@@ -12,6 +12,7 @@ import typer
 from click.testing import Result
 from pydantic import ValidationError
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 
@@ -33,7 +34,6 @@ from .._app_live_notifications_payloads import (
     NotificationDocumentPullResult,
     NotificationDocumentViewResult,
 )
-from ..errors import CliRefusedBoundaryError
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

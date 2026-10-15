@@ -268,11 +268,9 @@ def recorded_action_target_reconciliation(
             )
             for family in get_operator_surface_contract().command_families
             if (family.root.value, family.child) == target.cli_path[:2]
-        ) if target.program is CommandProgram.AEAT else (
-            MountedFamilyInventoryRow(
-                root=target.cli_path[0], child=target.cli_path[1], provenance=_PROVENANCE
-            ),
-        ),
+        )
+        if target.program is CommandProgram.AEAT
+        else (MountedFamilyInventoryRow(root=target.cli_path[0], child=target.cli_path[1], provenance=_PROVENANCE),),
         profile_policies=(
             ProfilePolicyInventoryRow(
                 subject_leaf_key=command_key,

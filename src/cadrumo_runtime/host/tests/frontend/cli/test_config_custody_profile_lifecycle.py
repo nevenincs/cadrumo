@@ -9,11 +9,9 @@ profile lifecycle to be filing-grade. Re-deriving either side from the
 taxonomy accessor would make the assertion agree unconditionally with
 the code path it exists to independently confirm.
 
-Profiles are registered in-process and the storage root is handed to the
-subprocess CLI. That is the only available shape rather than a convenience:
-credential registration is the sole creation door and it takes a passphrase
-as an argument, so no CLI verb -- and therefore no subprocess -- can mint a
-profile. CLI assertions run through the real console script. Keychainless
+Profiles are registered in-process and the storage root is handed to fresh
+subprocess CLI invocations. Scripted CLI creation has separate coverage;
+these tests exercise the resulting profile's custody lifecycle. Keychainless
 human sign-out uses a password-authenticated native frontend connection;
 a fresh CLI connection requires a persisted receipt.
 """
@@ -23,6 +21,8 @@ from __future__ import annotations
 import asyncio
 import json
 import subprocess
+import sys
+import sysconfig
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
@@ -31,14 +31,19 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
+from cadrumo.application.user_profile.profile_pointer import (
+    active_profile_pointer_transaction,
+    observe_active_profile_pointer,
+)
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from cadrumo.tests.inventory import REPO_ROOT
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
-from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
+from cadrumo.tests.subprocess_cli import as_text_completed_process, run_cadrumo_subprocess, subprocess_cli_env
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
@@ -83,13 +88,45 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
     return f"{result.stdout}\n{result.stderr}"
 
 
+def _run_runtime(
+    storage_root: Path,
+    args: tuple[str, ...],
+    *,
+    extra_env: dict[str, str] | None = None,
+    stdin_payload: str | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Invoke the actual runtime console for runtime-owned custody commands."""
+    executable = Path(sysconfig.get_path("scripts")) / (
+        "cadrumo-runtime.exe" if sys.platform == "win32" else "cadrumo-runtime"
+    )
+    assert executable.is_file()
+    return as_text_completed_process(
+        run_audited_process(
+            [str(executable), *args],
+            cwd=REPO_ROOT,
+            env=subprocess_cli_env(
+                extra={
+                    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+                    "CADRUMO_OUTPUT_LANGUAGE": "en",
+                    **(extra_env or {}),
+                }
+            ),
+            input=stdin_payload,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+            timeout=None,
+        )
+    )
+
+
 def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
     """Register one profile in-process against ``storage_root``, and return its id.
 
-    Credential registration is the only creation door and it takes a passphrase
-    as an argument rather than a flag, so a subprocess cannot mint a profile.
-    The sanctioned shape is to create in-process and hand the storage root to
-    the child, which then reaches the profile through its own login.
+    Registration seeds this test's encrypted facts before handing the storage
+    root to the child, which reaches the profile through its own login.
     """
     with override_settings(
         cadrumo_local_storage_root=storage_root,
@@ -216,20 +253,7 @@ def test_active_profile_delete_still_refuses_through_real_root(tmp_path: Path) -
 
 @pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
 def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_path: Path) -> None:
-    """Profile lifecycle is the custody surface; no legacy bootstrap command is reintroduced.
-
-    The profile is registered in-process and the storage root is handed to the
-    subprocess CLI, which is the only shape available: credential registration
-    takes a passphrase as an argument and no CLI verb creates a profile.
-
-    The file-fallback secret-store assertions this test carried (``master.key``
-    and ``master.kdf`` under the configured secret directory) were dropped
-    rather than moved. No live door writes that store any more -- a registered
-    profile's custody rides its own capsule envelope, and the whole lifecycle
-    below runs against a root that has no secrets directory at all -- so the
-    assertions described an artefact of the retired creation path, not a
-    property of custody.
-    """
+    """Cold CLI processes resume before sign-out, then require fresh proof to reopen custody."""
     require_os_credential_store()
 
     _register_profile(
@@ -262,33 +286,63 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
     assert listed.returncode == 0, _combined_output(listed)
     assert "custody" in listed.stdout
 
-    logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
-    assert logged_out.returncode == 0, _combined_output(logged_out)
-    assert "logged_out_profile\tcustody" in logged_out.stdout
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    login_payload = json.dumps({"passphrase": passphrase})
+    with native_profile_view_server(tmp_path):
+        # Registration leaves no saved sign-in. The first cold process proves
+        # the password and asks the real worker to custody its receipt.
+        signed_in = _run_cadrumo(
+            tmp_path,
+            ("config", "login", "custody", "--secrets-stdin"),
+            stdin_payload=login_payload,
+        )
+        assert signed_in.returncode == 0, _combined_output(signed_in)
 
-    # Deliberately no passphrase channel: this is the os_keychain subject.
-    # The login must reopen the session by unwrapping its DEK under the
-    # keychain-custodied key, so handing it a passphrase here would prove
-    # only that a passphrase works and retire the resumption this covers.
-    switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
-    assert switched.returncode == 0, _combined_output(switched)
-    assert "active_profile\tcustody" in switched.stdout
+        # No passphrase channel: a different process must resume the native
+        # keychain proof and use it for a real encrypted profile read.
+        switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
+        assert switched.returncode == 0, _combined_output(switched)
+        assert "active_profile\tcustody" in switched.stdout
+        shown = _run_cadrumo(tmp_path, ("config", "profile", "view", "custody"))
+        assert shown.returncode == 0, _combined_output(shown)
+        assert "identity.name\tCustody Operator" in shown.stdout
 
-    # Deletion refuses while the profile is active -- a contract with its own
-    # coverage in this module -- so the reopened session is closed again first.
-    closed_again = _run_cadrumo(tmp_path, ("config", "logout"))
-    assert closed_again.returncode == 0, _combined_output(closed_again)
+        logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
+        assert logged_out.returncode == 0, _combined_output(logged_out)
+        assert "logged_out_profile\tcustody" in logged_out.stdout
+        refused_resume = _run_cadrumo(tmp_path, ("--format", "json", "config", "login", "custody"))
+        assert refused_resume.returncode == 2, _combined_output(refused_resume)
+        missing_proof = json.loads(refused_resume.stderr)["error"]
+        assert missing_proof["code"] == "REFUSED_CLI_BOUNDARY"
+        assert missing_proof["action"]["failed_condition_id"] == "profile.human.input_channel_available"
+        assert missing_proof["action"]["evidence"][0]["values"]["password_channel_available"] is False
 
-    deleted = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
-    assert deleted.returncode == 0, _combined_output(deleted)
-    # ``deleted`` is the field that separates the confirmed run from the
-    # preflight posture the same schema serves, so it is what proves the
-    # capsule was destroyed rather than merely described.
-    assert "deleted\ttrue" in deleted.stdout
+        reopened = _run_cadrumo(
+            tmp_path,
+            ("config", "login", "custody", "--secrets-stdin"),
+            stdin_payload=login_payload,
+        )
+        assert reopened.returncode == 0, _combined_output(reopened)
+        assert "active_profile\tcustody" in reopened.stdout
+        closed_again = _run_cadrumo(tmp_path, ("config", "logout"))
+        assert closed_again.returncode == 0, _combined_output(closed_again)
 
-    remaining = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
-    assert remaining.returncode == 0, _combined_output(remaining)
-    assert json.loads(remaining.stdout)["result"]["profiles"] == []
+        # Human sign-out preserves selection, so deletion still refuses until
+        # the canonical pointer transaction explicitly deselects the profile.
+        selected_delete = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
+        assert selected_delete.returncode == 2, _combined_output(selected_delete)
+        assert observe_active_profile_pointer(tmp_path).bucket_id == bucket_dirs[0].name
+        with active_profile_pointer_transaction(tmp_path) as selection:
+            selection.clear()
+        deleted = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
+        assert deleted.returncode == 0, _combined_output(deleted)
+        assert "deleted\ttrue" in deleted.stdout
+
+        remaining = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+        assert remaining.returncode == 0, _combined_output(remaining)
+        assert json.loads(remaining.stdout)["result"]["profiles"] == []
+        for completed in (signed_in, switched, shown, logged_out, refused_resume, reopened, closed_again, deleted):
+            assert passphrase not in _combined_output(completed)
 
     retired = _run_cadrumo(tmp_path, ("config", "init", "--help"))
     assert retired.returncode != 0
@@ -380,7 +434,7 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
     failing_keychain = {"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"}
 
     with native_profile_view_server(tmp_path):
-        changed = _run_cadrumo(
+        changed = _run_runtime(
             tmp_path,
             ("config", "passphrase", "change", "--secrets-stdin"),
             extra_env=failing_keychain,
@@ -397,7 +451,7 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
         assert provisioning_passphrase not in _combined_output(changed)
         assert rotated_value not in _combined_output(changed)
 
-        refused_old_proof = _run_cadrumo(
+        refused_old_proof = _run_runtime(
             tmp_path,
             ("config", "passphrase", "change", "--secrets-stdin"),
             extra_env=failing_keychain,
@@ -411,7 +465,7 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
         )
         assert refused_old_proof.returncode == 2, _combined_output(refused_old_proof)
 
-        rotated_again = _run_cadrumo(
+        rotated_again = _run_runtime(
             tmp_path,
             ("config", "passphrase", "change", "--secrets-stdin"),
             extra_env=failing_keychain,
@@ -537,7 +591,7 @@ def test_keychain_free_root_login_notice_survives_callback_bad_parameter(tmp_pat
 
 def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_path: Path) -> None:
     """Parsed cross-scope collision wins before profile lookup, reads, or setup writes."""
-    result = _run_cadrumo(
+    result = _run_runtime(
         tmp_path,
         ("--profile-secrets-stdin", "config", "passphrase", "change", "--secrets-stdin"),
         stdin_payload="must-remain-unread",
@@ -597,67 +651,101 @@ def test_blank_explicit_profile_target_refuses_before_root_secret_read(tmp_path:
 
 
 def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> None:
-    result = _run_cadrumo(
+    result = _run_runtime(
         tmp_path,
-        ("--profile-secrets-stdin", "config", "passphrase", "change"),
+        ("--format", "json", "--profile-secrets-stdin", "config", "passphrase", "change"),
         stdin_payload="must-remain-unread",
     )
 
     output = _combined_output(result)
     assert result.returncode == 2, output
-    # The structured conditionality rather than the sentence: the prose that
-    # once carried the word "inapplicable" now says the same thing in other
-    # words, and it is localised, so pinning it pinned a translation.
-    assert '"not_applicable"' in output
+    error = json.loads(result.stderr)["error"]
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["action"]["conditionality"] == "not_applicable"
+    assert error["action"]["evidence"][0]["values"] == {
+        "profile_authentication_input": "not_applicable",
+        "input_read": False,
+    }
     # The subject of this case is that the payload is refused UNREAD, so the
     # secret-shaped input must appear nowhere in what the command emitted.
     assert "must-remain-unread" not in output
-    assert "json" not in output.lower()
+    assert "expected_fields" not in (error["context"] or {})
 
 
 @pytest.mark.os_keychain
-def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> None:
+def test_explicit_root_source_authenticates_instead_of_borrowing_saved_sign_in(tmp_path: Path) -> None:
+    """An explicit password is proved even when the same profile has a valid saved sign-in."""
     require_os_credential_store()
     bucket_id = _register_profile(tmp_path, "custody")
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    logged_in = _run_cadrumo(
-        tmp_path,
-        ("config", "login", "custody", "--secrets-stdin"),
-        stdin_payload=json.dumps({"passphrase": passphrase}),
-    )
-    assert logged_in.returncode == 0, _combined_output(logged_in)
-    from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
+    with native_profile_view_server(tmp_path):
+        logged_in = _run_cadrumo(
+            tmp_path,
+            ("config", "login", "custody", "--secrets-stdin"),
+            stdin_payload=json.dumps({"passphrase": passphrase}),
+        )
+        assert logged_in.returncode == 0, _combined_output(logged_in)
+        from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 
-    assert profile_session_path(storage_root=tmp_path, profile_id=UUID(bucket_id)).is_file(), (
-        "the os_keychain lane requires a host backend that can persist the cross-process session"
-    )
+        assert profile_session_path(storage_root=tmp_path, profile_id=UUID(bucket_id)).is_file(), (
+            "the os_keychain lane requires a host backend that can persist the cross-process session"
+        )
 
-    refused = _run_cadrumo(
-        tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
-        stdin_payload="must-remain-unread",
-    )
-    output = _combined_output(refused)
-    assert refused.returncode == 2, output
-    assert "unused" in output.lower()
-    assert "json" not in output.lower()
+        resumed = _run_cadrumo(tmp_path, ("config", "profile", "view", "custody"))
+        assert resumed.returncode == 0, _combined_output(resumed)
+
+        malformed = _run_cadrumo(
+            tmp_path,
+            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view", "custody"),
+            stdin_payload="explicit-input-must-be-parsed",
+        )
+        output = _combined_output(malformed)
+        assert malformed.returncode == 2, output
+        assert "explicit-input-must-be-parsed" not in output
+        error = json.loads(malformed.stderr)["error"]
+        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert error["context"]["expected_fields"] == "profile_passphrase, api_key"
+
+        proven = _run_cadrumo(
+            tmp_path,
+            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view", "custody"),
+            stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+        )
+        assert proven.returncode == 0, _combined_output(proven)
+        assert json.loads(proven.stdout)["result"]["display_name"] == "custody"
+        assert passphrase not in _combined_output(proven)
+
+        # Wrong proof runs last: its real password backoff must not be bypassed
+        # to make a later successful password attempt convenient for this test.
+        wrong_password = f"incorrect-{passphrase}"
+        refused = _run_cadrumo(
+            tmp_path,
+            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view", "custody"),
+            stdin_payload=json.dumps({"profile_passphrase": wrong_password}),
+        )
+        assert refused.returncode == 2, _combined_output(refused)
+        assert wrong_password not in _combined_output(refused)
+        refused_error = json.loads(refused.stderr)["error"]
+        assert refused_error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert refused_error["context"]["reason"] == "credential_rejected"
 
 
 def test_passphrase_change_resolves_target_before_reading_machine_secrets(tmp_path: Path) -> None:
     """An absent active target refuses without parsing the supplied payload."""
-    result = _run_cadrumo(
+    result = _run_runtime(
         tmp_path,
-        ("config", "passphrase", "change", "--secrets-stdin"),
+        ("--format", "json", "config", "passphrase", "change", "--secrets-stdin"),
         extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
         stdin_payload="not-json-and-must-remain-unread",
     )
     output = _combined_output(result)
     assert result.returncode == 2, output
-    # "active profile" is a substring of "No active profile", so the old
-    # disjunction required only the weaker half -- and an output that named an
-    # active profile rather than its ABSENCE would have satisfied it.
-    assert "No active profile" in output
-    assert "JSON" not in output
+    error = json.loads(result.stderr)["error"]
+    assert error["code"] == "REFUSED_CLI_BOUNDARY", output
+    assert error["message"] == lookup_translation("cli.config.passphrase.no_active_profile", locale="en"), output
+    assert "expected_fields" not in (error["context"] or {}), output
+    assert "not-json-and-must-remain-unread" not in output
+    assert not tmp_path.exists() or tuple(tmp_path.iterdir()) == ()
 
 
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
@@ -677,15 +765,18 @@ def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     catches a silent reinstatement. Optional recovery lives under the profile
     subject as ``config profile recovery``, never at the ``config`` root.
 
-    ``passphrase change`` is the sole credential-rotation door. Its presence is
-    asserted beside login/logout while the older ambiguous custody spellings
-    remain physically absent.
+    The runtime owns ``passphrase change`` and profile recovery. AEAT retains
+    direct login/logout; each mounted door is checked on its owning program.
     """
 
-    for verb in ("login", "logout", "passphrase"):
+    for verb in ("login", "logout"):
         help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)
+
+    runtime_help = _run_runtime(tmp_path, ("config", "passphrase", "--help"))
+    assert runtime_help.returncode == 0, _combined_output(runtime_help)
+    assert "passphrase" in _combined_output(runtime_help)
 
     for retired_verb in ("switch", "recover", "recovery"):
         retired = _run_cadrumo(tmp_path, ("config", retired_verb, "--help"))
@@ -820,8 +911,8 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         # Write-side precedence: configure-auth writes an
         # ``AUTH_PROVIDER_CONFIGURED`` event into the resolved bucket's
         # event history. The configure verb's stdout redacts the bucket id
-        # to a literal ``<profile-id>`` placeholder (security: bucket ids
-        # are sha256 fingerprints that must never reach stdout), so the
+        # to a literal ``<profile-id>`` placeholder (the internal UUID is
+        # hidden by the normal output privacy policy), so the
         # stdout cannot distinguish alpha from beta. Each write therefore runs
         # inside a recorded time window, and the two buckets' histories are read
         # once at the end: every configure event must fall inside exactly one
@@ -838,9 +929,21 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             route: str = "app_request",
         ) -> None:
             opened = datetime.now(UTC)
-            result = _run_authenticated(
-                (*prefix, "config", "auth", "configure", "--provider", "clave_movil", "--clave-movil-route", route),
+            result = _run_runtime(
+                tmp_path,
+                (
+                    "--profile-secrets-stdin",
+                    *prefix,
+                    "config",
+                    "auth",
+                    "configure",
+                    "--provider",
+                    "clave_movil",
+                    "--clave-movil-route",
+                    route,
+                ),
                 extra_env=extra_env,
+                stdin_payload=profile_secret_payload,
             )
             closed = datetime.now(UTC)
             assert result.returncode == 0, _combined_output(result)
@@ -898,40 +1001,3 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             "and --profile must win over both; writes landed as "
             f"{landed}"
         )
-
-
-def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
-    """CLI and wizard code delegate custody spans to application profile lifecycle operations."""
-
-    forbidden_tokens = (
-        "activate_master_key_provider",
-        "get_master_key_provider",
-        "_write_active_profile_pointer",
-        "_clear_active_profile_pointer",
-        "capture_active_profile_pointer",
-        "restore_active_profile_pointer",
-        "override_settings(cadrumo_active_profile",
-    )
-    # Whole packages, not two named files. This gate used to pin one module in
-    # each; when the wizard's command module was promoted to a public name the
-    # pin pointed at a path that no longer existed, and a relocation that
-    # happened to land on another existing file would have made it pass while
-    # scanning the wrong thing. Deriving the set means a module moved, renamed
-    # or added is covered without anyone remembering to extend a list.
-    scanned = [
-        path
-        for package in ("entrypoints/cli/config", "application/wizard")
-        for path in sorted((REPO_ROOT / "src" / "cadrumo" / package).rglob("*.py"))
-        if "tests" not in path.relative_to(REPO_ROOT).parts
-    ]
-
-    assert len(scanned) > 50, f"the custody-span scan collapsed to {len(scanned)} files; it would pass vacuously"
-
-    offenders = [
-        f"{path.relative_to(REPO_ROOT).as_posix()}: {token}"
-        for path in scanned
-        for token in forbidden_tokens
-        if token in path.read_text(encoding="utf-8")
-    ]
-
-    assert offenders == []

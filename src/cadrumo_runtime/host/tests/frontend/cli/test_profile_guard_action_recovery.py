@@ -80,7 +80,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
             assert f'"evidence_id":"{_FAILED_EVIDENCE_ID}"' in text
             assert (
                 '  action.action: {"action_id":"operator.profile.create",'
-                '"cli_path":["config","profile","create"],'
+                '"cli_path":["aeat","config","profile","create"],'
                 '"target_command_key":"config.profile.create"}'
             ) in text
             assert '"argument_name":"profile_name"' in text
@@ -116,7 +116,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
                 ],
                 "action": {
                     "action_id": _RECOVERY_ACTION_ID,
-                    "cli_path": ["config", "profile", "create"],
+                    "cli_path": ["aeat", "config", "profile", "create"],
                     "target_command_key": "config.profile.create",
                 },
                 "argument_bindings": [

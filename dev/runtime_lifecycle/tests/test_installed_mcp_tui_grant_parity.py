@@ -78,6 +78,9 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
+from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.automation_requester import (
@@ -88,9 +91,6 @@ from cadrumo_client.transport.credentials import open_installed_credential_clien
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
-from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
-from cadrumo.entrypoints.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from cadrumo_runtime.host.profile_host import RuntimeProfileHost
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 

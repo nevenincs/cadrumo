@@ -57,8 +57,6 @@ RUNTIME_PACKAGE: Final[str] = "src/cadrumo_runtime"
 PRODUCT_SOURCE_ROOTS: Final[tuple[str, ...]] = (PRODUCT_PACKAGE, CLIENT_PACKAGE, RUNTIME_PACKAGE)
 HARNESS_PACKAGE: Final[str] = "src/cadrumo_harness"
 SERVICE_PACKAGE: Final[str] = "src/cadrumo_agent_service"
-CLIENT_PACKAGE: Final[str] = "src/cadrumo_client"
-RUNTIME_PACKAGE: Final[str] = "src/cadrumo_runtime"
 DEVELOPMENT_TOOLING: Final[str] = "dev"
 PACKAGING_HOOKS: Final[str] = "packaging"
 
@@ -68,8 +66,6 @@ FIRST_PARTY_ROOTS: Final[tuple[str, ...]] = (
     RUNTIME_PACKAGE,
     HARNESS_PACKAGE,
     SERVICE_PACKAGE,
-    CLIENT_PACKAGE,
-    RUNTIME_PACKAGE,
     DEVELOPMENT_TOOLING,
     PACKAGING_HOOKS,
 )
@@ -79,8 +75,6 @@ DEPENDENCY_DECLARATION_ROOTS: Final[tuple[str, ...]] = (
     RUNTIME_PACKAGE,
     HARNESS_PACKAGE,
     SERVICE_PACKAGE,
-    CLIENT_PACKAGE,
-    RUNTIME_PACKAGE,
     f"{DEVELOPMENT_TOOLING}/registry",
 )
 

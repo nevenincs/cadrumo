@@ -578,24 +578,6 @@ desktop:
     zoom_in: Amplia la documentació
     zoom_out: Redueix la documentació
     zoom_reset: Restableix el zoom de la documentació
-  attendance:
-    actions: Accions
-    all_periods: Tots els períodes
-    changes: Canvis de registres
-    delegation: Delegació
-    disclosures: Divulgacions
-    executable: Executable
-    expires: Caduca
-    failed: 'Decisió d’accés no disponible: {code}'
-    network: Accés a la xarxa
-    'no': 'No'
-    none: Cap
-    operations: Operacions
-    period_independent: Treball sense període
-    periods: Períodes
-    process: Procés
-    title: Un procés extern sol·licita accés
-    'yes': Sí
   automation_access:
     cancel: Cancel·la
     cleanup_pending: Revocada. La clau desada encara s'està eliminant d'aquest equip.

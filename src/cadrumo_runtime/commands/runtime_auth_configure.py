@@ -7,7 +7,7 @@ from uuid import UUID
 
 import typer
 
-from cadrumo.application.auth.catalogue import get_auth_provider
+from cadrumo.application.auth.catalogue import get_auth_provider, known_auth_provider_ids
 from cadrumo.application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
@@ -41,8 +41,8 @@ def run_auth_configure(
         provider_kind = AuthProviderKind(get_auth_provider(provider).id)
     except KeyError:
         raise CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider},
+            translated_message="errors.refused.refused_cli_validation_boundary",
+            context={"field": "provider", "choices": known_auth_provider_ids()},
         ) from None
 
     pointer = resolve_active_profile_pointer()

@@ -20,7 +20,7 @@ from cadrumo.core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.config import operation_censal_file_import
-from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 

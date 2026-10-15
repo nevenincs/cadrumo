@@ -50,17 +50,6 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationLifecycle, profile_operation_subject
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
-from cadrumo_client.transport.framing import VerifiedConnection
-from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.installation import installation
-from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_harness.mcp.admitted_operations import call_admitted_operation
-from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
-from cadrumo_harness.mcp.runtime_admission import AdmissionDenial, McpAdmission
-from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, mcp_surface
-from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
-from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.navigation import (
     TUI_DESTINATION_CATALOGUE,
@@ -80,6 +69,17 @@ from cadrumo.entrypoints.tui.operations.destination import (
 from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProviderV1
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.windows import WindowsEndpoint
+from cadrumo_harness.mcp.admitted_operations import call_admitted_operation
+from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
+from cadrumo_harness.mcp.runtime_admission import AdmissionDenial, McpAdmission
+from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, mcp_surface
+from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
+from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 pytestmark = [

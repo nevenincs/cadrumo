@@ -182,6 +182,6 @@ def test_failed_clave_login_renders_its_typed_cause_and_diagnostic_follow_up(
     assert f"Failure mode: {ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT.value}" in rendered
     assert f"Diagnostic id: {diagnostic_id}" in rendered
     assert '"operator.auth.diagnostics.view"' in rendered
-    assert '["config","auth","diagnostics","view"]' in rendered
+    assert '["cadrumo-runtime","config","auth","diagnostics","view"]' in rendered
     assert f'"value":"{diagnostic_id}"' in rendered
     assert internal not in rendered

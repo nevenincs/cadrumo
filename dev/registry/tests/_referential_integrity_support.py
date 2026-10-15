@@ -105,7 +105,7 @@ def _snapshot_for_revision(
 
     filing_year = supported_filing_year(revision, catalogues)
     assert filing_year is not None, f"revision {revision.id!r} lies wholly below the supported floor"
-    period = revision.period_selector.periods[0]
+    period = revision.period_selector.periods_for_year(filing_year)[0]
     # APPLICABILITY grade, not the FILING default. These fixtures exist to
     # exercise REFERENTIAL integrity -- dangling ids, bound casillas with no
     # binding definition -- and carry no export layout, so a filing-grade

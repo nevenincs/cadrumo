@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
@@ -24,7 +25,6 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, no_active_profile_refusal
-from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .operation_profile_view import project_profile_validate, project_profile_view
 
 if TYPE_CHECKING:

@@ -43,12 +43,12 @@ from cadrumo.application.user_profile.automation_enrollment import EnrollmentTra
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.worker_completion import wait_file, wait_process
 from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 from cadrumo_runtime.adapters.worker_authorization import WorkerAuthorizationServer
-from cadrumo_runtime.contracts.profile_worker import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,

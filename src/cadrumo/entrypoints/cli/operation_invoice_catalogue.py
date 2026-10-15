@@ -9,6 +9,7 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
@@ -47,7 +48,6 @@ from ...application.invoices.catalogue_update_operation import (
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.classification import InvoiceKind
-from .errors import CliRefusedBoundaryError
 
 _REFUSAL_LOCALE_KEYS = {
     InvoiceLookupRefusalReason.REQUIRED: "application.invoices.lifecycle.errors.invoice_id_required",

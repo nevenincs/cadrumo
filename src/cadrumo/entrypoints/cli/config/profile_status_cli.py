@@ -6,6 +6,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.payloads import ConfigStatusResult
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -20,7 +21,6 @@ from ....core.i18n.render import tr
 from ....core.json_contract import ResolvedPreconditionAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
-from ..errors import CliRefusedBoundaryError
 from .operation_profile_view import resolve_profile_output_language
 from .status_rendering import blocked_readiness_status, precondition_action_lines
 

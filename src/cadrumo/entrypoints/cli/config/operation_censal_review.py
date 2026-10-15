@@ -6,6 +6,7 @@ import time
 from collections.abc import Callable
 from uuid import UUID, uuid4
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import bounded_deadline_after, remaining_budget
@@ -34,7 +35,6 @@ from ....application.user_profile.censal_operation import (
     CensalReviewProjectionV1,
 )
 from ....core.operations import OperationLifecycle, OperationTerminalCondition
-from ..errors import CliRefusedBoundaryError
 from .operation_censal_contracts import CensalReviewResult, _CensalReceiptState
 from .operation_censal_exchange import _exchange
 from .operation_censal_observation import _observe, _review_interaction, _validate_observation
