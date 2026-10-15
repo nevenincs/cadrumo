@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import sys
 import time
+from collections.abc import Generator
+from contextlib import contextmanager
+from logging import WARNING
 from threading import Event, RLock
+from typing import Literal
 from uuid import UUID
 
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
@@ -18,6 +25,16 @@ from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resou
 from .worker_transport import WorkerChannel
 
 _WORKER_NATIVE_HEALTH_WAIT_SECONDS = 2.0
+_NATIVE_GUARD_SLOW_SECONDS = 0.5
+_NativeCallName = Literal[
+    "process_health",
+    "peer_verification",
+    "process_membership",
+    "exchange_membership",
+    "health_check",
+    "containment",
+]
+_log = get_logger(__name__)
 
 
 class ProfileWorkerNativeLifetime:
@@ -28,6 +45,8 @@ class ProfileWorkerNativeLifetime:
     _operation_lock: RLock
     _human_lock: RLock
     _native_guard: RLock
+    _native_activity_lock: RLock
+    _native_activity: tuple[str, float] | None
     _scope: WindowsProcessScope | LinuxProcessScope | MacosProcessScope
     _process: WindowsOwnedProcess | LinuxOwnedProcess | MacosOwnedProcess
     _authorization: WorkerAuthorizationServer | None
@@ -40,7 +59,7 @@ class ProfileWorkerNativeLifetime:
     _pending_channel_cleanup: list[WorkerResourceCleanup]
 
     def _require_process_alive(self) -> None:
-        with self._native_guard:
+        with self._native_guard, self._native_call("process_health"):
             if self._stopping.is_set():
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             try:
@@ -52,26 +71,29 @@ class ProfileWorkerNativeLifetime:
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     def _verify_native_peer(self, channel: WorkerChannel) -> int:
-        with self._native_guard:
+        with self._native_guard, self._native_call("peer_verification"):
             if self._stopping.is_set():
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             return verify_worker_native_pid(channel, self._scope, self.identity.binding.os_owner_id)
 
     def _owns_native_process(self, process_id: int) -> bool:
-        with self._native_guard:
+        with self._native_guard, self._native_call("process_membership"):
             return not self._stopping.is_set() and process_id in self._scope.active_process_ids()
 
     def _contain_native_process(self, *, timeout: float = 2.0) -> None:
         self._stopping.set()
+        wait_started = time.monotonic()
         acquired = self._native_guard.acquire(blocking=False)
         if not acquired:
             deadline = time.monotonic() + timeout
             acquired = self._native_guard.acquire(timeout=max(0.0, timeout))
             timeout = max(0.0, deadline - time.monotonic())
         if not acquired:
+            self._log_native_guard_wait_failure("containment", wait_started)
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         try:
-            self._scope.terminate(timeout=timeout)
+            with self._native_call("containment"):
+                self._scope.terminate(timeout=timeout)
         finally:
             self._native_guard.release()
 
@@ -89,16 +111,59 @@ class ProfileWorkerNativeLifetime:
         """
         if self._stopping.is_set():
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+        wait_started = time.monotonic()
         if not self._native_guard.acquire(timeout=_WORKER_NATIVE_HEALTH_WAIT_SECONDS):
+            self._log_native_guard_wait_failure("health_check", wait_started)
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         try:
-            if self._stopping.is_set() or self._channel is None:
-                raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-            if self._authorization is not None:
-                self._authorization.require_healthy()
-            self._require_process_alive()
+            with self._native_call("health_check"):
+                if self._stopping.is_set() or self._channel is None:
+                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+                if self._authorization is not None:
+                    self._authorization.require_healthy()
+                self._require_process_alive()
         finally:
             self._native_guard.release()
+
+    @contextmanager
+    def _native_call(self, call_name: _NativeCallName) -> Generator[None]:
+        """Attribute a held native guard to a closed call name without logging process data."""
+        started = time.monotonic()
+        activity = (call_name, started)
+        with self._native_activity_lock:
+            previous = self._native_activity
+            self._native_activity = activity
+        try:
+            yield
+        finally:
+            primary = sys.exception()
+            elapsed = max(0.0, time.monotonic() - started)
+            with self._native_activity_lock:
+                if self._native_activity is activity:
+                    self._native_activity = previous
+            if elapsed >= _NATIVE_GUARD_SLOW_SECONDS:
+                _safe_diagnostic_event(
+                    "profile_worker_native_guard_call_slow",
+                    fields={
+                        "call_name": call_name,
+                        "elapsed_seconds": round(elapsed, 3),
+                        "outcome": "raised" if primary is not None else "completed",
+                    },
+                    primary_error=primary,
+                )
+
+    def _log_native_guard_wait_failure(self, call_name: _NativeCallName, started: float) -> None:
+        """Name the call holding the guard when a bounded wait expires."""
+        elapsed = max(0.0, time.monotonic() - started)
+        with self._native_activity_lock:
+            activity = self._native_activity
+        fields: dict[str, str | float] = {
+            "call_name": call_name,
+            "held_call_name": "unknown" if activity is None else activity[0],
+            "elapsed_seconds": round(elapsed, 3),
+            "held_elapsed_seconds": 0.0 if activity is None else round(max(0.0, time.monotonic() - activity[1]), 3),
+        }
+        _safe_diagnostic_event("profile_worker_native_guard_wait_failed", fields=fields, level=WARNING)
 
     def close(self, *, deadline: float | None = None) -> None:
         """Fence calls and terminate the complete owned process scope."""
@@ -164,3 +229,17 @@ class ProfileWorkerNativeLifetime:
                 lock.release()
         else:
             failures.append(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+
+
+def _safe_diagnostic_event(
+    event: str,
+    *,
+    fields: dict[str, str | float],
+    level: int | None = None,
+    primary_error: BaseException | None = None,
+) -> None:
+    """Keep timing telemetry from changing containment or refusal behavior."""
+    try:
+        diagnostic_event(_log, event, fields=fields, level=level, primary_error=primary_error)
+    except BaseException:
+        return

@@ -58,6 +58,7 @@ from typing import Any, Final
 
 import psutil
 
+from cadrumo_runtime.application.development_root import mark_development_root
 from dev._paths import REPO_ROOT
 
 from .caller_owned_root import (
@@ -357,6 +358,7 @@ async def run(package: Path, scratch: Path) -> Receipt:
     exchange = Exchange(directory)
     environment = consumer_environment(root, secret_store)
     profile = create_profile(programs, environment, _PROFILE)
+    mark_development_root(root)
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
         receipt.record("runtime_ready", product_version=runtime.ready().get("product_version"))
         profile = identify_profile(programs, environment, profile)

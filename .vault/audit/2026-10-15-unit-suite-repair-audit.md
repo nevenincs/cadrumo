@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d75ed2dfd3d23878d0d91f5c59c9f005b02276afcd254021084a9eebf8d69fe'
+body_hash: 'sha256:35ca62d21fc9dde7cacde97635233117b9929b1082da2a7a5423a6feaef08325'
 related:
   - '[[2026-10-15-unit-suite-repair-plan]]'
   - '[[2026-10-15-native-package-ci-adr]]'
@@ -199,6 +199,10 @@ Canonical authority publication succeeded after the source and derived corpus si
 ### cross-package-orphan-discovery | low | A whole-product census distinguishes live cross-package callers from obsolete duplicates
 
 The orphan test now uses the canonical five first-party roots and production-source classifier. Existing cross-package callers preserve disclosure_projections and session_retirement. The obsolete tax CLI Google folder helper duplicates the live client-owned command, and the unreferenced harness legacy_provenance prototype has no callers or accepted retention requirement; both dead files were removed without fake references or allowlists. Canonical module and import-load inventories reflect exactly those removals. The population census plus synthetic unreferenced/live-cross-package controls pass 3/3 (040950.861211Z-pytest-56540-787c7d6a). Independent review of the restored MCP guide and migrated runtime-owned sequences found no blocking command, authority or secret-handling issue; current localized build evidence remains pending. Required direct Import Linter verification passes all 24 contracts after these changes.
+
+### fullscope-v2-population | medium | PENDING: complete graph exposed alias duplication and remaining annotation paths
+
+The isolated Linux full-scope module 20261015T065912.729320Z-pytest-40347-8afbbdd0 completed in 697.63 seconds with one artifact-retention pass and one strict graph failure. It used immutable base155f4d7f6520210c892b79512caec8e18bed4630 plus seven-file overlay94e2722886b7f105a70f9c7b5af803183fd7d6b9e1dabeda6ed211c7c18ab4eb. Complete diagnostics contain91warnings:81duplicate object descriptions, eight unresolved references (four AllowInfNan, three RuntimeClientOpener, one EvidenceReference), and two config.cache warnings for the function-valued formatter. The focused24API and8Sphinx controls did not cover these whole-population interactions; their prior passes do not establish a full-graph verdict. Full portable metadata, command, streams and warning inventory are retained under .logs/unit-repair-20261015/docs/frozen-proof/20261015T065912.729320Z-pytest-40347-8afbbdd0/. Root has qualified the ambiguous core/text_bounds.py evidence example to the modelo filing_text defining owner. The worker owns alias target uniqueness, exact remaining annotation paths and stable formatter serialization. S02/S04 remain open pending repaired owner checks and a fresh complete strict graph pass. No suppression or assertion change is authorized by this finding.
 
 ## Recommendations
 

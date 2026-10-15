@@ -19,6 +19,7 @@ from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_environment import storage_mode
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from .adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
@@ -48,10 +49,11 @@ from .host.controller import (
 )
 from .host.credential_frame import wipe
 from .host.lane_root import is_marked_lane_root
-from .host.launch_environment import agent_launch_environment
+from .host.launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE, HOSTED_ROOT_VARIABLE, agent_launch_environment
 from .host.launcher_protocol import launcher_refusal_for
 from .host.store_lifecycle import AgentStoreLifecycle
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
+from .providers.application.contracts import ProviderSettingsRefusal
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
@@ -72,6 +74,9 @@ def service_failure(error: Exception) -> dict[str, Any]:
     elif isinstance(error, AgentProgramRefusalError):
         code = error.code.value
         _LOGGER.warning("agent program unavailable code=%s", code)
+    elif isinstance(error, RefusalError):
+        code = "service_failed"
+        _LOGGER.warning("agent runtime refused reason=%s", error.reason.value)
     else:
         code = "service_failed"
         _LOGGER.error("agent service failed error_type=%s", type(error).__name__)
@@ -172,6 +177,8 @@ class AgentService:
             return {"kind": "stopped"}
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
+        if action == "sign_in":
+            return self._prepare_sign_in(provider, expected_revision=expected_revision)
         if action == "set" and secret is not None:
             result = self._providers.set_credential(
                 provider,
@@ -195,6 +202,49 @@ class AgentService:
             return {"kind": "refused", "code": "invalid_request"}
         # Startup and background observation revalidate the committed generation.
         return result.model_dump(mode="json")
+
+    def _prepare_sign_in(self, provider: str, *, expected_revision: str) -> dict[str, Any]:
+        """Prepare a person-terminal launch without observing provider credentials.
+
+        The caller owns the terminal and must contain its child in the person's
+        session. A prepared command does not establish provider authentication.
+        """
+        with self._guard:
+            lease = self.client.lease
+            if self._closing.is_set() or lease is None:
+                return {"kind": "refused", "code": "signed_out"}
+            lane = self._catalog.catalog().entry(provider)
+            if (
+                lane is None
+                or not lane.auth_kind.accepts_provider_sign_in
+                or lane.provider not in self._catalog.sign_in_providers()
+            ):
+                return {"kind": "refused", "code": "sign_in_unavailable"}
+            root = profile_agent_root(self._root, lease.profile_id)
+            image = agent_image(self._agent_source, agent_root=root)
+            result = self._providers.set_assistant_auth(
+                provider, choice=AssistantAuthChoice.PROVIDER_SIGN_IN, expected_revision=expected_revision
+            )
+            if isinstance(result, ProviderSettingsRefusal):
+                return result.model_dump(mode="json")
+            self.stop()
+            if self._closing.is_set() or self.client.lease != lease:
+                return {"kind": "refused", "code": "signed_out"}
+            root.mkdir(parents=True, exist_ok=True)
+            environment = {HOSTED_ROOT_VARIABLE: str(root)}
+            external = os.environ.get(EXTERNAL_BIN_DIRECTORIES_VARIABLE)
+            if external is not None and external != "":
+                environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
+            return {
+                "kind": "sign_in_prepared",
+                "entry": result.entry.model_dump(mode="json"),
+                "launch": {
+                    "executable": str(image.executable),
+                    "arguments": [*AGENT_COMMAND_LINE, "auth", "login", "--provider", result.entry.provider],
+                    "directory": str(image.directory),
+                    "environment": environment,
+                },
+            }
 
     def start(self) -> dict[str, Any]:
         """Prepare stores and launch one tree under an exclusive cross-process reservation."""

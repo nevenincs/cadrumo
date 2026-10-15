@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import struct
 import sys
 import threading
@@ -28,6 +29,7 @@ from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerControlRequest,
     ProfileWorkerLeaseTransferRequest,
     ProfileWorkerRequest,
+    ProfileWorkerRetireRequest,
 )
 
 from ...adapters.worker_transport import WorkerChannel, WorkerEndpoint
@@ -356,6 +358,106 @@ class _ServeCustody(_Release):
 
     def live_sessions(self) -> tuple[UUID, ...]:
         return ()
+
+
+def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    request_id, session_id = uuid4(), uuid4()
+    request = ProfileWorkerRequest(root=ProfileWorkerRetireRequest(request_id=request_id, session_id=session_id))
+    retired: list[UUID] = []
+    discarded: list[UUID] = []
+    expired: list[tuple[UUID, ...]] = []
+    forgotten: list[bool] = []
+    output: list[bytes] = []
+
+    class Custody(_ServeCustody):
+        def retire(self, selected: UUID) -> None:
+            retired.append(selected)
+
+    class Human:
+        def discard(self, selected: UUID) -> None:
+            discarded.append(selected)
+
+    class Operations:
+        def forget_settled_ephemeral(self) -> None:
+            forgotten.append(True)
+
+        def in_flight_operation_count(self) -> int:
+            return 0
+
+    class Uploads:
+        def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
+            expired.append(live_sessions)
+
+    class Channel:
+        def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+            assert deadline > 0
+            output.append(bytes(payload))
+
+    custody = Custody()
+    failed = asyncio.Event()
+    context = worker_service._WorkerControl(
+        channel=cast(WorkerChannel, Channel()),
+        custody=cast(ProfileWorkerCustody, custody),
+        human=cast(ProfileWorkerHumanLogin, Human()),
+        operations=cast(ProfileWorkerOperationHost, Operations()),
+        uploads=cast(worker_service.WorkerSubmissionStaging, Uploads()),
+        failed=failed,
+        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+    )
+    receive_calls = 0
+
+    async def receive(*_arguments: object, **_keywords: object) -> ProfileWorkerRequest:
+        nonlocal receive_calls
+        receive_calls += 1
+        if receive_calls == 1:
+            return request
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+    clock = iter((10.0, 10.75, 11.0))
+    monkeypatch.setattr(worker_service, "time", SimpleNamespace(monotonic=lambda: next(clock)))
+    caplog.set_level(logging.DEBUG, logger=worker_service._log.name)
+
+    with pytest.raises(RefusalError) as caught:
+        asyncio.run(worker_service._serve_control_requests(context))
+
+    assert caught.value.reason is RefusalCode.UNAVAILABLE
+    assert retired == discarded == [session_id]
+    assert expired == [()]
+    assert forgotten == [True]
+    assert output
+    started = next(
+        record for record in caplog.records if record.getMessage() == "profile_worker_control_dispatch_started"
+    )
+    slow = next(record for record in caplog.records if record.getMessage() == "profile_worker_control_dispatch_slow")
+    assert {
+        "handler_name": started.__dict__["handler_name"],
+        "request_type": started.__dict__["request_type"],
+        "request_action": started.__dict__["request_action"],
+        "outcome": started.__dict__["outcome"],
+    } == {
+        "handler_name": "custody_control",
+        "request_type": "ProfileWorkerRetireRequest",
+        "request_action": "retire",
+        "outcome": "started",
+    }
+    assert {
+        "handler_name": slow.__dict__["handler_name"],
+        "request_type": slow.__dict__["request_type"],
+        "request_action": slow.__dict__["request_action"],
+        "elapsed_seconds": slow.__dict__["elapsed_seconds"],
+        "outcome": slow.__dict__["outcome"],
+    } == {
+        "handler_name": "custody_control",
+        "request_type": "ProfileWorkerRetireRequest",
+        "request_action": "retire",
+        "elapsed_seconds": 0.75,
+        "outcome": "completed",
+    }
+    assert "session_id" not in slow.__dict__ and str(session_id) not in repr(slow.__dict__)
 
 
 def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:

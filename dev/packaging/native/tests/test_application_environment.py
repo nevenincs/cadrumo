@@ -12,13 +12,33 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..application_environment import DECLARATION, ApplicationEnvironmentError, compile_section, load, parse
+from ..application_environment import (
+    DECLARATION,
+    ApplicationEnvironmentError,
+    LaunchRefusedError,
+    compile_section,
+    load,
+    parse,
+    reference_select,
+)
 from ..generate import generate
 from ..layout import load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("family", ("windows", "posix"))
+def test_operator_sign_in_accepts_metadata_but_not_flags_or_paths(family: str) -> None:
+    declaration = load(REPO_ROOT)
+    prefix = ("-m", "cadrumo_agent.cli.main", "auth", "login", "--provider")
+    assert reference_select(declaration, family, "cadrumo-agent", (*prefix, "example_provider_2")) == "agent-auth"
+    for invalid in ("", "--help", "../other", "a/b", "a\\b", "A", "a b", "a=key", "a" * 65):
+        with pytest.raises(LaunchRefusedError):
+            reference_select(declaration, family, "cadrumo-agent", (*prefix, invalid))
+    with pytest.raises(LaunchRefusedError):
+        reference_select(declaration, family, "cadrumo-agent", prefix)
 
 
 def test_the_declaration_validates_and_covers_every_built_image() -> None:

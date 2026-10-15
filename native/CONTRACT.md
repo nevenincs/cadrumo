@@ -319,12 +319,26 @@ names each program passes.
 An invocation is the exact argument pattern that selects a profile. The host
 matches the arguments after the image's own path against the compiled table before
 Python starts, left to right with no backtracking. A literal matches exactly. A
-typed argument (a Windows handle, a POSIX descriptor or an opaque revision) is
+typed argument (a Windows handle, a POSIX descriptor, an opaque revision or a metadata identifier) is
 validated by its kind, and a handle or descriptor also by its declared ordering. An
 option is an optional flag followed by one typed value, present whole or absent.
 Options come after every other argument, each at most once and in the declared
 order. A revision is 1 to 128 ASCII letters, digits, underscores, dots and hyphens
 that starts with a letter, a digit or an underscore, so it cannot read as a flag.
+An identifier is 1 to 64 lowercase ASCII letters, digits or underscores, beginning
+with a letter. It carries metadata and grants no process authority. The foreground
+agent `auth login --provider IDENTIFIER` invocation uses its own profile: the
+required hosted root, declared external binary directories and OS terminal/browser
+environment, without gateway settings or provider credentials. The agent chooses
+the provider's native login command and binds its home under that root. Provider
+output belongs to the person's terminal and must not enter diagnostic logs.
+The offline `auth providers --json` invocation reports supported operator login
+actions separately from credential kinds. Service administration's `sign_in`
+action validates that capability and the settings revision, selects sign-in mode,
+stops the hosted tree and returns `sign_in_prepared` with a fixed package command
+and its profile root. The terminal owner must bind that child to the person's
+session lifetime. This preparation neither reads a provider credential nor proves
+that authentication succeeded.
 An unknown flag, a flag without a valid value, a reordered or repeated flag, a
 spelling such as `--flag=value` and a trailing argument each leave the invocation
 undeclared. A match selects the invocation's profile. The image's profile without an

@@ -313,6 +313,15 @@ add_custom_target(desktop-packaged-test
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged.test.mjs"
   DEPENDS desktop-packaged-host
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+cadrumo_build_step(step_comment desktop-startup-test GROUP verification
+  SUMMARY "verify loading, runtime readiness, workspace handoff and startup cancellation")
+add_custom_target(desktop-startup-test
+  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+    "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+    "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
+    "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/startup.test.mjs"
+  DEPENDS desktop-packaged-host
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 # The harness's own frame and assertion logic against a plain Chromium and stand-in pages.
 cadrumo_build_step(step_comment desktop-packaged-harness-test GROUP verification
   SUMMARY "test the packaged end-to-end harness against stand-in pages")

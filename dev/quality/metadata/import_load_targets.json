@@ -3847,6 +3847,7 @@
         "dev.docs",
         "dev.docs._locale_chrome",
         "dev.docs.apidocs",
+        "dev.docs.apidocs.attribute_types",
         "dev.docs.apidocs.manager",
         "dev.docs.apidocs.rendering",
         "dev.docs.build",

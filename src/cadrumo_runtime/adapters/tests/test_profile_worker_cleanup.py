@@ -7,6 +7,7 @@ process acquisition is an isolated fault seam, not platform acceptance evidence.
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import sys
 import time
@@ -930,6 +931,62 @@ def test_worker_native_guard_unreleased_contention_refuses_without_retiring_live
             assert all(not channel.release.released for channel in fixture.channels)
         finally:
             worker.close()
+
+
+def test_native_guard_slow_call_emits_only_closed_call_metadata(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    worker = fixture.open()
+    try:
+        with monkeypatch.context() as clock_patch:
+            times = iter((10.0, 11.25))
+            clock_patch.setattr(profile_worker_lifetime, "time", SimpleNamespace(monotonic=lambda: next(times)))
+            caplog.set_level(logging.DEBUG, logger=profile_worker_lifetime._log.name)
+            assert worker._owns_native_process(1234)
+
+        record = next(item for item in caplog.records if item.getMessage() == "profile_worker_native_guard_call_slow")
+        assert record.__dict__["call_name"] == "process_membership"
+        assert record.__dict__["elapsed_seconds"] == 1.25
+        assert record.__dict__["outcome"] == "completed"
+        assert not {"process_id", "pid", "session_id", "worker_id"}.intersection(record.__dict__)
+    finally:
+        worker.close()
+
+
+def test_native_guard_wait_failure_names_held_call_without_private_identifiers(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    worker = fixture.open()
+    held, release = Event(), Event()
+
+    def blocked_membership() -> tuple[int, ...]:
+        held.set()
+        assert release.wait(5), "native membership barrier was not released"
+        return (1234,)
+
+    monkeypatch.setattr(fixture.scope, "active_process_ids", blocked_membership)
+    caplog.set_level(logging.DEBUG, logger=profile_worker_lifetime._log.name)
+    pool = ThreadPoolExecutor(max_workers=1)
+    membership = pool.submit(worker._owns_native_process, 1234)
+    try:
+        assert held.wait(2), "native membership call did not acquire the guard"
+        with pytest.raises(RefusalError) as caught:
+            worker._contain_native_process(timeout=0.05)
+        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        record = next(item for item in caplog.records if item.getMessage() == "profile_worker_native_guard_wait_failed")
+        assert record.__dict__["call_name"] == "containment"
+        assert record.__dict__["held_call_name"] == "process_membership"
+        assert record.__dict__["elapsed_seconds"] >= 0.03
+        assert record.__dict__["held_elapsed_seconds"] >= 0.03
+        assert not {"process_id", "pid", "session_id", "worker_id"}.intersection(record.__dict__)
+        assert not fixture.scope.release.released
+    finally:
+        release.set()
+        assert membership.result(timeout=2)
+        pool.shutdown(wait=True)
+        worker.close()
 
 
 @pytest.mark.parametrize("cancellation", [False, True], ids=["body-failure", "body-cancellation"])

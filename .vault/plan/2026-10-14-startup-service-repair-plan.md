@@ -7,9 +7,11 @@ tier: L1
 related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
+  - '[[2026-10-13-provider-settings-adr]]'
+  - '[[2026-10-13-native-agent-adr]]'
 modified: '2026-10-15'
 body_schema: body-v2
-body_hash: 'sha256:2eb57af8f681b4f760807754138149a8e3dd1b15abb68c0c5d1831eecaac3f93'
+body_hash: 'sha256:355e859fff248a891b14b3c7699388281286e5f5c5a00a7bcc30a9c880024193'
 ---
 
 <!-- LINK RULES:
@@ -130,6 +132,7 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 - [ ] `S03` - Verify corrected launch environment and service diagnostics in the rebuilt Windows package; `native/tests/environment_launch_probe.py, dev/runtime_lifecycle/agent_live.py, build/windows-x64, direct non-GUI service/runtime/provider-home and live-provider validation`.
 - [ ] `S04` - Diagnose and repair profile worker deadline cascades and distinguish ordinary client closes from refusals; `src/cadrumo/adapters/local_runtime/profile_worker_transport.py, src/cadrumo/adapters/local_runtime/server_connection_handling.py, src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, owning tests`.
 - [ ] `S05` - Preserve the declared external CLI binary directories across service, gateway and worker launches; `native/application-environment.toml, native/CONTRACT.md, native/platform/src/launch.rs, src/cadrumo_agent_service/host/launch_environment.py and tests, dev/packaging/native/environment_conformance.py and tests, packaged CLI resolution verification`.
+- [ ] `S06` - Enable explicit provider-native sign-in in the isolated profile home through the agent-owned operator command; `src/cadrumo_agent_service/admin.py and service.py, adapters/agent_provider_catalog.py and sign-in capability/preparation tests, native/application-environment.toml and native/platform/src/launch.rs and native/CONTRACT.md, dev/packaging/native/application_environment.py and owning checks, cadrumo-agent CLI operator auth command and tests`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

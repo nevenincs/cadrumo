@@ -81,6 +81,8 @@ def _worker(child: _Child) -> ProfileWorkerProcess:
     worker._process = child
     worker._pending_channel_cleanup = []
     worker._native_guard = RLock()
+    worker._native_activity_lock = RLock()
+    worker._native_activity = None
     worker._stopping = Event()
     return worker
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Mapping
 from typing import cast, override
@@ -93,6 +94,26 @@ class _Door:
         self.overview = _overview(fields, self.overview.record_revision + 1)
         self.readiness = _readiness(provider.value, ready=True)
         return await self.snapshot()
+
+
+@pytest.mark.asyncio
+async def test_editor_processes_input_while_native_snapshot_is_pending() -> None:
+    """A pending runtime read must not hold the screen's message queue."""
+    loaded = asyncio.Event()
+
+    class PendingDoor(_Door):
+        @override
+        async def snapshot(self) -> tuple[ProfileOverview, AuthSyncReadiness]:
+            await loaded.wait()
+            return await super().snapshot()
+
+    screen = AeatAuthSetupScreen(PendingDoor())
+    async with ScreenHostApp(screen).run_test(size=(100, 55)) as pilot:
+        await pilot.pause()
+        assert screen.query_one("#aeat-auth-save", Button).disabled
+        assert await pilot.press("escape") is None
+        assert pilot.app.screen is not screen
+        loaded.set()
 
 
 @pytest.mark.asyncio

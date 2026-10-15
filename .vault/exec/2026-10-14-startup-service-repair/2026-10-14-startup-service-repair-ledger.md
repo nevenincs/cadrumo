@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:5b62e4080b9f4c494e0e837d33ff48c509c88112f4ce260e52dbe4b65008cc35'
+body_hash: 'sha256:943001457aac0f1d20d67beb3bfb9ab36e83ea810c54bfc8593e16478ce3f325'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -103,6 +103,24 @@ related:
 - `S03` `verify:` `fresh manual packaged runtime shutdown agent-manual-ob5uo5er` -> `fail`
 - `S03` `verify:` `pytest agent_live and session_holder unit tests (24)` -> `pass`
 - `S03` `verify:` `live package proof agent-live-l2a5ehrv` -> `fail`
+- `S03` `verify:` `external-root live proof agent-live-jzgehw20` -> `fail`
+- `S06` `M` `src/cadrumo_agent_service/admin.py`
+- `S06` `M` `src/cadrumo_agent_service/service.py`
+- `S06` `A` `src/cadrumo_agent_service/host/tests/test_provider_sign_in_preparation.py`
+- `S06` `M` `native/application-environment.toml`
+- `S06` `M` `native/platform/src/launch.rs`
+- `S06` `M` `dev/packaging/native/application_environment.py`
+- `S06` `M` `dev/packaging/native/tests/test_application_environment.py`
+- `S06` `verify:` `service and holder focused suite (282 tests)` -> `pass`
+- `S06` `verify:` `native environment declaration unit tests (30)` -> `pass`
+- `S06` `M` `src/cadrumo_agent_service/adapters/agent_provider_catalog.py`
+- `S06` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_provider_catalog.py`
+- `S06` `verify:` `auth preparation catalog and parent-admin tests (34)` -> `pass`
+- `S06` `verify:` `service and holder suite 289 tests` -> `pass`
+- `S06` `verify:` `runtime cleanup and diagnostic suite 110 tests` -> `pass`
+- `S06` `verify:` `independent corrective auth review` -> `pass`
+- `S06` `verify:` `ctest platform.resolver 57 tests including operator auth environment` -> `pass`
+- `S06` `verify:` `final Release app-payload assembly missing shared product receipt` -> `fail`
 
 ## Notes
 
@@ -117,3 +135,9 @@ related:
 - `S03` Fresh Release payload completed. Installed service.py and `launch_environment.py` text match source; byte hashes differ only due to newline normalization. Launch probe passes stores, standalone worker and environment sanitation while hosted gateway still truthfully refuses `hosted_lane_unproven.` Live proof retry ended before agent launch: runtime did not emit readiness within the existing deadline. No model turn or hosted authentication claimed.
 - `S03` Real runtime, password-held CLI person, service admission, twelve-provider catalog/status, protected synthetic credential CAS set/remove/reset and asynchronous start acknowledgement completed. Both starts log `hosted_lane_unproven.` Despite temporary coordinator exit0, runtime stderr records ProfileWorkerRetireRequest timeout10s and native containment guard deadline; shutdown is failed evidence and is under investigation.
 - `S03` External search-directory repair is now observed in the unmodified staged gateway: codex/cli selectable, gpt-6.1-sol admitted, packaged worker receives dispatch. Turn fails before a model response because the manual driver seats the isolated Codex runtime beneath the Git repository; provider refuses it. Tool relay also exceeds its30s start/list deadline. Driver now uses system temp outside repositories, preserving the guard; retry underway.
+- `S03` Correction to temporary-root attempt: `dev._paths` intentionally redirects stdlib TEMP into the checkout. Default driver scratch remains build/acceptance; added explicit --scratch-parent so callers can select a provider-compatible external directory. Aborted ineffective agent-live-4mnry4z3 probe before proof; exact owned coordinator identity verified and all16 descendant/owner processes terminated and reaped. Retry uses user Temp/cadrumo-agent-acceptance, outside repositories.
+- `S03` Explicit external scratch retry reaches `runtime_ready` but synthetic config profile edit exits1 with empty envelope. No model response or hosted authentication established. Incremental Luna review finds no new destructive-path defect; overall verdict PENDING. Runtime shutdown attribution remains unproven; no speculative native authorization changes applied.
+- `S06` User continued explicit per-profile native CLI sign-in repair. Reuse provider-settings authority and agent project accepted provider-sign-in/provider-account decisions. Service prepares a fixed foreground agent auth login command with profile root and public external directories only; caller owns terminal and session tree. Prepared metadata is not authentication success. Agent owns provider-specific command/home mappings, direct inherited terminal IO and credential scrubbing. Packaged rebuild and interactive login remain pending.
+- `S06` Independent review found credential kind does not imply an executable login action (for example another CLI lane had no handler). Corrected by querying agent-owned auth providers --json schema1 before CAS or launch preparation. Unsupported actions and API lanes now refuse without mode mutation. User selected Claude for the isolated login. Agent auth tests5 pass; package human login pending.
+- `S06` Claude selected. Agent capability list prevents unsupported login preparation; actual isolated login and final package checks remain pending. Independent review identified broader existing admin dispatch deadline mismatch for follow-up.
+- `S06` Concurrent Debug app-payload producer reset shared product output. Release retry queued behind that build. Agent wheel auth handler and MCP diagnostics text match current source. First new native auth test lacked the required OS environment fixture; corrected fixture, rerun passed.

@@ -22,7 +22,7 @@ ADMIN_DOCUMENT_MAX_BYTES = 4096
 ADMIN_RESPONSE_MAX_BYTES = 256 * 1024
 ADMIN_SECRET_MAX_BYTES = 16 * 1024
 
-type AdminAction = Literal["catalog", "status", "set", "remove", "reset", "auth", "start", "stop"]
+type AdminAction = Literal["catalog", "status", "set", "remove", "reset", "auth", "sign_in", "start", "stop"]
 
 
 class AdminTarget(Protocol):

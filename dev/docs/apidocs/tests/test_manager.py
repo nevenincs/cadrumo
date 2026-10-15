@@ -14,6 +14,7 @@ from dev.first_party_source import CLIENT_PACKAGE, FIRST_PARTY_ROOTS
 
 from ..manager import (
     _NON_OWNER_GENERIC_IMPORTS,
+    _type_alias_declarations,
     API_SOURCE_PACKAGE,
     API_SOURCE_ROOTS,
     ApiDocsError,
@@ -114,7 +115,8 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
     manager.scaffold()
 
     targets: list[tuple[str, str]] = []
-    for module_name, is_package in manager.discover_modules():
+    modules = manager.discover_modules()
+    for module_name, is_package in modules:
         source_path = _source_path_for_module(module_name, is_package)
         tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
         targets.extend(
@@ -127,6 +129,25 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
         stub = (tmp_path / "api" / f"{module_name}.rst").read_text(encoding="utf-8")
         directive = f".. py:type:: {alias}\n   :module: {module_name}"
         assert stub.count(directive) == 1, f"{module_name}.{alias} must have one owner target"
+
+    for module_name, is_package in modules:
+        aliases = _type_alias_declarations(_source_path_for_module(module_name, is_package))
+        if not aliases:
+            continue
+        stub = (tmp_path / "api" / f"{module_name}.rst").read_text(encoding="utf-8")
+        alias_names = {name for name, _ in aliases}
+        exclusion_line = next(
+            (line for line in stub.splitlines() if line.strip().startswith(":exclude-members:")),
+            "",
+        )
+        excluded_names = set(exclusion_line.partition(":")[2].partition(":")[2].strip().split(","))
+        assert alias_names <= excluded_names, (
+            f"{module_name} must leave generated type-alias targets to their explicit directives: "
+            f"{sorted(alias_names - excluded_names)}"
+        )
+        for alias, _ in aliases:
+            directive = f".. py:type:: {alias}\n   :module: {module_name}"
+            assert stub.count(directive) == 1, f"{module_name}.{alias} must have one explicit target"
 
     assert targets, "the canonical source roots contain no public PEP 695 aliases"
     assert ("cadrumo_client.transport.automation_decision", "AutomationDecision") in targets
@@ -157,6 +178,24 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
     assert ".. py:type:: ModeloDraftContentAddress" in filing_schema
     assert ".. py:type:: SecureObjectListItem" in secure_object_records
     assert ".. py:type:: ComponentCatalogue" in iva_components
+
+
+def test_pep604_alias_detection_rejects_value_unions(tmp_path: Path) -> None:
+    """Union syntax is a type alias only when its operands are type expressions."""
+    source = tmp_path / "union_aliases.py"
+    source.write_text(
+        "class Left:\n    pass\n\n"
+        "class Right:\n    pass\n\n"
+        "PublicUnion = Left | Right\n"
+        "PrimitiveUnion = str | int | None\n"
+        "ACTION_SET = frozenset({'read'})\n"
+        "COMMIT_ACTIONS = ACTION_SET | frozenset({'commit'})\n",
+        encoding="utf-8",
+    )
+
+    aliases = dict(_type_alias_declarations(source))
+
+    assert set(aliases) == {"PublicUnion", "PrimitiveUnion"}
 
 
 def test_alias_targets_require_type_syntax_not_a_suffix_match(tmp_path: Path) -> None:

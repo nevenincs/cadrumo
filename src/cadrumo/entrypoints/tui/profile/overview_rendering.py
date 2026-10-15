@@ -199,7 +199,9 @@ class ProfileOverviewRenderingMixin:
             )
         return self._section_title(section)
 
-    async def _apply_overview(self: ProfileManagerScreen, updated: ProfileOverview) -> None:
+    async def _apply_overview(
+        self: ProfileManagerScreen, updated: ProfileOverview, *, refresh_auth: bool = True
+    ) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
 
         Most edits leave the row SET alone: the overview is projected by
@@ -222,7 +224,8 @@ class ProfileOverviewRenderingMixin:
         full rebuild rather than writing into coordinates the new page no
         longer has.
         """
-        await self._refresh_auth()
+        if refresh_auth and self._aeat_auth_setup is not None:
+            self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
         async with self._render_lock:
             previous = self.overview
             self.overview = updated

@@ -138,21 +138,22 @@ class RuntimeAeatAuthSetup:
         """Save facts serially with fresh CAS baselines; secrets never become facts."""
         try:
             self._pin()
+            current = await asyncio.to_thread(self._overview)
             for path, value in fields.items():
                 if not value.strip():
                     continue
-                current = await asyncio.to_thread(self._overview)
                 stored = next(
                     (field for section in current.sections for field in section.fields if field.path == path), None
                 )
                 if stored is not None and not stored.masked and stored.value == value:
                     continue
                 try:
-                    await asyncio.to_thread(self._persist, path, value, current.record_revision, current.content_digest)
+                    current = await asyncio.to_thread(
+                        self._persist, path, value, current.record_revision, current.content_digest
+                    )
                 except Exception as error:
                     raise AeatAuthFieldSaveError(path) from error
                 self._pin()
-            current = await asyncio.to_thread(self._overview)
             await asyncio.to_thread(
                 configure_runtime_auth,
                 self.client,

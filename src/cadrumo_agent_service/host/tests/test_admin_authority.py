@@ -61,7 +61,7 @@ def _read(stream: socket.socket) -> dict[str, object]:
     return {str(key): value for key, value in document.items()}
 
 
-@pytest.mark.parametrize("action", ["catalog", "status", "set", "remove", "reset", "auth", "start", "stop"])
+@pytest.mark.parametrize("action", ["catalog", "status", "set", "remove", "reset", "auth", "sign_in", "start", "stop"])
 def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(action: str) -> None:
     startup = ServiceStartupFrame(bearer="a" * 64, gateway_bearer="b" * 64)
     parent = bytearray(startup.bearer, "ascii")
@@ -73,7 +73,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
     target = _AdminRecorder()
     server = AdminServer(target, bearer=parent)
     request: dict[str, object] = {"version": 1, "request_id": str(uuid4()), "action": action}
-    if action in {"set", "remove", "reset", "auth"}:
+    if action in {"set", "remove", "reset", "auth", "sign_in"}:
         request.update(provider="synthetic", expected_revision="0" * 64)
     if action == "auth":
         request["choice"] = "provider_sign_in"

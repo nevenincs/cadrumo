@@ -114,9 +114,13 @@ class AeatAuthSetupScreen(Screen[None]):
             yield Button(tr("tui.aeat_auth.save"), id="aeat-auth-save", disabled=True)
             yield Button(tr("tui.aeat_auth.close"), id="aeat-auth-close")
 
-    async def on_mount(self) -> None:
+    def on_mount(self) -> None:
         """Populate fields from persisted data without blocking the event loop."""
         self._visibility()
+        self.run_worker(self._load(), group="aeat-auth-load")
+
+    async def _load(self) -> None:
+        """Keep the screen responsive while the native runtime reads the profile."""
         try:
             await self._apply(await self._door.snapshot())
         except Exception:
@@ -168,17 +172,19 @@ class AeatAuthSetupScreen(Screen[None]):
             tr("tui.aeat_auth.certificate_secret" if certificate else "tui.aeat_auth.password")
         )
 
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
+    def on_button_pressed(self, event: Button.Pressed) -> None:
         """Save the selected authentication settings or return to synchronization."""
         if event.button.id == "aeat-auth-close":
             self.action_close()
         elif event.button.id == "aeat-auth-save" and not self._busy:
-            await self._save()
+            self._busy = True
+            self.run_worker(self._save(), group="aeat-auth-save")
 
     async def _save(self) -> None:
         method = self.query_one("#aeat-auth-method", Select).value
         if not isinstance(method, str):
             self.query_one("#aeat-auth-message", Static).update(sync_requirement_reason("auth_method_required"))
+            self._busy = False
             return
         secret_field = self.query_one("#aeat-auth-secret", Input)
         secret = bytearray(secret_field.value, "utf-8") if secret_field.value and secret_field.display else None

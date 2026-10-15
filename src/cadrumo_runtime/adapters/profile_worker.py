@@ -81,6 +81,8 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         self._operation_lock = RLock()
         self._human_lock = RLock()
         self._native_guard = RLock()
+        self._native_activity_lock = RLock()
+        self._native_activity = None
         self._stopping = Event()
         self._channel: WorkerChannel | None = None
         self._operation_channel: WorkerChannel | None = None

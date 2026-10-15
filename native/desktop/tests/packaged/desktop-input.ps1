@@ -211,6 +211,15 @@ function Invoke-Request($request) {
             $target = if ($handle -and $handle.Value) { [IntPtr][long]$handle.Value } else { Get-Window $request.pid }
             return @{ posted = [CadrumoDesktopInput]::Post($target, [uint32]$messages[[string]$request.message]) }
         }
+        'accessible' {
+            Add-Type -AssemblyName UIAutomationClient
+            Add-Type -AssemblyName UIAutomationTypes
+            $element = [System.Windows.Automation.AutomationElement]::FromHandle((Get-Window $request.pid))
+            $elements = $element.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+            return ,@($elements | Select-Object -First 1024 | ForEach-Object {
+                @{ name = $_.Current.Name; role = $_.Current.ControlType.ProgrammaticName }
+            })
+        }
         'processes' {
             $names = @($request.names)
             $all = @(Get-CimInstance Win32_Process | Where-Object { $names -contains $_.Name })

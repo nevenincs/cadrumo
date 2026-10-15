@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import struct
 import sys
 import time
@@ -22,6 +23,34 @@ from cadrumo_client.transport.installed_client import open_installed_client
 _MAXIMUM_REQUEST_LINE_BYTES = 16_384
 _MAXIMUM_RESPONSE_LINE_BYTES = MAXIMUM_FRAME_BYTES + 1
 _MAXIMUM_PASSWORD_BYTES = 4_096
+
+
+def _read_stdin_bytes(fd: int, size: int) -> bytearray:
+    """Read at most ``size`` raw stdin bytes without buffering ahead."""
+    result = bytearray()
+    try:
+        while len(result) < size:
+            chunk = os.read(fd, size - len(result))
+            if not chunk:
+                break
+            result.extend(chunk)
+        return result
+    except BaseException:
+        result[:] = bytes(len(result))
+        raise
+
+
+def _read_stdin_line(fd: int, maximum_bytes: int) -> bytes:
+    """Read one bounded newline frame without locking Python's stdin buffer."""
+    line = bytearray()
+    while len(line) <= maximum_bytes:
+        character = os.read(fd, 1)
+        if not character:
+            break
+        line.extend(character)
+        if character == b"\n":
+            break
+    return bytes(line)
 
 
 def _emit(document: Mapping[str, object]) -> None:
@@ -47,14 +76,15 @@ async def _hold(
 ) -> int:
     client = await open_installed_client(profile_id=profile_id, frontend=frontend)
     try:
+        stdin_fd = sys.stdin.fileno()
         if password_stdin:
-            header = sys.stdin.buffer.read(4)
+            header = _read_stdin_bytes(stdin_fd, 4)
             if len(header) != 4:
                 return 1
             length = struct.unpack("!I", header)[0]
             if not 0 < length <= _MAXIMUM_PASSWORD_BYTES:
                 return 1
-            secret = bytearray(sys.stdin.buffer.read(length))
+            secret = _read_stdin_bytes(stdin_fd, length)
             try:
                 if len(secret) != length:
                     return 1
@@ -78,7 +108,9 @@ async def _hold(
 
         def read_lines() -> None:
             while not retired.is_set():
-                line = sys.stdin.buffer.readline(_MAXIMUM_REQUEST_LINE_BYTES + 1)
+                line = _read_stdin_line(stdin_fd, _MAXIMUM_REQUEST_LINE_BYTES)
+                if retired.is_set():
+                    return
                 lines.put(line)
                 if not line or len(line) > _MAXIMUM_REQUEST_LINE_BYTES:
                     return

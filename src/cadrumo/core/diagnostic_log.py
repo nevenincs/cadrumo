@@ -27,6 +27,10 @@ _LIFECYCLE_FIELDS = tuple(
     sorted(
         {
             "action",
+            "call_name",
+            "handler_name",
+            "held_call_name",
+            "held_elapsed_seconds",
             "request_type",
             "operation_channel",
             "budget_seconds",

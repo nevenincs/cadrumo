@@ -32,7 +32,7 @@ scan_directory = import_module("cadrumo.core.directory_scan").scan_directory
 OutputLanguage = import_module("cadrumo.core.external_constants").OutputLanguage
 PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY
 API_SOURCE_ROOTS = import_module("dev.docs.apidocs.manager").API_SOURCE_ROOTS
-typehints_formatter = import_module("dev.docs.apidocs.rendering").format_type_hint
+typehints_formatter = import_module("dev.docs.apidocs.rendering").TypeHintsFormatter()
 external_type_url = import_module("dev.docs.apidocs.rendering").external_type_url
 
 # Site chrome (header, broadcast strip, footer, accessible names, and the
@@ -144,6 +144,7 @@ def _skip_generated_output_for_i18n(generator: str) -> bool:
 # ── Extensions ──────────────────────────────────────────────────────────────
 extensions = [
     "sphinx.ext.autodoc",
+    "dev.docs.apidocs.attribute_types",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
@@ -162,7 +163,12 @@ if _USER_SCOPE:
     # notfound, intersphinx, napoleon) stays so the user surface renders
     # identically. napoleon is left loaded but inert (its docstring transform
     # never fires without autodoc).
-    _AUTODOC_ONLY_EXTENSIONS = {"sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx_autodoc_typehints"}
+    _AUTODOC_ONLY_EXTENSIONS = {
+        "dev.docs.apidocs.attribute_types",
+        "sphinx.ext.autodoc",
+        "sphinx.ext.viewcode",
+        "sphinx_autodoc_typehints",
+    }
     extensions = [name for name in extensions if name not in _AUTODOC_ONLY_EXTENSIONS]
 if _DESKTOP_FLAVOR:
     # The tooltips load from ``/_/api/v3/embed/``, an endpoint only Read the
@@ -1432,10 +1438,9 @@ def _resolve_short_reference(app, env, node, contnode):
     candidates = _PY_SUFFIX_INDEX.get(short)
     if not (candidates is not None and candidates):
         # Postponed annotations reach the extension as unresolved strings, so
-        # ``typehints_formatter`` cannot inspect their runtime TypeAliasType or
-        # TypeVar identity.  A source-declared alias with no documented object
-        # is implementation vocabulary, not a missing public class.  Preserve
-        # it as inline code; a real documented candidate always takes priority.
+        # ``typehints_formatter`` cannot inspect their runtime TypeVar identity.
+        # Public source aliases have generated ``py:type`` targets; these
+        # remaining declared names are generic parameters, which stay inline.
         if short in _LITERAL_TYPE_HINT_NAMES:
             return contnode
         if target.startswith(("bs4.", "textual.")) or target in {

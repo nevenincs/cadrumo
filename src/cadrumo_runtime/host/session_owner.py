@@ -118,11 +118,12 @@ class ProfileWorkerSessionOwner:
 
     def operation_worker(self) -> ProfileWorkerProcess:
         """Borrow an already admitted worker without holding the guard during callbacks."""
-        with self._guard:
-            if self._lost or self._worker is None:
+        with self._lifecycle_guard:
+            if self._lost or self._stopping.is_set() or self._worker is None:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-            self._worker.require_alive()
-            return self._worker
+            worker = self._worker
+        worker.require_alive()
+        return worker
 
     def extension_record(self, request, payload: bytearray | None = None):
         """Borrow admitted worker custody for an exact generic extension request."""

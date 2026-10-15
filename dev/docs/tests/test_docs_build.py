@@ -807,6 +807,7 @@ def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
         "print('SCOPE_CONFIG=' + json.dumps({"
         "'user_scope': ns['_USER_SCOPE'],"
         "'has_autodoc': 'sphinx.ext.autodoc' in ns['extensions'],"
+        "'has_attribute_types': 'dev.docs.apidocs.attribute_types' in ns['extensions'],"
         "'has_viewcode': 'sphinx.ext.viewcode' in ns['extensions'],"
         "'has_typehints': 'sphinx_autodoc_typehints' in ns['extensions'],"
         "'has_myst': 'myst_parser' in ns['extensions'],"
@@ -847,6 +848,7 @@ def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) ->
     user = _scope_config("user", tmp_path)
     assert user["user_scope"] is True
     assert user["has_autodoc"] is False
+    assert user["has_attribute_types"] is False
     assert user["has_viewcode"] is False
     assert user["has_typehints"] is False
     assert user["excludes_api"] is True
@@ -856,6 +858,7 @@ def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) ->
     full = _scope_config("full", tmp_path)
     assert full["user_scope"] is False
     assert full["has_autodoc"] is True
+    assert full["has_attribute_types"] is True
     assert full["has_viewcode"] is True
     assert full["has_typehints"] is True
     assert full["excludes_api"] is False

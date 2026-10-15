@@ -227,7 +227,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         if channel is None or self._stopping.is_set():
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         if isinstance(self._scope, LinuxProcessScope | MacosProcessScope):
-            with self._native_guard:
+            with self._native_guard, self._native_call("exchange_membership"):
                 if self._stopping.is_set() or not self._scope.owns_process(self._scope.worker_pid):
                     raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         return channel

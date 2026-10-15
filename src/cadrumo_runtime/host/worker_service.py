@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import sys
 import time
 from contextlib import suppress
@@ -58,7 +59,63 @@ from .profile_login import ProfileWorkerHumanLogin
 from .worker_submission_staging import WorkerSubmissionStaging
 
 _ControlDisposition = Literal["handled", "status", "stop"]
+_CONTROL_DISPATCH_SLOW_SECONDS = 0.5
 _log = get_logger(__name__)
+
+_CONTROL_REQUEST_TYPES = (
+    ProfileWorkerControlRequest,
+    ProfileWorkerLeaseRequest,
+    ProfileWorkerRetireRequest,
+    ProfileWorkerHumanBindingRequest,
+    ProfileWorkerHumanReceiptRequest,
+    ProfileWorkerSettlementRequest,
+    ProfileWorkerExtensionRecordRequest,
+    ProfileWorkerContractRequest,
+    ProfileWorkerSubmitRequest,
+    ProfileWorkerSubmissionBeginRequest,
+    ProfileWorkerSubmissionChunkRequest,
+    ProfileWorkerSubmissionFinishRequest,
+    ProfileWorkerSubmissionAbortRequest,
+    ProfileWorkerOperationRequest,
+    ProfileWorkerObserveRequest,
+    ProfileWorkerResumeRequest,
+    ProfileWorkerProjectRequest,
+    ProfileWorkerManageRequest,
+    ProfileWorkerSecretRequest,
+)
+_CONTROL_ACTIONS = frozenset(
+    {
+        "install",
+        "refresh",
+        "share",
+        "lease_transfer",
+        "retire",
+        "operation_settlement",
+        "status",
+        "stop",
+        "password",
+        "receipt",
+        "cancel_human",
+        "prepare_api",
+        "bind_human",
+        "mint_human_receipt",
+        "operation_contract",
+        "operation_submit",
+        "operation_submit_begin",
+        "operation_submit_chunk",
+        "operation_submit_finish",
+        "operation_submit_abort",
+        "operation_start",
+        "operation_secret_ready",
+        "operation_secret",
+        "operation_observe",
+        "operation_resume",
+        "operation_project",
+        "operation_project_page",
+        "operation_manage",
+        "extension_record",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,13 +321,89 @@ async def _dispatch_control_request(context: _WorkerControl, request: object) ->
     return disposition if disposition is not None else "status"
 
 
+def _control_dispatch_metadata(request: object) -> dict[str, str | None]:
+    """Project only closed worker request, handler and action labels for diagnostics."""
+    request_type = type(request).__name__ if type(request) in _CONTROL_REQUEST_TYPES else "UnknownWorkerRequest"
+    if type(request) in {
+        ProfileWorkerLeaseRequest,
+        ProfileWorkerRetireRequest,
+        ProfileWorkerHumanBindingRequest,
+        ProfileWorkerHumanReceiptRequest,
+    }:
+        handler_name = "custody_control"
+    elif type(request) is ProfileWorkerSettlementRequest:
+        handler_name = "metadata_control"
+    elif type(request) is ProfileWorkerExtensionRecordRequest:
+        handler_name = "extension_record"
+    elif isinstance(request, ProfileWorkerControlRequest) and request.action in {"password", "receipt"}:
+        handler_name = "human_control"
+    elif type(request) is ProfileWorkerControlRequest:
+        handler_name = "action_control"
+    else:
+        handler_name = "control_dispatch"
+    candidate_action = getattr(request, "action", None) if type(request) in _CONTROL_REQUEST_TYPES else None
+    action = candidate_action if isinstance(candidate_action, str) and candidate_action in _CONTROL_ACTIONS else None
+    return {"handler_name": handler_name, "request_type": request_type, "request_action": action}
+
+
+def _record_control_dispatch_started(request: object) -> None:
+    """Mark which validated control request is active if its synchronous handler stalls."""
+    try:
+        diagnostic_event(
+            _log,
+            "profile_worker_control_dispatch_started",
+            fields={**_control_dispatch_metadata(request), "outcome": "started"},
+        )
+    except BaseException:
+        return
+
+
+def _record_control_dispatch_elapsed(
+    request: object,
+    *,
+    handler_started: float,
+    outcome: str,
+    primary_error: BaseException | None = None,
+) -> None:
+    """Log only slow dispatches and bounded request/handler labels, never frame contents."""
+    elapsed = max(0.0, time.monotonic() - handler_started)
+    if elapsed < _CONTROL_DISPATCH_SLOW_SECONDS:
+        return
+    try:
+        diagnostic_event(
+            _log,
+            "profile_worker_control_dispatch_slow",
+            fields={
+                **_control_dispatch_metadata(request),
+                "elapsed_seconds": round(elapsed, 3),
+                "outcome": outcome,
+            },
+            level=logging.WARNING,
+            primary_error=primary_error,
+        )
+    except BaseException:
+        return
+
+
 async def _serve_control_requests(context: _WorkerControl) -> None:
     while not context.failed.is_set():
         request = (await _worker_requests.receive(context.channel, context.failed, control=True)).root
         if context.failed.is_set():
             raise RefusalError(RefusalCode.UNAVAILABLE)
         try:
-            disposition = await _dispatch_control_request(context, request)
+            _record_control_dispatch_started(request)
+            dispatch_started = time.monotonic()
+            try:
+                disposition = await _dispatch_control_request(context, request)
+            except BaseException as error:
+                _record_control_dispatch_elapsed(
+                    request,
+                    handler_started=dispatch_started,
+                    outcome="raised",
+                    primary_error=error,
+                )
+                raise
+            _record_control_dispatch_elapsed(request, handler_started=dispatch_started, outcome="completed")
             if disposition == "stop":
                 return
             if disposition == "status":

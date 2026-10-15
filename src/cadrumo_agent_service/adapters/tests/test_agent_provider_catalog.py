@@ -15,7 +15,7 @@ from ...providers.application.ports import ProviderCatalogUnavailableError, Prov
 from ...providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
 from ..agent_process import WindowsAgentInvocationRunner
 from ..agent_programs import PACKAGE_AGENT_VARIABLE
-from ..agent_provider_catalog import CATALOG_ARGUMENTS, AgentProviderCatalogSource
+from ..agent_provider_catalog import AUTH_CAPABILITIES_ARGUMENTS, CATALOG_ARGUMENTS, AgentProviderCatalogSource
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -131,3 +131,29 @@ def test_the_default_runner_is_the_runtime_s_contained_invocation_runner() -> No
     source = AgentProviderCatalogSource(received={})
 
     assert isinstance(source._runner, WindowsAgentInvocationRunner)
+
+
+def test_sign_in_actions_are_agent_reported_and_credential_free(tmp_path: Path) -> None:
+    source, runner = _source(tmp_path, _ok('{"schema_version":1,"providers":["example"]}'))
+    assert source.sign_in_providers() == ("example",)
+    assert source.sign_in_providers() == ("example",)
+    assert len(runner.calls) == 1
+    assert runner.calls[0]["arguments"] == AUTH_CAPABILITIES_ARGUMENTS
+    assert "CADRUMO_LLM_X_API_KEY" not in json.dumps(runner.calls[0]["environment"])
+
+
+@pytest.mark.parametrize(
+    "document",
+    (
+        '{"schema_version":2,"providers":["example"]}',
+        '{"schema_version":1,"providers":["example","example"]}',
+        '{"schema_version":1,"providers":["../other"]}',
+        '{"schema_version":1,"providers":["example"],"command":"unexpected"}',
+    ),
+)
+def test_malformed_sign_in_metadata_is_refused_without_caching(tmp_path: Path, document: str) -> None:
+    source, runner = _source(tmp_path, _ok(document))
+    with pytest.raises(ProviderCatalogUnavailableError):
+        source.sign_in_providers()
+    runner.result = _ok('{"schema_version":1,"providers":[]}')
+    assert source.sign_in_providers() == ()

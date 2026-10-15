@@ -111,6 +111,25 @@ _TYPE_ALIAS_FACTORIES = frozenset(
         "TypeAliasType",
     }
 )
+_BUILTIN_TYPE_EXPRESSIONS = frozenset(
+    {
+        "bool",
+        "bytearray",
+        "bytes",
+        "complex",
+        "dict",
+        "float",
+        "frozenset",
+        "int",
+        "list",
+        "memoryview",
+        "object",
+        "set",
+        "str",
+        "tuple",
+        "type",
+    }
+)
 # Pydantic materialises generic bases on each concrete consumer with the
 # defining class's original ``__module__``/``__qualname__``.  Autodoc would
 # consequently index the defining object (and its fields) again from every
@@ -129,7 +148,7 @@ _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _type_alias_expression(value: ast.expr) -> bool:
+def _type_alias_expression(value: ast.expr, path: Path | None = None) -> bool:
     """Return whether *value* is a source expression that defines a type alias."""
     if isinstance(value, ast.Subscript):
         factory = value.value
@@ -138,13 +157,28 @@ def _type_alias_expression(value: ast.expr) -> bool:
         factory_name = value.value.attr if isinstance(value.value, ast.Attribute) else getattr(factory, "id", None)
         return factory_name in _TYPE_ALIAS_FACTORIES
     if isinstance(value, ast.BinOp):
-        return isinstance(value.op, ast.BitOr)
+        return isinstance(value.op, ast.BitOr) and _union_operand_is_type(value.left, path) and _union_operand_is_type(
+            value.right, path
+        )
     if isinstance(value, ast.Call):
         factory = value.func
         while isinstance(factory, ast.Attribute):
             factory = factory.value
         factory_name = value.func.attr if isinstance(value.func, ast.Attribute) else getattr(factory, "id", None)
         return factory_name in {"NewType", "TypeAliasType"}
+    return False
+
+
+def _union_operand_is_type(value: ast.expr, path: Path | None) -> bool:
+    """Recognize operands of PEP 604 type unions without treating value unions as types."""
+    if isinstance(value, ast.Constant):
+        return value.value is None
+    if isinstance(value, ast.Name):
+        return value.id in _BUILTIN_TYPE_EXPRESSIONS or (path is not None and _module_symbol_is_type(path, value.id))
+    if isinstance(value, ast.Subscript):
+        return _type_alias_expression(value, path) or _union_operand_is_type(value.value, path)
+    if isinstance(value, ast.BinOp):
+        return _type_alias_expression(value, path)
     return False
 
 
@@ -202,7 +236,7 @@ def _module_symbol_is_type(path: Path, symbol: str, seen: frozenset[tuple[Path, 
         if isinstance(statement, ast.Assign) and any(
             isinstance(target, ast.Name) and target.id == symbol for target in statement.targets
         ):
-            if _type_alias_expression(statement.value):
+            if _type_alias_expression(statement.value, path):
                 return True
             if isinstance(statement.value, ast.Name) and source_root is not None and module_name:
                 return _module_symbol_is_type(path, statement.value.id, seen) or _imported_symbol_is_type(
@@ -224,7 +258,7 @@ def _imported_symbol_is_type(
     module_name = _module_name(source_root, path)
     package = module_name if path.name == "__init__.py" else module_name.rpartition(".")[0]
     for statement in tree.body:
-        if not isinstance(statement, ast.ImportFrom) or not statement.module:
+        if not isinstance(statement, ast.ImportFrom) or statement.module is None:
             continue
         for imported in statement.names:
             local_name = imported.asname or imported.name
@@ -272,7 +306,7 @@ def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
             continue
 
         value = statement.value
-        is_type_expression = _type_alias_expression(value)
+        is_type_expression = _type_alias_expression(value, path)
         is_referenced_type_alias = isinstance(value, ast.Name) and _module_symbol_is_type(path, value.id)
         if is_type_expression or is_referenced_type_alias:
             declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
@@ -556,6 +590,8 @@ class ApiStubManager:
             Complete RST source for the stub file.
         """
         title = f"{pkg_name} package"
+        source_path = self._source_path(pkg_name)
+        excluded_members = [alias for alias, _ in _type_alias_declarations(source_path)]
         lines: list[str] = [
             self._heading(title),
             "",
@@ -563,9 +599,11 @@ class ApiStubManager:
             "   :members:",
             "   :show-inheritance:",
             "   :ignore-module-all:",
-            "",
         ]
-        lines.extend(_public_type_aliases(pkg_name, self._source_path(pkg_name)))
+        if excluded_members:
+            lines.append(f"   :exclude-members: {','.join(excluded_members)}")
+        lines.append("")
+        lines.extend(_public_type_aliases(pkg_name, source_path))
         lines.extend(_public_function_aliases(pkg_name))
 
         if sub_packages:
@@ -596,6 +634,7 @@ class ApiStubManager:
             Complete RST source for the stub file.
         """
         title = f"{mod_name} module"
+        source_path = self._source_path(mod_name)
         lines: list[str] = [
             f"{title}\n{'=' * len(title)}",
             "",
@@ -604,11 +643,13 @@ class ApiStubManager:
             "   :show-inheritance:",
             "   :ignore-module-all:",
         ]
-        excluded_generics = _NON_OWNER_GENERIC_IMPORTS.get(mod_name, ())
-        if excluded_generics:
-            lines.append(f"   :exclude-members: {','.join(excluded_generics)}")
+        excluded_members = sorted(
+            {*_NON_OWNER_GENERIC_IMPORTS.get(mod_name, ()), *(alias for alias, _ in _type_alias_declarations(source_path))}
+        )
+        if excluded_members:
+            lines.append(f"   :exclude-members: {','.join(excluded_members)}")
         lines.append("")
-        lines.extend(_public_type_aliases(mod_name, self._source_path(mod_name)))
+        lines.extend(_public_type_aliases(mod_name, source_path))
         lines.extend(_public_function_aliases(mod_name))
         return "\n".join(lines)
 

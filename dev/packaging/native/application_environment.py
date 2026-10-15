@@ -30,7 +30,7 @@ NAME_KINDS = frozenset(
 )
 NAME_ROLES = frozenset({"location", "operator", "package", "pin", "fixed", "slot", "pass"})
 NUMERIC_ARGUMENT_KINDS = frozenset({"handle", "descriptor"})
-ARGUMENT_KINDS = NUMERIC_ARGUMENT_KINDS | {"revision"}
+ARGUMENT_KINDS = NUMERIC_ARGUMENT_KINDS | {"revision", "identifier"}
 OPTION_KINDS = frozenset({"revision"})
 BASE_GROUPS = ("system", "session", "terminal", "display", "network")
 PLATFORMS = ("windows", "posix")
@@ -48,6 +48,7 @@ _LITERAL = re.compile(r"[A-Za-z0-9_.:/=+-]+")
 _OPTION = re.compile(r"--[a-z][a-z0-9]*(-[a-z0-9]+)*")
 # An opaque revision is bounded printable ASCII that cannot be read as an option or a path.
 _REVISION = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
+_IDENTIFIER = re.compile(r"[a-z][a-z0-9_]{0,63}")
 
 
 class ApplicationEnvironmentError(ValueError):
@@ -1150,9 +1151,11 @@ class LaunchRefusedError(Exception):
 
 
 def _argument_value(kind: str, minimum: int, text: str, family: str) -> int | str | None:
-    """Bind an argument to its kind: a number for a handle or descriptor, the text for a revision, else ``None``."""
+    """Bind numeric capabilities or bounded metadata to their declared argument kind."""
     if kind == "revision":
         return text if _REVISION.fullmatch(text) else None
+    if kind == "identifier":
+        return text if _IDENTIFIER.fullmatch(text) else None
     if not text.isascii() or not text.isdigit() or (text.startswith("0") and len(text) > 1):
         return None
     value = int(text)

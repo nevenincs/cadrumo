@@ -6,6 +6,8 @@ import logging
 
 import pytest
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...adapters.agent_programs import AgentProgramRefusalError
 from ...service import service_failure
 from ..controller import AgentHostError, AgentHostRefusal
@@ -40,3 +42,10 @@ def test_unexpected_failure_never_serializes_or_logs_the_exception(caplog: pytes
     assert result == {"event": "refused", "code": "service_failed"}
     assert "ValueError" in caplog.text
     assert "synthetic-private-payload" not in caplog.text
+
+
+def test_runtime_refusal_keeps_its_closed_reason_in_diagnostics(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.WARNING, logger="cadrumo_agent_service.service"):
+        result = service_failure(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+    assert result == {"event": "refused", "code": "service_failed"}
+    assert RefusalCode.DEADLINE_EXCEEDED.value in caplog.text

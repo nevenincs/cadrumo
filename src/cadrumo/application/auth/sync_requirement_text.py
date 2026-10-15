@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ...core.i18n.render import tr
 
-_REASON_KEYS = {
+_REASON_LOCALE_KEYS = {
     "profile_tax_id_required": "auth.sync.requirement.profile_tax_id_required",
     "auth_method_required": "auth.sync.requirement.auth_method_required",
     "certificate_file_required": "auth.sync.requirement.certificate_file_required",
@@ -26,7 +26,7 @@ _REASON_KEYS = {
 
 def sync_requirement_reason(reason: str) -> str:
     """Render a safe reason without interpreting it as a translation key."""
-    key = _REASON_KEYS.get(reason)
+    key = _REASON_LOCALE_KEYS.get(reason)
     return tr(key) if key is not None else tr("auth.sync.requirement.unavailable")
 
 

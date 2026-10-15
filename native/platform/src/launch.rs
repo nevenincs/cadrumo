@@ -135,18 +135,35 @@ fn revision(text: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
 }
 
+fn identifier(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    let Some((first, rest)) = bytes.split_first() else {
+        return false;
+    };
+    bytes.len() <= 64
+        && first.is_ascii_lowercase()
+        && rest
+            .iter()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || *byte == b'_')
+}
+
 /// A typed argument that satisfied its declared kind.
 enum Bound {
     /// A handle or descriptor number, which a declared pair may compare.
     Number(u64),
     /// An opaque revision, which is only checked.
     Revision,
+    /// A lower-case metadata identifier, which grants no process capability.
+    Identifier,
 }
 
 fn bind(kind: &str, minimum: u64, text: &OsStr) -> Option<Bound> {
     let text = text.to_str()?;
     if kind == "revision" {
         return revision(text).then_some(Bound::Revision);
+    }
+    if kind == "identifier" {
+        return identifier(text).then_some(Bound::Identifier);
     }
     let value = decimal(text)?;
     let maximum = match kind {
@@ -190,7 +207,7 @@ fn invocation_matches(invocation: &LaunchInvocation, arguments: &[OsString]) -> 
             Some(Bound::Number(value)) => {
                 values.insert(slot, value);
             }
-            Some(Bound::Revision) => {}
+            Some(Bound::Revision | Bound::Identifier) => {}
             None => return false,
         }
         cursor += 1;
@@ -1004,6 +1021,109 @@ mod tests {
         assert!(bind("revision", 0, OsStr::new("0001")).is_some());
         assert!(bind("revision", 0, &crate::conformance_tests::invalid_unicode()).is_none());
         assert!(bind("unknown", 0, OsStr::new("0001")).is_none());
+    }
+
+    #[test]
+    fn operator_auth_keeps_its_home_and_terminal_but_drops_gateway_credentials() {
+        let scratch = Scratch::new("operator-auth");
+        let profile = select(
+            "cadrumo-agent",
+            &agent_arguments(&["auth", "login", "--provider", "example"]),
+        )
+        .unwrap();
+        let root_name = profile
+            .slots
+            .iter()
+            .find(|slot| slot.required)
+            .unwrap()
+            .name;
+        let ambient = vec![
+            (OsString::from(system_name()), OsString::from("C:\\Windows")),
+            (OsString::from(root_name), scratch.0.as_os_str().to_owned()),
+            (OsString::from("TERM"), OsString::from("xterm")),
+            (
+                OsString::from("CADRUMO_AGENT_EXAMPLE_API_KEY"),
+                OsString::from("must-not-cross"),
+            ),
+            (
+                OsString::from("EXAMPLE_API_KEY"),
+                OsString::from("must-not-cross"),
+            ),
+            (
+                OsString::from("VENDOR_CONFIG_DIR"),
+                OsString::from("must-not-cross"),
+            ),
+        ];
+        let defined = define_environment(
+            profile,
+            &ambient,
+            &scratch.0,
+            &fixed_root(scratch.0.clone()),
+        )
+        .unwrap();
+        assert_eq!(
+            get(&defined.environment, root_name).unwrap(),
+            scratch.0.as_os_str()
+        );
+        assert_eq!(get(&defined.environment, "TERM").unwrap(), "xterm");
+        for name in [
+            "CADRUMO_AGENT_EXAMPLE_API_KEY",
+            "EXAMPLE_API_KEY",
+            "VENDOR_CONFIG_DIR",
+        ] {
+            assert!(get(&defined.environment, name).is_none(), "{name}");
+        }
+        let missing = define_environment(profile, &[], &scratch.0, &fixed_root(scratch.0.clone()));
+        assert!(
+            matches!(missing, Err(DefineError::Refused(LaunchRefusal::Missing(name))) if name == root_name)
+        );
+        assert_eq!(
+            select(
+                "cadrumo-agent",
+                &agent_arguments(&["auth", "providers", "--json"])
+            )
+            .unwrap()
+            .name,
+            "agent-providers"
+        );
+    }
+
+    #[test]
+    fn operator_auth_accepts_only_bounded_provider_identifiers() {
+        let arguments = |provider: &str| {
+            [
+                "-m",
+                "cadrumo_agent.cli.main",
+                "auth",
+                "login",
+                "--provider",
+                provider,
+            ]
+            .into_iter()
+            .map(OsString::from)
+            .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            select("cadrumo-agent", &arguments("example_provider_2"))
+                .unwrap()
+                .name,
+            "agent-auth"
+        );
+        for invalid in [
+            "",
+            "--help",
+            "../other",
+            "name/value",
+            "a b",
+            "UPPER",
+            "a=key",
+            &"z".repeat(65),
+        ] {
+            assert!(
+                select("cadrumo-agent", &arguments(invalid)).is_err(),
+                "{invalid:?}"
+            );
+        }
     }
 
     #[test]

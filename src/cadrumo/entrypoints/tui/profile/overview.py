@@ -419,16 +419,21 @@ class ProfileManagerScreen(
             return
         self.app.push_screen(AeatAuthSetupScreen(self._aeat_auth_setup), self._auth_edited)
 
-    async def _auth_edited(self, _outcome: None) -> None:
+    def _auth_edited(self, _outcome: None) -> None:
+        """Refresh saved authentication without holding the screen's message queue."""
+        self.run_worker(self._reload_auth(), group="profile-auth-readiness", exclusive=True)
+
+    async def _reload_auth(self) -> None:
         if self._aeat_auth_setup is None:
             return
         try:
             overview, self._auth_readiness = await self._aeat_auth_setup.snapshot()
-            await self._apply_overview(overview)
-            await self._redraw()
+            await self._apply_overview(overview, refresh_auth=False)
+            self._sync_source_actions()
         except Exception:
             self._auth_readiness = None
-            await self._redraw()
+            if self.is_attached:
+                self._sync_source_actions()
 
     def _finish_mount(self) -> None:
         """Set focus and scrolling only while the asynchronously redrawn screen remains attached."""

@@ -116,6 +116,8 @@ function build(variant) {
       icons: paths.icons,
     },
   );
+  // Test windows must not activate or close an operator's running desktop.
+  config.identifier += ".desktop-tests";
   // Tauri reads a URL frontend as a remote shell; the host then admits that
   // origin as its shell and loads nothing embedded.
   if (variant === VARIANTS.served) config.build.frontendDist = servedShell();

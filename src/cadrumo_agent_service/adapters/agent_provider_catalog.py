@@ -20,7 +20,9 @@ from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 from threading import Lock
-from typing import Final, override
+from typing import Final, Literal, override
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.logging import get_logger
@@ -34,7 +36,7 @@ from ..providers.application.ports import (
     ProviderCatalogUnavailableError,
     ProviderCatalogUnavailableReason,
 )
-from ..providers.domain.catalog import ProviderCatalog, parse_provider_catalog
+from ..providers.domain.catalog import MAX_CATALOG_LANES, ProviderCatalog, ProviderId, parse_provider_catalog
 from .agent_process import WindowsAgentInvocationRunner
 from .agent_programs import AGENT_COMMAND_LINE, AgentProgramRefusalError, agent_image
 
@@ -43,8 +45,16 @@ _LOGGER = get_logger(__name__)
 CATALOG_VERB: Final = ("providers", "--declared", "--json")
 """The agent's offline provider declaration, serving schema version 2."""
 CATALOG_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, *CATALOG_VERB)
+AUTH_CAPABILITIES_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "auth", "providers", "--json")
 CATALOG_TIMEOUT_SECONDS: Final = 30.0
 CATALOG_OUTPUT_MAX_BYTES: Final = 256 * 1024
+
+
+class _SignInCapabilities(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
+
+    schema_version: Literal[1]
+    providers: tuple[ProviderId, ...] = Field(max_length=MAX_CATALOG_LANES)
 
 
 class AgentProviderCatalogSource(ProviderCatalogSource):
@@ -63,6 +73,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         self._received = os.environ if received is None else received
         self._lock = Lock()
         self._catalog: ProviderCatalog | None = None
+        self._sign_ins: tuple[str, ...] | None = None
 
     @override
     def catalog(self) -> ProviderCatalog:
@@ -78,6 +89,25 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
             return self._catalog
 
     def _fetch(self) -> ProviderCatalog:
+        try:
+            return parse_provider_catalog(self._invoke(CATALOG_ARGUMENTS).decode("utf-8"))
+        except (CoreValidationError, UnicodeDecodeError) as error:
+            raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED) from error
+
+    def sign_in_providers(self) -> tuple[str, ...]:
+        """Read the agent's supported operator login actions, separate from credential kinds."""
+        with self._lock:
+            if self._sign_ins is None:
+                try:
+                    result = _SignInCapabilities.model_validate_json(self._invoke(AUTH_CAPABILITIES_ARGUMENTS))
+                    if len(set(result.providers)) != len(result.providers):
+                        raise ValueError("duplicate_sign_in_provider")
+                except ValueError as error:
+                    raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED) from error
+                self._sign_ins = result.providers
+            return self._sign_ins
+
+    def _invoke(self, arguments: tuple[str, ...]) -> bytes:
         directory = Path(tempfile.gettempdir())
         try:
             image = agent_image(self._agent_source, agent_root=directory, received=self._received)
@@ -86,7 +116,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         try:
             completed = self._runner.run(
                 executable=image.executable,
-                arguments=CATALOG_ARGUMENTS,
+                arguments=arguments,
                 directory=image.directory,
                 environment=system_environment(self._received),
                 timeout=CATALOG_TIMEOUT_SECONDS,
@@ -101,10 +131,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED)
         if len(completed.standard_output) > CATALOG_OUTPUT_MAX_BYTES:
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED)
-        try:
-            return parse_provider_catalog(completed.standard_output.decode("utf-8"))
-        except (CoreValidationError, UnicodeDecodeError) as error:
-            raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED) from error
+        return completed.standard_output
 
 
 @cache

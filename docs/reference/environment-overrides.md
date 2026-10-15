@@ -269,20 +269,20 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Program:** `cadrumo-agent`
 - **Started with:** `-m cadrumo_agent.cli.main serve`; `-m cadrumo_agent.cli.main stores-state`; `-m cadrumo_agent.cli.main setup`; `-m cadrumo_agent.cli.main migrate [--expect-from <expected_from:revision>] [--expect-head <expected_head:revision>]`; `-m cadrumo_agent.cli.main version --json`
 - **Starts from:** only the operating-system group `system`
-- **Passes from its caller:** every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
+- **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS` and every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
 - **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `agent-worker`
 
 - **Program:** `cadrumo-agent`
 - **Started with:** `-m cadrumo_agent.worker`
 - **Starts from:** only the operating-system group `system`
-- **Passes from its caller:** every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
+- **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS` and every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
 - **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `agent-providers`
 

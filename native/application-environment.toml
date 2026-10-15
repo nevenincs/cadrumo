@@ -502,6 +502,19 @@ base_groups = ["system"]
 pins = false
 path = "package"
 
+# Foreground operator sign-in keeps provider output on the person's terminal.
+# It receives no agent settings or direct credentials from the gateway.
+[profiles.agent-auth]
+image = "cadrumo-agent"
+base = "groups"
+base_groups = ["system", "session", "terminal", "display", "network"]
+pass = ["CADRUMO_EXTERNAL_BIN_DIRS"]
+pins = ["temporary"]
+slots = [
+  { name = "CADRUMO_AGENT_HOSTED_ROOT", required = true },
+]
+path = "package"
+
 # ---------------------------------------------------------------------------
 # Invocation tables. Arguments follow the image's own path and are read left to
 # right with no backtracking. A literal must match exactly; a typed argument is
@@ -562,6 +575,29 @@ arguments = [
   { literal = "cadrumo_agent.cli.main" },
   { literal = "providers" },
   { literal = "--declared" },
+  { literal = "--json" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "login" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+]
+
+[[invocations]]
+profile = "agent-providers"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "providers" },
   { literal = "--json" },
 ]
 

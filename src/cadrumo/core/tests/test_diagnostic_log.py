@@ -136,6 +136,34 @@ def test_login_witness_context_allows_only_fixed_scalar_counts_and_spans() -> No
     assert "observed_unknown_count" not in context and "inventory_elapsed_ms" not in context
 
 
+def test_worker_timing_context_allows_closed_dispatch_and_native_call_labels() -> None:
+    fields = {
+        "handler_name": "custody_control",
+        "request_type": "ProfileWorkerRetireRequest",
+        "request_action": "retire",
+        "call_name": "containment",
+        "held_call_name": "process_membership",
+        "held_elapsed_seconds": 0.75,
+        "elapsed_seconds": 0.75,
+        "outcome": "completed",
+    }
+    record = _record()
+    record.__dict__.update(fields)
+    record.__dict__["session_id"] = "synthetic-private-session-canary"
+    stamp_diagnostic_scalar_fields(record)
+
+    _, context = _context(record)
+
+    assert context == {
+        "process_id": os.getpid(),
+        "process_role": "python",
+        "thread_id": threading.get_ident(),
+        "thread_name": threading.current_thread().name,
+        **fields,
+    }
+    assert "session_id" not in record.__dict__["diagnostic_context"]
+
+
 def test_kdf_context_admits_fixed_phase_spans_and_cleanup_without_private_payloads() -> None:
     fields = {
         "stage": "ready_wait",

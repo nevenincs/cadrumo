@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from threading import Event, Lock, Thread
 from uuid import UUID
@@ -20,6 +21,20 @@ from .installed_client import SERVICE_ID, open_service_client
 from .service import AgentService, service_failure
 
 _OUTPUT_GUARD = Lock()
+_MAX_STARTUP_FRAME_BYTES = 64 * 1024
+
+
+def _read_startup_frame(stdin_fd: int) -> bytearray:
+    """Read one bounded startup line without buffering past its newline."""
+    line = bytearray()
+    while len(line) <= _MAX_STARTUP_FRAME_BYTES:
+        part = os.read(stdin_fd, 1)
+        if not part:
+            break
+        line.extend(part)
+        if part == b"\n":
+            break
+    return line
 
 
 def _publish(document: dict[str, object]) -> None:
@@ -50,9 +65,10 @@ def _serve() -> None:
     client = None
     stop = Event()
     try:
-        line = bytearray(sys.stdin.buffer.readline(64 * 1024 + 1))
+        stdin_fd = sys.stdin.fileno()
+        line = _read_startup_frame(stdin_fd)
         try:
-            if len(line) > 64 * 1024 or not line.endswith(b"\n"):
+            if len(line) > _MAX_STARTUP_FRAME_BYTES or not line.endswith(b"\n"):
                 raise ValueError("invalid_startup_frame")
             frame = ServiceStartupFrame.model_validate_json(line)
             bearer = bytearray(frame.bearer, "ascii")
@@ -73,7 +89,14 @@ def _serve() -> None:
         # Native keeps stdin open and owns the complete service/agent process tree.
         def lifetime_ended() -> None:
             try:
-                sys.stdin.buffer.read(1)
+                # Do not use BufferedReader in this daemon: it may stay blocked
+                # after runtime revocation exits the service, and Python then
+                # cannot acquire its stdin lock during interpreter shutdown.
+                os.read(stdin_fd, 1)
+            except OSError:
+                # A closed or invalid parent pipe has the same lifetime meaning
+                # as EOF. The final cleanup path still owns service teardown.
+                pass
             finally:
                 try:
                     service.request_close()

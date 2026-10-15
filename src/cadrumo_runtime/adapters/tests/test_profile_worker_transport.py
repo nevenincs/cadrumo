@@ -95,6 +95,8 @@ def _worker(latency: float) -> _Worker:
     worker._lock = RLock()
     worker._operation_lock = RLock()
     worker._native_guard = RLock()
+    worker._native_activity_lock = RLock()
+    worker._native_activity = None
     worker._stopping = Event()
     # Not a Linux scope, so the exchange needs no native membership check.
     worker._scope = WindowsProcessScope.__new__(WindowsProcessScope)
