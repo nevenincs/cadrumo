@@ -2,21 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Cadrumo</title>
   </head>
   <body>
     <main aria-busy="true">
-      <h1>Cadrumo</h1>
+      <h1>
+        <img id="logo" alt="" draggable="false" />
+        <span id="name">Cadrumo</span>
+      </h1>
       <div class="activity" role="status" aria-live="polite">
         <span class="spinner" aria-hidden="true"></span>
-        <p id="status">Starting Cadrumo…</p>
+        <span id="status" class="sr-only"></span>
       </div>
-      <ol aria-label="Startup progress">
-        <li data-phase="environment">Prepare application</li>
-        <li data-phase="runtime">Start local runtime</li>
-        <li data-phase="workspace">Open workspace</li>
-      </ol>
-      <p id="failure" role="alert" hidden></p>
+      <p id="failure" role="alert" tabindex="0" hidden></p>
     </main>
     <script type="module" src="/src/startup.ts"></script>
   </body>

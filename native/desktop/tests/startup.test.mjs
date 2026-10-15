@@ -135,10 +135,11 @@ async function launch(t, name, overrides = {}) {
         .find((candidate) => candidate.url().endsWith("/startup.html")),
     { what: "the real loading document" },
   );
-  await page.waitForSelector(".spinner");
-  if (name !== "failure")
+  await page.waitForSelector("main");
+  if (name !== "failure") {
     assert.equal(await page.locator("main").getAttribute("aria-busy"), "true");
-  assert((await page.locator(".spinner").boundingBox()).width > 0);
+    assert((await page.locator(".spinner").boundingBox()).width > 0);
+  }
   await page.screenshot({ path: resolve(storage, "loading.png") });
   return { page, child, exit, storage, stderr: () => stderr };
 }
@@ -226,7 +227,7 @@ test(
   async (t) => {
     const run = await launch(t, "cancel");
     await run.page
-      .locator('[data-phase="runtime"][aria-current="step"]')
+      .locator('main[data-phase="runtime"]')
       .waitFor({ timeout: 60000 });
     await close(run, 0);
   },

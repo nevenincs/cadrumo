@@ -1,5 +1,6 @@
 @import "tailwindcss" source(none);
 @import "./tokens.css";
+@import "./fonts.css";
 
 :root {
   color-scheme: light dark;
@@ -7,61 +8,103 @@
   background: var(--color-background-primary);
   color: var(--color-foreground-primary);
 }
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100dvh;
   display: grid;
   place-items: center;
+  padding: calc(var(--spacing) * 6);
+  padding-top: max(calc(var(--spacing) * 6), env(safe-area-inset-top));
+  padding-right: max(calc(var(--spacing) * 6), env(safe-area-inset-right));
+  padding-bottom: max(calc(var(--spacing) * 6), env(safe-area-inset-bottom));
+  padding-left: max(calc(var(--spacing) * 6), env(safe-area-inset-left));
 }
 main {
-  padding: calc(var(--spacing) * 7) calc(var(--spacing) * 9);
-  max-width: var(--spacing-dialog);
+  display: grid;
+  grid-template:
+    "brand" auto
+    "feedback" var(--spacing-control-md) / minmax(0, 1fr);
+  gap: calc(var(--spacing) * 6);
+  width: min(100%, var(--spacing-dialog));
+  min-width: 0;
+  text-align: center;
 }
 h1 {
+  grid-area: brand;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-stack--headings);
   font-size: var(--text-lg);
-  font-weight: 600;
-  margin: 0 0 calc(var(--spacing) * 5);
+  line-height: var(--text-lg--line-height);
+  font-weight: 400;
+}
+#logo {
+  width: var(--startup-logo-size);
+  height: var(--startup-logo-size);
+  flex: none;
+  user-select: none;
+}
+#name {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .activity {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--spacing) * 2.5);
-  font-size: var(--text-base);
-}
-.activity p {
-  margin: 0;
+  grid-area: feedback;
+  display: grid;
+  place-items: center;
 }
 .spinner {
   width: var(--spacing-icon-sm);
   height: var(--spacing-icon-sm);
-  flex: none;
   border: var(--focus-ring) solid var(--color-background-border);
-  border-top-color: currentColor;
+  border-top-color: var(--color-foreground-primary);
   border-radius: 50%;
   animation: spin var(--motion-spin) linear infinite;
 }
-ol {
-  list-style: none;
-  padding: 0 0 0 calc(var(--spacing) * 7);
-  margin: calc(var(--spacing) * 4.5) 0 0;
-  font-size: var(--text-sm);
-  line-height: 1.9;
-  color: var(--color-foreground-muted);
-}
-li[aria-current] {
-  color: var(--color-foreground-primary);
-  font-weight: 600;
-}
-li[data-complete]::before {
-  content: "✓ ";
+.sr-only {
+  position: absolute;
+  width: var(--hairline);
+  height: var(--hairline);
+  padding: 0;
+  margin: calc(-1 * var(--hairline));
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 #failure {
+  grid-area: feedback;
+  align-self: center;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: var(--text-sm);
-  line-height: 1.5;
+  line-height: var(--text-sm--line-height);
+}
+#failure:focus-visible {
+  outline: var(--focus-ring) solid var(--color-foreground-primary);
+  outline-offset: var(--focus-ring);
+  border-radius: var(--radius-xs);
 }
 main[aria-busy="false"] .spinner {
-  animation: none;
-  border-color: var(--cadrumo-accent-danger);
+  display: none;
 }
 @keyframes spin {
   to {
@@ -70,6 +113,12 @@ main[aria-busy="false"] .spinner {
 }
 @media (prefers-reduced-motion: reduce) {
   .spinner {
-    animation-duration: var(--motion-spin-reduced);
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .spinner {
+    border-color: GrayText;
+    border-top-color: CanvasText;
   }
 }

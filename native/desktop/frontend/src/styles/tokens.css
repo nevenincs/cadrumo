@@ -114,6 +114,7 @@
   /* The calendar page at this height keeps its whole head in view while it
      scrolls; shorter, only its controls. */
   --calendar-tall: 22rem;
+  --startup-logo-size: 4rem;
   /* Where a top-placed dialog sits: the same gap is kept below it. */
   --overlay-top: 12vh;
   --overlay-gutter: calc(var(--spacing) * 8);
