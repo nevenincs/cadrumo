@@ -11,6 +11,9 @@ set(platform_contract_inputs "${CADRUMO_SOURCE_ROOT}/native/platforms/${platform
 set(contract_inputs "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
   "${CADRUMO_SOURCE_ROOT}/native/application-environment.toml" ${platform_contract_inputs}
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/application_environment.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/google_oauth.py"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config_google.py"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config_google_client.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/linux_desktop_runtime.py")
 if(CADRUMO_TARGET MATCHES "^linux-")

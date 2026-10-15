@@ -12,6 +12,7 @@ from typing import Any
 from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
+from ..google_oauth import build_client_json, client_build_identity
 from .action_cache import action_lock
 from .build_log import BuildLog, command_line, display_path
 from .build_timing import measure_build
@@ -46,6 +47,7 @@ def _reason(previous: dict[str, Any] | None, identity: dict[str, Any]) -> str:
         ("schema", "receipt has an older schema"),
         ("command", "command changed"),
         ("environment", "environment changed"),
+        ("publisher_client", "publisher application identity changed"),
     ):
         if recorded.get(key) != identity[key]:
             return reason
@@ -76,6 +78,11 @@ def run_cached(build: Path, spec_file: Path, command: list[str]) -> bool:
             "inputs": {},
             "command": command,
             "environment": {name: os.environ.get(name) for name in spec.get("environment", [])},
+            "publisher_client": (
+                client_build_identity("native-contract", build_client_json(REPO_ROOT))
+                if spec["name"] == "native_contract"
+                else None
+            ),
         }
         with timings.phase("input-inventory"):
             identity["inputs"] = inventory(spec["inputs"])
@@ -107,6 +114,10 @@ def run_cached(build: Path, spec_file: Path, command: list[str]) -> bool:
         with timings.phase("input-stability"):
             if identity["inputs"] != inventory(spec["inputs"]):
                 raise RuntimeError(f"Inputs changed during {spec['name']}; completion receipt refused")
+            if spec["name"] == "native_contract" and identity["publisher_client"] != client_build_identity(
+                "native-contract", build_client_json(REPO_ROOT)
+            ):
+                raise RuntimeError("Publisher application identity changed during native contract generation")
         with timings.phase("output-inventory"):
             produced = inventory(spec["outputs"])
         state = {"identity": identity, "outputs": produced}

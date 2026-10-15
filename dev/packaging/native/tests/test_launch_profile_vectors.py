@@ -16,15 +16,17 @@ from ..application_environment import (
     LaunchRefusedError,
     compile_section,
     load,
+    load_for_build,
     reference_define,
     reference_select,
 )
 from ..generate import generate
 from ..layout import load_layout
+from .google_identity import PUBLISHER_CLIENT_JSON
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_DECLARATION = load(REPO_ROOT)
+_DECLARATION = load(REPO_ROOT, package_values={"CADRUMO_GOOGLE_OAUTH_CLIENT_JSON": PUBLISHER_CLIENT_JSON})
 _PLACES = {
     "windows": ("C:\\launch-vector\\package", "C:\\launch-vector\\state", "windows-x86-64"),
     "posix": ("/launch-vector/package", "/launch-vector/state", "linux-x86-64"),
@@ -94,7 +96,8 @@ def test_vectors_cover_the_closed_environment_and_the_kdf_child_on_both_families
             name.startswith("CADRUMO_AGENT_") for vector in closed for name in vector["environment"]
         )
         inherited = next(vector for vector in vectors if vector["profile"] == "kdf-child")
-        assert inherited["environment"] == inherited["ambient"] and inherited["path"] is None
+        assert inherited["environment"] == {**inherited["ambient"], **_DECLARATION.package_values}
+        assert inherited["path"] is None
 
 
 _AGENT = "cadrumo-agent"
@@ -172,7 +175,9 @@ def test_vectors_give_the_declared_provider_catalog_the_system_base_only_on_both
         vector = admitted[0]
         system = {name.upper() for name in _DECLARATION.base[family]["system"]}
         assert any(name.startswith("CADRUMO_") for name in vector["ambient"]), vector["name"]
-        assert {name.upper() for name in vector["environment"]} <= system, vector["name"]
+        assert {name.upper() for name in vector["environment"]} <= system | set(_DECLARATION.package_values), vector[
+            "name"
+        ]
         refused = [
             candidate["arguments"]
             for candidate in _DECLARATION.launch_vectors
@@ -306,6 +311,6 @@ def test_the_contract_carries_the_target_familys_vectors(tmp_path: Path, target:
     family = "windows" if target.startswith("windows") else "posix"
     expected = [vector["name"] for vector in _DECLARATION.launch_vectors if vector["platform"] == family]
     assert [vector["name"] for vector in section["vectors"]] == expected
-    assert section == compile_section(_DECLARATION, load_layout(target))
+    assert section == compile_section(load_for_build(REPO_ROOT), load_layout(target))
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
     assert generated.count("    LaunchVector { name: ") == len(expected)

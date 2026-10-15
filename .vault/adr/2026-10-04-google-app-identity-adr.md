@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#google-app-identity'
 date: '2026-10-04'
-modified: '2026-10-07'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:4dffdfd1d32f7306377cf14db05351a428deca782ce2a7b796917fe5a1fe4bf2'
+body_hash: 'sha256:c0f9d501f349271007bd27485c1931218393d09a4d8f02f49d167e67aca7f1d0'
 related:
   - "[[2026-10-04-google-app-identity-research]]"
   - "[[2026-10-04-google-app-identity-reference]]"
@@ -221,6 +221,12 @@ records when this record was accepted:
   depend on who creates the root folder.
 
 ## Implementation
+
+### Accepted clarification 2026-10-15: fixed binary identity
+
+The product owner explicitly required that the Cadrumo OAuth client identify the application as a privileged package fact, be bundled and set automatically during the build, and never be an overridable runtime environment value. The full publisher client metadata remains a build input from ignored development provisioning or CI; no credential contents are committed. The validated value is embedded in the native contract and installed Python metadata. Every packaged image and invocation, including the generic Python image and inherited child profiles, pins the compiled value after ambient inputs. No profile may admit the name through operator, pass-through or launch-slot configuration. Python settings use installation metadata and ignore environment and dotenv attempts to select another client. Missing or malformed package metadata retains its typed refusal.
+
+This clarifies commitment 3's build provisioning channel. Its former reference to a secret-valued core setting never grants a deployed process the right to replace the publisher identity. Publisher identity, scope restrictions and profile token binding remain unchanged. Authorization is the owner's direct 2026-10-15 instruction in the full-suite repair session.
 
 We will run Cadrumo's Google integration on one publisher-owned Desktop
 client, read from installation data, restricted to non-sensitive scopes and

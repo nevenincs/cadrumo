@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-04'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:63f99da32a17e8c7d0ae588737782243513b283d91c64a623c3bbcf64e10166d'
+body_hash: 'sha256:82ca9d4e71a4c4bd51c904db952d6da51814b88dba2dfdc3a2a3beccd41df995'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
@@ -62,6 +62,12 @@ Binding commitments.
 - **Scope exclusion.** No operator configuration file is introduced. The package-owned `native/application-environment.toml` (`2026-10-13-canonical-environment-application-internals-adr`) declares image environments. (Amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "No configuration file is introduced.") The product reads the process environment only (`src/cadrumo/core/config.py:199-214`); the proposed `U/config/application.env` in `2026-10-03-application-packaging-adr` stays proposed and is a separate decision. The separate `cadrumo_agent_service` resolves cadrumo-agent provider-lane credentials from existing authenticated-profile ciphertext through descriptor-allowlisted opaque runtime custody; tax/runtime code contains no provider schema or resolver. Installed and release builds read none of those from the environment and load no `.env` file. Only the admitted development agent service may resolve an unset provider record from its declared development environment after profile authorization; persisted `disabled` blocks that fallback. Installed service execution has no environment fallback. Tax-domain document extraction retains its existing consent/credential policy. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that this exclusion also covered the provider keys that `src/cadrumo/core/config_llm_fields.py:52-63` reads from the environment in every mode. Narrowed the same day under that record's constraint 11: Cadrumo's own document reading keeps reading its keys from the environment until the owner rules on it.)
 
 ## Implementation
+
+### Accepted publisher identity clarification 2026-10-15
+
+The owner's direct instruction requires the publisher Google OAuth client to be a fixed application identity in every packaged image, including Python and aeat. The canonical environment declaration therefore names it as a global package-fixed build input. The generator resolves that one input through the existing publisher-client build owner, validates it, and embeds it in the native projection. Every profile applies the compiled package fact after ambient inputs, including otherwise inherited profiles; operator groups, pass-through declarations and launch slots cannot replace it. Contract cache identity includes the client digest and refuses a build input that changes during generation. Build provisioning is not runtime environment authority, and Python settings ignore ambient and dotenv client replacements in favor of installed metadata.
+
+This is a scoped exception to the statement that the environment projection imports no Python configuration owner: publisher identity validation and build provisioning are delegated to their existing canonical owner. It does not move storage, names, profile policy, locations or runtime override authority out of the native declaration. No client value or local provisioning contents enter this decision record. The same clarification is recorded in 2026-10-04-google-app-identity-adr.
 
 We will make the Python core storage owner the single declaration of every location and environment control, project it through the existing native contract generator into one versioned `contract.json`, and give installed builds a per-user, per-channel, cwd-independent default root that the native host resolves once and pins for every child. Items marked *hypothesis* may change within the Constraints.
 

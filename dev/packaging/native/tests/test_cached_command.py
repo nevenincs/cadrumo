@@ -13,9 +13,50 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ...command_execution import run_command
+from ...google_oauth import GOOGLE_OAUTH_ENV
 from ..cached_command import run_cached
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_native_contract_cache_tracks_the_publisher_identity_without_recording_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "count"
+    marker = tmp_path / "receipt.json"
+    spec = tmp_path / "spec.json"
+    spec.write_text(
+        json.dumps({"name": "native_contract", "inputs": [], "outputs": [str(output)], "marker": str(marker)}),
+        encoding="utf-8",
+    )
+    command = [
+        sys.executable,
+        "-c",
+        "import pathlib,sys; p=pathlib.Path(sys.argv[1]); "
+        "p.write_text(str(int(p.read_text())+1) if p.exists() else '1')",
+        str(output),
+    ]
+    for identity, count in (("publisher-first", "1"), ("publisher-second", "2")):
+        payload = json.dumps(
+            {
+                "installed": {
+                    "client_id": identity,
+                    "client_secret": "synthetic-public-client-secret",
+                    "project_id": "synthetic",
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "redirect_uris": ["http://localhost"],
+                }
+            }
+        )
+        monkeypatch.setenv(GOOGLE_OAUTH_ENV, payload)
+        assert run_cached(tmp_path, spec, command)
+        assert output.read_text() == count
+        assert not run_cached(tmp_path, spec, command)
+        receipt = marker.read_text()
+        assert identity not in receipt
+        assert "synthetic-public-client-secret" not in receipt
 
 
 def test_content_currency_and_output_recovery(tmp_path: Path) -> None:

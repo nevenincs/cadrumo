@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from importlib.resources.abc import Traversable  # nosemgrep
-from typing import Final
+from typing import Final, override
 
 from pydantic import Field, SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from .resources.bundled_data import packaged_data
 
@@ -45,17 +45,30 @@ def _installed_client_json() -> SecretStr | None:
 class GoogleOAuthClientSettings(BaseSettings):
     """The shared Google client field without storage or profile initialization.
 
-    Runtime reads process environment and installed resources only. Build tools
-    may explicitly supply ``_env_file`` for their development provisioning file.
+    Runtime uses installed resources. Build tools own the separate environment
+    and dotenv provisioning sources used to embed the publisher's identity.
     """
 
     model_config = SettingsConfigDict(env_ignore_empty=True, extra="ignore")
+
+    @classmethod
+    @override
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Keep the application identity independent of ambient configuration."""
+        return (init_settings,)
 
     cadrumo_google_oauth_client_json: SecretStr | None = Field(
         default_factory=_installed_client_json,
         description=(
             "Publisher Google Desktop OAuth client download as complete installed-envelope JSON. "
-            "Provision through the development environment or CI secret; installed builds fall back "
-            "to their bundled client metadata. Never use a web client or user token."
+            "Provision at build time through the development environment or CI secret; runtime uses "
+            "the bundled client metadata without environment overrides. Never use a web client or user token."
         ),
     )

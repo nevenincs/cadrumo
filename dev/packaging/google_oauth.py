@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Literal, overload
+from typing import Literal, overload, override
 
 from pydantic import Field, SecretStr
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource
 
 from cadrumo.core.config_google import (
     CLIENT_METADATA_MAX_BYTES,
@@ -50,6 +51,19 @@ def build_client_json(root: Path, *, required: bool = True) -> SecretStr | None:
     # changes only the fallback factory, retaining the shared field and source order.
     class BuildSettings(GoogleOAuthClientSettings):
         cadrumo_google_oauth_client_json: SecretStr | None = Field(default_factory=embedded_client)
+
+        @classmethod
+        @override
+        def settings_customise_sources(
+            cls,
+            settings_cls: type[BaseSettings],
+            init_settings: PydanticBaseSettingsSource,
+            env_settings: PydanticBaseSettingsSource,
+            dotenv_settings: PydanticBaseSettingsSource,
+            file_secret_settings: PydanticBaseSettingsSource,
+        ) -> tuple[PydanticBaseSettingsSource, ...]:
+            """Admit publisher provisioning only while constructing artifacts."""
+            return init_settings, env_settings, dotenv_settings
 
     try:
         selected = BuildSettings(_env_file=root / "env/.env").cadrumo_google_oauth_client_json

@@ -226,7 +226,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     ``channel`` is the release channel the identity projection validated for this build.
     """
     layout = load_layout(target, root=root)
-    declaration = application_environment.load(root)
+    declaration = application_environment.load_for_build(root)
     launch = application_environment.compile_section(declaration, layout)
     release = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml")
     build_channel = release.channel

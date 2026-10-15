@@ -14,6 +14,9 @@
 # pass (a component's own setting its parent passes through unchanged).
 
 schema = 1
+package_fixed = [
+  { name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", build_setting = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON" },
+]
 
 # ---------------------------------------------------------------------------
 # Environment names the package sets, passes or lets operators override.
@@ -96,6 +99,7 @@ TEMP = { kind = "directory", role = "pin" }
 TMP = { kind = "directory", role = "pin" }
 TMPDIR = { kind = "directory", role = "pin" }
 CADRUMO_AUTHORITY_ROOT = { kind = "directory", role = "fixed" }
+CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = { kind = "text", role = "fixed" }
 CADRUMO_PACKAGE_AGENT_EXECUTABLE = { kind = "executable", role = "fixed" }
 CADRUMO_PACKAGE_RELAY_EXECUTABLE = { kind = "executable", role = "fixed" }
 CADRUMO_PACKAGE_AEAT_EXECUTABLE = { kind = "executable", role = "fixed" }
@@ -646,7 +650,7 @@ name = "windows-python-defines-a-closed-environment"
 platform = "windows"
 image = "python"
 arguments = ["-c", "pass"]
-ambient = { SystemRoot = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "C:\\agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", AEAT_BASE_URL = "https://example.invalid", PYTHONPATH = "C:\\elsewhere", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_AUTHORITY_ROOT = "C:\\elsewhere", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", SystemRoot = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "C:\\agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", AEAT_BASE_URL = "https://example.invalid", PYTHONPATH = "C:\\elsewhere", ANTHROPIC_API_KEY = "must-not-cross", CADRUMO_AUTHORITY_ROOT = "C:\\elsewhere", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
 profile = "python"
 environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
@@ -676,7 +680,7 @@ name = "windows-kdf-child-keeps-its-parent-environment"
 platform = "windows"
 image = "python"
 arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
-ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
 profile = "kdf-child"
 environment = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
 
@@ -705,7 +709,7 @@ name = "posix-python-defines-a-closed-environment"
 platform = "posix"
 image = "python"
 arguments = ["-c", "pass"]
-ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", http_proxy = "http://proxy.invalid:3128", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "/agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", LD_PRELOAD = "/elsewhere.so", PYTHONHOME = "/elsewhere", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", http_proxy = "http://proxy.invalid:3128", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_HOSTED_ROOT = "/agent", CADRUMO_SECRET_PASSPHRASE = "must-not-cross", LD_PRELOAD = "/elsewhere.so", PYTHONHOME = "/elsewhere", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
 profile = "python"
 environment = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", http_proxy = "http://proxy.invalid:3128", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
@@ -725,7 +729,7 @@ name = "posix-kdf-child-keeps-its-parent-environment"
 platform = "posix"
 image = "python"
 arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
-ambient = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
+ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
 profile = "kdf-child"
 environment = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
 

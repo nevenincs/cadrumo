@@ -206,8 +206,13 @@ def test_a_gateway_that_dies_without_a_line_is_reported_with_its_status(stand_in
 
 def test_a_gateway_that_never_answers_is_stopped_at_the_timeout_and_killed(stand_in: StandIn, tmp_path: Path) -> None:
     stand_in.agent_mode("hang")
+    checks = _checks(stand_in, tmp_path)
+    asyncio.run(checks.stores())
+    checks.timeout = 8.0
     started = time.monotonic()
-    message = _failure(stand_in, tmp_path, "gateway", timeout=8.0)
+    with pytest.raises(probe.ProbeFailedError) as raised:
+        asyncio.run(checks.gateway())
+    message = str(raised.value)
     assert "no protocol line before the timeout" in message
     assert time.monotonic() - started < 60
     pid = stand_in.gateway_pid()

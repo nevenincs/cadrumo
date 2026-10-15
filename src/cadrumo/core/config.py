@@ -82,7 +82,9 @@ LIVE_READ_TEST_OPT_IN_VALUE = _live_test_config.LIVE_READ_TEST_OPT_IN_VALUE
 LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
-_NON_ENVIRONMENT_SELECTION_NAMES: Final[frozenset[str]] = frozenset({"CADRUMO_ACTIVE_PROFILE"})
+_NON_ENVIRONMENT_SELECTION_NAMES: Final[frozenset[str]] = frozenset(
+    {"CADRUMO_ACTIVE_PROFILE", "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"}
+)
 """Settings names that no environment source may populate.
 
 Profile SELECTION is not an environment concern. ``CADRUMO_ACTIVE_PROFILE``

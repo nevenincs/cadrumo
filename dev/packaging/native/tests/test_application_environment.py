@@ -17,8 +17,9 @@ from ..application_environment import (
     ApplicationEnvironmentError,
     LaunchRefusedError,
     compile_section,
-    load,
+    load_for_build,
     parse,
+    reference_define,
     reference_select,
 )
 from ..generate import generate
@@ -29,9 +30,75 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
 
 
+@pytest.mark.parametrize("family,target", [("windows", "windows-x86-64"), ("posix", "linux-x86-64")])
+def test_publisher_identity_is_compiled_for_every_profile_and_ignores_ambient_overrides(
+    monkeypatch: pytest.MonkeyPatch, family: str, target: str
+) -> None:
+    payload = json.dumps(
+        {
+            "installed": {
+                "client_id": "synthetic-publisher.apps.googleusercontent.com",
+                "client_secret": "synthetic-public-client-secret",
+                "project_id": "synthetic-publisher",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "redirect_uris": ["http://localhost"],
+            }
+        }
+    )
+    name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"
+    monkeypatch.setenv(name, payload)
+    declaration = load_for_build(REPO_ROOT)
+    layout = load_layout(target)
+    section = compile_section(declaration, layout)
+    assert section["package_fixed"] == {name: payload}
+    package = "C:/package" if family == "windows" else "/package"
+    root = "C:/state" if family == "windows" else "/state"
+    ambient = {
+        "SYSTEMROOT": "C:/Windows",
+        "HOME": "/home/test",
+        name: "ambient-override",
+        **{slot.name: root for slot in declaration.profiles["agent-auth"]["slots"] if slot.required},
+    }
+    if family == "windows":
+        ambient[name.lower()] = "case-folded-override"
+    for profile in declaration.profiles:
+        defined = reference_define(
+            declaration,
+            family,
+            profile,
+            ambient,
+            package=package,
+            root=root,
+            layout_paths=layout["paths"],
+            suffix=layout["entrypoint_suffix"],
+        )
+        assert defined[name] == payload
+        assert "ambient-override" not in defined.values()
+        assert "case-folded-override" not in defined.values()
+    for admitted in (
+        'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]',
+        'slots = [{ name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", required = false }]',
+    ):
+        planted = _SOURCE.replace("[profiles.python]\n", "[profiles.python]\n" + admitted + "\n", 1)
+        with pytest.raises(ApplicationEnvironmentError, match="package_fixed"):
+            parse(planted)
+
+
+def test_build_settings_are_reserved_for_package_fixed_values() -> None:
+    planted = _SOURCE.replace(
+        "[profiles.python]\n",
+        '[profiles.python]\nfixed = [{ name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", build_setting = "publisher" }]\n',
+        1,
+    )
+    with pytest.raises(ApplicationEnvironmentError, match=r"profiles\.python\.fixed\[0\].*exactly one"):
+        parse(planted)
+
+
 @pytest.mark.parametrize("family", ("windows", "posix"))
 def test_operator_sign_in_accepts_metadata_but_not_flags_or_paths(family: str) -> None:
-    declaration = load(REPO_ROOT)
+    declaration = load_for_build(REPO_ROOT)
     prefix = ("-m", "cadrumo_agent.cli.main", "auth", "login", "--provider")
     assert reference_select(declaration, family, "cadrumo-agent", (*prefix, "example_provider_2")) == "agent-auth"
     for invalid in ("", "--help", "../other", "a/b", "a\\b", "A", "a b", "a=key", "a" * 65):
@@ -42,7 +109,7 @@ def test_operator_sign_in_accepts_metadata_but_not_flags_or_paths(family: str) -
 
 
 def test_the_declaration_validates_and_covers_every_built_image() -> None:
-    declaration = load(REPO_ROOT)
+    declaration = load_for_build(REPO_ROOT)
     for target in ("windows-x86-64", "linux-x86-64", "macos-arm64"):
         section = compile_section(declaration, load_layout(target))
         assert {profile["image"] for profile in section["profiles"]} == set(section["images"])

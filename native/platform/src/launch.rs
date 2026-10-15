@@ -7,7 +7,7 @@
 
 use crate::{
     EXECUTABLE, LAUNCH_AUTHORITY_PATH, LAUNCH_AUTHORITY_PIN, LAUNCH_IMAGES, LAUNCH_INVOCATIONS,
-    LAUNCH_PATH_ENTRIES, LAUNCH_POSIX_SYSTEM_PATH, LAUNCH_PROFILES, LAUNCH_REFUSALS,
+    LAUNCH_PACKAGE_FIXED, LAUNCH_PATH_ENTRIES, LAUNCH_POSIX_SYSTEM_PATH, LAUNCH_PROFILES, LAUNCH_REFUSALS,
     LAUNCH_TEMPORARY_PINS, LAUNCH_WINDOWS_SYSTEM_SUBPATHS, LAUNCH_WINDOWS_SYSTEM_VARIABLE,
     LaunchInvocation, LaunchProfile, NATIVE, ROOT_VARIABLE, TEMPORARY_ENV, storage,
 };
@@ -378,8 +378,10 @@ pub fn define_environment(
     resolve_root: &ResolveRoot<'_>,
 ) -> Result<Defined, DefineError> {
     if profile.inherit {
+        let mut environment = ambient.to_vec();
+        apply_package_fixed(&mut environment);
         return Ok(Defined {
-            environment: ambient.to_vec(),
+            environment,
             directories: Vec::new(),
         });
     }
@@ -479,10 +481,18 @@ pub fn define_environment(
         environment.retain(|(key, _)| !name_matches(key, name));
         environment.push((OsString::from(name), value));
     }
+    apply_package_fixed(&mut environment);
     Ok(Defined {
         environment,
         directories,
     })
+}
+
+fn apply_package_fixed(environment: &mut Vec<(OsString, OsString)>) {
+    for (name, value) in LAUNCH_PACKAGE_FIXED {
+        environment.retain(|(key, _)| !name_matches(key, name));
+        environment.push((OsString::from(name), OsString::from(value)));
+    }
 }
 
 /// Create the private directories a defined environment pins.
@@ -692,7 +702,9 @@ mod tests {
             &fixed_root(PathBuf::from("/")),
         )
         .unwrap();
-        assert_eq!(defined.environment, ambient);
+        let mut expected = ambient;
+        apply_package_fixed(&mut expected);
+        assert_eq!(defined.environment, expected);
         assert!(defined.directories.is_empty());
         // A near miss is not the declared invocation: the image's default profile applies.
         let slots = numeric_positions(&arguments);
@@ -987,7 +999,9 @@ mod tests {
             .iter()
             .map(|(name, _)| name.to_string_lossy().to_uppercase())
             .collect();
-        assert_eq!(names, [system_name().to_owned(), "PATH".to_owned()]);
+        let mut expected_names = vec![system_name().to_owned(), "PATH".to_owned()];
+        expected_names.extend(LAUNCH_PACKAGE_FIXED.iter().map(|(name, _)| (*name).to_owned()));
+        assert_eq!(names, expected_names);
         assert!(defined.directories.is_empty());
         for near in [
             &["providers"][..],

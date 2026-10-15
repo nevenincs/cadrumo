@@ -1,4 +1,4 @@
-"""The bundled agent image: declared by the package, built from the interpreter host, admitting seven invocations."""
+"""The bundled agent image: declared by the package and built from the interpreter host."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..application_environment import DECLARATION, ApplicationEnvironmentError, compile_section, load, parse
+from ..application_environment import DECLARATION, ApplicationEnvironmentError, compile_section, load_for_build, parse
 from ..generate import generate
 from ..layout import bundled_image_files, bundled_images, load_layout
 
@@ -60,7 +60,7 @@ def _revision_option(flag: str, slot: str) -> dict[str, object]:
 
 
 _MODULE = ("-m", "cadrumo_agent.cli.main")
-# The seven invocations the image admits and the profile each selects, written out independently of the file.
+# The invocations the image admits and the profile each selects, written out independently of the file.
 _INVOCATIONS = [
     ("agent-gateway", _literals(*_MODULE, "serve")),
     (
@@ -79,11 +79,16 @@ _INVOCATIONS = [
     ("agent-gateway", _literals(*_MODULE, "version", "--json")),
     ("agent-worker", _literals("-m", "cadrumo_agent.worker")),
     ("agent-providers", _literals(*_MODULE, "providers", "--declared", "--json")),
+    (
+        "agent-auth",
+        [*_literals(*_MODULE, "auth", "login", "--provider"), {"slot": "provider", "kind": "identifier", "minimum": 0}],
+    ),
+    ("agent-providers", _literals(*_MODULE, "auth", "providers", "--json")),
 ]
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
-def test_the_contract_compiles_exactly_the_seven_invocations_of_the_agent_image(tmp_path: Path, target: str) -> None:
+def test_the_contract_compiles_exactly_the_declared_invocations_of_the_agent_image(tmp_path: Path, target: str) -> None:
     generate(REPO_ROOT, tmp_path, target=target)
     section = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))["application_environment"]
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
@@ -104,6 +109,7 @@ def test_the_contract_compiles_exactly_the_seven_invocations_of_the_agent_image(
         "agent-gateway",
         "agent-worker",
         "agent-providers",
+        "agent-auth",
     }
     assert generated.count('LaunchInvocation { profile: "agent-gateway"') == 5
     assert 'LaunchArgument { literal: None, option: Some("--expect-from"), slot: Some("expected_from"), ' in generated
@@ -122,7 +128,7 @@ def test_the_contract_compiles_exactly_the_seven_invocations_of_the_agent_image(
 
 
 def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile() -> None:
-    declaration = load(REPO_ROOT)
+    declaration = load_for_build(REPO_ROOT)
     section = compile_section(declaration, load_layout("windows-x86-64"))
     by_prefix = {profile["name"] for profile in section["profiles"] if profile["prefix"]}
     assert by_prefix == {"agent-gateway", "agent-worker"}
@@ -232,7 +238,11 @@ def _without_the_agent_table() -> str:
                 'CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }\n'
                 'CADRUMO_AGENT_LISTED = { kind = "text", role = "pass" }\n',
                 1,
-            ).replace(_GATEWAY_PINS, _GATEWAY_PINS + '\npass = ["CADRUMO_AGENT_LISTED"]', 1),
+            ).replace(
+                'pass = ["CADRUMO_EXTERNAL_BIN_DIRS"]\n' + _GATEWAY_PINS,
+                'pass = ["CADRUMO_EXTERNAL_BIN_DIRS", "CADRUMO_AGENT_LISTED"]\n' + _GATEWAY_PINS,
+                1,
+            ),
             "admits them by prefix only",
             id="listed-agent-name",
         ),
@@ -250,7 +260,7 @@ def test_the_declaration_admits_agent_names_by_the_prefix_alone(planted: str, me
 
 
 def test_only_the_service_pins_the_agent_location_and_generic_hosts_take_no_agent_slot() -> None:
-    section = compile_section(load(REPO_ROOT), load_layout("windows-x86-64"))
+    section = compile_section(load_for_build(REPO_ROOT), load_layout("windows-x86-64"))
     profiles = {profile["name"]: profile for profile in section["profiles"]}
     service_fixed = {value["name"] for value in profiles["cadrumo-agent-service"]["fixed"]}
     agent_location = "CADRUMO_PACKAGE_AGENT_EXECUTABLE"

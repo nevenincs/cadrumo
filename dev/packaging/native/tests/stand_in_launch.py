@@ -22,16 +22,21 @@ from ..layout import load_layout
 
 HOST = """
 import json, os, subprocess, sys
+from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, {root!r})
-from dev.packaging.native.application_environment import LaunchRefusedError, load, reference_define, reference_select
+from dev.packaging.native.application_environment import (
+    DECLARATION, LaunchRefusedError, parse, reference_define, reference_select,
+)
 from dev.packaging.native.layout import load_layout
 
 here = Path(__file__).resolve().parent
 faults = json.loads((here / "faults.json").read_text(encoding="utf-8"))
 package, image, *arguments = sys.argv[1:]
-declaration = load(Path({root!r}))
+compiled = json.loads((here / "contract.json").read_text(encoding="utf-8"))
+declaration = replace(parse((Path({root!r}) / DECLARATION).read_text(encoding="utf-8")),
+                      package_values=compiled["application_environment"]["package_fixed"])
 layout = load_layout({target!r})
 windows = os.name == "nt"
 family = "windows" if windows else "posix"
@@ -269,6 +274,7 @@ def build(directory: Path, target: str, contract: dict[str, Any]) -> StandIn:
     (stub / "cadrumo_agent" / "worker.py").write_text(AGENT_WORKER, encoding="utf-8")
     (stub / "names.json").write_text(json.dumps(agent_names), encoding="utf-8")
     command = directory / "stand-in" / "host.py"
+    (command.parent / "contract.json").write_text(json.dumps(contract), encoding="utf-8")
     command.write_text(HOST.format(root=str(REPO_ROOT), target=target), encoding="utf-8")
     stand_in = StandIn(package, contract, command, stub, directory / "stand-in" / "faults.json", agent_names)
     stand_in.agent_mode("unproven")

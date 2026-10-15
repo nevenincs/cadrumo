@@ -156,8 +156,8 @@ def test_an_invalid_file_never_surfaces_its_contents(monkeypatch: pytest.MonkeyP
     assert "example.invalid" not in rendered
 
 
-def test_environment_wins_over_bundled_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    use_installation_client(monkeypatch, tmp_path)
+def test_bundled_client_cannot_be_overridden_by_environment(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    installed = use_installation_client(monkeypatch, tmp_path)
     document = _envelope()
     document["installed"]["client_id"] = "environment.apps.googleusercontent.com"
     monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", json.dumps(document))
@@ -165,26 +165,18 @@ def test_environment_wins_over_bundled_client(monkeypatch: pytest.MonkeyPatch, t
     with override_settings(
         cadrumo_google_oauth_client_json=GoogleOAuthClientSettings().cadrumo_google_oauth_client_json
     ):
-        assert load_installation_client().client_id == "environment.apps.googleusercontent.com"
+        assert load_installation_client() == installed
 
 
-def test_invalid_environment_does_not_fall_back_or_disclose_input(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    use_installation_client(monkeypatch, tmp_path)
+def test_invalid_environment_cannot_replace_the_bundled_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    installed = use_installation_client(monkeypatch, tmp_path)
     marker = "private-invalid-client-json"
     monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", "{" + marker)
     reset_settings_cache()
-    with (
-        override_settings(
-            cadrumo_google_oauth_client_json=GoogleOAuthClientSettings().cadrumo_google_oauth_client_json
-        ),
-        pytest.raises(GoogleAuthClientMetadataUnavailableError) as refused,
+    with override_settings(
+        cadrumo_google_oauth_client_json=GoogleOAuthClientSettings().cadrumo_google_oauth_client_json
     ):
-        load_installation_client()
-    assert marker not in str(refused.value)
-    assert refused.value.__context__ is None
-    assert refused.value.translated_message == "adapters.google.installation_client.errors.client_metadata_invalid"
+        assert load_installation_client() == installed
 
 
 def test_blank_environment_uses_packaged_default(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -207,7 +199,7 @@ def test_settings_serialization_redacts_credentials(monkeypatch: pytest.MonkeyPa
         assert SYNTHETIC_CLIENT_CREDENTIAL not in repr(settings.model_dump())
 
 
-def test_explicit_build_dotenv_uses_process_environment_precedence(
+def test_runtime_client_cannot_be_selected_by_dotenv_or_process_environment(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     use_absent_installation_client(monkeypatch, tmp_path)
@@ -215,9 +207,12 @@ def test_explicit_build_dotenv_uses_process_environment_precedence(
     dotenv.write_text("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON='" + json.dumps(_envelope()) + "'\n", encoding="utf-8")
     assert GoogleOAuthClientSettings().cadrumo_google_oauth_client_json is None
     from_file = GoogleOAuthClientSettings(_env_file=dotenv).cadrumo_google_oauth_client_json
-    assert from_file is not None
-    assert from_file.get_secret_value() == json.dumps(_envelope())
+    assert from_file is None
     monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", "process-value")
     from_process = GoogleOAuthClientSettings(_env_file=dotenv).cadrumo_google_oauth_client_json
-    assert from_process is not None
-    assert from_process.get_secret_value() == "process-value"
+    assert from_process is None
+    use_installation_client(monkeypatch, tmp_path)
+    for settings in (GoogleOAuthClientSettings(), Settings()):
+        selected = settings.cadrumo_google_oauth_client_json
+        assert selected is not None
+        assert selected.get_secret_value() == json.dumps(_envelope())

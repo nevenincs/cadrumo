@@ -244,8 +244,10 @@ reader, refuses a violation, and compiles it into the `application_environment`
 section of `contract.json` and into matching constants in `contract.rs` and
 `contract.h`. No TOML parser enters a C host or the platform crate. The file is a
 declared input of the contract step in `native/cmake/Contract.cmake`. The
-generator imports no `cadrumo` module for the environment contract. Its
-remaining inputs from the Python product describe the product or its runtime
+generator validates the publisher's Google Desktop OAuth build provisioning
+through its canonical Python owner. It embeds that identity in the native
+contract and in the Python distribution's installation data. Its
+other inputs from the Python product describe the product or its runtime
 protocol, not any process environment: product identity, runtime transport, the
 runtime's exit-reason table and the manager's locale strings. A static test holds
 that list. The command line reads no packaging file, manifest or contract.
@@ -284,6 +286,14 @@ names, its pass-through names, its pins, its fixed package values, its launch
 parameters and its `PATH` policy. An undeclared name does not survive. Later
 sources win over earlier ones: base names, operator and pass-through names,
 host pins, package fixed values, then validated launch parameters, then `PATH`.
+Global `package_fixed` values are applied last to every image and invocation,
+including profiles that inherit their caller's environment.
+`CADRUMO_GOOGLE_OAUTH_CLIENT_JSON` is one such value: build provisioning selects
+the publisher identity once, and the native binary replaces any ambient value.
+No profile may expose it as an operator setting, pass-through value or launch
+slot. Python settings read the bundled metadata and accept no environment or
+dotenv override. Contract caching binds the publisher client's digest without
+recording the provisioning contents in its receipt.
 The host passes an operator or pass-through name unchanged and does not judge how
 a component uses it; the command line validates its own settings as before. The
 operator groups are the relocatable storage members, presentation settings,

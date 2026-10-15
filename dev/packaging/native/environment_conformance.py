@@ -31,6 +31,7 @@ from ..command_execution import run_command
 from .application_environment import (
     DECLARATION,
     ApplicationEnvironment,
+    bind_build_provisioning,
     channel_directory,
     compile_section,
     parse,
@@ -85,16 +86,16 @@ class Reference:
         return self.family == "windows"
 
 
-def reference_from_text(text: str, layout: Mapping[str, Any]) -> Reference:
+def reference_from_text(text: str, layout: Mapping[str, Any], *, source: Path = REPO_ROOT) -> Reference:
     """Validate the declaration's text and resolve it for ``layout``'s target."""
-    declaration = parse(text)
+    declaration = bind_build_provisioning(parse(text), source)
     section = compile_section(declaration, layout)
     return Reference(declaration, section, layout, tomllib.loads(text)["agent"], str(section["platform_family"]))
 
 
 def load_reference(source: Path, layout: Mapping[str, Any]) -> Reference:
     """Read the declaration under ``source`` and resolve it for ``layout``'s target."""
-    return reference_from_text((source / DECLARATION).read_text(encoding="utf-8"), layout)
+    return reference_from_text((source / DECLARATION).read_text(encoding="utf-8"), layout, source=source)
 
 
 def installed_platform() -> str:

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import json
 import re
 import tomllib
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 from typing import Any
 
@@ -134,6 +133,8 @@ class ApplicationEnvironment:
     root: Mapping[str, Any]
     vectors: tuple[Mapping[str, Any], ...]
     launch_vectors: tuple[Mapping[str, Any], ...]
+    package_fixed: tuple[FixedValue, ...] = ()
+    package_values: Mapping[str, str] = field(default_factory=dict)
 
 
 def _fail(message: str) -> ApplicationEnvironmentError:
@@ -313,11 +314,22 @@ def _invocations(raw: object) -> tuple[Invocation, ...]:
     return tuple(invocations)
 
 
-def _fixed(raw: object, where: str, names: Mapping[str, Mapping[str, str]], *, role: str) -> FixedValue:
+def _fixed(
+    raw: object,
+    where: str,
+    names: Mapping[str, Mapping[str, str]],
+    *,
+    role: str,
+    allow_build_setting: bool = False,
+) -> FixedValue:
     entry = _table(raw, where)
-    sources = {"value", "layout_path", "image"} & set(entry)
+    allowed = {"value", "layout_path", "image"}
+    if allow_build_setting:
+        allowed.add("build_setting")
+    sources = allowed & set(entry)
     if len(sources) != 1:
-        raise _fail(f"{where} must declare exactly one of value, layout_path or image")
+        choices = "value, layout_path, image or build_setting" if allow_build_setting else "value, layout_path or image"
+        raise _fail(f"{where} must declare exactly one of {choices}")
     _keys(entry, where, {"name", *sources})
     name, source = entry["name"], next(iter(sources))
     if names.get(name, {}).get("role") != role:
@@ -781,7 +793,7 @@ def parse(text: str) -> ApplicationEnvironment:
         "the declaration",
         {"schema", "names", "groups", "base", "pins", "path", "profiles", "host_classes", "native_host"}
         | {"components", "root"},
-        {"invocations", "launch_vectors", "agent"},
+        {"invocations", "launch_vectors", "agent", "package_fixed"},
     )
     if document["schema"] != SCHEMA or isinstance(document["schema"], bool):
         raise _fail(f"schema must be {SCHEMA}")
@@ -816,6 +828,23 @@ def parse(text: str) -> ApplicationEnvironment:
     root_table = _table(document["root"], "root")
     root = _root(root_table, names)
     profiles = _profiles(document["profiles"], names, groups, root["variable"])
+    package_fixed = tuple(
+        _fixed(value, f"package_fixed[{index}]", names, role="fixed", allow_build_setting=True)
+        for index, value in enumerate(_list(document.get("package_fixed", []), "package_fixed"))
+    )
+    if any(value.source != "build_setting" for value in package_fixed):
+        raise _fail("package_fixed must name build settings")
+    package_names = {value.name for value in package_fixed}
+    if len(package_names) != len(package_fixed):
+        raise _fail("package_fixed repeats a name")
+    for entry in profiles.values():
+        if package_names & {
+            *entry["operator"],
+            *entry["pass"],
+            *(slot.name for slot in entry["slots"]),
+            *(value.name for value in entry["fixed"]),
+        }:
+            raise _fail("a profile cannot admit or override a package_fixed name")
     if "agent" in document:
         _agent(document["agent"], names, profiles)
     elif any(entry["agent_names"] for entry in profiles.values()):
@@ -862,12 +891,42 @@ def parse(text: str) -> ApplicationEnvironment:
         root=root,
         vectors=_vectors(root_table.get("vectors"), root),
         launch_vectors=_launch_vectors(document.get("launch_vectors", []), profiles, native_host),
+        package_fixed=package_fixed,
     )
 
 
-def load(root: Path) -> ApplicationEnvironment:
-    """Read and validate the declaration from a source tree."""
-    return parse((root / DECLARATION).read_text(encoding="utf-8"))
+def load(root: Path, *, package_values: Mapping[str, str] | None = None) -> ApplicationEnvironment:
+    """Read declaration metadata without consulting publisher provisioning."""
+    declaration = parse((root / DECLARATION).read_text(encoding="utf-8"))
+    return declaration if package_values is None else _with_package_values(declaration, package_values)
+
+
+def _with_package_values(declaration: ApplicationEnvironment, values: Mapping[str, str]) -> ApplicationEnvironment:
+    expected = {fixed.name for fixed in declaration.package_fixed}
+    if set(values) != expected or any(not value or "\0" in value for value in values.values()):
+        raise _fail("package-fixed build values are missing or invalid")
+    vectors = tuple(
+        {**vector, "environment": {**vector["environment"], **values}} if vector["refusal"] is None else vector
+        for vector in declaration.launch_vectors
+    )
+    return replace(declaration, package_values=dict(values), launch_vectors=vectors)
+
+
+def load_for_build(root: Path) -> ApplicationEnvironment:
+    """Bind validated publisher provisioning for native contract generation."""
+    return bind_build_provisioning(load(root), root)
+
+
+def bind_build_provisioning(declaration: ApplicationEnvironment, root: Path) -> ApplicationEnvironment:
+    """Resolve declared fixed inputs through their canonical build owners."""
+    from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json
+
+    values: dict[str, str] = {}
+    for fixed in declaration.package_fixed:
+        if fixed.value != GOOGLE_OAUTH_ENV:
+            raise _fail("package_fixed names an unknown build setting")
+        values[fixed.name] = build_client_json(root).get_secret_value()
+    return _with_package_values(declaration, values)
 
 
 def _platform_family(layout: Mapping[str, Any]) -> str:
@@ -906,6 +965,8 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
     declared = {entry["image"] for entry in declaration.profiles.values()}
     if declared != set(built):
         raise _fail(f"profiles must cover exactly the built images {sorted(built)}; declared {sorted(declared)}")
+    if set(declaration.package_values) != {fixed.name for fixed in declaration.package_fixed}:
+        raise _fail("package-fixed values must be resolved before contract generation")
     authority = _package_relative(layout, declaration.authority.value)
 
     def fixed(value: FixedValue) -> dict[str, str]:
@@ -973,6 +1034,7 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
             "posix_system": list(declaration.posix_system),
         },
         "profiles": profiles,
+        "package_fixed": dict(declaration.package_values),
         "invocations": invocations,
         "native_host": {
             "launch_profile_refused": declaration.native_host["launch_profile_refused"],
@@ -983,9 +1045,19 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
 
 
 def _rust_string(value: str) -> str:
-    if not value.isascii() or any(character in value for character in '"\\') or not value.isprintable():
-        raise _fail(f"cannot spell {value!r} as a contract literal")
-    return f'"{value}"'
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        raise _fail("cannot spell a value as a contract literal") from None
+    escaped = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
+    return (
+        '"'
+        + "".join(
+            escaped.get(character, f"\\u{{{ord(character):x}}}" if ord(character) < 32 else character)
+            for character in value
+        )
+        + '"'
+    )
 
 
 def _rust_strings(values: Sequence[str]) -> str:
@@ -993,10 +1065,7 @@ def _rust_strings(values: Sequence[str]) -> str:
 
 
 def _rust_text(value: str) -> str:
-    # Vector values may hold path separators; JSON's escapes are valid Rust for printable ASCII.
-    if not value.isascii() or not value.isprintable():
-        raise _fail(f"cannot spell {value!r} as a contract literal")
-    return json.dumps(value)
+    return _rust_string(value)
 
 
 def _rust_pairs(values: Sequence[Sequence[str]]) -> str:
@@ -1051,6 +1120,7 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         f"pub const LAUNCH_PROFILE_REFUSED_EXIT: u32 = {section['native_host']['launch_profile_refused']};",
         f"pub const LAUNCH_REFUSALS: &[&str] = {_rust_strings(section['native_host']['refusals'])};",
         f"pub const LAUNCH_IMAGES: &[&str] = {_rust_strings(section['images'])};",
+        f"pub const LAUNCH_PACKAGE_FIXED: &[(&str, &str)] = {_rust_pairs(tuple(section['package_fixed'].items()))};",
         f"pub const LAUNCH_TEMPORARY_PINS: &[&str] = {_rust_strings(section['pins']['temporary'])};",
         f"pub const LAUNCH_AUTHORITY_PIN: &str = {_rust_string(section['pins']['authority']['name'])};",
         f"pub const LAUNCH_AUTHORITY_PATH: &str = {_rust_string(section['pins']['authority']['value'])};",
@@ -1242,7 +1312,12 @@ def reference_define(
 
     profile = declaration.profiles[profile_name]
     if profile["inherit"]:
-        return dict(ambient)
+        inherited = {
+            name: value
+            for name, value in ambient.items()
+            if (name.upper() if folded else name) not in declaration.package_values
+        }
+        return {**inherited, **declaration.package_values}
     defined: dict[str, str] = {}
 
     def put(name: str, value: str) -> None:
@@ -1313,4 +1388,6 @@ def reference_define(
                 else:
                     entries.extend(declaration.posix_system)
         put("PATH", (";" if family == "windows" else ":").join(entries))
+    for name, value in declaration.package_values.items():
+        put(name, value)
     return defined
