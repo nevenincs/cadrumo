@@ -14,6 +14,7 @@ from mcp.server import Server
 from pydantic import AllowInfNan, Field
 from sphinx.application import Sphinx
 
+from cadrumo.application.operations.models import CredentialFreeOperationRequest
 from cadrumo.application.user_profile.access_administration import FreshPasswordAuthorization
 from cadrumo.application.user_profile.access_contracts import AccessEvaluationContext, AccessSession
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -173,6 +174,7 @@ def test_type_alias_class_references_and_regex_fields_render_in_sphinx(tmp_path:
 
 def _build_type_alias_and_regex_probe(tmp_path: Path) -> None:
     """The generated alias target and formatter resolve under nitpicky Sphinx."""
+    request_annotations = dict(CredentialFreeOperationRequest.__annotations__)
     assert build_server.__annotations__["return"] == "Server"
     dependency_types = (UUID, FrontendClient, McpSurface)
     assert tuple((value.__module__, value.__qualname__) for value in dependency_types) == (
@@ -283,6 +285,9 @@ def setup(app):
         "The fully qualified MCP target is :class:`mcp.server.lowlevel.server.Server`.\n\n"
         f"{runtime_adapter_target}"
         f"{dependency_targets}\n\n"
+        ".. autoattribute:: cadrumo.application.operations.models.CredentialFreeOperationRequest.model_config\n"
+        "   :annotation:\n"
+        "   :no-value:\n\n"
         ".. autofunction:: cadrumo_harness.mcp.server.build_server\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._fresh_password_signature_probe\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._access_session_signature_probe\n\n"
@@ -296,6 +301,19 @@ def setup(app):
         encoding="utf-8",
     )
     app.build(force_all=True)
+
+    assert CredentialFreeOperationRequest.__annotations__ == request_annotations
+    assert "__pydantic_extra__" not in CredentialFreeOperationRequest.__annotations__
+    from cadrumo.application.user_profile import operations
+    from cadrumo.application.user_profile.view_operation import ProfileViewOperationRequest
+
+    request_schema = ProfileViewOperationRequest.model_json_schema()
+    assert request_schema["title"] == "ProfileViewOperationRequest"
+    assert "profile_id" in request_schema["properties"]
+    assert any(
+        definition.request_type is ProfileViewOperationRequest
+        for definition in operations.build_user_profile_operation_definitions()
+    )
 
     diagnostics = [
         line.partition(marker)[2].rsplit(" [", maxsplit=1)[0]

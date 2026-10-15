@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, override
 
 from docutils.statemachine import StringList
+from pydantic import BaseModel
 from sphinx.application import Sphinx
 from sphinx.ext.autodoc import AttributeDocumenter
 from sphinx.util.inspect import signature as sphinx_signature
@@ -17,6 +18,20 @@ class ApiAttributeDocumenter(AttributeDocumenter):
     """Keep constrained metadata intact without feeding regexes to RST parsing."""
 
     _rendered_field_type: tuple[str, str | None] | None = None
+
+    @override
+    def update_annotations(self, parent: Any) -> None:
+        """Keep inherited Pydantic annotations in their defining namespace.
+
+        Sphinx copies source annotations from every base onto the documented
+        class. Pydantic subsequently interprets ``__pydantic_extra__`` as an
+        explicit subclass annotation, resolving BaseModel's ``Dict`` against
+        the application module and leaving new subclasses incomplete. Model
+        fields already have runtime annotations, so no source backfill is needed.
+        """
+        if isinstance(parent, type) and issubclass(parent, BaseModel):
+            return
+        super().update_annotations(parent)
 
     @override
     def add_line(self, line: str, source: str, *lineno: int) -> None:

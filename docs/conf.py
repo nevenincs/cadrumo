@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import os
 import warnings
+from functools import cache
 from importlib import import_module
 from importlib.util import resolve_name
 
@@ -1409,22 +1410,23 @@ def _api_source_path(module_name: str) -> Path | None:
     return None
 
 
-def _source_binding_target(module_name: str, symbol: str) -> str | None:
-    """Return the source-level owner bound to *symbol* in one API module."""
+@cache
+def _source_bindings(module_name: str) -> dict[str, str]:
+    """Parse one module's final source bindings once per documentation build."""
     source_path = _api_source_path(module_name)
     if source_path is None or not source_path.is_file():
-        return None
+        return {}
     try:
         tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
     except (OSError, SyntaxError, UnicodeDecodeError):
-        return None
+        return {}
 
     package = module_name if source_path.name == "__init__.py" else module_name.rpartition(".")[0]
-    owner: str | None = None
+    bindings: dict[str, str] = {}
     for statement in tree.body:
         if isinstance(statement, ast.ImportFrom):
             for imported in statement.names:
-                if imported.name == "*" or (imported.asname or imported.name) != symbol:
+                if imported.name == "*":
                     continue
                 if statement.module is None:
                     try:
@@ -1438,7 +1440,7 @@ def _source_binding_target(module_name: str, symbol: str) -> str | None:
                         continue
                 else:
                     imported_module = statement.module
-                owner = f"{imported_module}.{imported.name}"
+                bindings[imported.asname or imported.name] = f"{imported_module}.{imported.name}"
             continue
 
         bound_names: set[str] = set()
@@ -1450,9 +1452,19 @@ def _source_binding_target(module_name: str, symbol: str) -> str | None:
             targets = statement.targets if isinstance(statement, ast.Assign) else (statement.target,)
             for target in targets:
                 bound_names.update(node.id for node in ast.walk(target) if isinstance(node, ast.Name))
-        if symbol in bound_names:
-            owner = f"{module_name}.{symbol}"
-    return owner
+        for symbol in bound_names:
+            bindings[symbol] = f"{module_name}.{symbol}"
+    return bindings
+
+
+def _source_binding_target(module_name: str, symbol: str) -> str | None:
+    """Return the source-level owner bound to *symbol* in one API module."""
+    return _source_bindings(module_name).get(symbol)
+
+
+def _clear_source_binding_cache(app, env, docnames) -> None:
+    """Discard prior-build bindings before Sphinx reads the next source set."""
+    _source_bindings.cache_clear()
 
 
 def _contextual_api_target(env, node, symbol: str, candidates: list[str]) -> str | None:
@@ -2169,6 +2181,7 @@ def setup(app):
     # source, once for every screen that inherits Textual's ``compose``.
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings, priority=400)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
+    app.connect("env-before-read-docs", _clear_source_binding_cache)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_api_stubs)
