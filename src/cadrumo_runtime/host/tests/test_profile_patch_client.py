@@ -30,6 +30,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -38,6 +39,7 @@ from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.profile_language import read_profile_language, set_profile_language
 from cadrumo_client.transport.profile_mutations import ProfileMutationRunError, run_profile_mutation
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -252,3 +254,67 @@ def test_native_patch_is_atomic_noop_and_exact_profile_bound(tmp_path: Path) -> 
         assert foreign.record_revision == foreign_initial.record_revision
         assert foreign.content_digest == foreign_initial.content_digest
         assert foreign_events == foreign_initial_events
+
+
+def test_canonical_language_bridge_writes_registered_fact_and_notifies_other_frontend(tmp_path: Path) -> None:
+    """Admitted CLI/TUI connections share canonical language without changing another profile."""
+    with worker_profiles(tmp_path) as (root, targets):
+        profile_id = targets[0][0].binding.profile_id
+        foreign_id = targets[1][0].binding.profile_id
+        _initial_record, initial_events = _snapshot(profile_id, root=root)
+        foreign_before, foreign_events = _snapshot(foreign_id, root=root)
+        endpoint = WindowsEndpoint(storage_root=root)
+        installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
+        stop, boot, native = Event(), uuid4(), MemoryNativePort()
+        profiles = RuntimeProfileConnections(
+            storage_root=root,
+            storage_identity=endpoint.storage_identity,
+            runtime_boot_id=boot,
+            stop=stop,
+            capture_login=lambda _channel: _LoginObservation(),
+            secret_store=lambda: native,
+        )
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
+        launch = LaunchDoor(
+            endpoint, expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity)
+        )
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            running = pool.submit(server.serve)
+            try:
+                assert server.ready.wait(3)
+                with (
+                    asyncio.run(
+                        FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
+                    ) as cli,
+                    asyncio.run(
+                        FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+                    ) as tui,
+                ):
+                    cli.login_password(bytearray(PROFILE_INPUT.encode()))
+                    tui.login_password(bytearray(PROFILE_INPUT.encode()))
+                    dirty = Event()
+                    tui.subscribe_profile_language_changes(lambda _event: dirty.set())
+                    original = read_profile_language(tui)
+                    dirty.clear()
+                    changed = set_profile_language(cli, OutputLanguage.HU)
+                    assert changed.language is OutputLanguage.HU
+                    assert changed.record_revision == original.record_revision + 1
+                    assert dirty.wait(5)
+                    assert read_profile_language(tui).language is OutputLanguage.HU
+                    assert set_profile_language(cli, OutputLanguage.HU).record_revision == changed.record_revision
+                    cli.lock()
+                    with pytest.raises(FrontendRefusedError):
+                        set_profile_language(cli, OutputLanguage.CA)
+            finally:
+                stop.set()
+                running.result(timeout=15)
+                endpoint.close()
+        persisted, persisted_events = _snapshot(profile_id, root=root)
+        assert any(fact.path == PROFILE_OUTPUT_LANGUAGE_PATH and fact.value == "hu" for fact in persisted.facts)
+        assert persisted_events == initial_events + 1
+        foreign_after, after_events = _snapshot(foreign_id, root=root)
+        assert foreign_after.content_digest == foreign_before.content_digest
+        assert after_events == foreign_events

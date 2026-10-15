@@ -20,6 +20,7 @@ from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ..account import AccountSessionExpiredError
+from ..components.language import localized
 from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
@@ -362,10 +363,10 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.invoice.title"), classes="cadrumo-banner")
+        yield localized(Static(tr("tui.ledger.invoice.title"), classes="cadrumo-banner"), "tui.ledger.invoice.title")
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(tr("tui.ledger.invoice.prompt"), markup=False)
+            yield localized(Static(tr("tui.ledger.invoice.prompt"), markup=False), "tui.ledger.invoice.prompt")
             yield Static(_field_label("kind"), markup=False)
             yield Select[str](
                 tuple((tr(_KIND_LOCALE_KEYS[kind]), kind.value) for kind in InvoiceKind),
@@ -377,7 +378,11 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 label = _field_label(name)
                 yield Static(label if required else tr("tui.ledger.invoice.optional", label=label), markup=False)
                 yield Input(value=_DEFAULTS.get(name, ""), id=f"ledger-invoice-{name.replace('_', '-')}")
-            yield Static(tr("tui.ledger.invoice.optional", label=_field_label("operation_type")), markup=False)
+            yield localized(
+                Static(tr("tui.ledger.invoice.optional", label=_field_label("operation_type")), markup=False),
+                "tui.ledger.invoice.optional",
+                label=_field_label("operation_type"),
+            )
             yield Select[str](
                 tuple((key.value, key.value) for key in IntracomOperationType),
                 prompt=tr("tui.ledger.invoice.operation_type_none"),
@@ -398,27 +403,51 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 allow_blank=False,
                 id="ledger-invoice-lease",
             )
-            yield Static(tr("tui.ledger.invoice.optional", label=_field_label("situacion_inmueble")), markup=False)
+            yield localized(
+                Static(tr("tui.ledger.invoice.optional", label=_field_label("situacion_inmueble")), markup=False),
+                "tui.ledger.invoice.optional",
+                label=_field_label("situacion_inmueble"),
+            )
             yield Select[str](
                 tuple((tr(key), code.value) for code, key in _SITUACION_LOCALE_KEYS.items()),
                 prompt=tr("tui.ledger.invoice.situacion_none"),
                 allow_blank=True,
                 id="ledger-invoice-situacion-inmueble",
             )
-            yield Static(tr("tui.ledger.invoice.line.heading"), markup=False)
+            yield localized(
+                Static(tr("tui.ledger.invoice.line.heading"), markup=False), "tui.ledger.invoice.line.heading"
+            )
             for name, required in _LINE_FIELDS:
                 label = _line_field_label(name)
                 yield Static(label if required else tr("tui.ledger.invoice.optional", label=label), markup=False)
                 yield Input(id=_line_input_id(name))
-            yield Button(tr("tui.ledger.invoice.line.add"), id="ledger-invoice-line-add")
-            yield Button(tr("tui.ledger.invoice.line.remove"), id="ledger-invoice-line-remove", disabled=True)
-            yield Static(tr("tui.ledger.invoice.line.none"), id="ledger-invoice-lines", markup=False)
-            yield Button(tr("tui.ledger.invoice.review"), id="ledger-invoice-review", variant="primary")
+            yield localized(
+                Button(tr("tui.ledger.invoice.line.add"), id="ledger-invoice-line-add"), "tui.ledger.invoice.line.add"
+            )
+            yield localized(
+                Button(tr("tui.ledger.invoice.line.remove"), id="ledger-invoice-line-remove", disabled=True),
+                "tui.ledger.invoice.line.remove",
+            )
+            yield localized(
+                Static(tr("tui.ledger.invoice.line.none"), id="ledger-invoice-lines", markup=False),
+                "tui.ledger.invoice.line.none",
+            )
+            yield localized(
+                Button(tr("tui.ledger.invoice.review"), id="ledger-invoice-review", variant="primary"),
+                "tui.ledger.invoice.review",
+            )
             yield Static("", id="ledger-invoice-summary", markup=False)
             yield Static("", id="ledger-flow-status", markup=False)
-            yield Button(tr("tui.ledger.invoice.confirm"), id="ledger-invoice-confirm", disabled=True)
-            yield Button(tr("tui.ledger.invoice.cancel"), id="ledger-invoice-cancel")
-            yield Button(tr("tui.ledger.invoice.again"), id="ledger-invoice-again")
+            yield localized(
+                Button(tr("tui.ledger.invoice.confirm"), id="ledger-invoice-confirm", disabled=True),
+                "tui.ledger.invoice.confirm",
+            )
+            yield localized(
+                Button(tr("tui.ledger.invoice.cancel"), id="ledger-invoice-cancel"), "tui.ledger.invoice.cancel"
+            )
+            yield localized(
+                Button(tr("tui.ledger.invoice.again"), id="ledger-invoice-again"), "tui.ledger.invoice.again"
+            )
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:

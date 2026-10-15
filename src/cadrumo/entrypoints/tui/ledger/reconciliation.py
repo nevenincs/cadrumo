@@ -13,6 +13,7 @@ from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
+from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
@@ -47,38 +48,67 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.reconciliation.title"), classes="cadrumo-banner")
+        yield localized(
+            Static(tr("tui.ledger.reconciliation.title"), classes="cadrumo-banner"), "tui.ledger.reconciliation.title"
+        )
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(tr("tui.ledger.reconciliation.local_only"), markup=False)
-            yield Static(
-                tr("tui.ledger.reconciliation.suggestions"),
-                classes="cadrumo-heading cadrumo-heading-lead",
-                markup=False,
+            yield localized(
+                Static(tr("tui.ledger.reconciliation.local_only"), markup=False), "tui.ledger.reconciliation.local_only"
+            )
+            yield localized(
+                Static(
+                    tr("tui.ledger.reconciliation.suggestions"),
+                    classes="cadrumo-heading cadrumo-heading-lead",
+                    markup=False,
+                ),
+                "tui.ledger.reconciliation.suggestions",
             )
             yield ContentDataTable[str](id="ledger-suggestions", cursor_type="row", zebra_stripes=True)
-            yield Static(
-                tr("tui.ledger.reconciliation.inconsistencies"),
-                classes="cadrumo-heading",
-                markup=False,
+            yield localized(
+                Static(
+                    tr("tui.ledger.reconciliation.inconsistencies"),
+                    classes="cadrumo-heading",
+                    markup=False,
+                ),
+                "tui.ledger.reconciliation.inconsistencies",
             )
             yield ContentDataTable[str](id="ledger-inconsistencies", cursor_type="row", zebra_stripes=True)
-            yield Static(
-                tr("tui.ledger.reconciliation.affected"),
-                classes="cadrumo-heading",
-                markup=False,
+            yield localized(
+                Static(
+                    tr("tui.ledger.reconciliation.affected"),
+                    classes="cadrumo-heading",
+                    markup=False,
+                ),
+                "tui.ledger.reconciliation.affected",
             )
             yield ContentDataTable[str](id="ledger-affected", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
-            yield Button(
-                tr("tui.ledger.reconciliation.confirm"),
-                id="ledger-reconciliation-confirm",
-                disabled=True,
+            yield localized(
+                Button(
+                    tr("tui.ledger.reconciliation.confirm"),
+                    id="ledger-reconciliation-confirm",
+                    disabled=True,
+                ),
+                "tui.ledger.reconciliation.confirm",
             )
-            yield Button(tr("tui.ledger.reconciliation.cancel"), id="ledger-reconciliation-cancel")
+            yield localized(
+                Button(tr("tui.ledger.reconciliation.cancel"), id="ledger-reconciliation-cancel"),
+                "tui.ledger.reconciliation.cancel",
+            )
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the existing projection, preserving semantic cursors and controls."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
+
     def on_mount(self) -> None:
+        """Populate the initially mounted projection."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """Populate all three local authorities without joining remote AEAT state."""
         self.populate_navigation()
         suggestions = cast("DataTable[str]", self.query_one("#ledger-suggestions", DataTable))

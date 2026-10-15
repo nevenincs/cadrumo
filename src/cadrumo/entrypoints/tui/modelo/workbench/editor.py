@@ -64,8 +64,9 @@ from .....application.modelo.work_form_models import (
     ModeloFormScalar,
 )
 from .....core.external_constants import OutputLanguage
-from .....core.i18n.render import tr
+from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
+from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from . import editor_explanations as _editor_explanations
 from .casilla_list_models import CasillaListEntry
@@ -343,6 +344,7 @@ class CasillaEditorPanel(Vertical):
         self._aeat_imported = aeat_imported
         self._parse = parse
         self._language = language
+        self._entry_language = language
         self._limits = limits
         self._read_only_reason = read_only_reason
         self._can_clear = can_clear and read_only_reason is None
@@ -388,7 +390,7 @@ class CasillaEditorPanel(Vertical):
     @staticmethod
     def _block(block_id: str, label_key: str, text: str) -> Horizontal:
         return Horizontal(
-            Static(tr(label_key), classes="editor-block-label", markup=False),
+            localized(Static(tr(label_key), classes="editor-block-label", markup=False), label_key),
             Static(text, classes="editor-block-text", id=f"{block_id}-text", markup=False),
             id=block_id,
             classes="editor-block",
@@ -438,13 +440,19 @@ class CasillaEditorPanel(Vertical):
 
     def _entry(self) -> ComposeResult:
         with Horizontal(id="editor-entry"):
-            yield Static(tr("tui.modelo.workbench.editor.block.new_value"), classes="editor-block-label", markup=False)
+            yield localized(
+                Static(tr("tui.modelo.workbench.editor.block.new_value"), classes="editor-block-label", markup=False),
+                "tui.modelo.workbench.editor.block.new_value",
+            )
             with Vertical(id="editor-field"):
-                yield Input(
-                    value=self._prefill or "",
-                    placeholder=tr(f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}"),
-                    max_length=MAX_EDIT_LEXEME_LENGTH,
-                    id="editor-input",
+                yield localized(
+                    Input(
+                        value=self._prefill or "",
+                        placeholder=tr(f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}"),
+                        max_length=MAX_EDIT_LEXEME_LENGTH,
+                        id="editor-input",
+                    ),
+                    f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}",
                 )
                 yield Static(self._hint(), id="editor-hint", markup=False)
                 yield Static("", id="editor-readback", markup=False)
@@ -471,21 +479,38 @@ class CasillaEditorPanel(Vertical):
     def _actions(self) -> ComposeResult:
         if self.read_only:
             with Horizontal(id="editor-actions"):
-                yield Button(tr("tui.modelo.workbench.key.back"), id="editor-cancel")
+                yield localized(
+                    Button(tr("tui.modelo.workbench.key.back"), id="editor-cancel"), "tui.modelo.workbench.key.back"
+                )
                 if self._open_area is not None:
                     yield Button(self._open_label(self._open_area), id="editor-open", variant="primary")
             return
         if self._can_clear or self._can_restore:
             with Horizontal(id="editor-alternatives"):
                 if self._can_clear:
-                    yield Button(tr("tui.modelo.workbench.editor.clear"), id="editor-clear")
+                    yield localized(
+                        Button(tr("tui.modelo.workbench.editor.clear"), id="editor-clear"),
+                        "tui.modelo.workbench.editor.clear",
+                    )
                 if self._can_restore:
-                    yield Button(tr("tui.modelo.workbench.editor.restore"), id="editor-restore")
+                    yield localized(
+                        Button(tr("tui.modelo.workbench.editor.restore"), id="editor-restore"),
+                        "tui.modelo.workbench.editor.restore",
+                    )
         with Horizontal(id="editor-actions"):
-            yield Button(tr("tui.modelo.workbench.editor.cancel"), id="editor-cancel")
-            yield Button(tr("tui.modelo.workbench.editor.save"), id="editor-save", disabled=True)
-            yield Button(
-                tr("tui.modelo.workbench.editor.save_next"), id="editor-save-next", variant="primary", disabled=True
+            yield localized(
+                Button(tr("tui.modelo.workbench.editor.cancel"), id="editor-cancel"),
+                "tui.modelo.workbench.editor.cancel",
+            )
+            yield localized(
+                Button(tr("tui.modelo.workbench.editor.save"), id="editor-save", disabled=True),
+                "tui.modelo.workbench.editor.save",
+            )
+            yield localized(
+                Button(
+                    tr("tui.modelo.workbench.editor.save_next"), id="editor-save-next", variant="primary", disabled=True
+                ),
+                "tui.modelo.workbench.editor.save_next",
             )
 
     @override
@@ -517,12 +542,28 @@ class CasillaEditorPanel(Vertical):
         self._read(field_input.value)
         field_input.focus()
 
+    async def refresh_language(self) -> None:
+        """Reword the editor without touching its lexeme, selection or parsed decision."""
+        self._language = OutputLanguage(output_language())
+        refresh_localized_widgets(self)
+        if not self.read_only:
+            self.query_one("#editor-input", Input).placeholder = tr(
+                f"tui.modelo.workbench.editor.placeholder.{self._hint_kind()}", locale=self._entry_language.value
+            )
+            self.query_one("#editor-hint", Static).update(self._hint())
+        for selector, text in (("#editor-now-text", self._now_text()), ("#editor-saved-text", self._saved_text())):
+            if self.query(selector):
+                self.query_one(selector, Static).update(text)
+        keys = self._keys_text()
+        if keys is not None and self.query("#editor-keys"):
+            self.query_one("#editor-keys", Static).update(keys)
+
     def _hint_kind(self) -> str:
         data_type = self._field.data_type
         return data_type if data_type in EDITOR_HINT_KINDS else "text"
 
     def _hint(self) -> str:
-        parts = [tr(f"tui.modelo.workbench.editor.format.{self._hint_kind()}")]
+        parts = [tr(f"tui.modelo.workbench.editor.format.{self._hint_kind()}", locale=self._entry_language.value)]
         parts.extend(self._limits)
         return " ".join(parts)
 
@@ -549,7 +590,7 @@ class CasillaEditorPanel(Vertical):
             self._allow_keep(False)
             return
         try:
-            outcome = self._parse(self._field, lexeme, self._language)
+            outcome = self._parse(self._field, lexeme, self._entry_language)
         except Exception as failure:
             get_logger(__name__).error("the casilla parser failed: %s", type(failure).__qualname__, exc_info=True)
             outcome = WorkbenchRefused(message=tr("tui.modelo.workbench.editor.unreadable"))
@@ -678,6 +719,10 @@ class CasillaEditorScreen(ModalScreen[EditorOutcome | None]):
     def compose(self) -> ComposeResult:
         with Container(id="editor-backdrop"):
             yield self._panel
+
+    async def refresh_language(self) -> None:
+        """Keep the open editor and its in-progress input while rewording controls."""
+        await self._panel.refresh_language()
 
     def on_resize(self, event: events.Resize) -> None:
         """Take the whole width on a narrow terminal."""

@@ -50,6 +50,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
 from ....core.operator_notice_messages import operation_notice_message
 from ....core.time.clock import now
+from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
 from .controller_port import OperationControllerPort, OperationErrorDetailPort
 from .interactions import (
@@ -167,17 +168,37 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 yield Static("", id="operation-modal-review")
                 yield Static("", id="operation-modal-log")
             with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
-                yield Button(tr("operation.modal.action.reject"), id="btn-operation-reject", disabled=True)
-                yield Button(
-                    tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary", disabled=True
+                yield localized(
+                    Button(tr("operation.modal.action.reject"), id="btn-operation-reject", disabled=True),
+                    "operation.modal.action.reject",
                 )
-                yield Button(tr("operation.modal.action.cancel"), id="btn-operation-cancel")
-                yield Button(tr("operation.modal.action.detach"), id="btn-operation-detach")
-                yield Button(tr("operation.modal.action.close"), id="btn-operation-close")
+                yield localized(
+                    Button(
+                        tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary", disabled=True
+                    ),
+                    "operation.modal.action.apply",
+                )
+                yield localized(
+                    Button(tr("operation.modal.action.cancel"), id="btn-operation-cancel"),
+                    "operation.modal.action.cancel",
+                )
+                yield localized(
+                    Button(tr("operation.modal.action.detach"), id="btn-operation-detach"),
+                    "operation.modal.action.detach",
+                )
+                yield localized(
+                    Button(tr("operation.modal.action.close"), id="btn-operation-close"), "operation.modal.action.close"
+                )
 
     def on_mount(self) -> None:
         """Start the bounded observation poll loop as an exclusive worker."""
         self._poll_worker = self.run_worker(self._poll_loop(), name="operation-modal-poll", exclusive=True)
+
+    async def refresh_language(self) -> None:
+        """Reword the held observation without restarting or answering the operation."""
+        refresh_localized_widgets(self)
+        self._refresh_view_state()
+        self._render_action_refusal()
 
     async def _poll_loop(self) -> None:
         try:

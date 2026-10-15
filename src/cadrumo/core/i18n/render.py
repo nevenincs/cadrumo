@@ -108,6 +108,21 @@ class MissingTranslationError(CoreError):
 # layer to read the active-profile output language without importing application
 # modules directly. Remains None until explicitly registered.
 _profile_language_resolver: Callable[[], str | None] | None = None
+_PROFILE_LANGUAGE_PRECEDENCE: ContextVar[bool] = ContextVar("cadrumo_profile_language_precedence", default=False)
+
+
+@contextmanager
+def profile_output_language_precedence() -> Generator[None]:
+    """Prefer the live profile in an interactive host; settings remain its fallback.
+
+    Ordinary command invocations retain settings and explicit flag precedence.
+    Child tasks and copied worker contexts inherit this host-local policy.
+    """
+    token = _PROFILE_LANGUAGE_PRECEDENCE.set(True)
+    try:
+        yield
+    finally:
+        _PROFILE_LANGUAGE_PRECEDENCE.reset(token)
 
 
 def register_profile_language_resolver(fn: Callable[[], str | None]) -> None:
@@ -171,6 +186,9 @@ def output_language() -> str:
     one-off sessions and automation. Otherwise the active profile's
     ``output.language`` key is used. The settings default remains the
     final fallback and defaults to Spanish for a clean install.
+
+    Interactive hosts opt into :func:`profile_output_language_precedence` so
+    their live shared profile preference precedes inherited settings instead.
 
     Returns:
         The resolved ISO 639-1 language code.
@@ -239,7 +257,7 @@ def _active_settings_override() -> object | None:
 def _output_language_cache_key() -> tuple[object, ...]:
     override = _active_settings_override()
     if override is not None:
-        return ("override", id(override), _output_language_cache_version)
+        return ("override", id(override), _PROFILE_LANGUAGE_PRECEDENCE.get(), _output_language_cache_version)
     # The key is built from in-memory inputs ONLY — no filesystem call. It
     # samples the raw env vars Pydantic merges into ``Settings`` so a cache
     # miss still rebuilds ``Settings`` normally (with the correct
@@ -268,6 +286,7 @@ def _output_language_cache_key() -> tuple[object, ...]:
     env_signature = tuple(os.environ.get(name) for name in _output_language_key_env_vars())
     return (
         "env",
+        _PROFILE_LANGUAGE_PRECEDENCE.get(),
         *env_signature,
         _output_language_cache_version,
     )
@@ -292,6 +311,10 @@ def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
 
 def _resolve_output_language() -> str:
     """Resolve the language from settings and the active profile, uncached."""
+    if _PROFILE_LANGUAGE_PRECEDENCE.get():
+        profile_language = _active_profile_output_language()
+        if profile_language is not None:
+            return profile_language
     if _profile_language_resolver is None and _active_settings_override() is None:
         return _resolve_output_language_before_profile_composition()
     from ..config import load_settings
@@ -731,6 +754,7 @@ __all__ = [
     "UnmatchedPlaceholderError",
     "extract_placeholders",
     "output_language",
+    "profile_output_language_precedence",
     "register_profile_language_resolver",
     "tr",
 ]

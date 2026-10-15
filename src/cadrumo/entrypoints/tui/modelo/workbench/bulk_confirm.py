@@ -39,6 +39,7 @@ from .....application.modelo.work_form_models import (
 )
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
+from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from .casilla_list_models import CasillaListEntry
 from .casilla_list_values import value_text
@@ -192,10 +193,22 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
         with Container(id="bulk-backdrop"), Vertical(id="bulk-panel"):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="bulk-status")
-            yield Static(tr("tui.modelo.workbench.bulk_confirm.title"), id="bulk-title", markup=False)
-            yield Static(tr("tui.modelo.workbench.bulk_confirm.intro"), id="bulk-intro", markup=False)
-            yield Static(
-                tr("tui.modelo.workbench.bulk_confirm.count", count=len(self._fields)), id="bulk-count", markup=False
+            yield localized(
+                Static(tr("tui.modelo.workbench.bulk_confirm.title"), id="bulk-title", markup=False),
+                "tui.modelo.workbench.bulk_confirm.title",
+            )
+            yield localized(
+                Static(tr("tui.modelo.workbench.bulk_confirm.intro"), id="bulk-intro", markup=False),
+                "tui.modelo.workbench.bulk_confirm.intro",
+            )
+            yield localized(
+                Static(
+                    tr("tui.modelo.workbench.bulk_confirm.count", count=len(self._fields)),
+                    id="bulk-count",
+                    markup=False,
+                ),
+                "tui.modelo.workbench.bulk_confirm.count",
+                count=len(self._fields),
             )
             with VerticalScroll(id="bulk-body", can_focus=True):
                 yield Static(confirmation_table(self._fields, self._language), id="bulk-table")
@@ -208,9 +221,18 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
                 disabled=not self._fields,
             )
             with Horizontal(id="bulk-actions"):
-                yield Button(tr("tui.modelo.workbench.editor.cancel"), id="bulk-cancel")
-                yield Button(
-                    tr("tui.modelo.workbench.bulk_confirm.confirm"), id="bulk-confirm", variant="primary", disabled=True
+                yield localized(
+                    Button(tr("tui.modelo.workbench.editor.cancel"), id="bulk-cancel"),
+                    "tui.modelo.workbench.editor.cancel",
+                )
+                yield localized(
+                    Button(
+                        tr("tui.modelo.workbench.bulk_confirm.confirm"),
+                        id="bulk-confirm",
+                        variant="primary",
+                        disabled=True,
+                    ),
+                    "tui.modelo.workbench.bulk_confirm.confirm",
                 )
 
     def on_resize(self, event: events.Resize) -> None:
@@ -236,6 +258,10 @@ class BulkConfirmScreen(ModalScreen[tuple[ModeloFormField, ...] | None]):
     def action_cancel(self) -> None:
         """Close without confirming anything."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
 
 
 __all__ = ["BulkConfirmScreen", "TickBox", "confirmation_table", "left_out_notes"]

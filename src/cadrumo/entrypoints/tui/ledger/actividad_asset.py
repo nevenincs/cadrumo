@@ -13,12 +13,14 @@ from ....application.actividad_asset.history import ActivityAssetHistoryClaimRes
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
 from ....core.period import Period
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
+from ..components.language import localized
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
@@ -81,23 +83,50 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         """Render typed JSON boundaries while keeping all arithmetic in application code."""
-        yield Static("Activos amortizables", classes="cadrumo-banner")
-        yield Input(placeholder="Identificador del activo", id="asset-id")
-        yield Input(placeholder="Revisión del activo (JSON)", id="asset-revision-json")
-        yield Button("Crear", id="asset-create")
-        yield Button("Inspeccionar", id="asset-inspect")
-        yield Button("Corregir", id="asset-correct")
+        yield localized(
+            Static(tr("tui.ledger.activity_asset.title"), classes="cadrumo-banner"), "tui.ledger.activity_asset.title"
+        )
+        yield localized(
+            Input(placeholder=tr("tui.ledger.activity_asset.asset_id"), id="asset-id"),
+            "tui.ledger.activity_asset.asset_id",
+        )
+        yield localized(
+            Input(placeholder=tr("tui.ledger.activity_asset.revision"), id="asset-revision-json"),
+            "tui.ledger.activity_asset.revision",
+        )
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.create"), id="asset-create"), "tui.ledger.activity_asset.create"
+        )
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.inspect"), id="asset-inspect"), "tui.ledger.activity_asset.inspect"
+        )
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.correct"), id="asset-correct"), "tui.ledger.activity_asset.correct"
+        )
         yield Static("", id="asset-current-revision-id", markup=False)
-        yield Input(placeholder="Importe de libertad de amortización (opcional)", id="asset-free-amount")
+        yield localized(
+            Input(placeholder=tr("tui.ledger.activity_asset.free_amount"), id="asset-free-amount"),
+            "tui.ledger.activity_asset.free_amount",
+        )
         yield Input(value="2025-01-01", id="asset-covered-from")
         yield Input(value="2026-01-01", id="asset-covered-until")
-        yield Input(placeholder="Amortización registrada que se sustituye (opcional)", id="asset-supersedes-claim-id")
-        yield Button("Calcular previsión", id="asset-forecast")
+        yield localized(
+            Input(placeholder=tr("tui.ledger.activity_asset.supersedes"), id="asset-supersedes-claim-id"),
+            "tui.ledger.activity_asset.supersedes",
+        )
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.forecast"), id="asset-forecast"), "tui.ledger.activity_asset.forecast"
+        )
         yield Input(value="actividad_asset.tui.claim", id="asset-creating-operation")
-        yield Button("Registrar amortización", id="asset-claim")
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.claim"), id="asset-claim"), "tui.ledger.activity_asset.claim"
+        )
         yield Input(value="2025", id="asset-filing-tax-year")
         yield Input(value="4T", id="asset-filing-m130-period")
-        yield Button("Preparar traslado a modelos", id="asset-filing-handoff")
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.filing"), id="asset-filing-handoff"),
+            "tui.ledger.activity_asset.filing",
+        )
         yield Static("", id="asset-result", markup=False)
         yield Static("", id="asset-recovery", markup=False)
 

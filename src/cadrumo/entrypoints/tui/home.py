@@ -33,6 +33,7 @@ from ...application.overview.home import (
 )
 from ...core.i18n.render import lookup_translation, output_language, tr
 from .components.account_chrome import AccountChromeScreen
+from .components.language import localized, repaint_tables
 from .components.theme import BASE_CSS, tokenised
 from .components.widgets import ContentDataTable, ContentScroll
 from .search import workbench_action_label
@@ -260,13 +261,16 @@ class HomeScreen(AccountChromeScreen):
     @override
     def compose(self) -> ComposeResult:
         projection = self.projection
-        yield Static(tr("tui.home.title"), classes="cadrumo-banner", markup=False)
+        yield localized(Static(tr("tui.home.title"), classes="cadrumo-banner", markup=False), "tui.home.title")
         with ContentScroll(id="home-page", classes="cadrumo-scroll"), Static(id="home-layout"):
             with Static(id="home-main"):
-                yield Static(
-                    tr("tui.home.heading.actions"),
-                    classes="cadrumo-heading cadrumo-heading-lead",
-                    markup=False,
+                yield localized(
+                    Static(
+                        tr("tui.home.heading.actions"),
+                        classes="cadrumo-heading cadrumo-heading-lead",
+                        markup=False,
+                    ),
+                    "tui.home.heading.actions",
                 )
                 yield Static(
                     _state_copy(
@@ -285,7 +289,10 @@ class HomeScreen(AccountChromeScreen):
                     classes="home-table",
                 )
                 yield Static(id="home-action-contexts", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.declarations"), classes="cadrumo-heading", markup=False)
+                yield localized(
+                    Static(tr("tui.home.heading.declarations"), classes="cadrumo-heading", markup=False),
+                    "tui.home.heading.declarations",
+                )
                 yield Static(
                     _state_copy(
                         projection.declarations_state,
@@ -303,7 +310,10 @@ class HomeScreen(AccountChromeScreen):
                     classes="home-table",
                 )
             with Static(id="home-sidebar"):
-                yield Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False)
+                yield localized(
+                    Static(tr("tui.home.heading.agenda"), classes="cadrumo-heading", markup=False),
+                    "tui.home.heading.agenda",
+                )
                 yield Static(
                     _state_copy(
                         projection.agenda_state,
@@ -322,9 +332,15 @@ class HomeScreen(AccountChromeScreen):
                 )
                 yield Static(id="home-agenda-evidence", classes="home-state", markup=False)
                 yield Static(id="home-evidence", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False)
+                yield localized(
+                    Static(tr("tui.home.heading.ledger"), classes="cadrumo-heading", markup=False),
+                    "tui.home.heading.ledger",
+                )
                 yield Static(id="home-ledger", classes="home-state", markup=False)
-                yield Static(tr("tui.home.heading.messages"), classes="cadrumo-heading", markup=False)
+                yield localized(
+                    Static(tr("tui.home.heading.messages"), classes="cadrumo-heading", markup=False),
+                    "tui.home.heading.messages",
+                )
                 yield Static(id="home-messages", classes="home-state", markup=False)
 
     def on_resize(self, event: events.Resize) -> None:
@@ -343,6 +359,35 @@ class HomeScreen(AccountChromeScreen):
         self._populate_agenda(agenda, projection.agenda)
         self._render_zone_summaries(projection)
         self._focus_initial_table((actions, declarations, agenda))
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the retained projection without moving its semantic selection."""
+        await super().refresh_language()
+        projection = self.projection
+
+        def paint() -> None:
+            self._populate_actions(
+                cast("ContentDataTable[str]", self.query_one("#home-actions", ContentDataTable)), projection.actions
+            )
+            self._populate_declarations(
+                cast("ContentDataTable[str]", self.query_one("#home-declarations", ContentDataTable)),
+                projection.declarations,
+            )
+            self._populate_agenda(
+                cast("ContentDataTable[str]", self.query_one("#home-agenda", ContentDataTable)), projection.agenda
+            )
+            self._render_zone_summaries(projection)
+
+        repaint_tables(self, paint)
+        for zone, state, items in (
+            ("actions", projection.actions_state, projection.actions),
+            ("declarations", projection.declarations_state, projection.declarations),
+            ("agenda", projection.agenda_state, projection.agenda),
+        ):
+            self.query_one(f"#home-{zone}-state", Static).update(
+                _state_copy(state, empty_key=f"tui.home.empty.{zone}" if not items else None)
+            )
 
     def _populate_actions(
         self,

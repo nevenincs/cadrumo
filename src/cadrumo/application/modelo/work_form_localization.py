@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
@@ -10,13 +10,15 @@ if TYPE_CHECKING:
 import re
 from typing import Final
 
+from pydantic import BaseModel
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
 from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .printed_boxes import printed_box_number
-from .work_form_models import ModeloFormText, ModeloFormTextDisclosure
+from .work_form_models import ModeloFormField, ModeloFormText, ModeloFormTextDisclosure, ModeloWorkForm
 
 _SPANISH: Final[str] = OutputLanguage.ES.value
 
@@ -145,3 +147,33 @@ def names_only_its_box(text: str, locators: tuple[re.Pattern[str], ...]) -> bool
 def normalized_help_text(text: str) -> str:
     """Normalize localized help and label text for duplicate suppression."""
     return re.sub(r"[\W_]+", " ", text).strip().casefold()
+
+
+def same_work_form_facts(before: ModeloWorkForm, after: ModeloWorkForm) -> bool:
+    """Whether builder outputs differ only in their localized presentation.
+
+    All addresses, values, sources, origin/editability, revisions, filing,
+    verification, dates and unknown-state markers participate. This admits
+    translation of a held read-only form without claiming a fresh edit grant.
+    """
+    return _form_facts(before) == _form_facts(after)
+
+
+def _form_facts(value: object) -> object:
+    if isinstance(value, ModeloFormText):
+        return ModeloFormText
+    if isinstance(value, BaseModel):
+        omitted: set[str] = {"language"} if isinstance(value, ModeloWorkForm) else set()
+        if isinstance(value, ModeloFormField):
+            omitted.update(("help", "not_writable_reason"))
+        return (
+            type(value),
+            tuple(
+                (name, _form_facts(cast(object, getattr(value, name))))
+                for name in type(value).model_fields
+                if name not in omitted
+            ),
+        )
+    if isinstance(value, tuple):
+        return tuple(_form_facts(item) for item in cast(tuple[object, ...], value))
+    return value

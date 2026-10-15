@@ -9,12 +9,16 @@ the same words. Its help and its legend name no key that would change it.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 from textual.pilot import Pilot
 from textual.widgets import Input, OptionList, Static
 
-from ......application.modelo.work_form_models import ModeloFormBlocker
+from ......application.modelo.work_form_localization import same_work_form_facts
+from ......application.modelo.work_form_models import ModeloFormBlocker, ModeloFormText, ModeloFormTextDisclosure
 from ......core.config import override_settings
+from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
 from ....components.host import ScreenHostApp
 from ..casilla_list import CasillaList
@@ -174,3 +178,23 @@ async def test_on_a_recorded_declaration_enter_is_named_for_opening_the_box_not_
 
     assert draft_enter is not None and draft_enter.description == tr("tui.modelo.workbench.key.edit", locale="en")
     assert filed_enter is not None and filed_enter.description == tr("tui.modelo.workbench.sources.key.go", locale="en")
+
+
+def test_readonly_form_can_reword_only_when_every_held_fact_matches() -> None:
+    before = recorded_as_filed(synthetic_form())
+    translated = replace_fields(
+        before,
+        {
+            "06": {
+                "label": ModeloFormText(text="Translated retained box", disclosure=ModeloFormTextDisclosure.LOCALIZED),
+                "help": "Translated help",
+            }
+        },
+    ).model_copy(update={"language": OutputLanguage.CA})
+    assert same_work_form_facts(before, translated)
+    assert not same_work_form_facts(before, translated.model_copy(update={"calculation_revision_id": "changed-head"}))
+    changed = replace_fields(translated, {"06": {"value": Decimal("12345")}})
+    assert not same_work_form_facts(before, changed)
+    assert not same_work_form_facts(
+        before, translated.model_copy(update={"operator_entries_known": not before.operator_entries_known})
+    )

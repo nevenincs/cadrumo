@@ -70,7 +70,7 @@ from ..contracts.profile_access import (
     SessionsLocked,
 )
 from ..contracts.service_access import ServiceAdmission, ServiceConnected
-from ..contracts.session_events import ConnectionEvent, LifecycleNotice
+from ..contracts.session_events import ConnectionEvent, LifecycleNotice, ProfileLanguageChanged
 from ..contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .enrollment_client import NativeEnrollmentClient
 from .framing import VerifiedConnection
@@ -121,6 +121,7 @@ class FrontendClient(ProfileViewFrontend):
         self._retirement_receivers: list[Callable[[], None]] = []
         self._event_subscription: Callable[[], None] | None = None
         self._notice_receivers: list[Callable[[LifecycleNotice], None]] = []
+        self._language_receivers: list[Callable[[ProfileLanguageChanged], None]] = []
         self._lifecycle_notice: LifecycleNotice | None = None
 
     def _session_retired(self, event: ConnectionEvent) -> None:
@@ -133,6 +134,12 @@ class FrontendClient(ProfileViewFrontend):
             return
         if event.profile_id != self.profile_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        if isinstance(event, ProfileLanguageChanged):
+            with self._event_guard:
+                receivers_language = tuple(self._language_receivers) if event.session_id == self._session_id else ()
+            for receive_language in receivers_language:
+                receive_language(event)
+            return
         with self._event_guard:
             self._retirement_epoch += 1
             if self._session_id != event.session_id:
@@ -185,6 +192,24 @@ class FrontendClient(ProfileViewFrontend):
             with self._event_guard:
                 if receive in self._notice_receivers:
                     self._notice_receivers.remove(receive)
+
+        return unsubscribe
+
+    def subscribe_profile_language_changes(
+        self, receive: Callable[[ProfileLanguageChanged], None]
+    ) -> Callable[[], None]:
+        """Observe exact-profile invalidation without refreshing or extending authority."""
+        if self._event_subscription is None:
+            self._event_subscription = self._connection.subscribe_session_events(
+                self._session_retired, disconnected=self._connection_failed
+            )
+        with self._event_guard:
+            self._language_receivers.append(receive)
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._language_receivers:
+                    self._language_receivers.remove(receive)
 
         return unsubscribe
 

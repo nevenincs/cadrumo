@@ -65,10 +65,10 @@ class WorkbenchFooterMixin:
 
         self.app.push_screen(
             ConfirmScreen(
-                title=tr("tui.modelo.workbench.leave.title"),
-                message=tr("tui.modelo.workbench.leave.message", count=len(self._session.changes)),
-                confirm_label=tr("tui.modelo.workbench.leave.discard"),
-                cancel_label=tr("tui.modelo.workbench.leave.stay"),
+                title=lambda: tr("tui.modelo.workbench.leave.title"),
+                message=lambda: tr("tui.modelo.workbench.leave.message", count=len(self._session.changes)),
+                confirm_label=lambda: tr("tui.modelo.workbench.leave.discard"),
+                cancel_label=lambda: tr("tui.modelo.workbench.leave.stay"),
             ),
             closed,
         )

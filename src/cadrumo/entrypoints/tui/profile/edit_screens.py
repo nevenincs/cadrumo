@@ -11,8 +11,10 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, OptionList, Static
 
+from ....application.user_profile.overview import relocalize_profile_field
 from ....application.user_profile.presentation import profile_field_shape_hint
 from ....core.i18n.render import tr
+from ..components.language import localized, refresh_localized_widgets
 from ..components.widgets import ContentScroll, DisclosureGroup
 from .overview_contracts import _EDIT_DIALOG_CSS, _REQUIRED_MARK
 
@@ -49,6 +51,7 @@ class FieldEditScreen(ModalScreen[str | None]):
         field: ProfileFieldView,
         *,
         prompt: str | None = None,
+        prompt_key: str | None = None,
         choice_labels: Mapping[str, str] | None = None,
         validate: Callable[[str], str | None] | None = None,
         context: str | None = None,
@@ -61,7 +64,9 @@ class FieldEditScreen(ModalScreen[str | None]):
         super().__init__()
         self._field = field
         self._question_context = context
-        self._prompt = prompt if prompt is not None else field.label
+        self._prompt_key = prompt_key
+        self._custom_prompt = prompt is not None or prompt_key is not None
+        self._prompt = tr(prompt_key) if prompt_key is not None else prompt if prompt is not None else field.label
         self._choice_labels: dict[str, str] = dict(choice_labels) if choice_labels is not None else {}
         self._validate = validate
 
@@ -161,6 +166,23 @@ class FieldEditScreen(ModalScreen[str | None]):
         """Dismiss without requesting a profile change."""
         self.dismiss(None)
 
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
+        self._field = relocalize_profile_field(self._field)
+        if self._prompt_key is not None:
+            self._prompt = tr(self._prompt_key)
+        elif not self._custom_prompt:
+            self._prompt = self._field.label
+        self.query_one("#edit-label", Label).update(self._prompt)
+        if self.query("#edit-help"):
+            self.query_one("#edit-help", Static).update(field_help_text(self._field))
+            self.query_one("#edit-help-fold", DisclosureGroup).title = tr("flows.manager.help.about")
+        if self._field.choices:
+            options = self.query_one("#edit-options", OptionList)
+            for index, choice in enumerate(self._field.choices):
+                options.replace_option_prompt_at_index(index, self._label_for(choice.value))
+
 
 class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
     """Collect one new repeatable row without deciding what may be stored.
@@ -190,9 +212,9 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield Label(tr("flows.manager.rows.add"), id="edit-label")
+            yield localized(Label(tr("flows.manager.rows.add"), id="edit-label"), "flows.manager.rows.add")
             for index, field in enumerate(self._fields):
-                yield Label(f"{field.label}{_REQUIRED_MARK if field.required else ''}")
+                yield Label(f"{field.label}{_REQUIRED_MARK if field.required else ''}", id=f"row-label-{index}")
                 if field.choices:
                     yield OptionList(*(choice.label for choice in field.choices), id=f"row-option-{index}")
                 else:
@@ -201,8 +223,13 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
                         id=f"row-input-{index}",
                     )
             with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-row-save", classes="-primary")
+                yield localized(
+                    Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel"), "flows.manager.edit.cancel"
+                )
+                yield localized(
+                    Button(tr("flows.manager.edit.save"), id="btn-row-save", classes="-primary"),
+                    "flows.manager.edit.save",
+                )
 
     def on_mount(self) -> None:
         """Focus the first available row input."""
@@ -237,6 +264,19 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
         """Dismiss without adding a row."""
         self.dismiss(None)
 
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
+        self._fields = tuple(relocalize_profile_field(field) for field in self._fields)
+        for index, field in enumerate(self._fields):
+            self.query_one(f"#row-label-{index}", Label).update(
+                f"{field.label}{_REQUIRED_MARK if field.required else ''}"
+            )
+            if field.choices:
+                options = self.query_one(f"#row-option-{index}", OptionList)
+                for choice_index, choice in enumerate(field.choices):
+                    options.replace_option_prompt_at_index(choice_index, choice.label)
+
 
 class RepeatableRowRemoveScreen(ModalScreen[bool]):
     """Require an explicit confirmation before clearing an identified row."""
@@ -253,13 +293,22 @@ class RepeatableRowRemoveScreen(ModalScreen[bool]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield Label(
-                tr("flows.manager.rows.remove_confirm", section=self._section_key, row=self._row_key),
-                id="edit-label",
+            yield localized(
+                Label(
+                    tr("flows.manager.rows.remove_confirm", section=self._section_key, row=self._row_key),
+                    id="edit-label",
+                ),
+                "flows.manager.rows.remove_confirm",
+                section=self._section_key,
+                row=self._row_key,
             )
             with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel")
-                yield Button(tr("flows.confirm.yes"), id="btn-row-remove", classes="-error")
+                yield localized(
+                    Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel"), "flows.manager.edit.cancel"
+                )
+                yield localized(
+                    Button(tr("flows.confirm.yes"), id="btn-row-remove", classes="-error"), "flows.confirm.yes"
+                )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Return whether the operator confirmed removal."""
@@ -269,6 +318,10 @@ class RepeatableRowRemoveScreen(ModalScreen[bool]):
         """Decline removal."""
         self.dismiss(False)
 
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
+
 
 def _field_edit_dialog(screen: FieldEditScreen) -> ComposeResult:
     """Compose the modal's fixed shell around its editor and actions."""
@@ -276,7 +329,7 @@ def _field_edit_dialog(screen: FieldEditScreen) -> ComposeResult:
         with ContentScroll(id="edit-body"):
             yield from _field_edit_content(screen)
         with Horizontal(id="edit-actions"):
-            yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
+            yield localized(Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel"), "flows.manager.edit.cancel")
             yield from _field_edit_actions(screen)
 
 
@@ -285,14 +338,19 @@ def _field_edit_content(screen: FieldEditScreen) -> ComposeResult:
     if screen._question_context is not None and screen._question_context:
         yield Static(screen._question_context, id="edit-context", markup=False)
     yield Label(screen._prompt, id="edit-label")
-    yield Static(
-        tr("flows.progress.required" if screen._field.required else "flows.progress.optional"),
-        id="edit-requirement",
+    yield localized(
+        Static(
+            tr("flows.progress.required" if screen._field.required else "flows.progress.optional"),
+            id="edit-requirement",
+        ),
+        "flows.progress.required" if screen._field.required else "flows.progress.optional",
     )
     yield from _field_editor_input(screen)
     yield Static(id="edit-refusal")
     if screen._box_hides_a_value:
-        yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
+        yield localized(
+            Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note"), "flows.manager.edit.masked_kept"
+        )
     help_text = field_help_text(screen._field)
     if help_text:
         yield DisclosureGroup(
@@ -323,5 +381,7 @@ def _field_editor_input(screen: FieldEditScreen) -> ComposeResult:
 def _field_edit_actions(screen: FieldEditScreen) -> ComposeResult:
     """Offer clear only when the existing masked optional answer allows it."""
     if screen._offers_clear:
-        yield Button(tr("flows.manager.edit.clear"), id="btn-edit-clear")
-    yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
+        yield localized(Button(tr("flows.manager.edit.clear"), id="btn-edit-clear"), "flows.manager.edit.clear")
+    yield localized(
+        Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary"), "flows.manager.edit.save"
+    )

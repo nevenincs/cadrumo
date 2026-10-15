@@ -158,3 +158,26 @@ async def test_a_help_fetch_from_the_previous_head_cannot_repopulate_the_fresh_c
             assert not app.screen.query(CasillaEditorPanel), "an old editor must not reopen after a fresh read"
             shown = await _explanation(app, pilot)
             assert "300.00" in shown and "100.00" not in shown
+
+
+@pytest.mark.asyncio
+async def test_relocalizing_form_preserves_held_admission_and_refuses_changed_coordinates(
+    calculated: tuple[SeededOperatorWork, InstalledModeloWorkbench],
+) -> None:
+    """A translated read cannot silently renew the baseline under staged edits."""
+    work, installed = calculated
+    with override_settings(cadrumo_output_language="en"):
+        original = installed.load(OutputLanguage.EN)
+        held = installed._state
+        assert held is not None and held.baseline is not None
+        with override_settings(cadrumo_output_language="es"):
+            translated = installed.relocalize(OutputLanguage.ES)
+        assert translated is not None
+        assert translated.form.language is OutputLanguage.ES
+        assert translated.form.work_unit_id == original.form.work_unit_id
+        assert translated.form.calculation_revision_id == original.form.calculation_revision_id
+        assert installed._state is held
+        assert installed._state.baseline is held.baseline
+        await _set_retention(work, "300")
+        assert installed.relocalize(OutputLanguage.ES) is None
+        assert installed._state is held

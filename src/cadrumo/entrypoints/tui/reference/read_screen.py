@@ -21,6 +21,7 @@ from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ....core.i18n.render import tr
 from ....core.logging import get_logger
 from ..components.account_chrome import AccountChromeScreen
+from ..components.language import localized, repaint_tables
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
@@ -104,8 +105,13 @@ class ReferenceReadScreen(AccountChromeScreen):
                     for reference_filter in filters_of(read):
                         yield from self._compose_filter(reference_filter)
             with Horizontal(id="reference-read-actions", classes="credential-actions"):
-                yield Button(tr("tui.reference.action.close"), id="reference-close")
-                yield Button(tr("tui.reference.action.show"), id="reference-show", classes="-primary")
+                yield localized(
+                    Button(tr("tui.reference.action.close"), id="reference-close"), "tui.reference.action.close"
+                )
+                yield localized(
+                    Button(tr("tui.reference.action.show"), id="reference-show", classes="-primary"),
+                    "tui.reference.action.show",
+                )
             yield Static(id="reference-facts", markup=False)
             with Horizontal(id="reference-links"):
                 for linked in ReferenceRead:
@@ -127,7 +133,7 @@ class ReferenceReadScreen(AccountChromeScreen):
         if reference_filter.kind is ReferenceFilterKind.FLAG:
             yield Checkbox(label, value=bool(value), id=widget_id)
             return
-        yield Label(label, classes="field-label")
+        yield Label(label, id=f"{widget_id}-label", classes="field-label")
         if reference_filter.kind is ReferenceFilterKind.CHOICE:
             yield Select[str](
                 [(choice, choice) for choice in reference_filter.choices],
@@ -141,6 +147,28 @@ class ReferenceReadScreen(AccountChromeScreen):
             type="integer" if reference_filter.kind is ReferenceFilterKind.INTEGER else "text",
             id=widget_id,
         )
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword retained reference facts without changing entered filters or fetching again."""
+        await super().refresh_language()
+        self.query_one(".cadrumo-banner", Static).update(read_label(self._query.read))
+        self.query_one("#reference-read-summary", Static).update(read_summary(self._query.read))
+        for field in filters_of(self._query.read):
+            selector = f"#{_filter_id(field.name)}"
+            if field.kind is ReferenceFilterKind.FLAG:
+                self.query_one(selector, Checkbox).label = filter_label(field.name)
+            else:
+                self.query_one(selector + "-label", Label).update(filter_label(field.name))
+                if field.kind is ReferenceFilterKind.CHOICE:
+                    self.query_one(selector, Select).prompt = tr("tui.reference.filter.any")
+        if self.query("#reference-filters"):
+            self.query_one("#reference-filters", DisclosureGroup).title = tr("tui.reference.filters")
+        for read in ReferenceRead:
+            self.query_one(f"#reference-link-{read.value}", Button).label = read_label(read)
+        result = self._result
+        if result is not None:
+            repaint_tables(self, lambda: self._lay_out(view_of(self._query, result)))
 
     def on_mount(self) -> None:
         """Answer at once a read whose coordinates are already complete."""

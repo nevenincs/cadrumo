@@ -55,6 +55,7 @@ from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
 from ...components.account_chrome import AccountChromeScreen
+from ...components.language import localized
 from ...components.theme import toggle_appearance, tokenised
 from ...navigation import TuiNavigationTargetV1
 from .casilla_list import (
@@ -83,6 +84,7 @@ from .page_items import (
 )
 from .ports import (
     ModeloWorkbenchActionsV1,
+    ModeloWorkbenchLanguageReaderV1,
     ModeloWorkbenchReaderV1,
     WorkbenchApplyPrerequisite,
 )
@@ -449,7 +451,10 @@ class ModeloWorkbenchScreen(
             notice.display = False
             yield notice
             if self._native_review is not None:
-                yield Button(tr("cli.app.modelo.spreadsheet.publish_button"), id="wb-google-review")
+                yield localized(
+                    Button(tr("cli.app.modelo.spreadsheet.publish_button"), id="wb-google-review"),
+                    "cli.app.modelo.spreadsheet.publish_button",
+                )
         with SymbolsPanel(id="wb-legend"):
             yield Static(id="wb-legend-text", markup=False)
         with Horizontal(id="wb-body"):
@@ -457,7 +462,10 @@ class ModeloWorkbenchScreen(
             with Vertical(id="wb-main"):
                 yield Static(id="wb-crumb", markup=False)
                 yield Static(id="wb-page", markup=False)
-                yield Static(tr("tui.modelo.workbench.loading"), id="wb-loading", markup=False)
+                yield localized(
+                    Static(tr("tui.modelo.workbench.loading"), id="wb-loading", markup=False),
+                    "tui.modelo.workbench.loading",
+                )
                 yield WorkbenchSearchPanel(id="wb-search")
                 yield CasillaList(language=self._language, id="wb-list")
         yield Static(id="wb-help", markup=False)
@@ -468,6 +476,32 @@ class ModeloWorkbenchScreen(
         self._apply_width(self.size.width)
         self._apply_height(self.size.height or self.app.size.height)
         self.run_worker(self._read, group="workbench-read", exclusive=True)
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the held form without reopening its edit admission or losing drafts."""
+        await super().refresh_language()
+        self._language = OutputLanguage(output_language())
+        if isinstance(self._reader, ModeloWorkbenchLanguageReaderV1):
+            try:
+                translated = await asyncio.to_thread(self._reader.relocalize, self._language)
+            except Exception as failure:
+                get_logger(__name__).warning("workbench language projection failed: %s", type(failure).__qualname__)
+            else:
+                if translated is not None:
+                    self._load = translated
+                    self._pages = workbench_pages(presented_form(translated.form, recorded=self.recorded))
+                    self._inapplicable = inapplicable_pages(translated.form)
+        self._session.refresh_language(self._language)
+        self._help_generation += 1
+        self._cards.clear()
+        self._render_all()
+        self._describe_keys()
+        if self._explained is not None:
+            self._render_help(self._explained)
+            self._ask_for_card(self._explained)
+        if self._docked is not None:
+            await self._docked[1].refresh_language()
 
     def on_resize(self, event: events.Resize) -> None:
         """Fold the navigator away on narrow terminals and shorten the header to fit."""

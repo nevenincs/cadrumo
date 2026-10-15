@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import threading
+from pathlib import Path
+from types import SimpleNamespace
 from typing import cast
 from uuid import uuid4
 
@@ -13,18 +16,26 @@ from cadrumo.application.auth.credential_operations import AuthCredentialSaveRes
 from cadrumo.application.auth.operation_definitions import AuthConfigureOperationRequest
 from cadrumo.application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from cadrumo.application.auth.sync_readiness import AuthSyncReadiness
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.language_resolver import adopt_profile_output_language, register_language_resolver
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.application.user_profile.view_operation import ProfileViewPageKind
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from cadrumo.core.config import override_settings
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import profile_output_language_precedence
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.profile.tests.test_aeat_auth_setup import _overview, _readiness
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, ProfileViewCollection
 
 from .....frontend.tui.profile import aeat_auth_client
 from .....frontend.tui.profile.aeat_auth_client import AeatAuthClient
+from .....frontend.tui.profile.manager_client import ProfileManagerClientComposition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
 
 @pytest.mark.asyncio
 async def test_runtime_setup_serializes_cas_writes_keeps_secrets_off_profile_and_rereads(
@@ -113,3 +124,106 @@ async def test_runtime_setup_serializes_cas_writes_keeps_secrets_off_profile_and
     assert all("password" not in key for key in values)
     assert overview_reads == 2  # displayed baseline and final persisted readback
 
+
+@pytest.mark.asyncio
+async def test_held_auth_setup_reads_live_locale_on_open_and_after_save_preserving_exact_cas(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Installed door orchestration uses explicit read/configuration ports, not native admission evidence."""
+    fake_client = SimpleNamespace(profile_id=uuid4(), session_id=uuid4(), frontend=OperationFrontendProjection.TUI)
+    client = cast(FrontendClient, fake_client)
+    reads: list[tuple[OutputLanguage, int]] = []
+    configured: list[AuthConfigureOperationRequest] = []
+    current = _overview({"identity.tax_id": "12345678Z"}, 7).model_copy(update={"profile_id": str(client.profile_id)})
+
+    def overview(bound: FrontendClient, _label: str, language: OutputLanguage) -> ProfileOverview:
+        assert bound is client
+        reads.append((language, threading.get_ident()))
+        return current.model_copy(update={"label": f"Profile {language.value}"})
+
+    def configure(bound: FrontendClient, request: AuthConfigureOperationRequest) -> AuthConfigurePublicResultV2:
+        assert bound is client
+        assert request.expected_profile_revision == 7
+        assert request.expected_profile_digest == "a" * 64
+        configured.append(request)
+        return AuthConfigurePublicResultV2(
+            profile_id=client.profile_id,
+            provider=request.provider,
+            changed=False,
+            certificate_file_provided=False,
+            complete=False,
+            profile_tax_id_present=True,
+            provider_identity_present=True,
+            identity_alignment="matches",
+        )
+
+    async def readiness(bound: FrontendClient) -> AuthSyncReadiness:
+        assert bound is client
+        return _readiness()
+
+    monkeypatch.setattr(aeat_auth_client, "configure_profile_authentication", configure)
+    monkeypatch.setattr(aeat_auth_client, "read_sync_readiness", readiness)
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""),
+        profile_output_language_precedence(),
+    ):
+        register_language_resolver()
+        try:
+            adopt_profile_output_language(OutputLanguage.EN)
+            composition = ProfileManagerClientComposition(
+                client, profile_label="Selected", output_language=OutputLanguage.EN, overview_reader=overview
+            )
+            door = composition.auth_setup()
+            first, _ = await door.snapshot()
+            assert first.label == "Profile en"
+            adopt_profile_output_language(OutputLanguage.ES)
+            opened, _ = await door.snapshot()
+            assert opened.label == "Profile es"
+            saved, _ = await door.save(AuthProviderKind.CLAVE_MOVIL, ClaveMovilRoute.APP_REQUEST, {}, "", None)
+            assert saved.label == "Profile es"
+            assert [language for language, _thread_id in reads] == [
+                OutputLanguage.EN,
+                OutputLanguage.ES,
+                OutputLanguage.ES,
+            ]
+            assert all(thread_id != threading.get_ident() for _language, thread_id in reads)
+            assert len(configured) == 1
+            assert saved.profile_id == str(client.profile_id)
+            assert (saved.record_revision, saved.content_digest) == (opened.record_revision, opened.content_digest)
+            fake_client.session_id = uuid4()
+            with pytest.raises(FrontendRefusedError):
+                await door.snapshot()
+            assert len(reads) == 3
+        finally:
+            register_language_resolver()
+
+
+def test_auth_overview_refuses_a_language_change_during_its_read(
+    tmp_path: Path,
+) -> None:
+    client = cast(
+        FrontendClient,
+        SimpleNamespace(profile_id=uuid4(), session_id=uuid4(), frontend=OperationFrontendProjection.TUI),
+    )
+    current = _overview({}, 4).model_copy(update={"profile_id": str(client.profile_id)})
+
+    def overview(_bound: FrontendClient, _label: str, language: OutputLanguage) -> ProfileOverview:
+        assert language is OutputLanguage.EN
+        adopt_profile_output_language(OutputLanguage.ES)
+        return current
+
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""),
+        profile_output_language_precedence(),
+    ):
+        register_language_resolver()
+        try:
+            adopt_profile_output_language(OutputLanguage.EN)
+            composition = ProfileManagerClientComposition(
+                client, profile_label="Selected", output_language=OutputLanguage.EN, overview_reader=overview
+            )
+            with pytest.raises(RefusalError) as changed:
+                composition._auth_overview()
+            assert changed.value.reason is RefusalCode.UNAVAILABLE
+        finally:
+            register_language_resolver()

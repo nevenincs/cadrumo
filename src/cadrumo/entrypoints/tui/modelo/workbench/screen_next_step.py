@@ -103,14 +103,14 @@ class WorkbenchNextStepMixin:
 
         self.app.push_screen(
             ConfirmScreen(
-                title=tr("tui.modelo.workbench.calculate.at_risk_title"),
-                message=recalculation_risk_text(
+                title=lambda: tr("tui.modelo.workbench.calculate.at_risk_title"),
+                message=lambda: recalculation_risk_text(
                     self._unattributed_boxes(form),
                     console=self.app.console,
                     width=max(self._width() - _DIALOG_FRAME, 1),
                 ),
-                confirm_label=tr("tui.modelo.workbench.calculate.at_risk_proceed"),
-                cancel_label=tr("tui.modelo.workbench.calculate.at_risk_cancel"),
+                confirm_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_proceed"),
+                cancel_label=lambda: tr("tui.modelo.workbench.calculate.at_risk_cancel"),
             ),
             closed,
         )

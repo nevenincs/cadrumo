@@ -29,9 +29,10 @@ from cadrumo_client.contracts.installation_requests import (
 from cadrumo_client.transport.installation_client import InstallationSecretHolder
 
 from ....core.async_cleanup import await_cancellation_complete
-from ....core.i18n.render import tr
+from ....core.i18n.render import output_language, tr
 from ..components.account_chrome import AccountChromeScreen
 from ..components.dialogs import ConfirmScreen
+from ..components.language import repaint_tables
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -101,6 +102,7 @@ class InstallationActScreen(AccountChromeScreen):
         self._pending_passphrase: bytearray | None = None
         self._pending_handovers: set[Event] = set()
         self._outcome_read_by: InstallationAct | None = None
+        self._last_outcome: tuple[ActOutcome, bool] | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -119,7 +121,7 @@ class InstallationActScreen(AccountChromeScreen):
             for field, label, hint in worded_fields:
                 yield from self._compose_field(field, label, hint)
             if self._offered.contract.takes_secret:
-                yield Label(passphrase_label, classes="field-label")
+                yield Label(passphrase_label, id="installation-passphrase-label", classes="field-label")
                 yield Input(password=True, id="installation-passphrase")
             with Horizontal(id="installation-act-actions", classes="credential-actions"):
                 yield Button(close_label, id="installation-act-close")
@@ -137,9 +139,9 @@ class InstallationActScreen(AccountChromeScreen):
         if field.kind is ActFieldKind.BOOLEAN:
             yield Checkbox(label, value=bool(field.default), id=widget_id)
             return
-        yield Label(label, classes="field-label")
+        yield Label(label, id=f"{widget_id}-label", classes="field-label")
         if hint:
-            yield Static(hint, classes="field-hint", markup=False)
+            yield Static(hint, id=f"{widget_id}-hint", classes="field-hint", markup=False)
         if field.kind is ActFieldKind.CHOICE:
             yield Select[str]([(choice, choice) for choice in field.choices], prompt=label, id=widget_id)
         elif field.kind is ActFieldKind.JSON:
@@ -162,6 +164,31 @@ class InstallationActScreen(AccountChromeScreen):
         if not field.required:
             return tr("tui.installation.hint.optional")
         return ""
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword controls and held outcomes without touching credentials or dispatching acts."""
+        await super().refresh_language()
+        self._locale = output_language()
+        self.query_one(".cadrumo-banner", Static).update(act_label(self._offered.act))
+        self.query_one("#installation-act-summary", Static).update(act_summary(self._offered.act))
+        self.query_one("#installation-act-close", Button).label = tr("tui.installation.action.close")
+        self.query_one("#installation-act-run", Button).label = tr("tui.installation.action.run")
+        if self.query("#installation-passphrase-label"):
+            self.query_one("#installation-passphrase-label", Label).update(tr("tui.installation.passphrase.label"))
+        for field in self._offered.fields:
+            selector = f"#{_field_id(field.name)}"
+            if field.kind is ActFieldKind.BOOLEAN:
+                self.query_one(selector, Checkbox).label = field_label(field.name)
+            else:
+                self.query_one(selector + "-label", Label).update(field_label(field.name))
+                if self.query(selector + "-hint"):
+                    self.query_one(selector + "-hint", Static).update(self._field_hint(field))
+                if field.kind is ActFieldKind.CHOICE:
+                    self.query_one(selector, Select).prompt = field_label(field.name)
+        if self._last_outcome is not None:
+            outcome, preview = self._last_outcome
+            repaint_tables(self, lambda: self._show(outcome, preview=preview))
 
     def on_mount(self) -> None:
         """Hide the empty result table, and answer at once a read that needs nothing from the person.
@@ -362,10 +389,10 @@ class InstallationActScreen(AccountChromeScreen):
         """Ask once, after the person has seen what the act would do."""
         with worded_in(self._locale):
             question = ConfirmScreen(
-                title=tr("tui.installation.confirm.title", act=act_label(self._offered.act)),
-                message="\n".join((*preview.lines, "", tr("tui.installation.confirm.question"))),
-                confirm_label=tr("tui.installation.confirm.accept"),
-                cancel_label=tr("tui.installation.confirm.cancel"),
+                title=lambda: tr("tui.installation.confirm.title", act=act_label(self._offered.act)),
+                message=lambda: "\n".join((*preview.lines, "", tr("tui.installation.confirm.question"))),
+                confirm_label=lambda: tr("tui.installation.confirm.accept"),
+                cancel_label=lambda: tr("tui.installation.confirm.cancel"),
             )
         answer = await self.app.push_screen_wait(question)
         return bool(answer) and self._active()
@@ -384,6 +411,7 @@ class InstallationActScreen(AccountChromeScreen):
     def _show(self, outcome: ActOutcome, *, preview: bool = False) -> None:
         if not self._active():
             return
+        self._last_outcome = (outcome, preview)
         status = self.query_one("#installation-act-status", PinnedStatusBar)
         with worded_in(self._locale):
             presentation = present_outcome(outcome, self._offered.contract, preview=preview)

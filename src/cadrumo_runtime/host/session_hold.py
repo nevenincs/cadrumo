@@ -16,9 +16,11 @@ from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_client.transport.profile_language import ProfileLanguage, read_profile_language, set_profile_language
 
 _MAXIMUM_REQUEST_LINE_BYTES = 16_384
 _MAXIMUM_RESPONSE_LINE_BYTES = MAXIMUM_FRAME_BYTES + 1
@@ -105,6 +107,10 @@ async def _hold(
         lines: Queue[bytes] = Queue(maxsize=1)
         retired = Event()
         client.subscribe_session_retirement(retired.set)
+        language_dirty = Event()
+        language_dirty.set()
+        language_cache: ProfileLanguage | None = None
+        language_subscription = None
 
         def read_lines() -> None:
             while not retired.is_set():
@@ -157,6 +163,7 @@ async def _hold(
             action_keys = {
                 "service_admission": {"recipient_connection_id", "service_id"},
                 "attendance_decision": {"attendance_id", "approve"},
+                "language_set": {"language"},
             }
             if set(request) != {"request_id", "action"} | action_keys.get(action, set()):
                 _emit_refusal("invalid", request_id)
@@ -189,6 +196,32 @@ async def _hold(
                 elif action == "activity":
                     reply = client.note_activity()
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+                elif action in {"language_read", "language_set", "language_observe"}:
+                    if language_subscription is None:
+                        language_subscription = client.subscribe_profile_language_changes(
+                            lambda _event: language_dirty.set()
+                        )
+                    if action != "language_observe" or language_cache is None or language_dirty.is_set():
+                        # Clear before reading so a concurrent notification remains dirty.
+                        language_dirty.clear()
+                        language_cache = (
+                            set_profile_language(client, OutputLanguage(request["language"]))
+                            if action == "language_set"
+                            else read_profile_language(client)
+                        )
+                    language = language_cache
+                    _emit(
+                        {
+                            "kind": "profile_language",
+                            "request_id": str(request_id),
+                            "profile_id": str(profile_id),
+                            "session_id": str(client.session_id),
+                            "runtime_boot_id": str(status.runtime_boot_id),
+                            "connection_id": str(status.connection_id),
+                            "language": None if language.language is None else language.language.value,
+                            "record_revision": language.record_revision,
+                        }
+                    )
                 else:
                     _emit_refusal("invalid", request_id)
                     return 1

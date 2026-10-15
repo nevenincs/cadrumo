@@ -58,6 +58,7 @@ from .....application.modelo.edit_preflight import (
     VALUE_REFUSED_PREFIX,
 )
 from .....application.modelo.value_presentation import format_casilla_value
+from .....application.modelo.work_form_localization import same_work_form_facts
 from .....application.modelo.work_form_models import (
     ModeloFormAddressV1,
     ModeloFormBindingAddressV1,
@@ -211,6 +212,45 @@ class InstalledModeloWorkbench:
                 else None
             ),
         )
+        return read.load
+
+    def relocalize(self, language: OutputLanguage) -> ModeloWorkFormLoadV1 | None:
+        """Read translated presentation while retaining the original CAS admission.
+
+        Admission ids and lifetimes change on every read, even for unchanged
+        content. Compare the admitted coordinate axes, never record equality;
+        a changed or unprovable baseline leaves the held form intact.
+        """
+        held = self._state
+        if held is None:
+            return None
+        read = self._source.read_form(language)
+        admission = read.admission
+        if held.baseline is None:
+            if isinstance(admission, ModeloEditAdmittedV1):
+                return None
+            if not same_work_form_facts(held.read.load.form, read.load.form):
+                return None
+            if (held.read.load.verified, held.read.load.filed) != (read.load.verified, read.load.filed):
+                return None
+        else:
+            if not isinstance(admission, ModeloEditAdmittedV1):
+                return None
+            volatile = {"baseline_id", "issued_at", "expires_at"}
+            if held.baseline.model_dump(exclude=volatile) != admission.baseline.model_dump(exclude=volatile):
+                return None
+        if (
+            read.registry_revision_id != held.read.registry_revision_id
+            or read.calculation_revision_id != held.read.calculation_revision_id
+            or read.verification_report_id != held.read.verification_report_id
+            or read.load.form.work_unit_id != held.read.load.form.work_unit_id
+            or read.tax_id_format != held.read.tax_id_format
+            or read.asks_m303_evidence != held.read.asks_m303_evidence
+            or read.asks_modelo_390 != held.read.asks_modelo_390
+        ):
+            return None
+        # Do not assign _state: apply/parse still use the original baseline,
+        # its lifetime and the revision the operator actually admitted.
         return read.load
 
     def edit_refusal(self) -> str | None:

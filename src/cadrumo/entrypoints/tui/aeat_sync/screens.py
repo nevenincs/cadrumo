@@ -42,6 +42,7 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ..components.account_chrome import AccountChromeScreen
 from ..components.cell_text import ellipsize
+from ..components.language import localized, repaint_tables
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
@@ -239,23 +240,29 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr(self.heading), classes="cadrumo-banner", markup=False)
+        yield localized(Static(tr(self.heading), classes="cadrumo-banner", markup=False), self.heading)
         with ContentScroll(id="aeat-sync-page", classes="cadrumo-scroll"):
             if self.controller.aeat_auth_setup is not None:
                 yield Static(
                     readiness_text(self.controller.auth_readiness), id="aeat-sync-auth-readiness", markup=False
                 )
-                yield Button(tr("tui.aeat_auth.edit"), id="aeat-sync-auth-edit")
-            yield Static(
-                tr("tui.aeat_sync.section.areas"),
-                classes="cadrumo-heading",
-                markup=False,
+                yield localized(Button(tr("tui.aeat_auth.edit"), id="aeat-sync-auth-edit"), "tui.aeat_auth.edit")
+            yield localized(
+                Static(
+                    tr("tui.aeat_sync.section.areas"),
+                    classes="cadrumo-heading",
+                    markup=False,
+                ),
+                "tui.aeat_sync.section.areas",
             )
             yield ContentDataTable[str](id="aeat-sync-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(
-                tr("tui.aeat_sync.section.detail"),
-                classes="cadrumo-heading",
-                markup=False,
+            yield localized(
+                Static(
+                    tr("tui.aeat_sync.section.detail"),
+                    classes="cadrumo-heading",
+                    markup=False,
+                ),
+                "tui.aeat_sync.section.detail",
             )
             yield ContentDataTable[str](id="aeat-sync-rows", cursor_type="row", zebra_stripes=True)
             yield Static(id="aeat-sync-status", markup=False)
@@ -355,6 +362,28 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
                     return
         navigation.focus()
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword held rows without renewing requests or resetting consumed operations."""
+        await super().refresh_language()
+
+        def paint() -> None:
+            navigation = cast("DataTable[str]", self.query_one("#aeat-sync-navigation", DataTable))
+            navigation.add_column(tr("tui.aeat_sync.column.area"), width=16)
+            navigation.add_column(tr("tui.aeat_sync.column.availability"), width=12)
+            navigation.add_column(tr("tui.aeat_sync.column.sources"), width=38)
+            self._render_navigation(navigation)
+            rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
+            self.populate_rows(rows)
+            self._render_zone_status(rows)
+            self.reword_evidence()
+
+        repaint_tables(self, paint)
+        readiness = self.query("#aeat-sync-auth-readiness")
+        if readiness:
+            self.query_one("#aeat-sync-auth-readiness", Static).update(readiness_text(self.controller.auth_readiness))
+        self._render_operation_refusal()
+
     def refresh_projection(self, projection: AeatSyncWorkspaceProjectionV1) -> None:
         """Apply one explicit preloaded snapshot and retain semantic focus."""
         self.controller.replace_projection(projection)
@@ -378,6 +407,9 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         self._restore_focus(navigation, rows)
         if self.controller.aeat_auth_setup is not None:
             self.run_worker(self._refresh_auth(), group="aeat-sync-auth-readiness", exclusive=True)
+
+    def reword_evidence(self) -> None:
+        """Reword an optional evidence table, without recapturing remote data."""
 
     def populate_rows(self, table: DataTable[str]) -> None:
         """Populate one safe public zone body in subclasses."""
@@ -410,11 +442,14 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         )
         self._requests[button_id] = request
         self.query_one("#aeat-sync-page", ContentScroll).mount(
-            Button(
-                tr(label_key),
-                id=button_id,
-                classes="aeat-sync-operation",
-                disabled=self._authentication_blocks(request),
+            localized(
+                Button(
+                    tr(label_key),
+                    id=button_id,
+                    classes="aeat-sync-operation",
+                    disabled=self._authentication_blocks(request),
+                ),
+                label_key,
             )
         )
 
@@ -693,6 +728,13 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
         yield Static(id="aeat-sync-census-captured", markup=False)
         yield ContentDataTable[str](id="aeat-sync-census-evidence", cursor_type="row", zebra_stripes=True)
         yield Static(id="aeat-sync-census-value", markup=False)
+
+    @override
+    def reword_evidence(self) -> None:
+        """Reword census headings while keeping the selected observed value."""
+        value = self.query_one("#aeat-sync-census-value", Static).content
+        self._populate_evidence()
+        self.query_one("#aeat-sync-census-value", Static).update(value)
 
     def _populate_evidence(self) -> None:
         observation = self.controller.projection.census_observation

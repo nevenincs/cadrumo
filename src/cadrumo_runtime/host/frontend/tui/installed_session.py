@@ -27,6 +27,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
+from cadrumo.application.user_profile.language_resolver import adopt_profile_output_language
 from cadrumo.application.user_profile.login_interaction import (
     ProfileLoginInventoryState,
     ProfileLoginInventoryV1,
@@ -36,7 +37,7 @@ from cadrumo.application.user_profile.profile_record_repository import close_act
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n.render import output_language, tr
+from cadrumo.core.i18n.render import output_language, profile_output_language_precedence, tr
 from cadrumo.core.logging import get_logger
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
@@ -47,6 +48,7 @@ from cadrumo_client.transport.credentials import open_installed_credential_clien
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_client.transport.profile_language import read_profile_language
 
 from .launcher import run_precomposed_runtime_root_session
 from .runtime_admission import runtime_login_session
@@ -254,6 +256,8 @@ async def _run_runtime_session(
 
         from .runtime_initial_root import RuntimeInitialRoot
 
+        preference = await asyncio.to_thread(read_profile_language, handoff.client)
+        adopt_profile_output_language(preference.language)
         root = RuntimeInitialRoot(
             handoff.client,
             profile_label=handoff.profile_label,
@@ -354,7 +358,7 @@ def run_installed_workbench_session(
 
     choose_profile = False
     auto_resume = True
-    with profile_adapter_composition():
+    with profile_adapter_composition(), profile_output_language_precedence():
         _release_bootstrap_custody()
         while True:
             inventory = observe_profile_login_inventory()

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.credentials import assess_profile_password
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import output_language
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.entrypoints.tui.account import (
     AccountDirectSessionActionV1,
@@ -38,6 +41,7 @@ def compose_runtime_account_factories(
     open_recovery_client: RecoveryClientOpener,
     requester_factory: HumanAutomationRequesterFactory | None = None,
     onboarding_pending: bool = False,
+    on_language_changed: Callable[[OutputLanguage], None] | None = None,
 ) -> AccountFactoriesV1:
     """Compose controls without acquiring a profile or constructing local custody.
 
@@ -111,6 +115,19 @@ def compose_runtime_account_factories(
         require_binding()
         screen.action_choose_language()
 
+    async def refresh_language() -> bool:
+        from cadrumo.application.user_profile.language_resolver import adopt_profile_output_language
+        from cadrumo_client.transport.profile_language import read_profile_language
+
+        require_binding()
+        preference = await asyncio.to_thread(read_profile_language, client)
+        require_binding()
+        changed = adopt_profile_output_language(preference.language)
+        if on_language_changed is not None:
+            await asyncio.to_thread(on_language_changed, OutputLanguage(output_language()))
+            require_binding()
+        return changed
+
     return AccountFactoriesV1(
         profile=profile,
         change_user=lambda: close_for(AccountRecomposeReasonV1.CHANGE_USER),
@@ -122,4 +139,6 @@ def compose_runtime_account_factories(
         onboarding_pending=onboarding_pending,
         subscribe_retirement=client.subscribe_session_retirement,
         subscribe_notices=client.subscribe_lifecycle_notices,
+        subscribe_language=lambda receive: client.subscribe_profile_language_changes(lambda _event: receive()),
+        refresh_language=refresh_language,
     )

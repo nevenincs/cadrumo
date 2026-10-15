@@ -11,6 +11,7 @@ from textual.widgets import Button, Static
 from ....application.modelo.declarations_list import DeclarationListRow
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr
+from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
 from ..components.widgets import ContentScroll
 from .row_words import row_lines
@@ -43,13 +44,28 @@ class ExternalFilingDetailsScreen(ModalScreen[None]):
         left, right = row_lines(self.row, language, can_open=False, can_create=False)
         with Vertical(id="external-filing-dialog"):
             with ContentScroll(id="external-filing-body"):
-                yield Static("\n".join(left + right), markup=False)
-                yield Static(tr("tui.declarations.list.aeat_unlinked.help.confirmed"), markup=False)
-                yield Static(tr("tui.declarations.list.aeat_unlinked.help.no_refile"), markup=False)
-                yield Static(tr("tui.declarations.list.aeat_unlinked.help.unavailable"), markup=False)
+                yield Static("\n".join(left + right), id="external-filing-summary", markup=False)
+                yield localized(
+                    Static(tr("tui.declarations.list.aeat_unlinked.help.confirmed"), markup=False),
+                    "tui.declarations.list.aeat_unlinked.help.confirmed",
+                )
+                yield localized(
+                    Static(tr("tui.declarations.list.aeat_unlinked.help.no_refile"), markup=False),
+                    "tui.declarations.list.aeat_unlinked.help.no_refile",
+                )
+                yield localized(
+                    Static(tr("tui.declarations.list.aeat_unlinked.help.unavailable"), markup=False),
+                    "tui.declarations.list.aeat_unlinked.help.unavailable",
+                )
                 yield Static(id="external-filing-technical", markup=False)
-            yield Button(tr("tui.modelo.workbench.issues.technical"), id="external-filing-more")
-            yield Button(tr("tui.modelo.workbench.key.close"), id="external-filing-close")
+            yield localized(
+                Button(tr("tui.modelo.workbench.issues.technical"), id="external-filing-more"),
+                "tui.modelo.workbench.issues.technical",
+            )
+            yield localized(
+                Button(tr("tui.modelo.workbench.key.close"), id="external-filing-close"),
+                "tui.modelo.workbench.key.close",
+            )
 
     def on_mount(self) -> None:
         """Make closing the primary keyboard action."""
@@ -72,3 +88,9 @@ class ExternalFilingDetailsScreen(ModalScreen[None]):
     def action_close(self) -> None:
         """Return to the selected portfolio row."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
+        left, right = row_lines(self.row, OutputLanguage(output_language()), can_open=False, can_create=False)
+        self.query_one("#external-filing-summary", Static).update("\n".join(left + right))

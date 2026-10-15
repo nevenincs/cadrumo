@@ -15,6 +15,7 @@ from textual.widgets import DataTable, Static
 
 from ....core.i18n.render import tr
 from ..components.account_chrome import AccountChromeScreen
+from ..components.language import localized, repaint_tables
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1
@@ -41,14 +42,32 @@ class ReferenceScreen(AccountChromeScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.reference.title"), classes="cadrumo-banner", markup=False)
+        yield localized(
+            Static(tr("tui.reference.title"), classes="cadrumo-banner", markup=False), "tui.reference.title"
+        )
         with ContentScroll(id="reference-page", classes="cadrumo-scroll"):
-            yield Static(tr("tui.reference.intro"), id="reference-intro", classes="cadrumo-subtle", markup=False)
+            yield localized(
+                Static(tr("tui.reference.intro"), id="reference-intro", classes="cadrumo-subtle", markup=False),
+                "tui.reference.intro",
+            )
             yield ContentDataTable[str](id="reference-reads", cursor_type="row", zebra_stripes=True)
             yield Static(id="reference-summary", markup=False)
-            yield Static(tr("tui.reference.list_hint"), id="reference-hint", classes="cadrumo-note", markup=False)
+            yield localized(
+                Static(tr("tui.reference.list_hint"), id="reference-hint", classes="cadrumo-note", markup=False),
+                "tui.reference.list_hint",
+            )
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the retained list while preserving its semantic cursor."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
 
     def on_mount(self) -> None:
+        """Populate the initially mounted list."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """List every read the reference service answers."""
         table = cast("DataTable[str]", self.query_one("#reference-reads", DataTable))
         table.add_column(tr("tui.reference.column.read"))

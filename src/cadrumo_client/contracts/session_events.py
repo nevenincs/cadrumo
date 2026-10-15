@@ -44,7 +44,19 @@ class LifecycleNotice(BaseModel):
     event: Literal["upgrade_pending"] = "upgrade_pending"
 
 
-type ConnectionEvent = SessionEvent | LifecycleNotice
+class ProfileLanguageChanged(BaseModel):
+    """Exact-session presentation invalidation; carries no private facts or authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["profile_language_changed"] = "profile_language_changed"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    session_id: UUID
+
+
+type ConnectionEvent = SessionEvent | LifecycleNotice | ProfileLanguageChanged
 
 
 class EventFrame(RootModel[Annotated[ConnectionEvent, Field(discriminator="kind")]]):

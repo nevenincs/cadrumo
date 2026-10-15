@@ -2954,6 +2954,7 @@
         "cadrumo.entrypoints.tui.components.cell_text",
         "cadrumo.entrypoints.tui.components.dialogs",
         "cadrumo.entrypoints.tui.components.host",
+        "cadrumo.entrypoints.tui.components.language",
         "cadrumo.entrypoints.tui.components.status",
         "cadrumo.entrypoints.tui.components.theme",
         "cadrumo.entrypoints.tui.components.widgets",

@@ -299,6 +299,17 @@ class NoticeBand(Vertical, can_focus=False):
                     markup=False,
                 )
 
+    def reword(self, notices: Sequence[NoticePresentation]) -> None:
+        """Update held notice wording without replacing the surrounding task state."""
+        if len(notices) != len(self._notices):
+            raise ValueError("rewording must preserve the held notice inventory")
+        self._notices = tuple(notices)
+        for index, notice in enumerate(self._notices):
+            glyph = _NOTICE_GLYPH.get(notice.severity, "•")
+            self.query_one(f"#notice-{index}", Static).update(f"{glyph} {notice.message}")
+            if notice.action_target is not None:
+                self.query_one(f"#notice-{index}-action", Static).update(notice.action_target)
+
 
 class DisclosureGroup(Collapsible):
     """A titled, collapsible task section -- the shared `Show optional` primitive.

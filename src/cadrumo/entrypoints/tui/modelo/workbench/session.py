@@ -25,7 +25,7 @@ is marked, so the review can ask the filer to look at it again.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
 from .....application.modelo.work_form_models import (
@@ -126,6 +126,18 @@ class WorkbenchEditSession:
     def dirty(self) -> bool:
         """Whether anything is staged."""
         return bool(self._changes)
+
+    def refresh_language(self, language: OutputLanguage) -> None:
+        """Reformat retained changes without restaging, rebasing or changing their values."""
+        self._language = language
+        for key, change in tuple(self._changes.items()):
+            if change.kind is WorkbenchChangeKind.CLEAR:
+                text = tr("tui.modelo.workbench.staged.clear")
+            elif change.kind is WorkbenchChangeKind.RESTORE:
+                text = tr("tui.modelo.workbench.staged.restore")
+            else:
+                text = value_text(CasillaListEntry(change.field.model_copy(update={"value": change.value})), language)
+            self._changes[key] = replace(change, text=text, previous_text=self._before(change.field))
 
     def display(self) -> dict[AddressKey, StagedDisplay]:
         """How each staged change reads on its line."""

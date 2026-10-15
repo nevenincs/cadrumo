@@ -9,6 +9,7 @@ from textual.widgets import Button, DataTable, Static
 
 from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
+from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from .controller import (
     LedgerEntrySelected,
@@ -107,16 +108,29 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.entries.title"), classes="cadrumo-banner")
+        yield localized(Static(tr("tui.ledger.entries.title"), classes="cadrumo-banner"), "tui.ledger.entries.title")
         with ledger_workspace_page() as navigation:
             yield navigation
             yield ContentDataTable[str](id="ledger-entries", cursor_type="row", zebra_stripes=True)
             if self.controller.record_doors is not None:
-                yield Button(tr("tui.ledger.records.open_transaction"), id="ledger-open-transaction")
+                yield localized(
+                    Button(tr("tui.ledger.records.open_transaction"), id="ledger-open-transaction"),
+                    "tui.ledger.records.open_transaction",
+                )
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the existing projection, preserving semantic cursors and controls."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
+
     def on_mount(self) -> None:
+        """Populate the initially mounted projection."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """Populate the safe entry index using semantic row identities."""
         self.populate_navigation()
         # Unsubscripted on purpose: Textual `isinstance`-checks this argument,

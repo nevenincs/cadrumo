@@ -150,17 +150,13 @@ def _mirror_output_language_hint(published: UserProfileRecord) -> None:
     bucket session is bound; nothing wrote it, so that fallback always found
     nothing and the operator's chosen language could not survive a lock.
     """
-    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config_support import coerce_output_language_setting
     from .language_resolver import mirror_profile_output_language_hint
     from .projections import record_to_path_values
 
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return
     stored = record_to_path_values(published).get(PROFILE_OUTPUT_LANGUAGE_PATH)
     mirror_profile_output_language_hint(
-        bucket_id,
+        str(published.profile_id),
         None if stored is None else coerce_output_language_setting(stored),
     )
 

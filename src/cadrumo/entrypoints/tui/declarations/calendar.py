@@ -22,6 +22,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ..components.account_chrome import AccountChromeScreen
 from ..components.dialogs import ConfirmScreen
+from ..components.language import localized, repaint_tables
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
@@ -79,18 +80,24 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(
-            tr("tui.declarations.calendar.title"),
-            classes="cadrumo-banner",
-            markup=False,
+        yield localized(
+            Static(
+                tr("tui.declarations.calendar.title"),
+                classes="cadrumo-banner",
+                markup=False,
+            ),
+            "tui.declarations.calendar.title",
         )
         with ContentScroll(
             id="declarations-calendar-page",
             classes="cadrumo-scroll declarations-calendar-page",
         ):
-            yield Input(
-                placeholder=tr("tui.declarations.calendar.search.placeholder"),
-                id="declarations-calendar-search",
+            yield localized(
+                Input(
+                    placeholder=tr("tui.declarations.calendar.search.placeholder"),
+                    id="declarations-calendar-search",
+                ),
+                "tui.declarations.calendar.search.placeholder",
             )
             yield Select[str](
                 tuple(
@@ -119,6 +126,30 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             self.query_one("#declarations-calendar-agenda", DataTable).focus()
         else:
             self.query_one("#declarations-calendar-search", Input).focus()
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the agenda in place, keeping scope, query and semantic selection."""
+        await super().refresh_language()
+        self.query_one("#declarations-calendar-search", Input).placeholder = tr(
+            "tui.declarations.calendar.search.placeholder"
+        )
+        scope = self.query_one("#declarations-calendar-scope", Select)
+        chosen = scope.value
+        with self.prevent(Select.Changed):
+            scope.set_options(
+                tuple(
+                    (tr(f"tui.declarations.calendar.scope.{item.value}"), item.value)
+                    for item in DeclarationsCalendarScopeV1
+                )
+            )
+            scope.value = chosen
+
+        def paint() -> None:
+            self._configure_table()
+            self._refresh()
+
+        repaint_tables(self, paint)
 
     def _configure_table(self) -> None:
         table = cast(
@@ -323,10 +354,10 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             app = self.app
             app.push_screen(
                 ConfirmScreen(
-                    title=tr("tui.declarations.calendar.action.create"),
-                    message=natural_address(row.modelo, row.filing_year, row.period),
-                    confirm_label=tr("tui.declarations.calendar.recovery.confirm"),
-                    cancel_label=tr("tui.declarations.calendar.recovery.cancel"),
+                    title=lambda: tr("tui.declarations.calendar.action.create"),
+                    message=lambda: natural_address(row.modelo, row.filing_year, row.period),
+                    confirm_label=lambda: tr("tui.declarations.calendar.recovery.confirm"),
+                    cancel_label=lambda: tr("tui.declarations.calendar.recovery.cancel"),
                 ),
                 self._resolve_recovery_confirmation,
             )

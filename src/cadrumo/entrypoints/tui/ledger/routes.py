@@ -13,6 +13,7 @@ from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
 from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
+from ..components.language import localized
 from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .actividad_asset import ActivityAssetTuiActionsV1
@@ -56,17 +57,23 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
     @override
     def compose(self) -> ComposeResult:
         """Render the explicit unavailability and no action affordance."""
-        yield Static(
-            tr("tui.ledger.unavailable.title"),
-            classes="cadrumo-banner",
+        yield localized(
+            Static(
+                tr("tui.ledger.unavailable.title"),
+                classes="cadrumo-banner",
+            ),
+            "tui.ledger.unavailable.title",
         )
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(
-                tr(self._route_refusal.reason_key),
-                id="ledger-refusal",
-                classes="ledger-refusal",
-                markup=False,
+            yield localized(
+                Static(
+                    tr(self._route_refusal.reason_key),
+                    id="ledger-refusal",
+                    classes="ledger-refusal",
+                    markup=False,
+                ),
+                self._route_refusal.reason_key,
             )
 
     def on_mount(self) -> None:

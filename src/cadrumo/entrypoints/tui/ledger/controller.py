@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import replace
-from typing import ClassVar, Final, cast
+from typing import ClassVar, Final, cast, override
 
 from textual.binding import Binding
 from textual.message import Message
@@ -637,6 +637,20 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         """The body's flow status line, or its notice line when it has none."""
         found = self.query("#ledger-flow-status")
         return cast(Static, found.first()) if found else self.query_one("#ledger-refusal", Static)
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword navigation without replacing forms or restarting their workers."""
+        await super().refresh_language()
+        navigation = self.query("#ledger-navigation")
+        if navigation:
+            table = cast("DataTable[str]", navigation.first())
+            key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
+            table.clear(columns=True)
+            self.populate_navigation()
+            row = next((index for index, item in enumerate(table.ordered_rows) if item.key.value == key), None)
+            if row is not None:
+                table.move_cursor(row=row, animate=False, scroll=False)
 
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""

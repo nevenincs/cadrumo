@@ -18,8 +18,9 @@ from textual.widgets import DataTable, Static
 from cadrumo_client.contracts.installation_requests import InstallationAct
 from cadrumo_client.transport.installation_client import open_installed_installation_client
 
-from ....core.i18n.render import tr
+from ....core.i18n.render import output_language, tr
 from ..components.account_chrome import AccountChromeScreen
+from ..components.language import repaint_tables
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..navigation import TuiScreenContextV1
@@ -92,7 +93,21 @@ class InstallationScreen(AccountChromeScreen):
             yield Static(id="installation-summary", markup=False)
             yield Static(hint, id="installation-hint", classes="cadrumo-note", markup=False)
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the retained list while preserving its semantic cursor."""
+        await super().refresh_language()
+        self._locale = output_language()
+        self.query_one(".cadrumo-banner", Static).update(tr("tui.installation.title"))
+        self.query_one("#installation-intro", Static).update(tr("tui.installation.intro"))
+        self.query_one("#installation-hint", Static).update(tr("tui.installation.list_hint"))
+        repaint_tables(self, self._populate_view)
+
     def on_mount(self) -> None:
+        """Populate the initially mounted list."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """List every offered act with its family and whether it changes records."""
         table = cast("DataTable[str]", self.query_one("#installation-acts", DataTable))
         with worded_in(self._locale):

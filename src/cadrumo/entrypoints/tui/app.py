@@ -40,6 +40,8 @@ from .account import (
     AccountSessionReaderV1,
     AccountSessionRetired,
     AccountSessionUnavailableError,
+    LanguageRefreshable,
+    ProfileLanguageInvalidated,
     RuntimeUpgradePending,
     WorkbenchAccountProviderV1,
 )
@@ -68,6 +70,9 @@ from .operations.palette import WorkbenchOperationProviderV1
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
 
 if TYPE_CHECKING:
+    from textual.timer import Timer
+    from textual.worker import Worker
+
     from ...application.overview.home import HomeAccountSession, HomeProjectionV1
     from .secret.passphrase import PassphraseScreen
 
@@ -199,6 +204,16 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         self._account_factories = account_factories
         self._unsubscribe_retirement: Callable[[], None] | None = None
         self._unsubscribe_notices: Callable[[], None] | None = None
+        self._unsubscribe_language: Callable[[], None] | None = None
+        self._language_pending = False
+        self._language_refreshing = False
+        self._language_revision = 0
+        self._language_epoch = 0
+        self._language_retry_attempt = 0
+        self._language_retry_timer: Timer | None = None
+        self._language_worker: Worker[None] | None = None
+        self._language_pending_screens: set[Screen[object]] = set()
+
         self._home_refresh_refusal_code: str | None = None
         """Why the last Home refresh was refused, or ``None`` when it succeeded."""
         self._workbench_search_refusal_code: str | None = (
@@ -313,6 +328,8 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
 
     def _start_session(self) -> None:
         factories = self._account_factories
+        if factories is not None and factories.subscribe_language is not None:
+            self._unsubscribe_language = factories.subscribe_language(self._post_language_invalidated)
         if factories is not None and factories.subscribe_notices is not None:
             self._unsubscribe_notices = factories.subscribe_notices(self._post_upgrade_notice)
         if factories is not None and factories.subscribe_retirement is not None:
@@ -380,11 +397,98 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
     def _post_upgrade_notice(self, _notice: object) -> None:
         self.post_message(RuntimeUpgradePending())
 
+    def _post_language_invalidated(self) -> None:
+        self.post_message(ProfileLanguageInvalidated())
+
+    def on_profile_language_invalidated(self, _: ProfileLanguageInvalidated) -> None:
+        """Coalesce invalidations; transient reads retain their pending work."""
+        self._language_revision += 1
+        self._language_pending = True
+        self._language_retry_attempt = 0
+        if self._language_retry_timer is not None:
+            self._language_retry_timer.stop()
+            self._language_retry_timer = None
+        self._start_language_refresh()
+
+    def _start_language_refresh(self) -> None:
+        self._language_retry_timer = None
+        factories = self._account_factories
+        if self._language_refreshing or factories is None or factories.refresh_language is None:
+            return
+        self._language_refreshing = True
+        self._language_worker = self.run_worker(
+            self._refresh_language_projection(factories, self._language_epoch), name="language-refresh"
+        )
+
+    async def _refresh_language_projection(self, factories: AccountFactoriesV1, epoch: int) -> None:
+        """Retry only failed presentation owners after a successful canonical read."""
+        revision = self._language_revision
+        try:
+            if self._language_pending:
+                refresh = factories.refresh_language
+                if refresh is None:
+                    return
+                try:
+                    await refresh()
+                except Exception as error:
+                    get_logger(__name__).debug(
+                        "canonical language refresh unavailable error_type=%s", type(error).__name__
+                    )
+                    return
+                if self._account_factories is not factories or self._language_epoch != epoch:
+                    return
+                self._language_pending = self._language_revision != revision
+                self._language_pending_screens.update(self.screen_stack)
+                self.refresh_account_chrome()
+            for screen in tuple(self._language_pending_screens):
+                if self._account_factories is not factories or self._language_epoch != epoch:
+                    return
+                if screen not in self.screen_stack:
+                    self._language_pending_screens.discard(screen)
+                    continue
+                if isinstance(screen, LanguageRefreshable):
+                    try:
+                        await screen.refresh_language()
+                    except Exception as error:
+                        get_logger(__name__).debug(
+                            "language presentation refresh unavailable error_type=%s", type(error).__name__
+                        )
+                        continue
+                self._language_pending_screens.discard(screen)
+        finally:
+            # The worker still owns this epoch when Home replaces the account
+            # factories. Release its slot and retry through the new doors;
+            # retirement increments the epoch and fences an old worker out.
+            if self._language_epoch == epoch:
+                if self._account_factories is not factories:
+                    self._language_pending = True
+                self._language_refreshing = False
+                self._language_worker = None
+                if self._language_pending or self._language_pending_screens:
+                    delay = min(0.5 * (2 ** min(self._language_retry_attempt, 4)), 5.0)
+                    self._language_retry_attempt += 1
+                    self._language_retry_timer = self.set_timer(delay, self._start_language_refresh)
+                else:
+                    self._language_retry_attempt = 0
+
     def on_unmount(self) -> None:
         """Release the event subscription when this profile-bound root leaves."""
         self._stop_session_events()
 
     def _stop_session_events(self) -> None:
+        self._language_epoch += 1
+        self._language_pending = False
+        self._language_pending_screens.clear()
+        if self._language_retry_timer is not None:
+            self._language_retry_timer.stop()
+            self._language_retry_timer = None
+        if self._language_worker is not None:
+            self._language_worker.cancel()
+            self._language_worker = None
+        self._language_refreshing = False
+        unsubscribe_language, self._unsubscribe_language = self._unsubscribe_language, None
+        if unsubscribe_language is not None:
+            unsubscribe_language()
         unsubscribe_notice, self._unsubscribe_notices = self._unsubscribe_notices, None
         if unsubscribe_notice is not None:
             unsubscribe_notice()

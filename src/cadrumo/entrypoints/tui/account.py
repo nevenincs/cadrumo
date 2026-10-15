@@ -55,6 +55,19 @@ class AccountSessionRetired(Message):
     """Ask the owning UI thread to clear private views after a runtime event."""
 
 
+class ProfileLanguageInvalidated(Message):
+    """Ask the UI owner to refresh its canonical presentation preference."""
+
+
+@runtime_checkable
+class LanguageRefreshable(Protocol):
+    """A mounted presentation owner that can relabel itself without replacing state."""
+
+    async def refresh_language(self) -> None:
+        """Refresh authored wording while retaining inputs and operation identity."""
+        ...
+
+
 class AccountRecomposeReasonV1(StrEnum):
     """Why the current profile-bound workbench must be discarded."""
 
@@ -111,6 +124,8 @@ class AccountFactoriesV1:
     """Whether the profile still needs setup, so the session opens on the setup walk."""
     subscribe_retirement: Callable[[Callable[[], None]], Callable[[], None]] | None = None
     subscribe_notices: Callable[[Callable[[LifecycleNotice], None]], Callable[[], None]] | None = None
+    subscribe_language: Callable[[Callable[[], None]], Callable[[], None]] | None = None
+    refresh_language: Callable[[], Awaitable[bool]] | None = None
 
 
 @runtime_checkable

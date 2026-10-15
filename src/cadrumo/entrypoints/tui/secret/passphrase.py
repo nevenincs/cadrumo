@@ -31,6 +31,7 @@ from textual.worker import Worker
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
+from ..components.language import localized, refresh_localized_widgets
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from .credentials import (
@@ -193,8 +194,13 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
             yield Input(id="field-confirm", password=True)
 
             with Horizontal(id="passphrase-actions", classes="credential-actions"):
-                yield Button(tr("flows.passphrase.cancel_button"), id="btn-cancel")
-                yield Button(tr("flows.passphrase.change_button"), id="btn-change", classes="-primary")
+                yield localized(
+                    Button(tr("flows.passphrase.cancel_button"), id="btn-cancel"), "flows.passphrase.cancel_button"
+                )
+                yield localized(
+                    Button(tr("flows.passphrase.change_button"), id="btn-change", classes="-primary"),
+                    "flows.passphrase.change_button",
+                )
         yield Footer()
 
     def on_mount(self) -> None:
@@ -203,7 +209,7 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         self._render_localised_copy()
         self.query_one("#field-current", Input).focus()
 
-    def _render_localised_copy(self) -> None:
+    def _render_localised_copy(self, *, assess_strength: bool = True) -> None:
         """Resolve every operator-facing string on the page."""
         title = tr("flows.passphrase.title")
         self.title = title
@@ -215,7 +221,17 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         self.query_one("#label-new", Label).update(tr("flows.passphrase.new_label"))
         self.query_one("#hint-new", Static).update(tr("flows.passphrase.new_hint"))
         self.query_one("#label-confirm", Label).update(tr("flows.passphrase.confirm_label"))
-        self._render_strength(self.query_one("#field-new", Input).value, assess=self._assess_profile_password)
+        if assess_strength:
+            self._render_strength(self.query_one("#field-new", Input).value, assess=self._assess_profile_password)
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the password screen without reading or replacing a secret input."""
+        await super().refresh_language()
+        refresh_localized_widgets(self)
+        self._render_localised_copy(assess_strength=False)
+        if self._last_strength_assessment is not None:
+            self.query_one("#strength-line", Static).update(assessment_copy(self._last_strength_assessment))
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Re-render the advisory strength line as the new password is typed."""

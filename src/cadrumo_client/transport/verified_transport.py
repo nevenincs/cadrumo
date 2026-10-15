@@ -14,7 +14,7 @@ from ..contracts.access_management import SessionInventoryTransfer
 from ..contracts.contracts import ByteChannel, RefusalCode, RefusalError, ServerHello
 from ..contracts.deadline_budget import remaining_budget
 from ..contracts.profile_access import AccessRefusal, ProfileStatusTransfer, Reply, SecretReady
-from ..contracts.session_events import ConnectionEvent, LifecycleNotice, SessionEvent
+from ..contracts.session_events import ConnectionEvent, LifecycleNotice, ProfileLanguageChanged, SessionEvent
 from .frame_io import (
     SecretBearingRequest,
     read_profile_status,
@@ -92,7 +92,7 @@ class VerifiedTransport:
                 if not self._channel.read_ready():
                     continue
                 received = read_reply_or_event(self._channel, Reply, deadline=time.monotonic() + 5)
-                if not isinstance(received, (SessionEvent, LifecycleNotice)):
+                if not isinstance(received, (SessionEvent, LifecycleNotice, ProfileLanguageChanged)):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 self._receive_event(received)
             except BaseException as error:
@@ -183,7 +183,7 @@ class VerifiedTransport:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         while True:
             result = read_reply_or_event(self._channel, Reply, deadline=deadline)
-            if not isinstance(result, (SessionEvent, LifecycleNotice)):
+            if not isinstance(result, (SessionEvent, LifecycleNotice, ProfileLanguageChanged)):
                 break
             self._receive_event(result)
         self._verify_reply(request_id, result.root.request_id, result.root.runtime_boot_id, result.root.connection_id)

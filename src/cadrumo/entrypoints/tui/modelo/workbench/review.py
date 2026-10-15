@@ -43,6 +43,7 @@ from textual.widgets import Button, Checkbox, Static
 
 from .....application.modelo.source_policy import SourceFamily
 from .....core.i18n.render import tr
+from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
 from .bulk_confirm import TickBox
 from .dialog_width import fit_dialog_width
@@ -332,26 +333,41 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
         with Container(id="review-backdrop"), Vertical(id="review-panel"):
             if self._status_line is not None:
                 yield StatusBar(self._status_line, id="review-status")
-            yield Static(
-                tr("tui.modelo.workbench.review.title", count=len(self._changes)), id="review-title", markup=False
+            yield localized(
+                Static(
+                    tr("tui.modelo.workbench.review.title", count=len(self._changes)), id="review-title", markup=False
+                ),
+                "tui.modelo.workbench.review.title",
+                count=len(self._changes),
             )
-            yield Static(tr("tui.modelo.workbench.review.nothing_saved"), id="review-subtitle", markup=False)
+            yield localized(
+                Static(tr("tui.modelo.workbench.review.nothing_saved"), id="review-subtitle", markup=False),
+                "tui.modelo.workbench.review.nothing_saved",
+            )
             with VerticalScroll(id="review-body", can_focus=True):
                 for index, change in enumerate(self._changes):
                     yield Static(
                         change_line(change), id=f"review-change-{index}", classes="review-change", markup=False
                     )
                 if displacing:
-                    yield Static(
-                        tr("tui.modelo.workbench.review.displacing", count=displacing),
-                        id="review-warning",
-                        markup=False,
+                    yield localized(
+                        Static(
+                            tr("tui.modelo.workbench.review.displacing", count=displacing),
+                            id="review-warning",
+                            markup=False,
+                        ),
+                        "tui.modelo.workbench.review.displacing",
+                        count=displacing,
                     )
                 if self._rebased:
-                    yield Static(
-                        tr("tui.modelo.workbench.review.rebased", count=self._rebased),
-                        id="review-rebased",
-                        markup=False,
+                    yield localized(
+                        Static(
+                            tr("tui.modelo.workbench.review.rebased", count=self._rebased),
+                            id="review-rebased",
+                            markup=False,
+                        ),
+                        "tui.modelo.workbench.review.rebased",
+                        count=self._rebased,
                     )
                 if self._at_risk is not None:
                     yield Static(
@@ -364,13 +380,21 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
             if self._needs_acknowledgement:
                 yield TickBox(tr("tui.modelo.workbench.review.acknowledge"), id="review-acknowledge", compact=True)
             with Horizontal(id="review-actions"):
-                yield Button(tr("tui.modelo.workbench.review.back"), id="review-back")
-                yield Button(tr("tui.modelo.workbench.review.discard"), id="review-discard", variant="error")
-                yield Button(
-                    tr("tui.modelo.workbench.review.apply"),
-                    id="review-apply",
-                    variant="primary",
-                    disabled=not self._may_apply(acknowledged=False),
+                yield localized(
+                    Button(tr("tui.modelo.workbench.review.back"), id="review-back"), "tui.modelo.workbench.review.back"
+                )
+                yield localized(
+                    Button(tr("tui.modelo.workbench.review.discard"), id="review-discard", variant="error"),
+                    "tui.modelo.workbench.review.discard",
+                )
+                yield localized(
+                    Button(
+                        tr("tui.modelo.workbench.review.apply"),
+                        id="review-apply",
+                        variant="primary",
+                        disabled=not self._may_apply(acknowledged=False),
+                    ),
+                    "tui.modelo.workbench.review.apply",
                 )
 
     def _notes_text(self) -> Content:
@@ -430,6 +454,10 @@ class EditReviewScreen(ModalScreen[ReviewDecision | None]):
     def action_back(self) -> None:
         """Return to editing with every change kept."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
 
 
 __all__ = [

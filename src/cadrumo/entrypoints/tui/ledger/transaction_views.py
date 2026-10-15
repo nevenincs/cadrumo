@@ -12,6 +12,7 @@ from ....application.ledger.models import ManualLedgerTransactionPatch
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.transactions.models import Transaction
+from ..components.language import localized
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models import LedgerRecordDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
@@ -31,14 +32,23 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.records.transaction_detail"), classes="cadrumo-banner")
+        yield localized(
+            Static(tr("tui.ledger.records.transaction_detail"), classes="cadrumo-banner"),
+            "tui.ledger.records.transaction_detail",
+        )
         with ledger_workspace_page() as navigation:
             yield navigation
             yield Static("", id="ledger-record-detail", markup=False)
-            yield Static(tr("tui.ledger.column.description"), markup=False)
+            yield localized(Static(tr("tui.ledger.column.description"), markup=False), "tui.ledger.column.description")
             yield Input(id="ledger-transaction-description")
-            yield Button(tr("tui.ledger.invoice.review"), id="ledger-transaction-edit-review", disabled=True)
-            yield Button(tr("tui.ledger.records.save"), id="ledger-transaction-edit-save", disabled=True)
+            yield localized(
+                Button(tr("tui.ledger.invoice.review"), id="ledger-transaction-edit-review", disabled=True),
+                "tui.ledger.invoice.review",
+            )
+            yield localized(
+                Button(tr("tui.ledger.records.save"), id="ledger-transaction-edit-save", disabled=True),
+                "tui.ledger.records.save",
+            )
             yield Static("", id="ledger-flow-status", markup=False)
             yield Static("", id="ledger-refusal", classes="ledger-refusal", markup=False)
 

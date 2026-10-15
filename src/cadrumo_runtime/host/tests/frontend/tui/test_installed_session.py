@@ -28,6 +28,7 @@ from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.secret import credentials
 from cadrumo.entrypoints.tui.secret.registration import RegistrationScreen
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.profile_language import ProfileLanguage
 
 from ....frontend.tui import installed_session, runtime_session
 from ....frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
@@ -96,6 +97,13 @@ def _session_callbacks(
         client=client,
     )
     screens: list[_ObservedRequester] = []
+
+    def read_language(bound: FrontendClient) -> ProfileLanguage:
+        # This fixture owns only requester composition, with no private views.
+        assert bound is client
+        return ProfileLanguage(language=None, record_revision=1, content_digest="a" * 64)
+
+    monkeypatch.setattr(installed_session, "read_profile_language", read_language)
 
     def observe_screen(**options: object) -> _ObservedRequester:
         screen = _ObservedRequester(

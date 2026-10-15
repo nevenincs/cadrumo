@@ -316,7 +316,7 @@ class ProfileOverviewInteractionMixin:
         self.app.push_screen(
             FieldEditScreen(
                 field,
-                prompt=tr("wizard.setup.profile.output-language.prompt"),
+                prompt_key="wizard.setup.profile.output-language.prompt",
                 choice_labels={
                     choice.value: tr(
                         f"wizard.setup.profile.output-language.choices.{choice.value}.label",

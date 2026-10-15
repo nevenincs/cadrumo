@@ -50,6 +50,7 @@ from ...core.operations import (
 )
 from ...core.time.clock import now
 from ..review_publication_labels import GoogleReviewLabels
+from .components.language import refresh_localized_widgets
 from .operations.interactions import OperationModalReviewInteractionV1
 from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
 
@@ -145,6 +146,12 @@ class GoogleSavedReviewModal(OperationModal):
         self.query_one("#btn-operation-apply", Button).label = labels("google_review.publish")
         self.query_one("#btn-operation-reject", Button).label = labels("google_review.cancel")
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the exact disclosure while retaining response and operation identity."""
+        self._labels = GoogleReviewLabels(OutputLanguage(output_language()))
+        await super().refresh_language()
+
     def action_technical(self) -> None:
         """Show the selected source and destination identities only on request."""
         self._technical = not self._technical
@@ -191,8 +198,8 @@ class GoogleSavedReviewScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(self._labels("google_review.offer.title"), markup=False)
-        yield Static(self._labels("google_review.notice.external_copy"), markup=False)
+        yield Static(self._labels("google_review.offer.title"), id="saved-google-review-title", markup=False)
+        yield Static(self._labels("google_review.notice.external_copy"), id="saved-google-review-copy", markup=False)
         yield Static("", id="saved-google-review-notice", markup=False)
         yield Link(self._labels("google_review.open_document"), url="", id="saved-google-review-link", disabled=True)
         yield Button(self._labels("google_review.close"), id="saved-google-review-close")
@@ -308,9 +315,7 @@ class GoogleSavedReviewScreen(Screen[None]):
                 raise TimeoutError("the original prepublication review did not become rejectable")
             await asyncio.sleep(0.1)
 
-    async def _read_result(
-        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1
-    ) -> None:
+    async def _read_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection
         if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
             self._notice(outcome.error_explanation or self._labels("google_review.notice.receipt_unavailable"))
@@ -341,3 +346,15 @@ class GoogleSavedReviewScreen(Screen[None]):
         """Return without consenting, replaying, or contacting a provider."""
         if event.button.id == "saved-google-review-close":
             self.app.pop_screen()
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)
+        self._labels = GoogleReviewLabels(OutputLanguage(output_language()))
+        self.query_one("#saved-google-review-title", Static).update(self._labels("google_review.offer.title"))
+        self.query_one("#saved-google-review-copy", Static).update(self._labels("google_review.notice.external_copy"))
+        self.query_one("#saved-google-review-close", Button).label = self._labels("google_review.close")
+        link = self.query_one("#saved-google-review-link", Link)
+        link.text = self._labels("google_review.open_document")
+        if not link.disabled:
+            self._notice(self._labels("google_review.publication.published"))

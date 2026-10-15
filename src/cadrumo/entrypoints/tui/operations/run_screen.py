@@ -33,6 +33,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
 from ....core.request_faults import request_fault_line
+from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import BASE_CSS, tokenised
 from .catalogue import OperationCatalogueEntryV1
 from .modal import (
@@ -140,10 +141,16 @@ class OperationRunScreen(Screen[None]):
             )
             yield Static("", id="operation-run-subject", markup=False)
             if self._subject_entered:
-                yield Static(tr("tui.operations.form.subject_entry"), classes="operation-field-label", markup=False)
+                yield localized(
+                    Static(tr("tui.operations.form.subject_entry"), classes="operation-field-label", markup=False),
+                    "tui.operations.form.subject_entry",
+                )
                 yield Input(id="operation-subject-entry")
             if entry.contract.ephemeral_secret_required:
-                yield Static(tr("tui.operations.form.secret"), classes="operation-field-label", markup=False)
+                yield localized(
+                    Static(tr("tui.operations.form.secret"), classes="operation-field-label", markup=False),
+                    "tui.operations.form.secret",
+                )
                 yield Input(password=True, id="operation-secret")
             with Vertical(id="operation-fields"):
                 for index, field in enumerate(self._fields):
@@ -171,11 +178,25 @@ class OperationRunScreen(Screen[None]):
             yield Static("", id="operation-result-page", markup=False)
             yield Static("", id="operation-result-body", markup=False)
         with ItemGrid(id="operation-run-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
-            yield Button(tr("tui.operations.action.run"), id="operation-run", classes="-primary")
-            yield Button(tr("tui.operations.action.edit_json"), id="operation-toggle-json")
-            yield Button(tr("tui.operations.action.previous_page"), id="operation-result-previous", disabled=True)
-            yield Button(tr("tui.operations.action.next_page"), id="operation-result-next", disabled=True)
-            yield Button(tr("tui.operations.action.close"), id="operation-close")
+            yield localized(
+                Button(tr("tui.operations.action.run"), id="operation-run", classes="-primary"),
+                "tui.operations.action.run",
+            )
+            yield localized(
+                Button(tr("tui.operations.action.edit_json"), id="operation-toggle-json"),
+                "tui.operations.action.edit_json",
+            )
+            yield localized(
+                Button(tr("tui.operations.action.previous_page"), id="operation-result-previous", disabled=True),
+                "tui.operations.action.previous_page",
+            )
+            yield localized(
+                Button(tr("tui.operations.action.next_page"), id="operation-result-next", disabled=True),
+                "tui.operations.action.next_page",
+            )
+            yield localized(
+                Button(tr("tui.operations.action.close"), id="operation-close"), "tui.operations.action.close"
+            )
 
     def on_mount(self) -> None:
         """Show the subject the untouched form already determines."""
@@ -474,9 +495,7 @@ class OperationRunScreen(Screen[None]):
                 f"{tr('tui.operations.run.unobserved')}"
             )
 
-    async def _show_result(
-        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1
-    ) -> None:
+    async def _show_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection
         contract = projection.definition_contract
         self._show_receipt(receipt_text(projection))
@@ -509,6 +528,20 @@ class OperationRunScreen(Screen[None]):
         )
         self.query_one("#operation-result-previous", Button).disabled = self._page <= 0
         self.query_one("#operation-result-next", Button).disabled = self._page >= len(pages) - 1
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)
+        self.query_one("#operation-run-session", Static).update(
+            f"{tr('tui.operations.form.profile')}: {self._client.profile_id}\n"
+            f"{tr('tui.operations.form.session')}: {self._client.session_id}"
+        )
+        for index, field in enumerate(self._fields):
+            self.query_one(f"#operation-field-label-{index}", Static).update(self._field_label(field))
+            if not field.session_fixed and field.kind in {RequestFieldKind.BOOLEAN, RequestFieldKind.ENUM}:
+                self.query_one(f"#operation-field-{index}", Select).prompt = tr("tui.operations.form.choose")
+        self._show_subject(request_document(self._fields, self._texts())[0])
+        self._show_page(self._page)
 
 
 __all__ = ["OperationRunScreen"]

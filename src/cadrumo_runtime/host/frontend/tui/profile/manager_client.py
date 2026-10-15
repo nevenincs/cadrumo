@@ -36,7 +36,7 @@ from cadrumo.application.user_profile.view_operation import ProfileViewFactItem,
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n.render import tr
+from cadrumo.core.i18n.render import output_language, tr
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
@@ -157,6 +157,18 @@ class ProfileManagerClientComposition:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return overview
 
+    def _auth_overview(self) -> ProfileOverview:
+        """Read held authentication metadata in the interactive host's current locale."""
+        self._pin()
+        language = OutputLanguage(output_language())
+        overview = self._overview_reader(self.client, self.profile_label, language)
+        self._pin()
+        if overview.profile_id != str(self.profile_id):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        if OutputLanguage(output_language()) is not language:
+            raise RefusalError(RefusalCode.UNAVAILABLE)
+        return overview
+
     def _current(self) -> ProfileOverview:
         screen = self.screen
         if screen is None:
@@ -225,7 +237,9 @@ class ProfileManagerClientComposition:
             self._pin()
             projection = completed.projection
             _require_projection_identity(projection, ProfileMutationOperationProjection, self.profile_id, request)
-            current = self.client.read_profile_view((ProfileViewPageKind.FACTS,), output_language=self.output_language)
+            current = self.client.read_profile_view(
+                (ProfileViewPageKind.FACTS,), output_language=OutputLanguage(output_language())
+            )
             self._pin()
             if current.profile_id != self.profile_id or current.record_revision < projection.record_revision:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
@@ -456,13 +470,18 @@ class ProfileManagerClientComposition:
             remove_plantilla_media=self._remove_plantilla_media,
             launch_source=self._launch_source,
             aeat_auth_setup=self.auth_setup(),
+            refresh_overview_language=self._refresh_overview_language,
         )
         self.screen = screen
         return screen
 
+    def _refresh_overview_language(self) -> ProfileOverview:
+        self.output_language = OutputLanguage(output_language())
+        return self._overview()
+
     def auth_setup(self) -> AeatAuthClient:
         """Expose the same exact-profile authentication editor beside both sync surfaces."""
-        return AeatAuthClient(self.client, overview=self._overview, persist=self._auth_field, pin=self._pin)
+        return AeatAuthClient(self.client, overview=self._auth_overview, persist=self._auth_field, pin=self._pin)
 
 
 __all__ = [

@@ -161,10 +161,10 @@ class WorkbenchOperationMixin:
 
         self.app.push_screen(
             ConfirmScreen(
-                title=tr("application.modelo.lifecycle.file_confirm_title"),
-                message=tr("application.modelo.lifecycle.file_confirm_message"),
-                confirm_label=tr("application.modelo.lifecycle.file_confirm_accept"),
-                cancel_label=tr("application.modelo.lifecycle.file_confirm_cancel"),
+                title=lambda: tr("application.modelo.lifecycle.file_confirm_title"),
+                message=lambda: tr("application.modelo.lifecycle.file_confirm_message"),
+                confirm_label=lambda: tr("application.modelo.lifecycle.file_confirm_accept"),
+                cancel_label=lambda: tr("application.modelo.lifecycle.file_confirm_cancel"),
             ),
             closed,
         )

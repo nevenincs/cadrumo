@@ -19,6 +19,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.model_validation import validate_business_pct_coupling, validate_non_negative_decimal
+from ..components.language import localized
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
@@ -88,37 +89,59 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.classification.title"), classes="cadrumo-banner")
+        yield localized(
+            Static(tr("tui.ledger.classification.title"), classes="cadrumo-banner"), "tui.ledger.classification.title"
+        )
         with ledger_workspace_page() as navigation:
             yield navigation
             position, total, short_id = self.controller.classification_target_coordinate()
-            yield Static(
-                tr(
-                    "tui.ledger.classification.target",
-                    position=position,
-                    total=total,
-                    short_id=short_id,
+            yield localized(
+                Static(
+                    tr(
+                        "tui.ledger.classification.target",
+                        position=position,
+                        total=total,
+                        short_id=short_id,
+                    ),
+                    id="ledger-classification-target",
+                    markup=False,
                 ),
-                id="ledger-classification-target",
-                markup=False,
+                "tui.ledger.classification.target",
+                position=position,
+                total=total,
+                short_id=short_id,
             )
-            yield Static(tr("tui.ledger.classification.prompt"), markup=False)
-            yield Static(
-                tr("tui.ledger.classification.boundary"),
-                id="ledger-classification-boundary",
-                markup=False,
+            yield localized(
+                Static(tr("tui.ledger.classification.prompt"), markup=False), "tui.ledger.classification.prompt"
+            )
+            yield localized(
+                Static(
+                    tr("tui.ledger.classification.boundary"),
+                    id="ledger-classification-boundary",
+                    markup=False,
+                ),
+                "tui.ledger.classification.boundary",
             )
             for field_name in CLASSIFICATION_FIELD_NAMES:
-                yield Static(tr(f"tui.ledger.classification.field.{field_name}"), markup=False)
+                yield localized(
+                    Static(tr(f"tui.ledger.classification.field.{field_name}"), markup=False),
+                    f"tui.ledger.classification.field.{field_name}",
+                )
                 yield Input(id=_input_id(field_name))
             yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
-            yield Button(
-                tr("tui.ledger.classification.confirm"),
-                id="ledger-classification-confirm",
-                disabled=True,
+            yield localized(
+                Button(
+                    tr("tui.ledger.classification.confirm"),
+                    id="ledger-classification-confirm",
+                    disabled=True,
+                ),
+                "tui.ledger.classification.confirm",
             )
-            yield Button(tr("tui.ledger.classification.cancel"), id="ledger-classification-cancel")
+            yield localized(
+                Button(tr("tui.ledger.classification.cancel"), id="ledger-classification-cancel"),
+                "tui.ledger.classification.cancel",
+            )
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:

@@ -19,6 +19,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr
 from ....core.time.clock import today_madrid
 from ..components.dialogs import ConfirmScreen
+from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
@@ -80,8 +81,14 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.declarations.list.title"), classes="cadrumo-banner", markup=False)
-        yield Input(placeholder=tr("tui.declarations.list.search.hint"), id="declarations-search")
+        yield localized(
+            Static(tr("tui.declarations.list.title"), classes="cadrumo-banner", markup=False),
+            "tui.declarations.list.title",
+        )
+        yield localized(
+            Input(placeholder=tr("tui.declarations.list.search.hint"), id="declarations-search"),
+            "tui.declarations.list.search.hint",
+        )
         yield Static(id="declarations-list-context", classes="cadrumo-heading", markup=False)
         yield Static(id="declarations-keys", markup=False)
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
@@ -92,10 +99,21 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             yield Static(id="declarations-technical", markup=False)
             yield Static(id="declarations-sources", markup=False)
             with Horizontal(id="declarations-links"):
-                yield Button(tr("tui.declarations.list.key.new"), id="declarations-new")
-                yield Button(tr("tui.declarations.destination.revisions"), id="declarations-revisions")
-                yield Button(tr("tui.declarations.destination.filing_history"), id="declarations-filings")
-                yield Button(tr("tui.declarations.destination.calendar"), id="declarations-calendar")
+                yield localized(
+                    Button(tr("tui.declarations.list.key.new"), id="declarations-new"), "tui.declarations.list.key.new"
+                )
+                yield localized(
+                    Button(tr("tui.declarations.destination.revisions"), id="declarations-revisions"),
+                    "tui.declarations.destination.revisions",
+                )
+                yield localized(
+                    Button(tr("tui.declarations.destination.filing_history"), id="declarations-filings"),
+                    "tui.declarations.destination.filing_history",
+                )
+                yield localized(
+                    Button(tr("tui.declarations.destination.calendar"), id="declarations-calendar"),
+                    "tui.declarations.destination.calendar",
+                )
 
     def on_mount(self) -> None:
         """Populate the joined portfolio and restore its semantic selection."""
@@ -113,6 +131,14 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             ).value not in {"available", "stale"}
         self._render_sources()
         self._restore_declaration_focus(None)
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the portfolio without changing its query, folds or selection."""
+        await super().refresh_language()
+        self.query_one("#declarations-search", Input).placeholder = tr("tui.declarations.list.search.hint")
+        self._populate()
+        self._render_sources()
 
     def _render_sources(self) -> None:
         """Say which authorities were observed, including retained evidence."""
@@ -250,10 +276,10 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
             if existing is not None:
                 self.app.push_screen(
                     ConfirmScreen(
-                        title=tr("tui.declarations.list.new.exists"),
-                        message=natural_address(target.modelo, target.period.filing_year, target.period),
-                        confirm_label=tr("tui.declarations.calendar.action.open"),
-                        cancel_label=tr("tui.modelo.workbench.editor.cancel"),
+                        title=lambda: tr("tui.declarations.list.new.exists"),
+                        message=lambda: natural_address(target.modelo, target.period.filing_year, target.period),
+                        confirm_label=lambda: tr("tui.declarations.calendar.action.open"),
+                        cancel_label=lambda: tr("tui.modelo.workbench.editor.cancel"),
                     ),
                     lambda confirmed: self._open(existing) if confirmed is True else None,
                 )

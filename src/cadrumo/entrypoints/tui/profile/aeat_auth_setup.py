@@ -20,6 +20,7 @@ from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.request_faults import request_fault_line
+from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import BASE_CSS, tokenised
 from .auth_fields import AeatAuthFieldSaveError
 
@@ -87,15 +88,19 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.aeat_auth.title"), classes="cadrumo-banner", markup=False)
+        yield localized(
+            Static(tr("tui.aeat_auth.title"), classes="cadrumo-banner", markup=False), "tui.aeat_auth.title"
+        )
         with VerticalScroll(id="aeat-auth-page"):
-            yield Static(tr("tui.aeat_auth.method"), markup=False)
+            yield localized(Static(tr("tui.aeat_auth.method"), markup=False), "tui.aeat_auth.method")
             yield Select(
                 [(tr(f"auth.catalogue.{kind.value}_label"), kind.value) for kind in AuthProviderKind],
                 allow_blank=True,
                 id="aeat-auth-method",
             )
-            yield Static(tr("tui.aeat_auth.route"), id="aeat-auth-route-label", markup=False)
+            yield localized(
+                Static(tr("tui.aeat_auth.route"), id="aeat-auth-route-label", markup=False), "tui.aeat_auth.route"
+            )
             yield Select(
                 [
                     (tr("flows.manager.action.auth_clave_movil_route_qr"), ClaveMovilRoute.QR.value),
@@ -106,17 +111,26 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
                 id="aeat-auth-route",
             )
             for index, path in enumerate(_FACT_PATHS):
-                yield Static(tr(f"profile.schema.field.{path}.label"), id=f"aeat-auth-label-{index}", markup=False)
+                yield localized(
+                    Static(tr(f"profile.schema.field.{path}.label"), id=f"aeat-auth-label-{index}", markup=False),
+                    f"profile.schema.field.{path}.label",
+                )
                 yield Input(id=f"aeat-auth-field-{index}")
-            yield Static(tr("tui.aeat_auth.document_hint"), id="aeat-auth-document-hint", markup=False)
-            yield Static(tr("tui.aeat_auth.certificate_path"), id="aeat-auth-path-label", markup=False)
+            yield localized(
+                Static(tr("tui.aeat_auth.document_hint"), id="aeat-auth-document-hint", markup=False),
+                "tui.aeat_auth.document_hint",
+            )
+            yield localized(
+                Static(tr("tui.aeat_auth.certificate_path"), id="aeat-auth-path-label", markup=False),
+                "tui.aeat_auth.certificate_path",
+            )
             yield Input(id="aeat-auth-path")
             yield Static("", id="aeat-auth-secret-label", markup=False)
             yield Input(password=True, id="aeat-auth-secret")
             yield Static(readiness_text(None), id="aeat-auth-readiness", markup=False)
             yield Static("", id="aeat-auth-message", markup=False)
-            yield Button(tr("tui.aeat_auth.save"), id="aeat-auth-save", disabled=True)
-            yield Button(tr("tui.aeat_auth.close"), id="aeat-auth-close")
+            yield localized(Button(tr("tui.aeat_auth.save"), id="aeat-auth-save", disabled=True), "tui.aeat_auth.save")
+            yield localized(Button(tr("tui.aeat_auth.close"), id="aeat-auth-close"), "tui.aeat_auth.close")
 
     def on_mount(self) -> None:
         """Populate fields from persisted data without blocking the event loop."""
@@ -249,3 +263,31 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
         if not self._busy:
             self.query_one("#aeat-auth-secret", Input).value = ""
             self.dismiss(self._snapshot)
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)
+        for selector, options in (
+            (
+                "#aeat-auth-method",
+                [(tr(f"auth.catalogue.{kind.value}_label"), kind.value) for kind in AuthProviderKind],
+            ),
+            (
+                "#aeat-auth-route",
+                [
+                    (tr("flows.manager.action.auth_clave_movil_route_qr"), ClaveMovilRoute.QR.value),
+                    (tr("flows.manager.action.auth_clave_movil_route_app_request"), ClaveMovilRoute.APP_REQUEST.value),
+                ],
+            ),
+        ):
+            control = self.query_one(selector, Select)
+            value = control.value
+            with self.prevent(Select.Changed):
+                control.set_options(options)
+                control.value = value
+        for index, path in enumerate(_FACT_PATHS):
+            self.query_one(f"#aeat-auth-label-{index}", Static).update(tr(f"profile.schema.field.{path}.label"))
+        self._visibility()
+        self.query_one("#aeat-auth-readiness", Static).update(
+            readiness_text(None if self._snapshot is None else self._snapshot[1])
+        )

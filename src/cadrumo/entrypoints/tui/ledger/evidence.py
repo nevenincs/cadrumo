@@ -9,6 +9,7 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 
 from ....core.i18n.render import tr
 from ....domain.iva.classification import InvoiceKind
+from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerEvidenceReviewRequested, LedgerWorkspaceController
 from .evidence_records import LedgerEvidenceRecordActions
@@ -40,39 +41,70 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.evidence.title"), classes="cadrumo-banner")
+        yield localized(Static(tr("tui.ledger.evidence.title"), classes="cadrumo-banner"), "tui.ledger.evidence.title")
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(tr("tui.ledger.evidence.safe_metadata"), markup=False)
+            yield localized(
+                Static(tr("tui.ledger.evidence.safe_metadata"), markup=False), "tui.ledger.evidence.safe_metadata"
+            )
             if self._has_attachment_review_queue:
-                yield Static(tr("tui.ledger.evidence.queue_heading"), classes="cadrumo-heading", markup=False)
+                yield localized(
+                    Static(tr("tui.ledger.evidence.queue_heading"), classes="cadrumo-heading", markup=False),
+                    "tui.ledger.evidence.queue_heading",
+                )
                 yield ContentDataTable[str](id="ledger-evidence", cursor_type="row", zebra_stripes=True)
                 yield Static("", id="ledger-evidence-detail", markup=False)
             if self.controller.evidence_door is not None:
-                yield Static(tr("tui.ledger.evidence.records_heading"), classes="cadrumo-heading", markup=False)
+                yield localized(
+                    Static(tr("tui.ledger.evidence.records_heading"), classes="cadrumo-heading", markup=False),
+                    "tui.ledger.evidence.records_heading",
+                )
                 yield Static("", id="ledger-evidence-reader", markup=False)
                 yield ContentDataTable[str](id="ledger-evidence-records", cursor_type="row", zebra_stripes=True)
                 yield Static("", id="ledger-evidence-record-detail", markup=False)
-                yield Button(tr("tui.ledger.evidence.extract"), id="ledger-evidence-extract", disabled=True)
+                yield localized(
+                    Button(tr("tui.ledger.evidence.extract"), id="ledger-evidence-extract", disabled=True),
+                    "tui.ledger.evidence.extract",
+                )
                 yield Static("", id="ledger-evidence-draft", markup=False)
-                yield Static(tr("tui.ledger.invoice.field.kind"), markup=False)
+                yield localized(
+                    Static(tr("tui.ledger.invoice.field.kind"), markup=False), "tui.ledger.invoice.field.kind"
+                )
                 yield Select[str](
                     tuple((tr(_KIND_LOCALE_KEYS[kind]), kind.value) for kind in InvoiceKind),
                     value=InvoiceKind.RECEIVED.value,
                     allow_blank=False,
                     id="ledger-evidence-kind",
                 )
-                yield Static(tr("tui.ledger.invoice.field.country_code"), markup=False)
+                yield localized(
+                    Static(tr("tui.ledger.invoice.field.country_code"), markup=False),
+                    "tui.ledger.invoice.field.country_code",
+                )
                 yield Input(value="ES", max_length=2, id="ledger-evidence-country")
-                yield Static(
-                    tr("tui.ledger.invoice.optional", label=tr("tui.ledger.invoice.field.counterparty_name")),
-                    markup=False,
+                yield localized(
+                    Static(
+                        tr("tui.ledger.invoice.optional", label=tr("tui.ledger.invoice.field.counterparty_name")),
+                        markup=False,
+                    ),
+                    "tui.ledger.invoice.optional",
+                    label=tr("tui.ledger.invoice.field.counterparty_name"),
                 )
                 yield Input(id="ledger-evidence-counterparty")
-                yield Button(tr("tui.ledger.evidence.confirm"), id="ledger-evidence-confirm", disabled=True)
-                yield Static(tr("tui.ledger.evidence.add_label"), markup=False)
-                yield Input(placeholder=tr("tui.ledger.evidence.path_placeholder"), id="ledger-evidence-path")
-                yield Button(tr("tui.ledger.evidence.add"), id="ledger-evidence-add", variant="primary")
+                yield localized(
+                    Button(tr("tui.ledger.evidence.confirm"), id="ledger-evidence-confirm", disabled=True),
+                    "tui.ledger.evidence.confirm",
+                )
+                yield localized(
+                    Static(tr("tui.ledger.evidence.add_label"), markup=False), "tui.ledger.evidence.add_label"
+                )
+                yield localized(
+                    Input(placeholder=tr("tui.ledger.evidence.path_placeholder"), id="ledger-evidence-path"),
+                    "tui.ledger.evidence.path_placeholder",
+                )
+                yield localized(
+                    Button(tr("tui.ledger.evidence.add"), id="ledger-evidence-add", variant="primary"),
+                    "tui.ledger.evidence.add",
+                )
                 yield Static("", id="ledger-flow-status", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 

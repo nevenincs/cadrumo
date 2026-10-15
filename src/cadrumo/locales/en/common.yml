@@ -2375,6 +2375,18 @@ tui:
       outcome: 'Verification result: {outcome}'
       valid: Valid.
   ledger:
+    activity_asset:
+      asset_id: Asset identifier
+      claim: Record depreciation
+      correct: Correct
+      create: Create
+      filing: Prepare tax form transfer
+      forecast: Calculate forecast
+      free_amount: Optional accelerated depreciation amount
+      inspect: Inspect
+      revision: Asset revision (JSON)
+      supersedes: Recorded depreciation to replace (optional)
+      title: Depreciable assets
     area:
       classification: Classification
       entries: Entries

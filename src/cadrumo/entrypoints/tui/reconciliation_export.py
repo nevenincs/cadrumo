@@ -26,6 +26,7 @@ from ...core.operations import OperationTerminalCondition, profile_operation_sub
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
+from .components.language import localized, refresh_localized_widgets
 from .modelo.workbench.ports import WorkbenchExportRequest
 from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
 
@@ -35,15 +36,27 @@ class ReconciliationDestinationScreen(ModalScreen[WorkbenchExportRequest | None]
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("cli.app.modelo.reconcile.export_work_unit_scope"), markup=False)
-        yield Input(
-            placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"),
-            id="reconciliation-export-path",
+        yield localized(
+            Static(tr("cli.app.modelo.reconcile.export_work_unit_scope"), markup=False),
+            "cli.app.modelo.reconcile.export_work_unit_scope",
+        )
+        yield localized(
+            Input(
+                placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"),
+                id="reconciliation-export-path",
+            ),
+            "application.modelo.lifecycle.export_destination_placeholder",
         )
         yield Checkbox(tr("tui.modelo.export.replace_existing.label"), id="reconciliation-export-replace")
         yield Static("", id="reconciliation-export-notice", markup=False)
-        yield Button(tr("application.modelo.lifecycle.export"), id="reconciliation-export-submit")
-        yield Button(tr("tui.modelo.workbench.editor.cancel"), id="reconciliation-export-cancel")
+        yield localized(
+            Button(tr("application.modelo.lifecycle.export"), id="reconciliation-export-submit"),
+            "application.modelo.lifecycle.export",
+        )
+        yield localized(
+            Button(tr("tui.modelo.workbench.editor.cancel"), id="reconciliation-export-cancel"),
+            "tui.modelo.workbench.editor.cancel",
+        )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Submit the chosen path, or leave without publishing anything."""
@@ -68,6 +81,10 @@ class ReconciliationDestinationScreen(ModalScreen[WorkbenchExportRequest | None]
                 replace_existing=self.query_one("#reconciliation-export-replace", Checkbox).value,
             )
         )
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)
 
 
 class ReconciliationExportScreen(Screen[None]):
@@ -117,9 +134,7 @@ class ReconciliationExportScreen(Screen[None]):
 
         self.app.push_screen(OperationModal(controller), settled)
 
-    async def _show_result(
-        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1
-    ) -> None:
+    async def _show_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection
         if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
             return
@@ -141,11 +156,21 @@ class ReconciliationExportScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("cli.app.modelo.reconcile.export_work_unit_scope"), markup=False)
+        yield localized(
+            Static(tr("cli.app.modelo.reconcile.export_work_unit_scope"), markup=False),
+            "cli.app.modelo.reconcile.export_work_unit_scope",
+        )
         yield Static("", id="reconciliation-result-notice", markup=False)
-        yield Button(tr("tui.modelo.export.result.close"), id="reconciliation-result-close")
+        yield localized(
+            Button(tr("tui.modelo.export.result.close"), id="reconciliation-result-close"),
+            "tui.modelo.export.result.close",
+        )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Return to the selected declaration's history."""
         if event.button.id == "reconciliation-result-close":
             self.app.pop_screen()
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)

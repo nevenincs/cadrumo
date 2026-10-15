@@ -8,6 +8,7 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
 from ....core.i18n.render import tr
+from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
     DeclarationsWorkspaceController,
@@ -28,15 +29,31 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.declarations.revisions.title"), classes="cadrumo-banner", markup=False)
+        yield localized(
+            Static(tr("tui.declarations.revisions.title"), classes="cadrumo-banner", markup=False),
+            "tui.declarations.revisions.title",
+        )
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(tr("tui.declarations.revisions.explanation"), markup=False)
+            yield localized(
+                Static(tr("tui.declarations.revisions.explanation"), markup=False),
+                "tui.declarations.revisions.explanation",
+            )
             yield ContentDataTable[str](id="declarations-revisions", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the existing projection, preserving semantic cursors and controls."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
+
     def on_mount(self) -> None:
+        """Populate the initially mounted projection."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """Populate calculation revisions from the safe projection."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-revisions", DataTable))

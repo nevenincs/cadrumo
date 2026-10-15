@@ -93,6 +93,7 @@ class _Capture:
 
     generation: WorkbenchGenerationV1
     profile: ProfileOverview
+    language_epoch: int
 
 
 class _DeclarationDestination:
@@ -224,6 +225,29 @@ class RuntimeWorkbenchRoot:
         self._label, self._language = profile_label, output_language
         self._open_recovery_client = open_recovery_client
         self._requester_factory = requester_factory
+        self._language_guard = Lock()
+        self._language_epoch = 0
+        self._latest_profile: ProfileOverview | None = None
+
+    def set_output_language(self, language: OutputLanguage) -> None:
+        """Update future requests and profile panes through one canonical read off-loop."""
+        self._require_binding()
+        with self._language_guard:
+            self._language = language
+            self._language_epoch += 1
+            self._latest_profile = None
+            epoch = self._language_epoch
+        profile = read_profile_overview(self._client, profile_label=self._label, output_language=language)
+        self._require_binding()
+        self._adopt_language_profile(profile, epoch)
+
+    def _adopt_language_profile(self, profile: ProfileOverview, epoch: int) -> None:
+        """Fence the result and keep any newer same-epoch read cached during I/O."""
+        with self._language_guard:
+            if epoch != self._language_epoch or profile.profile_id != str(self._profile_id):
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+            if self._latest_profile is None or profile.record_revision >= self._latest_profile.record_revision:
+                self._latest_profile = profile
 
     def _require_binding(self) -> None:
         try:
@@ -238,13 +262,15 @@ class RuntimeWorkbenchRoot:
 
     def _read(self, initial_profile: ProfileOverview | None = None) -> _Capture:
         self._require_binding()
+        with self._language_guard:
+            language, epoch = self._language, self._language_epoch
         try:
-            generation = read_workbench_generation(self._client, output_language=self._language)
+            generation = read_workbench_generation(self._client, output_language=language)
             profile = initial_profile
             if profile is not None:
                 # Routing already captured this overview. Revalidate its exact
                 # provenance after generation before avoiding another full stream.
-                current = self._client.read_profile_view((ProfileViewPageKind.STATUS,), output_language=self._language)
+                current = self._client.read_profile_view((ProfileViewPageKind.STATUS,), output_language=language)
                 if (
                     str(current.profile_id) != profile.profile_id
                     or current.record_revision != profile.record_revision
@@ -253,7 +279,7 @@ class RuntimeWorkbenchRoot:
                 ):
                     profile = None
             if profile is None:
-                profile = read_profile_overview(self._client, profile_label=self._label, output_language=self._language)
+                profile = read_profile_overview(self._client, profile_label=self._label, output_language=language)
         except (FrontendRefusedError, RefusalError):
             # A permission/readiness refusal does not imply expiry. A fresh
             # status check distinguishes it from a lost originating session.
@@ -266,7 +292,12 @@ class RuntimeWorkbenchRoot:
         )
         if generation.home.projection is None or profile.profile_id != str(self._profile_id):
             raise RefusalError(RefusalCode.UNAVAILABLE)
-        return _Capture(generation, profile)
+        with self._language_guard:
+            if epoch != self._language_epoch:
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+            if self._latest_profile is None or profile.record_revision >= self._latest_profile.record_revision:
+                self._latest_profile = profile
+        return _Capture(generation, profile, epoch)
 
     def _destinations(
         self, generation: WorkbenchGenerationV1, profile_factory: TuiScreenFactoryV1
@@ -363,6 +394,9 @@ class RuntimeWorkbenchRoot:
         )
 
     def _presentation(self, capture: _Capture) -> RootPresentationV1:
+        with self._language_guard:
+            if capture.language_epoch != self._language_epoch:
+                raise RefusalError(RefusalCode.UNAVAILABLE)
         generation = capture.generation
         home = generation.home.projection
         if home is None:
@@ -372,12 +406,16 @@ class RuntimeWorkbenchRoot:
             if context.destination != "workbench.profile":
                 raise ValueError("profile factory requires its exact destination")
             self._require_binding()
+            with self._language_guard:
+                language, latest = self._language, self._latest_profile
+            if latest is None:
+                raise RefusalError(RefusalCode.UNAVAILABLE)
             return ProfileManagerClientComposition(
-                self._client, profile_label=self._label, output_language=self._language
-            ).compose_from_overview(capture.profile)
+                self._client, profile_label=self._label, output_language=language
+            ).compose_from_overview(latest)
 
         search = generation.search.projection
-        return RootPresentationV1(
+        presentation = RootPresentationV1(
             home=home,
             destination_catalogue=self._destinations(generation, profile),
             workbench_search_service=None if search is None else search.service(),
@@ -387,12 +425,18 @@ class RuntimeWorkbenchRoot:
                 open_recovery_client=self._open_recovery_client,
                 requester_factory=self._requester_factory,
                 onboarding_pending=capture.profile.setup_state is ProfileSetupState.INCOMPLETE,
+                on_language_changed=self.set_output_language,
             ),
         )
+        with self._language_guard:
+            if capture.language_epoch != self._language_epoch:
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+        return presentation
 
     def load(self, *, initial_profile: ProfileOverview | None = None) -> RootBindingV1:
         """Read the first authorized generation, then join its existing screens."""
-        first = self._presentation(self._read(initial_profile))
+        first_capture = self._read(initial_profile)
+        first = self._presentation(first_capture)
         pending = [first]
         pending_lock = Lock()
 
@@ -400,7 +444,11 @@ class RuntimeWorkbenchRoot:
             self._require_binding()
             with pending_lock:
                 if pending:
-                    return pending.pop()
+                    with self._language_guard:
+                        current = self._language_epoch == first_capture.language_epoch
+                    cached = pending.pop()
+                    if current:
+                        return cached
             # Nothing is published by the capturing thread. The root applies
             # Home, navigation, search and account factories together only
             # after checking that this session and navigation still own it.

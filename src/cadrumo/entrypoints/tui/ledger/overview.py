@@ -9,6 +9,7 @@ from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.i18n.render import tr
+from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
 from .actividad_asset import ActivityAssetScreen
@@ -37,27 +38,54 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.ledger.overview.title"), classes="cadrumo-banner")
+        yield localized(Static(tr("tui.ledger.overview.title"), classes="cadrumo-banner"), "tui.ledger.overview.title")
         with ContentScroll(id="ledger-page", classes="cadrumo-scroll ledger-page"):
-            yield Static(
-                tr("tui.ledger.overview.areas"),
-                classes="cadrumo-heading cadrumo-heading-lead",
-                markup=False,
+            yield localized(
+                Static(
+                    tr("tui.ledger.overview.areas"),
+                    classes="cadrumo-heading cadrumo-heading-lead",
+                    markup=False,
+                ),
+                "tui.ledger.overview.areas",
             )
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(tr("tui.ledger.overview.quality"), classes="cadrumo-heading", markup=False)
+            yield localized(
+                Static(tr("tui.ledger.overview.quality"), classes="cadrumo-heading", markup=False),
+                "tui.ledger.overview.quality",
+            )
             yield ContentDataTable[str](id="ledger-quality", cursor_type="row", zebra_stripes=True)
             if self.controller.can_add_invoices():
-                yield Button(tr("tui.ledger.invoice.open"), id="ledger-add-invoice")
+                yield localized(
+                    Button(tr("tui.ledger.invoice.open"), id="ledger-add-invoice"), "tui.ledger.invoice.open"
+                )
             if self.controller.record_doors is not None:
-                yield Button(tr("tui.ledger.records.open_invoices"), id="ledger-open-invoices")
+                yield localized(
+                    Button(tr("tui.ledger.records.open_invoices"), id="ledger-open-invoices"),
+                    "tui.ledger.records.open_invoices",
+                )
             if self.controller.own_account_door is not None:
-                yield Button(tr("tui.ledger.own_accounts.open"), id="ledger-own-accounts-open")
+                yield localized(
+                    Button(tr("tui.ledger.own_accounts.open"), id="ledger-own-accounts-open"),
+                    "tui.ledger.own_accounts.open",
+                )
             if self.controller.can_manage_activity_assets():
-                yield Button("Activos amortizables", id="ledger-activity-assets")
+                yield localized(
+                    Button(tr("tui.ledger.activity_asset.title"), id="ledger-activity-assets"),
+                    "tui.ledger.activity_asset.title",
+                )
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the existing projection, preserving semantic cursors and controls."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
+
     def on_mount(self) -> None:
+        """Populate the initially mounted projection."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """Populate the complete navigation and quality-first summary."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-quality", DataTable))

@@ -2449,6 +2449,18 @@ tui:
       outcome: 'Resultado de la verificación: {outcome}'
       valid: Válido.
   ledger:
+    activity_asset:
+      asset_id: Identificador del activo
+      claim: Registrar amortización
+      correct: Corregir
+      create: Crear
+      filing: Preparar traslado a modelos
+      forecast: Calcular previsión
+      free_amount: Importe de libertad de amortización (opcional)
+      inspect: Inspeccionar
+      revision: Revisión del activo (JSON)
+      supersedes: Amortización registrada que se sustituye (opcional)
+      title: Activos amortizables
     area:
       classification: Clasificación
       entries: Apuntes

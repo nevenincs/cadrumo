@@ -12,6 +12,7 @@ from threading import BoundedSemaphore, Event, RLock
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.bucket.output_language_hint import read_bucket_output_language_hint
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
@@ -28,7 +29,7 @@ from cadrumo_client.contracts.contracts import ByteChannel, ExitReason, RefusalC
 from cadrumo_client.contracts.installation import Installation
 from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, NativeServiceVerifier
-from cadrumo_client.contracts.session_events import ConnectionEvent, SessionEvent
+from cadrumo_client.contracts.session_events import ConnectionEvent, ProfileLanguageChanged, SessionEvent
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.installation import read_runtime_installation
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
@@ -125,6 +126,7 @@ class RuntimeProfileConnections(
         # Connections whose approval ended with the person's session; only a new connection may ask again.
         self._attendance_spent: set[UUID] = set()
         self._events = RuntimeSessionEvents()
+        self._language_observations: dict[UUID, tuple[UUID, float, str | None]] = {}
         self._service_descriptors = {
             item.service_id: item
             for item in (installed_service_descriptors() if service_descriptors is None else service_descriptors)
@@ -150,6 +152,7 @@ class RuntimeProfileConnections(
     def _publish_retirement(self, event: SessionEvent) -> None:
         """Publish exact retirement; services own shutdown of their native descendants."""
         with self._guard:
+            self._language_observations.pop(event.connection_id, None)
             for service in self._services.values():
                 if service.lease is not None and service.lease.parent_session_id == event.session_id:
                     service.lease = None
@@ -169,7 +172,43 @@ class RuntimeProfileConnections(
 
     def take_events(self, context: ConnectionContext) -> tuple[ConnectionEvent, ...]:
         """Let the connection's sole writer drain its bounded event queue."""
+        self._observe_profile_language(context)
         return self._events.take(context)
+
+    def _observe_profile_language(self, context: ConnectionContext) -> None:
+        """Observe only a nonsecret invalidation hint, never decrypt on the transport loop.
+
+        Workers mirror this hint after the canonical CAS write. Consumers must
+        re-read the canonical preference through their held exact-profile session;
+        a hint and its notification confer neither a value nor access authority.
+        """
+        instant = time.monotonic()
+        with self._guard:
+            connection = self._connections.get(context.connection_id)
+            if connection is None or connection.session_id is None:
+                self._language_observations.pop(context.connection_id, None)
+                return
+            session_id, profile_id = connection.session_id, connection.profile_id
+            previous = self._language_observations.get(context.connection_id)
+            if previous is not None and previous[0] == session_id and instant - previous[1] < 0.5:
+                return
+        try:
+            language = read_bucket_output_language_hint(storage_root=self.root, bucket_id=str(profile_id))
+        except Exception:
+            return
+        with self._guard:
+            if self._connections.get(context.connection_id) is not connection or connection.session_id != session_id:
+                return
+            self._language_observations[context.connection_id] = session_id, instant, language
+        if previous is None or previous[0] != session_id or previous[2] != language:
+            self._events.publish(
+                ProfileLanguageChanged(
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    profile_id=profile_id,
+                    session_id=session_id,
+                )
+            )
 
     def event_flushed(self, context: ConnectionContext, event: ConnectionEvent) -> None:
         """Record transport completion without granting session or user acknowledgement."""

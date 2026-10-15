@@ -16,6 +16,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.i18n.render import tr
 from ..components.account_chrome import AccountChromeScreen
+from ..components.language import localized
 from ..components.theme import BASE_CSS, tokenised
 from ..navigation import TuiScreenContextV1
 from .catalogue import OperationCatalogueSourceV1, OperationCatalogueV1
@@ -54,9 +55,17 @@ class OperationsCatalogueScreen(AccountChromeScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.operations.title"), classes="cadrumo-banner", markup=False)
-        yield Input(placeholder=tr("tui.operations.search.placeholder"), id="operations-search")
-        yield Static(tr("tui.operations.status.loading"), id="operations-status", markup=False)
+        yield localized(
+            Static(tr("tui.operations.title"), classes="cadrumo-banner", markup=False), "tui.operations.title"
+        )
+        yield localized(
+            Input(placeholder=tr("tui.operations.search.placeholder"), id="operations-search"),
+            "tui.operations.search.placeholder",
+        )
+        yield localized(
+            Static(tr("tui.operations.status.loading"), id="operations-status", markup=False),
+            "tui.operations.status.loading",
+        )
         yield OptionList(id="operations-list", markup=False)
 
     def on_mount(self) -> None:
@@ -111,6 +120,24 @@ class OperationsCatalogueScreen(AccountChromeScreen):
         entry = catalogue.entry(option_id)
         if entry is not None:
             self.app.push_screen(OperationRunScreen(self._client, entry))
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the catalogue without changing the query or chosen operation."""
+        await super().refresh_language()
+        if self._catalogue is None:
+            return
+        listed = self.query_one("#operations-list", OptionList)
+        selected = None if listed.highlighted is None else listed.get_option_at_index(listed.highlighted).id
+        self._catalogue = await asyncio.to_thread(self._source.load)
+        self._show(self.query_one("#operations-search", Input).value)
+        if selected is not None:
+            index = next(
+                (index for index in range(listed.option_count) if listed.get_option_at_index(index).id == selected),
+                None,
+            )
+            if index is not None:
+                listed.highlighted = index
 
     def action_back(self) -> None:
         """Leave the destination."""

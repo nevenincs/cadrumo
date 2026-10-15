@@ -2423,6 +2423,18 @@ tui:
       outcome: 'Az ellenőrzés eredménye: {outcome}'
       valid: Érvényes.
   ledger:
+    activity_asset:
+      asset_id: Eszközazonosító
+      claim: Értékcsökkenés rögzítése
+      correct: Javítás
+      create: Létrehozás
+      filing: Adónyomtatványra átvitel előkészítése
+      forecast: Előrejelzés kiszámítása
+      free_amount: Szabad értékcsökkenés összege (nem kötelező)
+      inspect: Megtekintés
+      revision: Eszközverzió (JSON)
+      supersedes: Felülírandó elszámolt értékcsökkenés (nem kötelező)
+      title: Értékcsökkenthető eszközök
     area:
       classification: Besorolás
       entries: Tételek

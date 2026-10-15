@@ -199,10 +199,12 @@ class ProfileManagerScreen(
         list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
         set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
         remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
+        refresh_overview_language: Callable[[], ProfileOverview] | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
         self.overview = overview
+        self._refresh_overview_language = refresh_overview_language
         self._aeat_auth_setup = aeat_auth_setup
         self._auth_readiness: AuthSyncReadiness | None = None
         self._open_document_reader = open_document_reader
@@ -399,6 +401,18 @@ class ProfileManagerScreen(
         if self._aeat_auth_setup is not None:
             self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
         self._finish_mount()
+
+    @override
+    async def refresh_language(self) -> None:
+        """Refresh copy without dismissing editors or replacing the owning screen."""
+        reader = self._refresh_overview_language
+        if reader is not None:
+            refreshed = await asyncio.to_thread(reader)
+            if not self.is_attached or refreshed.profile_id != self.overview.profile_id:
+                return
+            if refreshed.record_revision >= self.overview.record_revision:
+                self.overview = refreshed
+        await self._redraw()
 
     async def _refresh_auth(self) -> None:
         """Read persisted requirements and gate every acquisition action consistently."""

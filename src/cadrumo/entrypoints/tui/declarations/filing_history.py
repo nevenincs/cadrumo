@@ -15,6 +15,7 @@ from ....application.modelo.declarations_workspace_contracts import (
 )
 from ....core.i18n.render import tr
 from ....domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, FilingOrigin
+from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
     DeclarationsWorkspaceController,
@@ -139,23 +140,47 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("tui.declarations.filing_history.title"), classes="cadrumo-banner", markup=False)
+        yield localized(
+            Static(tr("tui.declarations.filing_history.title"), classes="cadrumo-banner", markup=False),
+            "tui.declarations.filing_history.title",
+        )
         with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
-            yield Static(tr("tui.declarations.filing_history.axes"), markup=False)
+            yield localized(
+                Static(tr("tui.declarations.filing_history.axes"), markup=False), "tui.declarations.filing_history.axes"
+            )
             yield ContentDataTable[str](id="declarations-filings", cursor_type="row", zebra_stripes=True)
             yield Static(id="declarations-filing-chain", markup=False)
-            yield Button(tr("cli.app.modelo.filing_record.export_button"), id="filing-history-export", disabled=True)
-            yield Button(
-                tr("cli.app.modelo.reconcile.export_button"), id="filing-history-reconcile-export", disabled=True
+            yield localized(
+                Button(tr("cli.app.modelo.filing_record.export_button"), id="filing-history-export", disabled=True),
+                "cli.app.modelo.filing_record.export_button",
             )
-            yield Button(
-                tr("cli.app.modelo.spreadsheet.publish_button"), id="filing-history-google-review", disabled=True
+            yield localized(
+                Button(
+                    tr("cli.app.modelo.reconcile.export_button"), id="filing-history-reconcile-export", disabled=True
+                ),
+                "cli.app.modelo.reconcile.export_button",
+            )
+            yield localized(
+                Button(
+                    tr("cli.app.modelo.spreadsheet.publish_button"), id="filing-history-google-review", disabled=True
+                ),
+                "cli.app.modelo.spreadsheet.publish_button",
             )
             yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the existing projection, preserving semantic cursors and controls."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
+
     def on_mount(self) -> None:
+        """Populate the initially mounted projection."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
         """Populate separate local and external filing axes."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#declarations-filings", DataTable))

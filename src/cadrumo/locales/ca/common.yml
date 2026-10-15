@@ -2436,6 +2436,18 @@ tui:
       outcome: 'Resultat de la verificació: {outcome}'
       valid: Vàlid.
   ledger:
+    activity_asset:
+      asset_id: Identificador de l’actiu
+      claim: Registrar amortització
+      correct: Corregir
+      create: Crear
+      filing: Preparar trasllat a models
+      forecast: Calcular previsió
+      free_amount: Import de llibertat d’amortització (opcional)
+      inspect: Inspeccionar
+      revision: Revisió de l’actiu (JSON)
+      supersedes: Amortització registrada que se substitueix (opcional)
+      title: Actius amortitzables
     area:
       classification: Classificació
       entries: Apunts

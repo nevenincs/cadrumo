@@ -693,6 +693,27 @@ class WorkbenchSourcesScreen(ModalScreen[SourcesChoice | None]):
             return ()
         return group_items(self._groups[self._expanded], staged=self._staged)
 
+    async def refresh_language(self) -> None:
+        """Reword the open source map while retaining its group and box cursor."""
+        self._language = OutputLanguage(output_language())
+        title = tr("tui.modelo.workbench.sources.title")
+        count = tr("tui.modelo.workbench.sources.count", count=self._boxes)
+        self.query_one("#sources-title", Static).update(f"{title} · {count}")
+        self.query_one("#sources-intro", Static).update(
+            tr("tui.modelo.workbench.sources.intro" if self._groups else "tui.modelo.workbench.sources.none")
+        )
+        groups = self.query_one(_GroupList)
+        for index, group in enumerate(self._groups):
+            groups.replace_option_prompt(
+                f"{_GROUP_ID_PREFIX}{index}", group_prompt(group, expanded=index == self._expanded)
+            )
+        describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS)
+        self.refresh_bindings()
+        groups.describe_keys(_GROUPS_LOCALE_KEYS)
+        listing = self.query_one(CasillaList)
+        listing.describe_keys(_LIST_LOCALE_KEYS)
+        listing.set_items(self._current_items(), language=self._language)
+
     def on_resize(self, event: events.Resize) -> None:
         """Take the whole width on a narrow terminal."""
         fit_dialog_width(self, event.size.width)

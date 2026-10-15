@@ -31,6 +31,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from .components.language import localized, refresh_localized_widgets
 from .modelo.export_result import ModeloExportResultScreen
 from .modelo.workbench.export import WorkbenchExportScreen
 from .modelo.workbench.ports import WorkbenchExportOffer, WorkbenchExportRequest
@@ -62,9 +63,14 @@ class HistoricalFilingExportScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(tr("cli.app.modelo.filing_record.export_help"), markup=False)
+        yield localized(
+            Static(tr("cli.app.modelo.filing_record.export_help"), markup=False),
+            "cli.app.modelo.filing_record.export_help",
+        )
         yield Static("", id="historical-export-notice", markup=False)
-        yield Button(tr("tui.modelo.export.result.close"), id="historical-export-close")
+        yield localized(
+            Button(tr("tui.modelo.export.result.close"), id="historical-export-close"), "tui.modelo.export.result.close"
+        )
 
     def on_mount(self) -> None:
         """Resolve retained historical content before offering a destination."""
@@ -156,3 +162,7 @@ class HistoricalFilingExportScreen(Screen[None]):
         """Return to the history without changing its selected filing."""
         if event.button.id == "historical-export-close":
             self.app.pop_screen()
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)

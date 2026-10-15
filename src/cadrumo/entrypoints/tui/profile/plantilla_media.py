@@ -27,6 +27,7 @@ from textual.widgets import Button, Input, Label, OptionList, Static
 from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.i18n.render import tr
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
+from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
 
 _STATE_LOCALE_KEYS: Final[dict[PlantillaMediaState, str]] = {
@@ -112,7 +113,10 @@ class PlantillaMediaScreen(ModalScreen[PlantillaMediaRequest | None]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="plantilla-dialog"):
-            yield Label(tr("profile.schema.field.irpf.plantilla_media.label"), id="plantilla-title")
+            yield localized(
+                Label(tr("profile.schema.field.irpf.plantilla_media.label"), id="plantilla-title"),
+                "profile.schema.field.irpf.plantilla_media.label",
+            )
             if self._declared:
                 yield OptionList(
                     *(
@@ -124,18 +128,35 @@ class PlantillaMediaScreen(ModalScreen[PlantillaMediaRequest | None]):
                     id="plantilla-declared",
                 )
             else:
-                yield Static(tr("flows.manager.plantilla_media.none_declared"), id="plantilla-none-declared")
-            yield Label(tr("flows.manager.plantilla_media.year"))
+                yield localized(
+                    Static(tr("flows.manager.plantilla_media.none_declared"), id="plantilla-none-declared"),
+                    "flows.manager.plantilla_media.none_declared",
+                )
+            yield localized(Label(tr("flows.manager.plantilla_media.year")), "flows.manager.plantilla_media.year")
             yield Input(id="plantilla-year")
-            yield Label(tr("flows.manager.plantilla_media.average_workforce"))
-            yield Input(placeholder=tr("flows.manager.edit.shape.decimal"), id="plantilla-workforce")
-            yield Label(tr("flows.manager.plantilla_media.state"))
+            yield localized(
+                Label(tr("flows.manager.plantilla_media.average_workforce")),
+                "flows.manager.plantilla_media.average_workforce",
+            )
+            yield localized(
+                Input(placeholder=tr("flows.manager.edit.shape.decimal"), id="plantilla-workforce"),
+                "flows.manager.edit.shape.decimal",
+            )
+            yield localized(Label(tr("flows.manager.plantilla_media.state")), "flows.manager.plantilla_media.state")
             yield OptionList(*(plantilla_media_state_label(state) for state in _STATES), id="plantilla-state")
             yield Static(id="plantilla-refusal")
             with Horizontal(id="plantilla-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-plantilla-cancel")
-                yield Button(tr("flows.manager.plantilla_media.remove"), id="btn-plantilla-remove", classes="-error")
-                yield Button(tr("flows.manager.edit.save"), id="btn-plantilla-save", classes="-primary")
+                yield localized(
+                    Button(tr("flows.manager.edit.cancel"), id="btn-plantilla-cancel"), "flows.manager.edit.cancel"
+                )
+                yield localized(
+                    Button(tr("flows.manager.plantilla_media.remove"), id="btn-plantilla-remove", classes="-error"),
+                    "flows.manager.plantilla_media.remove",
+                )
+                yield localized(
+                    Button(tr("flows.manager.edit.save"), id="btn-plantilla-save", classes="-primary"),
+                    "flows.manager.edit.save",
+                )
 
     def on_mount(self) -> None:
         """Start with no state chosen, so the state is always the operator's answer."""
@@ -194,6 +215,22 @@ class PlantillaMediaScreen(ModalScreen[PlantillaMediaRequest | None]):
     def action_cancel(self) -> None:
         """Dismiss without requesting a profile change."""
         self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword mounted controls while preserving inputs and pending operations."""
+        refresh_localized_widgets(self)
+        options = self.query_one("#plantilla-state", OptionList)
+        for index, state in enumerate(_STATES):
+            options.replace_option_prompt_at_index(index, plantilla_media_state_label(state))
+        if self._declared:
+            declared = self.query_one("#plantilla-declared", OptionList)
+            for index, item in enumerate(self._declared):
+                declared.replace_option_prompt_at_index(
+                    index,
+                    _DECLARED_SEPARATOR.join(
+                        (str(item.year), str(item.average_workforce), plantilla_media_state_label(item.state))
+                    ),
+                )
 
 
 __all__ = [

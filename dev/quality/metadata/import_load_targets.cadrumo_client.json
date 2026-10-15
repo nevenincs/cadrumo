@@ -126,6 +126,7 @@
         "cadrumo_client.transport.posix",
         "cadrumo_client.transport.posix_channel",
         "cadrumo_client.transport.posix_endpoint",
+        "cadrumo_client.transport.profile_language",
         "cadrumo_client.transport.profile_mutations",
         "cadrumo_client.transport.profile_password_rotation",
         "cadrumo_client.transport.profile_transport",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from threading import Lock
 from typing import TYPE_CHECKING
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -38,6 +39,7 @@ if TYPE_CHECKING:
     from cadrumo_client.transport.frontend_client import FrontendClient
 
     from .runtime_access_management import RecoveryClientOpener
+    from .runtime_workbench import RuntimeWorkbenchRoot
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
 _LOGGER = get_logger(__name__)
@@ -66,6 +68,33 @@ class RuntimeInitialRoot:
         self._operation_registry = operation_registry
         self._requester_factory = requester_factory
         self._workbench_binding: RootBindingV1 | None = None
+        self._workbench_root: RuntimeWorkbenchRoot | None = None
+        self._language_guard = Lock()
+        self._language_epoch = 0
+        self._latest_profile: ProfileOverview | None = None
+
+    def _set_output_language(self, language: OutputLanguage) -> None:
+        """Refresh future captures off the UI loop without replacing mounted screens."""
+        self._session()
+        with self._language_guard:
+            self._language = language
+            self._language_epoch += 1
+            self._latest_profile = None
+            epoch = self._language_epoch
+            workbench = self._workbench_root
+        if workbench is not None:
+            workbench.set_output_language(language)
+        profile = read_profile_overview(self._client, profile_label=self._label, output_language=language)
+        self._session()
+        self._adopt_language_profile(profile, epoch)
+
+    def _adopt_language_profile(self, profile: ProfileOverview, epoch: int) -> None:
+        """Fence the result and keep any newer same-epoch read cached during I/O."""
+        with self._language_guard:
+            if epoch != self._language_epoch or profile.profile_id != str(self._profile_id):
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+            if self._latest_profile is None or profile.record_revision >= self._latest_profile.record_revision:
+                self._latest_profile = profile
 
     def _session(self) -> HomeAccountSession:
         return read_runtime_account_session(
@@ -79,29 +108,42 @@ class RuntimeInitialRoot:
         with startup_phase(_LOGGER, "tui_workbench_load"):
             from .runtime_workbench import RuntimeWorkbenchRoot
 
-            self._workbench_binding = RuntimeWorkbenchRoot(
+            with self._language_guard:
+                language = self._language
+            workbench = RuntimeWorkbenchRoot(
                 self._client,
                 profile_label=self._label,
-                output_language=self._language,
+                output_language=language,
                 open_recovery_client=self._open_recovery_client,
                 operation_registry=self._operation_registry,
                 requester_factory=self._requester_factory,
-            ).load(initial_profile=initial_profile)
+            )
+            with self._language_guard:
+                self._workbench_root = workbench
+                current_language = self._language
+            if current_language != language:
+                workbench.set_output_language(current_language)
+                initial_profile = None
+            self._workbench_binding = workbench.load(initial_profile=initial_profile)
             return self._workbench_binding
 
     def load(self) -> RootBindingV1:
         """Select the initial destination from an authenticated profile view."""
         with startup_phase(_LOGGER, "tui_initial_profile"):
+            with self._language_guard:
+                language, epoch = self._language, self._language_epoch
             try:
-                overview = read_profile_overview(
-                    self._client, profile_label=self._label, output_language=self._language
-                )
+                overview = read_profile_overview(self._client, profile_label=self._label, output_language=language)
             except (FrontendRefusedError, RefusalError):
                 self._session()
                 raise
             session = self._session()
             if overview.profile_id != str(self._profile_id):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
+            with self._language_guard:
+                if epoch != self._language_epoch:
+                    raise RefusalError(RefusalCode.UNAVAILABLE)
+                self._latest_profile = overview
         if overview.setup_state is not ProfileSetupState.INCOMPLETE:
             return self._workbench(initial_profile=overview)
 
@@ -116,9 +158,13 @@ class RuntimeInitialRoot:
                     raise AccountSessionExpiredError()
             except (FrontendRefusedError, RefusalError):
                 raise AccountSessionUnavailableError() from None
+            with self._language_guard:
+                language, latest = self._language, self._latest_profile
+            if latest is None:
+                raise RefusalError(RefusalCode.UNAVAILABLE)
             return ProfileManagerClientComposition(
-                self._client, profile_label=self._label, output_language=self._language
-            ).compose_from_overview(overview)
+                self._client, profile_label=self._label, output_language=language
+            ).compose_from_overview(latest)
 
         def refresh_home() -> RootPresentationV1:
             binding = self._workbench()
@@ -152,6 +198,7 @@ class RuntimeInitialRoot:
                 profile=profile,
                 open_recovery_client=self._open_recovery_client,
                 requester_factory=self._requester_factory,
+                on_language_changed=self._set_output_language,
             ),
             read_account_session=runtime_account_session_reader(
                 self._client, profile_id=self._profile_id, profile_label=self._label

@@ -113,10 +113,15 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         super().__init__()
         self.outcome: OutcomeT | None = None
         self.error: BaseException | None = None
+        self._last_strength_assessment: ProfilePasswordAssessment | None = None
         self._attempt: Worker[CredentialAttempt[OutcomeT]] | None = None
 
     @on(events.Mount)
     def _describe_appearance_on_mount(self) -> None:
+        self.describe_appearance_key()
+
+    async def refresh_language(self) -> None:
+        """Reword labels only; never copy or repopulate credential inputs."""
         self.describe_appearance_key()
 
     def describe_appearance_key(self) -> None:
@@ -145,9 +150,11 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         line = self.query_one("#strength-line", Static)
         line.remove_class("strength-refused", "strength-weak", "strength-fair", "strength-strong")
         if not candidate:
+            self._last_strength_assessment = None
             line.update("")
             return
         assessment = assess(candidate)
+        self._last_strength_assessment = assessment
         line.add_class(assessment_css_class(assessment))
         line.update(assessment_copy(assessment, locale=locale))
 

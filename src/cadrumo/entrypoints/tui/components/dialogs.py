@@ -1,5 +1,6 @@
 """Reusable confirmation dialog for irreversible TUI actions."""
 
+from collections.abc import Callable
 from typing import ClassVar, override
 
 from textual.app import ComposeResult
@@ -31,7 +32,14 @@ class ConfirmScreen(ModalScreen[bool]):
     DEFAULT_CSS = _CONFIRM_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "decline", "", show=False), Binding("y", "confirm", "", show=False)]
 
-    def __init__(self, *, title: str, message: str, confirm_label: str, cancel_label: str) -> None:
+    def __init__(
+        self,
+        *,
+        title: str | Callable[[], str],
+        message: str | Callable[[], str],
+        confirm_label: str | Callable[[], str],
+        cancel_label: str | Callable[[], str],
+    ) -> None:
         """Store the localized confirmation copy."""
         super().__init__()
         self._title = title
@@ -42,11 +50,26 @@ class ConfirmScreen(ModalScreen[bool]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="confirm-dialog"):
-            yield Label(self._title, id="confirm-title")
-            yield Static(self._message, id="confirm-message")
+            yield Label(self._resolve(self._title), id="confirm-title")
+            yield Static(self._resolve(self._message), id="confirm-message")
             with Horizontal(id="confirm-actions"):
-                yield Button(self._cancel_label, id="btn-confirm-cancel")
-                yield Button(self._confirm_label, id="btn-confirm-accept", classes="-primary", variant="error")
+                yield Button(self._resolve(self._cancel_label), id="btn-confirm-cancel")
+                yield Button(
+                    self._resolve(self._confirm_label), id="btn-confirm-accept", classes="-primary", variant="error"
+                )
+
+    @staticmethod
+    def _resolve(copy: str | Callable[[], str]) -> str:
+        if isinstance(copy, str):
+            return copy
+        return copy()
+
+    async def refresh_language(self) -> None:
+        """Resolve caller-owned message identities without changing the pending decision."""
+        self.query_one("#confirm-title", Label).update(self._resolve(self._title))
+        self.query_one("#confirm-message", Static).update(self._resolve(self._message))
+        self.query_one("#btn-confirm-cancel", Button).label = self._resolve(self._cancel_label)
+        self.query_one("#btn-confirm-accept", Button).label = self._resolve(self._confirm_label)
 
     def on_mount(self) -> None:
         """Focus the safe declining action first."""
