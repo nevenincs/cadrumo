@@ -12,7 +12,7 @@ related:
   - '[[2026-10-09-desktop-titlebar-adr]]'
 modified: '2026-10-15'
 body_schema: body-v2
-body_hash: 'sha256:e977620d63cb0c13b4fc7274194cebb830ec669c3e72c4d4601ac2b6ba7ea4c8'
+body_hash: 'sha256:df091efcd30e2d4a7b1b7c71774bff6575cdfbff58d341e039fb670e8908c66c'
 ---
 
 # `language-sync` plan
@@ -29,7 +29,7 @@ Reuse the canonical encrypted profile preference `preferences.output_language`, 
 
 - [ ] `S01` - Route shared language reads and writes through the canonical profile fact, then publish typed updates to TUI and CLI consumers; `src/cadrumo/application/user_profile, application/modelo/work_form_localization.py, core/i18n/render.py, entrypoints/tui and owning tests, locales/*/common.yml, src/cadrumo_client language/event contracts and transport, src/cadrumo_runtime holder, profile event observation, installed TUI composition and owning tests, dev/quality/metadata/import_load_targets{,.cadrumo,.cadrumo_client}.json generated module enrollment`.
 - [x] `S02` - Expose the shared language preference through narrow verified desktop host reads, writes, and live observation; `native/desktop/src-tauri language IPC and event adapter`.
-- [ ] `S03` - Connect Settings, Cmd+K, and the documentation switcher to one subscribed language controller; `native/desktop/frontend/src, frontend tests and fixtures, docs/_static/cadrumo-desktop-bridge.js, and dev/docs/tests/test_docs_desktop_flavor.py`.
+- [x] `S03` - Connect Settings, Cmd+K, and the documentation switcher to one subscribed language controller; `native/desktop/frontend/src, frontend tests and fixtures, docs/_static/cadrumo-desktop-bridge.js, and dev/docs/tests/test_docs_desktop_flavor.py`.
 
 ## Parallelization
 

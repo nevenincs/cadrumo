@@ -196,9 +196,10 @@ for (const from of ["header", "palette"] as const)
         .click();
       const palette = target.locator(".palette");
       await palette
-        .getByRole("combobox")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
         .fill(label("desktop.account.switch_profile"));
       await palette
+        .getByRole("listbox")
         .getByRole("option", { name: label("desktop.account.switch_profile") })
         .click();
     }
@@ -513,9 +514,10 @@ test("first run: the pane, header and the palette all lead to the form in the wi
     .click();
   const palette = target.locator(".palette");
   await palette
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.account.new_profile"));
   await palette
+    .getByRole("listbox")
     .getByRole("option", { name: label("desktop.account.new_profile") })
     .click();
   await expect(nameField(target)).toBeFocused();
@@ -532,9 +534,10 @@ test("signed out with profiles: the palette's new profile opens the form, not th
     .click();
   const palette = target.locator(".palette");
   await palette
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.account.new_profile"));
   await palette
+    .getByRole("listbox")
     .getByRole("option", { name: label("desktop.account.new_profile") })
     .click();
   await expect(nameField(target)).toBeFocused();
@@ -784,9 +787,11 @@ test("where it is not known whether somebody is signed in, no other profile and 
     .click();
   const palette = target.locator(".palette");
   await palette
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.account.new_profile"));
   await expect(
-    palette.getByRole("option", { name: label("desktop.account.new_profile") }),
+    palette
+      .getByRole("listbox")
+      .getByRole("option", { name: label("desktop.account.new_profile") }),
   ).toHaveCount(0);
 });

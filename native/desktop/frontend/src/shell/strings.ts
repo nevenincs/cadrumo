@@ -7,6 +7,7 @@ import catalogue from "virtual:desktop-strings";
 // which the generator's own checks keep out of a release.
 
 export const SOURCE_LOCALE = "en";
+export const OUTPUT_LANGUAGES: readonly string[] = Object.keys(catalogue);
 
 export type Translate = (
   key: string,

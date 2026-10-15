@@ -112,6 +112,7 @@ ${Array.from({ length: 12 }, (_, index) => `<p>Filler paragraph ${index + 1}, so
 <header>
 <a class="cadrumo-header-brand" href="${home}">${titles.site}</a>
 <span class="fixture-note">development fixture</span>
+<nav aria-label="Languages">${DOCS_FIXTURE_LANGUAGES.map((code) => `<a class="cadrumo-header-lang-item" lang="${code}" href="${root(code)}${name}.html">${code}</a>`).join(" ")}</nav>
 <button type="button" data-cadrumo-search>Search</button>
 <button type="button" class="theme-toggle">Theme</button>
 </header>

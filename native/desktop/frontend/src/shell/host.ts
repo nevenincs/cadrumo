@@ -9,6 +9,7 @@
 import type {
   ContextMenuItem,
   DesktopEnvironment,
+  DesktopLanguage,
   LogBatch,
   ManagerStatus,
   ManagerSignal,
@@ -78,6 +79,11 @@ export interface Host {
   /** Whether menus are drawn by the operating system. */
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
+  readonly language?: {
+    read(): Promise<DesktopLanguage>;
+    set(language: string): Promise<DesktopLanguage>;
+    observe(listener: (state: DesktopLanguage) => void): Promise<() => void>;
+  };
   signInStatus(): Promise<SignInStatus>;
   /** Reports a person gesture; background observations must never call it. */
   noteActivity?(): Promise<void>;

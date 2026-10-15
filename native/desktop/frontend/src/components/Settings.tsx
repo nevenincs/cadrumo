@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { NativeSelect } from "@/components/ui/native-select";
+import { LanguageSelect, type LanguageControl } from "./LanguageSelect";
 import {
   Popover,
   PopoverAnchor,
@@ -11,11 +11,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
-import {
-  FOLLOW_LANGUAGE,
-  TERMINAL_FONT_SIZES,
-  type Prefs,
-} from "../shell/layout";
+import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
 import { terminalFontPx } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 
@@ -53,37 +49,21 @@ function Choice<T extends string>({
   );
 }
 
-/** A language's own name for itself, as the platform spells it. */
-function languageName(code: string): string {
-  try {
-    const name = new Intl.DisplayNames([code], { type: "language" }).of(code);
-    return name ? name.charAt(0).toLocaleUpperCase(code) + name.slice(1) : code;
-  } catch {
-    return code;
-  }
-}
-
-/**
- * The settings popover, opened from the rail. Everything in it is a
- * preference of this window, kept in the browser's storage: it writes no
- * Cadrumo setting and reaches no backend.
- */
+/** Window presentation settings and the shared output language. */
 export function Settings({
   prefs,
   setPrefs,
-  languages,
+  language,
   onReset,
   close,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
-  /** The languages the documentation is bundled in. */
-  languages: readonly string[];
+  language: LanguageControl;
   onReset: () => void;
   close: () => void;
 }) {
   const t = useStrings();
-  const languageId = useId();
   const windowId = useId();
   const content = useRef<HTMLDivElement>(null);
   // Closing returns focus to where settings was opened from.
@@ -182,34 +162,7 @@ export function Settings({
             )}
             onChange={(fontSize) => setPrefs({ ...prefs, fontSize })}
           />
-          {languages.length > 1 && (
-            <Field>
-              <FieldLabel htmlFor={languageId}>
-                {t("desktop.settings.language")}
-              </FieldLabel>
-              <NativeSelect
-                id={languageId}
-                controlSize="sm"
-                value={
-                  languages.includes(prefs.language)
-                    ? prefs.language
-                    : FOLLOW_LANGUAGE
-                }
-                onChange={(event) =>
-                  setPrefs({ ...prefs, language: event.target.value })
-                }
-              >
-                <option value={FOLLOW_LANGUAGE}>
-                  {t("desktop.settings.follow_cadrumo")}
-                </option>
-                {languages.map((code) => (
-                  <option key={code} value={code} lang={code}>
-                    {languageName(code)}
-                  </option>
-                ))}
-              </NativeSelect>
-            </Field>
-          )}
+          <LanguageSelect {...language} />
           <Button
             variant="outline"
             size="sm"

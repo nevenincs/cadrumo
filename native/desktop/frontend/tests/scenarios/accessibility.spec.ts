@@ -113,9 +113,16 @@ const SURFACES: {
         .getByRole("button", { name: label("desktop.rail.search") })
         .click();
       await expect(target.locator(".palette")).toBeVisible();
-      await target.locator(".palette [role=combobox]").fill("sign");
+      await target
+        .locator(".palette")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
+        .fill("sign");
       await expect(
-        target.locator(".palette").getByRole("option").first(),
+        target
+          .locator(".palette")
+          .getByRole("listbox")
+          .getByRole("option")
+          .first(),
       ).toBeVisible();
     },
   },
@@ -127,7 +134,11 @@ const SURFACES: {
         .getByRole("button", { name: label("desktop.rail.search") })
         .click();
       await expect(
-        target.locator(".palette").getByRole("option").first(),
+        target
+          .locator(".palette")
+          .getByRole("listbox")
+          .getByRole("option")
+          .first(),
       ).toBeVisible();
     },
   },
@@ -138,7 +149,10 @@ const SURFACES: {
       await target
         .getByRole("button", { name: label("desktop.rail.search") })
         .click();
-      await target.locator(".palette [role=combobox]").fill("zzzzzz");
+      await target
+        .locator(".palette")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
+        .fill("zzzzzz");
       await expect(target.locator(".palette-note")).toContainText("zzzzzz");
     },
   },

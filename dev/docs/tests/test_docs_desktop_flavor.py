@@ -71,7 +71,7 @@ _SIDEBAR_TERM = "zzqsidebarterm"
 #: A made-up word only the fixture page body and the injected records carry.
 _SEARCH_TERM = "zzqbridgeterm"
 _PALETTE_SHORTCUT = "palette.open"
-_FEATURES = ["search", "navigate", "home", "appearance"]
+_FEATURES = ["search", "navigate", "home", "appearance", "language"]
 
 _FIXTURE_PAGE = f"""# Fixture
 
@@ -116,6 +116,7 @@ _OUTBOUND_FIELDS = {
     "ready": {"url", "title", "lang", "theme", "features"},
     "location": {"url", "title"},
     "theme": {"theme"},
+    "language-change": {"language"},
     "shortcut": {"id"},
     "open-external": {"url"},
     "context-menu": {"x", "y", "selection", "link", "pointer"},
@@ -1191,3 +1192,41 @@ def test_appearance_applies_like_the_theme_toggle_and_is_echoed(
     forced = window.wait_for("theme", 6)[-1]["theme"]
     frame.evaluate("setTimeout(() => window.location.reload(), 0)")
     assert window.wait_for("ready", 2)[-1]["theme"] == forced
+
+
+def test_language_switch_waits_for_host_and_preserves_fragment(
+    open_window: Callable[..., _Window], bridge_site: _Origins
+) -> None:
+    """A docs choice proposes a language; only the host response navigates."""
+    window = open_window(bridge_site.shell_origin)
+    window.wait_for("ready")
+    window.frame.evaluate("""() => {
+      location.hash = 'bridge-term';
+      document.querySelectorAll('a.cadrumo-header-lang-item[lang="es"]').forEach((link) => link.remove());
+      const link = document.createElement('a');
+      link.className = 'cadrumo-header-lang-item';
+      link.lang = 'es';
+      link.href = 'fixture.html?language=es';
+      link.textContent = 'Spanish';
+      document.body.append(link);
+    }""")
+    before = window.frame.url
+    window.frame.locator('a.cadrumo-header-lang-item[href="fixture.html?language=es"]').click()
+    (choice,) = window.wait_for("language-change")
+    assert choice["language"] == "es"
+    assert window.frame.url == before
+    window.send("language", language="es", entry=f"{bridge_site.docs}/fixture.html")
+    window.frame.wait_for_url(f"{bridge_site.docs}/fixture.html?language=es#bridge-term")
+
+
+def test_language_rejects_external_fallback(open_window: Callable[..., _Window], bridge_site: _Origins) -> None:
+    """A language instruction cannot send documentation off its origin."""
+    window = open_window(bridge_site.shell_origin)
+    window.wait_for("ready")
+    # Remove generated switcher links so the command exercises its fallback.
+    window.frame.evaluate("document.querySelectorAll('a.cadrumo-header-lang-item').forEach((link) => link.remove())")
+    before = window.frame.url
+    window.send("language", language="es", entry="https://example.org/")
+    window.settle()
+    assert window.frame.url == before
+    assert "cadrumo-desktop-bridge: refused message: language has no documentation target" in _bridge_logs(window)

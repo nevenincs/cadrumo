@@ -168,7 +168,7 @@ for (const way of ["menu", "pane", "palette"] as const)
           .click();
         await target
           .locator(".palette")
-          .getByRole("combobox")
+          .getByRole("combobox", { name: label("desktop.palette.label") })
           .fill(label("desktop.signin.submit"));
         await target.keyboard.press("Enter");
       }
@@ -407,8 +407,12 @@ test("the documentation fixture is another origin and answers the bridge", async
   const palette = target.getByRole("dialog", {
     name: label("desktop.palette.label"),
   });
-  await palette.getByRole("combobox").fill("sign-in");
-  const result = palette.getByRole("option", { name: /config sign-in-status/ });
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill("sign-in");
+  const result = palette
+    .getByRole("listbox")
+    .getByRole("option", { name: /config sign-in-status/ });
   await expect(result).toBeVisible();
   await result.click();
   await expect(palette).toBeHidden();
@@ -459,7 +463,9 @@ test("the palette's first section is the documentation's while a query searches 
     .getByRole("button", { name: label("desktop.rail.search"), exact: true })
     .click();
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.rail.logs"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.logs"));
   const sections = palette.locator(".palette-results > section");
   await expect(sections).toHaveCount(2);
   await expect(sections.first().getByRole("option")).toHaveCount(0);
@@ -1397,7 +1403,7 @@ test("Follow keeps the keyboard when the bar changes shape under it", async ({
   await target.keyboard.press("ControlOrMeta+k");
   await target
     .locator(".palette")
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.pane.maximize_panel"));
   await target.keyboard.press("Enter");
   await expect(target.locator(".palette")).toHaveCount(0);
@@ -1454,7 +1460,7 @@ test("maximizing the bottom panel over the pane that holds the keyboard takes it
     await target.keyboard.press("Control+Shift+KeyK");
     const palette = target.locator(".palette");
     await palette
-      .getByRole("combobox")
+      .getByRole("combobox", { name: label("desktop.palette.label") })
       .fill(label("desktop.pane.maximize_panel"));
     await target.keyboard.press("Enter");
     await expect(target.locator(".pane-tui")).toBeHidden();
@@ -1465,7 +1471,9 @@ test("maximizing the bottom panel over the pane that holds the keyboard takes it
     ).toBeFocused();
     // And back, for the next pane to start from.
     await target.keyboard.press("Control+Shift+KeyK");
-    await palette.getByRole("combobox").fill(label("desktop.pane.restore"));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label("desktop.pane.restore"));
     await target.keyboard.press("Enter");
     await expect(target.locator(".pane-tui")).toBeVisible();
   }
@@ -1865,7 +1873,9 @@ for (const state of ACCOUNT_STATES)
       .click();
     const palette = target.locator(".palette");
     for (const key of [...state.offers, ...state.withholds]) {
-      await palette.getByRole("combobox").fill(label(key));
+      await palette
+        .getByRole("combobox", { name: label("desktop.palette.label") })
+        .fill(label(key));
       const row = palette
         .locator(".palette-title")
         .filter({ hasText: new RegExp(`^${label(key)}$`) });
@@ -1917,7 +1927,9 @@ test("no-profile: the pane, the header and the palette do not offer to set a pro
     .click();
   const palette = target.locator(".palette");
   for (const key of ["desktop.account.new_profile", "desktop.signin.submit"]) {
-    await palette.getByRole("combobox").fill(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
     await expect(
       palette
         .locator(".palette-title")
@@ -2892,7 +2904,7 @@ test("a calendar read again after a sign-out opens on the current month, as the 
   await target.keyboard.press("ControlOrMeta+k");
   await target
     .locator(".palette")
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.account.sign_out"));
   await target.keyboard.press("Enter");
   await expect(page).toContainText(label("desktop.calendar.signed_out"));
@@ -4116,7 +4128,9 @@ test("signing out from the calendar leaves the keyboard on its page", async ({
     .focus();
   await target.keyboard.press("ControlOrMeta+k");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.account.sign_out"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.account.sign_out"));
   await target.keyboard.press("Enter");
   await expect(page).toContainText(label("desktop.account.signed_out"));
   await expect(page.getByRole("listitem")).toHaveCount(0);
@@ -4134,7 +4148,9 @@ test("the calendar's own actions replace the documentation's while it is shown",
     .click();
   const palette = target.locator(".palette");
   for (const key of ["desktop.action.zoom_in", "desktop.action.docs_back"]) {
-    await palette.getByRole("combobox").fill(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
     await expect(
       palette.locator(".palette-title").filter({ hasText: label(key) }),
     ).toHaveCount(0);
@@ -4148,7 +4164,9 @@ test("the calendar's own actions replace the documentation's while it is shown",
   await target
     .getByRole("button", { name: label("desktop.rail.search") })
     .click();
-  await palette.getByRole("combobox").fill(label("desktop.action.zoom_reset"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.action.zoom_reset"));
   await expect(
     palette
       .locator(".palette-title")
@@ -4180,7 +4198,9 @@ test("the calendar chosen while the TUI is maximized takes the keyboard", async 
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
   await target.keyboard.press("ControlOrMeta+Shift+k");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.calendar.title"));
   await target.keyboard.press("Enter");
   await expect(palette).toHaveCount(0);
   await expect(page).toBeVisible();
@@ -4270,7 +4290,9 @@ test("no-views: a host that offers no profile views shows no way into one", asyn
     .click();
   const palette = target.locator(".palette");
   for (const key of ["desktop.calendar.title", "desktop.rail.messages"]) {
-    await palette.getByRole("combobox").fill(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
     await expect(
       palette.locator(".palette-title").filter({ hasText: label(key) }),
     ).toHaveCount(0);
@@ -4323,7 +4345,9 @@ test("the palette's messages action opens the TUI", async ({
     .getByRole("button", { name: label("desktop.rail.search") })
     .click();
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.rail.messages"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.messages"));
   await target.keyboard.press("Enter");
   await expect(palette).toHaveCount(0);
   await expect(tui(target)).toBeFocused();
@@ -4434,7 +4458,7 @@ for (const origin of [
       await target.keyboard.press("ControlOrMeta+k");
       await target
         .locator(".palette")
-        .getByRole("combobox")
+        .getByRole("combobox", { name: label("desktop.palette.label") })
         .fill(label("desktop.signin.submit"));
       await target.keyboard.press("Enter");
     } else if (origin === "header") {
@@ -4714,7 +4738,9 @@ test("signing out from a terminal leaves the keyboard on the way back in", async
   await expect(tui(target)).toBeFocused();
   await target.keyboard.press("ControlOrMeta+Shift+k");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.account.sign_out"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.account.sign_out"));
   await target.keyboard.press("Enter");
   await expect(
     target.locator(".pane-tui").getByRole("button", {
@@ -4782,7 +4808,9 @@ test("the palette opens the calendar, and choosing it again keeps it open", asyn
       .getByRole("button", { name: label("desktop.rail.search") })
       .click();
     const palette = target.locator(".palette");
-    await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label("desktop.calendar.title"));
     await target.keyboard.press("Enter");
     await expect(palette).toHaveCount(0);
     await expect(page).toBeFocused();

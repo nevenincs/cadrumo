@@ -1,3 +1,4 @@
+import { useLanguage } from "./shell/useLanguage";
 import { saveLogs } from "./shell/saveLogs";
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
 import { useWindowPresentation } from "./shell/useWindowPresentation";
@@ -95,6 +96,7 @@ import { AEAT_SEDE } from "./shell/links";
 import { fromPointer } from "./shell/pointer";
 import {
   SOURCE_LOCALE,
+  OUTPUT_LANGUAGES,
   StringsContext,
   translator,
   type Translate,
@@ -170,6 +172,23 @@ const activeTerminal = (): TerminalKind | null => {
 export function App({ host }: { host: Host }) {
   const account = useSignIn(host);
   const environment = useDesktopEnvironment(host);
+  const language = useLanguage(
+    host,
+    environment.state === "ready"
+      ? environment.value.outputLanguage
+      : SOURCE_LOCALE,
+    { phase: account.phase, profile: account.status?.active_profile ?? null },
+  );
+  const locale = language.locale;
+  const languages = OUTPUT_LANGUAGES;
+  const languageControl = {
+    value: locale,
+    languages,
+    pending: language.pending,
+    failed: language.failed,
+    onChange: (code: string) => void language.change(code),
+  };
+
   const workspace = useRef<HTMLDivElement>(null);
   const { viewportHeight, viewportWidth, prefersDark } =
     useWindowPresentation(workspace);
@@ -367,8 +386,9 @@ export function App({ host }: { host: Host }) {
     reader,
     calendarVisible,
     recheckAccount,
+    locale,
   );
-  const observedMessages = useMessages(views, reader, recheckAccount);
+  const observedMessages = useMessages(views, reader, recheckAccount, locale);
   // Withhold private counts in the same render as the account gate. The
   // existing hook settles old reads and clears its cache in its effect.
   const messages = useMemo(
@@ -412,21 +432,6 @@ export function App({ host }: { host: Host }) {
     setCreatingProfile(true);
   }, [askSignIn]);
 
-  // The window's language: the person's own choice where the documentation
-  // is bundled in it, otherwise the language Cadrumo reports.
-  const languages = useMemo(
-    () =>
-      environment.state === "ready" &&
-      environment.value.docs.state === "bundled"
-        ? environment.value.docs.languages.map((language) => language.code)
-        : [],
-    [environment],
-  );
-  const locale = languages.includes(prefs.language)
-    ? prefs.language
-    : environment.state === "ready"
-      ? environment.value.outputLanguage
-      : SOURCE_LOCALE;
   const t: Translate = useMemo(() => translator(locale), [locale]);
 
   const docsResolved =
@@ -1597,12 +1602,12 @@ export function App({ host }: { host: Host }) {
 
   const searchDocs: DocsSearch = useMemo(
     () =>
-      docsSearchReady
+      docsSearchReady && locale
         ? (query: string) =>
             docs.current?.search(query) ??
             Promise.reject(new Error("docs-unmounted"))
         : null,
-    [docsSearchReady],
+    [docsSearchReady, locale],
   );
 
   const clampPanel = (height: number) =>
@@ -1978,6 +1983,9 @@ export function App({ host }: { host: Host }) {
             ref={docs}
             origin={environment.value.docs.origin}
             entry={docsEntry.entry}
+            language={docsEntry.code}
+            languages={languages}
+            onLanguage={(code) => void language.change(code)}
             title={t("desktop.docs.frame_title")}
             chords={chords}
             zoom={layout.zoom}
@@ -2428,7 +2436,7 @@ export function App({ host }: { host: Host }) {
               <Settings
                 prefs={prefs}
                 setPrefs={setPrefs}
-                languages={languages}
+                language={languageControl}
                 close={() => setSettingsOpen(false)}
                 onReset={() => {
                   setPrefs(DEFAULT_PREFS);
@@ -2441,6 +2449,7 @@ export function App({ host }: { host: Host }) {
             {paletteOpen && (
               <CommandPalette
                 actions={actions}
+                language={languageControl}
                 searchDocs={searchDocs}
                 openDoc={openDoc}
                 close={() => setPaletteOpen(false)}

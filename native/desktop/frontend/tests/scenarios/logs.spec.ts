@@ -53,9 +53,10 @@ test("reveal log location is available from the log bar and command palette", as
   await page.keyboard.press("Control+Shift+k");
   await page
     .locator(".palette")
-    .getByRole("combobox")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.logs.reveal"));
   await page
+    .getByRole("listbox")
     .getByRole("option", { name: label("desktop.logs.reveal") })
     .click();
   await expect

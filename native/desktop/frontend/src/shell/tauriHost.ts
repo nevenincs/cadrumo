@@ -110,6 +110,25 @@ export function tauriHost(): Host {
       },
     },
     environment: () => call("desktop_environment", {}),
+    language: {
+      read: () => call("desktop_language_read", {}),
+      set: (language) => call("desktop_language_set", { language }),
+      async observe(listener) {
+        const updates = new Channel<
+          import("../ipc/contract").DesktopLanguage
+        >();
+        updates.onmessage = listener;
+        const subscription = await call("desktop_language_observe", {
+          updates,
+        });
+        return () => {
+          updates.onmessage = () => undefined;
+          void call("desktop_language_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+    },
     signInStatus: () => call("sign_in_status", {}),
     noteActivity: () => call("sign_in_activity", {}),
     managerStatus: () => call("manager_status", {}),

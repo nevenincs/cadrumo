@@ -55,6 +55,10 @@
  * trigger, are relayed as shortcut {id: "palette.open"} so the window's
  * palette is the only one; the page's palette does not open.
  *
+ * language {language, entry} follows the host choice through the generated
+ * switcher link, preserving the fragment; entry is the same-origin fallback.
+ * A switcher click sends language-change {language} and waits for that choice.
+ *
  * An unknown type is ignored. A known channel with another version, or a
  * malformed message of a known type, is refused and logged without its
  * contents. The bridge carries the fields above and nothing else: it never
@@ -138,6 +142,26 @@
     var url = link ? documentationUrl(link.getAttribute("href"), document.baseURI) : null;
     if (url) url.hash = "";
     return url;
+  }
+
+  /* Generated switcher links already know which pages exist in each root. */
+  function languageLink(language) {
+    var links = document.querySelectorAll("a.cadrumo-header-lang-item[lang][href]");
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].getAttribute("lang") === language) return links[i];
+    }
+    return null;
+  }
+
+  function applyLanguage(data) {
+    var language = data.language;
+    if (typeof language !== "string" || !/^[a-z]{2,3}$/.test(language)) return refuse("invalid language");
+    if (document.documentElement.lang === language) return;
+    var link = languageLink(language);
+    var target = link ? documentationUrl(link.getAttribute("href"), document.baseURI) : documentationUrl(data.entry);
+    if (!target) return refuse("language has no documentation target");
+    if (!target.hash) target.hash = window.location.hash;
+    if (target.href !== window.location.href) window.location.assign(target.href);
   }
 
   function searchFunction() {
@@ -359,6 +383,7 @@
     zoom: applyZoom,
     search: applySearch,
     appearance: applyAppearance,
+    language: applyLanguage,
   };
 
   window.addEventListener("message", function (event) {
@@ -421,6 +446,19 @@
     },
     true
   );
+
+  /* The canonical host choice settles before any cross-language navigation. */
+  window.addEventListener("click", function (event) {
+    var element = elementOf(event.target);
+    var anchor = element && element.closest ? element.closest("a.cadrumo-header-lang-item[lang][href]") : null;
+    if (!anchor) return;
+    var language = anchor.getAttribute("lang");
+    var target = documentationUrl(anchor.getAttribute("href"), document.baseURI);
+    if (!target || !/^[a-z]{2,3}$/.test(language)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    post("language-change", { language: language });
+  }, true);
 
   function linkFor(target) {
     var element = elementOf(target);
@@ -504,6 +542,7 @@
     list.push("navigate");
     if (languageRoot() !== null) list.push("home");
     list.push("appearance");
+    list.push("language");
     return list;
   }
 

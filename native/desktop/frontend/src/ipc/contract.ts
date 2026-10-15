@@ -164,6 +164,14 @@ export type DocsLanguage = {
   entry: string;
 };
 
+export type DesktopLanguage = {
+  language: string;
+  persisted: boolean;
+  profile: string | null;
+  /** Monotonic host revision shared by reads, writes and observations. */
+  revision: number;
+};
+
 export type DesktopEnvironment = {
   /** The output language Settings resolved for this profile. */
   outputLanguage: string;
@@ -792,6 +800,19 @@ export interface HostCommands {
   sign_out: { args: Authorized; result: SignOutResult };
   /** Needs no password, session or runtime, and changes nothing. */
   profile_list: { args: Authorized; result: ProfileList };
+  desktop_language_read: { args: Authorized; result: DesktopLanguage };
+  desktop_language_set: {
+    args: Authorized<{ language: string }>;
+    result: DesktopLanguage;
+  };
+  desktop_language_observe: {
+    args: Authorized<{ updates: Channel<DesktopLanguage> }>;
+    result: number;
+  };
+  desktop_language_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
   desktop_environment: {
     args: Authorized;
     result: DesktopEnvironment;
@@ -1122,6 +1143,7 @@ export type DocsSearchResults = BridgeEnvelope<"search-results"> & {
 };
 
 export type DocsToShell =
+  | (BridgeEnvelope<"language-change"> & { language: string })
   | DocsReady
   | DocsLocation
   | DocsThemeReport

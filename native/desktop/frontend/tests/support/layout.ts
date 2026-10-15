@@ -1,7 +1,11 @@
 import type { Page } from "@playwright/test";
 import type { Layout, Prefs } from "../../src/shell/layout";
 
-type Seed = { prefs?: Partial<Prefs>; layout?: Partial<Layout> };
+/** Raw persisted input also permits obsolete keys to exercise loading old state. */
+type Seed = {
+  prefs?: Partial<Prefs> & Record<string, unknown>;
+  layout?: Partial<Layout>;
+};
 
 /** The documentation beside the TUI, documentation first, with no agent
  * column: the window a test of that split is about. */

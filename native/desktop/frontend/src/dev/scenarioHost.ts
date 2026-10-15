@@ -9,6 +9,7 @@
 
 import type {
   DocsLanguage,
+  DesktopLanguage,
   HostFailure,
   LogBatch,
   ManagerStatus,
@@ -89,6 +90,21 @@ export const CALENDAR_SHAPES = {
 export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 
 const never = <T>() => new Promise<T>(() => undefined);
+
+/** External runtime events and delayed transport answers for browser scenarios. */
+declare global {
+  interface Window {
+    __scenarioLanguage?: {
+      publish(state: DesktopLanguage): void;
+      switchAccount(profile: string, language: string): void;
+      cacheNextObservation(state: DesktopLanguage): void;
+      refuseNextRead(): void;
+      refuseNextSet(): void;
+      deferNextSet(): void;
+      completeSet(state: DesktopLanguage): void;
+    };
+  }
+}
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -265,7 +281,107 @@ export function scenarioHost(
     readable,
   });
 
+  let languageRevision = 0;
+  let outputLanguage = options.language;
+  let refuseLanguageSet = false;
+  let refuseLanguageRead = false;
+  let cachedLanguage: DesktopLanguage | null = null;
+  let deferLanguageSet = false;
+  let completeLanguageSet: ((state: DesktopLanguage) => void) | null = null;
+  const languageListeners = new Set<(state: DesktopLanguage) => void>();
+  const languageState = (): DesktopLanguage => ({
+    language: outputLanguage,
+    persisted: presence === "present",
+    profile: presence === "present" ? (status().active_profile ?? null) : null,
+    revision: languageRevision,
+  });
+  const languageControls: NonNullable<Window["__scenarioLanguage"]> = {
+    publish(state) {
+      // Transport delivery can be stale; the canonical fixture stays current.
+      if (
+        state.profile === languageState().profile &&
+        state.revision >= languageRevision
+      ) {
+        outputLanguage = state.language;
+        languageRevision = state.revision;
+      }
+      languageListeners.forEach((listener) => listener(state));
+    },
+    switchAccount(profile, language) {
+      active = profile;
+      presence = "present";
+      outputLanguage = language;
+      languageRevision += 1;
+      signInListener?.({
+        kind: "sign-in-state",
+        revision: languageRevision,
+        status: status(),
+      });
+      languageListeners.forEach((listener) => listener(languageState()));
+    },
+    cacheNextObservation(state) {
+      cachedLanguage = state;
+    },
+    refuseNextRead() {
+      refuseLanguageRead = true;
+    },
+    refuseNextSet() {
+      refuseLanguageSet = true;
+    },
+    deferNextSet() {
+      deferLanguageSet = true;
+    },
+    completeSet(state) {
+      completeLanguageSet?.(state);
+      completeLanguageSet = null;
+    },
+  };
   return {
+    language: {
+      read: () => {
+        if (refuseLanguageRead) {
+          refuseLanguageRead = false;
+          return Promise.reject(failure("read_failed", "cli"));
+        }
+        return Promise.resolve(languageState());
+      },
+      set: (language) => {
+        say(`language.set ${language}`);
+        if (refuseLanguageSet) {
+          refuseLanguageSet = false;
+          return Promise.reject(failure("read_failed", "cli"));
+        }
+        if (deferLanguageSet) {
+          deferLanguageSet = false;
+          return new Promise<DesktopLanguage>((resolve) => {
+            completeLanguageSet = resolve;
+          });
+        }
+        outputLanguage = language;
+        languageRevision += 1;
+        const next = languageState();
+        languageListeners.forEach((listener) => listener(next));
+        return Promise.resolve(next);
+      },
+      observe: (listener) => {
+        languageListeners.add(listener);
+        window.__scenarioLanguage = languageControls;
+        if (cachedLanguage) {
+          const cached = cachedLanguage;
+          cachedLanguage = null;
+          listener(cached);
+        }
+        return Promise.resolve(() => {
+          languageListeners.delete(listener);
+          if (
+            languageListeners.size === 0 &&
+            window.__scenarioLanguage === languageControls
+          ) {
+            delete window.__scenarioLanguage;
+          }
+        });
+      },
+    },
     available: true,
     ...(scenario.views === "none"
       ? {}
@@ -312,14 +428,14 @@ export function scenarioHost(
                 if (!timer.late) window.clearTimeout(timer.timer);
             });
           }) satisfies NonNullable<Host["observeManager"]>,
-          observeSignIn: ((listener) => {
-            signInListener = listener;
-            return Promise.resolve(() => {
-              if (signInListener === listener) signInListener = null;
-            });
-          }) satisfies NonNullable<Host["observeSignIn"]>,
         }
       : {}),
+    observeSignIn: ((listener) => {
+      signInListener = listener;
+      return Promise.resolve(() => {
+        if (signInListener === listener) signInListener = null;
+      });
+    }) satisfies NonNullable<Host["observeSignIn"]>,
     ...(manager?.installResult
       ? {
           async installManager(scope: "user" | "machine") {
@@ -346,7 +462,10 @@ export function scenarioHost(
       return Promise.resolve({
         outputLanguage: options.language,
         logLevel: "INFO",
-        docs: { state: "bundled", ...options.docs },
+        docs:
+          new URLSearchParams(window.location.search).get("docs") === "none"
+            ? { state: "notBundled" }
+            : { state: "bundled", ...options.docs },
       });
     },
 

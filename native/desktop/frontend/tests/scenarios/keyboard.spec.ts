@@ -166,13 +166,21 @@ test("the palette opens by chord, runs by Enter and returns focus", async ({
   const palette = target.getByRole("dialog", {
     name: label("desktop.palette.label"),
   });
-  await expect(palette.getByRole("combobox")).toBeFocused();
+  await expect(
+    palette.getByRole("combobox", {
+      name: label("desktop.palette.label"),
+    }),
+  ).toBeFocused();
   // The arrow keys move the choice while focus stays in the input.
-  const options = palette.getByRole("option");
+  const options = palette.getByRole("listbox").getByRole("option");
   await expect(options.first()).toHaveAttribute("aria-selected", "true");
   await target.keyboard.press("ArrowDown");
   await expect(options.nth(1)).toHaveAttribute("aria-selected", "true");
-  await expect(palette.getByRole("combobox")).toBeFocused();
+  await expect(
+    palette.getByRole("combobox", {
+      name: label("desktop.palette.label"),
+    }),
+  ).toBeFocused();
   await target.keyboard.press("Escape");
   await expect(palette).toBeHidden();
   await expect(opener).toBeFocused();
@@ -185,10 +193,12 @@ test("an action run from the palette keeps the focus it takes", async ({
   await rail(target).getByRole("button").nth(1).focus();
   await target.keyboard.press("Control+KeyK");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.rail.python"));
-  await expect(palette.getByRole("option").first()).toContainText(
-    label("desktop.rail.python"),
-  );
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.python"));
+  await expect(
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toContainText(label("desktop.rail.python"));
   await target.keyboard.press("Enter");
   await expect(palette).toHaveCount(0);
   await expect(
@@ -196,7 +206,9 @@ test("an action run from the palette keeps the focus it takes", async ({
   ).toBeFocused();
   // Chosen by name, a view is shown, not toggled: choosing it again keeps it.
   await target.keyboard.press("Control+Shift+KeyK");
-  await palette.getByRole("combobox").fill(label("desktop.rail.python"));
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.rail.python"));
   await target.keyboard.press("Enter");
   await expect(target.locator('[data-terminal="python"]')).toBeVisible();
   await expect(
@@ -211,10 +223,12 @@ test("settings opened from the palette inside a terminal stays open", async ({
   await target.locator('[data-terminal="console"] .xterm-screen').click();
   await target.keyboard.press("Control+Shift+KeyK");
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.settings.title"));
-  await expect(palette.getByRole("option").first()).toContainText(
-    label("desktop.settings.title"),
-  );
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.settings.title"));
+  await expect(
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toContainText(label("desktop.settings.title"));
   await target.keyboard.press("Enter");
   const settings = target.locator(".settings");
   await expect(settings).toBeVisible();
@@ -723,8 +737,12 @@ test("a view chosen in the palette from inside a terminal takes focus every time
   const palette = target.locator(".palette");
   const choose = async (key: string) => {
     await target.keyboard.press("Control+Shift+KeyK");
-    await palette.getByRole("combobox").fill(label(key));
-    await expect(palette.getByRole("option").first()).toContainText(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
+    await expect(
+      palette.getByRole("listbox").getByRole("option").first(),
+    ).toContainText(label(key));
     await target.keyboard.press("Enter");
     await expect(palette).toHaveCount(0);
   };

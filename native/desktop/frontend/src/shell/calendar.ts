@@ -130,6 +130,7 @@ export function useFilingCalendar(
   reader: string | null,
   shown: boolean,
   onRefused: () => void,
+  locale = "",
 ) {
   const [read, setRead] = useState<Read>({ kind: "loading" });
   const [refreshing, setRefreshing] = useState(false);
@@ -178,6 +179,12 @@ export function useFilingCalendar(
   }, [reader]);
 
   useEffect(() => {
+    // Locale invalidates wording without dropping the current calendar or selection.
+    readAt.current = 0;
+    ++request.current;
+  }, [locale]);
+
+  useEffect(() => {
     const stale =
       Date.now() - readAt.current >= FRESH_MS ||
       (readOn.current !== "" && readOn.current !== today);
@@ -187,7 +194,7 @@ export function useFilingCalendar(
       setRead((held) => (held.kind === "failed" ? { kind: "loading" } : held));
       refresh();
     }
-  }, [reader, shown, refresh, today]);
+  }, [reader, shown, refresh, today, locale]);
 
   const state: CalendarState = reader === null ? { kind: "withheld" } : read;
   return {

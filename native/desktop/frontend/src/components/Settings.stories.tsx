@@ -10,13 +10,16 @@ const noop = () => undefined;
 
 function Screen({
   initial,
+  initialLanguage = "en",
   languages,
 }: {
   initial: Prefs;
+  initialLanguage?: string;
   languages: readonly string[];
 }) {
   const t = useStrings();
   const [prefs, setPrefs] = useState(initial);
+  const [language, setLanguage] = useState(initialLanguage);
   return (
     <div className="grid h-dvh grid-cols-[auto_1fr] bg-chrome">
       <Rail
@@ -43,7 +46,7 @@ function Screen({
       <Settings
         prefs={prefs}
         setPrefs={setPrefs}
-        languages={languages}
+        language={{ value: language, languages, onChange: setLanguage }}
         onReset={() => setPrefs(initial)}
         close={noop}
       />
@@ -55,11 +58,14 @@ const meta = {
   title: "Shell/Settings",
   parameters: { fill: true },
   args: { initial: DEFAULT_PREFS, languages: ["en", "es", "ca", "hu"] },
-  render: (args: { initial: Prefs; languages: readonly string[] }) => (
-    <Screen {...args} />
-  ),
+  render: (args: {
+    initial: Prefs;
+    initialLanguage?: string;
+    languages: readonly string[];
+  }) => <Screen {...args} />,
 } satisfies Meta<{
   initial: Prefs;
+  initialLanguage?: string;
   languages: readonly string[];
 }>;
 export default meta;
@@ -69,9 +75,9 @@ export const Defaults: Story = {};
 
 export const EveryChoiceChanged: Story = {
   args: {
+    initialLanguage: "ca",
     initial: {
       appearance: "dark",
-      language: "ca",
       terminals: "dark",
       orientation: "column",
       order: "tui",

@@ -1264,7 +1264,9 @@ test("the desktop host offers no profile views, so nothing leads to one", async 
     .click();
   const palette = target.locator(".palette");
   for (const key of ["desktop.calendar.title", "desktop.rail.messages"]) {
-    await palette.getByRole("combobox").fill(label(key));
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label(key));
     await expect(
       palette.locator(".palette-title").filter({ hasText: label(key) }),
     ).toHaveCount(0);
@@ -1604,8 +1606,12 @@ test("the palette lists actions and runs the chosen one", async ({
   const palette = target.getByRole("dialog", {
     name: label("desktop.palette.label"),
   });
-  await expect(palette.getByRole("option").first()).toBeVisible();
-  await palette.getByRole("combobox").fill(label("desktop.pane.maximize_tui"));
+  await expect(
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toBeVisible();
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.pane.maximize_tui"));
   await target.keyboard.press("Enter");
   await expect(palette).toBeHidden();
   await expect(target.locator(".pane-docs")).toBeHidden();

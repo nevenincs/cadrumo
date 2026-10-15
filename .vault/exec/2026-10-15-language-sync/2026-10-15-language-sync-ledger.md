@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f7d936b1bc29119fc79f42ef36fccad010b8865d75795f37c79f4db13915d54'
+body_hash: 'sha256:65f1a9141f1ed538f440c61cee2493331e4a062650da72050b731ba3d7bf2c3c'
 related:
   - "[[2026-10-15-language-sync-plan]]"
 ---
@@ -198,6 +198,12 @@ related:
 - `S01` `verify:` `just check-symbol-usage` -> `fail`
 - `S01` `verify:` `just check-export-consumption` -> `fail`
 - `S01` `verify:` `just test-sequence-goldens-gate (stale registry authority)` -> `fail`
+- `S03` `verify:` `npm run check (after final profile-observation recovery fix)` -> `pass`
+- `S03` `verify:` `npx playwright test --project=scenarios tests/scenarios/language.spec.ts --workers=1 (six tests, final)` -> `pass`
+- `S01` `verify:` `just test-ci-contracts-gate (1136 passed,1 failed)` -> `fail`
+- `S01` `verify:` `just test-ci-contracts-serial (0 selected,expected pytest exit5)` -> `pass`
+- `S01` `verify:` `pytest test_ci_workflow.py::test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists -n 1 (original CI marker and env)` -> `pass`
+- `S03` `verify:` `cmake --build build/desktop-windows-x64 --config Release --target desktop-host-build (after final frontend correction)` -> `pass`
 
 ## Notes
 
@@ -205,3 +211,5 @@ related:
 - `S03` All 593 frontend test IDs have passing evidence across the full run and fresh retries; final two failures were setup/teardown timeouts and passed with one worker. Documentation full file passed 35 tests; the duplicate-anchor assertion was corrected and its focused real-browser retry passed. Packaged GUI cross-surface acceptance was not run.
 - `S02` The supported CMake Release retry of the exact live log-rotation test failed again (0 passed, 1 failed, 351 filtered) with an empty live record list. Read-only tracing shows this fixture constructs Tail directly and bypasses all five language files, Person::hold and session hold. Its environment projection participates in setup; baseline/provenance remains unknown. No further native rerun or unrelated log-reader edit is claimed.
 - `S01` S01 verification remains pending. Current import-boundary gate fails with 1144 hard findings, 324 new unapproved occurrences and110 shipped-root occurrences reaching repository-only roots. Candidate inventory0of424intersections with manifest; all93Python diffs add no private import target or dynamic import construct. Full hardfinding paths are not retained by the checker, so absence of every manifest intersection is not claimed. Other three static reports list no manifest files. Sequence goldens fail closed against stale authority while foreign registry edits remain in progress; no authority publication or unrelated repair is performed.
+- `S03` Final Luna review found previous-account cached observations could reach the UI and failure alerts could remain after recovery. Corrected frontend filters by typed account profile, hides old identity state before effects, preserves monotonic revisions and generation fences, and clears alerts on a newer accepted update. Six language scenarios pass after this correction; browserHost no-host transient fallback remains supported.
+- `S01` The CI wrapper passed 1136 tests and failed one collect-only child with FileNotFoundError for a deleted temporary docs root. The exact failed node passed on a fresh isolated retry with unchanged source and environment; all1137CItestIDs now have passing evidence across runs. The configured standalone serial recipe returned0 with1131deselected. A separate foreign four-node marker-splitting error is not attributed to this run.
