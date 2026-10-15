@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:50613e514cb657820eea3262879044720a79c3ec02290cd10b0fd008adf44764'
+body_hash: 'sha256:9bf6231a645786f8a5e5903938303c52b4df8040f044ec28cc094eb9745563f5'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -71,3 +71,14 @@ related:
 - `S02` `verify:` `final application environment parser tests (33)` -> `pass`
 - `S02` `verify:` `all-profile identity replacement correction (2)` -> `pass`
 - `S02` `verify:` `final native build and platform.rust` -> `pass`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/verification_expectations/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/verification_expectations/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/verification_expectations/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/verification_expectations/0001-declarations.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S01` `A` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/verification_expectations/0001-declarations.toml`
+- `S01` `verify:` `just check-registry-gate` -> `pass`
+- `S01` `verify:` `fresh cross-period profile module (31)` -> `pass`
+- `S01` `verify:` `fresh group aggregation and cross-period enforcement/provenance (33)` -> `pass`

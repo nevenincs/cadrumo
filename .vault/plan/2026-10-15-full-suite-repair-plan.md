@@ -4,12 +4,13 @@ tags:
   - '#full-suite-repair'
 date: '2026-10-15'
 tier: L1
-modified: '2026-10-15'
-body_schema: body-v2
-body_hash: 'sha256:dd5df9abc8f709235d13e59f52de9f1d8f60aa61c1d041221211b0d2a1003791'
 related:
   - '[[2026-10-04-google-app-identity-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
+  - '[[2026-07-01-verification-reconcile-when-present-adr]]'
+modified: '2026-10-15'
+body_schema: body-v2
+body_hash: 'sha256:0c6364314b808beb87fd2be6d19c836dfc1316662a1439ac5978a7f623edf255'
 ---
 
 # `full-suite-repair` plan
@@ -24,9 +25,10 @@ Current evidence and full command logs are in `.logs/test-repair/`. Read the act
 
 ## Steps
 
-- [ ] `S01` - Enroll computed casillas and validate published authority; `verification declarations for modelos 303, 308, 322, 369 and 390`.
+- [x] `S01` - Enroll computed casillas and validate published authority; `verification declarations for modelos 303, 308, 322, 369 and 390`.
 - [x] `S02` - Compile fixed Google publisher identity into every package launch environment; `native environment contract, build provisioning, runtime settings and identity tests`.
-- [ ] `S03` - Resolve remaining full-suite failures and rerun supported offline and live lanes; `all requested justfile test populations and verification gates`.
+- [ ] `S03` - Repair fixture and tooling contracts exposed by the full suite; `test fixtures, CLI metadata, TUI discovery, localization and protocol assertions`.
+- [ ] `S04` - Execute the remaining full offline and live test lanes and verify repairs; `all requested justfile test populations and final review`.
 
 ## Parallelization
 

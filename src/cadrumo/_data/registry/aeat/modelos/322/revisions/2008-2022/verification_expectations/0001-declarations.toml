@@ -28,3 +28,24 @@ source_refs = ["aeat-dr-322-2022", "aeat-modelo-322-procedure"]
 # IVA flow (repercutido / soportado / autorepercutido) for the individual group
 # member's cuota.
 # -----------------------------------------------------------------------------
+
+[[revisions."2008-2022".verification_expectations]]
+id = "modelo-322-2008-2022-additional-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "38",
+    "62",
+    "63",
+    "65",
+    "68",
+    "70",
+    "717",
+    "735",
+    "88",
+]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-322-procedure"]

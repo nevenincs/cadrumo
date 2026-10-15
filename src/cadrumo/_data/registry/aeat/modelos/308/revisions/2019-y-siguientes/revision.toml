@@ -58,10 +58,6 @@ reason = "A projection endpoint admits one typed filing endpoint that an export 
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions.2019-y-siguientes.family_dispositions.verification_expectations]
-reason = "No filed-return reconciliation surface is enrolled for Modelo308. The local box17 sum is checked through its declared formula, but does not establish an AEAT-confirmed refund."
-legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
-source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
 [revisions.2019-y-siguientes.family_dispositions.verification_predicates]
 reason = "The current computation is the unconditional sum of three non-negative declared quota amounts in box17. Missing operands remain unresolved and operand constraints prohibit negative quotas. No separate conditional tax entitlement predicate is inferred from this arithmetic; entitlement verification remains outside this sum."
