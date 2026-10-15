@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:8f35265246828676b54af4c6976c6508ea5b3a62cb1d25200369ed41d98f4ae7'
+body_hash: 'sha256:5bbc026695d68e6d79d7b8737cbd289c7d8b37b5c0d7bf0c34dd01314cc87a26'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -16,6 +16,7 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
+  - '[[2026-10-15-language-sync-reference]]'
 ---
 
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
@@ -128,6 +129,14 @@ The owner ruled first-hand on 2026-10-12 that Cadrumo is a GUI application with 
 - The shell still holds no session, receipt, credential or runtime connection. It never signs in on an agent's behalf.
 
 ## Implementation
+
+### Amendment 2026-10-15: canonical language synchronization
+
+Accepted under the user's explicit request for shared language switching in Settings, Cmd+K, documentation and TUI. The blanket frontend-only shell-settings constraint is amended for language only: the shell may read, write and observe the canonical authenticated profile preference through narrow token-checked host commands and the verified person transport. It receives no new custody or credential authority. Profile mutations retain registered-operation validation and record preconditions; a notification is an invalidation cue, never authority or a persisted substitute. Signed-out choices remain transient and cannot write a profile or its hint. Explicit per-invocation CLI overrides remain supported.
+
+The existing documentation bridge gains a bounded supported-language request and completion instruction under the same exact origin/source checks. One subscribed frontend controller updates chrome, projections and documentation; profile-scoped runtime notices refresh mounted TUI presentation without discarding staged work. Background observation must not extend person activity. This scoped exception supersedes only earlier statements excluding backend language preferences. Evidence: `2026-10-15-language-sync-reference`.
+
+The installed interactive TUI follows the canonical profile language ahead of inherited environment or Settings language defaults. Those defaults remain its fallback when the profile has no preference. This precedence is scoped to the interactive host lifetime, resets when it exits and does not change ordinary CLI per-invocation overrides. The separate TUI module grammar accepts no language launch flag; no supported explicit TUI flag is removed. This closes the observed case where the desktop adopted a profile change while an inherited setting kept the TUI in its prior language.
 
 We will build the desktop window as a React shell at the app origin. A left icon rail sits beside a main area that splits the packaged user documentation, in a cross-origin iframe, with the Cadrumo TUI. A single toggleable bottom panel holds three tabs: Console, Python and Logs. Approved additions (2026-10-04):
 

@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-09'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:d20fa38c49c0a58cb96cbeb2023fe6d9d7b380022981dfa403503774093de2a3'
+body_hash: 'sha256:596c9dbedfd711795ca47390c8a4b0d60094b5fe1f2681b8da7f925954434990'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
+  - '[[2026-10-15-language-sync-reference]]'
 ---
 # `desktop-design-system` adr: `Desktop shell design system and browser development loop` | (**status:** `accepted`)
 
@@ -138,6 +139,12 @@ Authorized by the user on 2026-10-06, who asked for the side rail to read: searc
 The first rail group's order becomes search, docs home, TUI, then the shortcuts group, then console, Python and logs; settings stays alone in the last group. Search and docs home keep the first two positions, which are the only positions the packaged acceptance suite reaches by index (`native/desktop/tests/packaged/docs-ui.mjs:22`, `:102`), so no packaged assertion changes. The shortcuts group opens with one element that needs nothing from the host beyond `open_external`: the tax agency's electronic office, whose address is the product's own constant and is held to it by a test. Further shortcuts that need data or actions the host does not offer today (notifications, the profile's Drive folder, sync counts, the filing calendar) are not part of this amendment: each needs its own decision on how the shell may read profile data.
 
 The stable-hooks commitment is otherwise unchanged.
+
+### Amendment 2026-10-15: shared application language
+
+Accepted under the user's explicit request to implement language dropdowns in the left Settings popup and Cmd+K palette and synchronize changes across documentation, TUI, CLI and desktop. For language alone, this replaces the Settings constraint that the choice is window-local and never reaches a backend. The canonical persisted value remains the authenticated profile fact `preferences.output_language`; the desktop uses narrow verified read/write/observation commands and no second persisted preference. Signed-out choices remain transient. Explicit CLI invocation overrides remain local to that invocation.
+
+Settings and the palette reuse the existing select and styling. Supported language options do not depend on bundled documentation. Documentation uses the existing origin-checked bridge to request a change; host observations update the shared frontend controller and mounted TUI views while preserving staged work. All other settings, dependency, catalog and token ownership constraints remain unchanged. Evidence: `2026-10-15-language-sync-reference`.
 
 ### Amendment 2026-10-09: one bottom-panel rail toggle
 

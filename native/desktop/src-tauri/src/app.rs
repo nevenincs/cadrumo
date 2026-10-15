@@ -136,6 +136,7 @@ pub fn run(
             shell::sign_in::commands(),
             shell::provider_settings::commands(),
             shell::agent_access::commands(),
+            shell::language::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),
@@ -234,6 +235,11 @@ pub fn run(
 /// every cleanup even after a failure, including on run-loop exit without a
 /// window close event. Each owner keeps failed cleanup available for retry.
 fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Result<()> {
+    let language_cleanup = handle
+        .try_state::<Arc<shell::language::LanguageHost>>()
+        .map_or(Ok(()), |language| {
+            tauri::async_runtime::block_on(language.close())
+        });
     let agent_cleanup = handle
         .try_state::<Arc<agent::AgentHost>>()
         .map_or(Ok(()), |agent| {
@@ -252,7 +258,8 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
         .map_or(Ok(()), |manager| {
             tauri::async_runtime::block_on(manager.close_checked())
         });
-    agent_cleanup
+    language_cleanup
+        .and(agent_cleanup)
         .and(sign_in_cleanup)
         .and(terminal_cleanup)
         .and(manager_cleanup)
@@ -428,6 +435,7 @@ mod tests {
             shell::sign_in::commands(),
             shell::provider_settings::commands(),
             shell::agent_access::commands(),
+            shell::language::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),

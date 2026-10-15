@@ -194,6 +194,9 @@ impl Person {
                     && reply["attendance_id"] == document["attendance_id"]
                     && reply["approved"] == document["approve"]
             }
+            Some("language_read" | "language_observe" | "language_set") => {
+                language_reply(&self.identity, &reply)
+            }
             _ => false,
         };
         if !valid {
@@ -220,3 +223,39 @@ impl Drop for Person {
 }
 
 pub type HeldPerson = std::sync::Arc<Mutex<Person>>;
+
+fn language_reply(identity: &Value, reply: &Value) -> bool {
+    reply["kind"] == "profile_language"
+        && reply["profile_id"] == identity["profile_id"]
+        && reply["session_id"] == identity["session_id"]
+        && (reply["language"].is_null()
+            || reply["language"]
+                .as_str()
+                .is_some_and(crate::shell::language::supported))
+        && reply["record_revision"].as_u64().is_some()
+}
+
+#[cfg(test)]
+mod language_tests {
+    use super::*;
+
+    #[test]
+    fn language_replies_bind_profile_session_and_validate_the_fact() {
+        let identity = json!({"profile_id":"profile", "session_id":"session"});
+        let reply = json!({"kind":"profile_language", "profile_id":"profile", "session_id":"session", "language":"hu", "record_revision":9});
+        assert!(language_reply(&identity, &reply));
+        for (key, value) in [
+            ("profile_id", json!("other")),
+            ("session_id", json!("other")),
+            ("language", json!("fr")),
+            ("record_revision", json!(-1)),
+        ] {
+            let mut invalid = reply.clone();
+            invalid[key] = value;
+            assert!(!language_reply(&identity, &invalid));
+        }
+        let mut unset = reply;
+        unset["language"] = Value::Null;
+        assert!(language_reply(&identity, &unset));
+    }
+}

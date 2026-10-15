@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-titlebar'
 date: '2026-10-09'
-modified: '2026-10-09'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f4be3876e302b12d86eae521b429bf940fe6d2be86177759fc492ece172b8f6'
+body_hash: 'sha256:98931caea895bcec499275ae50bd4374ccc18317c250cddaac754ecb45201d8d'
 related:
   - "[[2026-10-09-desktop-titlebar-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -36,6 +36,10 @@ Window commands are a closed typed set behind the per-launch token, operate only
 Windows and Linux remove window decorations. The existing macOS application refusal remains; this work does not broaden platform admission. Existing window-state persistence stays Rust-owned.
 
 ## Implementation
+
+### Amendment 2026-10-15: language settings exception
+
+Accepted under the user's explicit shared-language implementation request. The earlier Settings/frontend-preferences sentence remains binding for account placement and other window preferences, with the scoped language exception recorded by the 2026-10-15 amendments to `2026-10-04-desktop-shell-adr` and `2026-10-05-desktop-design-system-adr`: Settings and Cmd+K may change the canonical authenticated profile language through the existing verified host boundary. This grants no account-switching or credential authority to Settings. Evidence: `2026-10-15-language-sync-reference`.
 
 Promote the approved header to product composition, retire the separate visual-study implementation, publish typed window commands and Host window access, and adapt scenario and packaged checks to the authorized account location change. Keep generated localization in its canonical workflow and use existing shared controls and tokens.
 

@@ -3,6 +3,7 @@ pub mod channel;
 mod clipboard;
 mod external;
 mod interrupts;
+pub mod language;
 mod menu;
 pub mod navigation;
 pub mod provider_settings;
@@ -166,9 +167,13 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             interrupts::restore(&diagnostics);
             single_instance::verify(app.config())?;
             app.manage(Shell {
-                output_language,
+                output_language: output_language.clone(),
                 log_level,
             });
+            app.manage(Arc::new(language::LanguageHost::new(
+                sign_in.clone(),
+                output_language,
+            )));
             app.manage(sign_in);
             app.manage(popups);
             app.manage(channel::Deliveries::default());
