@@ -134,6 +134,13 @@ fn helper_projection_rejects_forged_sources_and_preserves_native_refusal_codes()
         assert_eq!(fact.envelope_decode, HelperDecode::NativeRefused);
         assert_eq!(fact.code.as_deref(), Some(code));
         assert!(!serde_json::to_string(&fact).unwrap().contains("CANARY"));
+        let native = json!({"native_refusal":code,"subject":"CADRUMO_LOCAL_STORAGE_ROOT"});
+        let fact =
+            HelperResult::inspect(identity, false, &[], &serde_json::to_vec(&native).unwrap());
+        assert_eq!(
+            fact.native_subject.as_deref(),
+            Some("CADRUMO_LOCAL_STORAGE_ROOT")
+        );
     }
     for bytes in [b"not an envelope PRIVATE-CANARY".as_slice(), br#"{"schema_version":"2","command":"config.logout","status":"error","error":{"code":"INTERNAL"}}"#.as_slice()] {
         let fact = HelperResult::inspect(identity, false, &[], bytes);

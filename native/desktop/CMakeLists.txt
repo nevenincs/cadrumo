@@ -228,10 +228,23 @@ if(NOT DEFINED CADRUMO_PACKAGE_USER_DOCS OR CADRUMO_PACKAGE_USER_DOCS)
   set(desktop_user_docs user_docs)
   set(desktop_test_user_docs 1)
 endif()
-set(CADRUMO_DESKTOP_HOST_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for desktop-host-test")
-foreach(action IN ITEMS test clippy)
+set(CADRUMO_DESKTOP_HOST_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for desktop host tests")
+foreach(action IN ITEMS test clippy unit-test unit-clippy)
+  set(host_driver_action "${action}")
+  set(host_dependencies desktop-frontend-build ${desktop_user_docs})
+  set(host_fixture_check)
+  if(action STREQUAL "unit-test" OR action STREQUAL "unit-clippy")
+    set(host_dependencies desktop-frontend-install)
+    if(action STREQUAL "unit-test")
+      set(host_driver_action test-unit)
+    else()
+      set(host_driver_action clippy-backend)
+    endif()
+    set(host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
+      "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/sign_in/cli_contract_fixtures.py" --check)
+  endif()
   set(host_test_arguments)
-  if(action STREQUAL "test")
+  if(action STREQUAL "test" OR action STREQUAL "unit-test")
     set(host_summary "run the desktop host Rust tests")
     if(NOT CADRUMO_DESKTOP_HOST_TEST_FILTER STREQUAL "")
       list(APPEND host_test_arguments "${CADRUMO_DESKTOP_HOST_TEST_FILTER}")
@@ -241,14 +254,15 @@ foreach(action IN ITEMS test clippy)
   endif()
   cadrumo_build_step(step_comment desktop-host-${action} GROUP verification SUMMARY "${host_summary}")
   add_custom_target(desktop-host-${action}
+    ${host_fixture_check}
     COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
       "${desktop_environment}" "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
-      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${action} ${host_test_arguments}
-    DEPENDS desktop-frontend-build ${desktop_user_docs}
+      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action} ${host_test_arguments}
+    DEPENDS ${host_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
   if(TARGET native_contract)
     add_dependencies(desktop-host-${action} native_contract)

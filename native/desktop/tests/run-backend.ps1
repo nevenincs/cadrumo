@@ -1,8 +1,10 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Run native Tauri backend checks without building the frontend or package.
+  Windows convenience wrapper for native Tauri backend checks.
 .DESCRIPTION
+  Portable entry points are the desktop-host-unit-test and desktop-host-unit-clippy
+  CMake targets. This wrapper assumes a Windows preset and virtual environment.
   BuildDirectory defaults to the binary directory of the Windows x64 configure
   preset in native\desktop\CMakePresets.json. It must already contain the
   standalone CMake build-path manifest and generated native contract. Unit runs
