@@ -1422,11 +1422,11 @@ test("log controls keep a consistent keyboard order as the toolbar wraps", async
       ),
     ).toEqual([
       label("desktop.logs.filters"),
-      label("desktop.logs.follow"),
       label("desktop.menu.select_all"),
       label("desktop.menu.copy"),
       label("desktop.logs.export"),
       label("desktop.logs.reveal"),
+      label("desktop.logs.follow"),
     ]);
     await controls.first().focus();
     for (let at = 1; at < (await controls.count()); at++) {

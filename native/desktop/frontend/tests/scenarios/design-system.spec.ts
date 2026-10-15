@@ -1,3 +1,4 @@
+import { label as chromeLabel } from "../support/strings";
 import { openPanelTab } from "../support/panel";
 import { expect, test } from "@playwright/test";
 
@@ -95,10 +96,63 @@ test("log follow icon uses the shared toggle surface and density", async ({
     )
     .not.toBe(selected);
   await page.evaluate(() =>
-    document.documentElement.style.setProperty("--spacing-control-sm", "40px"),
+    document.documentElement.style.setProperty("--spacing-control-xs", "40px"),
   );
   await expect(follow).toHaveCSS("width", "40px");
   await expect(follow).toHaveCSS("height", "40px");
   for (const side of ["top", "right", "bottom", "left"])
     await expect(follow).toHaveCSS(`border-${side}-width`, "0px");
+});
+
+test("log toolbar reuses agent header button styles and separates action groups", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
+  await openPanelTab(page, "logs");
+  const history = page.locator(".pane-agent").getByRole("button", {
+    name: chromeLabel("desktop.agent.history"),
+    exact: true,
+  });
+  const filters = page.locator(".log-toolbar").getByRole("button", {
+    name: chromeLabel("desktop.logs.filters"),
+    exact: true,
+  });
+  const follow = page.locator("[data-follow]");
+  const properties = [
+    "width",
+    "height",
+    "border-radius",
+    "color",
+    "background-color",
+    "border-top-width",
+  ];
+  for (const property of properties) {
+    const expected = await history.evaluate(
+      (element, property) =>
+        getComputedStyle(element).getPropertyValue(property),
+      property,
+    );
+    await expect(filters).toHaveCSS(property, expected);
+  }
+  await history.click();
+  await page.mouse.move(0, 0);
+  await history.blur();
+  for (const property of properties) {
+    const expected = await history.evaluate(
+      (element, property) =>
+        getComputedStyle(element).getPropertyValue(property),
+      property,
+    );
+    await expect(follow).toHaveCSS(property, expected);
+  }
+  expect(
+    await page
+      .locator(".log-toolbar [data-log-group]")
+      .evaluateAll((groups) =>
+        groups.map((group) => group.getAttribute("data-log-group")),
+      ),
+  ).toEqual(["filters", "selection", "files", "follow"]);
+  await expect(follow.locator(".lucide-circle-pause")).toHaveCount(1);
+  await follow.click();
+  await expect(follow.locator(".lucide-circle-play")).toHaveCount(1);
 });

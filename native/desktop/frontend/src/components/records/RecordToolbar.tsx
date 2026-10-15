@@ -69,27 +69,26 @@ export function RecordToolbar({
     filters.hiddenSources.length > 0 ||
     filters.minLevel !== defaultFilters.minLevel;
   return (
-    <div className="log-toolbar flex shrink-0 flex-wrap items-center gap-1 border-b px-2.5 py-1.5">
-      <Input
-        ref={filterInput}
-        className="filter-text min-w-20 flex-1 basis-field panel-short:basis-0"
-        controlSize="sm"
-        type="search"
-        placeholder={t("desktop.logs.filter")}
-        aria-label={t("desktop.logs.filter")}
-        value={filters.text}
-        onChange={(event) =>
-          setFilters({ ...filters, text: event.target.value })
-        }
-      />
-      <div className="flex flex-wrap items-center gap-1">
+    <div className="log-toolbar flex shrink-0 flex-wrap items-center gap-1 border-b bg-chrome py-1 pr-1.5 pl-3">
+      <div
+        data-log-group="filters"
+        className="flex min-w-40 flex-1 basis-field items-center gap-1 panel-short:basis-0"
+      >
+        <Input
+          ref={filterInput}
+          className="filter-text min-w-0 flex-1"
+          controlSize="sm"
+          type="search"
+          placeholder={t("desktop.logs.filter")}
+          aria-label={t("desktop.logs.filter")}
+          value={filters.text}
+          onChange={(event) =>
+            setFilters({ ...filters, text: event.target.value })
+          }
+        />
         <Popover>
           <PopoverTrigger asChild>
-            <IconButton
-              size="sm"
-              label={t("desktop.logs.filters")}
-              aria-pressed={active}
-            >
+            <IconButton label={t("desktop.logs.filters")} aria-pressed={active}>
               <Icon name="filter" />
             </IconButton>
           </PopoverTrigger>
@@ -188,91 +187,97 @@ export function RecordToolbar({
             </IconButton>
           </PopoverContent>
         </Popover>
-        <IconButton
-          size="sm"
-          label={t("desktop.logs.follow")}
-          data-follow=""
-          accessibleName={t("desktop.logs.follow")}
-          hint={t("desktop.logs.follow_hint")}
-          aria-pressed={follow}
-          onClick={onFollow}
-        >
-          <Icon name={follow ? "pause" : "play"} />
-        </IconButton>
-        <IconButton
-          size="sm"
-          label={t("desktop.menu.select_all")}
-          disabled={!visible.length}
-          onClick={onSelectAll}
-        >
-          <Icon name="selectAll" />
-        </IconButton>
-        {onCopy && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <IconButton
-                size="sm"
-                label={t("desktop.menu.copy")}
-                disabled={!all.length}
-              >
-                <Icon name="copy" />
-              </IconButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                disabled={!visible.length}
-                onSelect={() => onCopy(recordsText(visible))}
-              >
-                <Icon name="copy" />
-                {t("desktop.menu.copy_visible")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!all.length}
-                onSelect={() => onCopy(recordsText(all))}
-              >
-                <Icon name="copyAll" />
-                {t("desktop.logs.copy_all")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        {onExport && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <IconButton
-                size="sm"
-                label={t("desktop.logs.export")}
-                disabled={!all.length}
-              >
-                <Icon name="download" />
-              </IconButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                disabled={!visible.length}
-                onSelect={() => onExport(recordsText(visible))}
-              >
-                <Icon name="download" />
-                {t("desktop.logs.export_visible")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!all.length}
-                onSelect={() => onExport(recordsText(all))}
-              >
-                <Icon name="downloadAll" />
-                {t("desktop.logs.export_all")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        <IconButton
-          size="sm"
-          label={t("desktop.logs.reveal")}
-          disabled={!onReveal}
-          onClick={onReveal}
-        >
-          <Icon name="folder" />
-        </IconButton>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
+        <div data-log-group="selection" className="flex items-center gap-1">
+          <IconButton
+            label={t("desktop.menu.select_all")}
+            disabled={!visible.length}
+            onClick={onSelectAll}
+          >
+            <Icon name="selectAll" />
+          </IconButton>
+          {onCopy && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <IconButton
+                  label={t("desktop.menu.copy")}
+                  disabled={!all.length}
+                >
+                  <Icon name="copy" />
+                </IconButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={!visible.length}
+                  onSelect={() => onCopy(recordsText(visible))}
+                >
+                  <Icon name="copy" />
+                  {t("desktop.menu.copy_visible")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!all.length}
+                  onSelect={() => onCopy(recordsText(all))}
+                >
+                  <Icon name="copyAll" />
+                  {t("desktop.logs.copy_all")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+        <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
+        <div data-log-group="files" className="flex items-center gap-1">
+          {onExport && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <IconButton
+                  label={t("desktop.logs.export")}
+                  disabled={!all.length}
+                >
+                  <Icon name="download" />
+                </IconButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={!visible.length}
+                  onSelect={() => onExport(recordsText(visible))}
+                >
+                  <Icon name="download" />
+                  {t("desktop.logs.export_visible")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!all.length}
+                  onSelect={() => onExport(recordsText(all))}
+                >
+                  <Icon name="downloadAll" />
+                  {t("desktop.logs.export_all")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <IconButton
+            label={t("desktop.logs.reveal")}
+            disabled={!onReveal}
+            onClick={onReveal}
+          >
+            <Icon name="folder" />
+          </IconButton>
+        </div>
+        <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
+        <div data-log-group="follow" className="flex items-center">
+          <IconButton
+            label={t("desktop.logs.follow")}
+            data-follow=""
+            accessibleName={t("desktop.logs.follow")}
+            hint={t("desktop.logs.follow_hint")}
+            aria-pressed={follow}
+            onClick={onFollow}
+          >
+            <Icon name={follow ? "pause" : "play"} />
+          </IconButton>
+        </div>
       </div>
     </div>
   );
