@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#startup-service-repair'
 date: '2026-10-14'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:830b126ddf8e803fa8afc4ac0e64a53abe0eb399880073d505a97dccd1709d4b'
+body_hash: 'sha256:ab5c57e9f40d8ef8128f5dd1647aea2ef8586b98739c192ae3c9863c5f5d4744'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -80,7 +80,23 @@ Direct inspection found `AgentService.admin("start")` returns `kind=starting` wh
 
 Two user-requested Luna max investigations traced the service and agent separately. A packaged-interpreter composer probe confirms custom `CODEX_HOME` and `CADRUMO_AGENT_CODEX_HOME` are absent, while OS home variables remain. The agent seats hosted Codex at `providers/codex`, then creates a fresh per-turn home and copies only that provider home's `auth.json`; a synthetic production-helper probe confirmed present/absent source behavior. Hosted Claude uses a persistent per-provider `CLAUDE_CONFIG_DIR`, with no automatic import from the user's home. The real Codex CLI reports login status exit 0 in the selected account, but exit 1 with no auth file in the manual hosted provider home. Provider settings' sign-in mode is not credential provisioning. No credentials were imported as a workaround. Hosted authentication provisioning and recorded hosted-package proof remain separate requirements; no working hosted conversation is claimed.
 
+### external-cli-resolution | medium | Native gateway and worker discarded the runner's CLI search directories
+
+The real one-time package proof reached a gateway but failed before a turn: `build/acceptance/agent-live-jsygxbgn/exchange/runner-console.log` records `binary_version_unavailable` and no selectable provider. The runner resolved Codex on the operator PATH, but the native host recomposed PATH and neither agent profile admitted the already-declared external-directory variable. The service composer also dropped that setting despite its own native profile admitting it. S05 forwards only that public package setting, admits it to both gateway and worker, and recognizes declared pass-through names in conformance. No credential/home forwarding or PATH-policy bypass is added. Native `platform.resolver` passes the new two-stage regression; environment/composer conformance checks pass. Refreshed packaged live proof remains pending.
+
+### repository-gates-2026-10-15 | low | Shared gates fail outside the changed service paths
+
+`just check-registry-gate` passes. The change-scoped `just test-gate .tmp/agent-service-changed-paths.txt` uses the fixed contract set because the service composition files have no enclosing root tests directory; that population passed before CI-contract verification failed with six failures and 1131 passing tests. Five overview cases report runtime unavailable and a fixture-root coverage case retains a temporary directory outside its isolated root. `just check-code` fails project-wide checks, including unconsumed exports and an operation-contract manifest drift; style, format, types, dependency declarations, secure-store and persistence write paths, and docstring references pass. Changed-file Ruff, Rust formatting, focused ty and all 24 Import Linter contracts pass. These aggregate failures are not attributed to the agent repair and are not passing completion evidence.
+
+### luna-max-integrated-review | low | Repairs pass code review while package proof remains pending
+
+Independent Luna max review found no high or medium code defects in S01, S02, S03 or S05. Refusal diagnostics remain bounded, the CLI holder preserves person-session authority, and the public external-directory value is validated by each native launch. Manual retry can retain the old visible refusal until the next ready/refused event. Publishing Starting after its asynchronous acknowledgement could overwrite a result that arrived first; this minor progress limitation is retained without adding a new lifecycle protocol. Review verdict PENDING until refreshed packaged live-provider/tool-access evidence and the unresolved shared checks are accounted for. The user subsequently confirmed separate sign-in in each profile-owned provider CLI home, rather than importing an external account.
+
 ## Recommendations
+
+The owner confirmed on 2026-10-15 that provider CLI authentication must be performed separately in each profile-owned CLI home. Preserve provider-owned credentials there; do not import the ordinary user's account. The declared agent catalog currently supplies authentication kind and CLI program metadata, but no host-callable login operation or login/probe command descriptors. A saved `provider_sign_in` choice therefore cannot establish authentication. Complete the agent-owned authentication contract and its authenticated service integration before presenting provider sign-in as functional. Keep provider-specific login commands out of a Cadrumo-maintained provider list.
+
+The refreshed Release payload built successfully and its direct environment launch probe passes stores setup, standalone worker launch and sanitation. Its hosted gateway still explicitly refuses `hosted_lane_unproven`. The subsequent live proof at `build/acceptance/agent-live-5hu58oe3` stopped before agent launch because runtime readiness was not received within the existing deadline; it is failed evidence, not a model turn. Installed service source text matches the repair (wheel newline normalization explains differing byte hashes).
 
 <!-- Actionable recommendations, each tied to a finding above. An
      architecturally significant recommendation names the decision a

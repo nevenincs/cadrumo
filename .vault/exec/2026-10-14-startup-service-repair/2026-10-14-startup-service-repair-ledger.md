@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e991186eb7c4b723de0823e1160616f72caf1f25d88e5720904d4130cc2a321'
+body_hash: 'sha256:5b62e4080b9f4c494e0e837d33ff48c509c88112f4ce260e52dbe4b65008cc35'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -81,6 +81,28 @@ related:
 - `S03` `M` `dev/runtime_lifecycle/agent_live.py`
 - `S03` `verify:` `live person driver and holder 20 unit tests` -> `pass`
 - `S03` `verify:` `just check-registry-gate` -> `pass`
+- `S05` `M` `native/application-environment.toml`
+- `S05` `M` `native/platform/src/launch.rs`
+- `S05` `M` `src/cadrumo_agent_service/host/launch_environment.py`
+- `S05` `M` `src/cadrumo_agent_service/host/tests/test_launch_environment.py`
+- `S05` `M` `dev/packaging/native/environment_conformance.py`
+- `S05` `M` `dev/packaging/native/tests/test_environment_conformance.py`
+- `S05` `verify:` `ctest platform.resolver including external directory gateway and worker regression` -> `pass`
+- `S05` `verify:` `environment conformance and composer focused tests` -> `pass`
+- `S05` `verify:` `focused Ruff rustfmt and ty` -> `pass`
+- `S03` `verify:` `selected Codex user home login status exit0 and hosted profile home exit1` -> `pass`
+- `S05` `M` `native/CONTRACT.md`
+- `S05` `verify:` `native contract search-path paragraph reconciled with declared gateway and worker pass-through` -> `pass`
+- `S05` `verify:` `final service unit and Windows integration suite 268 tests` -> `pass`
+- `S05` `verify:` `environment conformance 59 tests` -> `pass`
+- `S05` `verify:` `current Import Linter 24 contracts` -> `pass`
+- `S03` `verify:` `cmake --build build/windows-x64 --config Release --target app-payload` -> `pass`
+- `S03` `verify:` `staged python native/tests/environment_launch_probe.py after external-directory repair` -> `pass`
+- `S03` `verify:` `temporary live package proof agent-live-5hu58oe3` -> `fail`
+- `S03` `verify:` `fresh manual packaged service admin agent-manual-ob5uo5er` -> `pass`
+- `S03` `verify:` `fresh manual packaged runtime shutdown agent-manual-ob5uo5er` -> `fail`
+- `S03` `verify:` `pytest agent_live and session_holder unit tests (24)` -> `pass`
+- `S03` `verify:` `live package proof agent-live-l2a5ehrv` -> `fail`
 
 ## Notes
 
@@ -90,3 +112,8 @@ related:
 - `S03` Original uppercase agent loglevel corrected: packaged stores-state/setup/current pass. Gateway/worker blocked by missing `lane_effort_control` import in bundled agent; GUI session owns incremental artifact investigation via build/message.txt. No dependency changes. User requires affected-artifact incremental builds only.
 - `S03` Resolved stale mixed staged agent selection/effort import using existing app-agent target. Full real GUI sign-in verification handed to coordinating session through build/message.txt; historical KDF cleanup and worker stall remain evidence questions.
 - `S01` Hosted gateway still refuses `hosted_lane_unproven;` provider CLI auth is absent from its hosted provider home.
+- `S05` Refreshed package and live model turn pending. No hosted CLI credential provisioning was added.
+- `S03` User 2026-10-15 explicitly requires separate provider sign-in in each Cadrumo profile CLI home; do not import external account credentials. Current `provider_sign_in` setting records a mode but performs no login.
+- `S03` Fresh Release payload completed. Installed service.py and `launch_environment.py` text match source; byte hashes differ only due to newline normalization. Launch probe passes stores, standalone worker and environment sanitation while hosted gateway still truthfully refuses `hosted_lane_unproven.` Live proof retry ended before agent launch: runtime did not emit readiness within the existing deadline. No model turn or hosted authentication claimed.
+- `S03` Real runtime, password-held CLI person, service admission, twelve-provider catalog/status, protected synthetic credential CAS set/remove/reset and asynchronous start acknowledgement completed. Both starts log `hosted_lane_unproven.` Despite temporary coordinator exit0, runtime stderr records ProfileWorkerRetireRequest timeout10s and native containment guard deadline; shutdown is failed evidence and is under investigation.
+- `S03` External search-directory repair is now observed in the unmodified staged gateway: codex/cli selectable, gpt-6.1-sol admitted, packaged worker receives dispatch. Turn fails before a model response because the manual driver seats the isolated Codex runtime beneath the Git repository; provider refuses it. Tool relay also exceeds its30s start/list deadline. Driver now uses system temp outside repositories, preserving the guard; retry underway.

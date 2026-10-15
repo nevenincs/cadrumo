@@ -1,4 +1,19 @@
 cli:
+  censo_auth:
+    field_failed: No s’ha pogut desar {field}. Revisa el format i reintenta; es conserven els camps desats
+      abans.
+    configure_help: Configura o edita l’autenticació AEAT desada abans de consultar el cens (terminal interactiu).
+    offer: Vols configurar l’autenticació AEAT abans de sincronitzar?
+    method: Mètode d’autenticació
+    route: Via de Cl@ve Móvil
+    certificate: Ruta del certificat (en blanc conserva el valor desat)
+    field: '{field} (en blanc conserva el valor desat)'
+    still_missing: Encara falta {field}.
+    password: Contrasenya (en blanc conserva el valor desat)
+    saved: Autenticació desada.
+    required: 'La sincronització AEAT requereix: {requirements}. Configura o edita l’autenticació aquí:
+      {command}.'
+    console_required: 'Per editar l’autenticació cal un terminal interactiu: {command}. Requisits: {requirements}.'
   app:
     ledger:
       account:

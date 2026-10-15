@@ -301,6 +301,7 @@
         "dev.docs._locale_chrome",
         "dev.docs.apidocs",
         "dev.docs.apidocs.manager",
+        "dev.docs.apidocs.rendering",
         "dev.docs.build",
         "dev.docs.build_paths",
         "dev.docs.casilla_card_rendering",

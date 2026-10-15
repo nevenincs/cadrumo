@@ -1,4 +1,21 @@
 cli:
+  censo_auth:
+    field_failed: No se pudo guardar {field}. Revisa su formato y reintenta; los campos guardados antes se
+      conservan.
+    configure_help: Configura o edita la autenticación AEAT guardada antes de consultar el censo (terminal
+      interactivo).
+    offer: ¿Configurar la autenticación AEAT antes de sincronizar?
+    method: Método de autenticación
+    route: Vía de Cl@ve Móvil
+    certificate: Ruta del certificado (en blanco conserva el valor guardado)
+    field: '{field} (en blanco conserva el valor guardado)'
+    still_missing: Sigue faltando {field}.
+    password: Contraseña (en blanco conserva el valor guardado)
+    saved: Autenticación guardada.
+    required: 'La sincronización AEAT requiere: {requirements}. Configura o edita la autenticación aquí:
+      {command}.'
+    console_required: 'Para editar la autenticación necesitas un terminal interactivo: {command}. Requisitos:
+      {requirements}.'
   app:
     ledger:
       account:

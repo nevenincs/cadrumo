@@ -1,5 +1,9 @@
 application:
   auth:
+    sync:
+      errors:
+        requirements_missing: 'La sincronización AEAT requiere: {required_fields}. Abre los ajustes de autenticación
+          junto a la sincronización para completar o editar estos datos. {reasons}'
     acquisition_lock:
       errors:
         acquire_failed: No se pudo adquirir el bloqueo de autenticación AEAT tras

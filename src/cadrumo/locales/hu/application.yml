@@ -1,5 +1,9 @@
 application:
   auth:
+    sync:
+      errors:
+        requirements_missing: 'Az AEAT-szinkronizálás feltételei: {required_fields}. Nyissa meg a hitelesítési
+          beállításokat a szinkronizálás mellett az adatok kitöltéséhez vagy szerkesztéséhez. {reasons}'
     acquisition_lock:
       errors:
         acquire_failed: Az AEAT hitelesítési zárat nem sikerült beszerezni az elavult

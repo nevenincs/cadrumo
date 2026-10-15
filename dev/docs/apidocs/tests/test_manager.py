@@ -68,6 +68,14 @@ def _bound_names(tree: ast.Module) -> set[str]:
     return names
 
 
+def _defines_class_or_function(tree: ast.Module, name: str) -> bool:
+    """Return whether a module binds *name* to a class or function definition."""
+    return any(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name
+        for node in tree.body
+    )
+
+
 def test_every_generic_exclusion_names_a_symbol_its_module_does_not_own() -> None:
     """Each ``_NON_OWNER_GENERIC_IMPORTS`` entry re-derives its own condition.
 
@@ -122,11 +130,72 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
 
     assert targets, "the canonical source roots contain no public PEP 695 aliases"
     assert ("cadrumo_client.transport.automation_decision", "AutomationDecision") in targets
-    cli_program = (tmp_path / "api" / "cadrumo_agent_service.providers.domain.catalog.rst").read_text(
-        encoding="utf-8"
-    )
+    cli_program = (tmp_path / "api" / "cadrumo_agent_service.providers.domain.catalog.rst").read_text(encoding="utf-8")
     assert ".. py:type:: CliProgram\n   :module: cadrumo_agent_service.providers.domain.catalog" in cli_program
     assert "CliProgram = Annotated[str, StringConstraints" in cli_program
+    binding_selector = (tmp_path / "api" / "cadrumo.domain.calculations.registry.binding_selector_utils.rst").read_text(
+        encoding="utf-8"
+    )
+    calc_sheet_records = (tmp_path / "api" / "cadrumo.application.storage.calc_sheets.records.rst").read_text(
+        encoding="utf-8"
+    )
+    m145_records = (tmp_path / "api" / "cadrumo.application.modelo.m145_communication_records.rst").read_text(
+        encoding="utf-8"
+    )
+    filing_schema = (tmp_path / "api" / "cadrumo.domain.filing.schema.rst").read_text(encoding="utf-8")
+    secure_object_records = (
+        tmp_path / "api" / "cadrumo.adapters.persistence.storage.sql.secure_object_records.rst"
+    ).read_text(encoding="utf-8")
+    iva_components = (tmp_path / "api" / "cadrumo.domain.iva.components.rst").read_text(encoding="utf-8")
+    binding_alias = (
+        ".. py:type:: BindingExportDataType\n   :module: cadrumo.domain.calculations.registry.binding_selector_utils"
+    )
+    decimal_alias = ".. py:type:: DecimalValue\n   :module: cadrumo.application.storage.calc_sheets.records"
+    assert binding_alias in binding_selector
+    assert decimal_alias in calc_sheet_records
+    assert ".. py:type:: M145CommunicationRecordId" in m145_records
+    assert ".. py:type:: ModeloDraftContentAddress" in filing_schema
+    assert ".. py:type:: SecureObjectListItem" in secure_object_records
+    assert ".. py:type:: ComponentCatalogue" in iva_components
+
+
+def test_alias_targets_require_type_syntax_not_a_suffix_match(tmp_path: Path) -> None:
+    """Source-derived targets exclude same-suffix ordinary value aliases."""
+    source_root = tmp_path / "src" / "fixture_api"
+    (source_root / "__init__.py").parent.mkdir(parents=True)
+    (source_root / "__init__.py").write_text(
+        '"""Fixture API."""\nfrom .values import CanonicalPolicy\nPublishedPolicy = CanonicalPolicy\n',
+        encoding="utf-8",
+    )
+    (source_root / "values.py").write_text(
+        'class CanonicalPolicy:\n    """Type fixture."""\n\n\nDEFAULT_POLICY = "encrypted"\n',
+        encoding="utf-8",
+    )
+    (source_root / "contracts.py").write_text(
+        "from collections.abc import Mapping\n"
+        "from typing import Annotated, Literal\n"
+        "from .values import CanonicalPolicy, DEFAULT_POLICY\n\n"
+        "type DeclaredMode = Literal['read', 'write']\n"
+        "Lookup = Mapping[str, str]\n"
+        "BoundedText = Annotated[str, 'bounded']\n"
+        "ExportedPolicy = CanonicalPolicy\n"
+        "PublicPolicy = DEFAULT_POLICY\n",
+        encoding="utf-8",
+    )
+    api_root = tmp_path / "api"
+    manager = ApiStubManager(source_root, api_root)
+
+    manager.scaffold()
+
+    stub = (api_root / "fixture_api.contracts.rst").read_text(encoding="utf-8")
+    package_stub = (api_root / "fixture_api.rst").read_text(encoding="utf-8")
+    assert ".. py:type:: DeclaredMode\n   :module: fixture_api.contracts" in stub
+    assert "type DeclaredMode = Literal['read', 'write']" in stub
+    assert ".. py:type:: Lookup\n   :module: fixture_api.contracts" in stub
+    assert ".. py:type:: BoundedText\n   :module: fixture_api.contracts" in stub
+    assert ".. py:type:: ExportedPolicy\n   :module: fixture_api.contracts" in stub
+    assert ".. py:type:: PublicPolicy" not in stub
+    assert ".. py:type:: PublishedPolicy\n   :module: fixture_api" in package_stub
 
 
 def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) -> None:

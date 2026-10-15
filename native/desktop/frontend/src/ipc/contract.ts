@@ -722,7 +722,17 @@ export type ProfileList = {
 export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
+export type StartupPhase = "environment" | "runtime" | "workspace";
+export type StartupProgress = {
+  phase: StartupPhase;
+  locale: string | null;
+  failure: HostFailure | null;
+};
+
 export interface HostCommands {
+  startup_begin: { args: Authorized; result: void };
+  startup_status: { args: Authorized; result: StartupProgress };
+
   runtime_attendance_inventory: {
     args: Authorized;
     result: {

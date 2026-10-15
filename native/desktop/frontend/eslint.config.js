@@ -57,6 +57,7 @@ const primitives = ["src/components/ui/**"];
 // The Tauri adapter, the entry that selects it and the contract's types.
 const adapter = [
   "src/shell/tauriHost.ts",
+  "src/shell/tauriStartup.ts",
   "src/shell/tauriTerminal.ts",
   "src/shell/hostCall.ts",
   "src/main.tsx",

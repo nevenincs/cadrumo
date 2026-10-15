@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import BaseModel, SecretStr, model_validator
+from pydantic import BaseModel, model_validator
 
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.config import Settings, load_settings
@@ -92,18 +92,15 @@ def project_auth_sync_readiness(
         credentials = snapshot.certificate_credentials
         path = credentials.certificate_path if credentials is not None else None
         require("certificate.file", path is not None and path.is_file(), "certificate_file_required")
-        probe_credentials = (
-            credentials.model_copy(update={"password": SecretStr("")})
-            if credentials is not None and credentials.password is None
-            else credentials
-        )
         probe = probe_certificate_bundle(
-            "", settings=resolved, certificate_credentials=probe_credentials, operator_probe_ports=operator_probe_ports
+            "", settings=resolved, certificate_credentials=credentials, operator_probe_ports=operator_probe_ports
         )
         healthy = probe.result in {ProviderProbeResult.OK, ProviderProbeResult.EXPIRING}
         require(
             "certificate.passphrase",
-            healthy or (credentials is not None and credentials.password is not None),
+            credentials is not None
+            and credentials.password is not None
+            and bool(credentials.password.get_secret_value()),
             "certificate_passphrase_required",
             secret=True,
         )
@@ -112,7 +109,7 @@ def project_auth_sync_readiness(
             healthy,
             probe.result.value,
         )
-    elif kind in {AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE}:
+    elif kind is AuthProviderKind.CLAVE_MOVIL or kind is AuthProviderKind.CLAVE_PERMANENTE:
         credentials = resolve_clave_credentials(kind, settings=resolved, facts=facts)
         if credentials is None:
             raise ValueError("Cl@ve credential resolver returned no credentials")

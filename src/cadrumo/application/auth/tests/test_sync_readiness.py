@@ -112,7 +112,7 @@ def test_real_certificate_health_controls_readiness(tmp_path: Path, expired: boo
     result = _read(
         AuthProviderKind.CERTIFICATE,
         {"identity.tax_id": "12345678Z"},
-        certificate=ActiveCertificateCredentials(certificate_path=path, password=SecretStr("")),
+        certificate=ActiveCertificateCredentials(certificate_path=path, password=SecretStr("certificate-password")),
         expired=expired,
     )
     assert result.ready is not expired
@@ -121,3 +121,16 @@ def test_real_certificate_health_controls_readiness(tmp_path: Path, expired: boo
 def test_readiness_cannot_claim_success_with_missing_fields() -> None:
     with pytest.raises(ValidationError):
         AuthSyncReadiness(ready=True)
+
+
+@pytest.mark.parametrize("password", [None, SecretStr("")])
+def test_certificate_requires_a_supported_nonempty_passphrase(tmp_path: Path, password: SecretStr | None) -> None:
+    path = tmp_path / "test.p12"
+    path.write_bytes(b"bundle supplied to health boundary")
+    result = _read(
+        AuthProviderKind.CERTIFICATE,
+        {"identity.tax_id": "12345678Z"},
+        certificate=ActiveCertificateCredentials(certificate_path=path, password=password),
+    )
+    assert not result.ready
+    assert any(item.field == "certificate.passphrase" and not item.satisfied for item in result.requirements)

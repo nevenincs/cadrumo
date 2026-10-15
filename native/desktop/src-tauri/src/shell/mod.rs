@@ -180,13 +180,22 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             single_instance::attach(&window, activation.clone());
             window_controls::attach(&window);
         })
-        .on_event(move |_, event| match event {
+        .on_event(move |app, event| match event {
             RunEvent::MenuEvent(event) => recorder.record(&event.id().0),
             RunEvent::WindowEvent {
+                label,
                 event: WindowEvent::Destroyed,
                 ..
+            } if app
+                .config()
+                .app
+                .windows
+                .first()
+                .is_some_and(|config| config.label == *label) =>
+            {
+                single_instance::close()
             }
-            | RunEvent::Exit => single_instance::close(),
+            RunEvent::Exit => single_instance::close(),
             _ => {}
         });
     #[cfg(windows)]

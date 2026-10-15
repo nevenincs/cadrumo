@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <main aria-busy="true">
+      <h1>Cadrumo</h1>
+      <div class="activity" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p id="status">Starting Cadrumo…</p>
+      </div>
+      <ol aria-label="Startup progress">
+        <li data-phase="environment">Prepare application</li>
+        <li data-phase="runtime">Start local runtime</li>
+        <li data-phase="workspace">Open workspace</li>
+      </ol>
+      <p id="failure" role="alert" hidden></p>
+    </main>
+    <script type="module" src="/src/startup.ts"></script>
+  </body>
+</html>

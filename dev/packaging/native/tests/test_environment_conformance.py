@@ -14,6 +14,7 @@ from typing import Any
 
 import pytest
 
+from cadrumo_agent_service.host.launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE
 from dev._paths import REPO_ROOT
 
 from .. import environment_facts
@@ -110,6 +111,10 @@ def test_composer_may_forward_the_declared_external_binary_directories(
     copied["runtime"]["composed"].append(reference.declaration.path_external)
     findings = conformance_findings(reference, copied, request_["received"], require_agent=False)
     assert findings == [], _rendered(findings)
+
+
+def test_service_external_binary_directory_name_matches_the_native_declaration(reference: Reference) -> None:
+    assert reference.declaration.path_external == EXTERNAL_BIN_DIRECTORIES_VARIABLE
 
 
 def test_an_agent_that_agrees_with_the_declaration_adds_no_finding(

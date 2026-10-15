@@ -5,10 +5,12 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import TYPE_CHECKING, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, SecretStr
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import load_settings
 from ...core.hashing import reject_duplicate_json_members, reject_json_constant
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
     from .operation_definitions import AuthOperationPorts
 
 AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID = "auth.credential.save"
-AUTH_CREDENTIAL_PASSWORD_SECRET_KIND = "auth.credential.password"  # noqa: S105 - protocol discriminator
+AUTH_CREDENTIAL_INPUT_KIND = "auth.credential.password"
 
 
 class AuthCredentialSaveRequest(BaseModel):
@@ -84,11 +86,15 @@ class AuthCredentialSaveExecutor:
         self, request: OperationRequest[AuthCredentialSaveRequest], context: OperationExecutorContext
     ) -> str:
         """Consume the protected frame and publish the profile-scoped secret."""
-        from .operation_definitions import _require_active_profile_subject
-
-        profile_id = _require_active_profile_subject(request)
+        try:
+            profile_id = str(UUID(request.subject_ref.removeprefix("profile:")))
+        except ValueError:
+            raise ValueError("Authentication credential subject must name a profile") from None
+        if request.subject_ref != profile_operation_subject(profile_id) or require_active_bucket_id() != profile_id:
+            raise ValueError("Authentication credential requires its exact active profile")
+        secret_access = context.ephemeral_secret
         await context.events.phase("auth.credential.secret-consume")
-        async with context.ephemeral_secret.consume() as secret:
+        async with secret_access.consume() as secret:
             password = _parse_password(secret)
 
             async def publish() -> str:
@@ -103,7 +109,7 @@ class AuthCredentialSaveExecutor:
                         with active_profile_storage_span(
                             settings, operator_scope_ports=self._ports.operator_scope_ports
                         ) as bucket_id:
-                            if bucket_id != profile_id:
+                            if bucket_id is None or bucket_id != profile_id:
                                 raise ValueError("Authentication credential profile changed")
                             with auth_mutation_span(
                                 settings=settings,

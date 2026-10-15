@@ -910,7 +910,10 @@ mod tests {
                 &fixed_root(scratch.0.clone()),
             )
             .unwrap();
-            assert_eq!(get(&defined.environment, name).unwrap(), external.as_os_str());
+            assert_eq!(
+                get(&defined.environment, name).unwrap(),
+                external.as_os_str()
+            );
             let path: Vec<PathBuf> =
                 env::split_paths(get(&defined.environment, "PATH").unwrap()).collect();
             assert!(path.contains(&external), "{}", profile.name);

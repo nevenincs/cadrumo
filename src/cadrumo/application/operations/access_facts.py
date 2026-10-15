@@ -154,6 +154,7 @@ _LOCAL_WRITES: Final = (
     "auth.apoderado.configure",
     "auth.certificate.secret.remove",
     "auth.certificate.secret.set",
+    "auth.credential.save",
     "auth.certificate.source.register",
     "auth.certificate.source.remove",
     "auth.certificate.source.select",

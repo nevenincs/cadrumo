@@ -1,4 +1,17 @@
 cli:
+  censo_auth:
+    field_failed: Could not save {field}. Check its format and try again; fields saved earlier are retained.
+    configure_help: Set up or edit saved AEAT authentication before pulling the census (interactive terminal).
+    offer: Set up AEAT authentication before synchronizing?
+    method: Authentication method
+    route: Cl@ve Móvil route
+    certificate: Certificate file path (blank keeps saved value)
+    field: '{field} (blank keeps saved value)'
+    still_missing: '{field} is still missing.'
+    password: Password (blank keeps saved value)
+    saved: Authentication settings saved.
+    required: 'AEAT synchronization requires: {requirements}. Set or edit authentication here: {command}.'
+    console_required: 'Authentication editing needs an interactive terminal: {command}. Required: {requirements}.'
   app:
     ledger:
       account:

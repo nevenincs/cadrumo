@@ -1,5 +1,9 @@
 application:
   auth:
+    sync:
+      errors:
+        requirements_missing: 'AEAT synchronization requires: {required_fields}. Open authentication settings
+          beside synchronization to complete or edit them. {reasons}'
     acquisition_lock:
       errors:
         acquire_failed: AEAT auth lock could not be acquired after stale-lock recovery.

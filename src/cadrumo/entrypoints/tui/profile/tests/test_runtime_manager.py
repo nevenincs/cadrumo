@@ -20,6 +20,7 @@ from cadrumo_client.transport.profile_mutations import (
     ProfileMutationRunError,
 )
 
+from .....application.auth.sync_readiness import AuthSyncReadiness, AuthSyncRequirement
 from .....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from .....application.user_profile.overview import ProfileOverview, ProfileSectionView
 from .....application.user_profile.profile_operation_contracts import (
@@ -49,7 +50,7 @@ from ...aeat_sync.models import AeatSyncOperationHandoffV1, AeatSyncOperationReq
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...operations.controller_port import OperationControllerPort
-from .. import runtime_manager
+from .. import runtime_aeat_auth, runtime_manager
 from ..runtime_errors import ProfileManagerCompletedViewUnavailableError
 from ..runtime_manager import (
     RuntimeProfileManagerComposition,
@@ -178,6 +179,16 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
         raise AssertionError("acquisition must use its own registered operation")
 
     monkeypatch.setattr(runtime_manager, "compose_runtime_aeat_sync_handoff", compose)
+
+    async def readiness(_client: FrontendClient) -> AuthSyncReadiness:
+        return AuthSyncReadiness(
+            provider="clave_movil",
+            ready=True,
+            route="qr",
+            requirements=(AuthSyncRequirement(field="auth.provider", satisfied=True, reason="auth_method_required"),),
+        )
+
+    monkeypatch.setattr(runtime_aeat_auth, "read_runtime_sync_readiness", readiness)
     composition = _composition(
         client, runner=refuse_mutation, reader=lambda _client, _label, _language: _overview(client.profile_id, 1)
     )

@@ -33,6 +33,7 @@ OutputLanguage = import_module("cadrumo.core.external_constants").OutputLanguage
 PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY
 API_SOURCE_ROOTS = import_module("dev.docs.apidocs.manager").API_SOURCE_ROOTS
 typehints_formatter = import_module("dev.docs.apidocs.rendering").format_type_hint
+external_type_url = import_module("dev.docs.apidocs.rendering").external_type_url
 
 # Site chrome (header, broadcast strip, footer, accessible names, and the
 # strings the interaction layer writes into the DOM) is not page content, so
@@ -1328,6 +1329,7 @@ def _should_resolve_deferred_models() -> bool:
 
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
 
+
 def _declared_type_hint_names() -> frozenset[str]:
     """Return PEP 695 and typing.TypeVar parameters rendered inline by typehints."""
     names: set[str] = set()
@@ -1413,6 +1415,9 @@ def _resolve_short_reference(app, env, node, contnode):
     if node.get("refdomain") not in ("py", ""):
         return None
     target = node.get("reftarget", "")
+    external_url = external_type_url(target)
+    if external_url is not None:
+        return nodes.reference("", "", contnode, refuri=external_url)
     parts = target.split(".") if target else []
     short = parts[-1] if parts else ""
     if not short or not short.isidentifier():

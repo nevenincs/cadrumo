@@ -742,6 +742,7 @@ def build_censal_operation_definition(
 
     return OperationDefinition(
         definition_id=CENSAL_OPERATION_DEFINITION_ID,
+        public_error_detail=True,
         request_type=CensalOperationRequest,
         subject_reference=OperationSubjectReferenceV1.payload_field("baseline", "profile_id"),
         result_type=CensalOperationResult,

@@ -29,7 +29,8 @@ from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.auth.sync_requirement_text import sync_requirement_reason
 from ....application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
-from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from ....core.auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE, AuthProviderKind, ClaveMovilRoute
+from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.output_rendering import OutputFormat
@@ -65,6 +66,10 @@ def require_censo_auth(ctx: typer.Context, *, configure: bool = False) -> None:
     client = bound_profile_client(ctx)
     readiness = read_censo_auth(client)
     interactive = format_of(ctx) is not OutputFormat.JSON and terminal_can_prompt_for_secrets()
+    if not readiness.ready and interactive:
+        for item in readiness.requirements:
+            if not item.satisfied:
+                typer.echo(f"{item.field}: {sync_requirement_reason(item.reason)}", err=True)
     if configure and not interactive:
         raise _readiness_error(readiness, console_required=True)
     if configure or (not readiness.ready and interactive and typer.confirm(tr("cli.censo_auth.offer"), default=True)):
@@ -113,7 +118,12 @@ def _prompt_field(client: FrontendClient, path: str) -> None:
     # Credential inputs never become prompt defaults or get echoed to stdout.
     value = prompt_secret_no_echo(tr("cli.censo_auth.field", field=path))
     if value:
-        _save_field(client, path, value.strip())
+        try:
+            _save_field(client, path, value.strip())
+        except CadrumoError as error:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.censo_auth.field_failed", context={"field": path}
+            ) from error
     elif not current:
         typer.echo(tr("cli.censo_auth.still_missing", field=path), err=True)
 
@@ -133,7 +143,7 @@ def _configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
             typer.prompt(
                 tr("cli.censo_auth.route"),
                 type=click.Choice(tuple(item.value for item in ClaveMovilRoute)),
-                default=readiness.route or "qr",
+                default=readiness.route or DEFAULT_CLAVE_MOVIL_ROUTE.value,
             )
         )
     if kind is AuthProviderKind.CERTIFICATE:
@@ -173,6 +183,9 @@ def _save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
         AuthCredentialSaveResult,
     )
 
+    if provider not in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}:
+        raise ValueError("This authentication method does not store a password")
+    credential_provider = "certificate" if provider is AuthProviderKind.CERTIFICATE else "clave_permanente"
     password = prompt_secret_no_echo(tr("cli.censo_auth.password"))
     if not password:
         return
@@ -181,7 +194,7 @@ def _save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
     try:
         completed = run_registered_operation(
             client,
-            AuthCredentialSaveRequest(provider=provider.value),
+            AuthCredentialSaveRequest(provider=credential_provider),
             definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(client.profile_id)),
             result_type=AuthCredentialSaveResult,

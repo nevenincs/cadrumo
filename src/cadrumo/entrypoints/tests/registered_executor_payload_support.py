@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -214,6 +215,10 @@ def _payload(
                 + _ROTATED_CREDENTIAL_INPUT
                 + '"}'
             ).encode()
+        case "auth.credential.save":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {"provider": "clave_permanente"}
+            secret = json.dumps({"password": _CREDENTIAL_INPUT}).encode()
         case "auth.provider.configure":
             values = {"provider": AuthProviderKind.CERTIFICATE}
         case "auth.session.acquire":

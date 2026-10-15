@@ -1,4 +1,21 @@
 cli:
+  censo_auth:
+    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra; a korábban mentett mezők
+      megmaradnak.'
+    configure_help: Állítsa be vagy szerkessze a mentett AEAT-hitelesítést a népszámlálási adatok lekérése
+      előtt (interaktív terminál).
+    offer: Beállítja az AEAT-hitelesítést a szinkronizálás előtt?
+    method: Hitelesítési mód
+    route: Cl@ve Móvil útvonal
+    certificate: Tanúsítványfájl útvonala (üresen a mentett érték marad)
+    field: '{field} (üresen a mentett érték marad)'
+    still_missing: '{field} még hiányzik.'
+    password: Jelszó (üresen a mentett érték marad)
+    saved: Hitelesítési beállítások mentve.
+    required: 'Az AEAT-szinkronizálás feltételei: {requirements}. A hitelesítés itt állítható be vagy szerkeszthető:
+      {command}.'
+    console_required: 'A hitelesítés szerkesztéséhez interaktív terminál szükséges: {command}. Feltételek:
+      {requirements}.'
   app:
     ledger:
       account:

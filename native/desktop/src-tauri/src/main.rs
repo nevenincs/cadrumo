@@ -8,6 +8,7 @@ mod launch;
 mod logs;
 mod manager;
 mod shell;
+mod startup;
 mod startup_logging;
 mod terminal;
 
@@ -56,6 +57,9 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     };
     let parent = environment::Parent::current()?;
     startup_logging::configure(&parent, &diagnostics);
+    if matches!(mode, Ok(launch::Mode::Gui)) {
+        return app::run(root, parent, diagnostics);
+    }
     diagnostics.host_event(EventKind::StageStarted, HostStage::Environment);
     let launch =
         tauri::async_runtime::block_on(environment::resolve(root, &parent, diagnostics.clone()))
@@ -70,7 +74,7 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
         std::mem::forget(lease.clone());
     }
     match mode? {
-        launch::Mode::Gui => app::run(launch),
+        launch::Mode::Gui => unreachable!("GUI starts before environment preparation"),
         launch::Mode::Health { hold_seconds } => {
             tauri::async_runtime::block_on(check_health(&launch, hold_seconds))
         }

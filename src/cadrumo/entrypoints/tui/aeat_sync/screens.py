@@ -31,6 +31,7 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceZone,
 )
 from ....application.live.notifications_read_operation import NotificationsListPublicResultV1
+from ....application.operations.access_facts import operation_access_facts
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
@@ -375,6 +376,8 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         self._render_operation_refusal()
         self._render_zone_status(rows)
         self._restore_focus(navigation, rows)
+        if self.controller.aeat_auth_setup is not None:
+            self.run_worker(self._refresh_auth(), group="aeat-sync-auth-readiness", exclusive=True)
 
     def populate_rows(self, table: DataTable[str]) -> None:
         """Populate one safe public zone body in subclasses."""
@@ -411,10 +414,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
                 tr(label_key),
                 id=button_id,
                 classes="aeat-sync-operation",
-                disabled=(
-                    self.controller.aeat_auth_setup is not None
-                    and (self.controller.auth_readiness is None or not self.controller.auth_readiness.ready)
-                ),
+                disabled=self._authentication_blocks(request),
             )
         )
 
@@ -442,7 +442,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         if self._in_flight_id is not None:
             status.update(tr("tui.aeat_sync.operation.in_flight"))
             return
-        if not await self._refresh_auth():
+        if operation_access_facts(str(request.operation)).reaches_network and not await self._refresh_auth():
             status.update(readiness_text(self.controller.auth_readiness))
             return
         self._consumed_request_ids.add(request_id)
@@ -547,11 +547,17 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             button.disabled = (
                 disabled
                 or (button.id in self._consumed_request_ids)
-                or (
-                    self.controller.aeat_auth_setup is not None
-                    and (self.controller.auth_readiness is None or not self.controller.auth_readiness.ready)
-                )
+                or self._authentication_blocks(self._requests.get(button.id or ""))
             )
+
+    def _authentication_blocks(self, request: AeatSyncOperationRequestV1 | None) -> bool:
+        """Require AEAT credentials only for operations that reach the network."""
+        return (
+            request is not None
+            and operation_access_facts(str(request.operation)).reaches_network
+            and self.controller.aeat_auth_setup is not None
+            and (self.controller.auth_readiness is None or not self.controller.auth_readiness.ready)
+        )
 
     async def _select_notification(self, row_key: str) -> None:
         """Open only a row AEAT has explicitly marked read."""

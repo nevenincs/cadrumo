@@ -157,7 +157,7 @@ def agent_launch_environment(
         ),
         None,
     )
-    if external:
+    if external is not None and external != "":
         environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
     environment[HOSTED_ROOT_VARIABLE] = str(agent_root)
     # The agent binds ephemeral ports and reports the real one on its ready line.

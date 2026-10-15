@@ -10,12 +10,18 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Input, Select, Static
 
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
 from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.auth.sync_requirement_text import sync_requirement_reason
 from ....application.user_profile.overview import ProfileOverview
-from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from ....core.auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE, AuthProviderKind, ClaveMovilRoute
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
-from ..components.theme import BASE_CSS
+from ....core.request_faults import request_fault_line
+from ..components.theme import BASE_CSS, tokenised
+from .runtime_aeat_auth import AeatAuthFieldSaveError
 
 _FACT_PATHS = ("identity.tax_id", "auth.dni_nie", "auth.fecha_validez", "auth.numero_soporte")
 
@@ -61,15 +67,12 @@ class AeatAuthSetupScreen(Screen[None]):
     """Show saved method-specific fields and reread authoritative readiness after edits."""
 
     BINDINGS: ClassVar = [Binding("escape", "close", "", show=False)]
-    CSS = (
-        BASE_CSS
-        + """
-    #aeat-auth-page { width: 100%; height: 1fr; padding: 1 2; }
+    CSS = BASE_CSS + tokenised("""
+    #aeat-auth-page { width: 100%; height: 1fr; padding: $cadrumo-space-1 $cadrumo-gutter; }
     #aeat-auth-page Static { height: auto; }
-    #aeat-auth-page Input, #aeat-auth-page Select { margin-bottom: 1; }
-    #aeat-auth-readiness, #aeat-auth-message { margin: 1 0; }
-    """
-    )
+    #aeat-auth-page Input, #aeat-auth-page Select { margin-bottom: $cadrumo-space-1; }
+    #aeat-auth-readiness, #aeat-auth-message { margin: $cadrumo-space-1 $cadrumo-space-0; }
+    """)
 
     def __init__(self, door: AeatAuthSetupPort) -> None:
         """Retain the exact-profile operation doors for this editor."""
@@ -84,26 +87,24 @@ class AeatAuthSetupScreen(Screen[None]):
         with VerticalScroll(id="aeat-auth-page"):
             yield Static(tr("tui.aeat_auth.method"), markup=False)
             yield Select(
-                [
-                    (tr(f"profile.schema.field.auth.provider.choices.{kind.value}"), kind.value)
-                    for kind in AuthProviderKind
-                ],
+                [(tr(f"auth.catalogue.{kind.value}_label"), kind.value) for kind in AuthProviderKind],
                 allow_blank=True,
                 id="aeat-auth-method",
             )
             yield Static(tr("tui.aeat_auth.route"), id="aeat-auth-route-label", markup=False)
             yield Select(
                 [
-                    (tr(f"profile.schema.field.auth.clave_movil_route.choices.{route.value}"), route.value)
-                    for route in ClaveMovilRoute
+                    (tr("flows.manager.action.auth_clave_movil_route_qr"), ClaveMovilRoute.QR.value),
+                    (tr("flows.manager.action.auth_clave_movil_route_app_request"), ClaveMovilRoute.APP_REQUEST.value),
                 ],
-                value=ClaveMovilRoute.APP_REQUEST.value,
+                value=DEFAULT_CLAVE_MOVIL_ROUTE.value,
                 allow_blank=False,
                 id="aeat-auth-route",
             )
             for index, path in enumerate(_FACT_PATHS):
                 yield Static(tr(f"profile.schema.field.{path}.label"), id=f"aeat-auth-label-{index}", markup=False)
                 yield Input(id=f"aeat-auth-field-{index}")
+            yield Static(tr("tui.aeat_auth.document_hint"), id="aeat-auth-document-hint", markup=False)
             yield Static(tr("tui.aeat_auth.certificate_path"), id="aeat-auth-path-label", markup=False)
             yield Input(id="aeat-auth-path")
             yield Static("", id="aeat-auth-secret-label", markup=False)
@@ -124,7 +125,7 @@ class AeatAuthSetupScreen(Screen[None]):
     async def _apply(self, snapshot: tuple[ProfileOverview, AuthSyncReadiness]) -> None:
         self._snapshot = snapshot
         overview, readiness = snapshot
-        self.query_one("#aeat-auth-method", Select).value = readiness.provider or Select.BLANK
+        self.query_one("#aeat-auth-method", Select).value = readiness.provider or Select.NULL
         if readiness.route:
             self.query_one("#aeat-auth-route", Select).value = readiness.route
         fields = {field.path: field for section in overview.sections for field in section.fields}
@@ -149,10 +150,11 @@ class AeatAuthSetupScreen(Screen[None]):
         certificate = method == AuthProviderKind.CERTIFICATE.value
         for selector in ("#aeat-auth-route", "#aeat-auth-route-label"):
             self.query_one(selector).display = movil
+        self.query_one("#aeat-auth-document-hint").display = movil and route == ClaveMovilRoute.APP_REQUEST.value
         for index, path in enumerate(_FACT_PATHS):
             visible = index == 0 or (
                 not certificate
-                and method is not Select.BLANK
+                and method is not Select.NULL
                 and (path == "auth.dni_nie" or (movil and route == ClaveMovilRoute.APP_REQUEST.value))
             )
             self.query_one(f"#aeat-auth-field-{index}").display = visible
@@ -197,8 +199,29 @@ class AeatAuthSetupScreen(Screen[None]):
             await self._apply(snapshot)
             self.query_one("#aeat-auth-path", Input).value = ""
             self.query_one("#aeat-auth-message", Static).update(tr("tui.aeat_auth.saved"))
-        except Exception:
-            self.query_one("#aeat-auth-message", Static).update(tr("tui.aeat_auth.failed"))
+        except Exception as error:
+            message = tr("tui.aeat_auth.failed")
+            cause = error.__cause__ if isinstance(error, AeatAuthFieldSaveError) else error
+            if isinstance(error, AeatAuthFieldSaveError):
+                field = (
+                    next(
+                        (
+                            field
+                            for section in self._snapshot[0].sections
+                            for field in section.fields
+                            if field.path == error.path
+                        ),
+                        None,
+                    )
+                    if self._snapshot
+                    else None
+                )
+                message = tr("tui.aeat_auth.field_failed", field=field.label if field else error.path)
+            if isinstance(cause, CadrumoError):
+                message += "\n" + resolve_error_message(cause)
+                if isinstance(cause, FrontendRefusedError):
+                    message += "\n" + "\n".join(request_fault_line(fault) for fault in cause.request_faults)
+            self.query_one("#aeat-auth-message", Static).update(message)
             try:
                 await self._apply(await self._door.snapshot())
             except Exception:

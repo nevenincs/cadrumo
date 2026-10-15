@@ -296,6 +296,24 @@ aggregation:
       unresolved_relation_ids_duplicate: 'Error intern: els ids de relació sense resoldre
         no poden estar duplicats.'
 auth:
+  sync:
+    requirement:
+      profile_tax_id_required: Introdueix el NIF/NIE del contribuent.
+      auth_method_required: Tria un mètode d’autenticació.
+      certificate_file_required: Selecciona un fitxer de certificat PKCS#12 existent.
+      certificate_passphrase_required: Desa la contrasenya del certificat.
+      clave_identity_required: Introdueix un DNI/NIE vàlid per a Cl@ve.
+      profile_identity_must_match: El DNI/NIE de Cl@ve ha de coincidir amb el NIF/NIE del contribuent.
+      nie_support_required: Introdueix el número de suport del NIE per a la sol·licitud a l’app.
+      dni_validity_required: Introdueix la data de validesa del DNI per a la sol·licitud a l’app.
+      clave_password_required: Desa la contrasenya de Cl@ve Permanente.
+      file_missing: El fitxer del certificat no existeix.
+      unreadable: No es pot llegir el fitxer del certificat.
+      corrupt: No es pot obrir el certificat. Revisa el fitxer i la contrasenya.
+      expired: El certificat ha caducat.
+      expiring: El certificat caduca aviat.
+      ok: La comprovació local és correcta.
+      unavailable: No s’ha pogut completar la comprovació local requerida.
   catalogue:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
       altra autoritat reconeguda). Compatible amb tots els fluxos de la seu electrònica.
@@ -1593,6 +1611,24 @@ transactions:
     unreadable: Arxiu il·legible o format no suportat
     verified: Importació verificada amb èxit
 tui:
+  aeat_auth:
+    document_hint: Per sol·licitar l’accés a l’app, introdueix la data de validesa del DNI o el número de
+      suport del NIE, segons el teu document.
+    field_failed: No s’ha pogut desar {field}. Revisa el format i reintenta.
+    title: Autenticació AEAT
+    edit: Configurar / editar autenticació AEAT
+    ready: A punt per sincronitzar
+    blocked: 'Completa aquests requisits abans de sincronitzar:'
+    unknown: No s’ha pogut comprovar l’autenticació. Torna a obrir els ajustos per reintentar.
+    save: Desar autenticació
+    saved: Desat. Els requisits reflecteixen el perfil emmagatzemat.
+    failed: No s’ha pogut desar l’autenticació. Revisa els camps requerits i reintenta.
+    certificate_path: Ruta del certificat (en blanc conserva la desada)
+    certificate_secret: Contrasenya del certificat (en blanc conserva la desada)
+    password: Contrasenya de Cl@ve Permanente (en blanc conserva la desada)
+    close: Tornar
+    method: Mètode d’autenticació
+    route: Via de Cl@ve Móvil
   aeat_sync:
     action:
       pull_filed: Recupera les declaracions presentades

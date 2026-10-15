@@ -282,6 +282,24 @@ aggregation:
       unresolved_relation_ids_duplicate: 'Belső hiba: a feloldatlan reláció-azonosítók
         nem lehetnek duplikáltak.'
 auth:
+  sync:
+    requirement:
+      profile_tax_id_required: Adja meg az adózó NIF/NIE azonosítóját.
+      auth_method_required: Válasszon hitelesítési módot.
+      certificate_file_required: Válasszon egy létező PKCS#12 tanúsítványfájlt.
+      certificate_passphrase_required: Mentse el a tanúsítvány jelszavát.
+      clave_identity_required: Adjon meg érvényes Cl@ve DNI/NIE azonosítót.
+      profile_identity_must_match: A Cl@ve DNI/NIE és az adózó NIF/NIE azonosítójának egyeznie kell.
+      nie_support_required: Adja meg a NIE támogatási számát az alkalmazáskéréshez.
+      dni_validity_required: Adja meg a DNI érvényességi dátumát az alkalmazáskéréshez.
+      clave_password_required: Mentse el a Cl@ve Permanente jelszavát.
+      file_missing: A tanúsítványfájl nem létezik.
+      unreadable: A tanúsítványfájl nem olvasható.
+      corrupt: A tanúsítvány nem nyitható meg. Ellenőrizze a fájlt és a jelszót.
+      expired: A tanúsítvány lejárt.
+      expiring: A tanúsítvány hamarosan lejár.
+      ok: A helyi ellenőrzés sikeres.
+      unavailable: A szükséges helyi ellenőrzés nem fejezhető be.
   catalogue:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
       bármely elismert hatóság). Minden Sede-folyamatot támogat.
@@ -1587,6 +1605,24 @@ transactions:
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
 tui:
+  aeat_auth:
+    document_hint: Alkalmazáskéréshez adja meg a DNI érvényességi dátumát vagy a NIE támogatási számát az
+      okmánya szerint.
+    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra.'
+    title: AEAT-hitelesítés
+    edit: AEAT-hitelesítés beállítása / szerkesztése
+    ready: Szinkronizálásra kész
+    blocked: 'A szinkronizálás előtt teljesítse ezeket a feltételeket:'
+    unknown: A hitelesítés állapota nem olvasható. Nyissa meg újra a beállításokat.
+    save: Hitelesítés mentése
+    saved: Mentve. A feltételek a tárolt profilt tükrözik.
+    failed: A hitelesítés nem menthető. Ellenőrizze a kötelező mezőket, és próbálja újra.
+    certificate_path: Tanúsítványfájl útvonala (üresen a mentett érték marad)
+    certificate_secret: Tanúsítvány jelszava (üresen a mentett érték marad)
+    password: Cl@ve Permanente jelszó (üresen a mentett érték marad)
+    close: Vissza
+    method: Hitelesítési mód
+    route: Cl@ve Móvil útvonal
   aeat_sync:
     action:
       pull_filed: Benyújtott bevallások lekérése

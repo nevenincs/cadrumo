@@ -138,6 +138,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "auth.profile.passphrase-rotate", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
+            "auth.credential.save",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("auth.credential.secret-consume", "auth.credential.execute", "auth.credential.settlement"),
+        ),
+        RegisteredExecutorConformanceCase(
             "auth.provider.configure", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(

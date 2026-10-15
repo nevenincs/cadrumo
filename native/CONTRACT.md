@@ -502,7 +502,10 @@ name under the agent's prefix, no launch parameter and no pin. The profiles
   declarations, not from these variables.
 - **Search path.** Both profiles take the package's `PATH` composition, so the agent
   finds `aeat`, `cadrumo-mcp` and the bundled `python` beside the system directory.
-  They do not admit `CADRUMO_EXTERNAL_BIN_DIRS`.
+  Both also pass `CADRUMO_EXTERNAL_BIN_DIRS` so explicitly configured provider CLI
+  directories survive gateway and worker re-execution. The service forwards this
+  public package setting; each native launch validates the directories and
+  composes its own `PATH`.
 - **Runtime start.** The runtime image's profile fixes
   `CADRUMO_PACKAGE_AGENT_EXECUTABLE`, `CADRUMO_PACKAGE_RELAY_EXECUTABLE`,
   `CADRUMO_PACKAGE_AEAT_EXECUTABLE` and `CADRUMO_PACKAGE_PYTHON_EXECUTABLE` as the

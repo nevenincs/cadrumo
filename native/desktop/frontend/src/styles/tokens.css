@@ -145,6 +145,8 @@
 
   /* ── Motion. Every transition and animation takes one of these; the base
      layer in src/styles/base.css removes them under reduced motion. ─────── */
+  --motion-spin: 800ms;
+  --motion-spin-reduced: 2000ms;
   --motion-fast: 120ms;
   --motion-base: 200ms;
   --motion-slow: 320ms;

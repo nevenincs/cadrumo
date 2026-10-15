@@ -1,0 +1,13 @@
+desktop:
+  startup:
+    starting: "Iniciando Cadrumo…"
+    progress: "Progreso de inicio"
+    environment_step: "Preparar la aplicación"
+    runtime_step: "Iniciar el servicio local"
+    workspace_step: "Abrir el espacio de trabajo"
+    environment: "Preparando los archivos y la configuración…"
+    runtime: "Iniciando y comprobando el servicio local…"
+    workspace: "Abriendo el espacio de trabajo…"
+    failed: "No se ha podido iniciar Cadrumo"
+    failure: "Error al iniciar ({code}). Cierra esta ventana e inténtalo de nuevo. Consulta el registro de la aplicación para más detalles."
+    interrupted: "Se ha interrumpido la conexión de inicio. Cierra esta ventana e inténtalo de nuevo."

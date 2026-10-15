@@ -1,0 +1,13 @@
+desktop:
+  startup:
+    starting: "Starting Cadrumo…"
+    progress: "Startup progress"
+    environment_step: "Prepare application"
+    runtime_step: "Start local runtime"
+    workspace_step: "Open workspace"
+    environment: "Preparing application files and settings…"
+    runtime: "Starting and checking the local runtime…"
+    workspace: "Opening your workspace…"
+    failed: "Cadrumo could not start"
+    failure: "Startup failed ({code}). Close this window and try again. See the application log for details."
+    interrupted: "The startup connection was interrupted. Close this window and try again."

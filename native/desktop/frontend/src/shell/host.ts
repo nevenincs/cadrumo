@@ -186,3 +186,9 @@ export function browserHost(location: Location): Host {
     openExternal: unavailable,
   };
 }
+
+/** Available before the package and normal desktop services are assembled. */
+export interface StartupHost {
+  begin(): Promise<void>;
+  status(): Promise<import("../ipc/contract").StartupProgress>;
+}

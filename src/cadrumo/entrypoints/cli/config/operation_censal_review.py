@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
+from cadrumo_client.commands.registered_operation_projections import settled_registered_error_detail
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import bounded_deadline_after, remaining_budget
 from cadrumo_client.contracts.operation_access import (
@@ -101,6 +102,8 @@ def review_censal_operation(
         receipt.condition = waiting.projection.terminal_condition
         receipt.effect = waiting.projection.effect
         receipt.refusal_code = waiting.projection.refusal_ref
+        if pending is None:
+            _raise_censal_terminal_error(client, waiting, contract, deadline)
         pending = _require_censal_pending(waiting, pending, receipt)
         review = _resolve_review(
             client,
@@ -159,6 +162,34 @@ def _start_censal_operation(
     started = _exchange(client, session_id, start_request, deadline=deadline)
     if not isinstance(started, OperationAcknowledged) or started.operation_id != operation_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
+
+
+def _raise_censal_terminal_error(
+    client: FrontendClient,
+    observed: OperationObservationSuccessV1,
+    contract: OperationPublicDefinitionContractV1,
+    deadline: float,
+) -> None:
+    """Preserve the worker's exact missing requirements and public failure detail."""
+    state = observed.projection
+    raise submitted_operation_error(
+        state.operation_id,
+        state.refusal_ref
+        or state.failure_error_code
+        or (state.terminal_condition.value if state.terminal_condition is not None else "unknown"),
+        terminal_condition=state.terminal_condition,
+        effect=state.effect,
+        refusal_code=state.refusal_ref,
+        detail=settled_registered_error_detail(
+            client,
+            operation_id=state.operation_id,
+            terminal_revision=state.revision,
+            contract=contract,
+            condition=state.terminal_condition,
+            deadline=deadline,
+        ),
+        diagnostic_ref=state.diagnostic_ref,
+    )
 
 
 def _require_censal_pending(
@@ -228,11 +259,7 @@ def _await_censal_terminal(
         )
         if state.lifecycle is OperationLifecycle.TERMINAL:
             if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
-                raise FrontendRefusedError(
-                    state.refusal_ref
-                    or state.failure_error_code
-                    or (receipt.condition.value if receipt.condition is not None else "unknown")
-                )
+                _raise_censal_terminal_error(client, terminal, contract, deadline)
             _validate_terminal(client, terminal, contract=contract, review=review, apply=apply, deadline=deadline)
             if client.profile_id != profile_id or client.session_id != session_id:
                 raise RefusalError(RefusalCode.INVALID_FRAME)

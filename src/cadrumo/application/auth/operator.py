@@ -243,8 +243,21 @@ def configure_operator_auth(
                     expected_revision=expected_profile_revision,
                     expected_content_digest=expected_profile_digest,
                 )
-                operational_changed = current_state.auth.provider != listing.id or (
-                    certificate_path is not None and current_state.auth.certificate_path != str(certificate_path)
+                from .certificate_sources import active_certificate_source, register_certificate_source
+
+                selected_source = active_certificate_source(current_state)
+                source_update = (
+                    (selected_source, certificate_path)
+                    if listing.id == AuthProviderKind.CERTIFICATE.value
+                    and certificate_path is not None
+                    and selected_source is not None
+                    and selected_source.certificate_path != str(certificate_path)
+                    else None
+                )
+                operational_changed = (
+                    source_update is not None
+                    or current_state.auth.provider != listing.id
+                    or (certificate_path is not None and current_state.auth.certificate_path != str(certificate_path))
                 )
                 changed = preference_changed or operational_changed
                 if not changed:
@@ -258,6 +271,14 @@ def configure_operator_auth(
                     action="auth.provider.configured",
                     object_id=listing.id,
                 )
+                if source_update is not None:
+                    selected_source, selected_path = source_update
+                    next_state = register_certificate_source(
+                        next_state,
+                        name=selected_source.name,
+                        certificate_path=selected_path,
+                        friendly_name=selected_source.friendly_name,
+                    )
                 events = _build_bucket_events(
                     bucket_id=bucket_id,
                     events=(

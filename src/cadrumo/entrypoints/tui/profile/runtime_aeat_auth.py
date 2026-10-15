@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....application.auth.auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
@@ -31,6 +32,15 @@ from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.operations import OperationTerminalCondition, profile_operation_subject
 from ..operations.runtime_controller import RuntimeOperationController, await_terminal_projection
 from .runtime_auth_configuration import configure_runtime_auth
+
+
+class AeatAuthFieldSaveError(Exception):
+    """Identify the attempted public field without copying the rejected input."""
+
+    def __init__(self, path: str) -> None:
+        """Keep only the canonical profile path for presentation."""
+        super().__init__(path)
+        self.path = path
 
 
 async def run_auth_operation[ResultT: BaseModel](
@@ -67,7 +77,7 @@ async def run_auth_operation[ResultT: BaseModel](
         deadline=deadline,
     )
     if state.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-        raise RefusalError(RefusalCode.UNAVAILABLE)
+        raise FrontendRefusedError(state.refusal_ref or state.failure_error_code or RefusalCode.UNAVAILABLE.value)
     result = await controller.read_settled_result(state, result_type, result_version=1)
     if (
         client.session_id != session_id
@@ -112,6 +122,7 @@ class RuntimeAeatAuthSetup:
         """Reread the exact profile and its authentication requirements."""
         self._pin()
         overview = await asyncio.to_thread(self._overview)
+        self._pin()
         readiness = await read_runtime_sync_readiness(self.client)
         self._pin()
         return overview, readiness
@@ -136,7 +147,10 @@ class RuntimeAeatAuthSetup:
                 )
                 if stored is not None and not stored.masked and stored.value == value:
                     continue
-                await asyncio.to_thread(self._persist, path, value, current.record_revision, current.content_digest)
+                try:
+                    await asyncio.to_thread(self._persist, path, value, current.record_revision, current.content_digest)
+                except Exception as error:
+                    raise AeatAuthFieldSaveError(path) from error
                 self._pin()
             current = await asyncio.to_thread(self._overview)
             await asyncio.to_thread(
@@ -145,13 +159,19 @@ class RuntimeAeatAuthSetup:
                 AuthConfigureOperationRequest(
                     provider=provider,
                     clave_movil_route=route if provider is AuthProviderKind.CLAVE_MOVIL else None,
-                    certificate_path=Path(certificate_path) if certificate_path.strip() else None,
+                    certificate_path=Path(certificate_path).expanduser().resolve(strict=False)
+                    if certificate_path.strip()
+                    else None,
                     expected_profile_revision=current.record_revision,
                     expected_profile_digest=current.content_digest,
                 ),
             )
             self._pin()
-            if secret and provider in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}:
+            if (
+                secret is not None
+                and len(secret) > 0
+                and provider in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}
+            ):
                 encoded = bytearray(json.dumps({"password": secret.decode("utf-8")}), "utf-8")
                 try:
                     result = await run_auth_operation(

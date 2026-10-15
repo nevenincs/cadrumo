@@ -1,0 +1,75 @@
+@import "tailwindcss" source(none);
+@import "./tokens.css";
+
+:root {
+  color-scheme: light dark;
+  font-family: var(--font-stack);
+  background: var(--color-background-primary);
+  color: var(--color-foreground-primary);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+main {
+  padding: calc(var(--spacing) * 7) calc(var(--spacing) * 9);
+  max-width: var(--spacing-dialog);
+}
+h1 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0 0 calc(var(--spacing) * 5);
+}
+.activity {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2.5);
+  font-size: var(--text-base);
+}
+.activity p {
+  margin: 0;
+}
+.spinner {
+  width: var(--spacing-icon-sm);
+  height: var(--spacing-icon-sm);
+  flex: none;
+  border: var(--calendar-mark-edge) solid var(--color-background-border);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin var(--motion-spin) linear infinite;
+}
+ol {
+  list-style: none;
+  padding: 0 0 0 calc(var(--spacing) * 7);
+  margin: calc(var(--spacing) * 4.5) 0 0;
+  font-size: 1var (--calendar-mark-edge);
+  line-height: 1.9;
+  color: var(--color-foreground-muted);
+}
+li[aria-current] {
+  color: var(--color-foreground-primary);
+  font-weight: 600;
+}
+li[data-complete]::before {
+  content: "✓ ";
+}
+#failure {
+  font-size: 1var (--calendar-mark-edge);
+  line-height: 1.5;
+}
+main[aria-busy="false"] .spinner {
+  animation: none;
+  border-color: var(--cadrumo-accent-danger);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: var(--motion-spin-reduced);
+  }
+}

@@ -205,7 +205,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
-    from dev.locales._registry_scanner import scan_detail_row_fields
+    from dev.locales._registry_scanner import scan_detail_row_fields, scan_profile_schema_keys
 
     with bundled_indexed_authority().operation() as operation:
         wizard_flow = build_setup_flow(operation)
@@ -215,6 +215,13 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         descendant_relations = tuple(token.value for token in descendant_relacion_tokens(authority=operation))
     topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
     row_fields = scan_detail_row_fields()
+    profile_field_label_keys = tuple(
+        sorted(
+            key
+            for key in scan_profile_schema_keys()
+            if key.startswith("profile.schema.field.") and key.endswith(".label")
+        )
+    )
 
     return (
         *_wizard_choice_label_registrations(
@@ -245,6 +252,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             home_reason_codes=HOME_ACTION_REASON_CODES,
             wizard_reason_codes=WIZARD_VALIDATION_REASON_CODES,
             ledger_classification_fields=CLASSIFICATION_FIELD_NAMES,
+        ),
+        FStringKeyRegistration(
+            description="profile.schema.field.*.label (user-profile schema field labels)",
+            key_factory=lambda key: key,
+            values=profile_field_label_keys,
         ),
         *_surface_registrations(profile_setup_state=ProfileSetupState),
         *_storage_registrations(

@@ -58,6 +58,8 @@ from typing import Any, Final
 
 import psutil
 
+from dev._paths import REPO_ROOT
+
 from .caller_owned_root import (
     AcceptanceError,
     Programs,
@@ -86,7 +88,6 @@ _SCENARIO: Final[dict[str, Any]] = {
     "taxpayer": "Daniel Persona",
     "ledger": {"description": "agent live acceptance", "amount": "12.34", "currency": "EUR", "date": "2026-01-15"},
 }
-_REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[2]
 _GATEWAY_SECONDS: Final = 600.0
 _RUN_SECONDS: Final = 1800.0
 _POLL_SECONDS: Final = 0.5
@@ -410,9 +411,17 @@ def main(arguments: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent-live", description=__doc__.splitlines()[0])
     parser.add_argument("--package", type=Path, required=True, help="A built package directory (stage/<Config>/app).")
     parser.add_argument("--keep", action="store_true", help="Keep the disposable root and exchange for inspection.")
+    parser.add_argument(
+        "--scratch-parent",
+        type=Path,
+        help="Parent for disposable data; choose a directory outside repositories for CLI provider proofs.",
+    )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    base = _REPOSITORY_ROOT / "build" / "acceptance"
+    # dev._paths deliberately redirects stdlib temp into the checkout. CLI
+    # provider proofs need an explicit external root to avoid repository
+    # instruction discovery in their isolated tool runtime.
+    base = options.scratch_parent or REPO_ROOT / "build" / "acceptance"
     base.mkdir(parents=True, exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=base))
     try:

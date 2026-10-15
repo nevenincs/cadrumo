@@ -38,7 +38,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 from urllib.parse import SplitResult, urlsplit
 
-from pydantic import SecretStr, ValidationError
+from pydantic import ValidationError
 
 from .....application.auth.protocols import (
     BrowserContextPort,
@@ -102,6 +102,7 @@ log = get_logger(__name__)
 
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
+_CERT_PASSWORD_SECRET_ENV: Final[str] = "CADRUMO_CERTIFICATE_PASSWORD_SECRET"
 _PERSISTED_SESSION_LABEL: Final[str] = "<persisted-aeat-session>"
 
 
@@ -524,6 +525,14 @@ class AeatAuthenticator:
                     "application.auth.certificate.health.file_missing",
                     path=str(self._credentials.certificate_path),
                 ),
+            )
+        if self._credentials.password is None:
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=True,
+                available=False,
+                health_summary=f"{_CERT_PASSWORD_SECRET_ENV} not set",
             )
         # Consume the single resolved typed credential bundle. The
         # certificate path and passphrase are the settings-resolved
@@ -1009,9 +1018,11 @@ class AeatAuthenticator:
             raise CertificateLoadError(
                 translated_message="application.auth.certificate.load.path_unset",
             )
-        # An unencrypted PKCS12 has an empty password. The loader decides
-        # whether an absent secret is valid for the actual bundle.
-        password = self._credentials.password or SecretStr("")
+        password = self._credentials.password
+        if password is None:
+            raise CertificateLoadError(
+                translated_message="application.auth.certificate.load.password_unset",
+            )
         return CertificateBundle(
             path=path,
             password=password,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -92,21 +93,24 @@ _UTF_8: str = UTF_8_ENCODING
 
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 
-_TYPE_ALIAS_FACTORIES = frozenset({"Annotated", "Callable", "Literal", "NewType", "TypeAliasType"})
-_TYPE_ALIAS_NAME_SUFFIXES = (
-    "Builder",
-    "Cursor",
-    "Kind",
-    "Policy",
-    "Port",
-    "Predicate",
-    "Reference",
-    "Resolver",
-    "Token",
-    "Type",
-    "Value",
+_TYPE_ALIAS_FACTORIES = frozenset(
+    {
+        "Annotated",
+        "AsyncIterator",
+        "Awaitable",
+        "Callable",
+        "Collection",
+        "Iterable",
+        "Iterator",
+        "Literal",
+        "Mapping",
+        "MutableMapping",
+        "NewType",
+        "Protocol",
+        "Sequence",
+        "TypeAliasType",
+    }
 )
-
 # Pydantic materialises generic bases on each concrete consumer with the
 # defining class's original ``__module__``/``__qualname__``.  Autodoc would
 # consequently index the defining object (and its fields) again from every
@@ -125,6 +129,117 @@ _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
 }
 
 
+def _type_alias_expression(value: ast.expr) -> bool:
+    """Return whether *value* is a source expression that defines a type alias."""
+    if isinstance(value, ast.Subscript):
+        factory = value.value
+        while isinstance(factory, ast.Attribute):
+            factory = factory.value
+        factory_name = value.value.attr if isinstance(value.value, ast.Attribute) else getattr(factory, "id", None)
+        return factory_name in _TYPE_ALIAS_FACTORIES
+    if isinstance(value, ast.BinOp):
+        return isinstance(value.op, ast.BitOr)
+    if isinstance(value, ast.Call):
+        factory = value.func
+        while isinstance(factory, ast.Attribute):
+            factory = factory.value
+        factory_name = value.func.attr if isinstance(value.func, ast.Attribute) else getattr(factory, "id", None)
+        return factory_name in {"NewType", "TypeAliasType"}
+    return False
+
+
+def _source_root(path: Path) -> Path | None:
+    """Find the ``src/<package>`` root containing *path*, including fixtures."""
+    return next((parent for parent in path.parents if parent.parent.name == "src"), None)
+
+
+def _module_name(source_root: Path, path: Path) -> str:
+    """Return the importable module name for a Python source path."""
+    relative = path.relative_to(source_root).with_suffix("")
+    parts = relative.parts[:-1] if relative.name == "__init__" else relative.parts
+    return ".".join((source_root.name, *parts))
+
+
+def _module_source_path(source_root: Path, module_name: str) -> Path | None:
+    """Resolve a module inside the source cohort containing *source_root*."""
+    module_path = source_root.parent.joinpath(*module_name.split("."))
+    source_path = module_path.with_suffix(".py")
+    package_path = module_path / "__init__.py"
+    if source_path.is_file():
+        return source_path
+    if package_path.is_file():
+        return package_path
+    return None
+
+
+def _module_symbol_is_type(path: Path, symbol: str, seen: frozenset[tuple[Path, str]] = frozenset()) -> bool:
+    """Follow an imported symbol to confirm it is a class or source type alias."""
+    key = (path.resolve(), symbol)
+    if key in seen:
+        return False
+    seen = seen | {key}
+    try:
+        source = path.read_text(encoding=_UTF_8)
+        tree = ast.parse(source, filename=str(path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return False
+
+    source_root = _source_root(path)
+    module_name = _module_name(source_root, path) if source_root is not None else ""
+    for statement in tree.body:
+        if isinstance(statement, ast.ClassDef) and statement.name == symbol:
+            return True
+        if isinstance(statement, ast.TypeAlias) and statement.name.id == symbol:
+            return True
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.target.id == symbol
+            and isinstance(statement.annotation, ast.Name)
+            and statement.annotation.id == "TypeAlias"
+        ):
+            return True
+        if isinstance(statement, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == symbol for target in statement.targets
+        ):
+            if _type_alias_expression(statement.value):
+                return True
+            if isinstance(statement.value, ast.Name) and source_root is not None and module_name:
+                return _module_symbol_is_type(path, statement.value.id, seen) or _imported_symbol_is_type(
+                    path, tree, statement.value.id, seen
+                )
+    return _imported_symbol_is_type(path, tree, symbol, seen)
+
+
+def _imported_symbol_is_type(
+    path: Path,
+    tree: ast.Module,
+    symbol: str,
+    seen: frozenset[tuple[Path, str]] = frozenset(),
+) -> bool:
+    """Return whether a module imports *symbol* from a class or alias owner."""
+    source_root = _source_root(path)
+    if source_root is None:
+        return False
+    module_name = _module_name(source_root, path)
+    package = module_name if path.name == "__init__.py" else module_name.rpartition(".")[0]
+    for statement in tree.body:
+        if not isinstance(statement, ast.ImportFrom) or not statement.module:
+            continue
+        for imported in statement.names:
+            local_name = imported.asname or imported.name
+            if local_name != symbol:
+                continue
+            try:
+                module_name = importlib.util.resolve_name(f"{'.' * statement.level}{statement.module}", package)
+            except ImportError:
+                continue
+            imported_path = _module_source_path(source_root, module_name)
+            if imported_path is not None and _module_symbol_is_type(imported_path, imported.name, seen):
+                return True
+    return False
+
+
 def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
     """Return public top-level type alias declarations from *path*."""
     source = path.read_text(encoding=_UTF_8)
@@ -137,11 +252,15 @@ def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
                 aliases[statement.name.id] = declaration
             continue
 
-        if isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
-            if isinstance(statement.annotation, ast.Name) and statement.annotation.id == "TypeAlias":
-                if not statement.target.id.startswith("_"):
-                    declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
-                    aliases[statement.target.id] = declaration
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and isinstance(statement.annotation, ast.Name)
+            and statement.annotation.id == "TypeAlias"
+            and not statement.target.id.startswith("_")
+        ):
+            declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
+            aliases[statement.target.id] = declaration
             continue
 
         if not isinstance(statement, ast.Assign):
@@ -153,20 +272,9 @@ def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
             continue
 
         value = statement.value
-        is_type_expression = isinstance(value, ast.Subscript) and isinstance(value.value, ast.Name) and (
-            value.value.id in _TYPE_ALIAS_FACTORIES
-        )
-        is_union_expression = isinstance(value, ast.BinOp) and isinstance(value.op, ast.BitOr)
-        is_named_type_alias = (
-            isinstance(value, ast.Name)
-            and value.id[:1].isupper()
-            and any(name.endswith(_TYPE_ALIAS_NAME_SUFFIXES) for name in public_targets)
-        )
-        if (
-            is_type_expression
-            or (is_union_expression and any(name.endswith(_TYPE_ALIAS_NAME_SUFFIXES) for name in public_targets))
-            or is_named_type_alias
-        ):
+        is_type_expression = _type_alias_expression(value)
+        is_referenced_type_alias = isinstance(value, ast.Name) and _module_symbol_is_type(path, value.id)
+        if is_type_expression or is_referenced_type_alias:
             declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
             aliases.update((name, declaration) for name in public_targets)
 

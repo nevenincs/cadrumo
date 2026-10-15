@@ -51,6 +51,19 @@ RUNTIME_LOCALES_DIR: Final[Path] = RUNTIME_SRC_DIR / "_data" / "locales"
 #: spelled out in :data:`DESKTOP_CHROME_KEYS`.
 DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]](
     {
+        "desktop.startup.": (
+            "starting",
+            "progress",
+            "environment_step",
+            "runtime_step",
+            "workspace_step",
+            "environment",
+            "runtime",
+            "workspace",
+            "failed",
+            "failure",
+            "interrupted",
+        ),
         "desktop.attendance.": ("network", "changes", "delegation", "period_independent"),
         "desktop.calendar.aeat.": ("accepted", "justificante_verified", "not_observed", "submitted_observed"),
         "desktop.calendar.event.": ("filing", "message"),
@@ -61,6 +74,17 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
 
 DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
     {
+        "desktop.startup.starting",
+        "desktop.startup.progress",
+        "desktop.startup.environment_step",
+        "desktop.startup.runtime_step",
+        "desktop.startup.workspace_step",
+        "desktop.startup.environment",
+        "desktop.startup.runtime",
+        "desktop.startup.workspace",
+        "desktop.startup.failed",
+        "desktop.startup.failure",
+        "desktop.startup.interrupted",
         "desktop.attendance.title",
         "desktop.attendance.process",
         "desktop.attendance.executable",

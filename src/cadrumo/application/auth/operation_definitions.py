@@ -55,7 +55,7 @@ from ..user_profile.passphrase_rotation import (
 )
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credential_operations import (
-    AUTH_CREDENTIAL_PASSWORD_SECRET_KIND,
+    AUTH_CREDENTIAL_INPUT_KIND,
     AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
     AuthCredentialSaveExecutor,
     AuthCredentialSaveRequest,
@@ -519,7 +519,7 @@ def build_auth_operation_definitions(
             executor_type=AuthCredentialSaveExecutor,
             build=lambda: AuthCredentialSaveExecutor(ports=ports),
             phases=("auth.credential.secret-consume", "auth.credential.execute", "auth.credential.settlement"),
-            secret_kind=AUTH_CREDENTIAL_PASSWORD_SECRET_KIND,
+            secret_kind=AUTH_CREDENTIAL_INPUT_KIND,
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         ),
         _definition(

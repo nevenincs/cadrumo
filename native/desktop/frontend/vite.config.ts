@@ -41,12 +41,15 @@ export default defineConfig(({ command, mode }) => {
   // development server's unminified modules are not what ships; it is never
   // the product and nothing packages it.
   const scenarios = mode === "scenarios";
-  // The product has one entry. The development entry beside it is never an
+  // The product has a workspace and a lightweight loading entry. The development entry beside it is never an
   // input of the product build, and the boundary plugin refuses its modules
   // by any route.
   const input: Record<string, string> = scenarios
     ? { scenarios: resolve(root, "scenarios.html") }
-    : { index: resolve(root, "index.html") };
+    : {
+        index: resolve(root, "index.html"),
+        startup: resolve(root, "startup.html"),
+      };
   return {
     base: "./",
     cacheDir: buildPath("desktop_cache"),

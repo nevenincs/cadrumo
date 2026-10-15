@@ -405,6 +405,7 @@ def build_censal_preview_operation_definition(
 
     return OperationDefinition(
         definition_id=CENSAL_PREVIEW_OPERATION_DEFINITION_ID,
+        public_error_detail=True,
         request_type=CensalPreviewOperationRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CensalPreviewOperationResult,

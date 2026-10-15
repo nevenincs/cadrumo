@@ -41,6 +41,8 @@ from ...application.auth.auth_read_contracts import (
     AuthReadRequest,
 )
 from ...application.auth.certificate_source_operations import list_operator_certificate_sources
+from ...application.auth.credential_operations import AuthCredentialSaveResult
+from ...application.auth.credentials import CLAVE_PERMANENTE_PASSWORD_SECRET_NAME
 from ...application.bienes_inversion.registered_result_contracts import (
     BienesInversionDeclareProjection,
     BienesInversionListProjection,
@@ -677,6 +679,22 @@ def _assert_registered_executor_conformance_outcome(
         assert recovery.profile_id == profile_id
         assert recovery.enrolled is True
         assert recovery.enrolled == profile_recovery_status(profile_id=profile_id).enrolled
+    if case.definition_id == "auth.credential.save":
+        result = _resolve_result_projection(
+            driver,
+            registry,
+            definition_id=case.definition_id,
+            operation_id=submitted.receipt.operation_id,
+            terminal_revision=observed.projection.revision,
+            projection_type=AuthCredentialSaveResult,
+        )
+        assert isinstance(result, AuthCredentialSaveResult)
+        assert result.saved and result.provider == "clave_permanente"
+        assert _CREDENTIAL_INPUT not in result.model_dump_json()
+        stored = build_certificate_secret_backend(bucket_id=str(profile_id), settings=load_settings()).get(
+            CLAVE_PERMANENTE_PASSWORD_SECRET_NAME
+        )
+        assert stored is not None and stored.get_secret_value() == _CREDENTIAL_INPUT
     if case.definition_id.startswith(("auth.certificate.", "ledger.ratios.")):
         contract = registry.lookup_public_contract(case.definition_id)
         assert contract.result_schema is not None
