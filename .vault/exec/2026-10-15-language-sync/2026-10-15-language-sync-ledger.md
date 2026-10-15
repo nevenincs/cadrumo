@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:65f1a9141f1ed538f440c61cee2493331e4a062650da72050b731ba3d7bf2c3c'
+body_hash: 'sha256:8f7f8eae0b0391e6b7a6dd0b3c04fa5f0917dc21854cc08cd4fc5ffd05087cba'
 related:
   - "[[2026-10-15-language-sync-plan]]"
 ---
@@ -204,6 +204,8 @@ related:
 - `S01` `verify:` `just test-ci-contracts-serial (0 selected,expected pytest exit5)` -> `pass`
 - `S01` `verify:` `pytest test_ci_workflow.py::test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists -n 1 (original CI marker and env)` -> `pass`
 - `S03` `verify:` `cmake --build build/desktop-windows-x64 --config Release --target desktop-host-build (after final frontend correction)` -> `pass`
+- `S01` `verify:` `just test-sequence-goldens-gate --changed-files (130-path manifest) --jobs 3 (fresh descriptor;33divergences)` -> `fail`
+- `S01` `verify:` `dev.docs.sequences check --sequence profile-setup-output-language (diagnostic reproduction)` -> `fail`
 
 ## Notes
 
@@ -213,3 +215,4 @@ related:
 - `S01` S01 verification remains pending. Current import-boundary gate fails with 1144 hard findings, 324 new unapproved occurrences and110 shipped-root occurrences reaching repository-only roots. Candidate inventory0of424intersections with manifest; all93Python diffs add no private import target or dynamic import construct. Full hardfinding paths are not retained by the checker, so absence of every manifest intersection is not claimed. Other three static reports list no manifest files. Sequence goldens fail closed against stale authority while foreign registry edits remain in progress; no authority publication or unrelated repair is performed.
 - `S03` Final Luna review found previous-account cached observations could reach the UI and failure alerts could remain after recovery. Corrected frontend filters by typed account profile, hides old identity state before effects, preserves monotonic revisions and generation fences, and clears alerts on a newer accepted update. Six language scenarios pass after this correction; browserHost no-host transient fallback remains supported.
 - `S01` The CI wrapper passed 1136 tests and failed one collect-only child with FileNotFoundError for a deleted temporary docs root. The exact failed node passed on a fresh isolated retry with unchanged source and environment; all1137CItestIDs now have passing evidence across runs. The configured standalone serial recipe returned0 with1131deselected. A separate foreign four-node marker-splitting error is not attributed to this run.
+- `S01` The authority descriptor changed after the earlier stale refusal, enabling one fresh gate attempt. It ran and failed33pagegroups, including broad `runtime_invalid_frame` and stale documented command refusals. The exact language sequence probe traced its first `INVALID_FRAME` to `commands/profile_binding.py:143:` ctx.meta held no FrontendClient during preflight, before the profile edit or any language event emission/reception. VerifiedTransport supports the new event; this repro rules out its decoder as the cause. No goldens or authority were rewritten; S01 remains verification-pending.

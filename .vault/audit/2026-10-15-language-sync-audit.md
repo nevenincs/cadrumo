@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0989b802916312f3279f57039d1a99772a32cb11a852116903b29c336dfe209'
+body_hash: 'sha256:61fbdd1810f21d3ba303b44d8f89563cfb68005a81deb46bf069529d912c8904'
 related:
   - "[[2026-10-15-language-sync-plan]]"
 ---
@@ -90,6 +90,18 @@ The review reuses prior integrated and corrective reviews plus Luna's final stab
 The final CI contracts wrapper passed 1,136 tests and failed one collect-only child because a temporary documentation root no longer existed. The exact failing node, test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists, passed on a fresh isolated retry with the original CI marker and unchanged source and environment. Its durable retry run is 20261015T130604.807126Z-pytest-64008-ab77f37b. The configured separate serial recipe returned zero with no selected serial cases. All 1,137 CI test IDs therefore have passing evidence across these runs; the original wrapper's nonzero exit is retained. The CI docs build completed with the existing missing api/index reference warning.
 
 After the last frontend correction, the official CMake desktop-host-build Release target passed again and rebuilt the current frontend bundle into build/desktop-windows-x64/cargo/desktop/release/cadrumo.exe. The current npm check, six language scenarios and Release build logs are preserved in TEMP under the cadrumo-language-sync prefix. Feature-scoped vault checks for language-sync and all three amended desktop decision features found no errors in the changed records. This fresh evidence supplements, rather than replaces, the earlier review and failure history.
+
+### sequence-harness-binding | medium | Current goldens reach a missing harness client binding before language behavior
+
+The authority descriptor changed after the historical stale-authority refusal. One current read-only sequence-goldens attempt ran with the 130-path manifest and three workers, then failed 33 page groups. Failures include runtime_invalid_frame across several operations and Unknown command refusals for stale config auth and Google status/logout examples; two oversized-JSON advisories were also reported. The current launcher log is TEMP/cadrumo-language-sync-sequence-goldens-retry-20261015.log. No expected outputs or authority were rewritten.
+
+A single-sequence diagnostic reproduction of profile-setup-output-language located the first refusal at src/cadrumo_client/commands/profile_binding.py:143: ctx.meta had no bound FrontendClient during profile-command preflight. It occurred before the profile edit or any language event emission, reception or callback. Static tracing confirms EventFrame includes ProfileLanguageChanged and VerifiedTransport demultiplexes it before validating replies. The refusal therefore does not implicate the new event decoder in this reproduction.
+
+The production entrypoint and harness use different composition. pyproject.toml points aeat to cadrumo_runtime.host.frontend.cli.bootstrap:main, which builds aeat_cli_app. Its dispatcher passes profile_admission.activate_profile to dispatch_cli_behavior; that helper opens/authenticates the installed client and calls bind_profile_target and bind_profile_client. The docs runner instead calls entrypoints/cli/tests/cli_runner.invoke_cached_cli, invoking bare cli_app with the default require_bound_profile_connection and no activation injection. The fixture port offers no activation hook. This is a documentation-harness composition gap; the ordinary installed CLI has the supported binding. Its minimal reproducer is uv run --no-sync python -m dev.docs.sequences check --sequence profile-setup-output-language. The probe changed no source or validation behavior and recorded only callsites and event presence, not custody or frame payloads.
+
+### checkpoint-verdict | medium | Language implementation saved; full verification remains PENDING
+
+Native adapter commit: 29426604d8. Backend checkpoint: d729dfb81f. Frontend/docs and initial final audit: b89a229f5b. S02 and S03 are closed on their applicable passing checks. S01 remains open for the failing import/static gates and documentation-sequence verification. Luna's final review and corrective checks found no unresolved critical or high defect in the language implementation. The frontend npm check, six current language scenarios, rebuilt Release executable, native 335 unit tests/clippy, scoped Python lint/format/types and focused behavior coverage pass; full browser and CI IDs have passing aggregate evidence with their original failed runs preserved. The separate production log-tail rotation failure remains unresolved with unknown baseline. This checkpoint does not claim a fully verified plan or packaged GUI acceptance.
 
 ## Recommendations
 
