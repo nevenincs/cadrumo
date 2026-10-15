@@ -14,7 +14,6 @@ from dev.first_party_source import CLIENT_PACKAGE, FIRST_PARTY_ROOTS
 
 from ..manager import (
     _NON_OWNER_GENERIC_IMPORTS,
-    _PUBLIC_DATA_ALIASES,
     API_SOURCE_PACKAGE,
     API_SOURCE_ROOTS,
     ApiDocsError,
@@ -42,6 +41,17 @@ def _module_tree(module_name: str) -> ast.Module:
     return ast.parse(Path(spec.origin).read_text(encoding="utf-8"))
 
 
+def _source_path_for_module(module_name: str, is_package: bool) -> Path:
+    """Map an admitted dotted module back to its canonical source file."""
+    for source_root in API_SOURCE_ROOTS:
+        package_name = Path(source_root).name
+        if module_name == package_name or module_name.startswith(package_name + "."):
+            relative_parts = module_name.split(".")[1:]
+            source_path = REPO_ROOT.joinpath(*Path(source_root).parts, *relative_parts)
+            return source_path / "__init__.py" if is_package else source_path.with_suffix(".py")
+    raise AssertionError(f"discovered API module is outside canonical roots: {module_name}")
+
+
 def _bound_names(tree: ast.Module) -> set[str]:
     """Return names the target module binds directly in source."""
     names: set[str] = set()
@@ -56,59 +66,6 @@ def _bound_names(tree: ast.Module) -> set[str]:
         elif isinstance(node, (ast.Import, ast.ImportFrom)):
             names.update(alias.asname or alias.name.rsplit(".", 1)[-1] for alias in node.names)
     return names
-
-
-def _defines_class_or_function(tree: ast.Module, name: str) -> bool:
-    return any(
-        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name
-        for node in tree.body
-    )
-
-
-def test_every_manual_alias_target_resolves_at_the_module_it_claims() -> None:
-    """Each ``_PUBLIC_DATA_ALIASES`` entry re-derives its own qualifying condition.
-
-    ``py:data`` is a MANUAL directive: Sphinx materialises the target whether or
-    not the named object exists, so an entry keyed on a module that has stopped
-    resolving the name publishes an API reference to nothing -- and, because the
-    table holds one canonical home per alias, simultaneously leaves the module
-    that really defines it undocumented. Nothing in the generator can notice:
-    the stub is compared against output the same table produced, so the drift
-    check agrees with itself, and the sibling case below asserts the very line
-    the table just wrote.
-
-    The condition an entry must satisfy is therefore re-derived here from the
-    imported module object rather than trusted because it was once written: the
-    name must resolve at the claimed module (else the target is fabricated), and
-    it must not be a class or function (else ``automodule :members:`` already
-    indexes it and the manual target duplicates the real one). The module object
-    is an independent root -- it cannot be edited into agreement with the table.
-
-    This caught a live entry: ``CasillaId`` was keyed on ``cadrumo.core``, whose
-    package initialiser exports nothing, so the published ``cadrumo.core``
-    reference carried a target for a name that package does not resolve while
-    ``cadrumo.core.casilla_id``, which defines the alias, had none.
-    """
-    assert _PUBLIC_DATA_ALIASES, "the alias table is empty; every claim below is vacuous"
-    unresolved: list[str] = []
-    already_indexed: list[str] = []
-    for module_name, aliases in sorted(_PUBLIC_DATA_ALIASES.items()):
-        assert aliases, f"{module_name!r} claims a manual target for no alias at all"
-        tree = _module_tree(module_name)
-        for alias in aliases:
-            if alias not in _bound_names(tree):
-                unresolved.append(f"{module_name}.{alias}")
-                continue
-            if _defines_class_or_function(tree, alias):
-                already_indexed.append(f"{module_name}.{alias}")
-    assert unresolved == [], (
-        "manual py:data targets name aliases their module does not resolve, so the generated "
-        f"reference documents nothing at those anchors: {unresolved}"
-    )
-    assert already_indexed == [], (
-        "manual py:data targets duplicate members automodule already indexes; drop the entry "
-        f"rather than emitting a second Python-domain target: {already_indexed}"
-    )
 
 
 def test_every_generic_exclusion_names_a_symbol_its_module_does_not_own() -> None:
@@ -143,29 +100,33 @@ def test_every_generic_exclusion_names_a_symbol_its_module_does_not_own() -> Non
 
 
 def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) -> None:
-    """Public PEP 695 aliases are indexed once at their defining modules."""
-    manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
+    """Every public PEP 695 alias gets a type target at its defining module."""
+    manager = ApiStubManager.for_repository(REPO_ROOT, docs_api=tmp_path / "api")
 
     manager.scaffold()
 
-    core_api_text = (tmp_path / "api" / "cadrumo.core.casilla_id.rst").read_text(encoding="utf-8")
-    digest_api_text = (tmp_path / "api" / "cadrumo.core.identity.digest.rst").read_text(encoding="utf-8")
-    tax_id_api_text = (tmp_path / "api" / "cadrumo.core.identity.tax_id.rst").read_text(encoding="utf-8")
-    tax_id_format_api_text = (tmp_path / "api" / "cadrumo.domain.calculations.registry.tax_id_format.rst").read_text(
+    targets: list[tuple[str, str]] = []
+    for module_name, is_package in manager.discover_modules():
+        source_path = _source_path_for_module(module_name, is_package)
+        tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+        targets.extend(
+            (module_name, statement.name.id)
+            for statement in tree.body
+            if isinstance(statement, ast.TypeAlias) and not statement.name.id.startswith("_")
+        )
+
+    for module_name, alias in targets:
+        stub = (tmp_path / "api" / f"{module_name}.rst").read_text(encoding="utf-8")
+        directive = f".. py:type:: {alias}\n   :module: {module_name}"
+        assert stub.count(directive) == 1, f"{module_name}.{alias} must have one owner target"
+
+    assert targets, "the canonical source roots contain no public PEP 695 aliases"
+    assert ("cadrumo_client.transport.automation_decision", "AutomationDecision") in targets
+    cli_program = (tmp_path / "api" / "cadrumo_agent_service.providers.domain.catalog.rst").read_text(
         encoding="utf-8"
     )
-    all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
-    assert ".. py:data:: CasillaId\n   :module: cadrumo.core.casilla_id" in core_api_text
-    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity.tax_id" in tax_id_api_text
-    assert (
-        ".. py:data:: SubjectTaxId\n   :module: cadrumo.domain.calculations.registry.tax_id_format"
-        in tax_id_format_api_text
-    )
-    assert ".. py:data:: ContentDigest\n   :module: cadrumo.core.identity.digest" in digest_api_text
-    assert all_stub_text.count(".. py:data:: CasillaId\n") == 1
-    assert all_stub_text.count(".. py:data:: TaxIdIdentityToken\n") == 1
-    assert all_stub_text.count(".. py:data:: SubjectTaxId\n") == 1
-    assert all_stub_text.count(".. py:data:: ContentDigest\n") == 1
+    assert ".. py:type:: CliProgram\n   :module: cadrumo_agent_service.providers.domain.catalog" in cli_program
+    assert "CliProgram = Annotated[str, StringConstraints" in cli_program
 
 
 def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) -> None:
@@ -231,12 +192,10 @@ def test_repository_api_scope_covers_every_canonical_package_and_cross_package_o
     automation_decision = (tmp_path / "api" / "cadrumo_client.transport.automation_decision.rst").read_text(
         encoding="utf-8"
     )
-    all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
     assert (
-        ".. py:data:: AutomationDecision\n   :module: cadrumo_client.transport.automation_decision"
+        ".. py:type:: AutomationDecision\n   :module: cadrumo_client.transport.automation_decision"
         in automation_decision
     )
-    assert all_stub_text.count(".. py:data:: AutomationDecision\n") == 1
 
     index = (REPO_ROOT / "docs" / "api" / "index.md").read_text(encoding="utf-8")
     toctree = index.split("```{toctree}", maxsplit=1)[1].split("```", maxsplit=1)[0]

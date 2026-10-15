@@ -47,6 +47,8 @@ _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
     "cadrumo_certificate_friendly_name",
     "cadrumo_cert_warn_days",
     "cadrumo_cert_critical_days",
+    "cadrumo_clave_permanente_password",
+    "cadrumo_clave_permanente_dni_nie",
     "cadrumo_clave_movil_dni_nie",
     "cadrumo_clave_movil_dni_fecha",
     "cadrumo_clave_movil_nie_soporte",

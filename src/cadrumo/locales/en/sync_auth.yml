@@ -1,0 +1,54 @@
+auth:
+  sync:
+    requirement:
+      profile_tax_id_required: Enter the taxpayer NIF/NIE.
+      auth_method_required: Choose an authentication method.
+      certificate_file_required: Select an existing PKCS#12 certificate file.
+      certificate_passphrase_required: Save the certificate passphrase.
+      clave_identity_required: Enter a valid Cl@ve DNI/NIE.
+      profile_identity_must_match: The Cl@ve DNI/NIE must match the taxpayer NIF/NIE.
+      nie_support_required: Enter the NIE support number for the app request route.
+      dni_validity_required: Enter the DNI validity date for the app request route.
+      clave_password_required: Save the Cl@ve Permanente password.
+      file_missing: The certificate file does not exist.
+      unreadable: The certificate file cannot be read.
+      corrupt: The certificate cannot be opened. Check the file and passphrase.
+      expired: The certificate has expired.
+      expiring: The certificate expires soon.
+      ok: The local check passed.
+      unavailable: The required local check could not be completed.
+cli:
+  censo_auth:
+    configure_help: Set up or edit saved AEAT authentication before pulling the census (interactive terminal).
+    offer: Set up AEAT authentication before synchronizing?
+    method: Authentication method
+    route: Cl@ve Móvil route
+    certificate: Certificate file path (blank keeps saved value)
+    field: '{field} (blank keeps saved value)'
+    still_missing: '{field} is still missing.'
+    password: Password (blank keeps saved value)
+    saved: Authentication settings saved.
+    required: 'AEAT synchronization requires: {requirements}. Set or edit authentication here: {command}.'
+    console_required: 'Authentication editing needs an interactive terminal: {command}. Required: {requirements}.'
+tui:
+  aeat_auth:
+    title: AEAT authentication
+    edit: Set up / edit AEAT authentication
+    ready: Ready to synchronize
+    blocked: 'Complete these requirements before synchronizing:'
+    unknown: Authentication readiness could not be read. Reopen authentication settings to retry.
+    save: Save authentication
+    saved: Saved. Readiness reflects the stored profile.
+    failed: Authentication settings could not be saved. Check the required fields and try again.
+    certificate_path: Certificate file path
+    certificate_secret: Certificate passphrase (leave blank to keep saved value)
+    password: Cl@ve Permanente password (leave blank to keep saved value)
+    close: Back
+    method: Authentication method
+    route: Cl@ve Móvil route
+application:
+  auth:
+    sync:
+      errors:
+        requirements_missing: 'AEAT synchronization requires: {required_fields}. Set or edit authentication
+          here: {reasons}.'

@@ -31,6 +31,8 @@ sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 scan_directory = import_module("cadrumo.core.directory_scan").scan_directory
 OutputLanguage = import_module("cadrumo.core.external_constants").OutputLanguage
 PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY
+API_SOURCE_ROOTS = import_module("dev.docs.apidocs.manager").API_SOURCE_ROOTS
+typehints_formatter = import_module("dev.docs.apidocs.rendering").format_type_hint
 
 # Site chrome (header, broadcast strip, footer, accessible names, and the
 # strings the interaction layer writes into the DOM) is not page content, so
@@ -365,12 +367,6 @@ autoclass_content = "class"
 
 autodoc_typehints = "description"
 autodoc_typehints_format = "short"
-
-_PUBLIC_TYPE_ALIAS_TARGETS = {
-    "CasillaId": "cadrumo.core.CasillaId",
-    "SubjectTaxId": "cadrumo.domain.calculations.registry.tax_id_format.SubjectTaxId",
-    "TaxIdIdentityToken": "cadrumo.core.identity.tax_id.TaxIdIdentityToken",
-}
 
 # Be tolerant of the wider AEAT dep tree at autodoc-import time. These are
 # either heavy native deps that pull a lot of platform-specific shared
@@ -1332,84 +1328,24 @@ def _should_resolve_deferred_models() -> bool:
 
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
 
-_TYPING_ALIAS_FACTORIES = frozenset(
-    {
-        "Annotated",
-        "AsyncIterator",
-        "Awaitable",
-        "Callable",
-        "Collection",
-        "Iterable",
-        "Iterator",
-        "Literal",
-        "Mapping",
-        "MutableMapping",
-        "Protocol",
-        "Sequence",
-    }
-)
-_ALIAS_NAME_SUFFIXES = (
-    "Builder",
-    "Collector",
-    "Cursor",
-    "Facts",
-    "Fetcher",
-    "Guard",
-    "Kind",
-    "Policy",
-    "Port",
-    "Predicate",
-    "Projection",
-    "Reference",
-    "Resolver",
-    "Scalar",
-    "Store",
-    "Token",
-    "Type",
-    "Value",
-)
-
-
-def _subscript_root_name(node: ast.expr) -> str | None:
-    """Return the root identifier of a subscription expression."""
-    value = node.value if isinstance(node, ast.Subscript) else None
-    while isinstance(value, ast.Attribute):
-        value = value.value
-    return value.id if isinstance(value, ast.Name) else None
-
-
 def _declared_type_hint_names() -> frozenset[str]:
-    """Return source-declared aliases and TypeVars that are not API objects."""
+    """Return PEP 695 and typing.TypeVar parameters rendered inline by typehints."""
     names: set[str] = set()
-    source_root = _PROJECT_ROOT / "src" / "cadrumo"
-    for path in scan_directory(source_root, pattern="*.py", recursive=True):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.TypeAlias):
-                names.add(node.name.id)
-            elif isinstance(node, ast.TypeVar):
-                names.add(node.name)
-            elif (
-                isinstance(node, ast.Assign)
-                and isinstance(node.value, ast.Call)
-                and isinstance(node.value.func, ast.Name)
-                and node.value.func.id == "TypeVar"
-            ):
-                names.update(target.id for target in node.targets if isinstance(target, ast.Name))
-            elif isinstance(node, ast.Assign):
-                target_names = tuple(target.id for target in node.targets if isinstance(target, ast.Name))
-                alias_like = (
-                    _subscript_root_name(node.value) in _TYPING_ALIAS_FACTORIES
-                    or (isinstance(node.value, ast.BinOp) and isinstance(node.value.op, ast.BitOr))
-                    or (
-                        isinstance(node.value, ast.Name)
-                        and node.value.id[:1].isupper()
-                        and any(name.endswith(_ALIAS_NAME_SUFFIXES) for name in target_names)
-                    )
-                )
-                if alias_like:
-                    names.update(target_names)
-    return frozenset(names - _PUBLIC_TYPE_ALIAS_TARGETS.keys())
+    for source_root_name in API_SOURCE_ROOTS:
+        source_root = _PROJECT_ROOT.joinpath(*Path(source_root_name).parts)
+        for path in scan_directory(source_root, pattern="*.py", recursive=True):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.TypeVar):
+                    names.add(node.name)
+                elif (
+                    isinstance(node, ast.Assign)
+                    and isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "TypeVar"
+                ):
+                    names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+    return frozenset(names)
 
 
 _LITERAL_TYPE_HINT_NAMES = _declared_type_hint_names()

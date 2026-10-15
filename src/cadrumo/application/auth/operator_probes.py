@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
@@ -494,12 +494,7 @@ def probe_certificate_bundle(
                 error=type(exc).__name__,
             ),
         )
-    password = credentials.password
-    if password is None:
-        return _ProviderProbeOutcome(
-            result=ProviderProbeResult.CORRUPT,
-            summary=tr("application.auth.operator.probe.certificate_corrupt"),
-        )
+    password = credentials.password or SecretStr("")
     try:
         bundle_health = operator_probe_ports.certificate_health.evaluate(
             CertificateHealthProbeRequest(

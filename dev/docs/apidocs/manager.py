@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -89,25 +90,22 @@ EXCLUDED_FILENAME_PREFIXES: tuple[str, ...] = ("test_", "_test_")
 
 _UTF_8: str = UTF_8_ENCODING
 
-# PEP 695 aliases do not produce Python-domain objects when ``automodule``
-# enumerates members.  These aliases are nevertheless intentional public API
-# and are referenced throughout the API prose and generated annotations.  Keep
-# the small ownership table here, beside the stub generator, so each alias gets
-# exactly one canonical ``py:data`` target at the module that RESOLVES it.
-#
-# ``py:data`` fabricates a target whether or not the object exists, so a key
-# naming a module that no longer resolves the name publishes a reference to
-# nothing while leaving the real alias undocumented.  Every entry therefore
-# re-derives its own condition against the imported module in
-# ``tests/test_manager.py`` rather than being trusted because it was written.
-_PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
-    "cadrumo.core.casilla_id": ("CasillaId",),
-    "cadrumo.core.identity.digest": ("ContentDigest",),
-    "cadrumo.core.identity.tax_id": ("TaxIdIdentityToken",),
-    "cadrumo.domain.calculations.registry.tax_id_format": ("SubjectTaxId",),
-    "cadrumo_client.transport.automation_decision": ("AutomationDecision",),
-}
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
+
+_TYPE_ALIAS_FACTORIES = frozenset({"Annotated", "Callable", "Literal", "NewType", "TypeAliasType"})
+_TYPE_ALIAS_NAME_SUFFIXES = (
+    "Builder",
+    "Cursor",
+    "Kind",
+    "Policy",
+    "Port",
+    "Predicate",
+    "Reference",
+    "Resolver",
+    "Token",
+    "Type",
+    "Value",
+)
 
 # Pydantic materialises generic bases on each concrete consumer with the
 # defining class's original ``__module__``/``__qualname__``.  Autodoc would
@@ -127,14 +125,66 @@ _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _public_data_aliases(module_name: str) -> list[str]:
-    """Render canonical Python-domain targets for public type aliases."""
+def _type_alias_declarations(path: Path) -> tuple[tuple[str, str], ...]:
+    """Return public top-level type alias declarations from *path*."""
+    source = path.read_text(encoding=_UTF_8)
+    tree = ast.parse(source, filename=str(path))
+    aliases: dict[str, str] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.TypeAlias):
+            if not statement.name.id.startswith("_"):
+                declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
+                aliases[statement.name.id] = declaration
+            continue
+
+        if isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            if isinstance(statement.annotation, ast.Name) and statement.annotation.id == "TypeAlias":
+                if not statement.target.id.startswith("_"):
+                    declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
+                    aliases[statement.target.id] = declaration
+            continue
+
+        if not isinstance(statement, ast.Assign):
+            continue
+
+        targets = tuple(target.id for target in statement.targets if isinstance(target, ast.Name))
+        public_targets = tuple(name for name in targets if not name.startswith("_"))
+        if not public_targets:
+            continue
+
+        value = statement.value
+        is_type_expression = isinstance(value, ast.Subscript) and isinstance(value.value, ast.Name) and (
+            value.value.id in _TYPE_ALIAS_FACTORIES
+        )
+        is_union_expression = isinstance(value, ast.BinOp) and isinstance(value.op, ast.BitOr)
+        is_named_type_alias = (
+            isinstance(value, ast.Name)
+            and value.id[:1].isupper()
+            and any(name.endswith(_TYPE_ALIAS_NAME_SUFFIXES) for name in public_targets)
+        )
+        if (
+            is_type_expression
+            or (is_union_expression and any(name.endswith(_TYPE_ALIAS_NAME_SUFFIXES) for name in public_targets))
+            or is_named_type_alias
+        ):
+            declaration = ast.get_source_segment(source, statement) or ast.unparse(statement)
+            aliases.update((name, declaration) for name in public_targets)
+
+    return tuple(sorted(aliases.items()))
+
+
+def _public_type_aliases(module_name: str, source_path: Path) -> list[str]:
+    """Render type-alias targets and source declarations from their owner module."""
     lines: list[str] = []
-    for alias in _PUBLIC_DATA_ALIASES.get(module_name, ()):
+    for alias, declaration in _type_alias_declarations(source_path):
         lines.extend(
             (
-                f".. py:data:: {alias}",
+                f".. py:type:: {alias}",
                 f"   :module: {module_name}",
+                "",
+                "   Declared in source::",
+                "",
+                *(f"      {line}" for line in declaration.splitlines()),
                 "",
             )
         )
@@ -407,7 +457,7 @@ class ApiStubManager:
             "   :ignore-module-all:",
             "",
         ]
-        lines.extend(_public_data_aliases(pkg_name))
+        lines.extend(_public_type_aliases(pkg_name, self._source_path(pkg_name)))
         lines.extend(_public_function_aliases(pkg_name))
 
         if sub_packages:
@@ -419,8 +469,7 @@ class ApiStubManager:
         lines.append("")
         return "\n".join(lines)
 
-    @staticmethod
-    def _module_stub(mod_name: str) -> str:
+    def _module_stub(self, mod_name: str) -> str:
         """Generate RST content for a leaf-module stub.
 
         Every symbol is documented exactly once, at the module that defines it
@@ -451,9 +500,20 @@ class ApiStubManager:
         if excluded_generics:
             lines.append(f"   :exclude-members: {','.join(excluded_generics)}")
         lines.append("")
-        lines.extend(_public_data_aliases(mod_name))
+        lines.extend(_public_type_aliases(mod_name, self._source_path(mod_name)))
         lines.extend(_public_function_aliases(mod_name))
         return "\n".join(lines)
+
+    def _source_path(self, module_name: str) -> Path:
+        """Return the source file for a discovered module name."""
+        for source_root in self.source_roots:
+            package_name = source_root.name
+            if module_name != package_name and not module_name.startswith(package_name + "."):
+                continue
+            parts = module_name.split(".")[1:]
+            module_path = source_root.joinpath(*parts)
+            return module_path / "__init__.py" if module_path.is_dir() else module_path.with_suffix(".py")
+        raise ValueError(f"API module is outside configured source roots: {module_name}")
 
     def _expected_stub_contents(self, all_modules: list[tuple[str, bool]] | None = None) -> dict[str, str]:
         """Return canonical stub content keyed by stub filename.

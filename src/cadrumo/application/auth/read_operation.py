@@ -59,6 +59,7 @@ from .diagnostics_ports import AuthDiagnosticPersistencePort
 from .operator import inspect_operator_auth, test_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_scope_ports import OperatorScopePorts
+from .sync_readiness import build_auth_sync_readiness
 
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
 
@@ -94,7 +95,18 @@ class AuthReadExecutor:
             if require_active_bucket_id() != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             ports = self._ports_factory(payload.profile_id)
-            if payload.kind in {"status", "test"}:
+            if payload.kind == "sync_readiness":
+                result = AuthReadResult(
+                    profile_id=payload.profile_id,
+                    kind="sync_readiness",
+                    sync_readiness=build_auth_sync_readiness(
+                        payload.provider,
+                        certificate_secret_backend_factory=ports.certificate_secret_backend_factory,
+                        operator_probe_ports=ports.operator_probe_ports,
+                        operator_scope_ports=ports.operator_scope_ports,
+                    ),
+                )
+            elif payload.kind in {"status", "test"}:
                 if payload.kind == "status":
                     result = AuthReadResult(
                         profile_id=payload.profile_id,
@@ -186,6 +198,7 @@ def project_auth_read_result(result: BaseModel, receipt: OperationTerminalReceip
         kind=validated.kind,
         status=AuthStatusSnapshot.from_status(validated.status) if validated.status else None,
         test=AuthTestSnapshot.from_test(validated.test) if validated.test else None,
+        sync_readiness=validated.sync_readiness,
         diagnostics_rows=(
             tuple(
                 AuthDiagnosticSummarySnapshot.model_validate(row.model_dump())

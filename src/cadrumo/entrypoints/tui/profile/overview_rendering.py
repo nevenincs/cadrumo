@@ -27,6 +27,7 @@ from ..components.widgets import (
     SourceActionCard,
     SourceActionDescriptor,
 )
+from .aeat_auth_setup import readiness_text
 from .overview_contracts import (
     _ABSENT_GLYPH,
     _COMPLETE_SETUP_KEY,
@@ -102,6 +103,8 @@ class ProfileOverviewRenderingMixin:
         for source in known_profile_acquisition_sources():
             posture = self._credential_postures.get(source.key)
             credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
+            if self._aeat_auth_setup is not None and source.requires_aeat_authentication:
+                credential_ready = self._auth_readiness is not None and self._auth_readiness.ready
             button = self.query_one(f"#source-{source.key.value}", SourceActionCard).query_one(Button)
             button.display = door_ready
             button.disabled = not (door_ready and credential_ready)
@@ -129,6 +132,11 @@ class ProfileOverviewRenderingMixin:
         await sources.remove_children()
         showing_sources = not self._onboarding or self._setup_stage is ProfileSetupStage.GET_DATA
         if showing_sources:
+            if self._aeat_auth_setup is not None:
+                await sources.mount(
+                    Static(readiness_text(self._auth_readiness), id="manager-auth-readiness", markup=False),
+                    Button(tr("tui.aeat_auth.edit"), id="manager-auth-edit", compact=True),
+                )
             await sources.mount_all(self._source_cards())
         if showing_sources and self._open_document_reader is not None:
             await sources.mount(
@@ -214,6 +222,7 @@ class ProfileOverviewRenderingMixin:
         full rebuild rather than writing into coordinates the new page no
         longer has.
         """
+        await self._refresh_auth()
         async with self._render_lock:
             previous = self.overview
             self.overview = updated

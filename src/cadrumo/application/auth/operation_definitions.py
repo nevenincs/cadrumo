@@ -54,6 +54,14 @@ from ..user_profile.passphrase_rotation import (
     rotate_profile_passphrase,
 )
 from .certificate_secret_backend import CertificateSecretBackendFactory
+from .credential_operations import (
+    AUTH_CREDENTIAL_PASSWORD_SECRET_KIND,
+    AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+    AuthCredentialSaveExecutor,
+    AuthCredentialSaveRequest,
+    AuthCredentialSaveResult,
+    resolve_auth_credential_access,
+)
 from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutResult, AuthResetResult
@@ -505,6 +513,16 @@ def build_auth_operation_definitions(
     """Build the owner registrations over the composed outer authority ports."""
     return (
         _definition(
+            definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+            request_type=AuthCredentialSaveRequest,
+            result_type=AuthCredentialSaveResult,
+            executor_type=AuthCredentialSaveExecutor,
+            build=lambda: AuthCredentialSaveExecutor(ports=ports),
+            phases=("auth.credential.secret-consume", "auth.credential.execute", "auth.credential.settlement"),
+            secret_kind=AUTH_CREDENTIAL_PASSWORD_SECRET_KIND,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+        ),
+        _definition(
             definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
             request_type=AuthConfigureOperationRequest,
             result_type=AuthConfigureResult,
@@ -640,6 +658,12 @@ def build_auth_operation_registrations(
                     access_resolver=resolve_auth_teardown_access,
                 )
                 if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}
+                else OperationPublicDefinitionRegistrationV1.compose_request_result(
+                    definition=definition,
+                    public_result_type=AuthCredentialSaveResult,
+                    access_resolver=resolve_auth_credential_access,
+                )
+                if definition.definition_id == AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID
                 else OperationPublicDefinitionRegistrationV1.compose_request_only(
                     definition=definition, request_schema_id=f"{definition.definition_id}.request"
                 )

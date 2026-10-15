@@ -31,6 +31,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Checkbox, DataTable, Footer, Input, ProgressBar, Static
 from textual.worker import Worker
 
+from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.user_profile.acquisition_sources import (
     AcquisitionSourceCredentialPostureV1,
     ProfileAcquisitionSourceKey,
@@ -51,6 +52,7 @@ from ..components.widgets import (
     ContentScroll,
     DisclosureGroup,
 )
+from .aeat_auth_setup import AeatAuthSetupPort, AeatAuthSetupScreen, readiness_text
 from .overview_contracts import (
     _COMPLETE_SETUP_ACTION,
     _COMPLETE_SETUP_KEY,
@@ -192,6 +194,7 @@ class ProfileManagerScreen(
         validate: Callable[[str, str], str | None] | None = None,
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
         credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
+        aeat_auth_setup: AeatAuthSetupPort | None = None,
         open_document_reader: Callable[[], Screen[None]] | None = None,
         list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
         set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
@@ -200,6 +203,8 @@ class ProfileManagerScreen(
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
         self.overview = overview
+        self._aeat_auth_setup = aeat_auth_setup
+        self._auth_readiness: AuthSyncReadiness | None = None
         self._open_document_reader = open_document_reader
         """Builds the document reader page, or ``None`` when this host offers none."""
         self._complete_setup = complete_setup
@@ -391,7 +396,39 @@ class ProfileManagerScreen(
                 button.styles.border = ("none", "transparent")
                 button.styles.height = 1
         await self._redraw()
+        if self._aeat_auth_setup is not None:
+            self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
         self._finish_mount()
+
+    async def _refresh_auth(self) -> None:
+        """Read persisted requirements and gate every acquisition action consistently."""
+        if self._aeat_auth_setup is None:
+            return
+        try:
+            _overview, self._auth_readiness = await self._aeat_auth_setup.snapshot()
+        except Exception:
+            self._auth_readiness = None
+        if self.is_attached:
+            for status in self.query("#manager-auth-readiness"):
+                if isinstance(status, Static):
+                    status.update(readiness_text(self._auth_readiness))
+            self._sync_source_actions()
+
+    def _edit_aeat_auth(self) -> None:
+        if self._aeat_auth_setup is None or self._pending_write is not None:
+            return
+        self.app.push_screen(AeatAuthSetupScreen(self._aeat_auth_setup), self._auth_edited)
+
+    async def _auth_edited(self, _outcome: None) -> None:
+        if self._aeat_auth_setup is None:
+            return
+        try:
+            overview, self._auth_readiness = await self._aeat_auth_setup.snapshot()
+            await self._apply_overview(overview)
+            await self._redraw()
+        except Exception:
+            self._auth_readiness = None
+            await self._redraw()
 
     def _finish_mount(self) -> None:
         """Set focus and scrolling only while the asynchronously redrawn screen remains attached."""

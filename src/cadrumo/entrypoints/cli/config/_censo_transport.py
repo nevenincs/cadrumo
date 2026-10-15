@@ -137,14 +137,18 @@ def _file_import_preview_lines(result: CensoFileIngestResult) -> list[str]:
 def censo_pull(
     ctx: typer.Context,
     apply: bool = False,
+    configure_auth: bool = False,
 ) -> None:
     """Preview the censal consulta or complete its registered reviewed apply."""
     from cadrumo_client.commands.profile_binding import bound_profile_client
 
+    from ._censo_auth import require_censo_auth
     from ._censo_review_cli import confirm_censal_review
     from .operation_censal_prepare import prepare_censal_review
     from .operation_censal_preview import preview_censal_operation
     from .operation_censal_review import review_censal_operation
+
+    require_censo_auth(ctx, configure=configure_auth)
 
     if apply:
         prepared = prepare_censal_review(ctx)

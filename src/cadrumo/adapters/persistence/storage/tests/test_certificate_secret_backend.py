@@ -447,3 +447,99 @@ class TestSecretStoreNaturalKey:
         assert _backend_module._secret_store_key(bucket_id="a", name="personal") != _backend_module._secret_store_key(
             bucket_id="b", name="personal"
         )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["clave_permanente", "certificate"])
+async def test_protected_authentication_password_is_persisted_and_reloaded(
+    _isolated_backend: None,
+    provider: str,
+) -> None:
+    """The setup operation writes encrypted credentials reused by a fresh projection."""
+    import json
+    from contextlib import asynccontextmanager
+    from types import SimpleNamespace
+    from typing import cast
+
+    from cadrumo.application.auth.credential_operations import (
+        AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+        AuthCredentialSaveExecutor,
+        AuthCredentialSaveRequest,
+    )
+    from cadrumo.application.auth.credentials import active_auth_projection_span
+    from cadrumo.application.auth.operation_definitions import AuthOperationPorts
+    from cadrumo.application.operations.models import OperationRequest
+    from cadrumo.application.operations.owner import OperationExecutorContext
+    from cadrumo.core.config import load_settings
+    from cadrumo.core.operations import OperationEffect, profile_operation_subject
+
+    _register_operator_profile()
+    synthetic_value = "synthetic-login-password"
+    encoded = bytearray(json.dumps({"password": synthetic_value}).encode())
+    saved_results = []
+    effects = []
+
+    class Secrets:
+        @asynccontextmanager
+        async def consume(self):
+            try:
+                yield memoryview(encoded)
+            finally:
+                encoded[:] = b"\0" * len(encoded)
+
+    class Cancellation:
+        @asynccontextmanager
+        async def irreversible_section(self):
+            yield
+
+    class Events:
+        async def phase(self, value):
+            pass
+
+        async def effect(self, value):
+            effects.append(value)
+
+    class Operands:
+        async def put(self, value, *, written_at):
+            saved_results.append(value)
+            return "b" * 64
+
+    ports = cast(
+        AuthOperationPorts,
+        SimpleNamespace(
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+        ),
+    )
+    executor = AuthCredentialSaveExecutor(ports=ports)
+    request = OperationRequest[AuthCredentialSaveRequest](
+        definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(_BUCKET_ID),
+        payload=AuthCredentialSaveRequest(provider=provider),
+    )
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            ephemeral_secret=Secrets(),
+            cancellation=Cancellation(),
+            events=Events(),
+            operands=Operands(),
+        ),
+    )
+    assert await executor.execute(request, context) == "b" * 64
+    with active_auth_projection_span(
+        requested_provider=provider,
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        settings=load_settings(),
+    ) as snapshot:
+        actual = (
+            snapshot.clave_permanente_password
+            if provider == "clave_permanente"
+            else snapshot.certificate_credentials.password
+        )
+        assert actual is not None
+        assert actual.get_secret_value() == synthetic_value
+    assert effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+    assert synthetic_value not in saved_results[0].model_dump_json()
+    assert not any(encoded)

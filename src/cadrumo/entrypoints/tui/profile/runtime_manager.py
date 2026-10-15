@@ -52,7 +52,9 @@ from ....domain.user_profile.plantilla_media import PlantillaMediaState, Plantil
 from ..aeat_sync.models import AeatSyncOperationRequestV1
 from ..aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 from ..operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
+from .aeat_auth_setup import readiness_text
 from .overview import ProfileManagerScreen
+from .runtime_aeat_auth import RuntimeAeatAuthSetup
 from .runtime_auth_configuration import configure_runtime_auth
 from .runtime_errors import ProfileManagerCompletedViewUnavailableError
 from .runtime_overview import read_runtime_profile_overview
@@ -351,6 +353,16 @@ class RuntimeProfileManagerComposition:
         screen = self.screen
         if screen is None:
             raise RefusalError(RefusalCode.UNAVAILABLE)
+        try:
+            _, readiness = await self.auth_setup().snapshot()
+        except Exception:
+            screen.notify(readiness_text(None), severity="error")
+            return
+        if not readiness.ready:
+            screen._auth_readiness = readiness
+            await screen._redraw()
+            screen.notify(readiness_text(readiness), severity="warning")
+            return
         if source.key is ProfileAcquisitionSourceKey.CENSAL_REVIEW:
             request = AeatSyncOperationRequestV1(
                 action=ActionReference(action_id="operator.profile.edit"),
@@ -412,9 +424,14 @@ class RuntimeProfileManagerComposition:
             set_plantilla_media=self._set_plantilla_media,
             remove_plantilla_media=self._remove_plantilla_media,
             launch_source=self._launch_source,
+            aeat_auth_setup=self.auth_setup(),
         )
         self.screen = screen
         return screen
+
+    def auth_setup(self) -> RuntimeAeatAuthSetup:
+        """Expose the same exact-profile authentication editor beside both sync surfaces."""
+        return RuntimeAeatAuthSetup(self.client, overview=self._overview, persist=self._field, pin=self._pin)
 
 
 __all__ = [

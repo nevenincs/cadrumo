@@ -40,6 +40,8 @@ HOSTED_ROOT_VARIABLE: Final = "CADRUMO_AGENT_HOSTED_ROOT"
 GATEWAY_PORT_VARIABLE: Final = "CADRUMO_AGENT_PORT"
 WORKER_PORT_VARIABLE: Final = "CADRUMO_AGENT_WORKER_PORT"
 AGENT_LOG_LEVEL_VARIABLE: Final = "CADRUMO_AGENT_LOG_LEVEL"
+EXTERNAL_BIN_DIRECTORIES_VARIABLE: Final = "CADRUMO_EXTERNAL_BIN_DIRS"
+"""The native package's admitted directories for external provider executables."""
 DIAGNOSTIC_VARIABLES: Final = frozenset({AGENT_LOG_LEVEL_VARIABLE})
 """Capture agent diagnostics independently of the operator view filter."""
 
@@ -147,6 +149,16 @@ def agent_launch_environment(
         ChildEnvironmentProfile.STRICT, storage_root, received=received, base=base, sys_platform=platform
     )
     environment[STORAGE_ROOT.variable] = str(normalize_storage_path(storage_root))
+    external = next(
+        (
+            value
+            for name, value in received.items()
+            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
+        ),
+        None,
+    )
+    if external:
+        environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
     environment[HOSTED_ROOT_VARIABLE] = str(agent_root)
     # The agent binds ephemeral ports and reports the real one on its ready line.
     environment[GATEWAY_PORT_VARIABLE] = "0"

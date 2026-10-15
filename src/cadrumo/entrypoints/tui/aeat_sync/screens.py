@@ -46,6 +46,7 @@ from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
 from ..operations.controller_port import OperationControllerPort
 from ..operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
+from ..profile.aeat_auth_setup import AeatAuthSetupScreen, readiness_text
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
 
@@ -239,6 +240,11 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
     def compose(self) -> ComposeResult:
         yield Static(tr(self.heading), classes="cadrumo-banner", markup=False)
         with ContentScroll(id="aeat-sync-page", classes="cadrumo-scroll"):
+            if self.controller.aeat_auth_setup is not None:
+                yield Static(
+                    readiness_text(self.controller.auth_readiness), id="aeat-sync-auth-readiness", markup=False
+                )
+                yield Button(tr("tui.aeat_auth.edit"), id="aeat-sync-auth-edit")
             yield Static(
                 tr("tui.aeat_sync.section.areas"),
                 classes="cadrumo-heading",
@@ -273,6 +279,24 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             navigation,
             rows,
         )
+        if self.controller.aeat_auth_setup is not None:
+            self.run_worker(self._refresh_auth(), group="aeat-sync-auth-readiness", exclusive=True)
+
+    async def _refresh_auth(self) -> bool:
+        door = self.controller.aeat_auth_setup
+        if door is None:
+            return True
+        try:
+            _, self.controller.auth_readiness = await door.snapshot()
+        except Exception:
+            self.controller.auth_readiness = None
+        if self.is_attached:
+            self.query_one("#aeat-sync-auth-readiness", Static).update(readiness_text(self.controller.auth_readiness))
+            self._set_operation_buttons_disabled(self._in_flight_id is not None)
+        return self.controller.auth_readiness is not None and self.controller.auth_readiness.ready
+
+    async def _auth_edited(self, _outcome: None) -> None:
+        await self._refresh_auth()
 
     def _render_zone_status(self, rows: DataTable[str]) -> None:
         """State known-empty and unobservable zones in non-colour text."""
@@ -383,7 +407,15 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         )
         self._requests[button_id] = request
         self.query_one("#aeat-sync-page", ContentScroll).mount(
-            Button(tr(label_key), id=button_id, classes="aeat-sync-operation")
+            Button(
+                tr(label_key),
+                id=button_id,
+                classes="aeat-sync-operation",
+                disabled=(
+                    self.controller.aeat_auth_setup is not None
+                    and (self.controller.auth_readiness is None or not self.controller.auth_readiness.ready)
+                ),
+            )
         )
 
     def _render_operation_refusal(self) -> None:
@@ -395,6 +427,10 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Hand the exact admitted request to the optional owning host door."""
         request_id = event.button.id or ""
+        if request_id == "aeat-sync-auth-edit":
+            if self.controller.aeat_auth_setup is not None and self._in_flight_id is None:
+                self.app.push_screen(AeatAuthSetupScreen(self.controller.aeat_auth_setup), self._auth_edited)
+            return
         request = self._requests.get(request_id)
         if request is None:
             return
@@ -405,6 +441,9 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             return
         if self._in_flight_id is not None:
             status.update(tr("tui.aeat_sync.operation.in_flight"))
+            return
+        if not await self._refresh_auth():
+            status.update(readiness_text(self.controller.auth_readiness))
             return
         self._consumed_request_ids.add(request_id)
         if handoff is None:
@@ -505,7 +544,14 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
     def _set_operation_buttons_disabled(self, disabled: bool) -> None:
         """Make the one-shot operation guard visible during a host handoff."""
         for button in self.query(".aeat-sync-operation"):
-            button.disabled = disabled
+            button.disabled = (
+                disabled
+                or (button.id in self._consumed_request_ids)
+                or (
+                    self.controller.aeat_auth_setup is not None
+                    and (self.controller.auth_readiness is None or not self.controller.auth_readiness.ready)
+                )
+            )
 
     async def _select_notification(self, row_key: str) -> None:
         """Open only a row AEAT has explicitly marked read."""

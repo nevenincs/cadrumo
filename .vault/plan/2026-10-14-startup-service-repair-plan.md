@@ -9,7 +9,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-15'
 body_schema: body-v2
-body_hash: 'sha256:4b0947044b59292d2daccbc40e27e03aa05bad42e9d125a959b26029d733769f'
+body_hash: 'sha256:950b29a2586fc0c8f74dcee094872c043c607bb5953a8dea941b9f1bbaf74d9f'
 ---
 
 <!-- LINK RULES:
@@ -130,6 +130,7 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 - [ ] `S02` - Coalesce sign-in observations and make agent retry supervision responsive and bounded; `native/desktop/src-tauri/src/shell/sign_in, native/desktop/src-tauri/src/agent/supervisor.rs`.
 - [ ] `S03` - Verify corrected launch environment and service diagnostics in the rebuilt Windows package; `native/tests/environment_launch_probe.py, dev/runtime_lifecycle/agent_live.py, build/windows-x64, direct non-GUI service/runtime/provider-home and live-provider validation`.
 - [ ] `S04` - Diagnose and repair profile worker deadline cascades and distinguish ordinary client closes from refusals; `src/cadrumo/adapters/local_runtime/profile_worker_transport.py, src/cadrumo/adapters/local_runtime/server_connection_handling.py, src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, owning tests`.
+- [ ] `S05` - Preserve the declared external CLI binary directories across service, gateway and worker launches; `native/application-environment.toml, native/platform/src/launch.rs, src/cadrumo_agent_service/host/launch_environment.py and tests, dev/packaging/native/environment_conformance.py and tests, packaged CLI resolution verification`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

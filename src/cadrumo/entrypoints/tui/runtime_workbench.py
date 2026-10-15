@@ -341,6 +341,9 @@ class RuntimeWorkbenchRoot:
             operation_handoff=operation_handoff,
             refresh_snapshot=refresh_aeat_sync,
             operation_contracts=operation_contracts,
+            aeat_auth_setup=RuntimeProfileManagerComposition(
+                self._client, profile_label=self._label, output_language=self._language
+            ).auth_setup(),
         )
 
     def _presentation(self, capture: _Capture) -> RootPresentationV1:

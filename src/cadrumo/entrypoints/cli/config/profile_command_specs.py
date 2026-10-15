@@ -713,6 +713,14 @@ PROFILE_COMMAND_SPECS = (
         LIVE_PROFILE_WRITE,
         (
             _option(
+                "configure_auth",
+                ("--configure-auth",),
+                FLAG_VALUE,
+                "cli.censo_auth.configure_help",
+                default=False,
+                flag=True,
+            ),
+            _option(
                 "apply",
                 ("--apply",),
                 FLAG_VALUE,

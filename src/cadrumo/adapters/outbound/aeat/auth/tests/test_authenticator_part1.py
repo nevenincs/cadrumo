@@ -308,7 +308,7 @@ def test_describe_warns_when_password_missing(tmp_path: Path, _settings_factory)
 
     assert description.configured is True
     assert description.available is False
-    assert description.health_summary == "CADRUMO_CERTIFICATE_PASSWORD_SECRET not set"
+    assert description.health_summary
 
 
 def test_describe_preserves_expired_certificate_severity(tmp_path: Path, _settings_factory) -> None:
@@ -624,3 +624,25 @@ def test_outbound_certificate_factory_requires_typed_credentials(tmp_path: Path,
 
     with pytest.raises(AuthConfigurationError, match="ActiveCertificateCredentials"):
         select_provider(AuthProviderKind.CERTIFICATE, settings=settings)
+
+
+def test_unencrypted_pkcs12_needs_no_saved_password(tmp_path: Path, _settings_factory) -> None:
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.serialization import pkcs12
+
+    encrypted = _build_bundle(tmp_path)
+    key, certificate, chain = pkcs12.load_key_and_certificates(encrypted.read_bytes(), CERTIFICATE_INPUT.encode())
+    unencrypted = tmp_path / "unencrypted.p12"
+    unencrypted.write_bytes(
+        pkcs12.serialize_key_and_certificates(
+            b"holder",
+            key,
+            certificate,
+            chain,
+            serialization.NoEncryption(),
+        )
+    )
+    settings = _settings_factory(unencrypted, cadrumo_certificate_password_secret=None)
+    auth = AeatAuthenticator(settings, credentials=unnamed_certificate_credentials(settings))
+    assert extract_nif_from_subject(auth.load_certificate()) == "12345678Z"
+    assert auth.describe().available

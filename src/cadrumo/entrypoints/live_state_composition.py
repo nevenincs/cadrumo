@@ -79,11 +79,13 @@ from ..adapters.persistence.storage.runtime_repository import secure_object_repo
 from ..adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ..application.auth.operator import build_live_auth_preflight_report
+from ..application.auth.operator_results import AuthLoginPreconditionError
 from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.auth.protocols import BrowserSessionFactoryPort
 from ..application.auth.session_types import AeatSession
 from ..application.auth.sessions import AuthenticatedAeatSessionResult
+from ..application.auth.sync_readiness import build_auth_sync_readiness
+from ..application.auth.sync_requirement_text import sync_requirement_reason
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
@@ -127,7 +129,6 @@ from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import SessionWriteReporter, active_verified_session, ensure_live_authenticated_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.automation_custody_port import AutomationCustodyError
 from ..core.bucket_pointer import require_active_bucket_id
@@ -160,15 +161,22 @@ def preflight_filed_history_provider(profile_id: UUID, operation: PinnedAuthorit
     from .auth_read_composition import compose_auth_read_ports
 
     ports = compose_auth_read_ports(profile_id)
-    report = build_live_auth_preflight_report(
+    report = build_auth_sync_readiness(
         certificate_secret_backend_factory=ports.certificate_secret_backend_factory,
         operator_probe_ports=ports.operator_probe_ports,
         operator_scope_ports=ports.operator_scope_ports,
-        read_ports=ports.read_ports,
-        operation=operation,
     )
-    if not report.configured or not report.available:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
+    if not report.ready:
+        missing = tuple(item for item in report.requirements if not item.satisfied)
+        raise AuthLoginPreconditionError(
+            translated_message="application.auth.sync.errors.requirements_missing",
+            context={
+                "provider": report.provider,
+                "route": report.route,
+                "required_fields": ", ".join(item.field for item in missing),
+                "reasons": "; ".join(sync_requirement_reason(item.reason) for item in missing),
+            },
+        )
 
 
 class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):

@@ -17,6 +17,7 @@ from ..launch_environment import (
     AGENT_LOG_LEVEL_VARIABLE,
     AGENT_SLOTS,
     DIAGNOSTIC_VARIABLES,
+    EXTERNAL_BIN_DIRECTORIES_VARIABLE,
     FORWARD_VARIABLE,
     GATEWAY_PORT_VARIABLE,
     GATEWAY_SLOTS,
@@ -32,6 +33,27 @@ from ..launch_environment import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.mark.parametrize(
+    ("platform", "name"), [("win32", "cadrumo_external_bin_dirs"), ("linux", "CADRUMO_EXTERNAL_BIN_DIRS")]
+)
+def test_declared_provider_binary_directories_reach_the_native_agent_host(
+    tmp_path: Path, platform: str, name: str
+) -> None:
+    environment = agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=None,
+        received={name: str(tmp_path), "CODEX_HOME": "private-account", "API_KEY": "private-key"},
+        sys_platform=platform,
+    )
+    assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == str(tmp_path)
+    assert "CODEX_HOME" not in environment
+    assert "API_KEY" not in environment
+
 
 _RECEIVED = {
     "SystemRoot": "C:\\Windows",

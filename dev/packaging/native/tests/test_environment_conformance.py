@@ -103,6 +103,15 @@ def test_the_installed_components_conform_to_the_package_declaration(
     assert findings == [], _rendered(findings)
 
 
+def test_composer_may_forward_the_declared_external_binary_directories(
+    reference: Reference, request_: dict[str, Any], facts: dict[str, Any]
+) -> None:
+    copied = copy.deepcopy(facts)
+    copied["runtime"]["composed"].append(reference.declaration.path_external)
+    findings = conformance_findings(reference, copied, request_["received"], require_agent=False)
+    assert findings == [], _rendered(findings)
+
+
 def test_an_agent_that_agrees_with_the_declaration_adds_no_finding(
     reference: Reference, request_: dict[str, Any], facts: dict[str, Any]
 ) -> None:

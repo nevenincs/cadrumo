@@ -834,7 +834,7 @@ mod tests {
                 profile.name
             );
             assert!(
-                profile.pass.is_empty(),
+                profile.pass.iter().all(|name| !name.starts_with(prefix)),
                 "{} lists no agent name",
                 profile.name
             );
@@ -882,6 +882,38 @@ mod tests {
             }
             assert!(get(environment, prefix).is_none());
             assert!(get(environment, "UNDECLARED_PROVIDER_KEY").is_none());
+        }
+    }
+
+    #[test]
+    fn gateway_and_worker_preserve_declared_external_binary_directories() {
+        let scratch = Scratch::new("agent-external-path");
+        let external = scratch.0.join("provider-bin");
+        std::fs::create_dir_all(&external).unwrap();
+        let name = LAUNCH_PATH_ENTRIES
+            .iter()
+            .find(|entry| entry.kind == "external")
+            .unwrap()
+            .value;
+        let value = external.to_str().unwrap();
+        let gateway = select("cadrumo-agent", &agent_arguments(&["serve"])).unwrap();
+        let worker = select(
+            "cadrumo-agent",
+            &["-m", "cadrumo_agent.worker"].map(OsString::from),
+        )
+        .unwrap();
+        for profile in [gateway, worker] {
+            let defined = define_environment(
+                profile,
+                &agent_ambient(profile.prefix, &[(name.to_owned(), value)]),
+                &scratch.0,
+                &fixed_root(scratch.0.clone()),
+            )
+            .unwrap();
+            assert_eq!(get(&defined.environment, name).unwrap(), external.as_os_str());
+            let path: Vec<PathBuf> =
+                env::split_paths(get(&defined.environment, "PATH").unwrap()).collect();
+            assert!(path.contains(&external), "{}", profile.name);
         }
     }
 

@@ -415,6 +415,18 @@ async def _ensure_authenticated_aeat_session_locked(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
     )
+    if provider_kind is AuthProviderKind.CLAVE_PERMANENTE:
+        from .credentials import active_auth_projection_span
+
+        with active_auth_projection_span(
+            settings=settings,
+            requested_provider=provider_kind.value,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
+        ) as snapshot:
+            settings = settings.model_copy(
+                update={"cadrumo_clave_permanente_password": snapshot.clave_permanente_password}
+            )
     settings, expected_identity = _prepare_clave_auth(
         settings,
         provider_kind,

@@ -49,6 +49,9 @@ class ProfileOverviewInteractionMixin:
     async def on_button_pressed(self: ProfileManagerScreen, event: Button.Pressed) -> None:
         """Route setup, section, and acquisition buttons in their established order."""
         button_id = event.button.id or ""
+        if button_id == "manager-auth-edit":
+            self._edit_aeat_auth()
+            return
         if await _handle_setup_button(self, button_id):
             return
         if _handle_section_button(self, button_id):

@@ -1,0 +1,56 @@
+auth:
+  sync:
+    requirement:
+      profile_tax_id_required: Introdueix el NIF/NIE del contribuent.
+      auth_method_required: Tria un mètode d’autenticació.
+      certificate_file_required: Selecciona un fitxer de certificat PKCS#12 existent.
+      certificate_passphrase_required: Desa la contrasenya del certificat.
+      clave_identity_required: Introdueix un DNI/NIE vàlid per a Cl@ve.
+      profile_identity_must_match: El DNI/NIE de Cl@ve ha de coincidir amb el NIF/NIE del contribuent.
+      nie_support_required: Introdueix el número de suport del NIE per a la sol·licitud a l’app.
+      dni_validity_required: Introdueix la data de validesa del DNI per a la sol·licitud a l’app.
+      clave_password_required: Desa la contrasenya de Cl@ve Permanente.
+      file_missing: El fitxer del certificat no existeix.
+      unreadable: No es pot llegir el fitxer del certificat.
+      corrupt: No es pot obrir el certificat. Revisa el fitxer i la contrasenya.
+      expired: El certificat ha caducat.
+      expiring: El certificat caduca aviat.
+      ok: La comprovació local és correcta.
+      unavailable: No s’ha pogut completar la comprovació local requerida.
+cli:
+  censo_auth:
+    configure_help: Configura o edita l’autenticació AEAT desada abans de consultar el cens (terminal
+      interactiu).
+    offer: Vols configurar l’autenticació AEAT abans de sincronitzar?
+    method: Mètode d’autenticació
+    route: Via de Cl@ve Móvil
+    certificate: Ruta del certificat (en blanc conserva el valor desat)
+    field: '{field} (en blanc conserva el valor desat)'
+    still_missing: Encara falta {field}.
+    password: Contrasenya (en blanc conserva el valor desat)
+    saved: Autenticació desada.
+    required: 'La sincronització AEAT requereix: {requirements}. Configura o edita l’autenticació aquí:
+      {command}.'
+    console_required: 'Per editar l’autenticació cal un terminal interactiu: {command}. Requisits: {requirements}.'
+tui:
+  aeat_auth:
+    title: Autenticació AEAT
+    edit: Configurar / editar autenticació AEAT
+    ready: A punt per sincronitzar
+    blocked: 'Completa aquests requisits abans de sincronitzar:'
+    unknown: No s’ha pogut comprovar l’autenticació. Torna a obrir els ajustos per reintentar.
+    save: Desar autenticació
+    saved: Desat. Els requisits reflecteixen el perfil emmagatzemat.
+    failed: No s’ha pogut desar l’autenticació. Revisa els camps requerits i reintenta.
+    certificate_path: Ruta del certificat
+    certificate_secret: Contrasenya del certificat (en blanc conserva la desada)
+    password: Contrasenya de Cl@ve Permanente (en blanc conserva la desada)
+    close: Tornar
+    method: Mètode d’autenticació
+    route: Via de Cl@ve Móvil
+application:
+  auth:
+    sync:
+      errors:
+        requirements_missing: 'La sincronització AEAT requereix: {required_fields}. Configura o edita
+          l’autenticació aquí: {reasons}.'

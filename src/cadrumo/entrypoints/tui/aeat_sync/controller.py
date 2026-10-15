@@ -11,6 +11,7 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceZone,
     AeatSyncWorkspaceZoneStateV1,
 )
+from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.operations.models import OperationDefinitionId
 from ....application.operations.registry import (
     OperationPublicContractSetV1,
@@ -19,6 +20,7 @@ from ....application.operations.registry import (
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ....application.operator_actions.models import ActionReference
 from ..navigation import TuiScreenContextV1
+from ..profile.aeat_auth_setup import AeatAuthSetupPort
 from .models import (
     AEAT_SYNC_DESTINATION_BY_ZONE,
     AeatSyncNotificationDocumentHandoffV1,
@@ -92,6 +94,7 @@ class AeatSyncWorkspaceController:
         notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
         action_catalogue: ActionCatalogue = OPERATOR_ACTION_CATALOGUE,
         operation_contracts: OperationPublicContractSetV1 | None = None,
+        aeat_auth_setup: AeatAuthSetupPort | None = None,
     ) -> None:
         """Validate the outer context and retain only injected public facts."""
         if context.destination != "workbench.aeat_sync":
@@ -105,6 +108,8 @@ class AeatSyncWorkspaceController:
         self.notification_document_handoff = notification_document_handoff
         self.action_catalogue = action_catalogue
         self.operation_contracts = operation_contracts
+        self.aeat_auth_setup = aeat_auth_setup
+        self.auth_readiness: AuthSyncReadiness | None = None
         self._states = {state.zone: state for state in projection.zones}
 
     def state_for(self, zone: AeatSyncWorkspaceZone) -> AeatSyncWorkspaceZoneStateV1:

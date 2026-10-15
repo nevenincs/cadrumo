@@ -705,6 +705,9 @@ async def login_operator_auth(
             guarded_read_context=guarded_read_context,
         )
 
+        resolved_settings = resolved_settings.model_copy(
+            update={"cadrumo_clave_permanente_password": snapshot.clave_permanente_password}
+        )
         certificate_credentials = snapshot.certificate_credentials
 
         # Provider-specific local-readiness preconditions. A certificate

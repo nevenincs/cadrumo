@@ -81,6 +81,8 @@ def register_certificate_source(
     normalized_name = name.strip()
     if not normalized_name:
         raise ValueError("certificate source name must not be blank")
+    if normalized_name.startswith("auth-provider:"):
+        raise ValueError("certificate source name uses a reserved authentication credential prefix")
     auth = auth_state(state)
     record = CertificateSourceRecord(
         name=normalized_name,

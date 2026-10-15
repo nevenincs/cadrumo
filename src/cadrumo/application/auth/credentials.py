@@ -25,6 +25,9 @@ from .operator_scope import active_profile_storage_span
 from .operator_scope_ports import OperatorScopePorts
 from .preferences import profile_auth_provider
 
+CLAVE_PERMANENTE_PASSWORD_SECRET_NAME = "auth-provider:clave-permanente:password"  # noqa: S105 - storage key
+UNNAMED_CERTIFICATE_PASSWORD_SECRET_NAME = "auth-provider:certificate:password"  # noqa: S105 - storage key
+
 
 def resolve_certificate_source_secret(
     *,
@@ -65,6 +68,7 @@ class ActiveAuthProjectionSnapshot:
     state: WorkflowState | None
     provider: AuthProviderKind | None
     certificate_credentials: ActiveCertificateCredentials | None
+    clave_permanente_password: SecretStr | None = None
 
 
 def _project_provider_kind(provider: str | None) -> AuthProviderKind | None:
@@ -88,7 +92,13 @@ def _resolve_witnessed_certificate_credentials(
     """Bind a secret to certificate metadata loaded from the witnessed bucket."""
     credentials = project_active_certificate_credentials(state, settings=settings)
     if credentials.source_name is None:
-        return credentials
+        password = resolve_certificate_source_secret(
+            name=UNNAMED_CERTIFICATE_PASSWORD_SECRET_NAME,
+            bucket_id=bucket_id,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            settings=settings,
+        )
+        return credentials.model_copy(update={"password": password or credentials.password})
     password = _resolve_named_certificate_source_secret(
         name=credentials.source_name,
         bucket_id=bucket_id,
@@ -160,6 +170,17 @@ def _witnessed_auth_projection_snapshot(
         state=state,
         provider=provider,
         certificate_credentials=credentials,
+        clave_permanente_password=(
+            resolve_certificate_source_secret(
+                name=CLAVE_PERMANENTE_PASSWORD_SECRET_NAME,
+                bucket_id=bucket_id,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                settings=settings,
+            )
+            or settings.cadrumo_clave_permanente_password
+            if provider is AuthProviderKind.CLAVE_PERMANENTE
+            else None
+        ),
     )
 
 
@@ -207,7 +228,7 @@ def active_auth_projection_span(
             return
         with override_settings(cadrumo_active_profile=bucket_id):
             state = workflow_state_repository().load()
-            yield _witnessed_auth_projection_snapshot(
+            snapshot = _witnessed_auth_projection_snapshot(
                 state,
                 bucket_id=bucket_id,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -215,6 +236,8 @@ def active_auth_projection_span(
                 fallback_provider=fallback_provider,
                 settings=resolved,
             )
+            with override_settings(cadrumo_clave_permanente_password=snapshot.clave_permanente_password):
+                yield snapshot
 
 
 def resolve_active_provider_kind(
