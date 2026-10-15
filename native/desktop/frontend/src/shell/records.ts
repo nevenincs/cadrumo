@@ -21,6 +21,7 @@ export type RecordFilters = {
   minLevel: number;
   hiddenSources: string[];
   logger: string | null;
+  origin?: string;
 };
 
 export const DEFAULT_FILTERS: RecordFilters = {
@@ -39,6 +40,22 @@ export function recordLine(record: LogRecord): string {
     ? ` | ${JSON.stringify(context)}`
     : "";
   return `${record.timestamp} [${record.level ?? "-"}] ${record.logger ?? record.source}: ${record.message}${suffix}`;
+}
+
+export function recordOrigin(record: LogRecord): string {
+  return record.process
+    ? `${record.source} / ${record.process.role}:${record.process.pid}`
+    : record.source;
+}
+
+export function recordsText(records: readonly LogRecord[]): string {
+  return records
+    .map((record) =>
+      record.detail
+        ? `${recordLine(record)}\n${record.detail}`
+        : recordLine(record),
+    )
+    .join("\n");
 }
 
 export function recordContext(record: LogRecord): LogContext {

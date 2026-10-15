@@ -689,11 +689,17 @@ desktop:
     failed: This part couldn't load.
     unavailable: This part needs the desktop application.
   logs:
+    all_origins: All origins
     clear_logger: Clear logger filter
+    copy_all: Copy all
     details: Details
     dropped: 'Older records dropped from this view: {count}'
     empty: The log is empty.
     errors: 'Errors: {count}'
+    export_all: Export all
+    export_failed: The logs could not be exported.
+    export_visible: Export visible
+    exported: Exported to {path}
     filter: Filter
     follow: Follow
     follow_hint: Keep the newest record in view
@@ -704,7 +710,10 @@ desktop:
     loading: Loading the log…
     minimum_level: Minimum level
     no_match: No records match these filters.
+    origin: Origin
     rejected: '{count} records omitted because their diagnostic format was invalid.'
+    reveal: Reveal log location
+    selected: '{count} entries selected'
     source_host: Desktop
     source_python: Python
     sources: Sources

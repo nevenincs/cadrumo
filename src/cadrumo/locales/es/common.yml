@@ -720,11 +720,17 @@ desktop:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
   logs:
+    all_origins: Todos los orígenes
     clear_logger: Quitar el filtro de logger
+    copy_all: Copiar todo
     details: Detalles
     dropped: 'Registros antiguos descartados de esta vista: {count}'
     empty: El registro está vacío.
     errors: 'Errores: {count}'
+    export_all: Exportar todo
+    export_failed: No se pudieron exportar los registros.
+    export_visible: Exportar visibles
+    exported: Exportado a {path}
     filter: Filtrar
     follow: Seguir
     follow_hint: Mantener visible el registro más reciente
@@ -735,7 +741,10 @@ desktop:
     loading: Cargando el registro…
     minimum_level: Nivel mínimo
     no_match: Ningún registro coincide con estos filtros.
+    origin: Origen
     rejected: Se han omitido {count} registros con un formato de diagnóstico no válido.
+    reveal: Mostrar la ubicación de los registros
+    selected: '{count} entradas seleccionadas'
     source_host: Escritorio
     source_python: Python
     sources: Orígenes

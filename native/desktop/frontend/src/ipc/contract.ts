@@ -805,6 +805,18 @@ export interface HostCommands {
     args: Authorized<{ records: Channel<LogBatch> }>;
     result: LogSubscription;
   };
+  logs_export: {
+    args: Authorized<{ text: string }>;
+    result: string;
+  };
+  logs_copy: {
+    args: Authorized<{ text: string }>;
+    result: null;
+  };
+  logs_reveal: {
+    args: Authorized;
+    result: null;
+  };
   /** Refuses an unknown subscription with `invalid_arguments`. */
   logs_unsubscribe: {
     args: Authorized<{ subscription: number }>;

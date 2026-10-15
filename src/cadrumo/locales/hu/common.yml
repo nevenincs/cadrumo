@@ -702,11 +702,17 @@ desktop:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
   logs:
+    all_origins: Minden forrás
     clear_logger: Loggerszűrő törlése
+    copy_all: Összes másolása
     details: Részletek
     dropped: 'A nézetből elvetett régebbi bejegyzések: {count}'
     empty: A napló üres.
     errors: 'Hibák: {count}'
+    export_all: Összes exportálása
+    export_failed: A naplók exportálása sikertelen.
+    export_visible: Láthatók exportálása
+    exported: 'Exportálva ide: {path}'
     filter: Szűrés
     follow: Követés
     follow_hint: A legújabb bejegyzés maradjon látható
@@ -717,7 +723,10 @@ desktop:
     loading: A napló betöltése…
     minimum_level: Minimális szint
     no_match: Egy bejegyzés sem felel meg ezeknek a szűrőknek.
+    origin: Forrás
     rejected: '{count} bejegyzés kimaradt érvénytelen diagnosztikai formátum miatt.'
+    reveal: Napló helyének megnyitása
+    selected: '{count} bejegyzés kijelölve'
     source_host: Asztali alkalmazás
     source_python: Python
     sources: Források

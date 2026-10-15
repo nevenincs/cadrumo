@@ -1,9 +1,8 @@
-//! The Logs view: Python records and manager diagnostics tailed from their
-//! logs and rotations, merged with desktop-host events in paced batches.
+//! The Logs view: Python records and manager diagnostics from the current
+//! desktop launch, merged with desktop-host events in paced batches.
 //!
-//! Records are read, never written: nothing here creates, truncates, rotates
-//! or deletes a log file, and nothing is persisted. Terminal bytes and
-//! captured child output never become records.
+//! The feed never changes source files. Explicit exports write a new file in
+//! Downloads. Terminal bytes and captured child output never become records.
 //!
 //! One poller thread owns the tail and does every file and directory read,
 //! and only while a subscription exists. The commands and the page-load hook
@@ -74,6 +73,8 @@ pub struct LogHub {
 
 /// The poller's side: the tail and the host events, read on its own thread.
 pub struct Poller {
+    /// Fixed for the launch, including when the page reloads or the reader rests.
+    since_ms: Option<u64>,
     shared: Arc<Shared>,
     tail: tail::Tail,
     manager_tail: tail::Tail,
@@ -122,6 +123,7 @@ impl LogHub {
             diagnostics: diagnostics.clone(),
         };
         let poller = Poller {
+            since_ms: Some(diagnostics.started_ms()),
             shared,
             tail,
             manager_tail,
@@ -245,9 +247,25 @@ impl Poller {
             .map(Prepared::new)
             .collect();
         let (entries, python) = self.tail.poll(now);
-        prepared.extend(entries.into_iter().map(Prepared::new));
+        prepared.extend(
+            entries
+                .into_iter()
+                .filter(|entry| {
+                    self.since_ms
+                        .is_none_or(|since| entry.timestamp_ms.is_some_and(|time| time >= since))
+                })
+                .map(Prepared::new),
+        );
         let (entries, manager) = self.manager_tail.poll(now);
-        prepared.extend(entries.into_iter().map(Prepared::new));
+        prepared.extend(
+            entries
+                .into_iter()
+                .filter(|entry| {
+                    self.since_ms
+                        .is_none_or(|since| entry.timestamp_ms.is_some_and(|time| time >= since))
+                })
+                .map(Prepared::new),
+        );
         let deliveries = {
             let mut inner = shared.lock();
             for record in prepared {
@@ -308,6 +326,94 @@ async fn logs_unsubscribe(hub: State<'_, Arc<LogHub>>, subscription: u64) -> Res
     hub.unsubscribe(subscription)
 }
 
+/// Exports an explicit log selection to a new file; never overwrites an export.
+#[tauri::command]
+async fn logs_export<R: Runtime>(app: tauri::AppHandle<R>, text: String) -> Result<String> {
+    admit_text(&text)?;
+    let directory = app.path().download_dir().map_err(|e| {
+        ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(e)
+    })?;
+    tauri::async_runtime::spawn_blocking(move || export(&directory, &text))
+        .await
+        .map_err(|e| ApplicationError::new(ErrorCode::Panic, Operation::Logging).caused_by(e))?
+}
+
+fn admit_text(text: &str) -> Result<()> {
+    if text.is_empty() || text.len() > 1024 * 1024 * 1024 {
+        return Err(ApplicationError::new(
+            ErrorCode::InvalidArguments,
+            Operation::Logging,
+        ));
+    }
+    Ok(())
+}
+
+/// The host chooses the location; webview callers cannot supply a path.
+#[tauri::command]
+async fn logs_reveal(hub: State<'_, Arc<LogHub>>) -> Result<()> {
+    let file = hub.file.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let directory = file
+            .parent()
+            .filter(|parent| parent.is_dir())
+            .ok_or_else(|| ApplicationError::new(ErrorCode::ReadFailed, Operation::Logging))?;
+        opener::open(directory).map_err(|e| {
+            ApplicationError::new(ErrorCode::SpawnFailed, Operation::Logging).caused_by(e)
+        })
+    })
+    .await
+    .map_err(|e| ApplicationError::new(ErrorCode::Panic, Operation::Logging).caused_by(e))?
+}
+
+/// Log selections can exceed the ordinary shell clipboard's one MiB limit.
+#[tauri::command]
+async fn logs_copy<R: Runtime>(app: tauri::AppHandle<R>, text: String) -> Result<()> {
+    admit_text(&text)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        app.try_state::<tauri_plugin_clipboard_manager::Clipboard<R>>()
+            .ok_or_else(|| {
+                ApplicationError::new(ErrorCode::DesktopUnavailable, Operation::Logging)
+            })?
+            .write_text(text)
+            .map_err(|e| {
+                ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(e)
+            })
+    })
+    .await
+    .map_err(|e| ApplicationError::new(ErrorCode::Panic, Operation::Logging).caused_by(e))?
+}
+
+fn export(directory: &std::path::Path, text: &str) -> Result<String> {
+    use std::io::Write;
+    admit_text(text)?;
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let path = directory.join(format!(
+        "cadrumo-session-{}-{stamp}.log",
+        std::process::id()
+    ));
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .map_err(|e| {
+            ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(e)
+        })?;
+    if let Err(error) = file
+        .write_all(text.as_bytes())
+        .and_then(|()| file.sync_all())
+    {
+        drop(file);
+        let _ = std::fs::remove_file(&path);
+        return Err(
+            ApplicationError::new(ErrorCode::WriteFailed, Operation::Logging).caused_by(error),
+        );
+    }
+    Ok(path.display().to_string())
+}
+
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let (hub, poller) = LogHub::new(
         launch.log_file.clone(),
@@ -336,5 +442,11 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
 }
 
 pub fn commands<R: Runtime>() -> Commands<R> {
-    crate::app::commands![logs_subscribe, logs_unsubscribe]
+    crate::app::commands![
+        logs_subscribe,
+        logs_unsubscribe,
+        logs_export,
+        logs_copy,
+        logs_reveal
+    ]
 }

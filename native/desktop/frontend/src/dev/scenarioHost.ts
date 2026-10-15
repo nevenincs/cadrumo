@@ -528,6 +528,10 @@ export function scenarioHost(
         ? Promise.reject(failure("output_limit", "webview"))
         : Promise.resolve(clipboard);
     },
+    revealLogs() {
+      say("revealLogs");
+      return Promise.resolve();
+    },
 
     writeClipboard(text) {
       say(`writeClipboard ${text.length} characters`);

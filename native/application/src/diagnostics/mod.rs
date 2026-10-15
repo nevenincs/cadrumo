@@ -112,6 +112,7 @@ pub struct Snapshot {
 }
 #[derive(Default)]
 struct State {
+    first_event_ms: Option<u64>,
     file: Option<LogFile>,
     // One incomplete configuration attempt; the ring remains the replay source.
     pending_replay: Option<Replay>,
@@ -141,6 +142,14 @@ pub struct Diagnostics {
     source: DiagnosticSource,
 }
 impl Diagnostics {
+    /// The first event of this process, retained even after the event ring wraps.
+    pub fn started_ms(&self) -> u64 {
+        self.state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .first_event_ms
+            .unwrap_or_else(timestamp_ms)
+    }
     pub fn new(source: DiagnosticSource) -> Self {
         Self {
             source,
@@ -229,6 +238,7 @@ impl Diagnostics {
             helper_timing: context.helper_timing,
             service: context.service,
         };
+        state.first_event_ms.get_or_insert(event.timestamp_ms);
         if let Some(file) = &state.file {
             state.log_failure = file.append(&event).err();
         }

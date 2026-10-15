@@ -15,6 +15,7 @@ const LEVEL_TONE: Partial<Record<LogLevel, string>> = {
 // holds thousands, and a batch arrives up to ten times a second.
 export const RecordRow = memo(function RecordRow({
   record,
+  selected = false,
   open,
   current,
   tabStop,
@@ -25,6 +26,7 @@ export const RecordRow = memo(function RecordRow({
   onMenu,
 }: {
   record: LogRecord;
+  selected?: boolean;
   open: boolean;
   /** The row the keyboard is on, or the one its menu was opened for. */
   current: boolean;
@@ -76,10 +78,11 @@ export const RecordRow = memo(function RecordRow({
         `record level-${level} source-${record.source}`,
         // The current row carries an ink bar as well as the hover wash: its
         // faint text has no contrast to spare for a stronger surface.
-        "border-l-(length:--selection-edge) hover:bg-accent focus-visible:-outline-offset-2 aria-[current=true]:border-ring aria-[current=true]:bg-accent",
+        "border-l-(length:--selection-edge) hover:bg-accent focus-visible:-outline-offset-2 aria-[current=true]:border-ring aria-[current=true]:bg-accent data-[selected=true]:bg-accent",
         failed ? "border-destructive" : "border-transparent",
       )}
       data-seq={record.seq}
+      data-selected={selected || undefined}
       aria-current={current || undefined}
       tabIndex={tabStop ? 0 : -1}
       onFocus={() => onCurrent(record.seq)}

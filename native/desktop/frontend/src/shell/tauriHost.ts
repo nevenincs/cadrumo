@@ -160,6 +160,9 @@ export function tauriHost(): Host {
       call("shell_clipboard_read", {}).then(({ text }) => text),
     writeClipboard: (text) =>
       call("shell_clipboard_write", { text }).then(() => undefined),
+    exportLogs: (text) => call("logs_export", { text }),
+    copyLogs: (text) => call("logs_copy", { text }).then(() => undefined),
+    revealLogs: () => call("logs_reveal", {}).then(() => undefined),
     async showMenu(items: ContextMenuItem[], at?: { x: number; y: number }) {
       const { chosen } = await call(
         "shell_context_menu",

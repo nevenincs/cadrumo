@@ -25,6 +25,8 @@ import {
   DEFAULT_FILTERS,
   levelRank,
   recordLine,
+  recordOrigin,
+  recordsText,
   shortLogger,
   type RecordFilters,
 } from "../shell/records";
@@ -62,6 +64,8 @@ type RowHandlers = {
 };
 
 type BlockProps = {
+  selected: string;
+  selection: ReadonlySet<number>;
   records: LogRecord[];
   /** The records of this block whose detail is open, as their numbers. */
   opened: string;
@@ -76,6 +80,7 @@ type BlockProps = {
 };
 
 const sameBlock = (a: BlockProps, b: BlockProps) =>
+  a.selected === b.selected &&
   a.opened === b.opened &&
   a.current === b.current &&
   a.tabStop === b.tabStop &&
@@ -89,6 +94,7 @@ const sameBlock = (a: BlockProps, b: BlockProps) =>
 // The rows of one block, side by side with every other block's in the list:
 // a fragment, so each row is still a child of the list itself.
 const RecordBlock = memo(function RecordBlock({
+  selection,
   records,
   expanded,
   current,
@@ -102,6 +108,7 @@ const RecordBlock = memo(function RecordBlock({
     <RecordRow
       key={record.seq}
       record={record}
+      selected={selection.has(record.seq)}
       open={expanded.has(record.seq)}
       current={record.seq === current}
       tabStop={record.seq === tabStop}
@@ -134,6 +141,9 @@ export const RecordList = memo(function RecordList({
   defaultFilters = DEFAULT_FILTERS,
   setFilters,
   onMenu,
+  onCopy,
+  onExport,
+  onReveal,
   shown,
 }: {
   /** null until the host's subscription answers. */
@@ -144,12 +154,16 @@ export const RecordList = memo(function RecordList({
   defaultFilters?: RecordFilters;
   setFilters: (filters: RecordFilters) => void;
   onMenu: (request: RecordMenuRequest) => void;
+  onCopy?: (text: string) => void;
+  onExport?: (text: string) => void;
+  onReveal?: () => void;
   shown: boolean;
 }) {
   const t = useStrings();
   const followSlack = useMetric("--log-follow-slack", 24);
   const list = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
+  const [selectedRecords, setSelected] = useState<LogRecord[]>([]);
   const [follow, setFollow] = useState(true);
   // While the log follows its end, the newest span is drawn. Once a reader
   // has left the end the span is pinned to its first record instead, so the
@@ -175,12 +189,24 @@ export const RecordList = memo(function RecordList({
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
+  const selected = useMemo(() => {
+    const retained = new Set(all);
+    return selectedRecords.filter((record) => retained.has(record));
+  }, [all, selectedRecords]);
+  const selection = useMemo(
+    () => new Set(selected.map((record) => record.seq)),
+    [selected],
+  );
 
   const sources = useMemo(() => {
     const seen = new Set(["python", "host"]);
     for (const record of all) seen.add(record.source);
     return [...seen];
   }, [all]);
+  const origins = useMemo(
+    () => [...new Set(all.map(recordOrigin))].sort(),
+    [all],
+  );
 
   const visible = useMemo(() => {
     const text = filters.text.trim().toLowerCase();
@@ -189,6 +215,7 @@ export const RecordList = memo(function RecordList({
         !filters.hiddenSources.includes(record.source) &&
         levelRank(record.level) >= filters.minLevel &&
         (!filters.logger || record.logger === filters.logger) &&
+        (!filters.origin || recordOrigin(record) === filters.origin) &&
         (!text ||
           `${recordLine(record)} ${record.detail ?? ""}`
             .toLowerCase()
@@ -202,6 +229,7 @@ export const RecordList = memo(function RecordList({
   // the old view's place is carried into it.
   const [drawnFor, setDrawnFor] = useState(filters);
   if (drawnFor !== filters) {
+    setSelected([]);
     setDrawnFor(filters);
     const kept = follow ? null : anchor.current;
     let at =
@@ -702,7 +730,7 @@ export const RecordList = memo(function RecordList({
           </NativeSelect>
           {followButton("@4xl:hidden panel-short:hidden")}
         </div>
-        <div className="flex min-w-0 items-center gap-1.5 scroll-cue-x overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden @4xl:contents panel-short:contents">
+        <div className="flex min-w-0 items-center gap-1.5 scroll-cue-x overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden @4xl:flex-1 panel-short:contents">
           <div
             className="flex shrink-0 gap-1"
             role="group"
@@ -746,6 +774,87 @@ export const RecordList = memo(function RecordList({
             </Button>
           )}
           <span className="flex-1" />
+          <div className="w-field shrink-0">
+            <NativeSelect
+              controlSize="sm"
+              aria-label={t("desktop.logs.origin")}
+              value={filters.origin ?? ""}
+              onChange={(event) =>
+                setFilters({ ...filters, origin: event.target.value })
+              }
+            >
+              <option value="">{t("desktop.logs.all_origins")}</option>
+              {origins.map((origin) => (
+                <option key={origin} value={origin}>
+                  {origin}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          <Button
+            variant="pill"
+            size="sm"
+            disabled={!visible.length}
+            onClick={() => {
+              setSelected(visible);
+              list.current?.focus({ preventScroll: true });
+            }}
+          >
+            {t("desktop.menu.select_all")}
+          </Button>
+          {onCopy && (
+            <>
+              <Button
+                variant="pill"
+                size="sm"
+                disabled={!visible.length}
+                onClick={() => onCopy(recordsText(visible))}
+              >
+                {t("desktop.menu.copy_visible")}
+              </Button>
+              <Button
+                variant="pill"
+                size="sm"
+                disabled={!all.length}
+                onClick={() => onCopy(recordsText(all))}
+              >
+                {t("desktop.logs.copy_all")}
+              </Button>
+            </>
+          )}
+          {onExport && (
+            <>
+              <Button
+                variant="pill"
+                size="sm"
+                disabled={!visible.length}
+                onClick={() => onExport(recordsText(visible))}
+              >
+                {t("desktop.logs.export_visible")}
+              </Button>
+              <Button
+                variant="pill"
+                size="sm"
+                disabled={!all.length}
+                onClick={() => onExport(recordsText(all))}
+              >
+                {t("desktop.logs.export_all")}
+              </Button>
+            </>
+          )}
+          {selected.length > 0 && (
+            <span className="shrink-0 text-xs" role="status">
+              {t("desktop.logs.selected", { count: selected.length })}
+            </span>
+          )}
+          <Button
+            variant="pill"
+            size="sm"
+            disabled={!onReveal}
+            onClick={onReveal}
+          >
+            {t("desktop.logs.reveal")}
+          </Button>
           {states.length > 0 &&
             states.every(([, state]) => state.kind === "available") && (
               <span className="shrink-0 text-xs text-faint">
@@ -827,6 +936,32 @@ export const RecordList = memo(function RecordList({
         aria-live="off"
         tabIndex={tabStop === undefined && drawn.length > 0 ? 0 : -1}
         onKeyDown={key}
+        onKeyDownCapture={(event) => {
+          if (
+            (event.metaKey || event.ctrlKey) &&
+            !event.altKey &&
+            event.key.toLowerCase() === "a"
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            setSelected(visible);
+          } else if (
+            (event.metaKey || event.ctrlKey) &&
+            !event.altKey &&
+            event.key.toLowerCase() === "c" &&
+            selected.length &&
+            onCopy
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            onCopy(recordsText(selected));
+          } else if (event.key === "Escape" && selected.length) {
+            event.preventDefault();
+            event.stopPropagation();
+            setSelected([]);
+          }
+        }}
+        onPointerDownCapture={() => setSelected([])}
         // A menu asked for off any record has no record to be about: none
         // is shown, the browser's own included.
         onContextMenu={(event) => {
@@ -953,6 +1088,11 @@ export const RecordList = memo(function RecordList({
             <RecordBlock
               key={Math.floor(first / BLOCK)}
               records={records}
+              selection={selection}
+              selected={records
+                .filter((record) => selection.has(record.seq))
+                .map((record) => record.seq)
+                .join(",")}
               opened={records
                 .filter((record) => expanded.has(record.seq))
                 .map((record) => record.seq)

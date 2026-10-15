@@ -102,6 +102,11 @@ export interface Host {
   subscribeLogs(listener: (batch: LogBatch) => void): Promise<() => void>;
   readClipboard(): Promise<string>;
   writeClipboard(text: string): Promise<void>;
+  /** Exports a selection to a new file in Downloads and returns its path. */
+  exportLogs?(text: string): Promise<string>;
+  /** Copies a log selection with the larger bounded log-transfer limit. */
+  copyLogs?(text: string): Promise<void>;
+  revealLogs?(): Promise<void>;
   /** Resolves to the chosen item id, or null when dismissed. Omit `at` for a
    * pointer-opened menu so the host places it at the cursor. */
   showMenu(

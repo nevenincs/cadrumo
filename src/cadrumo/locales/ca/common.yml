@@ -712,11 +712,17 @@ desktop:
     failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
   logs:
+    all_origins: Tots els orígens
     clear_logger: Treu el filtre de logger
+    copy_all: Copia-ho tot
     details: Detalls
     dropped: 'Registres antics descartats d''aquesta vista: {count}'
     empty: El registre és buit.
     errors: 'Errors: {count}'
+    export_all: Exporta-ho tot
+    export_failed: No s’han pogut exportar els registres.
+    export_visible: Exporta els visibles
+    exported: Exportat a {path}
     filter: Filtra
     follow: Segueix
     follow_hint: Mantén visible el registre més recent
@@ -727,7 +733,10 @@ desktop:
     loading: S'està carregant el registre…
     minimum_level: Nivell mínim
     no_match: Cap registre no coincideix amb aquests filtres.
+    origin: Origen
     rejected: S'han omès {count} registres amb un format de diagnòstic no vàlid.
+    reveal: Mostra la ubicació dels registres
+    selected: '{count} entrades seleccionades'
     source_host: Escriptori
     source_python: Python
     sources: Orígens

@@ -7,13 +7,18 @@ const RECORD_CAP = 10000;
 export function useHostLogs(host: Host) {
   // The log ring and what it has lost, held together: a batch changes both.
   const [log, setLog] = useState<{
+    owner: Host;
     records: LogRecord[] | null;
     dropped: number;
-  }>({ records: null, dropped: 0 });
+  }>({ owner: host, records: null, dropped: 0 });
   const { records, dropped } = log;
   const [sourceStates, setSourceStates] = useState<
     LogSourceStates | "unavailable" | null
   >(null);
+  if (log.owner !== host) {
+    setLog({ owner: host, records: null, dropped: 0 });
+    setSourceStates(null);
+  }
   // Log batches: a bounded ring; a missing or unreadable source keeps its state.
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
@@ -26,6 +31,7 @@ export function useHostLogs(host: Host) {
           const next = [...(held.records ?? []), ...batch.records];
           const over = Math.max(0, next.length - RECORD_CAP);
           return {
+            owner: host,
             records: over ? next.slice(over) : next,
             dropped: held.dropped + batch.dropped + over,
           };

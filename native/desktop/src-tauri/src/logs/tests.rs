@@ -391,18 +391,107 @@ fn start(poller: Poller) -> std::thread::JoinHandle<()> {
 }
 
 fn hub(log: PathBuf, diagnostics: Arc<Diagnostics>) -> (LogHub, Poller) {
-    LogHub::new(
+    let (hub, mut poller) = LogHub::new(
         log.clone(),
         log.with_file_name("cadrumo-manager.log"),
         FORMAT,
         diagnostics,
-    )
+    );
+    // Parser/transport fixtures below deliberately replay historical and legacy records.
+    poller.since_ms = None;
+    (hub, poller)
 }
 
 fn subscribe(hub: &LogHub) -> (u64, Frames) {
     let (channel, frames) = channel();
     let subscribed = hub.subscribe(Arc::new(move |batch| channel.send(batch).is_ok()));
     (subscribed.subscription, frames)
+}
+
+#[test]
+fn session_boundary_excludes_history_across_rotation_and_resubscription() {
+    use cadrumo_application::diagnostics::EventKind;
+    let scratch = Scratch::new("session-boundary");
+    let diagnostics = Arc::new(Diagnostics::default());
+    diagnostics.event(EventKind::HostStarted, None, None);
+    let since = diagnostics.started_ms();
+    let (hub, mut poller) = LogHub::new(
+        scratch.log(),
+        scratch.0.join("manager.log"),
+        FORMAT,
+        diagnostics.clone(),
+    );
+    // Keep the exact launch boundary even when its event leaves the memory ring.
+    for _ in 0..600 {
+        diagnostics.event(EventKind::GuiSelected, None, None);
+    }
+    assert_eq!(diagnostics.started_ms(), since);
+    append(
+        &scratch.log(),
+        b"2020-01-01T00:00:00.000Z [ERROR] cadrumo.test: old-run\n",
+    );
+    append(
+        &scratch.log(),
+        b"2026-10-04 12:00:00,000 [ERROR] cadrumo.test: legacy-unattributed\n",
+    );
+    let fresh = format!(
+        "{} [INFO] cadrumo.test: this-run\n",
+        host::entry(&diagnostics.snapshot(u64::MAX).events[0]).timestamp
+    );
+    append(&scratch.log(), fresh.as_bytes());
+    append(&scratch.0.join("manager.log"), &manager_line(1));
+    let mut manager: serde_json::Value = serde_json::from_slice(&manager_line(2)).unwrap();
+    manager["timestampMs"] = since.into();
+    let mut manager = serde_json::to_vec(&manager).unwrap();
+    manager.push(b'\n');
+    append(&scratch.0.join("manager.log"), &manager);
+    let (subscription, frames) = subscribe(&hub);
+    let now = Instant::now();
+    poller.tick(now);
+    poller.tick(now + SETTLE);
+    let text = serde_json::to_string(&records_of(&frames.lock().unwrap())).unwrap();
+    assert!(text.contains("this-run"));
+    assert!(!text.contains("old-run"));
+    assert!(!text.contains("legacy-unattributed"));
+    assert_eq!(
+        records_of(&frames.lock().unwrap())
+            .iter()
+            .filter(|record| record["source"] == "manager")
+            .count(),
+        1
+    );
+    hub.unsubscribe(subscription).unwrap();
+    poller.tick(now + SETTLE + TICK);
+    fs::rename(scratch.log(), scratch.0.join("cadrumo.log.1")).unwrap();
+    append(
+        &scratch.log(),
+        fresh.replace("this-run", "after-rotation").as_bytes(),
+    );
+    let (_, frames) = subscribe(&hub);
+    poller.tick(now + SETTLE * 2);
+    poller.tick(now + SETTLE * 3);
+    let text = serde_json::to_string(&records_of(&frames.lock().unwrap())).unwrap();
+    assert!(text.contains("after-rotation"));
+    assert!(!text.contains("old-run"));
+    assert!(!text.contains("legacy-unattributed"));
+    assert_eq!(poller.since_ms, Some(since));
+}
+
+#[test]
+fn exports_preserve_complete_text_without_overwriting_prior_exports() {
+    let scratch = Scratch::new("exports");
+    let text = "2026-10-15T12:00:00.000Z [ERROR] python: failed\nTraceback\n  cause: á\n";
+    let first = super::export(&scratch.0, text).unwrap();
+    let second = super::export(&scratch.0, text).unwrap();
+    assert_ne!(first, second);
+    assert_eq!(fs::read_to_string(first).unwrap(), text);
+    assert_eq!(fs::read_to_string(second).unwrap(), text);
+    assert!(super::export(&scratch.0.join("missing"), text).is_err());
+    assert!(super::export(&scratch.0, "").is_err());
+    // A normal retained log can exceed the general shell clipboard's cap.
+    let large = "á".repeat(600_000);
+    assert!(super::admit_text(&large).is_ok());
+    assert!(large.len() > 1024 * 1024);
 }
 
 #[test]

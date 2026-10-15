@@ -46,6 +46,7 @@ import {
   DEFAULT_FILTERS,
   levelRank,
   recordLine,
+  recordsText,
   type RecordFilters,
 } from "./shell/records";
 import { Settings } from "./components/Settings";
@@ -492,6 +493,44 @@ export function App({ host }: { host: Host }) {
         () => say(t("desktop.toast.copied")),
         () => say(t("desktop.toast.copy_failed")),
       );
+    },
+    [host, say, t],
+  );
+
+  const copyLogs = useCallback(
+    (text: string) => {
+      if (!text) return;
+      (host.copyLogs ? host.copyLogs(text) : host.writeClipboard(text)).then(
+        () => say(t("desktop.toast.copied")),
+        () => say(t("desktop.toast.copy_failed")),
+      );
+    },
+    [host, say, t],
+  );
+
+  const revealLogs = useCallback(() => {
+    host.revealLogs?.().catch(() => say(t("desktop.toast.open_failed")));
+  }, [host, say, t]);
+
+  const exportLogs = useCallback(
+    async (text: string) => {
+      try {
+        if (host.exportLogs) {
+          const path = await host.exportLogs(text);
+          say(t("desktop.logs.exported", { path }));
+        } else {
+          const url = URL.createObjectURL(
+            new Blob([text], { type: "text/plain;charset=utf-8" }),
+          );
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `cadrumo-session-${Date.now()}.log`;
+          link.click();
+          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+      } catch {
+        say(t("desktop.logs.export_failed"));
+      }
     },
     [host, say, t],
   );
@@ -1095,6 +1134,14 @@ export function App({ host }: { host: Host }) {
         run: () => setFilterOverride(null),
       },
       {
+        id: "logs.reveal",
+        label: t("desktop.logs.reveal"),
+        group: "logs",
+        icon: "logs",
+        enabled: () => !!host.revealLogs,
+        run: revealLogs,
+      },
+      {
         id: "settings.open",
         label: t("desktop.settings.title"),
         group: "general",
@@ -1277,6 +1324,8 @@ export function App({ host }: { host: Host }) {
       switchProfile,
       cycleFocus,
       openLink,
+      host,
+      revealLogs,
       goHome,
       patch,
       toggleMaximize,
@@ -1519,7 +1568,7 @@ export function App({ host }: { host: Host }) {
             id: "visible",
             label: t("desktop.menu.copy_visible"),
             enabled: true,
-            run: () => copy(visible.map(recordLine).join("\n")),
+            run: () => copyLogs(recordsText(visible)),
           },
           { separator: true },
           {
@@ -1545,7 +1594,7 @@ export function App({ host }: { host: Host }) {
         pointer,
       );
     },
-    [openMenu, t, copy, setFilters],
+    [openMenu, t, copy, copyLogs, setFilters],
   );
 
   const searchDocs: DocsSearch = useMemo(
@@ -2367,6 +2416,9 @@ export function App({ host }: { host: Host }) {
                       defaultFilters={defaultFilters}
                       setFilters={setFilters}
                       onMenu={recordMenu}
+                      onCopy={copyLogs}
+                      onExport={(text) => void exportLogs(text)}
+                      onReveal={host.revealLogs ? revealLogs : undefined}
                       shown={tabOpen("logs")}
                     />
                   </div>
