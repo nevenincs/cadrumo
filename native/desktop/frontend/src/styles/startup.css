@@ -35,7 +35,7 @@ h1 {
   width: var(--spacing-icon-sm);
   height: var(--spacing-icon-sm);
   flex: none;
-  border: var(--calendar-mark-edge) solid var(--color-background-border);
+  border: var(--focus-ring) solid var(--color-background-border);
   border-top-color: currentColor;
   border-radius: 50%;
   animation: spin var(--motion-spin) linear infinite;
@@ -44,7 +44,7 @@ ol {
   list-style: none;
   padding: 0 0 0 calc(var(--spacing) * 7);
   margin: calc(var(--spacing) * 4.5) 0 0;
-  font-size: 1var (--calendar-mark-edge);
+  font-size: var(--text-sm);
   line-height: 1.9;
   color: var(--color-foreground-muted);
 }
@@ -56,7 +56,7 @@ li[data-complete]::before {
   content: "✓ ";
 }
 #failure {
-  font-size: 1var (--calendar-mark-edge);
+  font-size: var(--text-sm);
   line-height: 1.5;
 }
 main[aria-busy="false"] .spinner {

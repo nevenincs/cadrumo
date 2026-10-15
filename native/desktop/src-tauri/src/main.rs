@@ -56,10 +56,10 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             .to_owned(),
     };
     let parent = environment::Parent::current()?;
-    startup_logging::configure(&parent, &diagnostics);
     if matches!(mode, Ok(launch::Mode::Gui)) {
         return app::run(root, parent, diagnostics);
     }
+    startup_logging::configure(&parent, &diagnostics);
     diagnostics.host_event(EventKind::StageStarted, HostStage::Environment);
     let launch =
         tauri::async_runtime::block_on(environment::resolve(root, &parent, diagnostics.clone()))

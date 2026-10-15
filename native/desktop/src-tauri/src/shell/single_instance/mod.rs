@@ -264,7 +264,7 @@ pub fn attach<R: Runtime>(window: &Window<R>, diagnostics: Arc<Diagnostics>) {
         .windows
         .first()
         .is_some_and(|config| config.label == window.label());
-    if !main {
+    if !main && window.label() != "startup" {
         return;
     }
     let window = window.clone();

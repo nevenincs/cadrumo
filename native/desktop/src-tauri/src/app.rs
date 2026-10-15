@@ -151,10 +151,12 @@ pub fn run(
         origins.clone(),
     ));
     let app = tauri::Builder::default()
+        .plugin(crate::startup::plugin(diagnostics.clone()))
         .manage(startup.clone())
         .invoke_handler(handler)
         .channel_interceptor(shell::channel::interceptor(diagnostics.clone()))
         .setup(move |app| {
+            shell::single_instance::verify(app.config())?;
             let config = app.config().app.windows[0].clone();
             let mut loading = config;
             loading.label = "startup".into();
@@ -165,6 +167,7 @@ pub fn run(
             loading.min_width = Some(380.0);
             loading.min_height = Some(240.0);
             tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?
+                .center()
                 .incognito(true)
                 .initialization_script(script)
                 .on_navigation(move |url| shell::navigation::allowed(&origins, url))

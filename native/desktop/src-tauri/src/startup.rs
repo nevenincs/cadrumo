@@ -115,6 +115,7 @@ fn startup_begin<R: tauri::Runtime>(app: tauri::AppHandle<R>, state: State<'_, A
     *task = Some(tauri::async_runtime::spawn_blocking(move || {
         let outcome = tauri::async_runtime::block_on(async {
             startup.check_cancelled()?;
+            crate::startup_logging::configure(&parent, &startup.diagnostics);
             startup
                 .diagnostics
                 .host_event(EventKind::StageStarted, HostStage::Environment);
@@ -151,6 +152,23 @@ pub fn commands<R: tauri::Runtime>() -> Commands<R> {
     crate::app::commands![startup_begin, startup_status]
 }
 
+pub fn plugin<R: tauri::Runtime>(diagnostics: Arc<Diagnostics>) -> tauri::plugin::TauriPlugin<R> {
+    let activation = diagnostics.clone();
+    let builder = tauri::plugin::Builder::new("cadrumo-startup").on_window_ready(move |window| {
+        if window.label() == "startup" {
+            shell::single_instance::attach(&window, activation.clone());
+        }
+    });
+    #[cfg(windows)]
+    let builder = builder.on_webview_ready(move |webview| {
+        if webview.label() == "startup" {
+            shell::webview::restrict(&webview, diagnostics.clone());
+            shell::webview::observe(&webview, diagnostics.clone());
+        }
+    });
+    builder.build()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -160,7 +178,12 @@ mod tests {
         Arc::new(Startup::new(
             std::env::temp_dir().join("cadrumo-absent-startup-package"),
             environment::Parent {
-                environment: vec![],
+                environment: vec![(
+                    cadrumo_platform::ROOT_VARIABLE.into(),
+                    std::env::temp_dir()
+                        .join(format!("cadrumo-startup-test-{}", std::process::id()))
+                        .into_os_string(),
+                )],
                 working_directory: std::env::temp_dir(),
             },
             Arc::new(Diagnostics::default()),

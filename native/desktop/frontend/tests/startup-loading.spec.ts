@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("loading page paints before assembly and follows actual startup stages", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.addInitScript(() => {
     const state = {
       phase: "environment",
@@ -48,6 +48,8 @@ test("loading page paints before assembly and follows actual startup stages", as
     ),
   );
   await expect(page.getByRole("status")).toContainText("Starting and checking");
+  await page.setViewportSize({ width: 480, height: 300 });
+  await page.screenshot({ path: testInfo.outputPath("startup.png") });
   await expect(page.locator('[data-phase="environment"]')).toHaveAttribute(
     "data-complete",
     "",
