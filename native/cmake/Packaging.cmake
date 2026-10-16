@@ -145,7 +145,7 @@ if(CADRUMO_PACKAGE_USER_DOCS)
   list(APPEND assembly_inputs "${CADRUMO_PATH_USER_DOCS_STAGE}")
 endif()
 # These helpers own assembly; unrelated native build/test helpers are not inputs.
-foreach(helper assemble service_descriptors stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command build_timing agent_runtime)
+foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command build_timing agent_runtime)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/${helper}.py")
 endforeach()
 cadrumo_assembly_backend_inputs(assembly_backend_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
@@ -162,7 +162,7 @@ foreach(input uv.lock pyproject.toml dev/packaging/release-python-version
     dev/packaging/native/action_cache.py dev/packaging/native/build_toolchain.py)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/${input}")
 endforeach()
-cadrumo_cached_command(assembly_command bundle INPUTS ${assembly_inputs}
+cadrumo_cached_command(assembly_command app-payload INPUTS ${assembly_inputs}
   OUTPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready")
 cadrumo_build_step(step_comment native-process-quiesce GROUP assembly
   SUMMARY "stop Cadrumo processes running from this build before its images are replaced")
@@ -198,7 +198,6 @@ add_custom_target(app-payload
     "${package_bootstrap}"
   BYPRODUCTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(app-payload rust_application)
 # Native iteration uses the existing Python payload. It never depends on the
 # Python product producer or the destructive full-package assembler.
 add_custom_target(app-native
@@ -254,6 +253,8 @@ add_custom_target(bundle ALL ${desktop_delivery_check} DEPENDS app-payload
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment app-distro GROUP assembly SUMMARY "alias of bundle")
 add_custom_target(app-distro DEPENDS bundle COMMENT "${step_comment}")
+cadrumo_register_clean(TARGET bundle DEPENDS app-payload)
+cadrumo_register_clean(TARGET app-distro DEPENDS bundle)
 if(TARGET desktop-headless-test)
   add_dependencies(desktop-headless-test bundle)
 endif()

@@ -7,7 +7,7 @@ import importlib.metadata
 import json
 import os
 import shutil
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import nullcontext
 from pathlib import Path, PurePath, PurePosixPath
 from typing import Any
@@ -21,6 +21,7 @@ from ..runtime_wheel_selection import active_requirements
 from ..runtime_wheelhouse_contract import target_platform
 from .agent import locked_requirements
 from .agent_runtime import stage_agent_runtime
+from .assembly_transaction import AssemblyReuse, assembly_candidate
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .build_timing import BuildTimings
@@ -40,7 +41,7 @@ from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_invento
 from .product import BUNDLED_EXTRAS
 from .service_descriptors import stage_service_descriptors
 from .stdlib import bundle as bundle_stdlib
-from .stdlib import compile_packages_bytecode
+from .stdlib import bundle_identity, compile_packages_bytecode, compiler_identity
 
 
 def image_artifact(argument: str) -> tuple[str, Path]:
@@ -61,7 +62,12 @@ def named_application_images(layout: Mapping[str, Any], artifacts: Mapping[str, 
 
 
 def stage_application_images(
-    root: Path, images: tuple[ApplicationImage, ...], artifacts: Mapping[str, Path], binary_dir: Path
+    root: Path,
+    images: tuple[ApplicationImage, ...],
+    artifacts: Mapping[str, Path],
+    binary_dir: Path,
+    *,
+    copy_function: Callable[[Path, Path], object] = shutil.copy2,
 ) -> list[str]:
     """Copy each staged application image from the artifact its CMake target built, refusing any gap."""
     unexpected = sorted(set(artifacts) - {image.file for image in images})
@@ -80,7 +86,7 @@ def stage_application_images(
         target = root / image.package_path
         if target.exists():
             raise FileExistsError(f"Application image collides with an assembled file: {image.package_path}")
-        shutil.copy2(source, target)
+        copy_function(source, target)
         staged.append(image.package_path)
     return staged
 
@@ -194,10 +200,50 @@ def assemble(
     agent_runtime: Path | None = None,
     timings: BuildTimings | None = None,
 ) -> None:
+    """Publish a complete candidate, retaining the old package if any phase fails."""
+    contract = load_layout(target)
+    with assembly_candidate(
+        destination, contract["files"]["package_manifest"], rewrite_native=contract["backend"] != "windows"
+    ) as (candidate, reuse):
+        _assemble_candidate(
+            python,
+            dependencies,
+            build,
+            candidate,
+            metadata,
+            user_docs,
+            images=images,
+            binary_dir=binary_dir,
+            development=development,
+            interpreter=interpreter,
+            target=target,
+            provenance=provenance,
+            agent_runtime=agent_runtime,
+            timings=timings,
+            reuse=reuse,
+        )
+
+
+def _assemble_candidate(
+    python: Path,
+    dependencies: Path | None,
+    build: Path,
+    destination: Path,
+    metadata: Path,
+    user_docs: Path | None,
+    *,
+    images: Mapping[str, Path],
+    binary_dir: Path,
+    development: bool,
+    interpreter: bool,
+    target: str,
+    provenance: Mapping[str, object] | None,
+    agent_runtime: Path | None,
+    timings: BuildTimings | None,
+    reuse: AssemblyReuse,
+) -> None:
     """Relocate native modules while retaining their qualified import names."""
     root = destination.resolve()
-    if root.exists():
-        raise FileExistsError(f"Assembly requires a fresh destination: {root}")
     contract = load_layout(target)
     build_identity = json.loads(metadata.read_text(encoding="utf-8"))
     if build_identity["target"] != target or build_identity["layout_abi"] != contract["abi"]:
@@ -271,17 +317,26 @@ def assemble(
     if bootstrap.count(marker) != 1:
         raise ValueError("Missing bootstrap fixed environment projection marker")
     bootstrap = bootstrap.replace(marker, f"PACKAGE_FIXED_ENVIRONMENT_NAMES = {tuple(sorted(package_fixed))!r}")
+    bootstrap_modules = {
+        "_cadrumo_bootstrap": bootstrap.encode(),
+        "_cadrumo_native": (REPO_ROOT / "native" / contract["bootstrap"]).read_bytes(),
+    }
+    stdlib_identity = bundle_identity(
+        python / contract["sdk"]["stdlib"], contract["stdlib_exclude"], bootstrap_modules, build_identity["python"]
+    )
+    assembly_identity = {"stdlib": stdlib_identity, "bytecode": compiler_identity()}
     with timings.phase("stdlib-bytecode-zip") if timings is not None else nullcontext():
-        bundle_stdlib(
-            python / contract["sdk"]["stdlib"],
-            lib,
-            contract["stdlib_exclude"],
-            {
-                "_cadrumo_bootstrap": bootstrap.encode(),
-                "_cadrumo_native": (REPO_ROOT / "native" / contract["bootstrap"]).read_bytes(),
-            },
-            build_identity["python"],
-        )
+        previous_stdlib = reuse.verified(layout["stdlib"])
+        if previous_stdlib is not None and reuse.manifest.get("assembly", {}).get("stdlib") == stdlib_identity:
+            reuse.link(previous_stdlib, lib)
+        else:
+            bundle_stdlib(
+                python / contract["sdk"]["stdlib"],
+                lib,
+                contract["stdlib_exclude"],
+                bootstrap_modules,
+                build_identity["python"],
+            )
 
     def omit_development(directory: str, names: list[str]) -> set[str]:
         excluded = {"__pycache__", "tests"}
@@ -293,10 +348,10 @@ def assemble(
         if dependencies is None:
             packages.mkdir(parents=True)
         else:
-            shutil.copytree(dependencies, packages, ignore=omit_development)
+            shutil.copytree(dependencies, packages, ignore=omit_development, copy_function=reuse.copy)
     if agent_runtime is not None:
         with timings.phase("agent-runtime-copy") if timings is not None else nullcontext():
-            stage_agent_runtime(agent_runtime, packages.parent)
+            stage_agent_runtime(agent_runtime, packages.parent, copy_function=reuse.copy)
     pruned = []
     for exclusion in [] if interpreter else contract.get("package_exclusions", []):
         matches = list(packages.glob(exclusion["pattern"]))
@@ -311,26 +366,30 @@ def assemble(
             member.unlink()
     executable = root / layout["executable"]
     executable.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(build / executable.name, executable)
+    reuse.copy(build / executable.name, executable)
     # Console entrypoints share the native directory; the platform context maps them back to the package root.
     entrypoints = (
         [] if interpreter else sorted((*entrypoint_files(contract).values(), *bundled_image_files(contract).values()))
     )
     for relative in entrypoints:
-        shutil.copy2(build / Path(relative).name, root / relative)
+        reuse.copy(build / Path(relative).name, root / relative)
     # Application images are not interpreter hosts; each enters the startup check only by opting in.
     staged_images = () if interpreter else named_application_images(contract, images)
-    stage_application_images(root, staged_images, images, binary_dir)
+    stage_application_images(root, staged_images, images, binary_dir, copy_function=reuse.copy)
     if not interpreter:
         stage_linux_desktop_runtime(root, contract)
     if development:
         development_executable = root / files["development_executable"]
         development_executable.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(build / development_executable.name, development_executable)
-    shutil.copy2(build / files["bridge"], native)
+        reuse.copy(build / development_executable.name, development_executable)
+    reuse.copy(build / files["bridge"], native / files["bridge"])
     with timings.phase("native-relocation") if timings is not None else nullcontext():
-        native_manifest = backend(contract).assemble_native(
-            python, packages, native, root, native_assembly_layout(contract, provenance or {})
+        platform = backend(contract)
+        native_layout = native_assembly_layout(contract, provenance or {})
+        native_manifest = (
+            platform.assemble_native(python, packages, native, root, native_layout, copy_function=reuse.copy)
+            if contract["backend"] == "windows"
+            else platform.assemble_native(python, packages, native, root, native_layout)
         )
     modules = native_manifest["modules"]
     service_descriptors = None if interpreter else stage_service_descriptors(root, contract, staged_images)
@@ -352,7 +411,7 @@ def assemble(
     docs_prefix = f"{layout['docs']}/{docs_declaration['directory']}"
     docs_manifest = f"{docs_prefix}/{docs_declaration['manifest']}"
     if user_docs is not None:
-        shutil.copytree(verified_stage(user_docs, docs_declaration), root / docs_prefix)
+        shutil.copytree(verified_stage(user_docs, docs_declaration), root / docs_prefix, copy_function=reuse.copy)
     path_file = root / files["path_file"]
     path_file.write_text(
         "# CADRUMO package-relative import paths; executable directives are forbidden.\n"
@@ -363,7 +422,14 @@ def assemble(
     stage_sdk_licenses(root, python, contract)
     shutil.copy2(metadata, root / files["build_metadata"])
     with timings.phase("dependency-bytecode") if timings is not None else nullcontext():
-        compile_packages_bytecode(packages, prefix=layout["packages"], version=build_identity["python"])
+        reuse_bytecode = reuse.manifest.get("assembly", {}).get("bytecode") == assembly_identity["bytecode"]
+        compile_packages_bytecode(
+            packages,
+            prefix=layout["packages"],
+            version=build_identity["python"],
+            previous=reuse.previous / layout["packages"] if reuse_bytecode else None,
+            previous_files=reuse.manifest.get("files", {}) if reuse_bytecode else None,
+        )
     startup_files = [
         layout["executable"],
         *entrypoints,
@@ -388,6 +454,7 @@ def assemble(
             if relative == docs_manifest or not relative.startswith(f"{docs_prefix}/")
         }
     manifest = {
+        "assembly": assembly_identity,
         "kind": "interpreter" if interpreter else "application",
         "build": build_identity,
         "layout": contract,

@@ -478,7 +478,8 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
         if not arguments.without_user_docs and "user_docs_stage" not in paths:
             raise SystemExit(RECONFIGURE)
         quiesce(build, arguments.target)
-        destination = reset(build, str((paths["stage"] / arguments.config).relative_to(build)))
+        destination = paths["stage"] / arguments.config
+        destination.mkdir(parents=True, exist_ok=True)
         assemble(
             sdk,
             None if arguments.interpreter else paths["product"] / "dependencies",

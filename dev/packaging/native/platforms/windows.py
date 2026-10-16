@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -26,12 +27,20 @@ from .pe import imports as pe_imports
 from .windows_verify import verify as windows_verify
 
 
-def assemble_native(python: Path, packages: Path, native: Path, root: Path, contract: dict[str, Any]) -> dict[str, Any]:
+def assemble_native(
+    python: Path,
+    packages: Path,
+    native: Path,
+    root: Path,
+    contract: dict[str, Any],
+    *,
+    copy_function: Callable[[Path, Path], object] = shutil.copy2,
+) -> dict[str, Any]:
     """Relocate PE modules and apply the reviewed Windows wheel loader patches."""
     modules: dict[str, str] = {}
     for source in [*python.glob("*.dll"), *(python / "DLLs").glob("*.dll"), *(python / "DLLs").glob("*.pyd")]:
         target = native / source.name
-        shutil.copy2(source, target)
+        copy_function(source, target)
         if source.suffix.lower() == ".pyd":
             modules[source.stem] = target.relative_to(root).as_posix()
     relocation = {}

@@ -103,8 +103,10 @@ function build(variant) {
     throw new Error(
       "Set CADRUMO_NATIVE_CONTRACT to the generated native contract.json.",
     );
-  // The same fresh copy of the sources the shipped build compiles.
-  const snapshot = snapshotHostSources(resolve(desktop, ".."), paths.snapshot);
+  // Preserve unchanged source timestamps so Cargo can reuse its compiled inputs.
+  const snapshot = snapshotHostSources(resolve(desktop, ".."), paths.snapshot, {
+    incremental: true,
+  });
   const config = tauriConfig(
     JSON.parse(
       readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
@@ -121,7 +123,12 @@ function build(variant) {
   // Tauri reads a URL frontend as a remote shell; the host then admits that
   // origin as its shell and loads nothing embedded.
   if (variant === VARIANTS.served) config.build.frontendDist = servedShell();
-  writeFileSync(paths.configuration, JSON.stringify(config, null, 2));
+  const configuration = JSON.stringify(config, null, 2);
+  if (
+    !existsSync(paths.configuration) ||
+    readFileSync(paths.configuration, "utf8") !== configuration
+  )
+    writeFileSync(paths.configuration, configuration);
   const environment = {
     ...process.env,
     ...selected.environment,

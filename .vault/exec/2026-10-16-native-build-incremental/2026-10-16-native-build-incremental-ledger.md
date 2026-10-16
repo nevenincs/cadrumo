@@ -61,3 +61,13 @@ related:
 - `S02` `verify:` `authority and uv-selection 14 tests` -> `pass`
 - `S02` `verify:` `snapshot links and real uv deletion currency 5 tests` -> `pass`
 - `S02` `verify:` `scoped Ruff and ty` -> `pass`
+- `S03` `M` `dev/packaging/native/assemble.py`
+- `S03` `A` `dev/packaging/native/assembly_transaction.py`
+- `S03` `M` `dev/packaging/native/stdlib.py`
+- `S03` `M` `native/cmake/Packaging.cmake`
+- `S03` `M` `native/desktop/tests/packaged/host.mjs`
+- `S03` `verify:` `assembly platform and agent runtime focused tests 56` -> `pass`
+- `S03` `verify:` `final authority reuse transactions 13` -> `pass`
+- `S03` `verify:` `desktop snapshot tests 5` -> `pass`
+- `S03` `verify:` `CPython3.13.15 bytecode executed on packaged3.13.11` -> `pass`
+- `S03` `verify:` `scoped Ruff ty and Prettier` -> `pass`
