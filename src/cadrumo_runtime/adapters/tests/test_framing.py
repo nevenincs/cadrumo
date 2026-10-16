@@ -28,7 +28,7 @@ from cadrumo.application.user_profile.access_projections import PublicAccessSess
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.access_management import SessionInventory, SessionInventoryReply, SessionInventoryTransfer
-from cadrumo_client.contracts.contracts import ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileStatus,
@@ -76,6 +76,13 @@ class CleanupChannel:
 
     def read_ready(self) -> bool:
         return bool(self.inbound)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         assert deadline > time.monotonic()

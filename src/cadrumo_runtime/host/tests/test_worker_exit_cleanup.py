@@ -7,6 +7,7 @@ import logging
 import struct
 import sys
 import threading
+import time
 from contextlib import nullcontext, suppress
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,7 +22,7 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.application.operations.drain import OperationDrainResult
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import write_document
 from cadrumo_runtime.contracts.profile_worker import (
@@ -132,6 +133,13 @@ class _Channel(_Release):
         if self.read_failure is not None:
             raise self.read_failure
         return bool(self.incoming)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def read_exact(self, count: int, *, deadline: float) -> bytes:
         assert deadline > 0
@@ -633,8 +641,8 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
         @override
         def read_ready(self) -> bool:
             if cancelled and entered.is_set():
-                # The event loop remains in this call until _serve cancels its
-                # operation task, so that task settles the in-flight real read.
+                # Control's readiness wait ends in this cancellation only once the
+                # operation's real read is in flight, so that read settles first.
                 release.set()
                 raise cancellation
             return super().read_ready()

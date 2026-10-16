@@ -64,6 +64,7 @@ from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceCon
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import read_document, write_document, write_profile_status, write_session_event
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import TransportCleanup, close_transport_after_failure
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.profile_host import ProfileHandler
@@ -96,6 +97,8 @@ class RuntimeConnectionHandling:
 
     identity: ServerHello
     stop: Event
+    # Set once ``stop`` is, so a connection blocked between requests sees it.
+    _stopping: NativeWake
     profiles: ProfileHandler | None
     _failed: Event
     _slots: BoundedSemaphore
@@ -154,9 +157,10 @@ class RuntimeConnectionHandling:
                 context.peer,
                 lifecycle_notices=hello.lifecycle_notices == "v1",
             )
+            queued = NativeWake()
             if self.profiles is not None:
-                self.profiles.connect_events(context, channel)
-            self._serve_connection_requests(channel, context)
+                self.profiles.connect_events(context, channel, queued=queued)
+            self._serve_connection_requests(channel, context, queued)
         except RefusalError as error:
             retained = self._retain_channel_cleanup(error, channel=channel)
             if retained is not None:
@@ -194,16 +198,21 @@ class RuntimeConnectionHandling:
         finally:
             self._finish_connection(channel_owner, context, cleanup_deferred)
 
-    def _serve_connection_requests(self, channel: ByteChannel, context: ConnectionContext) -> None:
-        """Serve the admitted request sequence until the peer or host closes it."""
-        idle_wait = 0.001
+    def _serve_connection_requests(self, channel: ByteChannel, context: ConnectionContext, queued: NativeWake) -> None:
+        """Serve the admitted request sequence until the peer or host closes it.
+
+        Between requests the thread blocks on the channel, the connection's
+        queued events and the runtime stop together; nothing wakes it on a timer.
+        """
         while not self.stop.is_set():
+            # Cleared before taking, so an event queued meanwhile still ends the wait.
+            queued.clear()
             if self.profiles is not None:
                 for event in self.profiles.take_events(context):
                     write_session_event(channel, event, deadline=time.monotonic() + 5)
                     self.profiles.event_flushed(context, event)
             try:
-                ready = channel.read_ready()
+                ready = channel.wait_readable(queued, self._stopping)
             except RefusalError as error:
                 if error.reason is not RefusalCode.CONNECTION_CLOSED:
                     raise
@@ -212,13 +221,7 @@ class RuntimeConnectionHandling:
                 diagnostic_event(_LOGGER, "runtime_connection_closed", level=logging.DEBUG)
                 return
             if not ready:
-                # Short waits after activity avoid a fixed 50ms round-trip tax.
-                # Idle connections quickly return to the existing bounded rate;
-                # Event.wait still wakes immediately when shutdown is requested.
-                self.stop.wait(idle_wait)
-                idle_wait = min(0.05, idle_wait * 2)
                 continue
-            idle_wait = 0.001
             request = read_document(channel, Request, deadline=time.monotonic() + 5).root
             status = self._dispatch_profile_request(channel, context, request)
             if status is None:

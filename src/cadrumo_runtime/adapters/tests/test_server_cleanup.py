@@ -13,8 +13,16 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError, ShutdownIncompleteError
+from cadrumo_client.contracts.contracts import (
+    ByteChannel,
+    ChannelWake,
+    Peer,
+    RefusalCode,
+    RefusalError,
+    ShutdownIncompleteError,
+)
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import TransportCleanup, close_transport_after_failure
 
 from .retained_server import RetainedRuntimeTransportServer
@@ -40,6 +48,13 @@ class _Channel:
 
     def read_ready(self) -> bool:
         return False
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         raise AssertionError("a refused peer must receive no private write")
@@ -103,18 +118,18 @@ def test_idle_peer_close_is_completion_but_other_refusals_propagate(
     server, _ = _server(channel)
     context = ConnectionContext(uuid4(), server.identity.boot_id, channel.peer)
 
-    def read_ready() -> bool:
+    def wait_readable(*wakes: ChannelWake) -> bool:
         raise RefusalError(reason)
 
-    monkeypatch.setattr(channel, "read_ready", read_ready)
+    monkeypatch.setattr(channel, "wait_readable", wait_readable)
     with caplog.at_level(logging.DEBUG):
         if reason is RefusalCode.CONNECTION_CLOSED:
-            server._serve_connection_requests(channel, context)
+            server._serve_connection_requests(channel, context, NativeWake())
             assert "runtime_connection_closed" in caplog.text
             assert "runtime_connection_refused" not in caplog.text
         else:
             with pytest.raises(RefusalError) as caught:
-                server._serve_connection_requests(channel, context)
+                server._serve_connection_requests(channel, context, NativeWake())
             assert caught.value.reason is reason
     assert not server.stop.is_set()
 

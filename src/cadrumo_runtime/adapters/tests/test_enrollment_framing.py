@@ -17,7 +17,7 @@ from cadrumo.application.user_profile.access_contracts import ProfileAccessBindi
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.contracts import ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.enrollment_access import (
     EnrollmentClientReply,
     EnrollmentCredentialBinding,
@@ -69,6 +69,13 @@ class MemoryChannel:
     def read_ready(self) -> bool:
         with self._condition:
             return bool(self._data) or self._closed or (self._other is not None and self._other._closed)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         other = self._other

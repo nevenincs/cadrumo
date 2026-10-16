@@ -22,7 +22,7 @@ from cadrumo_client.contracts.access_management import (
     SessionInventoryReply,
 )
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
-from cadrumo_client.contracts.contracts import ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.profile_access import Request, SecretReady
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -62,6 +62,13 @@ class MemoryChannel:
     def read_ready(self) -> bool:
         with self._condition:
             return bool(self._data) or self._closed or (self._other is not None and self._other._closed)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         other = self._other

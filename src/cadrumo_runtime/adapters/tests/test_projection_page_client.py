@@ -55,7 +55,7 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.period import Period
-from cadrumo_client.contracts.contracts import ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.operation_access import (
     OperationPage,
     OperationProjected,
@@ -118,6 +118,13 @@ class MemoryChannel:
     def read_ready(self) -> bool:
         with self._condition:
             return bool(self._data) or self._closed or (self._other is not None and self._other._closed)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         other = self._other

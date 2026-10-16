@@ -17,7 +17,7 @@ import pytest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
-from ...contracts.contracts import Peer, RefusalCode, RefusalError, ServerHello
+from ...contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError, ServerHello
 from .. import installed_client
 from ..frame_io import write_document
 from ..frontend_client import FrontendClient
@@ -78,6 +78,13 @@ class _Channel(_ReleasePort):
 
     def read_ready(self) -> bool:
         return bool(self.inbound)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         assert deadline > time.monotonic()

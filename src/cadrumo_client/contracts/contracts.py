@@ -215,6 +215,19 @@ class Peer(BaseModel):
         return hash((self.os_owner_id, self.process_id))
 
 
+class ChannelWake(Protocol):
+    """A flag a channel's readiness wait includes beside its input."""
+
+    @property
+    def waitable(self) -> int:
+        """Return the native object a wait includes: an event handle or a readable descriptor."""
+        ...
+
+    def is_set(self) -> bool:
+        """Return whether the flag is set."""
+        ...
+
+
 class ByteChannel(Protocol):
     """An already peer-verified stream with absolute monotonic I/O deadlines."""
 
@@ -229,6 +242,14 @@ class ByteChannel(Protocol):
 
     def read_ready(self) -> bool:
         """Observe available input or EOF without consuming bytes or blocking an idle peer."""
+        ...
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        """Block until input or EOF is available or one of ``wakes`` is set, returning whether input is.
+
+        Nothing a later read would return is lost, so an idle connection waits
+        here instead of observing readiness on a timer.
+        """
         ...
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:

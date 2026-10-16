@@ -31,7 +31,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
-from cadrumo_client.contracts.contracts import ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -139,6 +139,14 @@ class _Channel(WindowsChannel):
     @override
     def read_ready(self) -> bool:
         return bool(self.inbound)
+
+    @override
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     @override
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:

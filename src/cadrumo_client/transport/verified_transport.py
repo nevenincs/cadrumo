@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from threading import Event, RLock, Thread
+from threading import Event, Lock, RLock, Thread
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -23,6 +23,7 @@ from .frame_io import (
     write_document,
     write_secret,
 )
+from .native_wake import NativeWake
 from .transport_cleanup import TransportCleanup, close_transport_after_failure
 
 
@@ -41,7 +42,7 @@ class VerifiedTransport:
         self, receive: Callable[[ConnectionEvent], None], *, disconnected: Callable[[], None] | None = None
     ) -> Callable[[], None]:
         """Observe this connection without giving a second thread concurrent read authority."""
-        with self._exchange_lock:
+        with self._claimed():
             if self._closed:
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             self._event_receivers.append(receive)
@@ -50,11 +51,13 @@ class VerifiedTransport:
             if disconnected is not None:
                 self._disconnect_receivers.append(disconnected)
             if self._event_reader is None:
+                with self._claims_guard:
+                    self._idle_wake = NativeWake()
                 self._event_reader = Thread(target=self._read_idle_events, name="runtime-session-events", daemon=True)
                 self._event_reader.start()
 
         def unsubscribe() -> None:
-            with self._exchange_lock:
+            with self._claimed():
                 if receive in self._event_receivers:
                     self._event_receivers.remove(receive)
                 if disconnected is not None and disconnected in self._disconnect_receivers:
@@ -66,8 +69,37 @@ class VerifiedTransport:
         self._event_receivers: list[Callable[[ConnectionEvent], None]] = []
         self._disconnect_receivers: list[Callable[[], None]] = []
         self._event_reader: Thread | None = None
-        self._event_stop = Event()
         self._retained_notice: LifecycleNotice | None = None
+        # The idle event reader holds the exchange while it waits for input;
+        # anyone else claims it first, which wakes that wait (see _claim).
+        self._claims_guard = Lock()
+        self._claims = 0
+        self._unclaimed = Event()
+        self._unclaimed.set()
+        self._idle_wake: NativeWake | None = None
+
+    def _claim(self, timeout: float = -1) -> bool:
+        """Acquire the exchange, first waking an idle event wait that holds it."""
+        with self._claims_guard:
+            self._claims += 1
+            self._unclaimed.clear()
+            if self._idle_wake is not None:
+                self._idle_wake.set()
+        try:
+            return self._exchange_lock.acquire(timeout=timeout)
+        finally:
+            with self._claims_guard:
+                self._claims -= 1
+                if not self._claims:
+                    self._unclaimed.set()
+
+    @contextmanager
+    def _claimed(self) -> Generator[None]:
+        self._claim()
+        try:
+            yield
+        finally:
+            self._exchange_lock.release()
 
     def _receive_event(self, event: ConnectionEvent) -> None:
         if isinstance(event, LifecycleNotice) and not self._lifecycle_notices:
@@ -83,27 +115,36 @@ class VerifiedTransport:
             receive(event)
 
     def _read_idle_events(self) -> None:
-        while not self._event_stop.wait(0.05):
-            if not self._exchange_lock.acquire(blocking=False):
-                continue
-            try:
-                if self._closed:
-                    return
-                if not self._channel.read_ready():
-                    continue
-                received = read_reply_or_event(self._channel, Reply, deadline=time.monotonic() + 5)
-                if not isinstance(received, CONNECTION_EVENT_TYPES):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                self._receive_event(received)
-            except BaseException as error:
-                try:
-                    self._close_after_failure(error)
-                finally:
-                    for disconnected in tuple(self._disconnect_receivers):
-                        disconnected()
-                return
-            finally:
-                self._exchange_lock.release()
+        """Between exchanges, block on input and the claim wake together; nothing runs on a timer."""
+        wake = self._idle_wake
+        try:
+            while wake is not None:
+                # A claimant is about to take the exchange: let it go first.
+                self._unclaimed.wait()
+                with self._exchange_lock:
+                    if self._closed:
+                        return
+                    with self._claims_guard:
+                        if self._claims:
+                            continue
+                        wake.clear()
+                    try:
+                        if not self._channel.wait_readable(wake):
+                            continue
+                        received = read_reply_or_event(self._channel, Reply, deadline=time.monotonic() + 5)
+                        if not isinstance(received, CONNECTION_EVENT_TYPES):
+                            raise RefusalError(RefusalCode.INVALID_FRAME)
+                        self._receive_event(received)
+                    except BaseException as error:
+                        try:
+                            self._close_after_failure(error)
+                        finally:
+                            for disconnected in tuple(self._disconnect_receivers):
+                                disconnected()
+                        return
+        finally:
+            with self._claims_guard:
+                self._idle_wake = None
 
     def _close_after_failure(self, error: BaseException) -> None:
         retained = error.__dict__.get("_transport_cleanup")
@@ -122,7 +163,7 @@ class VerifiedTransport:
         """Include queueing in the total budget without closing another caller's exchange."""
         try:
             remaining = remaining_budget(deadline)
-            if not self._exchange_lock.acquire(timeout=remaining):
+            if not self._claim(timeout=remaining):
                 raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
             try:
                 yield
@@ -162,7 +203,7 @@ class VerifiedTransport:
     @property
     def connection_id(self) -> UUID | None:
         """Return the last verified non-bearer connection identity, if any."""
-        with self._exchange_lock:
+        with self._claimed():
             return self._connection_id
 
     def send_secret(self, secret: bytearray, *, deadline: float) -> None:
@@ -221,9 +262,8 @@ class VerifiedTransport:
 
     def close(self) -> None:
         """Stop exchanges immediately and retry failed owned channel cleanup."""
-        with self._exchange_lock:
+        with self._claimed():
             self._closed = True
-            self._event_stop.set()
             if not self._channel_closed:
                 self._channel.close()
                 self._channel_closed = True

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d9010f04801620a2fe41f1c6b0b9ec3dd1f6354cce68703d3a80a007741ad44'
+body_hash: 'sha256:252707ea76aab70dc69ef9dc84284ba80195c68bac769f574a2e41cb04093608'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -120,6 +120,44 @@ related:
 - `S07` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test` -> `pass`
 - `S07` `verify:` `pnpm tsc eslint prettier` -> `pass`
 - `S07` `verify:` `pytest src/cadrumo_runtime/host/tests/test_session_watch.py` -> `pass`
+- `S08` `A` `src/cadrumo_client/transport/native_wake.py`
+- `S08` `M` `src/cadrumo_client/contracts/contracts.py`
+- `S08` `M` `src/cadrumo_client/transport/windows_channel.py`
+- `S08` `M` `src/cadrumo_client/transport/posix_channel.py`
+- `S08` `M` `src/cadrumo_client/transport/verified_transport.py`
+- `S08` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S08` `M` `src/cadrumo_runtime/contracts/profile_host.py`
+- `S08` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/server_connection_handling.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/server.py`
+- `S08` `M` `src/cadrumo_runtime/host/worker_operation_requests.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_registered_operation.py`
+- `S08` `M` `src/cadrumo_client/transport/tests/test_launch_door_cleanup.py`
+- `S08` `M` `src/cadrumo_client/transport/tests/test_runtime_client.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_access_management_framing.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_connection_serialization.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_enrollment_framing.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_framing.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_frontend_access_management.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_launch_door.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_profile_worker_cleanup.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_projection_page_client.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_server_cleanup.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_worker_lease_transfer.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/operation_transport_support.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_installation_door.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_worker_construction_cleanup.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S08` `A` `src/cadrumo_client/transport/tests/test_channel_readiness_wait.py`
+- `S08` `A` `src/cadrumo_runtime/adapters/tests/test_server_idle_wait.py`
+- `S08` `A` `src/cadrumo_runtime/host/tests/test_worker_request_wait.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_session_events.py`
+- `S08` `verify:` `pytest src/cadrumo_client/transport/tests src/cadrumo_runtime/adapters/tests` -> `fail`
+- `S08` `verify:` `pytest serial runtime host server-backed files` -> `fail`
+- `S08` `verify:` `pytest test_channel_readiness_wait test_server_idle_wait test_worker_request_wait test_session_events` -> `pass`
+- `S08` `verify:` `ruff ty basedpyright pyrefly lint-imports on touched files` -> `pass`
 
 ## Notes
 
@@ -130,3 +168,4 @@ related:
 - `S05` `session_hold.py` carries another session's `_report_failure` and `OS_SESSION_UNAVAILABLE` hunks; this Step was staged as a HEAD-relative patch. Pushed lines are opt-in through `observe_events,` so a desktop built before S07 keeps its strict request-reply bridge.
 - `S06` End-to-end use against the packaged runtime is verified with the desktop in S10; the runtime cue path itself is covered by `test_sign_in_watch.py` from S03.
 - `S07` Commit carries CADRUMO-FIX1's shared-person hunks by agreement; CADRUMO-BUILD-DEBUG's diagnostics and `with_reason` calls stay uncommitted pending its ApplicationError reason API; the committed tree was not compiled separately from the working tree
+- `S08` Adapter and transport suites: 913 passed, 1 failed `(test_posix_login_capture,` an unowned uncommitted pidfd option rename in `posix_channel.py).` Host suite: 211 passed, 5 failed, all from other sessions' uncommitted changes: the receipt handover in `profile_connection_sessions.py` and the `AUTHENTICATION_REQUIRED` session mismatch in `profile_connection_operations.py.` The stop-wake gate was shown to fail with the wake removed.

@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import AsyncGenerator
+from concurrent.futures import Future
 from contextlib import ExitStack, asynccontextmanager
+from threading import Thread
 from typing import TypeGuard
 from uuid import UUID
 
@@ -28,6 +30,7 @@ from cadrumo_client.contracts.operation_access import operation_management_actio
 from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, project_document_page
 from cadrumo_client.contracts.submission_payload import FinancialOperandInputDescriptor
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import close_transport_after_failure
 from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerContractRequest,
@@ -78,10 +81,41 @@ async def receive(channel: WorkerChannel, failed: asyncio.Event, *, control: boo
         return request
 
     while not failed.is_set():
-        if channel.read_ready():
+        if await _input_ready(channel, failed):
             return await await_cancellation_complete(asyncio.to_thread(read), task_name="profile-worker-read")
-        await asyncio.sleep(0.02)
     raise RefusalError(RefusalCode.UNAVAILABLE)
+
+
+async def _input_ready(channel: WorkerChannel, failed: asyncio.Event) -> bool:
+    """Block one thread on the channel until input, the worker's failure, or cancellation.
+
+    The thread is the waiter's own, so an idle channel holds no shared executor
+    thread, and it has returned before the channel is read or released.
+    """
+    wake = NativeWake()
+    waited: Future[bool] = Future()
+    # Running from here on, so nothing can cancel it before the thread answers.
+    waited.set_running_or_notify_cancel()
+
+    def wait() -> None:
+        try:
+            waited.set_result(channel.wait_readable(wake))
+        except BaseException as error:
+            waited.set_exception(error)
+
+    Thread(target=wait, name="profile-worker-input", daemon=True).start()
+    outcome = asyncio.wrap_future(waited)
+    stopping = asyncio.ensure_future(failed.wait())
+    try:
+        await asyncio.wait((outcome, stopping), return_when=asyncio.FIRST_COMPLETED)
+    except asyncio.CancelledError as cancelled:
+        stopping.cancel()
+        wake.set()
+        await await_cancellation_complete(outcome, task_name="profile-worker-input", cancellation=cancelled)
+        raise
+    stopping.cancel()
+    wake.set()
+    return await outcome
 
 
 async def operate(

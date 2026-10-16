@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
@@ -201,6 +201,9 @@ class _FailOnceNativeChannel:
 
     def read_ready(self) -> bool:
         return self.channel.read_ready()
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        return self.channel.wait_readable(*wakes)
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         self.channel.write_all(payload, deadline=deadline)

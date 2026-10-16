@@ -12,7 +12,15 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import (
+    ByteChannel,
+    ChannelWake,
+    ClientHello,
+    Peer,
+    RefusalCode,
+    RefusalError,
+    ServerHello,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin, SecretReady, SessionRequest
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -49,6 +57,9 @@ class PausingChannel:
 
     def read_ready(self) -> bool:
         return self.channel.read_ready()
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        return self.channel.wait_readable(*wakes)
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         self.channel.write_all(payload, deadline=deadline)

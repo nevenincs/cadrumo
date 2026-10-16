@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import ctypes
 import sys
 from collections.abc import Buffer, Callable, Generator
@@ -10,7 +11,7 @@ from pathlib import Path
 from threading import RLock
 from typing import cast
 
-from ..contracts.contracts import Peer, RefusalCode, RefusalError
+from ..contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from .transport_cleanup import close_transport_after_failure
 from .windows_native_io import (
     PROCESS_QUERY_LIMITED_INFORMATION,
@@ -25,6 +26,8 @@ from .windows_native_io import (
     windows_image_path,
     windows_owner_sid,
 )
+
+_ERROR_OPERATION_ABORTED = 995
 
 
 class WindowsChannel:
@@ -41,6 +44,8 @@ class WindowsChannel:
 
         self._handle: int | NativeWindowsHandle | None = handle
         self._peer_process: NativeWindowsHandle | None = None
+        # The byte an idle readiness wait read, owed to the next read.
+        self._pending = b""
         try:
             pid = native_windows_call(
                 win32pipe,
@@ -159,7 +164,8 @@ class WindowsChannel:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
         if not 0 <= count <= 64 * 1024:
             raise RefusalError(RefusalCode.INVALID_FRAME)
-        payload = bytearray()
+        payload = bytearray(self._pending[:count])
+        self._pending = self._pending[count:]
         while len(payload) < count:
             windows_deadline_milliseconds(deadline)
             overlapped = pywintypes.OVERLAPPED()
@@ -186,11 +192,64 @@ class WindowsChannel:
 
         if self._handle is None:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+        if self._pending:
+            return True
         try:
             _, available, _ = win32pipe.PeekNamedPipe(int(self._handle), 0)
             return available > 0
         except pywintypes.error:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        """Wait on a one-byte overlapped read and ``wakes`` together; a byte read is owed to the next read."""
+        import pywintypes
+        import win32api
+        import win32event
+        import win32file
+
+        if self._handle is None:
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+        if self._pending:
+            return True
+        handle = int(self._handle)
+        overlapped = pywintypes.OVERLAPPED()
+        overlapped.hEvent = win32event.CreateEvent(None, True, False, None)
+        buffer = win32file.AllocateReadBuffer(1)
+        try:
+            try:
+                win32file.ReadFile(handle, buffer, overlapped)
+            except pywintypes.error:
+                raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
+            try:
+                signalled = win32event.WaitForMultipleObjects(
+                    [overlapped.hEvent, *(wake.waitable for wake in wakes)], False, win32event.INFINITE
+                )
+            except BaseException:
+                # The read must settle on this thread before its buffer is released.
+                with contextlib.suppress(pywintypes.error):
+                    win32file.CancelIo(handle)
+                with contextlib.suppress(pywintypes.error):
+                    win32file.GetOverlappedResult(handle, overlapped, True)
+                raise
+            woken = signalled != win32event.WAIT_OBJECT_0
+            if woken:
+                # A handle another thread closed meanwhile has already ended the read.
+                with contextlib.suppress(pywintypes.error):
+                    win32file.CancelIo(handle)
+            try:
+                received = win32file.GetOverlappedResult(handle, overlapped, True)
+            except pywintypes.error as error:
+                if woken and error.winerror == _ERROR_OPERATION_ABORTED:
+                    return False
+                # Ended by a closed handle or a peer that went away.
+                raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
+            if not isinstance(buffer, Buffer):
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+            # A wake that raced a completed read still delivers its byte.
+            self._pending = bytes(memoryview(buffer)[:received])
+            return True
+        finally:
+            win32api.CloseHandle(overlapped.hEvent)
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         """Send within the deadline without generic-write/create-instance rights."""

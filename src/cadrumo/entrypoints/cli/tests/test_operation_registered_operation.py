@@ -72,6 +72,7 @@ from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationReviewHandler,
 )
 from cadrumo_client.contracts.contracts import (
+    ChannelWake,
     ClientHello,
     Peer,
     RefusalCode,
@@ -513,6 +514,13 @@ class ReleaseFaultChannel:
 
     def read_ready(self) -> bool:
         return bool(self.inbound)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         assert deadline > time.monotonic()

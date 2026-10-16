@@ -12,7 +12,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from threading import RLock
 
-from ..contracts.contracts import Peer, RefusalCode, RefusalError
+from ..contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from ..contracts.deadline_budget import remaining_budget
 from .posix import posix_owner_uid
 
@@ -189,6 +189,14 @@ class PosixChannel:
             return bool(readable)
         except (OSError, ValueError):
             raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        """Select the held socket and ``wakes`` together; a readable EOF is settled by the next read."""
+        try:
+            readable, _, _ = select.select((self._socket, *(wake.waitable for wake in wakes)), (), ())
+        except (OSError, ValueError):
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
+        return self._socket in readable
 
     def read_exact(self, count: int, *, deadline: float) -> bytes:
         """Bound aggregate read time even when the peer sends one byte at a time."""

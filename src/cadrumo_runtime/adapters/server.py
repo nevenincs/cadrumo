@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from concurrent.futures import Future, ThreadPoolExecutor, wait
-from threading import BoundedSemaphore, Event, RLock
+from threading import BoundedSemaphore, Event, RLock, Thread
 from typing import Protocol
 from uuid import UUID, uuid4
 
@@ -19,6 +19,7 @@ from cadrumo_client.contracts.contracts import (
     ServerHello,
     ShutdownIncompleteError,
 )
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import TransportCleanup, close_transport_after_failure
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult, ProfileHandler
 
@@ -72,6 +73,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         self.listener = listener
         self._listener_owner = TransportCleanup(listener)
         self.stop = stop
+        self._stopping = NativeWake()
         self.profiles = profiles
         self.identity = ServerHello(
             product_version=product_version,
@@ -111,6 +113,8 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                 self.listener.listen()
             workers = ThreadPoolExecutor(max_workers=32, thread_name_prefix="cadrumo-ipc")
             try:
+                # Serving always ends by setting stop, which also ends this thread.
+                Thread(target=self._wake_on_stop, name="runtime-stop-wake", daemon=True).start()
                 self.ready.set()
                 accept_error: BaseException | None = None
                 try:
@@ -209,6 +213,11 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                 cleanup_error,
                 note="Listener cleanup also failed; retry through the attached async_cleanup_error",
             )
+
+    def _wake_on_stop(self) -> None:
+        """Carry ``stop`` to the native wake that connections block on between requests."""
+        self.stop.wait()
+        self._stopping.set()
 
     def _accept_connections(self, workers: ThreadPoolExecutor) -> None:
         while not self.stop.is_set():

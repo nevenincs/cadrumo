@@ -56,6 +56,7 @@ from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
+    ChannelWake,
     Peer,
     RefusalCode,
     RefusalError,
@@ -115,6 +116,13 @@ class _Channel:
     def read_ready(self) -> bool:
         with self.incoming.condition:
             return bool(self.incoming.data) or self.incoming.closed
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         with self.outgoing.condition:

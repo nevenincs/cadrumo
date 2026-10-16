@@ -26,7 +26,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import AccessRefusal, HumanProof, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -86,6 +86,13 @@ def test_scope_constructor_owner_survives_public_refusal_and_failed_settlement(
 
         def read_ready(self) -> bool:
             return False
+
+        def wait_readable(self, *wakes: ChannelWake) -> bool:
+            while not self.read_ready():
+                if any(wake.is_set() for wake in wakes):
+                    return False
+                time.sleep(0.01)
+            return True
 
         def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
             raise AssertionError("failed construction must not write a secret")
@@ -438,6 +445,13 @@ def test_unreturned_candidate_survives_exact_primary_and_public_refusal_until_se
 
             def read_ready(self) -> bool:
                 return False
+
+            def wait_readable(self, *wakes: ChannelWake) -> bool:
+                while not self.read_ready():
+                    if any(wake.is_set() for wake in wakes):
+                        return False
+                    time.sleep(0.01)
+                return True
 
             def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
                 raise AssertionError("refusal mapping must not write a secret")

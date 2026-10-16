@@ -18,7 +18,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus, ProfileStatusTransfer, Reply
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SubmissionPayloadChunk
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -66,6 +66,13 @@ class LeaseChannel:
 
     def read_ready(self) -> bool:
         return bool(self.data)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def close(self) -> None:
         self.closed = True

@@ -15,7 +15,7 @@ import pytest
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.logging import get_logger
 
-from ...contracts.contracts import ByteChannel, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from ...contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from .. import startup
 from ..frame_io import write_document
 from ..framing import VerifiedConnection
@@ -63,6 +63,13 @@ class _BlockedChannel:
 
     def read_ready(self) -> bool:
         return bool(self.inbound)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         self.writes.append(bytes(payload))

@@ -32,6 +32,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, Server
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, read_document, read_secret, write_document
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.worker_authorization import (
     WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
@@ -80,9 +81,6 @@ _LOGGER = get_logger(__name__)
 _FRAME_SECONDS = 5.0
 """How long one frame of the authority handshake may take to arrive once its first byte is ready."""
 
-_INSTRUCTION_POLL_SECONDS = 0.05
-"""How often the runtime looks for a stage's next frame while it runs."""
-
 _SETTLE_JOIN_SECONDS = 35.0
 """How long shutdown joins the callback thread; its worker is contained first, so the thread ends promptly."""
 
@@ -118,7 +116,8 @@ class WorkerAuthorizationServer:
         self._owns_process, self._contain, self._owner = owns_process, contain, owner
         self._wall_clock = wall_clock
         self._runtime_server_starter = runtime_server_starter
-        self._stop, self._failed = Event(), Event()
+        # A stage's wait for the worker's next frame blocks on this stop too.
+        self._stop, self._failed = NativeWake(), Event()
         self._slots = BoundedSemaphore(8)
         self._endpoint = worker_endpoint(
             storage_root=root, worker_namespace=worker_authorization_namespace(identity.worker_id)
@@ -306,10 +305,8 @@ class WorkerAuthorizationServer:
 
     def _await_instruction(self, channel: WorkerChannel) -> None:
         """Wait for the worker's next frame for as long as its stage runs, ending only on stop or a dead channel."""
-        while not channel.read_ready():
-            if self._stop.is_set():
-                raise RefusalError(RefusalCode.DRAINING)
-            self._stop.wait(_INSTRUCTION_POLL_SECONDS)
+        if not channel.wait_readable(self._stop):
+            raise RefusalError(RefusalCode.DRAINING)
 
     def require_healthy(self) -> None:
         """A failed or stopping callback owner cannot authorize another operation."""

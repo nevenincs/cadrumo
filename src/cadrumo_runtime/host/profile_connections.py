@@ -43,6 +43,7 @@ from cadrumo_client.contracts.session_events import (
 )
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.installation import read_runtime_installation
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
 
 from ..adapters.login import capture_runtime_login
@@ -192,9 +193,11 @@ class RuntimeProfileConnections(
         for connection_id in watchers:
             self._events.publish_cue(SignInChanged(runtime_boot_id=self.boot, connection_id=connection_id))
 
-    def connect_events(self, context: ConnectionContext, channel: ByteChannel | None = None) -> None:
+    def connect_events(
+        self, context: ConnectionContext, channel: ByteChannel | None = None, *, queued: NativeWake | None = None
+    ) -> None:
         """Register a native-verified connection without admitting profile access."""
-        self._events.connect(context)
+        self._events.connect(context, queued)
         if context.lifecycle_notices and channel is not None:
             if channel.peer != context.peer:
                 raise RefusalError(RefusalCode.PEER_UNTRUSTED)

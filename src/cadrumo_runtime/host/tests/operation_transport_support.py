@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from threading import Event, Lock
 from uuid import UUID
 
-from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, Peer, RefusalCode, RefusalError
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.windows import WindowsEndpoint
 
@@ -110,6 +110,9 @@ class PausedProjectionChannel:
 
     def read_ready(self) -> bool:
         return self.channel.read_ready()
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        return self.channel.wait_readable(*wakes)
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         self.barrier.before_write(payload, deadline=deadline)

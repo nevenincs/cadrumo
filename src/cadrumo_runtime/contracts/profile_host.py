@@ -39,6 +39,7 @@ from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceCon
 from cadrumo_client.contracts.session_events import ConnectionEvent
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.transport.native_wake import NativeWake
 
 from .profile_worker import ProfileWorkerDrained
 
@@ -62,8 +63,14 @@ class ProfileDrainResult:
 class ProfileHandler(Protocol):
     """Host-owned profile admission and lifetime hooks after the native handshake."""
 
-    def connect_events(self, context: ConnectionContext, channel: ByteChannel | None = None) -> None:
-        """Register an already verified stream for bounded retirement notices."""
+    def connect_events(
+        self, context: ConnectionContext, channel: ByteChannel | None = None, *, queued: NativeWake | None = None
+    ) -> None:
+        """Register an already verified stream for bounded retirement notices.
+
+        ``queued`` is set whenever an event waits for the stream's writer, which
+        blocks on it together with the channel between requests.
+        """
         ...
 
     def take_events(self, context: ConnectionContext) -> tuple[ConnectionEvent, ...]:

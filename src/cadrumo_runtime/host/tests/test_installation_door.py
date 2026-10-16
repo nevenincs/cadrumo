@@ -25,7 +25,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationC
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.storage_taxonomy import StorageArea
-from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_LOG_TAIL_MAX_LINES,
     ArchiveImportReply,
@@ -85,6 +85,13 @@ class _BufferChannel:
 
     def read_ready(self) -> bool:
         return bool(self._inbound)
+
+    def wait_readable(self, *wakes: ChannelWake) -> bool:
+        while not self.read_ready():
+            if any(wake.is_set() for wake in wakes):
+                return False
+            time.sleep(0.01)
+        return True
 
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         del deadline
