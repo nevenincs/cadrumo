@@ -49,6 +49,10 @@ class RuntimeEnrollmentOffer:
             destination_id=self.prepared.destination_id,
         )
 
+    def lapses_at(self) -> float:
+        """Return the monotonic instant this offer's window closes, whichever of its two bounds is first."""
+        return min(self.deadline, time.monotonic() + (self.prepared.expires_at - now()).total_seconds())
+
     def require_live(self) -> None:
         """Reobserve originating login, current root generation and offer lifetime."""
         observation = self.connection.login.observe(credential_facilities=Availability.UNAVAILABLE)

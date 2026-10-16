@@ -192,3 +192,36 @@ def test_an_idle_subscription_waits_once_and_an_exchange_claims_the_connection_a
         assert counted.waits == 3
     finally:
         connection.close()
+
+
+def test_an_accept_wait_ends_for_a_wake_and_the_next_accepts_the_waiting_peer(tmp_path: Path) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsEndpoint(storage_root=root)
+    endpoint.listen()
+    try:
+        wake = NativeWake()
+        refused: list[RefusalCode] = []
+
+        def accept() -> None:
+            try:
+                endpoint.accept(timeout=None, wakes=(wake,)).close()
+            except RefusalError as error:
+                refused.append(error.reason)
+
+        waiting = Thread(target=accept, daemon=True)
+        waiting.start()
+        waiting.join(0.3)
+        assert waiting.is_alive(), "with no deadline only a connection or a wake ends the wait"
+        wake.set()
+        waiting.join(2)
+        assert not waiting.is_alive() and refused == [RefusalCode.DEADLINE_EXCEEDED]
+        wake.clear()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            accepted = pool.submit(endpoint.accept, timeout=None, wakes=(wake,))
+            client = endpoint.connect(timeout=5)
+            server = accepted.result(timeout=5)
+        client.close()
+        server.close()
+    finally:
+        endpoint.close()

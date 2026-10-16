@@ -86,9 +86,8 @@ class RuntimeShutdownWatchdog:
         self._thread = Thread(target=self._watch, name="runtime-shutdown-bound", daemon=True)
 
     def _watch(self) -> None:
-        while not self._stop.wait(0.05):
-            if self._finished.is_set():
-                return
+        # Sleeps until stop; a runtime that finishes unstopped leaves this daemon waiting, harmlessly.
+        self._stop.wait()
         if not self._finished.wait(self._timeout):
             terminate_runtime(ExitReason.DRAIN_WATCHDOG)
 
@@ -102,4 +101,5 @@ class RuntimeShutdownWatchdog:
     ) -> None:
         """Disarm after serving has settled or terminated the installed process."""
         self._finished.set()
-        self._thread.join(timeout=1)
+        if self._stop.is_set():
+            self._thread.join(timeout=1)

@@ -322,6 +322,12 @@ class RuntimeEnrollmentConnections:
         if offer is not None:
             offer.close(AutomationCustodyCode.REQUESTER_DISCONNECTED)
 
+    def next_lapse(self) -> float | None:
+        """Return the monotonic instant the earliest open offer's window closes."""
+        with self._guard:
+            offers = tuple(self._offers.values())
+        return min((offer.lapses_at() for offer in offers), default=None)
+
     def poll(self) -> None:
         """End offers on expiry and originating-login loss even without client calls."""
         with self._guard:

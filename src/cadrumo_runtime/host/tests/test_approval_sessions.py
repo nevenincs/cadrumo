@@ -167,6 +167,19 @@ def test_expiry_and_capacity_fence_later_phases(subject: AdministrationSubject) 
     assert second.close() == 0
 
 
+def test_the_earliest_held_proof_is_when_the_lifecycle_must_look_again(subject: AdministrationSubject) -> None:
+    clock = [10.0]
+    manager, binding, _ = _setup(subject, clock=clock)
+    assert manager.next_expiry() is None
+    _prepare(manager, binding)
+    lapse = 10.0 + ACCESS_LEASE_MAXIMUM.total_seconds()
+    assert manager.next_expiry() == lapse
+    clock[0] = lapse
+    manager.expire()
+    assert manager.next_expiry() is None
+    assert manager.close() == 0
+
+
 def test_retire_waits_for_real_password_proof_to_settle(subject: AdministrationSubject) -> None:
     entered, release = Event(), Event()
     actual: list[ApprovalSession] = []

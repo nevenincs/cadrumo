@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import errno
 import os
+import select
 import socket
 import stat
 import sys
@@ -15,7 +16,7 @@ from uuid import UUID
 from cadrumo.core.connection_transport import SOCKET_PATH_LIMIT, socket_directory
 from cadrumo.core.hashing import sha256_hex
 
-from ..contracts.contracts import EndpointPresence, RefusalCode, RefusalError
+from ..contracts.contracts import ChannelWake, EndpointPresence, RefusalCode, RefusalError
 from .posix import (
     _accept_socket,
     _lock_exclusive,
@@ -323,14 +324,25 @@ class PosixEndpoint:
                 raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
             os.unlink(self._name, dir_fd=self._directory_fd)
 
-    def accept(self, *, timeout: float = 5.0) -> PosixChannel:
-        """Return only accepted connections with native owner identity verified."""
+    def accept(self, *, timeout: float | None = 5.0, wakes: tuple[ChannelWake, ...] = ()) -> PosixChannel:
+        """Return only accepted connections with native owner identity verified.
+
+        No connection by ``timeout``, or a set wake, ends the wait as an unmet
+        deadline; with ``timeout`` ``None`` only a connection or a wake ends it.
+        """
         if self._listener is None:
             raise RefusalError(RefusalCode.UNAVAILABLE)
-        self._listener.settimeout(timeout)
+        try:
+            readable, _, _ = select.select((self._listener, *(wake.waitable for wake in wakes)), (), (), timeout)
+        except (OSError, ValueError):
+            raise RefusalError(RefusalCode.UNAVAILABLE) from None
+        if self._listener not in readable:
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        # The connection is waiting now; one its peer abandoned meanwhile is not waited for.
+        self._listener.settimeout(0)
         try:
             return PosixChannel(_accept_socket(self._listener))
-        except TimeoutError:
+        except (TimeoutError, BlockingIOError):
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
 
     def close(self) -> None:

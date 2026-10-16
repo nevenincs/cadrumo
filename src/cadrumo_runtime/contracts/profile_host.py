@@ -21,7 +21,7 @@ from cadrumo_client.contracts.attendance import (
 )
 from cadrumo_client.contracts.bootstrap import PasswordReset, PasswordResetPrepare
 from cadrumo_client.contracts.bootstrap_delete import ProfileDelete, ProfileDeletePrepare
-from cadrumo_client.contracts.contracts import ByteChannel
+from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake
 from cadrumo_client.contracts.enrollment_access import EnrollmentRequest
 from cadrumo_client.contracts.extension_records import ExtensionRecordRequest
 from cadrumo_client.contracts.installation_requests import InstallationActRequest
@@ -156,6 +156,19 @@ class ProfileHandler(Protocol):
 
     def poll(self) -> None:
         """Revalidate leases without requiring a frontend call."""
+        ...
+
+    @property
+    def lifecycle_wake(self) -> ChannelWake:
+        """Return the flag set when the wait for the next lifecycle pass must be decided again."""
+        ...
+
+    def lifecycle_due_in(self) -> float | None:
+        """Return the seconds until a pass is due with nothing happening, or ``None`` when only a call brings one."""
+        ...
+
+    def lifecycle_changed(self) -> None:
+        """Have a pass look, soon but coalesced, at what a request or a disconnect changed."""
         ...
 
     def close(self) -> None:

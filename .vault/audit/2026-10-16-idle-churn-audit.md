@@ -65,6 +65,28 @@ The runtime's per-connection loop backs off from 1 ms to 50 ms between `read_rea
 
 `AttendanceRequests` re-reads the inventory on a 2 s timer (`native/desktop/frontend/src/components/AttendanceRequests.tsx:41`). Each read passes through the person bridge into a runtime `attendance_inventory` request.
 
+### manager-supervision-poll | medium | The shared manager core wakes every 100 ms in whichever process supervises
+
+The supervisor's wait is capped at `poll_interval`, 100 ms, even when it is only waiting for the next 5 s heartbeat (`native/manager/src/supervision/supervisor.rs:70`, `:992`). `desktop_host` also turns on a fixed 100 ms `POLL` (`native/manager/src/desktop_host.rs:29`). When no installed manager owns the runtime, the desktop hosts this core, so these wakeups land in the desktop process. The desktop adds its own 500 ms `supervision_continues` check (`native/desktop/src-tauri/src/app.rs:380`). The manager crate is shared and under another in-flight plan, so the idle-churn plan does not change it. The fix is to wait on the child's process handle, the command channel and the next heartbeat deadline.
+
+### shutdown-watchdog-poll | low | The runtime's shutdown watchdog woke every 50 ms for the whole runtime lifetime
+
+`RuntimeShutdownWatchdog._watch` looped on `stop.wait(0.05)` to notice an early finish (`src/cadrumo_runtime/host/shutdown.py:89`). It now blocks on the stop itself. It joins on exit only when the stop has been set.
+
+### worker-authorization-accept | low | Each profile worker's authorization endpoint turned every 0.2 s
+
+`WorkerAuthorizationServer._serve` accepted with `timeout=0.2` (`src/cadrumo_runtime/adapters/worker_authorization.py:137`), and the stage wait polled every 50 ms. Both now block on the endpoint or channel together with the server's stop.
+
+### agent-diagnostic-tail | low | The agent service tailed hosted log files every 0.2 s
+
+`AgentDiagnosticFiles._follow` re-scanned and re-read the hosted runtime log directory every 0.2 s while an agent ran (`src/cadrumo_agent_service/adapters/agent_diagnostics.py:306`). Since cadrumo-agent `09bfc8b`, the agent relays its worker's diagnostics on its own standard error, which the service already drains.
+
+### remaining-platform-observation | low | Some observations stay periodic where no notification source exists or the work is not idle
+
+- Without WTS session notifications the runtime observes logins every 0.5 s. That applies to POSIX hosts, a refused registration, non-desktop logons, and unknown lock states. The ADR records this allowance.
+- The macOS worker guardian checks for parent loss every 0.2 s (`src/cadrumo_runtime/host/macos_worker_guardian.py:28`). kqueue `NOTE_EXIT` could replace it.
+- Startup and in-flight operation waits remain bounded polls. These are the profile worker's startup accept, the supervised ready announcement and client operation settlement. They are not idle work.
+
 ## Recommendations
 
 - For desktop-sign-in-polling, service-lease-polling, attendance-polling, language-hint-polling and session-hold-loop: replace each poll with a pushed invalidation cue and one re-read. This requires a decision on the cues and on how the shell observes sign-in without holding a runtime connection itself. See `2026-10-16-idle-churn-adr`.

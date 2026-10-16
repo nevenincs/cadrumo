@@ -224,6 +224,9 @@ class RuntimeConnectionHandling:
                 continue
             request = read_document(channel, Request, deadline=time.monotonic() + 5).root
             status = self._dispatch_profile_request(channel, context, request)
+            if self.profiles is not None:
+                # What the request changed may move a lease's deadline or end one.
+                self.profiles.lifecycle_changed()
             if status is None:
                 continue
             if isinstance(status, ProfileStatus):
@@ -315,6 +318,7 @@ class RuntimeConnectionHandling:
         try:
             if self.profiles is not None and context is not None:
                 self.profiles.disconnect(context)
+                self.profiles.lifecycle_changed()
         except Exception as error:
             _LOGGER.error(
                 "runtime connection disconnect failed; stopping the runtime error_type=%s",

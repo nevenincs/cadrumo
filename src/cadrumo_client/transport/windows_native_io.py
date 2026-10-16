@@ -10,7 +10,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 
-from ..contracts.contracts import RefusalCode, RefusalError
+from ..contracts.contracts import ChannelWake, RefusalCode, RefusalError
 from ..contracts.deadline_budget import remaining_budget
 
 if TYPE_CHECKING:
@@ -134,14 +134,27 @@ def windows_deadline_milliseconds(deadline: float) -> int:
     return min(0xFFFFFFFE, max(1, math.ceil(remaining * 1000)))
 
 
-def finish_windows_io(handle: int | NativeWindowsHandle, overlapped: PyOVERLAPPED, *, deadline: float) -> int:
-    """Join cancellation on the owning thread before releasing native I/O state."""
+def finish_windows_io(
+    handle: int | NativeWindowsHandle,
+    overlapped: PyOVERLAPPED,
+    *,
+    deadline: float | None,
+    wakes: tuple[ChannelWake, ...] = (),
+) -> int:
+    """Join cancellation on the owning thread before releasing native I/O state.
+
+    A set wake ends the wait as an unmet deadline does; without a deadline,
+    only completion or a wake ends it.
+    """
     import pywintypes
     import win32event
     import win32file
 
     try:
-        elapsed = win32event.WaitForSingleObject(overlapped.hEvent, windows_deadline_milliseconds(deadline))
+        waited = win32event.INFINITE if deadline is None else windows_deadline_milliseconds(deadline)
+        elapsed = win32event.WaitForMultipleObjects(
+            [overlapped.hEvent, *(wake.waitable for wake in wakes)], False, waited
+        )
         if elapsed != win32event.WAIT_OBJECT_0:
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         return win32file.GetOverlappedResult(int(handle), overlapped, False)

@@ -9,7 +9,7 @@ from uuid import UUID
 
 from cadrumo.core.hashing import sha256_hex
 
-from ..contracts.contracts import EndpointPresence, RefusalCode, RefusalError
+from ..contracts.contracts import ChannelWake, EndpointPresence, RefusalCode, RefusalError
 from .windows_channel import WindowsChannel
 from .windows_native_io import (
     CLIENT_PIPE_ACCESS,
@@ -165,8 +165,12 @@ class WindowsEndpoint:
             return EndpointPresence.INDETERMINATE
         return EndpointPresence.HELD
 
-    def accept(self, *, timeout: float = 5.0) -> WindowsChannel:
-        """Provision the next instance before transferring this connected handle."""
+    def accept(self, *, timeout: float | None = 5.0, wakes: tuple[ChannelWake, ...] = ()) -> WindowsChannel:
+        """Provision the next instance before transferring this connected handle.
+
+        No connection by ``timeout``, or a set wake, ends the wait as an unmet
+        deadline; with ``timeout`` ``None`` only a connection or a wake ends it.
+        """
         import pywintypes
         import win32api
         import win32event
@@ -189,7 +193,8 @@ class WindowsEndpoint:
                 elif error.winerror != ERROR_IO_PENDING:
                     raise
             if not connected:
-                finish_windows_io(handle, overlapped, deadline=time.monotonic() + timeout)
+                deadline = None if timeout is None else time.monotonic() + timeout
+                finish_windows_io(handle, overlapped, deadline=deadline, wakes=wakes)
             self._pending = self._new_instance(first=False)
             return WindowsChannel(handle, server=True)
         except pywintypes.error as error:

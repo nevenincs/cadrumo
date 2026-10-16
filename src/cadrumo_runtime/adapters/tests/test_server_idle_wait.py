@@ -5,15 +5,26 @@ from __future__ import annotations
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Event
+from typing import cast
+from uuid import uuid4
 
 import pytest
 
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.windows import WindowsEndpoint
 
+from ...host.profile_connections import RuntimeProfileConnections
 from .retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
@@ -60,11 +71,12 @@ class _Counted:
 
 
 class _Listener:
-    """The real endpoint, keeping each accepted channel it hands the server."""
+    """The real endpoint, keeping each accepted channel it hands the server and counting its waits."""
 
     def __init__(self, endpoint: WindowsEndpoint) -> None:
         self.endpoint = endpoint
         self.accepted: list[_Counted] = []
+        self.waits = 0
 
     @property
     def storage_identity(self) -> str:
@@ -73,8 +85,9 @@ class _Listener:
     def listen(self) -> None:
         self.endpoint.listen()
 
-    def accept(self, *, timeout: float) -> ByteChannel:
-        channel = _Counted(self.endpoint.accept(timeout=timeout))
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
+        self.waits += 1
+        channel = _Counted(self.endpoint.accept(timeout=timeout, wakes=wakes))
         self.accepted.append(channel)
         return channel
 
@@ -113,5 +126,63 @@ def test_an_idle_connection_waits_once_and_stop_ends_it_promptly(tmp_path: Path)
                 assert listener.accepted[0].endings == [False]
             finally:
                 client.close()
+        finally:
+            stop.set()
+
+
+@dataclass
+class _Login:
+    login_id: str = "synthetic-native-login"
+
+    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
+        return OsLoginContext(
+            login_id=self.login_id,
+            os_owner_id="synthetic-owner",
+            active=True,
+            lock_state=OsLockState.UNLOCKED,
+            unattended=LoginEligibility.ELIGIBLE,
+            credential_facilities=credential_facilities,
+        )
+
+
+def test_an_idle_accept_loop_parks_until_a_lifecycle_wake_and_reports_no_tick_age(tmp_path: Path) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsEndpoint(storage_root=root)
+    listener = _Listener(endpoint)
+    stop, boot = Event(), uuid4()
+    login = _Login()
+    profiles = RuntimeProfileConnections(
+        storage_root=root,
+        storage_identity=endpoint.storage_identity,
+        runtime_boot_id=boot,
+        stop=stop,
+        service_descriptors=(),
+        login_inventory=lambda: LoginInventory(logins=(cast(LoginEvidence, login),), complete=True),
+    )
+    # As if Windows reports this desktop login's changes: nothing is observed on a timer.
+    profiles.session_changes_pushed(True)
+    server = RetainedRuntimeTransportServer(
+        listener, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+    )
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        serving = pool.submit(server.serve)
+        try:
+            assert server.ready.wait(3)
+            # The first passes may owe one more within an interval; then the loop rests.
+            time.sleep(1.2)
+            resting = listener.waits
+            time.sleep(0.6)
+            assert listener.waits == resting, "an idle accept loop waits; it does not turn on a timer"
+            assert server.accept_tick_age() == 0.0, "a loop at rest is not reported as stuck"
+            profiles.lifecycle_changed()
+            deadline = time.monotonic() + 2
+            while listener.waits == resting:
+                assert time.monotonic() < deadline, "the lifecycle wake did not turn the loop"
+                time.sleep(0.01)
+            stopping = time.monotonic()
+            stop.set()
+            serving.result(timeout=10)
+            assert time.monotonic() - stopping < server.DRAIN_SECONDS / 3
         finally:
             stop.set()

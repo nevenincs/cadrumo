@@ -653,6 +653,14 @@ class RuntimeProfileHost:
                 finally:
                     self.approvals.close()
 
+    def lifecycle_due(self) -> float | None:
+        """Return the monotonic instant this profile must be observed again even if nothing happens."""
+        instants = (
+            self.authority.revalidation_due(monotonic_now=time.monotonic(), wall_now=self._wall_clock()),
+            self.approvals.next_expiry(),
+        )
+        return min((instant for instant in instants if instant is not None), default=None)
+
     def retire_replaced_binding(self, *, deadline: float) -> bool | None:
         """Drain an obsolete incarnation before permitting a fresh profile owner.
 

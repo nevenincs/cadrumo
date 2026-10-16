@@ -156,11 +156,17 @@ class _Listener:
         if self.closed:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
-    def accept(self, *, timeout: float) -> ByteChannel:
-        try:
-            return self.pending.get(timeout=timeout)
-        except Empty:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while not any(wake.is_set() for wake in wakes):
+            remaining = 0.01 if deadline is None else min(0.01, deadline - time.monotonic())
+            if remaining <= 0:
+                break
+            try:
+                return self.pending.get(timeout=remaining)
+            except Empty:
+                continue
+        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
 
     def connect(self, *, timeout: float) -> ByteChannel:
         del timeout

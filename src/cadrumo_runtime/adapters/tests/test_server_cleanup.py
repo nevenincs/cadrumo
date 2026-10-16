@@ -85,7 +85,7 @@ class _Listener:
     def listen(self) -> None:
         pass
 
-    def accept(self, *, timeout: float) -> ByteChannel:
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
         if self.accepted:
             self.stop.set()
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
@@ -206,11 +206,11 @@ async def test_listener_failure_preserves_primary_and_retains_retry_owner(
                 raise primary
 
         @override
-        def accept(self, *, timeout: float) -> ByteChannel:
+        def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
             if phase == "accept":
                 close_transport_after_failure(channel, primary)
                 raise primary
-            return super().accept(timeout=timeout)
+            return super().accept(timeout=timeout, wakes=wakes)
 
     class FailedExecutor:
         def submit(self, *_args: object) -> Future[None]:
@@ -285,9 +285,9 @@ def test_accept_failure_transfers_unreturned_native_owner_before_mapping(failure
 
     class FailedAcceptListener(_Listener):
         @override
-        def accept(self, *, timeout: float) -> ByteChannel:
+        def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
             if self.accepted:
-                return super().accept(timeout=timeout)
+                return super().accept(timeout=timeout, wakes=wakes)
             self.accepted = True
             close_transport_after_failure(channel, primary)
             raise primary

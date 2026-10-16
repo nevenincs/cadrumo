@@ -9,6 +9,7 @@ Durable grants remain in the existing automation control store.
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 from uuid import UUID
 
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, SessionKind
@@ -64,6 +65,26 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
         """
         with self.owner.admission_guard():
             return self._revalidate_sessions_locked()
+
+    def revalidation_due(self: SessionAuthorityLifecycle, *, monotonic_now: float, wall_now: datetime) -> float | None:
+        """Return the monotonic instant the earliest lease lapses, or now while a retirement is unfinished.
+
+        A login, lock or custody change can end a lease sooner; such changes
+        call for their own revalidation, so only lapse needs a deadline here.
+        """
+        with self.owner.admission_guard():
+            if self._pending_retirements:
+                return monotonic_now
+            return min(
+                (
+                    min(
+                        session.issued_monotonic + (session.expires_at - session.issued_at).total_seconds(),
+                        monotonic_now + (session.expires_at - wall_now).total_seconds(),
+                    )
+                    for session in self._sessions.values()
+                ),
+                default=None,
+            )
 
     def invalidate_automation(self: SessionAuthorityLifecycle, change: AutomationDenial) -> None:
         """Trusted lifecycle hook: fence matching leases before durable denial.

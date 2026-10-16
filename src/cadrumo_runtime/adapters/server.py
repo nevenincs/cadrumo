@@ -14,6 +14,7 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
+    ChannelWake,
     RefusalCode,
     RefusalError,
     ServerHello,
@@ -40,8 +41,8 @@ class RuntimeListener(Protocol):
         """Claim ownership, refusing any existing live owner."""
         ...
 
-    def accept(self, *, timeout: float) -> ByteChannel:
-        """Accept a kernel-verified peer within the supplied deadline."""
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
+        """Accept a kernel-verified peer, or refuse as an unmet deadline at ``timeout`` or a set wake."""
         ...
 
     def close(self) -> None:
@@ -89,15 +90,20 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         self._requests: set[Future[None]] = set()
         self._drain_guard = RLock()
         self._accept_tick: float | None = None
+        # Waiting for a connection or a wake is the loop at rest, not a loop that is stuck.
+        self._accept_parked = False
 
     def accept_tick_age(self) -> float | None:
         """Return seconds since the accept loop last turned, or ``None`` before it first ran.
 
-        Each turn polls profile lifecycle and waits at most one bounded accept, so
-        a growing age means the loop itself is blocked.
+        Each turn runs a lifecycle pass when one is due, then waits for a
+        connection, a wake or the next due pass. That wait is the loop at rest
+        and counts as no age, so a growing age means the loop is blocked elsewhere.
         """
         tick = self._accept_tick
-        return None if tick is None else max(0.0, time.monotonic() - tick)
+        if tick is None:
+            return None
+        return 0.0 if self._accept_parked else max(0.0, time.monotonic() - tick)
 
     def open_connection_count(self) -> int:
         """Return the number of accepted verified connections not yet closed."""
@@ -226,8 +232,12 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                 self.profiles.poll()
             if self.stop.is_set():
                 return
+            due, wakes = None, (self._stopping,)
+            if self.profiles is not None:
+                due, wakes = self.profiles.lifecycle_due_in(), (self._stopping, self.profiles.lifecycle_wake)
+            self._accept_parked = True
             try:
-                channel = self.listener.accept(timeout=0.2)
+                channel = self.listener.accept(timeout=due, wakes=wakes)
             except RefusalError as error:
                 if self._accept_refusal_can_retry(error):
                     continue
@@ -235,6 +245,8 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             except BaseException as error:
                 self._retain_channel_cleanup(error)
                 raise
+            finally:
+                self._accept_parked = False
             channel_owner = self._channel_owner(channel)
             if self.stop.is_set() or not self._slots.acquire(blocking=False):
                 self._close_owned_channel(channel_owner)

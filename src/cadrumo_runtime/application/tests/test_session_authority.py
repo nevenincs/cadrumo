@@ -1003,6 +1003,25 @@ def test_host_poll_retires_expired_access_without_a_frontend_request(subject: Su
     assert not subject.authority.revalidate_sessions()
 
 
+def test_revalidation_is_due_when_the_earliest_lease_lapses_by_either_clock(subject: Subject) -> None:
+    context = subject.owner.current.context
+    assert subject.authority.revalidation_due(monotonic_now=context.monotonic_now, wall_now=context.now) is None
+    api = subject.admit()
+    assert isinstance(api, AccessSession)
+    lifetime = (api.expires_at - api.issued_at).total_seconds()
+    due = subject.authority.revalidation_due(monotonic_now=context.monotonic_now, wall_now=context.now)
+    assert due == api.issued_monotonic + lifetime
+    # A wall clock that has run ahead brings the lapse forward; the earlier bound wins.
+    ahead = subject.authority.revalidation_due(
+        monotonic_now=context.monotonic_now, wall_now=context.now + timedelta(seconds=100)
+    )
+    assert ahead == context.monotonic_now + lifetime - 100
+    subject.advance(lifetime + 1)
+    assert subject.authority.revalidate_sessions() == (api.session_id,)
+    later = subject.owner.current.context
+    assert subject.authority.revalidation_due(monotonic_now=later.monotonic_now, wall_now=later.now) is None
+
+
 def test_host_poll_preserves_password_access_when_automation_storage_is_lost(subject: Subject) -> None:
     api = subject.admit()
     human = subject.authority.admit_human(connection_id=subject.connection)

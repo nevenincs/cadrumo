@@ -39,6 +39,7 @@ from ..adapters.linux_login import linux_login_inventory
 from ..adapters.login_policy import compose_runtime_login_policy
 from ..adapters.server import RuntimeTransportServer
 from ..adapters.windows_login import windows_login_inventory
+from ..adapters.windows_session_notifications import WindowsSessionNotifications
 from .caller_owned import CallerOwnedRuntime, configured_storage_root
 from .profile_connections import RuntimeProfileConnections
 from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, RuntimeStop, terminate_runtime
@@ -172,10 +173,15 @@ def _serve_runtime_endpoint(
         attach = partial(supervision.attach, profiles=profiles, ready=ready, publish_boot_record=publication.publish)
     with startup_phase(_LOGGER, "registry_prepare"):
         profiles.prepare_registry()
+    # Logon, logoff, lock and unlock wake the lifecycle pass; where Windows will
+    # not report them, the pass observes logins on an interval instead.
+    notifications = WindowsSessionNotifications(profiles.os_session_changed)
+    profiles.session_changes_pushed(notifications.start())
     with RuntimeShutdownWatchdog(stop, timeout=RuntimeTransportServer.DRAIN_SECONDS + 2):
         try:
             _serve_transport(endpoint, installed_version, stop, profiles, boot_id, attach)
         finally:
+            notifications.close()
             if publication is not None:
                 _withdraw_boot_record(publication)
 

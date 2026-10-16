@@ -74,6 +74,10 @@ if TYPE_CHECKING:
 
 _LOGGER = get_logger(__name__)
 
+# Lifecycle passes stay this far apart, and where nothing reports a login's
+# changes it is also how often that login is observed.
+_LIFECYCLE_INTERVAL_SECONDS = 0.5
+
 
 class RuntimeProfileConnections(
     RuntimeBootstrapMixin,
@@ -155,6 +159,15 @@ class RuntimeProfileConnections(
         self._operation_requests = 0
         self._last_poll = 0.0
         self._last_sign_in_sweep = 0.0
+        # A pass runs when this is set, at the earliest deadline, or when one
+        # that could not finish is owed; never on a timer while nothing changes.
+        self._lifecycle = NativeWake()
+        self._lifecycle_owed: float | None = None
+        self._lifecycle_called = False
+        # Each profile's next lapse, as the last pass found it; reading it takes no profile guard.
+        self._host_dues: dict[UUID, float] = {}
+        self._session_changes_pushed = False
+        self._unreported_logins = True
         self._enrollments = RuntimeEnrollmentConnections(prepare=self._prepare_enrollment, admitting=self._admitting)
         self._management = RuntimeAccessManagement(
             resolve=self._resolve_access_management,
@@ -314,6 +327,12 @@ class RuntimeProfileConnections(
         if not eligible or instant - self._last_sign_in_sweep >= 1.0:
             self._sweep_sign_ins(observed, complete=inventory.complete, include_hosted=not eligible)
             self._last_sign_in_sweep = instant
+        else:
+            self._owe_lifecycle_pass(self._last_sign_in_sweep + 1.0)
+        # A logon without a lock surface, or one in an unknown state, changes with no session notification.
+        self._unreported_logins = any(
+            login.lock_state in (OsLockState.NOT_APPLICABLE, OsLockState.UNKNOWN) for login in observed
+        )
         with self._guard:
             self._login_lifecycle_available = eligible
             if eligible:
@@ -458,18 +477,76 @@ class RuntimeProfileConnections(
             return registry
 
     def poll(self) -> None:
-        """Do not race custody-owned containment or a retained shutdown attempt."""
+        """Run a lifecycle pass when one is called for or due, never racing custody containment or shutdown."""
+        # Cleared first, so a change during this pass calls for another.
+        self._lifecycle.clear()
+        with self._guard:
+            called, self._lifecycle_called = self._lifecycle_called, False
+        due = self._lifecycle_due()
+        if not called and (due is None or time.monotonic() < due):
+            # Woken only to decide the wait again: no pass is due yet.
+            return
+        with self._guard:
+            self._lifecycle_owed = None
         if not self._drain_guard.acquire_poll():
+            self._owe_lifecycle_pass()
             return
         try:
             self._poll_profiles()
         finally:
             self._drain_guard.release()
 
+    @property
+    def lifecycle_wake(self) -> NativeWake:
+        """Return the flag set when the wait for the next lifecycle pass must be decided again."""
+        return self._lifecycle
+
+    def lifecycle_changed(self) -> None:
+        """Have a pass look, one interval from now, at what a request or a disconnect changed.
+
+        A burst of requests costs one pass, as when passes ran on an interval.
+        """
+        self._owe_lifecycle_pass()
+        self._lifecycle.set()
+
+    def os_session_changed(self) -> None:
+        """Call for a pass now: the OS reported a logon, logoff, lock, unlock, connect or disconnect."""
+        with self._guard:
+            self._lifecycle_called = True
+        self._lifecycle.set()
+
+    def session_changes_pushed(self, pushed: bool) -> None:
+        """Say whether OS session changes reach ``os_session_changed``; without them logins are observed."""
+        self._session_changes_pushed = pushed
+
+    def lifecycle_due_in(self) -> float | None:
+        """Return the seconds until a pass is due with nothing happening, or ``None`` when only a call brings one."""
+        due = self._lifecycle_due()
+        if due is None:
+            return None
+        return max(0.0, max(due, self._last_poll + _LIFECYCLE_INTERVAL_SECONDS) - time.monotonic())
+
+    def _lifecycle_due(self) -> float | None:
+        with self._guard:
+            owed = self._lifecycle_owed
+            host_dues = tuple(self._host_dues.values())
+        instants = [owed, self._enrollments.next_lapse(), *host_dues]
+        if not self._session_changes_pushed or self._unreported_logins:
+            # Nothing reports these logins' changes, so observing them on an interval is their only source.
+            instants.append(self._last_poll + _LIFECYCLE_INTERVAL_SECONDS)
+        return min((instant for instant in instants if instant is not None), default=None)
+
+    def _owe_lifecycle_pass(self, at: float | None = None) -> None:
+        """Owe a pass that could not finish now, by ``at`` or one interval from now, without waking the loop."""
+        due = time.monotonic() + _LIFECYCLE_INTERVAL_SECONDS if at is None else at
+        with self._guard:
+            self._lifecycle_owed = due if self._lifecycle_owed is None else min(self._lifecycle_owed, due)
+
     def _poll_profiles(self) -> None:
         """Fence idle leases on expiry, native logout/lock or unavailable custody."""
         instant = time.monotonic()
-        if instant - self._last_poll < 0.5:
+        if instant - self._last_poll < _LIFECYCLE_INTERVAL_SECONDS:
+            self._owe_lifecycle_pass(self._last_poll + _LIFECYCLE_INTERVAL_SECONDS)
             return
         self._last_poll = instant
         self._login_contexts()
@@ -480,9 +557,16 @@ class RuntimeProfileConnections(
             if not self._admitting():
                 return
             hosts = tuple(host for identity, host in self._profiles.items() if identity not in self._custody_mutations)
+            mutating = bool(self._custody_mutations)
+        if mutating:
+            # A profile under a custody mutation is looked at again once that settles.
+            self._owe_lifecycle_pass()
+        dues: dict[UUID, float] = {}
         for host in hosts:
             retired = host.retire_replaced_binding(deadline=time.monotonic() + 15)
             if retired is None:
+                # Another owner holds its fence; look again shortly.
+                self._owe_lifecycle_pass()
                 continue
             if retired:
                 self._remove_retired_host(host)
@@ -493,6 +577,12 @@ class RuntimeProfileConnections(
             if host.owner.lost:
                 host.close()
                 self._remove_retired_host(host)
+                continue
+            due = host.lifecycle_due()
+            if due is not None:
+                dues[host.store.binding.profile_id] = due
+        with self._guard:
+            self._host_dues = dues
 
     def _remove_retired_host(self, host: RuntimeProfileHost) -> None:
         """Forget only the contained incarnation; old connections gain no new lease."""

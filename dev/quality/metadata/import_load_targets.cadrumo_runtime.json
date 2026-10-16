@@ -46,6 +46,7 @@
         "cadrumo_runtime.adapters.windows_login",
         "cadrumo_runtime.adapters.windows_login_native",
         "cadrumo_runtime.adapters.windows_process",
+        "cadrumo_runtime.adapters.windows_session_notifications",
         "cadrumo_runtime.adapters.worker_admission_budget",
         "cadrumo_runtime.adapters.worker_arguments",
         "cadrumo_runtime.adapters.worker_authorization",

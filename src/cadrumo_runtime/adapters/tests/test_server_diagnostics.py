@@ -11,7 +11,13 @@ from typing import override
 import pytest
 
 from cadrumo.core.logging import get_logger
-from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError, ShutdownIncompleteError
+from cadrumo_client.contracts.contracts import (
+    ByteChannel,
+    ChannelWake,
+    RefusalCode,
+    RefusalError,
+    ShutdownIncompleteError,
+)
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
 
 from ..server import RuntimeTransportServer
@@ -28,7 +34,7 @@ class _Listener:
     def listen(self) -> None:
         pass
 
-    def accept(self, *, timeout: float) -> ByteChannel:
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
         raise AssertionError("the test server owns its bounded accept driver")
 
     def close(self) -> None:

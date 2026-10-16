@@ -169,9 +169,14 @@ class RuntimeApprovalSessions:
             self._reap_locked(self._instant())
 
     def expire(self) -> None:
-        """Release idle expired proofs during the host's existing lifecycle tick."""
+        """Release idle expired proofs during the host's lifecycle pass."""
         with self._lock:
             self._reap_locked(self._instant())
+
+    def next_expiry(self) -> float | None:
+        """Return the clock instant the earliest live proof lapses, or none while none is held."""
+        with self._lock:
+            return min((entry.expires_at for entry in self._entries.values() if not entry.retired), default=None)
 
     def retire_sessions(self, session_ids: tuple[UUID, ...]) -> None:
         """Release proofs for retired human leases without affecting other sessions."""

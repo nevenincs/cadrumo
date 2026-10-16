@@ -137,8 +137,8 @@ class PausedProjectionListener:
     def listen(self) -> None:
         self.endpoint.listen()
 
-    def accept(self, *, timeout: float) -> ByteChannel:
-        return PausedProjectionChannel(self.endpoint.accept(timeout=timeout), self.barrier)
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
+        return PausedProjectionChannel(self.endpoint.accept(timeout=timeout, wakes=wakes), self.barrier)
 
     def close(self) -> None:
         self.endpoint.close()

@@ -135,7 +135,7 @@ class WorkerAuthorizationServer:
             with ThreadPoolExecutor(max_workers=8, thread_name_prefix="profile-effect") as pool:
                 while not self._stop.is_set():
                     try:
-                        channel = self._endpoint.accept(timeout=0.2)
+                        channel = self._endpoint.accept(timeout=None, wakes=(self._stop,))
                     except RefusalError as error:
                         if error.reason in {
                             RefusalCode.DEADLINE_EXCEEDED,

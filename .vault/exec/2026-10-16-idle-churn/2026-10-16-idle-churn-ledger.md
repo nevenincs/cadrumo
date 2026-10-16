@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:29d492b95e0af3403a3a007faa86429e0f1fca953c8492892f9ad116ee78da50'
+body_hash: 'sha256:99c92e4c5d2a7c582ed0c42ef23fbef728e52e408ca12651148f6992d22842d4'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -166,6 +166,40 @@ related:
 - `S11` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S11` `verify:` `pytest src/cadrumo_agent_service/adapters/tests` -> `pass`
 - `S11` `verify:` `ruff ty on touched files` -> `pass`
+- `S09` `M` `dev/quality/metadata/import_load_targets.cadrumo_client.json`
+- `S09` `M` `dev/quality/metadata/import_load_targets.cadrumo_runtime.json`
+- `S09` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `M` `src/cadrumo_client/transport/posix_endpoint.py`
+- `S09` `M` `src/cadrumo_client/transport/tests/test_channel_readiness_wait.py`
+- `S09` `M` `src/cadrumo_client/transport/windows.py`
+- `S09` `M` `src/cadrumo_client/transport/windows_native_io.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/server.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/server_connection_handling.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/tests/test_server_cleanup.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/tests/test_server_diagnostics.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/tests/test_server_idle_wait.py`
+- `S09` `A` `src/cadrumo_runtime/adapters/tests/test_windows_session_notifications.py`
+- `S09` `A` `src/cadrumo_runtime/adapters/windows_session_notifications.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S09` `M` `src/cadrumo_runtime/application/approval_sessions.py`
+- `S09` `M` `src/cadrumo_runtime/application/session_authority_lifecycle.py`
+- `S09` `M` `src/cadrumo_runtime/application/tests/test_session_authority.py`
+- `S09` `M` `src/cadrumo_runtime/contracts/profile_host.py`
+- `S09` `M` `src/cadrumo_runtime/host/enrollment_connections.py`
+- `S09` `M` `src/cadrumo_runtime/host/enrollment_offer.py`
+- `S09` `M` `src/cadrumo_runtime/host/main.py`
+- `S09` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S09` `M` `src/cadrumo_runtime/host/profile_host.py`
+- `S09` `M` `src/cadrumo_runtime/host/shutdown.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_fixture_cleanup.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/operation_transport_support.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/test_approval_sessions.py`
+- `S09` `A` `src/cadrumo_runtime/host/tests/test_lifecycle_wake.py`
+- `S09` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S09` `verify:` `pytest serial server-backed host suite (55 files)` -> `pass`
+- `S09` `verify:` `pytest transport, server, worker, shutdown, cue and authority suites` -> `pass`
+- `S09` `verify:` `ruff ty basedpyright pyrefly lint-imports on touched files` -> `pass`
 
 ## Notes
 
@@ -178,3 +212,4 @@ related:
 - `S07` Commit carries CADRUMO-FIX1's shared-person hunks by agreement; CADRUMO-BUILD-DEBUG's diagnostics and `with_reason` calls stay uncommitted pending its ApplicationError reason API; the committed tree was not compiled separately from the working tree
 - `S08` Adapter and transport suites: 913 passed, 1 failed `(test_posix_login_capture,` an unowned uncommitted pidfd option rename in `posix_channel.py).` Host suite: 211 passed, 5 failed, all from other sessions' uncommitted changes: the receipt handover in `profile_connection_sessions.py` and the `AUTHENTICATION_REQUIRED` session mismatch in `profile_connection_operations.py.` The stop-wake gate was shown to fail with the wake removed.
 - `S11` Depends on cadrumo-agent 09bfc8b relaying worker diagnostics on the agent's standard error, proved end to end on the rebuilt stage by CADRUMO-AGENT-SESSION1; the native fixture now models that relay.
+- `S09` Host suite 221 passed, 2 skipped. A first run caught an accept loop that took each profile's admission guard while computing its wait `(test_grant_change[rotate],` `test_bootstrap_reset[reset-and-replay]).` Profile deadlines are now cached during the pass, and request-driven passes coalesce to one interval later. Without WTS notifications, or with a non-desktop or unknown-state login, logins are still observed every 0.5 s, as the ADR allows.

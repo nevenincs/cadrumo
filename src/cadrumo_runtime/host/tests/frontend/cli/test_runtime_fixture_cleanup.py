@@ -21,6 +21,7 @@ from cadrumo.application.user_profile.access_contracts import AccessAction, Acce
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
+    ChannelWake,
     RefusalCode,
     RefusalError,
 )
@@ -46,7 +47,7 @@ class _Listener:
     def listen(self) -> None:
         self.listens += 1
 
-    def accept(self, *, timeout: float) -> ByteChannel:
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
         raise AssertionError("a draining fixture must never accept a new client")
 
     def close(self) -> None:

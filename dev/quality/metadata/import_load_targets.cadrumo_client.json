@@ -118,6 +118,7 @@
         "cadrumo_client.transport.installation_frame_io",
         "cadrumo_client.transport.installed_client",
         "cadrumo_client.transport.modelo_metadata",
+        "cadrumo_client.transport.native_wake",
         "cadrumo_client.transport.operation_controller",
         "cadrumo_client.transport.operation_reads",
         "cadrumo_client.transport.operation_run_error_context",
