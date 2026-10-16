@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c63bcd723065efe7f449c776e99539108f87251164c56d92465c01faee93791'
+body_hash: 'sha256:0f0c9d2e1cf4b1d248e7c2e1f37c90ea7530ab02dde4fcaae7ff51ac2603a811'
 related:
   - "[[2026-10-16-native-build-incremental-plan]]"
 ---
@@ -71,3 +71,46 @@ related:
 - `S03` `verify:` `desktop snapshot tests 5` -> `pass`
 - `S03` `verify:` `CPython3.13.15 bytecode executed on packaged3.13.11` -> `pass`
 - `S03` `verify:` `scoped Ruff ty and Prettier` -> `pass`
+- `S04` `A` `dev/packaging/native/build_directory.py`
+- `S04` `M` `dev/packaging/native/cmake_build.py`
+- `S04` `M` `dev/packaging/native/distribution_prepare.py`
+- `S04` `M` `dev/packaging/native/installation.py`
+- `S04` `A` `dev/packaging/native/installation_reuse.py`
+- `S04` `M` `dev/packaging/native/package_launch_smoke.py`
+- `S04` `A` `dev/packaging/native/tests/test_build_directory_admission.py`
+- `S04` `M` `dev/packaging/native/tests/test_cmake_installer_flow.py`
+- `S04` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S04` `M` `dev/packaging/native/tests/test_windows_msi.py`
+- `S04` `A` `dev/packaging/native/tests/test_windows_msi_single.py`
+- `S04` `M` `dev/packaging/native/windows_msi.py`
+- `S04` `M` `dev/packaging/native/windows_msi_build.py`
+- `S04` `M` `dev/packaging/native/windows_msi_database.py`
+- `S04` `M` `dev/packaging/native/windows_msi_identity.py`
+- `S04` `A` `dev/packaging/native/windows_msi_paths.py`
+- `S04` `A` `dev/packaging/native/windows_msi_single.py`
+- `S04` `M` `native/CONTRACT.md`
+- `S04` `M` `native/application/src/installation/maintenance.rs`
+- `S04` `M` `native/application/tests/installation.rs`
+- `S04` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S04` `M` `native/desktop/CMakeLists.txt`
+- `S04` `M` `native/installer/src/admission.rs`
+- `S04` `M` `native/installer/src/owner.rs`
+- `S04` `M` `native/installer/src/runner.rs`
+- `S04` `M` `native/installer/src/runner/already_installed.rs`
+- `S04` `M` `native/installer/src/runner/already_installed/observation_tests.rs`
+- `S04` `M` `native/installer/src/runner/bootstrap.rs`
+- `S04` `M` `native/installer/src/runner/recovery.rs`
+- `S04` `M` `native/installer/src/runner/removal.rs`
+- `S04` `M` `native/installer/src/windows.rs`
+- `S04` `verify:` `Debug and Release rust_installer CMake builds` -> `pass`
+- `S04` `verify:` `installer.rust and application.rust CTest 2 tests` -> `pass`
+- `S04` `verify:` `focused installer Python 156 tests 2 skips` -> `pass`
+- `S04` `verify:` `rebuilt adapter and runner admission external test` -> `pass`
+- `S04` `verify:` `real WiX fixture 1 initial compile 0 unchanged` -> `pass`
+- `S04` `verify:` `build-directory admission 14 tests` -> `pass`
+- `S04` `verify:` `CMake desktop paths 6 tests` -> `pass`
+- `S04` `verify:` `scoped Ruff ty and Rust checks` -> `pass`
+
+## Notes
+
+- `S04` Disposable Windows installed upgrade rollback removal acceptance remains unavailable; no workstation installation ran.

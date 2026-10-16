@@ -69,7 +69,8 @@ impl Observation for NativeObservation {
         )?
         .ok_or_else(|| Error::Integrity("registration native owner absent".into()))?;
         let incoming =
-            windows::product_definition(&plan.registration_product.path).map_err(native_error)?;
+            windows::product_definition_for_scope(&plan.registration_product.path, plan.scope)
+                .map_err(native_error)?;
         let (cached, cached_custody) = windows::cached_product(registration)?;
         let description = bound_description(
             plan,

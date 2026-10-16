@@ -26,6 +26,7 @@ from .action_cache import action_lock, completed, fingerprint, modified_inputs, 
 from .agent import agent_wheel, build_agent, validate_wheel_dependencies
 from .agent_runtime import build_agent_runtime
 from .assemble import assemble, image_artifact
+from .build_directory import require_enrolled_build
 from .build_log import BuildLog, command_line, display_path
 from .build_paths import build_paths
 from .build_timing import BuildTimings, measure_build
@@ -192,7 +193,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools", "agent"))
     parser.add_argument("--agent-source", type=Path)
-    parser.add_argument("--build", type=Path)
+    parser.add_argument("--build", type=require_enrolled_build)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--config", choices=("Debug", "Release"))
     parser.add_argument("--env", action="append", default=[])

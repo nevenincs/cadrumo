@@ -144,6 +144,25 @@ pub struct NativeOwner {
     product_code: String,
     context: NativeContext,
     prefix: PathBuf,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    feature: Option<NativeFeature>,
+}
+
+/// Independent native ownership inside the single release MSI product.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NativeFeature {
+    Version,
+    Registration,
+}
+
+impl NativeFeature {
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Version => "VersionFiles",
+            Self::Registration => "SharedRegistration",
+        }
+    }
 }
 
 impl NativeOwner {
@@ -156,6 +175,7 @@ impl NativeOwner {
             product_code: product_code.to_ascii_uppercase(),
             context,
             prefix,
+            feature: None,
         };
         owner.validate()?;
         Ok(owner)
@@ -168,6 +188,13 @@ impl NativeOwner {
     }
     pub fn prefix(&self) -> &Path {
         &self.prefix
+    }
+    pub fn with_feature(mut self, feature: NativeFeature) -> Self {
+        self.feature = Some(feature);
+        self
+    }
+    pub fn feature(&self) -> Option<NativeFeature> {
+        self.feature
     }
 
     fn validate(&self) -> Result<(), Error> {
@@ -527,6 +554,11 @@ impl Store {
         let first_owner = state.versions.values().next().map(|product| &product.owner);
         if let Some(registration) = &state.registration {
             self.validate_owner(&registration.owner)?;
+            if registration.owner.feature == Some(NativeFeature::Version) {
+                return Err(Error::Integrity(
+                    "registration names the version feature".into(),
+                ));
+            }
             if first_owner.is_some_and(|owner| {
                 owner.context != registration.owner.context
                     || owner.prefix != registration.owner.prefix
@@ -543,6 +575,11 @@ impl Store {
         for (release, product) in &state.versions {
             version(release)?;
             self.validate_owner(&product.owner)?;
+            if product.owner.feature == Some(NativeFeature::Registration) {
+                return Err(Error::Integrity(
+                    "version names the registration feature".into(),
+                ));
+            }
             if first_owner.is_some_and(|owner| {
                 owner.context != product.owner.context || owner.prefix != product.owner.prefix
             }) {
@@ -625,6 +662,11 @@ impl Store {
             phase: Phase::Pending,
         };
         self.validate_owner(&requested.owner)?;
+        if requested.owner.feature == Some(NativeFeature::Registration) {
+            return Err(Error::Invalid(
+                "version requires its own native feature".into(),
+            ));
+        }
         let _writer = lock(&self.root.join("transaction.lock"), false, false)?;
         let mut state = self.read()?;
         if let Some(previous) = state.versions.get(release) {
@@ -703,13 +745,20 @@ impl Store {
         let _writer = lock(&self.root.join("transaction.lock"), false, false)?;
         let mut state = self.read()?;
         self.validate_owner(&registration_owner)?;
+        if registration_owner.feature == Some(NativeFeature::Version) {
+            return Err(Error::Invalid(
+                "registration requires its own native feature".into(),
+            ));
+        }
         let product = state
             .versions
             .get(release)
             .ok_or_else(|| Error::Invalid("unreserved release".into()))?;
         if product.owner.context != registration_owner.context
             || product.owner.prefix != registration_owner.prefix
-            || product.owner.product_code == registration_owner.product_code
+            || (product.owner.product_code == registration_owner.product_code
+                && (product.owner.feature != Some(NativeFeature::Version)
+                    || registration_owner.feature != Some(NativeFeature::Registration)))
         {
             return Err(Error::Integrity(
                 "registration owner differs from version ownership".into(),

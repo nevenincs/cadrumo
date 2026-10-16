@@ -251,9 +251,18 @@ fn native_publication_identity_and_path_must_match_the_catalogue() {
 
 #[test]
 fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atomically() {
+    verify_independent_registration_absence(false);
+}
+
+#[test]
+fn single_product_features_keep_independent_registration_absence_and_anchors() {
+    verify_independent_registration_absence(true);
+}
+
+fn verify_independent_registration_absence(single_product: bool) {
     use cadrumo_application::{
         installation::maintenance::{
-            NativeContext, NativeOwner, NativeProductInventory, RegistrationPhase,
+            NativeContext, NativeFeature, NativeOwner, NativeProductInventory, RegistrationPhase,
         },
         value::Sha256Digest,
     };
@@ -280,12 +289,26 @@ fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atom
         prefix.clone(),
     )
     .unwrap();
+    let owner = if single_product {
+        owner.with_feature(NativeFeature::Version)
+    } else {
+        owner
+    };
     let registration = NativeOwner::new(
-        "22345678-1234-1234-1234-123456789abc".into(),
+        if single_product {
+            owner.product_code().into()
+        } else {
+            "22345678-1234-1234-1234-123456789abc".into()
+        },
         NativeContext::Machine,
         prefix,
     )
     .unwrap();
+    let registration = if single_product {
+        registration.with_feature(NativeFeature::Registration)
+    } else {
+        registration
+    };
     let writer = store
         .prepare("1.0.0", owner.clone(), manifest.clone())
         .unwrap();

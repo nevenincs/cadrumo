@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import plistlib
 import re
 import shutil
 import tempfile
+from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 from uuid import UUID, uuid5
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from dev._paths import REPO_ROOT
 
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .identity import DistributionIdentity
@@ -68,7 +71,7 @@ def validate_payload(root: Path, identity_file: Path, desktop: str | None = None
         member(root, path.relative_to(root).as_posix())
 
 
-def inventory(root: Path, destination: Path, application_id: str) -> None:
+def inventory(root: Path, destination: Path, application_id: str, *, staging_generation: int | None = None) -> None:
     """Capture the staged installation's exact files before native packaging."""
     files = {}
     for path in sorted(root.rglob("*")):
@@ -76,9 +79,10 @@ def inventory(root: Path, destination: Path, application_id: str) -> None:
         checked = member(root, relative)
         if checked.is_file():
             files[relative] = digest(checked)
-    destination.write_text(
-        json.dumps({"application_id": application_id, "files": files}, indent=2) + "\n", encoding="utf-8"
-    )
+    document: dict[str, object] = {"application_id": application_id, "files": files}
+    if staging_generation is not None:
+        document["staging_generation"] = staging_generation
+    destination.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
 
 
 def verify_inventory(root: Path, receipt: Path) -> None:
@@ -146,9 +150,15 @@ def uninstall(prefix: Path, receipt: Path, *, dry_run: bool = False) -> list[str
     return preserved
 
 
-def prepare(payload: Path, identity_file: Path, build: Path, desktop: str | None = None) -> Path:
+def prepare(
+    payload: Path,
+    identity_file: Path,
+    build: Path,
+    desktop: str | None = None,
+    *,
+    copy_file: Callable[[str | Path, str | Path], str | Path] | None = None,
+) -> Path:
     """Reuse only an unchanged, identical owning stage; never erase existing state."""
-    validate_payload(payload, identity_file, desktop)
     build = build.absolute()
     paths = build_paths(build)
     root = paths["installation_stage"]
@@ -171,10 +181,18 @@ def prepare(payload: Path, identity_file: Path, build: Path, desktop: str | None
         # Recheck after construction: another writer may have touched the stage.
         verify_inventory(root, receipt)
         return root
-    return _prepare_fresh(payload, identity_file, root, metadata, desktop)
+    return _prepare_fresh(payload, identity_file, root, metadata, desktop, copy_file=copy_file)
 
 
-def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, desktop: str | None = None) -> Path:
+def _prepare_fresh(
+    payload: Path,
+    identity_file: Path,
+    root: Path,
+    build: Path,
+    desktop: str | None = None,
+    *,
+    copy_file: Callable[[str | Path, str | Path], str | Path] | None = None,
+) -> Path:
     """Create platform installation layout, with desktop registration only for a real entrypoint."""
     validate_payload(payload, identity_file, desktop)
     value = json.loads(identity_file.read_text(encoding="utf-8"))
@@ -182,7 +200,7 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
     build.mkdir(parents=True, exist_ok=True)
     if payload.resolve().is_relative_to(root) or root.is_relative_to(payload.resolve()):
         raise ValueError("Payload and installer staging directory must not overlap")
-    root.mkdir(parents=True, mode=0o700)
+    root.mkdir(parents=True, mode=0o755 if os.name == "nt" else 0o700)
     target = value["target"]
     manifest = json.loads(member(payload, "data/package-manifest.json").read_text(encoding="utf-8"))
     managers = [image for image in application_images(manifest["layout"]) if image.target == "rust_manager"]
@@ -205,13 +223,17 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
         destination = member(root, definition["versions"]) / value["version"]
     else:
         destination = root / "app"
-    shutil.copytree(payload, destination, dirs_exist_ok=True)
+    shutil.copytree(payload, destination, dirs_exist_ok=True, copy_function=copy_file or shutil.copy2)
     validate_payload(destination, identity_file, desktop)
     # Installer-added notices must not mutate the verified immutable package inventory.
     license_dir = (root if versioned else destination) / "docs/licenses"
     license_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(REPO_ROOT / "LICENSE", license_dir / "CADRUMO.txt")
-    shutil.copy2(REPO_ROOT / "NOTICE", license_dir / "NOTICE.txt")
+    for original, name in ((REPO_ROOT / "LICENSE", "CADRUMO.txt"), (REPO_ROOT / "NOTICE", "NOTICE.txt")):
+        # Notices may overlap a payload member reused from the previous stage.
+        # Detach before writing so the admitted previous stage remains immutable.
+        destination_notice = license_dir / name
+        destination_notice.unlink(missing_ok=True)
+        shutil.copy2(original, destination_notice)
     for file in license_dir.iterdir():
         if file.is_file():
             file.chmod(0o644)
@@ -330,7 +352,7 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
         SubElement(feature, "ComponentRef", Id="CADRUMO_MENU_COMPONENT")
         (build / "DesktopPatch.xml").write_bytes(tostring(patch, encoding="utf-8", xml_declaration=True))
     # Receipt lives in the build tree, outside the user's installation and storage.
-    inventory(root, build / "installation.json", value["application_id"])
+    inventory(root, build / "installation.json", value["application_id"], staging_generation=1)
     return root
 
 
@@ -345,7 +367,7 @@ def main() -> None:
     stage = commands.add_parser("prepare")
     stage.add_argument("--payload", type=Path, required=True)
     stage.add_argument("--identity", type=Path, required=True)
-    stage.add_argument("--build", type=Path, required=True)
+    stage.add_argument("--build", type=require_enrolled_build, required=True)
     stage.add_argument("--desktop")
     capture = commands.add_parser("inventory")
     capture.add_argument("--root", type=Path, required=True)

@@ -5,7 +5,9 @@ use crate::admission::{
 };
 use cadrumo_application::{
     error::Error,
-    installation::maintenance::{NativeContext, NativeOwner, NativeProductInventory},
+    installation::maintenance::{
+        NativeContext, NativeFeature, NativeOwner, NativeProductInventory,
+    },
 };
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -75,6 +77,19 @@ unsafe extern "system" {
         properties: *const u16,
     ) -> u32;
     fn MsiSetInternalUI(level: u32, window: *mut *mut c_void) -> u32;
+    fn MsiQueryFeatureStateExW(
+        product: *const u16,
+        sid: *const u16,
+        context: u32,
+        feature: *const u16,
+        state: *mut i32,
+    ) -> u32;
+    fn MsiGetFeatureStateW(
+        install: u32,
+        feature: *const u16,
+        installed: *mut i32,
+        action: *mut i32,
+    ) -> u32;
 }
 
 #[link(name = "kernel32")]
@@ -217,14 +232,36 @@ impl Transaction {
         if prefix.contains(['"', '\r', '\n', '\0']) || endpoint.contains(['"', '\r', '\n', '\0']) {
             return Err(Refusal::InvalidRequest);
         }
+        let (remove, selection) = if let Some(feature) = owner.feature() {
+            let other = match feature {
+                NativeFeature::Version => NativeFeature::Registration,
+                NativeFeature::Registration => NativeFeature::Version,
+            };
+            let other_present = MsiInventory
+                .locate(&owner.clone().with_feature(other))
+                .map_err(|_| Refusal::IncompleteInventory)?
+                .is_some();
+            (
+                if other_present { feature.id() } else { "ALL" },
+                format!(" CADRUMO_MSI_FEATURE={}", feature.id()),
+            )
+        } else {
+            ("ALL", String::new())
+        };
         let properties = wide(&format!(
-            "REMOVE=ALL INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable"
+            "REMOVE={remove} INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable{selection}"
         ))?;
         // SAFETY: exact native product was admitted by the caller; this transaction
         // owns settlement. INSTALLSTATE_ABSENT removes only Windows Installer-owned
         // resources. Nonzero reboot, in-use and failure statuses are never success.
-        let removed =
-            result(unsafe { MsiConfigureProductExW(product.as_ptr(), 0, 2, properties.as_ptr()) });
+        let removed = result(unsafe {
+            MsiConfigureProductExW(
+                product.as_ptr(),
+                0,
+                if remove == "ALL" { 2 } else { 5 },
+                properties.as_ptr(),
+            )
+        });
         self.ownership.current()?;
         removed
     }
@@ -253,12 +290,29 @@ fn installation_properties(
     // presence enables forced file/registry/shortcut repair. No recache ('v') is
     // requested: the independently verified native cache remains authoritative.
     let repair = if observed.is_some() {
-        " REINSTALL=ALL REINSTALLMODE=amus"
+        format!(
+            " REINSTALL={} REINSTALLMODE=amus",
+            owner.feature().map_or("ALL", NativeFeature::id)
+        )
+    } else {
+        String::new()
+    };
+    let feature = owner.feature().map_or_else(String::new, |feature| {
+        format!(
+            " INSTALLLEVEL=0 ADDLOCAL={0} CADRUMO_MSI_FEATURE={0}",
+            feature.id()
+        )
+    });
+    let scope = if owner.feature().is_some() {
+        match owner.context() {
+            NativeContext::Machine => " ALLUSERS=1 MSIINSTALLPERUSER=\"\"",
+            NativeContext::User { .. } => " ALLUSERS=\"\" MSIINSTALLPERUSER=1",
+        }
     } else {
         ""
     };
     Ok(format!(
-        "INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable{repair}"
+        "INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable{scope}{feature}{repair}"
     ))
 }
 impl Drop for Transaction {
@@ -694,10 +748,20 @@ fn verified_features(
     if enrolled.len() != owned.len() {
         return Err(DestinationRefusal::Inventory);
     }
+    let combined = tree.contains_key("VersionFiles")
+        && tree.contains_key("SharedRegistration")
+        && !tree.contains_key("ProductFeature");
     for (name, (parent, display, level, attributes)) in &tree {
         if !matches!(display.as_str(), "" | "0")
             || level != "1"
-            || attributes != if parent.is_empty() { "24" } else { "26" }
+            || attributes
+                != if combined {
+                    if parent.is_empty() { "8" } else { "10" }
+                } else if parent.is_empty() {
+                    "24"
+                } else {
+                    "26"
+                }
         {
             return Err(DestinationRefusal::Inventory);
         }
@@ -709,11 +773,16 @@ fn verified_features(
             }
             current = &tree.get(current).ok_or(DestinationRefusal::Inventory)?.0;
         }
-        if !visited.contains("ProductFeature")
-            || !tree
-                .get("ProductFeature")
-                .is_some_and(|row| row.0.is_empty())
-        {
+        if if combined {
+            !["VersionFiles", "SharedRegistration"].iter().any(|root| {
+                visited.contains(root) && tree.get(*root).is_some_and(|row| row.0.is_empty())
+            })
+        } else {
+            !visited.contains("ProductFeature")
+                || !tree
+                    .get("ProductFeature")
+                    .is_some_and(|row| row.0.is_empty())
+        } {
             return Err(DestinationRefusal::Inventory);
         }
     }
@@ -725,6 +794,14 @@ pub fn verify_installation_destinations(
     package: &Path,
     prefix: &Path,
     _custody: &crate::custody::FileCustody,
+) -> Result<(), DestinationRefusal> {
+    verify_installation_destinations_for_scope(package, prefix, _custody, Scope::User)
+}
+pub fn verify_installation_destinations_for_scope(
+    package: &Path,
+    prefix: &Path,
+    _custody: &crate::custody::FileCustody,
+    scope: Scope,
 ) -> Result<(), DestinationRefusal> {
     let inspect = || -> Result<_, Refusal> {
         let database = database(package)?;
@@ -744,7 +821,7 @@ pub fn verify_installation_destinations(
             },
         )
         .map_err(|_| Refusal::InvalidRequest)?;
-        let components = table_rows(
+        let mut components = table_rows(
             &database,
             "SELECT `Component`, `Directory_` FROM `Component`",
         )?;
@@ -763,35 +840,73 @@ pub fn verify_installation_destinations(
         {
             return Err(Refusal::InvalidRequest);
         }
+        let combined = property(&database, "CadrumoAdmissionUser")?.is_some();
+        let mut files = table_rows::<3>(
+            &database,
+            "SELECT `File`, `Component_`, `FileName` FROM `File`",
+        )?;
+        if combined {
+            let conditions = table_rows::<2>(
+                &database,
+                "SELECT `Component`, `Condition` FROM `Component`",
+            )?;
+            let mut excluded = BTreeSet::new();
+            for [component, condition] in conditions {
+                let active = match condition.as_str() {
+                    "" => true,
+                    "NOT ALLUSERS" => scope == Scope::User,
+                    "ALLUSERS = \"1\"" => scope == Scope::Machine,
+                    _ => return Err(Refusal::InvalidRequest),
+                };
+                if !active {
+                    excluded.insert(component);
+                }
+            }
+            components.retain(|row: &[String; 2]| !excluded.contains(&row[0]));
+            files.retain(|row| !excluded.contains(&row[1]));
+        }
         Ok((
             table_rows(
                 &database,
                 "SELECT `Directory`, `Directory_Parent`, `DefaultDir` FROM `Directory`",
             )?,
             components,
-            table_rows(
-                &database,
-                "SELECT `File`, `Component_`, `FileName` FROM `File`",
-            )?,
+            files,
         ))
     };
     let (directories, components, files) = inspect().map_err(|_| DestinationRefusal::Inventory)?;
     resolved_destinations(prefix, directories, components, files).map(|_| ())
 }
 pub fn product_definition(path: &Path) -> Result<ProductDefinition, Refusal> {
+    product_definition_for_scope(path, Scope::User)
+}
+pub fn product_definition_for_scope(
+    path: &Path,
+    scope: Scope,
+) -> Result<ProductDefinition, Refusal> {
     let database = database(path)?;
     let required = |name| property(&database, name)?.ok_or(Refusal::InvalidRequest);
+    let suffix = if scope == Scope::Machine {
+        "Machine"
+    } else {
+        "User"
+    };
+    let admission = property(&database, &format!("CadrumoAdmission{suffix}"))?
+        .or(property(&database, "CadrumoAdmission")?)
+        .ok_or(Refusal::InvalidRequest)?;
+    let registration = property(&database, &format!("CadrumoRegistration{suffix}"))?
+        .or(property(&database, "CadrumoRegistration")?);
     Ok(ProductDefinition {
         code: canonical_guid(&required("ProductCode")?)?,
         family: canonical_guid(&required("UpgradeCode")?)?,
         version: required("ProductVersion")?,
-        admission: Request::parse(&required("CadrumoAdmission")?)?,
+        admission: Request::parse(&admission)?,
         ownership: serde_json::from_str(&required("CadrumoPackage")?)
             .map_err(|_| Refusal::InvalidRequest)?,
         owner: property(&database, "CadrumoOwner")?
             .map(|value| serde_json::from_str(&value).map_err(|_| Refusal::InvalidRequest))
             .transpose()?,
-        registration: property(&database, "CadrumoRegistration")?
+        registration: registration
             .map(|value| crate::registration::Description::parse(&value))
             .transpose()?,
     })
@@ -981,7 +1096,14 @@ pub fn cached_product(
     );
     let custody =
         crate::custody::native_cache(&path, owner.context()).map_err(application_error)?;
-    let definition = product_definition(&path).map_err(application_error)?;
+    let definition = product_definition_for_scope(
+        &path,
+        match owner.context() {
+            NativeContext::Machine => Scope::Machine,
+            NativeContext::User { .. } => Scope::User,
+        },
+    )
+    .map_err(application_error)?;
     if definition.code != owner.product_code() {
         return Err(Error::Integrity("cached product identity mismatch".into()));
     }
@@ -997,6 +1119,7 @@ impl NativeProductInventory for MsiInventory {
         };
         let contexts: &[u32] = if sid.is_none() { &[MACHINE] } else { &[1, 2] };
         let mut found = None;
+        let mut product_seen = false;
         for context in contexts {
             let state = native_product_property(&code, sid.as_deref(), *context, "State")?;
             let Some(state) = state else {
@@ -1004,22 +1127,54 @@ impl NativeProductInventory for MsiInventory {
             };
             // INSTALLSTATE_DEFAULT (5) is installed. Advertised, broken or other
             // transitional state cannot prove either committed presence or absence.
-            if state != "5" || found.is_some() {
+            if state != "5" || product_seen {
                 return Err(Error::Integrity(
                     "native product has ambiguous installation state".into(),
                 ));
             }
+            product_seen = true;
             let location =
                 native_product_property(&code, sid.as_deref(), *context, "InstallLocation")?
                     .filter(|value| !value.is_empty())
                     .ok_or_else(|| {
                         Error::Integrity("native product install location is unavailable".into())
                     })?;
-            found = Some(NativeOwner::new(
+            if owner.feature().is_some() && PathBuf::from(&location) != owner.prefix() {
+                return Err(Error::Integrity(
+                    "native feature belongs to another prefix".into(),
+                ));
+            }
+            if let Some(feature) = owner.feature() {
+                let feature = wide(feature.id()).map_err(application_error)?;
+                let mut installed = 0;
+                // SAFETY: exact native product/account/context and bounded, owned
+                // feature name; observation never opens an installation session.
+                result(unsafe {
+                    MsiQueryFeatureStateExW(
+                        code.as_ptr(),
+                        sid.as_ref().map_or(ptr::null(), |sid| sid.as_ptr()),
+                        *context,
+                        feature.as_ptr(),
+                        &mut installed,
+                    )
+                })
+                .map_err(application_error)?;
+                if installed == 2 {
+                    continue;
+                }
+                if installed != 3 {
+                    return Err(Error::Integrity("native feature state is not local".into()));
+                }
+            }
+            let mut observed = NativeOwner::new(
                 owner.product_code().into(),
                 owner.context().clone(),
                 PathBuf::from(location),
-            )?);
+            )?;
+            if let Some(feature) = owner.feature() {
+                observed = observed.with_feature(feature);
+            }
+            found = Some(observed);
         }
         Ok(found)
     }
@@ -1120,15 +1275,29 @@ fn prepare(install: u32) -> Result<(), Refusal> {
     // SAFETY: MSI returns an owned database handle for the borrowed session handle.
     let database = Handle::new(unsafe { MsiGetActiveDatabase(install) })?;
     // Read the authored database, not an overridable public MSI property.
-    let value = property(&database, "CadrumoAdmission")?.ok_or(Refusal::InvalidRequest)?;
-    let request = Request::parse(&value)?;
     let all_users = session_property(install, "ALLUSERS")?;
+    let suffix = if all_users == "1" {
+        "Machine"
+    } else if all_users.is_empty() {
+        "User"
+    } else {
+        return Err(Refusal::AmbiguousOwnership);
+    };
+    let scoped = property(&database, &format!("CadrumoAdmission{suffix}"))?;
+    let combined = scoped.is_some();
+    let value = scoped
+        .or(property(&database, "CadrumoAdmission")?)
+        .ok_or(Refusal::InvalidRequest)?;
+    let request = Request::parse(&value)?;
     if (request.scope == Scope::Machine && all_users != "1")
         || (request.scope == Scope::User && !all_users.is_empty())
     {
         return Err(Refusal::AmbiguousOwnership);
     }
-    let name = wide("CadrumoScopeAdmission")?;
+    let name = wide(&format!(
+        "CadrumoScopeAdmission{}",
+        if combined { suffix } else { "" }
+    ))?;
     let value = wide(&serde_json::to_string(&request).map_err(|_| Refusal::InvalidRequest)?)?;
     // SAFETY: The strings are terminated. Windows Installer copies the deferred data.
     result(unsafe { MsiSetPropertyW(install, name.as_ptr(), value.as_ptr()) })
@@ -1143,12 +1312,23 @@ fn admit(install: u32) -> Result<(), Refusal> {
 #[serde(deny_unknown_fields)]
 pub struct OwnerMetadata {
     pub schema: u32,
-    pub scope: Scope,
+    #[serde(default)]
+    pub scope: Option<Scope>,
     pub product_code: String,
     pub role: crate::owner::Role,
     pub runner_sha256: cadrumo_application::value::Sha256Digest,
     pub identity: cadrumo_application::installation::maintenance::Identity,
     pub publication: cadrumo_application::value::RelativePath,
+}
+
+impl OwnerMetadata {
+    pub fn admits_role(&self, scope: Scope, role: crate::owner::Role) -> bool {
+        (self.schema == 2 && self.scope == Some(scope) && self.role == role)
+            || (self.schema == 3
+                && self.scope.is_none()
+                && self.role == crate::owner::Role::Application
+                && role != crate::owner::Role::Application)
+    }
 }
 
 fn prepare_owner(install: u32) -> Result<(), Refusal> {
@@ -1158,31 +1338,151 @@ fn prepare_owner(install: u32) -> Result<(), Refusal> {
     let metadata: OwnerMetadata =
         serde_json::from_str(&metadata).map_err(|_| Refusal::InvalidRequest)?;
     let product = property(&database, "ProductCode")?.ok_or(Refusal::InvalidRequest)?;
-    if metadata.schema != 2 || canonical_guid(&product)? != metadata.product_code {
+    let combined = metadata.schema == 3
+        && metadata.role == crate::owner::Role::Application
+        && metadata.scope.is_none();
+    if (!combined && metadata.schema != 2) || canonical_guid(&product)? != metadata.product_code {
         return Err(Refusal::InvalidRequest);
     }
+    let all_users = session_property(install, "ALLUSERS")?;
+    let scope = if all_users == "1" {
+        Scope::Machine
+    } else if all_users.is_empty() {
+        Scope::User
+    } else {
+        return Err(Refusal::AmbiguousOwnership);
+    };
+    let (role, operation) = if combined {
+        selected_feature(install)?
+    } else {
+        if metadata.scope != Some(scope) {
+            return Err(Refusal::AmbiguousOwnership);
+        }
+        (
+            metadata.role,
+            if session_property(install, "REMOVE")?.is_empty() {
+                crate::owner::Operation::Install
+            } else {
+                crate::owner::Operation::Remove
+            },
+        )
+    };
     let callback = crate::owner::Callback {
         schema: 2,
         identity: metadata.identity,
         publication: metadata.publication,
         claim: crate::owner::Claim {
             product_code: metadata.product_code,
-            scope: metadata.scope,
+            scope,
             prefix: PathBuf::from(session_property(install, "INSTALL_ROOT")?),
-            operation: if session_property(install, "REMOVE")?.is_empty() {
-                crate::owner::Operation::Install
-            } else {
-                crate::owner::Operation::Remove
-            },
-            role: metadata.role,
+            operation,
+            role,
         },
     };
     let bytes = serde_json::to_vec(&callback).map_err(|_| Refusal::InvalidRequest)?;
     crate::owner::Callback::parse(&bytes)?;
-    let name = wide("CadrumoAuthenticateOwner")?;
+    let name = wide(&format!(
+        "CadrumoAuthenticateOwner{}",
+        if combined {
+            if scope == Scope::Machine {
+                "Machine"
+            } else {
+                "User"
+            }
+        } else {
+            ""
+        }
+    ))?;
     let value = wide(std::str::from_utf8(&bytes).map_err(|_| Refusal::InvalidRequest)?)?;
     // SAFETY: MSI copies the bounded strings for the deferred action.
     result(unsafe { MsiSetPropertyW(install, name.as_ptr(), value.as_ptr()) })
+}
+
+fn feature_states(install: u32, feature: NativeFeature) -> Result<(i32, i32), Refusal> {
+    let feature = wide(feature.id())?;
+    let mut installed = 0;
+    let mut action = 0;
+    // SAFETY: borrowed native session, immutable authored feature name and live outputs.
+    result(unsafe { MsiGetFeatureStateW(install, feature.as_ptr(), &mut installed, &mut action) })?;
+    Ok((installed, action))
+}
+
+fn selected_feature(
+    install: u32,
+) -> Result<(crate::owner::Role, crate::owner::Operation), Refusal> {
+    let (feature, other, role) = match session_property(install, "CADRUMO_MSI_FEATURE")?.as_str() {
+        "VersionFiles" => (
+            NativeFeature::Version,
+            NativeFeature::Registration,
+            crate::owner::Role::Version,
+        ),
+        "SharedRegistration" => (
+            NativeFeature::Registration,
+            NativeFeature::Version,
+            crate::owner::Role::Registration,
+        ),
+        _ => return Err(Refusal::InvalidRequest),
+    };
+    for property in [
+        "ADVERTISE",
+        "ADDDEFAULT",
+        "ADDSOURCE",
+        "COMPADDLOCAL",
+        "COMPADDSOURCE",
+        "FILEADDLOCAL",
+        "FILEADDSOURCE",
+    ] {
+        if !session_property(install, property)?.is_empty() {
+            return Err(Refusal::InvalidRequest);
+        }
+    }
+    let remove = session_property(install, "REMOVE")?;
+    let add = session_property(install, "ADDLOCAL")?;
+    let reinstall = session_property(install, "REINSTALL")?;
+    let (_, target_action) = feature_states(install, feature)?;
+    let other_states = feature_states(install, other)?;
+    let operation = feature_operation(
+        feature,
+        target_action,
+        other_states,
+        (&remove, &add, &reinstall),
+    )?;
+    Ok((role, operation))
+}
+
+fn feature_operation(
+    feature: NativeFeature,
+    target_action: i32,
+    other_states: (i32, i32),
+    selectors: (&str, &str, &str),
+) -> Result<crate::owner::Operation, Refusal> {
+    let (other_installed, other_action) = other_states;
+    let (remove, add, reinstall) = selectors;
+    if !matches!(other_installed, -1 | 2 | 3)
+        || (other_installed == 3 && other_action != 3)
+        || (other_installed != 3 && !matches!(other_action, -1 | 2))
+    {
+        return Err(Refusal::InvalidRequest);
+    }
+    let operation = if remove.is_empty() {
+        if add != feature.id()
+            || (!reinstall.is_empty() && reinstall != feature.id())
+            || target_action != 3
+        {
+            return Err(Refusal::InvalidRequest);
+        }
+        crate::owner::Operation::Install
+    } else {
+        if (!add.is_empty())
+            || !reinstall.is_empty()
+            || target_action != 2
+            || !(remove == feature.id() || (remove == "ALL" && other_installed != 3))
+        {
+            return Err(Refusal::InvalidRequest);
+        }
+        crate::owner::Operation::Remove
+    };
+    Ok(operation)
 }
 
 fn authenticate_owner(install: u32) -> Result<(), Refusal> {
@@ -1388,6 +1688,85 @@ pub fn file_users(files: &[PathBuf]) -> Result<Vec<FileUse>, Refusal> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn selective_feature_actions_preserve_other_role_and_refuse_wider_mutation() {
+        use crate::owner::Operation::{Install, Remove};
+        use NativeFeature::{Registration, Version};
+        for (feature, action, other, selectors, expected) in [
+            (Version, 3, (-1, -1), ("", "VersionFiles", ""), Ok(Install)),
+            (
+                Version,
+                3,
+                (3, 3),
+                ("", "VersionFiles", "VersionFiles"),
+                Ok(Install),
+            ),
+            (
+                Registration,
+                3,
+                (3, 3),
+                ("", "SharedRegistration", ""),
+                Ok(Install),
+            ),
+            (Version, 2, (3, 3), ("VersionFiles", "", ""), Ok(Remove)),
+            (Registration, 2, (2, 2), ("ALL", "", ""), Ok(Remove)),
+            (
+                Version,
+                2,
+                (3, 3),
+                ("ALL", "", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                2,
+                (3, 2),
+                ("VersionFiles", "", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                3,
+                (2, 3),
+                ("", "VersionFiles", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                3,
+                (3, 3),
+                ("", "VersionFiles", "ALL"),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                3,
+                (3, 3),
+                ("", "SharedRegistration", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                2,
+                (2, 2),
+                ("VersionFiles", "SharedRegistration", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                0,
+                (2, 2),
+                ("", "VersionFiles", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+        ] {
+            assert_eq!(
+                feature_operation(feature, action, other, selectors),
+                expected
+            );
+        }
+    }
 
     type DestinationFixture = (Vec<[String; 3]>, Vec<[String; 2]>, Vec<[String; 3]>);
 

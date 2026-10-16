@@ -114,8 +114,8 @@ impl Fixture {
         let admission = Request {
             schema: 1,
             scope: Scope::Machine,
-            permitted_families: ["version".into(), "registration".into()],
-            conflicting_families: ["other-v".into(), "other-r".into(), "legacy".into()],
+            permitted_families: vec!["version".into(), "registration".into()],
+            conflicting_families: vec!["other-v".into(), "other-r".into(), "legacy".into()],
         };
         Self {
             _root: root,

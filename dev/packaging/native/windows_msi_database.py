@@ -90,8 +90,10 @@ def _verify_feature_rows(
             raise ValueError("MSI feature exceeds 1600 components")
     if enrolled != owned:
         raise ValueError("MSI components are detached from mandatory features")
+    combined = "VersionFiles" in tree and "SharedRegistration" in tree and "ProductFeature" not in tree
     for name, (parent, display, level, attributes) in tree.items():
-        if display not in {"", "0"} or level != "1" or attributes != ("26" if parent else "24"):
+        expected = ("10" if parent else "8") if combined else ("26" if parent else "24")
+        if display not in {"", "0"} or level != "1" or attributes != expected:
             raise ValueError("MSI feature can be deselected or installed outside local storage")
         visited = {name}
         while parent:
@@ -99,7 +101,8 @@ def _verify_feature_rows(
                 raise ValueError("MSI feature parent inventory is unknown or cyclic")
             visited.add(parent)
             parent = tree[parent][0]
-        if visited.isdisjoint({"ProductFeature"}) or tree["ProductFeature"][0]:
+        roots = {"VersionFiles", "SharedRegistration"} if combined else {"ProductFeature"}
+        if not any(root in visited and not tree[root][0] for root in roots):
             raise ValueError("MSI feature is detached from the mandatory product root")
 
 
@@ -170,6 +173,34 @@ def verify_admission_order(artifact: Path, *, owner_required: bool = False) -> N
     """Prove scoped admission runs in the execute transaction before file ownership changes."""
     rows = _sequence_rows(artifact)
     sequence = {name: row[0] for name, row in rows.items()}
+    if "CadrumoScopeAdmissionUser" in sequence:
+        if not (
+            0
+            < sequence.get("CostFinalize", 0)
+            < sequence.get("CadrumoPrepareAdmission", 0)
+            < sequence.get("InstallInitialize", 0)
+            < sequence.get("ProcessComponents", 0)
+            < sequence.get("InstallFiles", 0)
+        ):
+            raise ValueError("Scope-aware MSI admission has unsafe action ordering")
+        for suffix, condition in (("User", "NOT ALLUSERS"), ("Machine", 'ALLUSERS = "1"')):
+            admission = "CadrumoScopeAdmission" + suffix
+            if not sequence["InstallInitialize"] < sequence.get(admission, 0) < sequence["ProcessComponents"]:
+                raise ValueError("Scope-aware MSI admission runs outside the transaction")
+            if rows[admission][1] != f"({condition}) AND NOT REMOVE":
+                raise ValueError("Scope-aware MSI admission has an unrecognized scope condition")
+            if owner_required or "CadrumoAuthenticateOwner" + suffix in sequence:
+                authenticate = "CadrumoAuthenticateOwner" + suffix
+                if not (
+                    sequence["CostFinalize"]
+                    < sequence.get("CadrumoPrepareOwner", 0)
+                    < sequence["CadrumoPrepareAdmission"]
+                    and sequence[admission] < sequence.get(authenticate, 0) < sequence["ProcessComponents"]
+                ):
+                    raise ValueError("Scope-aware MSI owner authentication has unsafe ordering")
+                if rows["CadrumoPrepareOwner"][1] or rows[authenticate][1] != condition:
+                    raise ValueError("Scope-aware MSI owner authentication can be bypassed")
+        return
     if not (
         0
         < sequence.get("CostFinalize", 0)

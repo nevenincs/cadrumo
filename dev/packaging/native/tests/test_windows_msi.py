@@ -18,7 +18,7 @@ from dev.packaging.command_execution import run_command
 from dev.packaging.native.distribution_prepare import refresh
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import DistributionIdentity
-from dev.packaging.native.windows_msi import MAINTENANCE_GATE, _source_path, author, reject_combined_manager_msi
+from dev.packaging.native.windows_msi import MAINTENANCE_GATE, author, reject_combined_manager_msi
 from dev.packaging.native.windows_msi_build import (
     bootstrap_kit,
     compile_products,
@@ -28,6 +28,7 @@ from dev.packaging.native.windows_msi_build import (
 )
 from dev.packaging.native.windows_msi_database import verify_admission_order, verify_feature_ownership
 from dev.packaging.native.windows_msi_identity import msi_identity
+from dev.packaging.native.windows_msi_paths import source_path as _source_path
 from dev.packaging.tests.test_native_installation import payload_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -534,16 +535,24 @@ def test_wix_source_paths_refuse_ambiguous_or_interpreted_paths(source: str) -> 
 def test_registration_description_matches_authored_resources(tmp_path: Path, desktop: bool) -> None:
     build, identity = _prepared(tmp_path, desktop=desktop)
     outputs = author(build, identity, "cadrumo" if desktop else None)
+    tree = ElementTree.parse(outputs["application.wxs"])
+    shared = tree.find(".//w:Feature[@Id='SharedRegistration']", NS)
+    assert shared is not None
+    references = {node.attrib["Id"] for node in shared.findall(".//w:ComponentRef", NS)}
+    shared_components = [node for node in tree.findall(".//w:Component", NS) if node.attrib["Id"] in references]
     for scope in ("user", "machine"):
-        tree = ElementTree.parse(outputs[f"{scope}-registration.wxs"])
-        property_node = tree.find(".//w:Property[@Id='CadrumoRegistration']", NS)
+        property_node = tree.find(f".//w:Property[@Id='CadrumoRegistration{scope.title()}']", NS)
         assert property_node is not None
         description = json.loads(property_node.attrib["Value"])
         assert description["scope"] == scope
         assert description["schema"] == 2
         assert len(description["services"]) == int(scope == "machine")
-        components = tree.findall(".//w:Component", NS)
-        assert description["components"] == [item.attrib["Guid"] for item in components]
+        components = [
+            node
+            for node in shared_components
+            if node.attrib.get("Condition", "") != ('ALLUSERS = "1"' if scope == "user" else "NOT ALLUSERS")
+        ]
+        assert set(description["components"]) == {item.attrib["Guid"] for item in components}
         actual_registry = [
             {
                 "component": component.attrib["Guid"],
@@ -552,20 +561,22 @@ def test_registration_description_matches_authored_resources(tmp_path: Path, des
             for component in components
             for entry in component.findall("w:RegistryValue", NS)
         ]
-        assert description["registry"] == actual_registry
+        assert len(description["registry"]) == len(actual_registry)
+        assert {json.dumps(row, sort_keys=True) for row in description["registry"]} == {
+            json.dumps(row, sort_keys=True) for row in actual_registry
+        }
         assert len(description["files"]) == 4
-        for file in tree.findall(".//w:File", NS):
-            expected = digest(Path(file.attrib["Source"]))
-            assert expected in description["files"].values()
-        marker = next(path for path in description["files"] if path.endswith("installation.json"))
+        for component in components:
+            for file in component.findall("w:File", NS):
+                assert digest(Path(file.attrib["Source"])) in description["files"].values()
+        marker = next(name for name in description["files"] if name.endswith("installation.json"))
         assert description["files"][marker] == digest(build / "installation/metadata/wix/native-installation.json")
         assert bool(description["shortcuts"]) == desktop
         assert bool(description["absent_shortcuts"]) != desktop
         assert {entry["name"] for entry in description["absent_registry"]} == (
             set() if desktop else {"DesktopRegistered", "DesktopAnchorVersion"}
         )
-        version = ElementTree.parse(outputs[f"{scope}-version.wxs"])
-        assert version.find(".//w:Property[@Id='CadrumoRegistration']", NS) is None
+    assert tree.find(".//w:Property[@Id='CadrumoRegistration']", NS) is None
 
 
 def _prepared(tmp_path: Path, *, manager: bool = True, desktop: bool = True) -> tuple[Path, Path]:
@@ -584,114 +595,87 @@ def _prepared(tmp_path: Path, *, manager: bool = True, desktop: bool = True) -> 
 def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Path, desktop: bool) -> None:
     build, identity = _prepared(tmp_path, desktop=desktop)
     outputs = author(build, identity, "cadrumo" if desktop else None)
-    assert set(outputs) == {
-        f"{scope}-{role}.wxs" for scope in ("user", "machine") for role in ("version", "registration")
-    }
+    assert set(outputs) == {"application.wxs"}
     stage = build / "installation/stage"
-    receipt = build / "installation/metadata/installation.json"
-    owned = json.loads(receipt.read_text(encoding="utf-8"))["files"]
+    owned = json.loads((build / "installation/metadata/installation.json").read_text(encoding="utf-8"))["files"]
     value = json.loads(identity.read_text(encoding="utf-8"))
-    version_prefix = f"versions/{value['version']}/"
-    products: set[str] = set()
-    families: set[str] = set()
-    for scope in ("user", "machine"):
-        expected_registry = "HKCU" if scope == "user" else "HKLM"
-        sets = {}
-        components = {}
-        for role in ("version", "registration"):
-            root = ElementTree.parse(outputs[f"{scope}-{role}.wxs"])
-            package = root.find("w:Package", NS)
-            assert package is not None
-            products.add(package.attrib["ProductCode"])
-            families.add(package.attrib["UpgradeCode"])
-            assert package.attrib["Scope"] == ("perUser" if scope == "user" else "perMachine")
-            assert package.attrib["Version"] == value["version"]
-            launch = package.find("w:Launch", NS)
-            assert launch is not None and launch.attrib == {"Condition": "0", "Message": MAINTENANCE_GATE}
-            properties = {item.attrib["Id"]: item.attrib["Value"] for item in package.findall("w:Property", NS)}
-            assert properties["MSIRESTARTMANAGERCONTROL"] == "Disable"
-            assert properties["REBOOT"] == "ReallySuppress"
-            service = root.find(".//w:ServiceInstall", NS)
-            control = root.find(".//w:ServiceControl", NS)
-            if role == "registration" and scope == "machine":
-                assert service is not None and control is not None
-                assert service.attrib["Name"] == value["manager_id"]
-                assert service.attrib["Account"] == "LocalSystem"
-                assert service.attrib["Start"] == "auto"
-                assert service.attrib["Type"] == "ownProcess"
-                assert service.attrib["Arguments"] == "--service"
-                assert control.attrib["Start"] == "install"
-                assert control.attrib["Stop"] == "both"
-                assert control.attrib["Remove"] == "uninstall"
-            else:
-                assert service is None and control is None
-            assert root.find(".//w:CustomAction", NS) is None
-            component_nodes = root.findall(".//w:Component", NS)
-            components[role] = {item.attrib["Guid"] for item in component_nodes}
-            references = {item.attrib["Id"] for item in root.findall(".//w:ComponentRef", NS)}
-            assert references == {item.attrib["Id"] for item in component_nodes}
-            registry = root.findall(".//w:RegistryValue", NS)
-            assert all(item.attrib["Root"] == expected_registry for item in registry)
-            sets[role] = set()
-            for file in root.findall(".//w:File", NS):
+    root = ElementTree.parse(outputs["application.wxs"])
+    package = root.find("w:Package", NS)
+    assert package is not None
+    assert package.attrib["Scope"] == "perUserOrMachine"
+    assert package.attrib["Version"] == value["version"]
+    assert package.attrib["UpgradeStrategy"] == "none"
+    assert root.find(".//w:MajorUpgrade", NS) is None
+    assert root.find(".//w:RemoveExistingProducts", NS) is None
+    launch = package.find("w:Launch", NS)
+    assert launch is not None and launch.attrib == {"Condition": "0", "Message": MAINTENANCE_GATE}
+    properties = {node.attrib["Id"]: node.attrib.get("Value") for node in package.findall("w:Property", NS)}
+    assert properties["MSIRESTARTMANAGERCONTROL"] == "Disable"
+    assert properties["REBOOT"] == "ReallySuppress"
+    ownership_property = properties["CadrumoPackage"]
+    assert ownership_property is not None
+    assert json.loads(ownership_property)["role"] == "application"
+    components = {node.attrib["Id"]: node for node in root.findall(".//w:Component", NS)}
+    ownership = {}
+    component_sets = {}
+    for role in ("VersionFiles", "SharedRegistration"):
+        feature = package.find(f"w:Feature[@Id='{role}']", NS)
+        assert feature is not None and feature.attrib["AllowAbsent"] == "yes"
+        references = {node.attrib["Id"] for node in feature.findall(".//w:ComponentRef", NS)}
+        component_sets[role] = references
+        members = set()
+        for key in references:
+            for file in components[key].findall("w:File", NS):
                 source = Path(file.attrib["Source"])
-                if source.name == "native-installation.json":
-                    relative = "data/installation.json"
-                    native_marker = json.loads(source.read_text(encoding="utf-8"))
-                    portable_marker = json.loads((stage / relative).read_text(encoding="utf-8"))
-                    assert "publication" not in portable_marker
-                    assert native_marker.pop("publication") == "data/installation-state"
-                    assert native_marker.pop("launch_policy") == "native"
-                    assert portable_marker.pop("launch_policy") == "portable"
-                    assert native_marker == portable_marker
-                else:
-                    relative = source.relative_to(Path(_source_path(stage))).as_posix()
+                relative = (
+                    "data/installation.json"
+                    if source.name == "native-installation.json"
+                    else source.relative_to(Path(_source_path(stage))).as_posix()
+                )
+                if source.name != "native-installation.json":
                     assert digest(source) == owned[relative]
-                sets[role].add(relative)
-                assert file.attrib["KeyPath"] == ("no" if scope == "user" else "yes")
-            if role == "version":
-                assert package.attrib["UpgradeStrategy"] == "none"
-                assert root.find(".//w:MajorUpgrade", NS) is None
-                assert root.find(".//w:RemoveExistingProducts", NS) is None
-                assert root.find(".//w:Shortcut", NS) is None
-                assert not any(item.attrib["Name"] in {"EntryPoint", "InstallLocation"} for item in registry)
-            else:
-                assert package.attrib["UpgradeStrategy"] == "majorUpgrade"
-                upgrade = package.find("w:MajorUpgrade", NS)
-                assert upgrade is not None and upgrade.attrib["Schedule"] == "afterInstallExecute"
-                assert upgrade.attrib["AllowSameVersionUpgrades"] == "no"
-                entry = next(item for item in registry if item.attrib["Name"] == "EntryPoint")
-                assert entry.attrib["Value"] == "[INSTALL_ROOT]cadrumo-manager"
-                login = [item for item in registry if item.attrib["Key"].endswith("\\CurrentVersion\\Run")]
-                if scope == "user":
-                    assert len(login) == 1
-                    assert login[0].attrib["Value"] == '"[INSTALL_ROOT]cadrumo-manager" --sign-in'
-                else:
-                    assert not login
-                anchor = next(item for item in registry if item.attrib["Name"] == "ManagerAnchorVersion")
-                assert anchor.attrib["Value"] == value["version"]
-                shortcut = root.find(".//w:Shortcut", NS)
-                if desktop:
-                    assert shortcut is not None
-                    assert shortcut.attrib["Target"] == f"[INSTALL_ROOT]versions\\{value['version']}\\cadrumo"
-                else:
-                    assert shortcut is None
-        assert sets["version"] == {name for name in owned if name.startswith(version_prefix)}
-        assert sets["version"].isdisjoint(sets["registration"])
-        assert sets["version"] | sets["registration"] == set(owned)
-        assert components["version"].isdisjoint(components["registration"])
-    assert len(products) == 4
-    assert len(families) == 4
+                members.add(relative)
+        ownership[role] = members
+    assert component_sets["VersionFiles"].isdisjoint(component_sets["SharedRegistration"])
+    assert component_sets["VersionFiles"] | component_sets["SharedRegistration"] == set(components)
+    prefix = f"versions/{value['version']}/"
+    assert ownership["VersionFiles"] == {name for name in owned if name.startswith(prefix)}
+    assert ownership["VersionFiles"].isdisjoint(ownership["SharedRegistration"])
+    assert ownership["VersionFiles"] | ownership["SharedRegistration"] == set(owned)
+    assert all(node.attrib["Root"] == "HKMU" for node in root.findall(".//w:RegistryValue", NS))
+    manager_components = [
+        node
+        for key, node in components.items()
+        if key in component_sets["SharedRegistration"]
+        if any(file.attrib["Name"] == "cadrumo-manager" for file in node.findall("w:File", NS))
+    ]
+    # One stable destination has mutually exclusive scope-specific ownership.
+    assert {node.attrib["Condition"] for node in manager_components} == {"NOT ALLUSERS", 'ALLUSERS = "1"'}
+    for component in manager_components:
+        machine = component.attrib["Condition"] != "NOT ALLUSERS"
+        services = component.findall("w:ServiceInstall", NS)
+        assert len(services) == int(machine)
+        if machine:
+            assert services[0].attrib["Name"] == value["manager_id"]
+            assert services[0].attrib["Account"] == "LocalSystem"
+            assert services[0].attrib["Start"] == "auto"
+            assert services[0].attrib["Arguments"] == "--service"
+            control = component.find("w:ServiceControl", NS)
+            assert control is not None and control.attrib["Stop"] == "both" and control.attrib["Remove"] == "uninstall"
+        file = component.find("w:File", NS)
+        assert file is not None and file.attrib["KeyPath"] == ("yes" if machine else "no")
+    assert bool(root.findall(".//w:Shortcut", NS)) == desktop
     descriptor = json.loads((build / "installation/metadata/wix/authoring.json").read_text(encoding="utf-8"))
     assert descriptor["installable"] is False
     assert descriptor["sources"] == {name: digest(path) for name, path in outputs.items()}
+    assert descriptor["maintenance"]["products"] == {"application": package.attrib["ProductCode"]}
 
 
 @pytest.mark.parametrize("manager", [False, True])
 def test_legacy_msi_guard_refuses_only_manager_payloads(tmp_path: Path, manager: bool) -> None:
     build, _ = _prepared(tmp_path, manager=manager)
     if manager:
-        with pytest.raises(ValueError, match="separate version and registration"):
+        with pytest.raises(ValueError, match="authenticated release MSI"):
             reject_combined_manager_msi(build)
     else:
         reject_combined_manager_msi(build)
@@ -709,69 +693,69 @@ def test_authoring_is_incremental_and_preserves_stage(tmp_path: Path) -> None:
 
 
 def test_cached_owner_protocol_binds_native_identity_and_publication_for_owned_installation(tmp_path: Path) -> None:
+    from dev.packaging.native.windows_msi_identity import release_identity
+
     build, identity = _prepared(tmp_path)
-    adapter = tmp_path / "installer.dll"
-    runner = tmp_path / "maintenance.exe"
+    adapter, runner = tmp_path / "installer.dll", tmp_path / "maintenance.exe"
     adapter.write_bytes(b"authoring fixture")
     runner.write_bytes(b"authoring fixture, never executed")
     outputs = author(build, identity, "cadrumo", adapter, runner)
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
-    for scope in ("user", "machine"):
-        for role in ("version", "registration"):
-            package = ElementTree.parse(outputs[f"{scope}-{role}.wxs"]).find("w:Package", NS)
-            assert package is not None
-            metadata = package.find("w:Property[@Id='CadrumoOwner']", NS)
-            assert metadata is not None
-            assert json.loads(metadata.attrib["Value"]) == {
-                "schema": 2,
-                "scope": scope,
-                "product_code": msi_identity(value, scope, role).product_code,
-                "role": role,
-                "runner_sha256": digest(runner),
-                "identity": {
-                    "application_id": value.application_id,
-                    "channel": value.channel,
-                    "platform": "windows-x64",
-                },
-                "publication": "data/installation-state",
-            }
-            launch = package.find("w:Launch", NS)
-            assert launch is not None and launch.attrib["Condition"] == "1"
-            for name in ("CadrumoPrepareOwner", "CadrumoAuthenticateOwner"):
-                action = package.find(f"w:CustomAction[@Id='{name}']", NS)
-                assert action is not None and action.attrib["Return"] == "check"
-                sequence = package.find(f"w:InstallExecuteSequence/w:Custom[@Action='{name}']", NS)
-                assert sequence is not None and "Condition" not in sequence.attrib
+    package = ElementTree.parse(outputs["application.wxs"]).find("w:Package", NS)
+    assert package is not None
+    metadata = package.find("w:Property[@Id='CadrumoOwner']", NS)
+    assert metadata is not None
+    assert json.loads(metadata.attrib["Value"]) == {
+        "schema": 3,
+        "product_code": release_identity(value, "version").product_code,
+        "role": "application",
+        "runner_sha256": digest(runner),
+        "identity": {"application_id": value.application_id, "channel": value.channel, "platform": "windows-x64"},
+        "publication": "data/installation-state",
+    }
+    launch = package.find("w:Launch", NS)
+    assert launch is not None and launch.attrib["Condition"] == "1"
+    prepare = package.find("w:InstallExecuteSequence/w:Custom[@Action='CadrumoPrepareOwner']", NS)
+    assert prepare is not None and "Condition" not in prepare.attrib
+    for suffix, condition in (("User", "NOT ALLUSERS"), ("Machine", 'ALLUSERS = "1"')):
+        action = package.find(f"w:CustomAction[@Id='CadrumoAuthenticateOwner{suffix}']", NS)
+        sequence = package.find(f"w:InstallExecuteSequence/w:Custom[@Action='CadrumoAuthenticateOwner{suffix}']", NS)
+        assert action is not None and action.attrib["Return"] == "check"
+        assert action.attrib["Execute"] == "deferred"
+        assert action.attrib["Impersonate"] == ("yes" if suffix == "User" else "no")
+        assert sequence is not None and sequence.attrib["Condition"] == condition
 
 
 def test_optional_native_admission_is_scoped_and_hash_bound_without_opening_installation(tmp_path: Path) -> None:
+    from dev.packaging.native.windows_msi_identity import release_identity
+
     build, identity = _prepared(tmp_path)
     adapter = tmp_path / "installer.dll"
     adapter.write_bytes(b"authoring fixture; not a native acceptance payload")
     outputs = author(build, identity, "cadrumo", adapter)
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
+    package = ElementTree.parse(outputs["application.wxs"]).find("w:Package", NS)
+    assert package is not None
     for scope in ("user", "machine"):
-        opposite = "machine" if scope == "user" else "user"
-        for role in ("version", "registration"):
-            package = ElementTree.parse(outputs[f"{scope}-{role}.wxs"]).find("w:Package", NS)
-            assert package is not None
-            metadata = package.find("w:Property[@Id='CadrumoAdmission']", NS)
-            assert metadata is not None
-            request = json.loads(metadata.attrib["Value"])
-            assert request["scope"] == scope
-            assert request["permitted_families"] == [
-                msi_identity(value, scope, item).upgrade_code for item in ("version", "registration")
-            ]
-            assert request["conflicting_families"] == [
-                msi_identity(value, opposite, item).upgrade_code for item in ("version", "registration")
-            ] + [value.upgrade_code]
-            action = package.find("w:CustomAction[@Id='CadrumoScopeAdmission']", NS)
-            assert action is not None
-            assert action.attrib["Impersonate"] == ("yes" if scope == "user" else "no")
-            assert action.attrib["Execute"] == "deferred"
-            assert action.attrib["Return"] == "check"
-            launch = package.find("w:Launch", NS)
-            assert launch is not None and launch.attrib["Condition"] == "0"
+        suffix = scope.title()
+        metadata = package.find(f"w:Property[@Id='CadrumoAdmission{suffix}']", NS)
+        assert metadata is not None
+        request = json.loads(metadata.attrib["Value"])
+        assert request["schema"] == 2 and request["scope"] == scope
+        assert request["permitted_families"] == [release_identity(value, "version").upgrade_code]
+        assert request["conflicting_families"] == [
+            msi_identity(value, old_scope, role).upgrade_code
+            for old_scope in ("user", "machine")
+            for role in ("version", "registration")
+        ] + [value.upgrade_code]
+        action = package.find(f"w:CustomAction[@Id='CadrumoScopeAdmission{suffix}']", NS)
+        assert action is not None and action.attrib["Impersonate"] == ("yes" if scope == "user" else "no")
+        assert action.attrib["Execute"] == "deferred" and action.attrib["Return"] == "check"
+        sequence = package.find(f"w:InstallExecuteSequence/w:Custom[@Action='CadrumoScopeAdmission{suffix}']", NS)
+        expected = "NOT ALLUSERS" if scope == "user" else 'ALLUSERS = "1"'
+        assert sequence is not None and sequence.attrib["Condition"] == f"({expected}) AND NOT REMOVE"
+    launch = package.find("w:Launch", NS)
+    assert launch is not None and launch.attrib["Condition"] == "0"
     descriptor = build / "installation/metadata/wix/authoring.json"
     before = descriptor.read_bytes()
     assert json.loads(before)["adapter_sha256"] == digest(adapter)
@@ -787,7 +771,7 @@ def test_database_verifier_refuses_broken_native_owner_admission(tmp_path: Path,
     runner = tmp_path / "maintenance.exe"
     adapter.write_bytes(b"authoring fixture")
     runner.write_bytes(b"authoring fixture, never executed")
-    source = author(build, identity, "cadrumo", adapter, runner)["machine-version.wxs"]
+    source = author(build, identity, "cadrumo", adapter, runner)["application.wxs"]
     tree = ElementTree.parse(source)
     package = tree.find("w:Package", NS)
     assert package is not None
@@ -796,13 +780,13 @@ def test_database_verifier_refuses_broken_native_owner_admission(tmp_path: Path,
         assert launch is not None
         launch.set("Condition", "0")
     elif defect == "ignore-failure":
-        action = package.find("w:CustomAction[@Id='CadrumoAuthenticateOwner']", NS)
+        action = package.find("w:CustomAction[@Id='CadrumoAuthenticateOwnerMachine']", NS)
         assert action is not None
         action.set("Return", "ignore")
     else:
         sequence = package.find("w:InstallExecuteSequence", NS)
         assert sequence is not None
-        action = sequence.find("w:Custom[@Action='CadrumoAuthenticateOwner']", NS)
+        action = sequence.find("w:Custom[@Action='CadrumoAuthenticateOwnerMachine']", NS)
         assert action is not None
         if defect == "missing-owner":
             sequence.remove(action)
@@ -819,11 +803,11 @@ def test_database_verifier_detects_native_admission_changes(tmp_path: Path, defe
     build, identity = _prepared(tmp_path)
     adapter = tmp_path / "installer.dll"
     adapter.write_bytes(b"authoring fixture")
-    source = author(build, identity, "cadrumo", adapter)["machine-version.wxs"]
+    source = author(build, identity, "cadrumo", adapter)["application.wxs"]
     database = tmp_path / "database.wxs"
     content = source.read_text(encoding="utf-8")
     if defect == "data":
-        content = content.replace('Id="CadrumoAdmission"', 'Id="MissingAdmission"')
+        content = content.replace('Id="CadrumoAdmissionMachine"', 'Id="MissingAdmission"')
     elif defect == "action":
         content = content.replace('DllEntry="CadrumoScopeAdmission"', 'DllEntry="MissingAdmission"')
     elif defect == "impersonation":
@@ -838,7 +822,7 @@ def test_database_verifier_detects_native_admission_changes(tmp_path: Path, defe
 @pytest.mark.external_tool
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="Requires the native Windows MSI adapter and compiler")
-def test_native_admission_dll_is_embedded_in_all_four_verified_products(
+def test_native_admission_dll_is_embedded_once_in_the_verified_scope_aware_product(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from dev.packaging.native import windows_msi_build
@@ -856,11 +840,23 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
     document = json.loads(paths.read_text(encoding="utf-8"))
     document["paths"]["packages"] = "packages"
     paths.write_text(json.dumps(document), encoding="utf-8")
+    compiler_calls = []
+    run_wix = windows_msi_build._run
+
+    def counted(wix: Path, arguments: list[str], directory: Path) -> str:
+        if arguments[0] == "build":
+            compiler_calls.append(tuple(arguments))
+        return run_wix(wix, arguments, directory)
+
+    monkeypatch.setattr(windows_msi_build, "_run", counted)
     compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
+    assert len(compiler_calls) == 1
+    compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
+    assert len(compiler_calls) == 1
     verify_products(build, identity, "cadrumo", adapter, runner)
     receipt = json.loads((build / "packages/msi/compiled.json").read_text(encoding="utf-8"))
     assert receipt["installable"] is False
-    assert len(receipt["artifacts"]) == 4
+    assert set(receipt["artifacts"]) == {"application.msi"}
     from dev.packaging.native.windows_msi_database import _table_rows
 
     for name in receipt["artifacts"]:
@@ -869,19 +865,18 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
         component_rows = _table_rows(compiled, "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`", 3)
         assert len(file_rows) == len({row[0] for row in file_rows})
         counts = {row[0]: sum(file[1] == row[0] for file in file_rows) for row in component_rows}
-        if name == "user-version.msi":
-            assert max(counts.values()) > 1
-            keys = {
-                row[0]: row[1:]
-                for row in _table_rows(compiled, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
-            }
-            assert all(
-                int(attributes) & 4 and keys[keypath] == ("1", component)
-                for component, attributes, keypath in component_rows
-            )
-        else:
-            assert max(counts.values()) == 1
-    artifact = build / "packages/msi/user-version.msi"
+        assert max(counts.values()) > 1
+        keys = {
+            row[0]: row[1:]
+            for row in _table_rows(compiled, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
+        }
+        files = {row[0]: row[1] for row in file_rows}
+        for component, attributes, keypath in component_rows:
+            if int(attributes) & 4:
+                assert keys[keypath] == ("-1", component)
+            else:
+                assert files[keypath] == component
+    artifact = build / "packages/msi/application.msi"
     # Alter the real compiled feature table, without installing or recompiling.
     # Artifact hash checks alone cannot prove mandatory component selection.
     import ctypes
@@ -901,29 +896,28 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
         function = getattr(msi, name)
         function.argtypes = arguments
         function.restype = handle
-    database, view = handle(), handle()
-    assert msi.MsiOpenDatabaseW(str(disabled), ctypes.c_void_p(1), ctypes.byref(database)) == 0
-    try:
-        assert (
-            msi.MsiDatabaseOpenViewW(
-                database, "UPDATE `Feature` SET `Level` = 0 WHERE `Feature` = 'ProductFeature'", ctypes.byref(view)
-            )
-            == 0
-        )
+
+    def change_database(artifact: Path, statement: str) -> None:
+        database, view = handle(), handle()
+        assert msi.MsiOpenDatabaseW(str(artifact), ctypes.c_void_p(1), ctypes.byref(database)) == 0
         try:
-            assert msi.MsiViewExecute(view, 0) == 0
+            assert msi.MsiDatabaseOpenViewW(database, statement, ctypes.byref(view)) == 0
+            try:
+                assert msi.MsiViewExecute(view, 0) == 0
+            finally:
+                msi.MsiCloseHandle(view)
+            assert msi.MsiDatabaseCommit(database) == 0
         finally:
-            msi.MsiCloseHandle(view)
-        assert msi.MsiDatabaseCommit(database) == 0
-    finally:
-        msi.MsiCloseHandle(database)
+            msi.MsiCloseHandle(database)
+
+    change_database(disabled, "UPDATE `Feature` SET `Level` = 0 WHERE `Feature` = 'VersionFiles'")
     with pytest.raises(ValueError, match="can be deselected"):
         verify_feature_ownership(disabled)
     original = artifact.read_bytes()
     unpublished = tmp_path / "unpublished"
     artifact.write_bytes(original + b"changed")
     try:
-        with pytest.raises(ValueError, match=r"MSI artifact has changed: user-version\.msi"):
+        with pytest.raises(ValueError, match=r"MSI artifact has changed: application\.msi"):
             bootstrap_kit(build, identity, unpublished / "app", "cadrumo", adapter, runner)
         assert not unpublished.exists()
     finally:
@@ -968,37 +962,33 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(
     published_plan = build / "installation/metadata/maintenance-user.json"
     assert published_plan.resolve() == plan.resolve()
     request = json.loads(published_plan.read_text(encoding="utf-8"))
-    request["version_product"], request["registration_product"] = (
-        request["registration_product"],
-        request["version_product"],
-    )
+    original_product = request["version_product"]["product_code"]
+    request["version_product"]["product_code"] = "00000000-0000-0000-0000-000000000000"
+    published_plan.write_text(json.dumps(request), encoding="utf-8")
+    assert run_plan() == "invalid_plan"
+    assert run_plan("unregister") == "invalid_plan"
+    assert run_plan("remove-version", "--version", "0.5.1") == "invalid_plan"
+    request["registration_product"]["product_code"] = request["version_product"]["product_code"]
     published_plan.write_text(json.dumps(request), encoding="utf-8")
     assert run_plan() == "artifact_or_owner_refused"
     assert run_plan("unregister") == "artifact_or_owner_refused"
     assert run_plan("remove-version", "--version", "0.5.1") == "artifact_or_owner_refused"
-    request["version_product"], request["registration_product"] = (
-        request["registration_product"],
-        request["version_product"],
-    )
+    request["version_product"]["product_code"] = original_product
+    request["registration_product"]["product_code"] = original_product
     request["contract"]["installation_identity"]["channel"] = "another-channel"
     published_plan.write_text(json.dumps(request), encoding="utf-8")
     assert run_plan() == "artifact_or_owner_refused"
-    # Read the actual conditional action row in a deliberately broken MSI;
-    # compilation and database inspection create no installation session.
-    source = build / "installation/metadata/wix/machine-version.wxs"
-    tree = ElementTree.parse(source)
-    action = tree.find("w:Package/w:InstallExecuteSequence/w:Custom[@Action='CadrumoAuthenticateOwner']", NS)
-    assert action is not None
-    action.set("Condition", "NOT SKIP_OWNER")
-    conditional_source = tmp_path / "conditional.wxs"
-    tree.write(conditional_source, encoding="utf-8")
+    # Alter the actual action table without a second compilation or install session.
     conditional_msi = tmp_path / "conditional.msi"
-    result = run_command(
-        [str(wix), "build", "-arch", "x64", "-wx", "-o", str(conditional_msi), str(conditional_source)], cwd=build
+    shutil.copyfile(artifact, conditional_msi)
+    change_database(
+        conditional_msi,
+        "UPDATE `InstallExecuteSequence` SET `Condition` = 'NOT SKIP_OWNER' "
+        "WHERE `Action` = 'CadrumoAuthenticateOwnerMachine'",
     )
-    assert result.returncode == 0, result.stdout + result.stderr
-    with pytest.raises(ValueError, match="can be skipped by a condition"):
+    with pytest.raises(ValueError, match="owner authentication can be bypassed"):
         verify_admission_order(conditional_msi, owner_required=True)
+    assert len(compiler_calls) == 1
     adapter.write_bytes(adapter.read_bytes() + b"changed")
     with pytest.raises(ValueError, match="stale payload identity"):
         verify_products(build, identity, "cadrumo", adapter, runner)
@@ -1066,35 +1056,37 @@ def test_stage_receipt_and_package_identity_must_agree(tmp_path: Path) -> None:
     ],
 )
 def test_database_verifier_rejects_ownership_regressions(tmp_path: Path, defect: str) -> None:
+    from xml.etree.ElementTree import SubElement
+
     build, identity = _prepared(tmp_path)
-    sources = author(build, identity, "cadrumo")
-    role = "registration" if defect.startswith("registration-") else "version"
-    source = sources[f"user-{role}.wxs"]
+    source = author(build, identity, "cadrumo")["application.wxs"]
     database = tmp_path / "database.wxs"
-    content = source.read_text(encoding="utf-8")
-    database.write_text(content, encoding="utf-8")
+    tree = ElementTree.parse(source)
+    package = tree.find("w:Package", NS)
+    assert package is not None
+    tree.write(database, encoding="utf-8")
     verify_database(source, database)
     if defect == "identity":
-        package = ElementTree.parse(source).find("w:Package", NS)
-        assert package is not None
-        content = content.replace(package.attrib["ProductCode"], "00000000-0000-0000-0000-000000000000")
+        package.attrib["ProductCode"] = "00000000-0000-0000-0000-000000000000"
     elif defect == "gate":
-        content = content.replace('Condition="0"', 'Condition="1"')
+        launch = package.find("w:Launch", NS)
+        assert launch is not None
+        launch.attrib["Condition"] = "1"
     elif defect == "version-removal":
-        content = content.replace(
-            "</Package>",
-            "<InstallExecuteSequence><RemoveExistingProducts "
-            'After="InstallExecute" /></InstallExecuteSequence></Package>',
-        )
+        sequence = SubElement(package, "{" + NS["w"] + "}InstallExecuteSequence")
+        SubElement(sequence, "{" + NS["w"] + "}RemoveExistingProducts", After="InstallExecute")
     elif defect == "registration-upgrade":
-        content = content.replace("MajorUpgrade", "MissingUpgrade")
-    elif defect == "registration-missing":
-        content = content.replace('Id="CadrumoRegistration"', 'Id="MissingRegistration"')
-    elif defect == "registration-changed":
-        content = content.replace('Id="CadrumoRegistration" Value="', 'Id="CadrumoRegistration" Value="changed')
+        SubElement(package, "{" + NS["w"] + "}MajorUpgrade", Schedule="afterInstallExecute")
+    elif defect in {"registration-missing", "registration-changed"}:
+        property_node = package.find("w:Property[@Id='CadrumoRegistrationMachine']", NS)
+        assert property_node is not None
+        if defect == "registration-missing":
+            package.remove(property_node)
+        else:
+            property_node.attrib["Value"] += "changed"
     else:
-        content = content.replace("</Package>", '<Property Id="CadrumoRegistration" Value="{}" /></Package>')
-    database.write_text(content, encoding="utf-8")
+        SubElement(package, "{" + NS["w"] + "}Property", Id="CadrumoRegistration", Value="{}")
+    tree.write(database, encoding="utf-8")
     with pytest.raises(ValueError):
         verify_database(source, database)
 
@@ -1113,7 +1105,7 @@ def test_database_verifier_refuses_missing_or_altered_machine_service(
     tmp_path: Path, defect: str, replacement: str
 ) -> None:
     build, identity = _prepared(tmp_path)
-    source = author(build, identity, "cadrumo")["machine-registration.wxs"]
+    source = author(build, identity, "cadrumo")["application.wxs"]
     database = tmp_path / "machine.wxs"
     content = source.read_text(encoding="utf-8")
     database.write_text(content, encoding="utf-8")
@@ -1142,7 +1134,7 @@ def test_native_wix_cabinets_preserve_long_source_bytes_and_install_destinations
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     refresh(payload, identity, build, "cadrumo")
     sources = author(build, identity, "cadrumo")
-    source = sources["machine-version.wxs"]
+    source = sources["application.wxs"]
     authored = ElementTree.parse(source)
     long_file = next(item for item in authored.findall(".//w:File", NS) if item.attrib["Name"] == original.name)
     actual_source = Path(long_file.attrib["Source"])
@@ -1172,35 +1164,51 @@ def test_native_wix_cabinets_preserve_long_source_bytes_and_install_destinations
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="Requires the native Windows MSI validator")
 @pytest.mark.parametrize("desktop", [True, False])
-def test_native_wix_compiles_all_scopes_and_roles_without_warnings(tmp_path: Path, desktop: bool) -> None:
+def test_native_wix_compiles_one_scope_aware_product_without_warnings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, desktop: bool
+) -> None:
+    from dev.packaging.native import windows_msi_build
+
     wix = shutil.which("wix")
     assert wix is not None, "Put a configured WiX 5 or newer tool on PATH for the native compiler lane"
     build, identity = _prepared(tmp_path, desktop=desktop)
+    paths = build / "build-paths.json"
+    document = json.loads(paths.read_text(encoding="utf-8"))
+    document["paths"]["packages"] = "packages"
+    paths.write_text(json.dumps(document), encoding="utf-8")
+    compiler_calls = []
+    run_wix = windows_msi_build._run
+
+    def counted(wix: Path, arguments: list[str], directory: Path) -> str:
+        if arguments[0] == "build":
+            compiler_calls.append(tuple(arguments))
+        return run_wix(wix, arguments, directory)
+
+    monkeypatch.setattr(windows_msi_build, "_run", counted)
+    compile_products(build, identity, Path(wix), "cadrumo" if desktop else None)
+    assert len(compiler_calls) == 1
+    artifact = build / "packages/msi/application.msi"
+    assert artifact.is_file() and artifact.stat().st_size > 0
+    previous = artifact.stat().st_mtime_ns
+    compile_products(build, identity, Path(wix), "cadrumo" if desktop else None)
+    assert len(compiler_calls) == 1
+    assert artifact.stat().st_mtime_ns == previous
+    receipt = json.loads((artifact.parent / "compiled.json").read_text(encoding="utf-8"))
+    assert set(receipt["artifacts"]) == {"application.msi"}
     outputs = author(build, identity, "cadrumo" if desktop else None)
-    artifacts = tmp_path / "compiled"
-    artifacts.mkdir()
-    for source in outputs.values():
-        artifact = artifacts / source.with_suffix(".msi").name
-        result = run_command(
-            [wix, "build", "-arch", "x64", "-wx", "-o", str(artifact), str(source)],
-            cwd=tmp_path,
-        )
-        assert result.returncode == 0, result.stdout + result.stderr
-        assert artifact.is_file() and artifact.stat().st_size > 0
-        decompiled = artifact.with_suffix(".wxs")
-        result = run_command([wix, "msi", "decompile", "-o", str(decompiled), str(artifact)], cwd=tmp_path)
-        assert result.returncode == 0, result.stdout + result.stderr
-        database = ElementTree.parse(decompiled)
-        package = database.find("w:Package", NS)
-        assert package is not None
-        original = ElementTree.parse(source).find("w:Package", NS)
-        assert original is not None
-        assert UUID(package.attrib["ProductCode"]) == UUID(original.attrib["ProductCode"])
-        verify_database(source, decompiled)
-        launch = database.find(".//w:Launch", NS)
-        assert launch is not None and launch.attrib == {"Condition": "0", "Message": MAINTENANCE_GATE}
-        if "version" in source.stem:
-            assert database.find(".//w:MajorUpgrade", NS) is None
-            assert database.find(".//w:RemoveExistingProducts", NS) is None
-        else:
-            assert database.find(".//w:MajorUpgrade", NS) is not None
+    assert set(outputs) == {"application.wxs"}
+    source = outputs["application.wxs"]
+    decompiled = tmp_path / "compiled.wxs"
+    result = run_command([wix, "msi", "decompile", "-o", str(decompiled), str(artifact)], cwd=tmp_path)
+    assert result.returncode == 0, result.stdout + result.stderr
+    database = ElementTree.parse(decompiled)
+    package = database.find("w:Package", NS)
+    original = ElementTree.parse(source).find("w:Package", NS)
+    assert package is not None and original is not None
+    assert UUID(package.attrib["ProductCode"]) == UUID(original.attrib["ProductCode"])
+    verify_database(source, decompiled)
+    launch = database.find(".//w:Launch", NS)
+    assert launch is not None and launch.attrib == {"Condition": "0", "Message": MAINTENANCE_GATE}
+    assert database.find(".//w:MajorUpgrade", NS) is None
+    assert database.find(".//w:RemoveExistingProducts", NS) is None
+    assert {node.attrib["Id"] for node in package.findall("w:Feature", NS)} == {"VersionFiles", "SharedRegistration"}

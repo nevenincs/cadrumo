@@ -7,20 +7,24 @@ import hashlib
 import json
 import sys
 from collections.abc import Iterable
-from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 from xml.etree.ElementTree import Element, SubElement, tostring
 
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .identity import DistributionIdentity
 from .installation import member, validate_payload, verify_inventory
 from .layout import application_images, load_layout
-from .windows_msi_identity import InstallationScope, MsiIdentity, ProductRole, msi_identity
+from .windows_msi_identity import InstallationScope, MsiIdentity, ProductRole, msi_identity, release_identity
+from .windows_msi_paths import literal as _literal
+from .windows_msi_paths import source_path as _source_path
+from .windows_msi_single import OWNER_GATE
+from .windows_msi_single import source as release_source
 
 WIX_NAMESPACE = "http://wixtoolset.org/schemas/v4/wxs"
 MAINTENANCE_GATE = "Native MSI transaction, scope admission and safe maintenance are not yet integrated."
-OWNER_GATE = "Installation requires the authenticated native maintenance owner."
 
 
 def verify_destination_lengths(prefix: PureWindowsPath, members: Iterable[str]) -> None:
@@ -74,35 +78,7 @@ def reject_combined_manager_msi(build: Path) -> None:
     """Prevent the legacy CPack product from owning a manager version and shared entry."""
     _, _, _, manifest = _staged_manifest(build)
     if any(image.target == "rust_manager" for image in application_images(manifest["layout"])):
-        raise ValueError("Manager payloads require separate version and registration MSI products. " + MAINTENANCE_GATE)
-
-
-def _literal(value: str) -> str:
-    # WiX preprocessing must never interpret metadata or source paths as expressions.
-    if "$" in value:
-        raise ValueError("MSI authoring cannot admit WiX preprocessor expressions in literal inputs")
-    return value
-
-
-def _source_path(path: PurePath) -> str:
-    """Use native extended paths at the cabinet reader, without changing MSI destinations."""
-    value = str(path).replace("/", "\\")
-    if value.startswith("\\\\?\\UNC\\"):
-        value = "\\\\" + value[8:]
-    elif value.startswith("\\\\?\\"):
-        value = value[4:]
-    if value.startswith(("\\\\.\\", "\\??\\")):
-        raise ValueError("MSI source must identify a filesystem path, not a device namespace")
-    native = PureWindowsPath(value)
-    if native.is_absolute():
-        if ".." in native.parts:
-            raise ValueError("MSI source must use an absolute normalized path")
-        value = str(native)
-        return _literal("\\\\?\\UNC\\" + value[2:] if value.startswith("\\\\") else "\\\\?\\" + value)
-    # Portable authoring tests can inspect WiX metadata from POSIX fixture roots.
-    if path.is_absolute() and not isinstance(path, PureWindowsPath):
-        return _literal(path.as_posix())
-    raise ValueError("MSI source must use an absolute filesystem path")
+        raise ValueError("Manager payloads require the authenticated release MSI. " + MAINTENANCE_GATE)
 
 
 def _component(parent: Element, feature: Element, product: MsiIdentity, resource: str) -> Element:
@@ -178,7 +154,7 @@ def _files(
             SubElement(
                 component,
                 "RegistryValue",
-                Root="HKCU",
+                Root=product.registry_root,
                 Key=f"Software\\{value.application_id}\\Installer\\Components\\{component.attrib['Id']}",
                 Name="Installed",
                 Type="integer",
@@ -293,8 +269,9 @@ def _source(
     manifest_sha256: str,
     adapter: Path | None = None,
     runner: Path | None = None,
+    product: MsiIdentity | None = None,
 ) -> bytes:
-    product = msi_identity(value, scope, role)
+    product = product or msi_identity(value, scope, role)
     wix = Element("Wix", xmlns=WIX_NAMESPACE, RequiredVersion="5.0")
     package = SubElement(
         wix,
@@ -576,7 +553,7 @@ def author(
     adapter: Path | None = None,
     runner: Path | None = None,
 ) -> dict[str, Path]:
-    """Emit four scoped sources; owned products require authenticated native maintenance."""
+    """Emit one scope-aware MSI source with independently maintained ownership features."""
     stage, owned, manifest_file, manifest = _staged_manifest(build)
     if adapter is not None:
         adapter = adapter.resolve(strict=True)
@@ -615,23 +592,78 @@ def author(
     marker["launch_policy"] = "native"
     native_marker = member(directory, "native-installation.json")
     marker_content = (json.dumps(marker, indent=2) + "\n").encode("utf-8")
-    sources = {}
-    for scope in ("user", "machine"):
-        for role, files in (("version", version_files), ("registration", shared_files)):
-            name = f"{scope}-{role}.wxs"
-            sources[name] = _source(
+    retired_sources = {}
+    previous = {}
+    locator = member(directory, "authoring.json")
+    try:
+        previous = json.loads(locator.read_text(encoding="utf-8"))
+        old = {**previous.get("retired_sources", {}), **previous.get("sources", {})}
+        retired_sources = {
+            name: checksum
+            for name, checksum in old.items()
+            if name in {f"{scope}-{role}.wxs" for scope in ("user", "machine") for role in ("version", "registration")}
+        }
+    except (OSError, ValueError, AttributeError, TypeError):
+        pass
+    input_identity = {
+        "installation_sha256": digest(member(metadata, "installation.json")),
+        "identity_sha256": digest(identity_file),
+        "desktop": desktop,
+        "adapter_sha256": digest(adapter) if adapter is not None else None,
+        "runner_sha256": digest(runner) if runner is not None else None,
+        "helpers": {
+            name: digest(Path(__file__).with_name(name + ".py"))
+            for name in (
+                "windows_msi",
+                "windows_msi_single",
+                "windows_msi_identity",
+                "windows_msi_paths",
+                "identity",
+                "layout",
+                "installation",
+            )
+        },
+    }
+    output = member(directory, "application.wxs")
+    if isinstance(previous, dict) and previous.get("input_identity") == input_identity:
+        try:
+            if (
+                previous["sources"] == {"application.wxs": digest(output)}
+                and digest(native_marker) == hashlib.sha256(marker_content).hexdigest()
+            ):
+                verify_inventory(stage, member(metadata, "installation.json"))
+                return {"application.wxs": output}
+        except (OSError, KeyError, TypeError):
+            pass
+    partitions = []
+    for role, files in (("version", version_files), ("registration", shared_files)):
+        partitions.append(
+            _source(
                 stage,
                 files,
                 value,
-                scope,
+                "user",
                 role,
                 manager,
                 desktop,
                 (definition["marker"], native_marker, hashlib.sha256(marker_content).hexdigest()),
                 digest(manifest_file),
-                adapter,
-                runner,
+                product=release_identity(value, role),
             )
+        )
+    service = Element("Component")
+    _machine_service(service, value)
+    sources = {
+        "application.wxs": release_source(
+            partitions[0],
+            partitions[1],
+            value,
+            manager,
+            list(service),
+            adapter,
+            runner,
+        )
+    }
     verify_inventory(stage, member(metadata, "installation.json"))
     directory.mkdir(exist_ok=True)
     if not native_marker.exists() or native_marker.read_bytes() != marker_content:
@@ -647,6 +679,8 @@ def author(
         "blocked_by": OWNER_GATE if runner is not None else MAINTENANCE_GATE,
         "manifest_sha256": digest(manifest_file),
         "sources": {name: digest(path) for name, path in outputs.items()},
+        "input_identity": input_identity,
+        "retired_sources": retired_sources,
         "adapter_sha256": digest(adapter) if adapter is not None else None,
         "runner_sha256": digest(runner) if runner is not None else None,
         "native_marker_sha256": digest(native_marker),
@@ -658,14 +692,9 @@ def author(
                 "layout": manifest["layout"],
                 "installation_identity": {"application_id": value.application_id, "channel": value.channel},
             },
-            "products": {
-                f"{scope}-{role}": msi_identity(value, scope, role).product_code
-                for scope in ("user", "machine")
-                for role in ("version", "registration")
-            },
+            "products": {"application": release_identity(value, "version").product_code},
         },
     }
-    locator = member(directory, "authoring.json")
     content = (json.dumps(descriptor, indent=2) + "\n").encode("utf-8")
     if not locator.exists() or locator.read_bytes() != content:
         locator.write_bytes(content)
@@ -677,13 +706,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     source = commands.add_parser("author")
-    source.add_argument("--build", type=Path, required=True)
+    source.add_argument("--build", type=require_enrolled_build, required=True)
     source.add_argument("--identity", type=Path, required=True)
     source.add_argument("--desktop")
     source.add_argument("--adapter", type=Path)
     source.add_argument("--runner", type=Path)
     guard = commands.add_parser("reject-combined")
-    guard.add_argument("--build", type=Path, required=True)
+    guard.add_argument("--build", type=require_enrolled_build, required=True)
     args = parser.parse_args()
     if args.command == "author":
         author(args.build, args.identity, args.desktop, args.adapter, args.runner)

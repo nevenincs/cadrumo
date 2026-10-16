@@ -52,8 +52,13 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
     let admitted = (|| -> Result<_, Error> {
         let runner = runner_digest()?;
         let (request, version_file) = artifact(&plan.version_product, &plan, "version", &runner)?;
-        let (registration, registration_file) =
-            artifact(&plan.registration_product, &plan, "registration", &runner)?;
+        let (registration, registration_file) = if plan.schema == 2 {
+            (request.clone(), None)
+        } else {
+            let (registration, custody) =
+                artifact(&plan.registration_product, &plan, "registration", &runner)?;
+            (registration, Some(custody))
+        };
         if request.permitted_families != registration.permitted_families
             || request.conflicting_families != registration.conflicting_families
         {
@@ -202,20 +207,23 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
             .as_ref()
             .ok_or_else(|| Error::Integrity("cached product has no owner protocol".into()))?;
         let index = usize::from(release.is_none());
-        if definition.family != request.permitted_families[index]
+        if definition.family != request.family(index)
             || definition.version != selected
             || definition.ownership.version != selected
-            || definition.ownership.role != role.as_str()
-            || definition.ownership.schema != 1
+            || definition.ownership.role
+                != if plan.schema == 2 {
+                    "application"
+                } else {
+                    role.as_str()
+                }
+            || definition.ownership.schema != if plan.schema == 2 { 2 } else { 1 }
             || definition.ownership.manifest_sha256 != product.manifest_sha256
             || definition.ownership.application_id
                 != plan.contract.installation_identity.application_id
             || definition.ownership.channel != plan.contract.installation_identity.channel
             || definition.ownership.platform != plan.contract.layout.platform
-            || metadata.schema != 2
-            || metadata.scope != plan.scope
+            || !metadata.admits_role(plan.scope, role)
             || metadata.product_code != definition.code
-            || metadata.role != role
             || metadata.identity.application_id != definition.ownership.application_id
             || metadata.identity.channel != definition.ownership.channel
             || metadata.identity.platform != definition.ownership.platform
@@ -408,10 +416,12 @@ fn prove_absence(
     inventory: &impl NativeProductInventory,
 ) -> Result<(), Error> {
     crate::admission::validate_inventory(products).map_err(native_error)?;
-    if products.iter().any(|product| {
-        crate::admission::canonical_guid(&product.code)
-            .is_ok_and(|code| code == owner.product_code())
-    }) || inventory.locate(owner)?.is_some()
+    if (owner.feature().is_none()
+        && products.iter().any(|product| {
+            crate::admission::canonical_guid(&product.code)
+                .is_ok_and(|code| code == owner.product_code())
+        }))
+        || inventory.locate(owner)?.is_some()
     {
         return Err(Error::Integrity(
             "native removal absence is not established".into(),

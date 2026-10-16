@@ -1943,13 +1943,15 @@ and serialized by this lock.
 `native/cmake/distribution` packages an already assembled payload. Its shared
 identity projection covers Windows x64, Linux x64/ARM64 and macOS ARM64. The
 application ID is `md.neve.cadrumo`; the preview channel adds `.preview`.
-The legacy combined MSI family retains its published UUID. New MSI families
-separate application/channel, target, user/machine scope and version/registration
-ownership role. Their family UUIDs do not change with the version. Product codes
-identify releases; shared registration components keep their resource identities
-across releases, while version components have distinct release ownership. WiX
-generates package codes for individual MSI builds. Publisher, license, version
-and names come from the existing Python product and project metadata owners.
+Legacy combined and earlier scope/role MSI families retain their published
+UUIDs. The current scope-aware release MSI has one application/channel and target
+family, with one product code per release. Its `VersionFiles` and
+`SharedRegistration` features retain separate ownership: version components belong
+to one immutable release; shared registration components retain their resource
+identities across releases. Native observation qualifies product ownership by the
+selected feature and actual user/machine installation scope. WiX generates package
+codes for individual MSI builds. Publisher, license, version and names come from
+the existing Python product and project metadata owners.
 
 Configure with CMake 4.4.3 or newer, `-S native/cmake/distribution`, the target's preset and
 `-DCADRUMO_PAYLOAD=<absolute-payload>`. The presets are `distribution-windows-x64`,
@@ -1975,7 +1977,7 @@ the corresponding distribution preset on the native packaging host:
 
 | Platform | Build command | Output |
 | --- | --- | --- |
-| Windows x64 | `cmake --build --preset distribution-windows-msi` | `.msi`; manager payloads are currently gated |
+| Windows x64 | `cmake --build --preset distribution-windows-msi` | Manager payload: `build/distribution-windows-x64/packages/msi/application.msi`; native acceptance remains required |
 | Linux x64 | `cmake --build --preset distribution-linux-x86-64-deb` | `.deb` |
 | Linux x64 | `cmake --build --preset distribution-linux-x86-64-rpm` | `.rpm` |
 | Linux ARM64 | `cmake --build --preset distribution-linux-aarch64-deb` | `.deb` |
@@ -2021,63 +2023,83 @@ Manager payloads are refused by the legacy combined CPack MSI route, including
 direct CPack invocation. That product's removing major upgrade cannot preserve
 older runtime versions. The explicit `zip` target remains available.
 
-Build `msi-author` to validate the stage and emit `user-version.wxs`,
-`machine-version.wxs`, `user-registration.wxs` and `machine-registration.wxs`
-under `installation/metadata/wix`. `clean-msi-author` owns those generated sources.
-Version sources own only the immutable release subtree. Registration sources own
-the stable manager, marker, notices, shortcuts and scoped startup registration,
-including which versions supply the manager and desktop anchors. User sources
-use HKCU and LocalAppData with user-login startup; machine sources use HKLM and
-Program Files with an automatic LocalSystem SCM lifecycle broker. Machine
-registration starts the broker after installing its verified payload. Its user
-workers supply runtime supervision without using SYSTEM taxpayer credentials.
-Explicit `UpgradeStrategy`
-authoring requires WiX 5 or newer: version products disable automatic major
-upgrades; registration uses its own family and shared component identities.
+Build `msi-author` to validate the stage and emit one source,
+`build/distribution-windows-x64/installation/metadata/wix/application.wxs`.
+`clean-msi-author` owns the generated authoring directory. The scope-aware package
+contains two independently owned features. `VersionFiles` owns the immutable
+release subtree. `SharedRegistration` owns the stable manager, marker, notices,
+shortcuts and scoped startup registration, including the manager and desktop
+anchors. Each component belongs to exactly one feature. The native maintenance
+owner authenticates feature changes; a product code alone is not proof that both
+features are installed.
 
-For manager payloads, `msi` compiles these four products through WiX with warnings
-treated as errors, then decompiles each database to check product/upgrade identity,
-version, the install block and upgrade ownership. A read-only Windows Installer
-query checks actual action sequencing: version products cannot remove existing
-products; registration removal must follow InstallExecute and precede InstallFinalize.
-This query avoids relying on the WiX decompiler's reconstructed scheduling.
-Set `CADRUMO_WIX_EXECUTABLE` to
-the installed WiX 5+ executable when it is not on the configure process's PATH.
-The build uses that existing tool; provisioning and any tool-term acceptance remain
-with the operator. Outputs are `packages/msi/{user,machine}-{version,registration}.msi`.
-Only after all four pass does `packages/msi/compiled.json` publish their SHA256
-hashes and compiler/source identity. A failed compilation invalidates that receipt;
-remaining older artifacts are not evidence of the failed build succeeding.
-`clean-msi` owns this artifact directory and leaves the staged payload intact.
+The same MSI selects user or machine scope. User registration uses HKCU and
+LocalAppData with user-login startup; machine registration uses HKLM and Program
+Files with an automatic LocalSystem SCM lifecycle broker. Mutually exclusive
+scope conditions select the stable manager component. Machine registration starts
+the broker after installing its verified payload. Its user workers supervise
+runtimes without using SYSTEM taxpayer credentials. `UpgradeStrategy="none"`
+prevents automatic removal of another release. Native maintenance controls shared
+registration and version lifetimes, preserving retained versions and anchors.
+Explicit upgrade-strategy authoring requires WiX 5 or newer.
+
+For manager payloads, `msi` invokes WiX once for a changed MSI payload, with warnings
+treated as errors. Unchanged source, compiler, native adapter, runner and payload
+identities reuse the verified artifact without another compiler invocation. The
+build decompiles the database and queries Windows Installer tables to check
+product identity, complete feature ownership, scope-specific authentication and
+admission ordering, and the absence of automatic version-removal upgrades. These
+queries do not create an installation session.
+
+Set `CADRUMO_WIX_EXECUTABLE` to the installed WiX 5+ executable when it is not on
+configure's PATH. Tool provisioning and term acceptance remain with the operator.
+The sole compiled output is
+`build/distribution-windows-x64/packages/msi/application.msi`.
+`packages/msi/compiled.json` publishes its hash and compiler/source identity only
+after verification succeeds. A failed compilation invalidates that receipt;
+retained older artifacts do not prove the failed build succeeded. Receipt-owned
+obsolete artifacts from the earlier four-product topology retire only after the
+new artifact verifies. `clean-msi` owns the artifact directory and preserves the
+staged payload.
 
 ```text
 cmake --build build/distribution-windows-x64 --config Release --target msi-verify
 ```
 
-`msi-verify` depends on preparation, authoring and compilation, then verifies all
-four artifacts against the current payload and compilation receipt. It is a build
-integrity check, not native installation acceptance. Direct CPack and
-its `package` target still refuse the combined manager MSI; use `msi` or `msi-verify`.
+`msi-verify` depends on preparation and compilation, then checks the one artifact
+against the current payload and receipt. This is build integrity verification;
+it does not establish native installation acceptance. Direct CPack and its
+`package` target still refuse manager payloads; use `msi` or `msi-verify`.
+
+For Windows desktop delivery, `msi-bootstrap-kit` publishes sibling
+`stage/<Config>/services/kit.json` with schema `2`, the authenticated maintenance
+runner and one `application.msi`. The kit's `artifacts` map has one `application`
+entry, binding that file's path, hash and product code. It does not contain
+separate scope or ownership-role MSI files. The root `bundle` and ZIP include
+this matching services kit.
 
 The distribution graph also exposes `install-msi`, `remove-msi-version` and
-`unregister-msi`. These invoke the native maintenance runner after `msi-verify`
+`unregister-msi`. They invoke the native maintenance runner after `msi-verify`
 and require explicit `CADRUMO_MSI_SCOPE` and `CADRUMO_MSI_PREFIX` configuration.
 Version removal additionally requires `CADRUMO_MSI_REMOVE_VERSION`, the exact
 unanchored installed release. Unregistration removes shared registration;
-version removal targets one immutable version. All three operations retain the
-installation readiness gate; exposing a target does not enable native maintenance.
+version removal targets one immutable version. Native authentication, scope
+admission, transaction rollback, same-version byte checks, retained anchors and
+in-use leases still govern these operations.
 
-The compiled products retain `installable: false` in their build
-descriptor and a literal-false launch condition. Native transaction publication,
-scope admission, same-version byte checks, retained anchors and safe in-use
-maintenance must be implemented and validated before replacing that condition.
+The compilation descriptor retains `installable: false`: a successful build is
+not installation acceptance. Authoring without the native adapter and runner
+keeps a literal-false launch condition. With both configured, execution still
+requires the authenticated native maintenance owner and its scoped callbacks.
 The explicit Windows compiler test lane uses a configured WiX tool on `PATH`:
 `uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/native/tests/test_windows_msi.py`.
-It compiles all four sources for desktop and runtime-only payloads with warnings
-treated as errors, then reads the MSI databases back to verify product identities,
-the install block and the absence of version-removal upgrades. This verifies the
-generated ownership definitions. Disposable-host install/upgrade acceptance remains
-pending.
+It compiles one scope-aware source for each desktop or runtime-only fixture with
+warnings treated as errors, verifies the decompiled ownership and actual tables,
+and proves an unchanged rebuild invokes no compiler. The adapter test additionally
+checks native refusal paths without installing a product. Disposable-host
+installation, upgrade, rollback and removal acceptance have not run for this
+topology and remain required.
+
 Native installation markers can opt into the canonical `publication` directory,
 `data/installation-state`, outside immutable version inventories. The application
 library owns its bounded, identity-bound state with pending, ready and removing
@@ -2107,9 +2129,9 @@ State replacement is serialized and atomic; this does not claim power-loss recov
 
 These primitives do not replace native installer admission, transaction rollback,
 directory permissions, all-session process checks or native package-manager removal.
-The MSI adapter must own those operations and keep reservation/removal leases alive
-through them. Native MSI markers remain gated until integrated process-lifetime
-and installer transaction behavior is verified.
+The MSI adapter owns those operations and keeps reservation/removal leases alive
+through them. The one-MSI topology still requires disposable-host verification of
+integrated process lifetime and installer transactions before release acceptance.
 The catalogue alone does not implement manager cutover or obsolete-version removal.
 Linux installs under `/opt/cadrumo` with desktop/icon registrations
 under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app

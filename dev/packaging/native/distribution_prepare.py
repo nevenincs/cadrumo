@@ -4,16 +4,23 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
-import tempfile
 from pathlib import Path
 
+from .action_cache import action_lock
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .installation import member, prepare, verify_inventory
+from .installation_reuse import InstallationReuse, public_directory, publish
 
 
 def refresh(payload: Path, identity: Path, build: Path, desktop: str | None = None) -> None:
+    """Serialize candidate staging and publication across CLI and CMake callers."""
+    with action_lock(build, "installation-staging"):
+        _refresh(payload, identity, build, desktop)
+
+
+def _refresh(payload: Path, identity: Path, build: Path, desktop: str | None = None) -> None:
     """Construct the next stage before replacing a verified, generated previous stage."""
     paths = build_paths(build)
     stage = paths["installation_stage"]
@@ -23,8 +30,7 @@ def refresh(payload: Path, identity: Path, build: Path, desktop: str | None = No
         verify_inventory(stage, receipt)
     work = paths["installation_work"]
     work.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=work) as temporary:
-        candidate = Path(temporary)
+    with public_directory(work, "candidate-") as candidate:
         (candidate / "build-paths.json").write_text(
             json.dumps(
                 {
@@ -37,7 +43,14 @@ def refresh(payload: Path, identity: Path, build: Path, desktop: str | None = No
             ),
             encoding="utf-8",
         )
-        prepare(payload, identity, candidate, desktop)
+        reuse = None
+        if stage.exists():
+            previous = json.loads(receipt.read_text(encoding="utf-8"))
+            # Old private temporary stages migrate by copying once; never carry
+            # their retained Windows DACL into a new public output via hardlinks.
+            if previous.get("staging_generation") == 1:
+                reuse = InstallationReuse(stage, candidate / "stage", previous["files"])
+        prepare(payload, identity, candidate, desktop, copy_file=reuse.copy if reuse else None)
         # Receipts outlive generated staging, including an explicit target clean.
         receipts = paths["installation_receipts"]
         receipts.mkdir(parents=True, exist_ok=True)
@@ -52,20 +65,14 @@ def refresh(payload: Path, identity: Path, build: Path, desktop: str | None = No
                 retained.write_bytes(owned.read_bytes())
         if stage.exists():
             verify_inventory(stage, receipt)
-            shutil.rmtree(stage)
-        if metadata.exists():
-            shutil.rmtree(metadata)
-        stage.parent.mkdir(parents=True, exist_ok=True)
-        metadata.parent.mkdir(parents=True, exist_ok=True)
-        (candidate / "stage").replace(stage)
-        (candidate / "metadata").replace(metadata)
+        publish(stage, metadata, candidate)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--payload", type=Path, required=True)
     parser.add_argument("--identity", type=Path, required=True)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--desktop")
     arguments = parser.parse_args()
     refresh(arguments.payload, arguments.identity, arguments.build, arguments.desktop)

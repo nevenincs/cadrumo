@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _paths(build: Path) -> dict[str, str]:
     paths = {f"installation_{name}": f"installation/{name}" for name in ("stage", "metadata", "work", "receipts")}
     paths.update(generated="generated", packages="packages")
-    build.mkdir()
+    build.mkdir(parents=True)
     (build / "build-paths.json").write_text(json.dumps({"paths": paths}), encoding="utf-8")
     return paths
 
@@ -56,6 +56,71 @@ def test_refresh_preserves_previous_receipt_and_rejects_modified_stage(tmp_path:
     assert (build / "installation/stage/app/cadrumo").read_text(encoding="utf-8") == "user alteration"
 
 
+def test_refresh_links_unchanged_payload_and_keeps_changed_members_private(tmp_path: Path) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    build = tmp_path / "build"
+    _paths(build)
+    refresh(payload, identity_file, build)
+    unchanged = build / "installation/stage/app/docs/user/index.html"
+    previous_identity = unchanged.stat().st_ino
+    changed = build / "installation/stage/app/cadrumo"
+    changed_identity = changed.stat().st_ino
+    _change_payload(payload)
+    refresh(payload, identity_file, build)
+    assert unchanged.stat().st_ino == previous_identity
+    assert changed.stat().st_ino != changed_identity
+    assert changed.read_bytes() == b"changed binary"
+    assert payload.joinpath("docs/user/index.html").stat().st_ino != previous_identity
+
+
+def test_refresh_restores_previous_stage_and_metadata_when_second_publish_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    build = tmp_path / "build"
+    _paths(build)
+    refresh(payload, identity_file, build)
+    stage = build / "installation/stage"
+    metadata = build / "installation/metadata"
+    original_receipt = (metadata / "installation.json").read_bytes()
+    original_payload = (stage / "app/cadrumo").read_bytes()
+    _change_payload(payload)
+    replace = Path.replace
+    rejected = False
+
+    def fail_metadata_once(path: Path, destination: str | Path) -> Path:
+        nonlocal rejected
+        if Path(destination) == metadata and path.parent.name.startswith("candidate-") and not rejected:
+            rejected = True
+            raise OSError("injected second publication failure")
+        return replace(path, destination)
+
+    monkeypatch.setattr(Path, "replace", fail_metadata_once)
+    with pytest.raises(OSError, match="second publication"):
+        refresh(payload, identity_file, build)
+    assert rejected
+    assert (metadata / "installation.json").read_bytes() == original_receipt
+    assert (stage / "app/cadrumo").read_bytes() == original_payload
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="Checks generated Windows publication ACL inheritance")
+def test_refresh_publishes_stage_and_metadata_with_inherited_permissions(tmp_path: Path) -> None:
+    import win32security
+
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    build = tmp_path / "build"
+    _paths(build)
+    refresh(payload, identity_file, build)
+    for path in (build / "installation/stage", build / "installation/metadata"):
+        descriptor = win32security.GetNamedSecurityInfo(
+            str(path), win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION
+        )
+        control, _ = descriptor.GetSecurityDescriptorControl()
+        assert not control & win32security.SE_DACL_PROTECTED
+
+
 def _cmake(source: Path, *arguments: str) -> str:
     cmake = shutil.which("cmake")
     assert cmake is not None
@@ -66,13 +131,53 @@ def _cmake(source: Path, *arguments: str) -> str:
 
 def _configure_distribution(tmp_path: Path, target: str, *, manager: bool = False) -> tuple[Path, Path, Path]:
     payload, identity_file = payload_fixture(tmp_path, target, manager=manager)
-    source = tmp_path / "source"
-    source.mkdir()
-    build = tmp_path / "build"
+    source = tmp_path / "native/cmake/distribution"
+    source.mkdir(parents=True)
+    build = tmp_path / "build/distribution-fixture"
     paths = _paths(build)
     (build / "generated").mkdir()
     shutil.copy2(identity_file, build / "generated/identity.json")
     module = REPO_ROOT / "native/cmake/distribution"
+    # The copied graph has its own real enrollment and cache. Substitute only
+    # the repository path authority in its subprocesses; production admission
+    # still validates presets, source/cache agreement and output containment.
+    for project, names in (
+        (tmp_path, ["fixture-root"]),
+        (tmp_path / "native/desktop", []),
+        (source, ["distribution-fixture"]),
+    ):
+        project.mkdir(parents=True, exist_ok=True)
+        (project / "CMakePresets.json").write_text(
+            json.dumps(
+                {
+                    "version": 6,
+                    "configurePresets": [{"name": name} for name in names],
+                }
+            ),
+            encoding="utf-8",
+        )
+    manifest = build / "build-paths.json"
+    manifest.write_text(json.dumps({"source": source.as_posix(), "paths": paths}), encoding="utf-8")
+    driver = source / "fixture-python.py"
+    driver.write_text(
+        "import runpy, sys\nfrom pathlib import Path\n"
+        f"sys.path.insert(0, {str(REPO_ROOT)!r})\n"
+        "from dev.packaging.native import build_directory\n"
+        f"build_directory.REPO_ROOT = Path({str(tmp_path)!r})\n"
+        "module = sys.argv.pop(1)\nrunpy.run_module(module, run_name='__main__')\n",
+        encoding="utf-8",
+    )
+
+    def project_commands(text: str) -> str:
+        return re.sub(r"-m (dev\.packaging\.native\.\w+)", lambda match: f'"{driver.as_posix()}" {match[1]}', text)
+
+    for helper in ("CachedCommand.cmake", "Cleanup.cmake"):
+        content = (REPO_ROOT / "native/cmake" / helper).read_text(encoding="utf-8")
+        content = content.replace(
+            'get_filename_component(repository "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../.." ABSOLUTE)',
+            f'set(repository "{REPO_ROOT.as_posix()}")',
+        )
+        (source / helper).write_text(project_commands(content), encoding="utf-8")
     text = (module / "CMakeLists.txt").read_text(encoding="utf-8")
     # Keep the real distribution graph; substitute only host/bootstrap admission.
     text = text.replace("include(../Identity.cmake)", "include(FixtureIdentity.cmake)")
@@ -84,15 +189,20 @@ def _configure_distribution(tmp_path: Path, target: str, *, manager: bool = Fals
         text,
     )
     assert "include(../" not in text, "A relative include escaped the fixture's sibling-module resolution"
-    (source / "CMakeLists.txt").write_text(text, encoding="utf-8")
-    shutil.copy2(module / "VerifyInstall.cmake.in", source / "VerifyInstall.cmake.in")
-    shutil.copy2(module / "WindowsMsiGate.cmake.in", source / "WindowsMsiGate.cmake.in")
+    text = text.replace(
+        f'include("{(REPO_ROOT / "native/cmake/CachedCommand.cmake").as_posix()}")', "include(CachedCommand.cmake)"
+    )
+    (source / "CMakeLists.txt").write_text(project_commands(text), encoding="utf-8")
+    for template in ("VerifyInstall.cmake.in", "WindowsMsiGate.cmake.in"):
+        (source / template).write_text(
+            project_commands((module / template).read_text(encoding="utf-8")), encoding="utf-8"
+        )
     bootstrap = cmake_projection(identity(target))
     bootstrap += f'set(CADRUMO_SOURCE_ROOT "{REPO_ROOT.as_posix()}")\n'
     bootstrap += f'set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
     bootstrap += f"set(CADRUMO_TARGET {target})\nadd_custom_target(setup-native-builder)\n"
     bootstrap += f'include("{(REPO_ROOT / "native/cmake/BuildLog.cmake").as_posix()}")\n'
-    bootstrap += f'include("{(REPO_ROOT / "native/cmake/Cleanup.cmake").as_posix()}")\n'
+    bootstrap += "include(Cleanup.cmake)\n"
     bootstrap += 'cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_clean_targets)\n'
     for key, relative in paths.items():
         bootstrap += f'set(CADRUMO_PATH_{key.upper()} "${{CMAKE_BINARY_DIR}}/{relative}")\n'
@@ -136,8 +246,8 @@ def test_distribution_wix_guard_and_authoring_are_in_the_real_graph(tmp_path: Pa
     result = run_command([cmake, "-DCPACK_GENERATOR=WIX", "-P", str(build / "WindowsMsiGate.cmake")], cwd=source)
     if manager:
         assert result.returncode != 0
-        assert "separate version and registration" in result.stdout + result.stderr, result.stdout + result.stderr
-        assert len(list((build / "installation/metadata/wix").glob("*.wxs"))) == 4
+        assert "authenticated release MSI" in result.stdout + result.stderr, result.stdout + result.stderr
+        assert len(list((build / "installation/metadata/wix").glob("*.wxs"))) == 1
         assert not list((build / "packages").glob("*.msi"))
     else:
         assert result.returncode == 0, result.stdout + result.stderr
@@ -156,27 +266,16 @@ def test_cmake_scoped_msi_build_verify_tamper_and_clean(tmp_path: Path) -> None:
     directory = build / "packages/msi"
     receipt = json.loads((directory / "compiled.json").read_text(encoding="utf-8"))
     assert receipt["installable"] is False
-    assert set(receipt["artifacts"]) == {
-        f"{scope}-{role}.msi" for scope in ("user", "machine") for role in ("version", "registration")
-    }
+    assert set(receipt["artifacts"]) == {"application.msi"}
     identity_file = build / "generated/identity.json"
     for name, checksum in receipt["artifacts"].items():
         assert digest(directory / name) == checksum
-    # Compile a real regression: moving removal outside the transaction must fail
-    # the native action-table check even if the WiX decompiler loses scheduling.
-    bad_source = tmp_path / "bad-registration.wxs"
-    bad_source.write_text(
-        (build / "installation/metadata/wix/user-registration.wxs")
-        .read_text(encoding="utf-8")
-        .replace('Schedule="afterInstallExecute"', 'Schedule="afterInstallFinalize"'),
-        encoding="utf-8",
-    )
-    bad_msi = tmp_path / "bad-registration.msi"
-    result = run_command([wix, "build", "-arch", "x64", "-wx", "-o", str(bad_msi), str(bad_source)], cwd=tmp_path)
-    assert result.returncode == 0, result.stdout + result.stderr
-    with pytest.raises(ValueError, match="transactional upgrade order"):
-        verify_upgrade_order(bad_msi, version_product=False)
-    (directory / "user-version.msi").write_bytes(b"replaced artifact")
+    compilation_times = {path.name: path.stat().st_mtime_ns for path in directory.iterdir()}
+    _cmake(source, "--build", str(build), "--target", "msi-verify")
+    assert {path.name: path.stat().st_mtime_ns for path in directory.iterdir()} == compilation_times
+    # A release MSI may never remove another registered release implicitly.
+    verify_upgrade_order(directory / "application.msi", version_product=True)
+    (directory / "application.msi").write_bytes(b"replaced artifact")
     with pytest.raises(ValueError, match="artifact has changed"):
         verify_products(build, identity_file)
     with pytest.raises(ValueError, match="WiX 5 or newer"):
@@ -184,7 +283,7 @@ def test_cmake_scoped_msi_build_verify_tamper_and_clean(tmp_path: Path) -> None:
     assert not (directory / "compiled.json").exists()
     _cmake(source, "--build", str(build), "--target", "clean-msi")
     assert not directory.exists()
-    assert (build / "installation/metadata/wix/user-version.wxs").is_file()
+    assert (build / "installation/metadata/wix/application.wxs").is_file()
     assert (build / "installation/stage").is_dir()
 
 
@@ -261,8 +360,17 @@ def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path, m
     package = f"versions/{identity('windows-x86-64').version}" if manager else "app"
     archive = next((build / "packages").glob("*.zip"))
     original_time = archive.stat().st_mtime_ns
+    staged = build / "installation/stage" / package / "cadrumo"
+    original_stage_time = staged.stat().st_mtime_ns
+    if manager:
+        # MSI owns additional metadata. It must not invalidate either the
+        # installation producer or a ZIP containing only its installation tree.
+        _cmake(source, "--build", str(build), "--target", "msi-author")
     _cmake(source, "--build", str(build), "--target", "zip")
     assert archive.stat().st_mtime_ns == original_time
+    assert staged.stat().st_mtime_ns == original_stage_time
+    if manager:
+        assert (build / "installation/metadata/wix/authoring.json").is_file()
     _change_payload(payload)
     _cmake(source, "--build", str(build), "--target", "zip")
     with zipfile.ZipFile(archive) as zipped:

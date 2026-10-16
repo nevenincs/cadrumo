@@ -127,17 +127,14 @@ def test_desktop_delivery_refuses_incomplete_or_stale_installation_kit(tmp_path:
     )
     services = tmp_path / "services"
     services.mkdir()
-    names = [
-        "runner.exe",
-        *(f"{scope}-{kind}.msi" for scope in ("user", "machine") for kind in ("version", "registration")),
-    ]
+    names = ["runner.exe", "application.msi"]
     artifacts = {}
     for name in names:
         path = services / name
         path.write_bytes(name.encode())
         artifacts[name] = {"path": name, "sha256": digest(path)}
     kit = {
-        "schema": 1,
+        "schema": 2,
         "runner": artifacts.pop("runner.exe"),
         "maintenance": {"desktop_present": True, "manifest_sha256": digest(manifest)},
         "artifacts": {Path(name).stem: artifact for name, artifact in artifacts.items()},
@@ -152,11 +149,11 @@ def test_desktop_delivery_refuses_incomplete_or_stale_installation_kit(tmp_path:
     elif defect == "missing-runner":
         (services / "runner.exe").unlink()
     elif defect == "changed-product":
-        (services / "user-version.msi").write_bytes(b"changed")
+        (services / "application.msi").write_bytes(b"changed")
     elif defect == "stale-package":
         manifest.write_text(manifest.read_text() + "\n", encoding="utf-8")
     else:
-        del kit["artifacts"]["machine-registration"]
+        del kit["artifacts"]["application"]
         descriptor.write_text(json.dumps(kit), encoding="utf-8")
     invalid = run_command(command, cwd=REPO_ROOT)
     assert invalid.returncode != 0, f"Incomplete installation kit was accepted: {defect}"

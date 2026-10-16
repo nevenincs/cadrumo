@@ -78,7 +78,7 @@ cadrumo_build_step(step_comment desktop-frontend-build GROUP desktop
   SUMMARY "build the desktop frontend bundle"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_FRONTEND}")
 add_custom_target(desktop-frontend-build
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" ${desktop_node_path_arguments}
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} ${desktop_node_path_arguments}
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/frontend-build.mjs" "${CADRUMO_NPM_CLI}"
   DEPENDS desktop-frontend-install
   WORKING_DIRECTORY "${desktop_frontend}" COMMENT "${step_comment}" VERBATIM)
@@ -109,7 +109,7 @@ foreach(action IN ITEMS check test)
   cadrumo_build_step(step_comment desktop-frontend-${action} GROUP verification
     SUMMARY "run the frontend's npm ${action} script")
   add_custom_target(desktop-frontend-${action}
-    COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" ${desktop_node_path_arguments}
+    COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} ${desktop_node_path_arguments}
       "${CADRUMO_NODE}" "${CADRUMO_NPM_CLI}" run ${action} ${desktop_frontend_script_arguments}
     WORKING_DIRECTORY "${desktop_frontend}" COMMENT "${step_comment}" VERBATIM)
   add_dependencies(desktop-frontend-${action} desktop-frontend-install)
@@ -174,13 +174,13 @@ include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Docs.cmake")
 cadrumo_build_step(step_comment desktop-paths-test GROUP verification
   SUMMARY "test the desktop build path resolution")
 add_custom_target(desktop-paths-test
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/build-paths.test.mjs"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment desktop-configuration-test GROUP verification
   SUMMARY "test the desktop build configuration selection")
 add_custom_target(desktop-configuration-test
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/configuration.test.mjs"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment desktop-host-build GROUP desktop
@@ -188,7 +188,7 @@ cadrumo_build_step(step_comment desktop-host-build GROUP desktop
   OUTPUTS "${CADRUMO_DESKTOP_HOST_EXECUTABLE}")
 add_custom_target(desktop-host-build
   COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
-    "${desktop_environment}" "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
+    ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_HOST_EXECUTABLE=${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs"
@@ -204,7 +204,7 @@ cadrumo_build_step(step_comment desktop-host-prepare GROUP desktop
   SUMMARY "prepare the desktop host project and its icons"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_HOST}" "${CADRUMO_PATH_DESKTOP_ICONS}")
 add_custom_target(desktop-host-prepare
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}" ${desktop_node_path_arguments}
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" prepare
   DEPENDS desktop-frontend-install
@@ -256,7 +256,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
   add_custom_target(desktop-host-${action}
     ${host_fixture_check}
     COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
-      "${desktop_environment}" "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
+      ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
@@ -272,7 +272,7 @@ endforeach()
 cadrumo_build_step(step_comment desktop-run GROUP desktop
   SUMMARY "run the desktop application against the package root")
 add_custom_target(desktop-run
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" run
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" VERBATIM)
@@ -280,7 +280,7 @@ add_custom_target(desktop-run
 cadrumo_build_step(step_comment desktop-headless-test GROUP verification
   SUMMARY "start the built desktop host headless against the bundle")
 add_custom_target(desktop-headless-test
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/headless.test.mjs"
@@ -295,7 +295,7 @@ cadrumo_build_step(step_comment desktop-packaged-host GROUP verification
   SUMMARY "compile the remote-debugging desktop host for packaged end-to-end tests (never shipped)"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_TESTING}")
 add_custom_target(desktop-packaged-host
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
   DEPENDS desktop-frontend-build
@@ -306,7 +306,7 @@ endif()
 cadrumo_build_step(step_comment desktop-packaged-test GROUP verification
   SUMMARY "drive the packaged desktop window end to end (needs an interactive desktop)")
 add_custom_target(desktop-packaged-test
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
     "CADRUMO_STORAGE_ROOT_VARIABLE=${CADRUMO_STORAGE_ROOT_VARIABLE}"
@@ -316,7 +316,7 @@ add_custom_target(desktop-packaged-test
 cadrumo_build_step(step_comment desktop-startup-test GROUP verification
   SUMMARY "verify loading, runtime readiness, workspace handoff and startup cancellation")
 add_custom_target(desktop-startup-test
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/startup.test.mjs"
@@ -326,7 +326,7 @@ add_custom_target(desktop-startup-test
 cadrumo_build_step(step_comment desktop-packaged-harness-test GROUP verification
   SUMMARY "test the packaged end-to-end harness against stand-in pages")
 add_custom_target(desktop-packaged-harness-test
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged-harness.test.mjs"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 

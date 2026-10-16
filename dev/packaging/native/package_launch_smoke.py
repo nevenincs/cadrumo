@@ -314,14 +314,14 @@ def verify_installation_kit(package: Path) -> None:
     kit = json.loads(descriptor.read_text(encoding="utf-8"))
     maintenance = kit["maintenance"]
     if (
-        kit["schema"] != 1
+        kit["schema"] != 2
         or not maintenance["desktop_present"]
         or maintenance["manifest_sha256"] != digest(manifest_path)
     ):
         raise AssertionError("Desktop installation kit does not match this application package")
-    expected = {f"{scope}-{kind}" for scope in ("user", "machine") for kind in ("version", "registration")}
+    expected = {"application"}
     if set(kit["artifacts"]) != expected:
-        raise AssertionError("Desktop installation kit lacks its scoped products")
+        raise AssertionError("Desktop installation kit lacks its scope-aware release product")
     for artifact in (kit["runner"], *kit["artifacts"].values()):
         path = member(directory, artifact["path"])
         _require_public_kit_file(path)

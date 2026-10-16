@@ -83,17 +83,20 @@ fn read_kit(path: &Path) -> Result<(Kit, FileCustody), Failure> {
         return Err(Failure::KitRefused);
     }
     let kit: Kit = serde_json::from_slice(&bytes).map_err(|_| Failure::KitRefused)?;
-    if kit.schema != 1
-        || kit.artifacts.len() != 4
+    let release =
+        kit.schema == 2 && kit.artifacts.len() == 1 && kit.artifacts.contains_key("application");
+    if (!release && kit.schema != 1)
+        || (!release && kit.artifacts.len() != 4)
         || !kit.maintenance.desktop_present
-        || [
-            "user-version",
-            "user-registration",
-            "machine-version",
-            "machine-registration",
-        ]
-        .iter()
-        .any(|name| !kit.artifacts.contains_key(*name))
+        || (!release
+            && [
+                "user-version",
+                "user-registration",
+                "machine-version",
+                "machine-registration",
+            ]
+            .iter()
+            .any(|name| !kit.artifacts.contains_key(*name)))
     {
         return Err(Failure::KitRefused);
     }
@@ -196,7 +199,11 @@ fn prepare_plan(
     let product = |role: &str| -> Result<Artifact, Failure> {
         let value = kit
             .artifacts
-            .get(&format!("{name}-{role}"))
+            .get(&if kit.schema == 2 {
+                "application".into()
+            } else {
+                format!("{name}-{role}")
+            })
             .ok_or(Failure::KitRefused)?;
         Ok(Artifact {
             path: value.path.under(directory),
@@ -205,7 +212,7 @@ fn prepare_plan(
         })
     };
     let plan = Plan {
-        schema: 1,
+        schema: kit.schema,
         scope,
         prefix,
         version: kit.maintenance.version,
@@ -252,16 +259,22 @@ pub fn install<G>(
     let (admission, _version_custody) =
         artifact(&plan.version_product, &plan, "version", &runner_digest)
             .map_err(|_| Failure::KitRefused)?;
-    let (registration, _registration_custody) = artifact(
-        &plan.registration_product,
-        &plan,
-        "registration",
-        &runner_digest,
-    )
-    .map_err(|_| Failure::KitRefused)?;
+    let (registration, _registration_custody) = if plan.schema == 2 {
+        (admission.clone(), None)
+    } else {
+        let (registration, custody) = artifact(
+            &plan.registration_product,
+            &plan,
+            "registration",
+            &runner_digest,
+        )
+        .map_err(|_| Failure::KitRefused)?;
+        (registration, Some(custody))
+    };
     if admission.permitted_families != registration.permitted_families
         || admission.conflicting_families != registration.conflicting_families
-        || plan.version_product.product_code == plan.registration_product.product_code
+        || ((plan.version_product.product_code == plan.registration_product.product_code)
+            != (plan.schema == 2))
     {
         return Err(Failure::KitRefused);
     }
@@ -517,14 +530,42 @@ mod tests {
             let digest = crate::registration::file_digest(&mut runner.file).unwrap();
             let (version, _version_custody) =
                 artifact(&plan.version_product, &plan, "version", &digest).unwrap();
-            let (registration, _registration_custody) =
-                artifact(&plan.registration_product, &plan, "registration", &digest).unwrap();
+            let (registration, _registration_custody) = if plan.schema == 2 {
+                (version.clone(), None)
+            } else {
+                let (request, custody) =
+                    artifact(&plan.registration_product, &plan, "registration", &digest).unwrap();
+                (request, Some(custody))
+            };
             assert_eq!(version.permitted_families, registration.permitted_families);
             assert!(!crate::windows::standalone_gate_present(&plan.version_product.path).unwrap());
-            assert!(
-                !crate::windows::standalone_gate_present(&plan.registration_product.path).unwrap()
-            );
-            assert!(artifact(&plan.registration_product, &plan, "version", &digest).is_err());
+            if plan.schema == 2 {
+                let definition =
+                    crate::windows::product_definition_for_scope(&plan.version_product.path, scope)
+                        .unwrap();
+                let metadata = definition.owner.unwrap();
+                let callback = crate::owner::Callback {
+                    schema: 2,
+                    identity: metadata.identity,
+                    publication: metadata.publication,
+                    claim: crate::owner::Claim {
+                        product_code: definition.code,
+                        scope,
+                        prefix: plan.prefix.clone(),
+                        operation: crate::owner::Operation::Install,
+                        role: crate::owner::Role::Application,
+                    },
+                };
+                assert!(
+                    crate::owner::Callback::parse(&serde_json::to_vec(&callback).unwrap()).is_err()
+                );
+            } else {
+                assert!(
+                    !crate::windows::standalone_gate_present(&plan.registration_product.path)
+                        .unwrap()
+                );
+                assert!(artifact(&plan.registration_product, &plan, "version", &digest).is_err());
+            }
             let changed_runner = Sha256Digest::new("0".repeat(64)).unwrap();
             assert!(artifact(&plan.version_product, &plan, "version", &changed_runner).is_err());
             let request = TemporaryPlan::new(&plan, root.path()).unwrap();

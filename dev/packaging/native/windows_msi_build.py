@@ -3,23 +3,28 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
+from contextlib import suppress
 from pathlib import Path, PureWindowsPath
-from tempfile import TemporaryDirectory
 from uuid import UUID, uuid4
 from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
 from ..command_execution import run_command
+from .action_cache import action_lock
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .installation import member, verify_inventory
-from .windows_msi import MAINTENANCE_GATE, OWNER_GATE, WIX_NAMESPACE, author, verify_destination_lengths
+from .installation_reuse import public_directory
+from .windows_msi import MAINTENANCE_GATE, WIX_NAMESPACE, author, verify_destination_lengths
 from .windows_msi_database import verify_admission_order, verify_feature_ownership, verify_upgrade_order
 from .windows_msi_identity import InstallationScope
+from .windows_msi_single import OWNER_GATE
 
 _NS = {"w": WIX_NAMESPACE}
 
@@ -58,6 +63,13 @@ def verify_database(source: Path, database: Path) -> None:
             raise ValueError("Version MSI acquired unexpected registration resources")
     elif observed_registration is None or registration.attrib.get("Value") != observed_registration.attrib.get("Value"):
         raise ValueError("MSI database immutable registration resources differ from its source")
+    for scope in ("User", "Machine"):
+        for prefix in ("CadrumoRegistration", "CadrumoAdmission"):
+            name = prefix + scope
+            expected = original.find(f"w:Property[@Id='{name}']", _NS)
+            actual = package.find(f"w:Property[@Id='{name}']", _NS)
+            if expected is not None and (actual is None or expected.attrib.get("Value") != actual.attrib.get("Value")):
+                raise ValueError("MSI database altered scope-specific registration ownership or admission")
     for element, defaults in (
         (
             "ServiceInstall",
@@ -109,14 +121,28 @@ def verify_database(source: Path, database: Path) -> None:
         observed_owner = package.find("w:Property[@Id='CadrumoOwner']", _NS)
         if observed_owner is None or observed_owner.attrib.get("Value") != owner.attrib["Value"]:
             raise ValueError("MSI database lost immutable native owner authentication metadata")
-        for name in ("CadrumoPrepareOwner", "CadrumoAuthenticateOwner"):
+        combined = original.find("w:Property[@Id='CadrumoAdmissionUser']", _NS) is not None
+        names = ("CadrumoPrepareOwner",) if combined else ("CadrumoPrepareOwner", "CadrumoAuthenticateOwner")
+        for name in names:
             scheduled = tree.find(f".//w:InstallExecuteSequence/w:Custom[@Action='{name}']", _NS)
             if scheduled is None or scheduled.attrib.get("Condition", ""):
                 raise ValueError("MSI database lost unconditional native owner authentication")
-    if admission is not None:
-        observed = package.find("w:Property[@Id='CadrumoAdmission']", _NS)
-        if observed is None or observed.attrib.get("Value") != admission.attrib["Value"]:
-            raise ValueError("MSI database lost its immutable scope admission data")
+        if combined:
+            for scope in ("User", "Machine"):
+                name = "CadrumoAuthenticateOwner" + scope
+                expected = original.find(f".//w:InstallExecuteSequence/w:Custom[@Action='{name}']", _NS)
+                actual = tree.find(f".//w:InstallExecuteSequence/w:Custom[@Action='{name}']", _NS)
+                if (
+                    expected is None
+                    or actual is None
+                    or actual.attrib.get("Condition", "") != expected.attrib.get("Condition", "")
+                ):
+                    raise ValueError("MSI database lost scope-bound native owner authentication")
+    if admission is not None or original.find("w:Property[@Id='CadrumoAdmissionUser']", _NS) is not None:
+        if admission is not None:
+            observed = package.find("w:Property[@Id='CadrumoAdmission']", _NS)
+            if observed is None or observed.attrib.get("Value") != admission.attrib["Value"]:
+                raise ValueError("MSI database lost its immutable scope admission data")
         for action in original.findall("w:CustomAction", _NS):
             actual = package.find(f"w:CustomAction[@Id='{action.attrib['Id']}']", _NS)
             if actual is None:
@@ -135,23 +161,62 @@ def compile_products(
     adapter: Path | None = None,
     runner: Path | None = None,
 ) -> None:
-    """Publish four gated products and a hash receipt only after all databases pass."""
+    """Serialize the one MSI producer, including direct admitted CLI invocations."""
+    with action_lock(build, "msi-products"):
+        _compile_products(build, identity, wix, desktop, adapter, runner)
+
+
+def _compile_products(
+    build: Path,
+    identity: Path,
+    wix: Path,
+    desktop: str | None,
+    adapter: Path | None,
+    runner: Path | None,
+) -> None:
+    """Compile the single release MSI and publish its receipt after database verification."""
     wix = wix.resolve(strict=True)
     sources = author(build, identity, desktop, adapter, runner)
     paths = build_paths(build)
     directory = member(paths["packages"], "msi")
     directory.mkdir(parents=True, exist_ok=True)
     receipt = member(directory, "compiled.json")
-    # A failed retry must not leave an earlier receipt presenting this run as successful.
-    receipt.unlink(missing_ok=True)
     version = _run(wix, ["--version"], build)
     if not version.split(".", 1)[0].isdigit() or int(version.split(".", 1)[0]) < 5:
+        receipt.unlink(missing_ok=True)
         raise ValueError("Scoped MSI products require WiX 5 or newer")
     inputs = {name: digest(path) for name, path in sources.items()}
     authoring = member(paths["installation_metadata"], "wix/authoring.json")
-    authoring_hash = digest(authoring)
-    with TemporaryDirectory(prefix="compile-", dir=directory) as temporary:
-        work = Path(temporary)
+    authoring_hash = _authoring_identity(authoring)
+    compiler = {"path": str(wix), "version": version, "sha256": digest(wix)}
+    previous = {}
+    try:
+        previous = json.loads(receipt.read_text(encoding="utf-8"))
+        if (
+            previous["compiler"] == compiler
+            and previous["sources"] == inputs
+            and previous["authoring_sha256"] == authoring_hash
+        ):
+            _verify_compilation(directory, sources, authoring)
+            return
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    if not isinstance(previous, dict):
+        previous = {}
+    retirement = member(directory, "retiring.json")
+    retired = {}
+    with suppress(OSError, ValueError):
+        retired = json.loads(retirement.read_text(encoding="utf-8"))
+    legacy = {f"{scope}-{role}.msi" for scope in ("user", "machine") for role in ("version", "registration")}
+    retired.update({name: checksum for name, checksum in previous.get("artifacts", {}).items() if name in legacy})
+    if retired:
+        retirement.write_text(json.dumps(retired, indent=2) + "\n", encoding="utf-8")
+    # A failed retry must not leave an earlier receipt presenting this run as successful.
+    receipt.unlink(missing_ok=True)
+    stable_inputs = [identity, member(paths["installation_metadata"], "installation.json")]
+    stable_inputs.extend(path for path in (adapter, runner) if path is not None)
+    before = {str(path): digest(path) for path in stable_inputs}
+    with public_directory(directory, "compile-") as work:
         artifacts = {}
         for name, source in sources.items():
             artifact = work / Path(name).with_suffix(".msi").name
@@ -160,19 +225,32 @@ def compile_products(
             _run(wix, ["msi", "decompile", "-o", str(database), str(artifact)], work)
             verify_database(source, database)
             verify_feature_ownership(artifact)
-            verify_upgrade_order(artifact, version_product=source.stem.endswith("-version"))
+            verify_upgrade_order(
+                artifact, version_product=source.stem.endswith("-version") or source.stem == "application"
+            )
             if adapter is not None:
                 verify_admission_order(artifact, owner_required=runner is not None)
             artifacts[artifact.name] = digest(artifact)
-        # Re-admit the payload after compilation, detecting a concurrently changed stage.
-        author(build, identity, desktop, adapter, runner)
-        if inputs != {name: digest(path) for name, path in sources.items()} or digest(authoring) != authoring_hash:
+        # Re-admit bytes without regenerating a second complete WiX document.
+        verify_inventory(paths["installation_stage"], member(paths["installation_metadata"], "installation.json"))
+        if (
+            before != {str(path): digest(path) for path in stable_inputs}
+            or inputs != {name: digest(path) for name, path in sources.items()}
+            or _authoring_identity(authoring) != authoring_hash
+        ):
             raise ValueError("MSI inputs changed during compilation")
         for name in artifacts:
             os.replace(work / name, member(directory, name))
+        _retire(directory, retired, legacy)
+        authored = json.loads(authoring.read_text(encoding="utf-8"))
+        _retire(
+            authoring.parent,
+            authored.get("retired_sources", {}),
+            {Path(name).with_suffix(".wxs").name for name in legacy},
+        )
         document = {
             "installable": False,
-            "compiler": {"path": str(wix), "version": version},
+            "compiler": compiler,
             "authoring_sha256": authoring_hash,
             "sources": inputs,
             "artifacts": artifacts,
@@ -180,6 +258,30 @@ def compile_products(
         pending = work / "compiled.json"
         pending.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
         os.replace(pending, receipt)
+        retirement.unlink(missing_ok=True)
+
+
+def _retire(directory: Path, recorded: dict[str, str], permitted: set[str]) -> None:
+    """Remove only unchanged outputs whose previous producer recorded ownership."""
+    paths = []
+    for name, checksum in recorded.items():
+        if name not in permitted:
+            raise ValueError("Previous MSI receipt contains an unexpected owned output")
+        path = member(directory, name)
+        if path.exists():
+            if digest(path) != checksum:
+                raise ValueError(f"Previous MSI output changed; refusing to remove: {name}")
+            paths.append(path)
+    for path in paths:
+        path.unlink()
+
+
+def _authoring_identity(path: Path) -> str:
+    """Bind emitted ownership, without rebuilding MSI for generation-cache bookkeeping."""
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document.pop("input_identity", None)
+    document.pop("retired_sources", None)
+    return hashlib.sha256(json.dumps(document, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def verify_products(
@@ -189,13 +291,18 @@ def verify_products(
     sources = author(build, identity, desktop, adapter, runner)
     paths = build_paths(build)
     directory = member(paths["packages"], "msi")
+    _verify_compilation(directory, sources, member(paths["installation_metadata"], "wix/authoring.json"))
+
+
+def _verify_compilation(directory: Path, sources: dict[str, Path], authoring: Path) -> None:
+    """Validate one publication against already admitted authoring without regenerating it."""
     receipt = json.loads(member(directory, "compiled.json").read_text(encoding="utf-8"))
     expected = {Path(name).with_suffix(".msi").name for name in sources}
     if receipt["installable"] is not False or set(receipt["artifacts"]) != expected:
         raise ValueError("MSI compilation receipt has invalid ownership or installation state")
     if receipt["sources"] != {name: digest(path) for name, path in sources.items()}:
         raise ValueError("MSI compilation receipt has stale sources")
-    if receipt["authoring_sha256"] != digest(member(paths["installation_metadata"], "wix/authoring.json")):
+    if receipt["authoring_sha256"] != _authoring_identity(authoring):
         raise ValueError("MSI compilation receipt has stale payload identity")
     for name, checksum in receipt["artifacts"].items():
         if digest(member(directory, name)) != checksum:
@@ -225,9 +332,9 @@ def maintenance_plan(
     compilation = json.loads(member(paths["packages"], "msi/compiled.json").read_text(encoding="utf-8"))
     source = authoring["maintenance"]
     document = {key: source[key] for key in ("version", "manifest_sha256", "desktop_present", "contract")}
-    document.update({"schema": 1, "scope": scope, "prefix": str(prefix)})
+    document.update({"schema": 2, "scope": scope, "prefix": str(prefix)})
     for role in ("version", "registration"):
-        name = f"{scope}-{role}"
+        name = "application"
         document[f"{role}_product"] = {
             "path": str(member(paths["packages"], f"msi/{name}.msi")),
             "sha256": compilation["artifacts"][f"{name}.msi"],
@@ -270,7 +377,7 @@ def bootstrap_kit(
         for name, code in source["products"].items()
     }
     document = {
-        "schema": 1,
+        "schema": 2,
         "runner": {"path": runner.name, "sha256": authored["runner_sha256"]},
         "maintenance": {key: source[key] for key in ("version", "manifest_sha256", "desktop_present", "contract")},
         "artifacts": artifacts,
@@ -291,25 +398,63 @@ def _deliver_kit(directory: Path, descriptor: Path, sources: dict[str, tuple[Pat
     # These public installation files must inherit their destination's permissions.
     work = member(directory, f"kit-{uuid4().hex}")
     work.mkdir(mode=0o755)
+    retired = {}
+    try:
+        previous = json.loads(descriptor.read_text(encoding="utf-8"))
+        legacy = {f"{scope}-{role}.msi" for scope in ("user", "machine") for role in ("version", "registration")}
+        retired = {
+            artifact["path"]: artifact["sha256"]
+            for artifact in previous.get("artifacts", {}).values()
+            if artifact.get("path") in legacy and artifact["path"] not in sources
+        }
+    except (OSError, ValueError, TypeError, AttributeError, KeyError):
+        pass
     try:
         for name, (original, checksum) in sources.items():
             if digest(original) != checksum:
                 raise ValueError("Installation kit source changed during delivery")
+            destination = member(directory, name)
+            if destination.is_file() and digest(destination) == checksum and _public_permissions(destination):
+                continue
             pending = member(work, name)
             shutil.copyfile(original, pending)
             if digest(pending) != checksum:
                 raise ValueError("Installation kit copy differs from its verified source")
-            destination = member(directory, name)
-            # Replace identical bytes too: an earlier publication may have retained
-            # the private staging DACL, which copying into this directory repairs.
+            # Identical bytes with private or explicit ACLs are replaced too.
             os.replace(pending, destination)
+        _retire(directory, retired, set(retired))
         # Publish the descriptor last; incomplete or mixed copies cannot pass admission.
-        pending_descriptor = member(work, descriptor.name)
-        pending_descriptor.write_text(document, encoding="utf-8")
-        os.replace(pending_descriptor, descriptor)
+        if not (
+            descriptor.is_file()
+            and descriptor.read_text(encoding="utf-8") == document
+            and _public_permissions(descriptor)
+        ):
+            pending_descriptor = member(work, descriptor.name)
+            pending_descriptor.write_text(document, encoding="utf-8")
+            os.replace(pending_descriptor, descriptor)
     finally:
         shutil.rmtree(work)
     return descriptor
+
+
+def _public_permissions(path: Path) -> bool:
+    """Skip publication copies only for destination-inherited public file permissions."""
+    if os.name != "nt":
+        return True
+    import win32security
+
+    security = win32security.GetNamedSecurityInfo(
+        str(path),
+        win32security.SE_FILE_OBJECT,
+        win32security.DACL_SECURITY_INFORMATION,
+    )
+    control, _ = security.GetSecurityDescriptorControl()
+    acl = security.GetSecurityDescriptorDacl()
+    return (
+        not control & win32security.SE_DACL_PROTECTED
+        and acl is not None
+        and all(acl.GetAce(index)[0][1] & win32security.INHERITED_ACE for index in range(acl.GetAceCount()))
+    )
 
 
 def main() -> None:
@@ -319,7 +464,7 @@ def main() -> None:
         "command",
         choices=("build", "verify", "kit", "plan", "install", "remove-version", "unregister"),
     )
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--identity", type=Path, required=True)
     parser.add_argument("--desktop")
     parser.add_argument("--adapter", type=Path)

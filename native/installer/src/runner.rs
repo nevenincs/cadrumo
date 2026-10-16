@@ -120,7 +120,11 @@ fn read_plan(path: &Path) -> Result<Plan, Error> {
     }
     let plan: Plan = serde_json::from_slice(&bytes)?;
     version(&plan.version)?;
-    if plan.schema != 1
+    if !matches!(plan.schema, 1 | 2)
+        || (plan.schema == 2
+            && (plan.version_product.path != plan.registration_product.path
+                || plan.version_product.sha256 != plan.registration_product.sha256
+                || plan.version_product.product_code != plan.registration_product.product_code))
         || plan.contract.layout.platform != "windows-x64"
         || plan.contract.layout.installation.publication.is_none()
         || !plan.prefix.is_absolute()
@@ -190,7 +194,18 @@ fn existing_native_registration(
                 "native family belongs to another prefix or context".into(),
             ));
         }
-        if family == admission.permitted_families[1] && registration.replace(owner).is_some() {
+        let owner = if plan.schema == 2 {
+            let owner = owner.with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Registration,
+            );
+            if MsiInventory.locate(&owner)?.is_none() {
+                continue;
+            }
+            owner
+        } else {
+            owner
+        };
+        if family == admission.family(1) && registration.replace(owner).is_some() {
             return Err(Error::Integrity(
                 "multiple native registration owners".into(),
             ));
@@ -232,22 +247,30 @@ fn previous_registration(
     let anchor = snapshot
         .manager_anchor()
         .ok_or_else(|| Error::Integrity("registration has no manager anchor".into()))?;
+    if plan.schema == 2 && version(&plan.version)? < version(anchor)? {
+        return Err(Error::Incompatible(
+            "shared registration cannot be downgraded".into(),
+        ));
+    }
     let product = snapshot
         .versions()
         .find(|(release, _)| *release == anchor)
         .map(|(_, product)| product)
         .ok_or_else(|| Error::Integrity("registration anchor has no product".into()))?;
-    if definition.family != admission.permitted_families[1]
+    if definition.family != admission.family(1)
         || definition.version != anchor
         || definition.ownership.version != anchor
-        || definition.ownership.role != "registration"
-        || metadata.role != crate::owner::Role::Registration
+        || definition.ownership.role
+            != if plan.schema == 2 {
+                "application"
+            } else {
+                "registration"
+            }
         || definition.ownership.manifest_sha256 != product.manifest_sha256
         || definition.ownership.application_id != plan.contract.installation_identity.application_id
         || definition.ownership.channel != plan.contract.installation_identity.channel
         || definition.ownership.platform != plan.contract.layout.platform
-        || metadata.schema != 2
-        || metadata.scope != plan.scope
+        || !metadata.admits_role(plan.scope, crate::owner::Role::Registration)
         || metadata.product_code != definition.code
         || metadata.identity.application_id != definition.ownership.application_id
         || metadata.identity.channel != definition.ownership.channel
@@ -345,7 +368,8 @@ fn artifact(
     if Sha256Digest::new(format!("{:x}", digest.finalize()))? != artifact.sha256 {
         return Err(Error::Integrity("native MSI artifact hash changed".into()));
     }
-    let definition = windows::product_definition(&artifact.path).map_err(native_error)?;
+    let definition =
+        windows::product_definition_for_scope(&artifact.path, plan.scope).map_err(native_error)?;
     let family_index = match role {
         "version" => 0,
         "registration" => 1,
@@ -355,10 +379,16 @@ fn artifact(
         .owner
         .as_ref()
         .ok_or_else(|| Error::Integrity("MSI has no authenticated native owner".into()))?;
-    if owner.schema != 2
-        || owner.scope != plan.scope
+    let native_role = if role == "version" {
+        crate::owner::Role::Version
+    } else {
+        crate::owner::Role::Registration
+    };
+    if !owner.admits_role(plan.scope, native_role)
+        || (plan.schema == 2
+            && (!owner.admits_role(plan.scope, crate::owner::Role::Version)
+                || !owner.admits_role(plan.scope, crate::owner::Role::Registration)))
         || owner.product_code != definition.code
-        || owner.role.as_str() != role
         || &owner.runner_sha256 != runner
         || Some(&owner.publication) != plan.contract.layout.installation.publication.as_ref()
         || owner.identity.application_id != plan.contract.installation_identity.application_id
@@ -375,15 +405,20 @@ fn artifact(
         || definition.admission.scope != plan.scope
         || definition.ownership
             != (windows::PackageOwnership {
-                schema: 1,
+                schema: if plan.schema == 2 { 2 } else { 1 },
                 application_id: plan.contract.installation_identity.application_id.clone(),
                 channel: plan.contract.installation_identity.channel.clone(),
                 platform: plan.contract.layout.platform.clone(),
                 version: plan.version.clone(),
-                role: role.into(),
+                role: if plan.schema == 2 {
+                    "application"
+                } else {
+                    role
+                }
+                .into(),
                 manifest_sha256: plan.manifest_sha256.clone(),
             })
-        || definition.family != definition.admission.permitted_families[family_index]
+        || definition.family != definition.admission.family(family_index)
     {
         return Err(Error::Integrity(
             "native MSI identity differs from maintenance plan".into(),
@@ -407,26 +442,40 @@ pub fn install(path: &Path) -> MaintenanceResult {
     let prepared = (|| -> Result<_, Error> {
         let runner = runner_digest()?;
         let (admission, version_file) = artifact(&plan.version_product, &plan, "version", &runner)?;
-        let (registration, registration_file) =
-            artifact(&plan.registration_product, &plan, "registration", &runner)?;
+        let (registration, registration_file) = if plan.schema == 2 {
+            (admission.clone(), None)
+        } else {
+            let (registration, custody) =
+                artifact(&plan.registration_product, &plan, "registration", &runner)?;
+            (registration, Some(custody))
+        };
         if admission.permitted_families != registration.permitted_families
             || admission.conflicting_families != registration.conflicting_families
-            || plan.version_product.product_code == plan.registration_product.product_code
+            || ((plan.version_product.product_code == plan.registration_product.product_code)
+                != (plan.schema == 2))
         {
             return Err(Error::Integrity(
                 "MSI roles have inconsistent ownership".into(),
             ));
         }
-        let owner = NativeOwner::new(
+        let mut owner = NativeOwner::new(
             plan.version_product.product_code.clone(),
             context.clone(),
             plan.prefix.clone(),
         )?;
-        let registration_owner = NativeOwner::new(
+        let mut registration_owner = NativeOwner::new(
             plan.registration_product.product_code.clone(),
             context,
             plan.prefix.clone(),
         )?;
+        if plan.schema == 2 {
+            owner = owner.with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Version,
+            );
+            registration_owner = registration_owner.with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Registration,
+            );
+        }
         let publication = plan
             .contract
             .layout
@@ -457,13 +506,17 @@ pub fn install(path: &Path) -> MaintenanceResult {
             Ok(value) => value,
             Err(_) => return report(Outcome::Refused, "artifact_or_owner_refused"),
         };
-    for (artifact, custody) in [
-        (&plan.version_product, &_version_file),
-        (&plan.registration_product, &_registration_file),
-    ] {
-        if let Err(refusal) =
-            windows::verify_installation_destinations(&artifact.path, &plan.prefix, custody)
-        {
+    let mut admitted_artifacts = vec![(&plan.version_product, &_version_file)];
+    if let Some(custody) = &_registration_file {
+        admitted_artifacts.push((&plan.registration_product, custody));
+    }
+    for (artifact, custody) in admitted_artifacts {
+        if let Err(refusal) = windows::verify_installation_destinations_for_scope(
+            &artifact.path,
+            &plan.prefix,
+            custody,
+            plan.scope,
+        ) {
             return report(
                 Outcome::Refused,
                 match refusal {
@@ -616,6 +669,22 @@ pub fn install(path: &Path) -> MaintenanceResult {
             claims.push(claim.clone());
         }
         let _active = broker.activate_claims(claims)?;
+        if plan.schema == 2
+            && role == crate::owner::Role::Registration
+            && let Some((claim, _custody)) = &previous
+            && claim.product_code != artifact.product_code.to_ascii_uppercase()
+        {
+            let previous_owner = NativeOwner::new(
+                claim.product_code.clone(),
+                owner.context().clone(),
+                plan.prefix.clone(),
+            )
+            .map_err(|_| crate::admission::Refusal::InvalidRequest)?
+            .with_feature(
+                cadrumo_application::installation::maintenance::NativeFeature::Registration,
+            );
+            transaction.remove(&previous_owner, broker.endpoint())?;
+        }
         let product_owner = if role == crate::owner::Role::Version {
             &owner
         } else {

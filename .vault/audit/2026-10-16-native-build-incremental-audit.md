@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:e96d87f0640810230806dca62145fc6d6151c8f469bc7048ca3dd00825442e94'
+body_hash: 'sha256:7ea3ff3ca8b95a424bd2e0a60712adc3f111122967714b964b0522effc88adf8'
 related:
   - "[[2026-10-16-native-build-incremental-plan]]"
 ---
@@ -45,6 +45,16 @@ Resolved: retained snapshot roots, ancestors and members reject symlinks/junctio
 
 PENDING: S02/S03 focused producer, rollback, authority, bytecode, native platform, Node and content-currency checks pass, along with changed-file style/type checks. The first configured Python product build passes and installed only one changed cohort wheel; source edits during that build correctly prevent a reusable checkout identity. Parent must finish current-source Debug/Release app-payload builds and unchanged-repeat verification. Independent installer review and rebuilt-adapter tests are active; genuine disposable installed lifecycle acceptance is not established by source/unit/compiler evidence.
 
+### public-candidate-acl | medium | Private temporary-directory ACL could survive application publication
+
+Resolved: assembly candidates use collision-resistant UUID names and normal mkdir with mode0755, preserving inherited stage access rules instead of Python3.13 Windows mkdtemp's protected private DACL. The final13 transaction tests pass after this change, and a real published test directory reports AreAccessRulesProtected=False. The installer reviewer routed the equivalent installation candidate concern to its owner.
+
 ## Recommendations
+
+### Installer integration review, S04
+
+Independent review traced single-artifact authoring, feature-qualified native ownership, scope authentication, transaction rollback and services-kit admission together. Resolved findings include machine registration incorrectly retaining user startup, duplicate admission/hash passes, overlapping metadata output ownership, protected candidate ACL inheritance, and a staged CLI regression referring to an unstaged verifier option. The regression now invokes the staged guarded MSI CLI; all14 build-directory tests pass. New helper imports and schema2 kit consumers are present in the staged change. No confirmed high source finding remains.
+
+Evidence: Debug/Release rust_installer builds pass; installer.rust and application.rust CTest pass2/2; focused Python checks pass156 with2 skips; the actual rebuilt Release adapter/runner admission fixture passes; real WiX fixtures compile once initially and zero times unchanged. Six desktop-path tests pass through the corrected CMake environment argument expansion. Genuine disposable Windows installation, upgrade, rollback and removal acceptance remains unrun. Full application-payload builds pass for Debug and Release; full-payload MSI publication and unchanged integration repeats remain S05 work.
 
 Retain the corrected content/membership and ownership refusal tests. Close S04 only after one actual compilation/zero unchanged evidence and native owner/admission regression checks pass. Append final build/no-op/package verification evidence before declaring the plan complete. A prior platform-specific release acceptance gate remains explicit when the required disposable host is unavailable.

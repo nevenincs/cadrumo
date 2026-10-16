@@ -19,9 +19,9 @@ pub struct Request {
     pub schema: u32,
     pub scope: Scope,
     /// Both immutable-version and stable-registration families in this scope.
-    pub permitted_families: [String; 2],
+    pub permitted_families: Vec<String>,
     /// Opposite-scope version/registration and the unreleased legacy combined family.
-    pub conflicting_families: [String; 3],
+    pub conflicting_families: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -80,12 +80,18 @@ pub fn canonical_guid(value: &str) -> Result<String, Refusal> {
 }
 
 impl Request {
+    pub fn family(&self, role_index: usize) -> &str {
+        &self.permitted_families[if self.schema == 2 { 0 } else { role_index }]
+    }
     pub fn parse(value: &str) -> Result<Self, Refusal> {
         if value.len() > MAX_DATA_BYTES || value.contains('\0') {
             return Err(Refusal::InvalidRequest);
         }
         let mut request: Self = serde_json::from_str(value).map_err(|_| Refusal::InvalidRequest)?;
-        if request.schema != 1 {
+        if !matches!(request.schema, 1 | 2)
+            || request.permitted_families.len() != if request.schema == 2 { 1 } else { 2 }
+            || request.conflicting_families.len() != if request.schema == 2 { 5 } else { 3 }
+        {
             return Err(Refusal::InvalidRequest);
         }
         let mut seen = BTreeSet::new();
