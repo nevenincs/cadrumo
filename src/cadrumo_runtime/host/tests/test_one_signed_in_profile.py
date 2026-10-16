@@ -109,7 +109,7 @@ def test_a_stored_sign_in_of_another_profile_is_revoked_and_the_one_kept_stays(
             runtime.resume(runtime.connect(), OperationFrontendProjection.CLI)
 
 
-def test_delayed_activity_resume_cannot_sign_out_a_newly_selected_profile(
+def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Finish A's receipt proof after B's handover, without letting A revoke B."""
@@ -130,7 +130,7 @@ def test_delayed_activity_resume_cannot_sign_out_a_newly_selected_profile(
         result = original(self, connection, host, context, request, admitted)
         if not owners:
             owners.append(self)
-        if request.activity_only and not release.is_set():
+        if request.method == "receipt" and not release.is_set():
             entered.set()
             assert release.wait(90), "new profile handover did not complete"
         return result
@@ -160,11 +160,11 @@ def test_delayed_activity_resume_cannot_sign_out_a_newly_selected_profile(
             person.login_password(bytearray(PROFILE_INPUT.encode()))
             store_receipt(first_id)
             with ThreadPoolExecutor(max_workers=1) as pool:
-                pending = pool.submit(copy_context().run, activity.resume_receipt, activity_only=True)
+                pending = pool.submit(copy_context().run, activity.resume_receipt)
                 try:
                     if not entered.wait(30):
                         pending.result(timeout=1)
-                        pytest.fail("old activity did not reach the publication boundary")
+                        pytest.fail("old resume did not reach the publication boundary")
                     other.login_password(bytearray(PROFILE_INPUT.encode()))
                     store_receipt(second_id)
                     assert other.status().status.connected
@@ -177,7 +177,7 @@ def test_delayed_activity_resume_cannot_sign_out_a_newly_selected_profile(
             assert other.status().status.connected
             # B's durable receipt also remains valid after the stale helper completes.
             with _fresh_client(launch, second_id) as returning:
-                assert returning.resume_receipt(activity_only=True).status.connected
+                assert returning.resume_receipt().status.connected
             assert other.status().status.connected
 
 

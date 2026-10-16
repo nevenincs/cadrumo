@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
+import time
 from collections.abc import Callable
 from threading import RLock
-from typing import Final, Literal, Self
+from typing import TYPE_CHECKING, Final, Literal, Self
 from uuid import UUID, uuid4
 
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
@@ -86,6 +88,9 @@ from .frontend_profile_view_client import ProfileViewFrontend
 from .startup import LaunchDoor
 from .transport_cleanup import TransportCleanup
 
+if TYPE_CHECKING:
+    from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
+
 _CONNECTION_RECEIPT_REFUSALS: Final[dict[str, ProfileSessionRefusalReason]] = {
     # The runtime deleted a receipt that no longer signs this login in.
     AccessDenialCode.AUTHENTICATION_REQUIRED.value: ProfileSessionRefusalReason.ABSENT,
@@ -95,6 +100,23 @@ _CONNECTION_RECEIPT_REFUSALS: Final[dict[str, ProfileSessionRefusalReason]] = {
     AutomationCustodyCode.CREDENTIAL_REJECTED.value: ProfileSessionRefusalReason.TAMPERED,
 }
 """Runtime denials of a presented receipt, as the receipt refusals callers already handle."""
+
+_RECEIPT_PROOF_ATTEMPTS: Final = 3
+"""Presentations of one resume; each one after the first needs a proof that changed since the last refusal."""
+
+
+def _receipt_refusal(error: FrontendRefusedError) -> ProfileReceiptRefusedError | None:
+    """Translate a runtime denial of a presented receipt into the receipt refusal callers handle, if it is one."""
+    from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
+
+    reason = (
+        error.sign_in.reason
+        if error.sign_in is not None and isinstance(error.sign_in.reason, ProfileSessionRefusalReason)
+        else _CONNECTION_RECEIPT_REFUSALS.get(error.reason)
+    )
+    if reason is None:
+        return None
+    return ProfileReceiptRefusedError(reason, binding=None if error.sign_in is None else error.sign_in.binding)
 
 
 class FrontendClient(ProfileViewFrontend):
@@ -292,7 +314,7 @@ class FrontendClient(ProfileViewFrontend):
         *,
         timeout: float,
         persist_receipt: bool = False,
-        activity_only: bool = False,
+        hand_over: bool = False,
     ) -> ProfileStatus:
         try:
             if self._connection_purpose in {"recovery", "enrollment", "bootstrap"}:
@@ -306,7 +328,7 @@ class FrontendClient(ProfileViewFrontend):
                 "frontend": self.frontend,
                 "method": method,
                 "persist_receipt": persist_receipt,
-                "activity_only": activity_only,
+                "hand_over": hand_over,
             }
             if self._scope is not None:
                 document["scope"] = self._scope.model_dump(mode="python")
@@ -351,7 +373,7 @@ class FrontendClient(ProfileViewFrontend):
         return self._login("api_key", secret, timeout=timeout)
 
     def resume_receipt(
-        self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS, activity_only: bool = False
+        self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS, hand_over: bool = False
     ) -> ProfileStatus:
         """Present the exact profile's keychain-held receipt proof on one verified frame.
 
@@ -360,28 +382,53 @@ class FrontendClient(ProfileViewFrontend):
         proof against this connection's login and the current sign-in
         generation, and deletes a receipt it refuses. A runtime refusal of the
         receipt returns as :class:`ProfileReceiptRefusedError`, like a local
-        one, so callers keep one fallback path. ``activity_only`` resumes without
-        selecting this profile or signing out another profile.
-        """
-        from cadrumo.application.user_profile.login_session import (
-            ProfileReceiptRefusedError,
-            borrow_profile_receipt_key,
-        )
+        one, so callers keep one fallback path. A resume continues the sign-in
+        and signs no other profile out. ``hand_over`` is the person signing in
+        to this profile with it, which signs every other profile out as a
+        password sign-in does.
 
-        with borrow_profile_receipt_key(bucket_id=self.profile_id) as proof:
-            try:
-                return self._login("receipt", proof, timeout=timeout, activity_only=activity_only)
-            except FrontendRefusedError as error:
-                reason = (
-                    error.sign_in.reason
-                    if error.sign_in is not None and isinstance(error.sign_in.reason, ProfileSessionRefusalReason)
-                    else _CONNECTION_RECEIPT_REFUSALS.get(error.reason)
-                )
-                if reason is None:
-                    raise
-                raise ProfileReceiptRefusedError(
-                    reason, binding=None if error.sign_in is None else error.sign_in.binding
-                ) from error
+        A sign-in that completes between the borrow and the runtime's check
+        replaces the receipt, so the proof read before it no longer unwraps
+        what the runtime reads. Such a refusal is retried with a fresh borrow,
+        a bounded number of times and only while the borrowed proof differs
+        from the one refused.
+        """
+        from cadrumo.application.user_profile.login_session import borrow_profile_receipt_key
+
+        deadline = time.monotonic() + timeout
+        attempts = 0
+        presented = bytearray()
+        stale: ProfileReceiptRefusedError | None = None
+        try:
+            while True:
+                with borrow_profile_receipt_key(bucket_id=self.profile_id) as proof:
+                    if stale is not None and hmac.compare_digest(proof, presented):
+                        # No sign-in replaced the receipt: the proof was refused for itself.
+                        raise stale
+                    presented[:] = bytes(len(presented))
+                    # The exchange wipes the proof it presents; this copy tells a later borrow apart.
+                    presented = bytearray(proof)
+                    attempts += 1
+                    try:
+                        return self._login(
+                            "receipt", proof, timeout=max(0.0, deadline - time.monotonic()), hand_over=hand_over
+                        )
+                    except FrontendRefusedError as error:
+                        refused = _receipt_refusal(error)
+                        if refused is None:
+                            raise
+                        # A proof that no longer unwraps the receipt may only be stale: a sign-in
+                        # completing meanwhile replaced the receipt, and a fresh borrow reads its proof.
+                        if (
+                            refused.reason is not ProfileSessionRefusalReason.TAMPERED
+                            or attempts >= _RECEIPT_PROOF_ATTEMPTS
+                            or time.monotonic() >= deadline
+                        ):
+                            raise refused from error
+                        refused.__cause__ = error
+                        stale = refused
+        finally:
+            presented[:] = bytes(len(presented))
 
     def request_attendance(
         self, *, timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS

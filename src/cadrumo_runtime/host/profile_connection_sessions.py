@@ -138,7 +138,11 @@ class ProfileConnectionSessionMixin:
                     credential=api_login.credential,
                     scope=api_login.scope,
                 )
-        if request.activity_only or request.method == "api_key":
+        if request.method == "api_key" or (request.method == "receipt" and not request.hand_over):
+            # Only a person's sign-in hands the profile over: a password, or a
+            # saved sign-in the person logs in with. A command, a terminal start
+            # or a hold resuming continues the sign-in, and sweeping there would
+            # sign out a sign-in to another profile completing now.
             return self._finish_login(connection, host, context, request, admitted)
         # Publish the ordinary handover and retire other profiles as one ordered
         # effect. Proof/KDF stays outside this lock and the profile-map lock is
@@ -153,10 +157,12 @@ class ProfileConnectionSessionMixin:
                 and finished.status.credential_authenticated
                 and finished.status.profile_bound
             ):
-                self._sign_out_other_profiles(keep=request.profile_id)
+                signed_out = self._sign_out_other_profiles(keep=request.profile_id)
+                if signed_out:
+                    return finished.model_copy(update={"signed_out_profile_ids": signed_out})
             return finished
 
-    def _sign_out_other_profiles(self: RuntimeProfileConnections, *, keep: UUID) -> None:
+    def _sign_out_other_profiles(self: RuntimeProfileConnections, *, keep: UUID) -> tuple[UUID, ...]:
         """Keep one profile signed in: a person's sign-in to ``keep`` signs every other profile out everywhere.
 
         Each other hosted profile is signed out as the person's sign-out does
@@ -164,19 +170,25 @@ class ProfileConnectionSessionMixin:
         human session it holds ends, on every frontend, an automation's resumed
         session included. A key session needs no sign-in and stays. A profile
         that is not hosted has no live session, so only its stored sign-in is
-        revoked.
+        revoked. Returns the profiles that had a sign-in to end.
         """
         with self._guard:
             hosts = {profile_id: host for profile_id, host in self._profiles.items() if profile_id != keep}
             installation = self._installation
-        for host in hosts.values():
-            _deletion, retired = host.revoke_human_sign_in(kind=SessionRetirementKind.SIGNED_OUT)
+        signed_out: list[UUID] = []
+        for profile_id, host in hosts.items():
+            deletion, retired = host.revoke_human_sign_in(kind=SessionRetirementKind.SIGNED_OUT)
             self._retired(retired)
+            if retired or deletion is not ReceiptDeletion.NOT_REQUIRED:
+                signed_out.append(profile_id)
         # Their automation trees are gone before this sign-in is answered and its profile is usable.
         if installation is not None:
-            revoke_other_saved_sign_ins(
-                root=self.root, installation=installation, keep=keep, hosted_profiles=frozenset(hosts)
+            signed_out.extend(
+                revoke_other_saved_sign_ins(
+                    root=self.root, installation=installation, keep=keep, hosted_profiles=frozenset(hosts)
+                )
             )
+        return tuple(signed_out)
 
     def _admit_human_login(
         self: RuntimeProfileConnections,

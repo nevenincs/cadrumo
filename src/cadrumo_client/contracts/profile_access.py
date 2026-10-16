@@ -62,6 +62,10 @@ type HumanProofMethod = Literal["password", "receipt"]
 # references, and uses the whole of the runtime's single-exchange maximum.
 PROFILE_ADMISSION_TIMEOUT_SECONDS = 120.0
 
+_SIGN_IN_FRONTENDS = frozenset(
+    {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.DESKTOP}
+)
+
 
 @dataclass(frozen=True, slots=True)
 class HumanProof:
@@ -84,13 +88,16 @@ class ProfileLogin(BaseModel):
     frontend: OperationFrontendProjection
     scope: AccessScope | None = None
     persist_receipt: bool = False
-    #: Omit the unset intent so older peers retain the ordinary login frame.
-    activity_only: bool = Field(default=False, exclude_if=lambda value: value is False)
+    #: The person signs in to this profile with its saved sign-in, which hands the
+    #: profile over as a password does. Omit the unset intent so the ordinary
+    #: resume frame stays unchanged.
+    hand_over: bool = Field(default=False, exclude_if=lambda value: value is False)
 
     @model_validator(mode="after")
-    def _activity_resumes_existing_receipt(self) -> ProfileLogin:
-        if self.activity_only and self.method != "receipt":
-            raise ValueError("activity-only admission requires an existing receipt")
+    def _handover_is_a_person_resuming(self) -> ProfileLogin:
+        # A password always hands over and a key never does; no agent frontend signs a person in.
+        if self.hand_over and (self.method != "receipt" or self.frontend not in _SIGN_IN_FRONTENDS):
+            raise ValueError("a handover resumes a saved sign-in at a person's frontend")
         return self
 
 
@@ -167,6 +174,8 @@ class ProfileStatus(BaseModel):
     connection_id: UUID
     status: ProfileAccessStatus
     human_login: ProfileHumanLoginReceipt | None = None
+    #: The other profiles a password sign-in signed out, since one profile is signed in at a time.
+    signed_out_profile_ids: tuple[UUID, ...] = ()
 
 
 def status_admits_session(

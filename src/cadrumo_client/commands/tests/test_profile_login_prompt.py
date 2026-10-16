@@ -32,11 +32,12 @@ from cadrumo.application.user_profile.profile_pointer import (
     observe_active_profile_pointer,
 )
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
-from cadrumo_client.commands.custody import _login_through_the_prompt
-from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.secure_input import MachineSecretChannel, MachineSecretSelection
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+
+from ..custody import _login_through_the_prompt
+from ..errors import CliRefusedBoundaryError
+from ..secure_input import MachineSecretChannel, MachineSecretSelection
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -111,8 +112,9 @@ class _RuntimeClient:
             ),
         )
 
-    def resume_receipt(self) -> ProfileStatus:
-        self.calls.append("resume")
+    def resume_receipt(self, *, hand_over: bool = False) -> ProfileStatus:
+        # Logging in with a saved sign-in is the person's sign-in, so it hands the profile over.
+        self.calls.append("resume" if hand_over else "resume without handover")
         if self.resume_refusal:
             raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT)
         return self._reply(human_login=self.receipt)
@@ -280,6 +282,28 @@ def test_candidate_selection_conflict_keeps_other_profile_selected(monkeypatch: 
     assert observe_active_profile_pointer().bucket_id == str(second_id)
     assert client.calls == ["resume", "status", "close"]
     assert client.closed == 1
+
+
+def test_concurrent_sign_in_to_the_same_profile_is_not_a_selection_conflict(monkeypatch: MonkeyPatch) -> None:
+    first_id = UUID(register_cli_profile(label="Concurrent first", log_in=False))
+    target_id = UUID(register_cli_profile(label="Concurrent target", log_in=False))
+    _select(first_id)
+    client = _RuntimeClient(target_id, receipt=_receipt(resumed=True))
+    client.resume_refusal = False
+    # Another login to the same profile publishes its selection while this one is admitted.
+    client.on_status = lambda: _select(target_id)
+    _install_client(monkeypatch, client)
+    monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: True)
+    published = observe_active_profile_pointer()
+
+    outcome = _login_through_the_prompt(_ctx(), name=str(target_id), machine_secret=None)
+
+    assert outcome.bucket_id == str(target_id)
+    assert client.calls == ["resume", "status", "close"]
+    # The concurrent selection stands as published; this login adds no transition of its own.
+    current = observe_active_profile_pointer()
+    assert current.bucket_id == str(target_id)
+    assert current.transition_revision == published.transition_revision + 1
 
 
 def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(

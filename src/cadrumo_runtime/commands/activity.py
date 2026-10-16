@@ -37,7 +37,7 @@ def config_activity(ctx: typer.Context, output_language: OutputLanguage | None =
     client = asyncio.run(open_installed_client(profile_id=UUID(bucket_id), frontend=OperationFrontendProjection.CLI))
     try:
         subscribe_profile_notices(ctx, client)
-        client.resume_receipt(activity_only=True)
+        client.resume_receipt()
         client.note_activity()
     except ProfileReceiptRefusedError as error:
         raise CliRefusedBoundaryError(

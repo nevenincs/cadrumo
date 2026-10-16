@@ -21,9 +21,9 @@ class ConfigLoginResult(OutputSchema):
     usable OS keychain, where the login is process-scoped only.
     ``already_authenticated`` marks the idempotent no-op that resumed a
     still-valid session without re-prompting, and
-    ``closed_previous_profile`` names the profile a cross-profile handover
-    signed out. No passphrase, key material, or session-key bytes enter
-    this payload.
+    ``closed_previous_profile`` names, by its label, the profile a
+    cross-profile handover signed out. No passphrase, key material, or
+    session-key bytes enter this payload.
     """
 
     profile_id: BucketId

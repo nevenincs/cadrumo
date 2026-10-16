@@ -161,14 +161,26 @@ def test_the_frontend_client_reuses_its_exact_explicit_scope(scope: AccessScope 
     assert {request.frontend for request in connection.logins} == {OperationFrontendProjection.EXTERNAL_CLIENT}
 
 
-@pytest.mark.parametrize("method", ["password", "receipt", "api_key"])
-def test_activity_only_is_an_explicit_receipt_intent(method: str) -> None:
-    document = _document_without_scope(uuid4(), uuid4(), method, OperationFrontendProjection.CLI)
-    payload = canonical_json_bytes(document | {"activity_only": True})
-    if method == "receipt":
+@pytest.mark.parametrize(
+    ("method", "frontend", "admitted"),
+    [
+        ("receipt", OperationFrontendProjection.CLI, True),
+        ("receipt", OperationFrontendProjection.TUI, True),
+        ("receipt", OperationFrontendProjection.DESKTOP, True),
+        ("receipt", OperationFrontendProjection.EXTERNAL_CLIENT, False),
+        ("receipt", OperationFrontendProjection.INSTALLED_SERVICE, False),
+        ("password", OperationFrontendProjection.CLI, False),
+        ("api_key", OperationFrontendProjection.CLI, False),
+    ],
+)
+def test_a_handover_is_a_saved_sign_in_resumed_at_a_persons_frontend(
+    method: str, frontend: OperationFrontendProjection, admitted: bool
+) -> None:
+    payload = canonical_json_bytes(_document_without_scope(uuid4(), uuid4(), method, frontend) | {"hand_over": True})
+    if admitted:
         decoded = decode_document(payload, Request).root
-        assert isinstance(decoded, ProfileLogin) and decoded.activity_only
-        assert json.loads(document_frame(decoded)[_HEADER_BYTES:])["activity_only"] is True
+        assert isinstance(decoded, ProfileLogin) and decoded.hand_over
+        assert json.loads(document_frame(decoded)[_HEADER_BYTES:])["hand_over"] is True
     else:
         with pytest.raises(RefusalError) as refused:
             decode_document(payload, Request)

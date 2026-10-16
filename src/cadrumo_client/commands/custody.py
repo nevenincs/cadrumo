@@ -142,14 +142,28 @@ def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str)
     clear_output_language_cache()
 
 
-def _login_notices(outcome: ProfileLoginOutcome) -> tuple[Notice, ...]:
+def _previous_profile_label(outcome: ProfileLoginOutcome) -> str | None:
+    """Name the profile a cross-profile handover signed out by its label, as the active profile is named."""
+    if outcome.closed_previous_bucket_id is None:
+        return None
+    from cadrumo.application.user_profile.login_session import resolve_login_target
+    from cadrumo.domain.user_profile.errors import ProfileNotFoundError
+
+    try:
+        return resolve_login_target(outcome.closed_previous_bucket_id).label
+    except ProfileNotFoundError:
+        return None
+
+
+def _login_notices(outcome: ProfileLoginOutcome, *, previous_profile: str | None = None) -> tuple[Notice, ...]:
     """Project one login outcome's non-blocking diagnostics onto the Notice channel.
 
     Three distinct operator-visible conditions ride here rather than as
     bespoke ``result`` fields: the idempotent no-op that resumed a
     still-valid session, the cross-profile handover that closed the
     previous profile, and the degraded host that could not custody a
-    session key and so logged in for this process only.
+    session key and so logged in for this process only. The closed profile
+    is named by ``previous_profile``, its label, never by its identifier.
     """
     notices: list[Notice] = []
     if outcome.already_authenticated:
@@ -167,7 +181,7 @@ def _login_notices(outcome: ProfileLoginOutcome) -> tuple[Notice, ...]:
                 severity=NoticeSeverity.INFO,
                 code="config.login.closed_previous_session",
                 message=tr("cli.config.login.notices.closed_previous_session"),
-                context={"previous_profile_id": outcome.closed_previous_bucket_id},
+                context=None if previous_profile is None else {"previous_profile": previous_profile},
             ),
         )
     if not outcome.session_persisted:
@@ -240,9 +254,10 @@ def _login_through_the_prompt(
 
         subscribe_profile_notices(ctx, client)
         # A live sign-in on this OS login is reused whether or not a terminal is attached.
+        # Logging in to the profile with it is still the person's sign-in, so it hands over.
         if machine_secret is None:
             with suppress(ProfileReceiptRefusedError):
-                admitted = client.resume_receipt()
+                admitted = client.resume_receipt(hand_over=True)
         if admitted is None:
             if machine_secret is not None:
                 payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
@@ -270,7 +285,11 @@ def _login_through_the_prompt(
         # non-authoritative metadata and cannot retarget an existing session.
         _require_current_profile_login(client)
         with active_profile_pointer_transaction() as selection:
-            selection.compare_and_select(expected=captured, bucket_id=target.bucket_id)
+            # A concurrent sign-in to the same profile already published this selection.
+            if selection.read().bucket_id != target.bucket_id:
+                selection.compare_and_select(expected=captured, bucket_id=target.bucket_id)
+        # One profile is signed in at a time; there was at most one other to sign out.
+        signed_out = next(iter(admitted.signed_out_profile_ids), None)
         return ProfileLoginOutcome(
             bucket_id=target.bucket_id,
             label=target.label,
@@ -279,6 +298,7 @@ def _login_through_the_prompt(
             absolute_deadline=receipt.absolute_deadline,
             session_persisted=receipt.session_persisted,
             already_authenticated=receipt.resumed,
+            closed_previous_bucket_id=None if signed_out is None else str(signed_out),
         )
     except FrontendRefusedError as error:
         _raise_frontend_refusal(error)
@@ -308,6 +328,7 @@ def config_login(
 
     from cadrumo_client.commands.custody_payloads import ConfigLoginResult
 
+    previous_profile = _previous_profile_label(outcome)
     result = ConfigLoginResult(
         profile_id=outcome.bucket_id,
         active_profile=outcome.label,
@@ -316,9 +337,9 @@ def config_login(
         absolute_deadline=outcome.absolute_deadline,
         session_persisted=outcome.session_persisted,
         already_authenticated=outcome.already_authenticated,
-        closed_previous_profile=outcome.closed_previous_bucket_id,
+        closed_previous_profile=previous_profile,
     )
-    notices = _login_notices(outcome)
+    notices = _login_notices(outcome, previous_profile=previous_profile)
     _emit_envelope(
         ctx,
         command="config.login",
