@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d4fe5542f122bb57eb731fcaeed3dca0c4ba3511ab16c68e8b3903f082101ee'
+body_hash: 'sha256:bdc87f9781a6b9bc643a9c07a61ddb0fed8d8a17e2f14372091a3aa3b063c30d'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -49,7 +49,37 @@ related:
 - `S01` `A` `src/cadrumo_runtime/adapters/tests/test_service_verification.py`
 - `S01` `verify:` `pytest -n0 -m '' test_service_verification.py test_service_records.py` -> `pass`
 - `S01` `verify:` `ruff check + ruff format --check + ty check on touched files` -> `pass`
+- `S02` `M` `src/cadrumo_runtime/host/worker_service.py`
+- `S02` `M` `src/cadrumo_runtime/host/worker_operation_requests.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_login.py`
+- `S02` `M` `src/cadrumo_runtime/host/worker_submission_staging.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_worker_submission_staging.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_human_login_receipt.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py`
+- `S02` `verify:` `pytest -n0 worker exit cleanup, submission staging, custody lease window` -> `pass`
+- `S02` `verify:` `pytest -n0 test_human_login_receipt.py` -> `fail`
+- `S02` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S03` `M` `src/cadrumo_client/contracts/session_events.py`
+- `S03` `M` `src/cadrumo_client/contracts/sign_in.py`
+- `S03` `M` `src/cadrumo_client/transport/verified_transport.py`
+- `S03` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S03` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_sessions.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_services.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_attendance.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_operations.py`
+- `S03` `M` `src/cadrumo_runtime/host/tests/test_profile_language_events.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/test_connection_cues.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/test_sign_in_watch.py`
+- `S03` `A` `src/cadrumo_client/transport/tests/test_invalidation_cues.py`
+- `S03` `verify:` `pytest -n0 connection cues, sign-in watch, attendance, lifecycle notices, session events, sign-in status, service records, client cue and language tests` -> `pass`
+- `S03` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
 
 ## Notes
 
 - `S01` `profile_connection_services.py` interleaves with another session's uncommitted lease-guard and refusal-check hunks; its claim and admission recheck stays uncommitted until those land, while HEAD's full verification there still works with the new verifier.
+- `S02` `test_worker_human_login_receipt_lifecycle[success]` fails on CADRUMO-RUNTIME-DEBUG's uncommitted `_ended` change in `profile_worker_custody.retire` (retired sessions now refuse with `authentication_required);` the other seven modes pass and the failure was reported to that session.
+- `S03` Four files carry other sessions' uncommitted hunks; this Step's edits were staged as a HEAD-relative patch with git apply --cached, leaving theirs in the working tree. The S01 claim and admission recheck rides in the same patch.

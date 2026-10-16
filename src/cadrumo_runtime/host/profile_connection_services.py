@@ -18,6 +18,7 @@ from cadrumo_client.contracts.service_access import (
     ServiceLease,
     VerifiedServicePeer,
 )
+from cadrumo_client.contracts.session_events import ServiceLeaseChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 
 from .profile_host import ProfileConnection
@@ -51,14 +52,20 @@ class ProfileConnectionServicesMixin:
         descriptor = self._service_descriptors.get(request.service_id)
         if descriptor is None:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-        peer = self._service_verifier.verify_service(context, channel, descriptor)
-        if peer is None:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         with self._guard:
             existing = self._services.get(context.connection_id)
             connection = self._connections.get(context.connection_id)
+        # A registered connection proves its admitted incarnation; only a new one hashes the image.
+        if existing is None:
+            peer = self._service_verifier.verify_service(context, channel, descriptor)
+        elif self._service_verifier.recheck_service(context, channel, existing.peer):
+            peer = existing.peer
+        else:
+            peer = None
+        if peer is None:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         if existing is not None:
-            if existing.peer != peer or connection is None or connection.profile_id != request.profile_id:
+            if existing.descriptor != descriptor or connection is None or connection.profile_id != request.profile_id:
                 raise RefusalError(RefusalCode.PEER_UNTRUSTED)
             if existing.lease is not None:
                 with self._profiles[request.profile_id].guard:
@@ -140,8 +147,11 @@ class ProfileConnectionServicesMixin:
             host.authority.human_administration_facts(
                 connection_id=context.connection_id, session_id=request.session_id
             )
-            current = self._service_verifier.verify_service(recipient.context, service.channel, service.descriptor)
-            if current != service.peer or recipient.profile_id != request.profile_id or service.lease is not None:
+            if (
+                not self._service_verifier.recheck_service(recipient.context, service.channel, service.peer)
+                or recipient.profile_id != request.profile_id
+                or service.lease is not None
+            ):
                 return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
             recipient.client_id = holder.client_id
             child = host.authority.attend(
@@ -162,6 +172,14 @@ class ProfileConnectionServicesMixin:
                 service_id=request.service_id,
                 runtime_boot_id=self.boot,
                 connection_id=request.recipient_connection_id,
+            )
+            # The service learns of its lease by claiming again; this only tells it to.
+            self._events.publish_cue(
+                ServiceLeaseChanged(
+                    runtime_boot_id=self.boot,
+                    connection_id=request.recipient_connection_id,
+                    profile_id=request.profile_id,
+                )
             )
             return ServiceConnected(
                 request_id=request.request_id,

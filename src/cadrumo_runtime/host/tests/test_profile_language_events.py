@@ -44,14 +44,24 @@ def test_committed_hint_invalidates_only_its_profile_and_live_session(tmp_path: 
             frontend=OperationFrontendProjection.TUI,
             session_id=uuid4(),
         )
-    assert len(profiles.take_events(first)) == 1
-    assert len(profiles.take_events(other)) == 1
-    assert profiles.take_events(stranger) == ()
     connection = profiles._connections[first.connection_id]
+    other_profile = profiles._connections[other.connection_id].profile_id
+
+    # Operation traffic is the only moment the hint can move; the first look gives each session a baseline.
+    profiles.observe_profile_language(connection.profile_id)
+    assert len(profiles.take_events(first)) == 1
+    assert profiles.take_events(other) == ()
+    assert profiles.take_events(stranger) == ()
+    profiles.observe_profile_language(connection.profile_id)
+    assert profiles.take_events(first) == ()
+
     write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=str(connection.profile_id), language="hu")
-    # Advance the observation witness rather than sleeping in a unit test.
-    session, _instant, old_language = profiles._language_observations[first.connection_id]
-    profiles._language_observations[first.connection_id] = session, 0.0, old_language
+    # An idle connection's turns never read the hint: nothing moves without operation traffic.
+    assert profiles.take_events(first) == ()
+    profiles.observe_profile_language(other_profile)
+    assert profiles.take_events(first) == () and len(profiles.take_events(other)) == 1
+
+    profiles.observe_profile_language(connection.profile_id)
     (event,) = profiles.take_events(first)
     assert isinstance(event, ProfileLanguageChanged)
     assert (event.profile_id, event.session_id, event.connection_id) == (
@@ -61,8 +71,10 @@ def test_committed_hint_invalidates_only_its_profile_and_live_session(tmp_path: 
     )
     assert profiles.take_events(other) == ()
     assert profiles.take_events(stranger) == ()
+    profiles.observe_profile_language(connection.profile_id)
     assert profiles.take_events(first) == ()
+
     connection.session_id = None
     write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=str(connection.profile_id), language="ca")
+    profiles.observe_profile_language(connection.profile_id)
     assert profiles.take_events(first) == ()
-    assert first.connection_id not in profiles._language_observations

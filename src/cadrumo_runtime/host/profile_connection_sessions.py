@@ -387,6 +387,8 @@ class ProfileConnectionSessionMixin:
                     connection.session_id = None
         for host in hosts:
             host.approvals.retire_sessions(identities)
+        if identities:
+            self._sign_in_changed()
 
     def handle(
         self: RuntimeProfileConnections,
@@ -426,6 +428,9 @@ class ProfileConnectionSessionMixin:
                 login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
                 if login.os_owner_id != context.peer.os_owner_id:
                     raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+                if request.watch:
+                    # Watch before reading, so a change racing this read still cues the watcher.
+                    self.watch_sign_in(context)
                 return SignInStatusReply(
                     request_id=request.request_id,
                     runtime_boot_id=self.boot,
@@ -445,6 +450,9 @@ class ProfileConnectionSessionMixin:
                 result = self._attendance_decide(context, request)
             elif isinstance(request, ProfileLogin):
                 result = self._login(context, channel, request)
+                if not isinstance(result, AccessDenied):
+                    # Admission has published the session and minted any receipt.
+                    self._sign_in_changed()
             elif isinstance(request, ProfileDisclosurePageRequest):
                 result = self._disclosure_page(context, request)
             else:
@@ -486,3 +494,7 @@ class ProfileConnectionSessionMixin:
                 self._language_observations.pop(context.connection_id, None)
                 self._notice_connections.pop(context.connection_id, None)
                 self._services.pop(context.connection_id, None)
+                self._sign_in_watchers.discard(context.connection_id)
+            if connection is not None and connection.session_id is not None:
+                # A held sign-in lives on its connection and ends with it.
+                self._sign_in_changed()

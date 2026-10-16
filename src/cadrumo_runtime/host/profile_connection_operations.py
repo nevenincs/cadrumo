@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import time
-from contextlib import ExitStack
+from collections.abc import Generator
+from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -137,7 +138,7 @@ class ProfileConnectionOperationMixin:
         """Hold newly observed authority through the final bounded frontend write."""
         reply: OperationReply | AccessRefusal
         deadline = time.monotonic() + 5
-        with ExitStack() as release_guard:
+        with self._language_observed_after(context), ExitStack() as release_guard:
             try:
                 release_guard.enter_context(self.operation_admission())
                 connection, host = self._operation_target(context, channel, request)
@@ -169,6 +170,17 @@ class ProfileConnectionOperationMixin:
             # Write errors propagate: a partially written frame is never retried
             # as a refusal. No private payload escapes the scope of its fence.
             write_document(channel, reply, deadline=deadline)
+
+    @contextmanager
+    def _language_observed_after(self: RuntimeProfileConnections, context: ConnectionContext) -> Generator[None]:
+        """Look at the profile's language hint once this request ends; only an operation's worker moves it."""
+        try:
+            yield
+        finally:
+            with self._guard:
+                connection = self._connections.get(context.connection_id)
+            if connection is not None:
+                self.observe_profile_language(connection.profile_id)
 
     def _operation_target(
         self: RuntimeProfileConnections,

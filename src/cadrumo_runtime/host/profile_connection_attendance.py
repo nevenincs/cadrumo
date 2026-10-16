@@ -36,6 +36,7 @@ from cadrumo_client.contracts.attendance import (
 )
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.session_events import AttendanceChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 
 from .profile_host import ProfileConnection
@@ -152,6 +153,7 @@ class ProfileConnectionAttendanceMixin:
                 if sum(item.approved is None for item in pending) >= ATTENDANCE_PENDING_LIMIT:
                     return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
                 self._attendance[ask.attendance_id] = ask
+        self._attendance_changed(request.profile_id)
         return AttendancePending(
             request_id=request.request_id,
             runtime_boot_id=self.boot,
@@ -289,10 +291,26 @@ class ProfileConnectionAttendanceMixin:
     def _expire_attendance(self: RuntimeProfileConnections) -> None:
         """Drop lapsed asks; the caller holds the connections guard."""
         instant = time.monotonic()
-        for identity in [
-            item.attendance_id for item in self._attendance.values() if instant >= item.monotonic_deadline
-        ]:
-            del self._attendance[identity]
+        lapsed = [item for item in self._attendance.values() if instant >= item.monotonic_deadline]
+        for item in lapsed:
+            del self._attendance[item.attendance_id]
+        for profile_id in {item.profile_id for item in lapsed}:
+            self._attendance_changed(profile_id)
+
+    def _attendance_changed(self: RuntimeProfileConnections, profile_id: UUID) -> None:
+        """Cue each person holding this profile's asks to read the inventory again; the cue shows them nothing."""
+        with self._guard:
+            cues = [
+                AttendanceChanged(
+                    runtime_boot_id=self.boot, connection_id=connection_id, profile_id=profile_id, session_id=session_id
+                )
+                for connection_id, session_id in self._attendance_holders.items()
+                if (holder := self._connections.get(connection_id)) is not None
+                and holder.profile_id == profile_id
+                and holder.session_id == session_id
+            ]
+        for cue in cues:
+            self._events.publish_cue(cue)
 
     def _attendance_decide(
         self: RuntimeProfileConnections, context: ConnectionContext, request: AttendanceDecide
@@ -339,7 +357,9 @@ class ProfileConnectionAttendanceMixin:
                     session_expires_at=facts.session.expires_at,
                     candidates=candidates,
                 )
-            return self._decide_attendance(connection, host, context, request)
+            decided = self._decide_attendance(connection, host, context, request)
+            self._attendance_changed(request.profile_id)
+            return decided
 
     def _decide_attendance(
         self: RuntimeProfileConnections,
@@ -404,11 +424,12 @@ class ProfileConnectionAttendanceMixin:
             self._attendance_holders.pop(connection_id, None)
             self._attended.pop(connection_id, None)
             self._attendance_spent.discard(connection_id)
-            for identity in [
-                item.attendance_id for item in self._attendance.values() if item.connection_id == connection_id
-            ]:
-                del self._attendance[identity]
+            withdrawn = [item for item in self._attendance.values() if item.connection_id == connection_id]
+            for item in withdrawn:
+                del self._attendance[item.attendance_id]
             for recipient, attended in tuple(self._attended.items()):
                 if attended.holder_connection_id == connection_id:
                     del self._attended[recipient]
                     self._attendance_spent.add(recipient)
+        for profile_id in {item.profile_id for item in withdrawn}:
+            self._attendance_changed(profile_id)

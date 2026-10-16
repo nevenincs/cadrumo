@@ -5,10 +5,18 @@ from threading import Event, Lock
 from uuid import UUID, uuid4
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.session_events import ConnectionEvent, LifecycleNotice
+from cadrumo_client.contracts.session_events import (
+    AttendanceChanged,
+    ConnectionEvent,
+    LifecycleNotice,
+    ServiceLeaseChanged,
+    SignInChanged,
+)
 from cadrumo_client.contracts.transport import ConnectionContext
 
 SESSION_EVENT_QUEUE_LIMIT = 64
+
+type InvalidationCue = SignInChanged | ServiceLeaseChanged | AttendanceChanged
 
 
 class RuntimeSessionEvents:
@@ -19,6 +27,7 @@ class RuntimeSessionEvents:
         self._guard = Lock()
         self._queues: dict[UUID, tuple[Queue[ConnectionEvent], Event]] = {}
         self._notices: dict[UUID, tuple[LifecycleNotice, Event]] = {}
+        self._pending_cues: dict[UUID, set[str]] = {}
 
     def connect(self, context: ConnectionContext) -> None:
         """Register one completed native handshake."""
@@ -30,6 +39,27 @@ class RuntimeSessionEvents:
         with self._guard:
             self._queues.pop(context.connection_id, None)
             self._notices.pop(context.connection_id, None)
+            self._pending_cues.pop(context.connection_id, None)
+
+    def publish_cue(self, cue: InvalidationCue) -> None:
+        """Queue a cue unless the same one still waits for the connection's writer.
+
+        A cue only asks its receiver to read again, so one waiting cue answers any
+        number of changes and a burst cannot overflow the queue and close it.
+        """
+        with self._guard:
+            target = self._queues.get(cue.connection_id)
+            if target is None or target[1].is_set():
+                return
+            pending = self._pending_cues.setdefault(cue.connection_id, set())
+            if cue.kind in pending:
+                return
+            try:
+                target[0].put_nowait(cue)
+            except Full:
+                target[1].set()
+                return
+            pending.add(cue.kind)
 
     def publish(self, event: ConnectionEvent) -> None:
         """Enqueue after authority removal without waiting for a client to read."""
@@ -84,4 +114,6 @@ class RuntimeSessionEvents:
                 try:
                     result.append(target[0].get_nowait())
                 except Empty:
+                    # Every taken cue is now the writer's; a later change queues a fresh one.
+                    self._pending_cues.pop(context.connection_id, None)
                     return tuple(result)

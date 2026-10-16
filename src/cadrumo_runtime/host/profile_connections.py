@@ -15,7 +15,12 @@ from uuid import UUID
 from cadrumo.adapters.persistence.storage.bucket.output_language_hint import read_bucket_output_language_hint
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
@@ -29,7 +34,13 @@ from cadrumo_client.contracts.contracts import ByteChannel, ExitReason, RefusalC
 from cadrumo_client.contracts.installation import Installation
 from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, NativeServiceVerifier
-from cadrumo_client.contracts.session_events import ConnectionEvent, ProfileLanguageChanged, SessionEvent
+from cadrumo_client.contracts.session_events import (
+    ConnectionEvent,
+    ProfileLanguageChanged,
+    ServiceLeaseChanged,
+    SessionEvent,
+    SignInChanged,
+)
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.installation import read_runtime_installation
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
@@ -126,7 +137,9 @@ class RuntimeProfileConnections(
         # Connections whose approval ended with the person's session; only a new connection may ask again.
         self._attendance_spent: set[UUID] = set()
         self._events = RuntimeSessionEvents()
-        self._language_observations: dict[UUID, tuple[UUID, float, str | None]] = {}
+        self._sign_in_watchers: set[UUID] = set()
+        self._observed_logins: frozenset[tuple[str, bool, OsLockState]] = frozenset()
+        self._language_observations: dict[UUID, tuple[UUID, str | None]] = {}
         self._service_descriptors = {
             item.service_id: item
             for item in (installed_service_descriptors() if service_descriptors is None else service_descriptors)
@@ -151,12 +164,33 @@ class RuntimeProfileConnections(
 
     def _publish_retirement(self, event: SessionEvent) -> None:
         """Publish exact retirement; services own shutdown of their native descendants."""
+        withdrawn: list[ServiceLeaseChanged] = []
         with self._guard:
             self._language_observations.pop(event.connection_id, None)
-            for service in self._services.values():
+            for connection_id, service in self._services.items():
                 if service.lease is not None and service.lease.parent_session_id == event.session_id:
+                    withdrawn.append(
+                        ServiceLeaseChanged(
+                            runtime_boot_id=self.boot, connection_id=connection_id, profile_id=service.lease.profile_id
+                        )
+                    )
                     service.lease = None
         self._events.publish(event)
+        for cue in withdrawn:
+            self._events.publish_cue(cue)
+        self._sign_in_changed()
+
+    def watch_sign_in(self, context: ConnectionContext) -> None:
+        """Cue this connection on every later change that can move any sign-in status, until it disconnects."""
+        with self._guard:
+            self._sign_in_watchers.add(context.connection_id)
+
+    def _sign_in_changed(self) -> None:
+        """Cue every sign-in watcher; each re-reads a status that still decides for itself."""
+        with self._guard:
+            watchers = tuple(self._sign_in_watchers)
+        for connection_id in watchers:
+            self._events.publish_cue(SignInChanged(runtime_boot_id=self.boot, connection_id=connection_id))
 
     def connect_events(self, context: ConnectionContext, channel: ByteChannel | None = None) -> None:
         """Register a native-verified connection without admitting profile access."""
@@ -172,43 +206,40 @@ class RuntimeProfileConnections(
 
     def take_events(self, context: ConnectionContext) -> tuple[ConnectionEvent, ...]:
         """Let the connection's sole writer drain its bounded event queue."""
-        self._observe_profile_language(context)
         return self._events.take(context)
 
-    def _observe_profile_language(self, context: ConnectionContext) -> None:
-        """Observe only a nonsecret invalidation hint, never decrypt on the transport loop.
+    def observe_profile_language(self, profile_id: UUID) -> None:
+        """Cue each session of the profile that has not yet heard its current language hint.
 
-        Workers mirror this hint after the canonical CAS write. Consumers must
-        re-read the canonical preference through their held exact-profile session;
-        a hint and its notification confer neither a value nor access authority.
+        Only an operation's worker writes this hint, mirroring the canonical CAS
+        write, so operation traffic for the profile is the one moment it can have
+        moved. Consumers must re-read the canonical preference through their held
+        exact-profile session; a hint and its notification confer neither a value
+        nor access authority.
         """
-        instant = time.monotonic()
-        with self._guard:
-            connection = self._connections.get(context.connection_id)
-            if connection is None or connection.session_id is None:
-                self._language_observations.pop(context.connection_id, None)
-                return
-            session_id, profile_id = connection.session_id, connection.profile_id
-            previous = self._language_observations.get(context.connection_id)
-            if previous is not None and previous[0] == session_id and instant - previous[1] < 0.5:
-                return
         try:
             language = read_bucket_output_language_hint(storage_root=self.root, bucket_id=str(profile_id))
         except Exception:
             return
+        changed: list[ProfileLanguageChanged] = []
         with self._guard:
-            if self._connections.get(context.connection_id) is not connection or connection.session_id != session_id:
-                return
-            self._language_observations[context.connection_id] = session_id, instant, language
-        if previous is None or previous[0] != session_id or previous[2] != language:
-            self._events.publish(
-                ProfileLanguageChanged(
-                    runtime_boot_id=self.boot,
-                    connection_id=context.connection_id,
-                    profile_id=profile_id,
-                    session_id=session_id,
+            for connection_id, connection in self._connections.items():
+                session_id = connection.session_id
+                if connection.profile_id != profile_id or session_id is None:
+                    continue
+                if self._language_observations.get(connection_id) == (session_id, language):
+                    continue
+                self._language_observations[connection_id] = session_id, language
+                changed.append(
+                    ProfileLanguageChanged(
+                        runtime_boot_id=self.boot,
+                        connection_id=connection_id,
+                        profile_id=profile_id,
+                        session_id=session_id,
+                    )
                 )
-            )
+        for event in changed:
+            self._events.publish(event)
 
     def event_flushed(self, context: ConnectionContext, event: ConnectionEvent) -> None:
         """Record transport completion without granting session or user acknowledgement."""
@@ -269,6 +300,12 @@ class RuntimeProfileConnections(
         observation_started = time.monotonic()
         observed = tuple(login.observe(credential_facilities=Availability.UNAVAILABLE) for login in logins.values())
         observation_elapsed_ms = round((time.monotonic() - observation_started) * 1000, 3)
+        # A sign-in status reads its peer's login and lock state, so a change there moves it too.
+        logins_seen = frozenset((login.login_id, login.active, login.lock_state) for login in observed)
+        with self._guard:
+            logins_moved, self._observed_logins = logins_seen != self._observed_logins, logins_seen
+        if logins_moved:
+            self._sign_in_changed()
         eligible = any(login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed)
         instant = time.monotonic()
         if not eligible or instant - self._last_sign_in_sweep >= 1.0:
@@ -464,3 +501,4 @@ class RuntimeProfileConnections(
                 for connection in self._connections.values():
                     if connection.profile_id == profile_id:
                         connection.session_id = None
+        self._sign_in_changed()

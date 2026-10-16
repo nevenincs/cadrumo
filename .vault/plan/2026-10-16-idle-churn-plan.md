@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-16'
 body_schema: body-v2
-body_hash: 'sha256:87acab6a58a9caca7914c190d4f81e0b47f0531ba8944603c7bc6fd7296acb40'
+body_hash: 'sha256:488da4e61a2c5487b802ec9b5fdc952e6d9befdff02757c168e63a52e8797f69'
 ---
 
 <!-- LINK RULES:
@@ -121,9 +121,9 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 
 ## Steps
 
-- [ ] `S01` - Verify a service image once per connection and recheck only the kernel incarnation on later requests; `src/cadrumo_runtime/adapters/service_verification.py`.
-- [ ] `S02` - Wait for the earliest lease deadline or a custody change instead of the 0.1 s worker expiry loop; `src/cadrumo_runtime/host/worker_service.py`.
-- [ ] `S03` - Add sign-in, service-lease and attendance cues with coalesced publication and a sign-in watch flag, and publish language cues on operation completion; `src/cadrumo_client/contracts/session_events.py`.
+- [x] `S01` - Verify a service image once per connection and recheck only the kernel incarnation on later requests; `src/cadrumo_runtime/adapters/service_verification.py`.
+- [x] `S02` - Wait for the earliest lease deadline or a custody change instead of the 0.1 s worker expiry loop; `src/cadrumo_runtime/host/worker_service.py`.
+- [x] `S03` - Add sign-in, service-lease and attendance cues with coalesced publication and a sign-in watch flag, and publish language cues on operation completion; `src/cadrumo_client/contracts/session_events.py`.
 - [ ] `S04` - Drive the agent service from its connection events and stdin lifetime with cached generations; `src/cadrumo_agent_service/main.py`.
 - [ ] `S05` - Make the session hold block on one queue and emit unsolicited event lines; `src/cadrumo_runtime/host/session_hold.py`.
 - [ ] `S06` - Add the cadrumo-runtime session watch child; `src/cadrumo_runtime/host/session_watch.py`.

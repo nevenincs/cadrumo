@@ -70,7 +70,14 @@ from ..contracts.profile_access import (
     SessionsLocked,
 )
 from ..contracts.service_access import ServiceAdmission, ServiceConnected
-from ..contracts.session_events import ConnectionEvent, LifecycleNotice, ProfileLanguageChanged
+from ..contracts.session_events import (
+    AttendanceChanged,
+    ConnectionEvent,
+    LifecycleNotice,
+    ProfileLanguageChanged,
+    ServiceLeaseChanged,
+    SignInChanged,
+)
 from ..contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .enrollment_client import NativeEnrollmentClient
 from .framing import VerifiedConnection
@@ -123,6 +130,8 @@ class FrontendClient(ProfileViewFrontend):
         self._notice_receivers: list[Callable[[LifecycleNotice], None]] = []
         self._language_receivers: list[Callable[[ProfileLanguageChanged], None]] = []
         self._lifecycle_notice: LifecycleNotice | None = None
+        self._sign_in_receivers: list[Callable[[], None]] = []
+        self._attendance_receivers: list[Callable[[], None]] = []
 
     def _session_retired(self, event: ConnectionEvent) -> None:
         if isinstance(event, LifecycleNotice):
@@ -132,8 +141,21 @@ class FrontendClient(ProfileViewFrontend):
             for receive_notice in receivers:
                 receive_notice(event)
             return
-        if event.profile_id != self.profile_id:
+        if isinstance(event, SignInChanged):
+            with self._event_guard:
+                receivers_sign_in = tuple(self._sign_in_receivers)
+            for receive_sign_in in receivers_sign_in:
+                receive_sign_in()
+            return
+        if event.profile_id != self.profile_id or isinstance(event, ServiceLeaseChanged):
+            # A frontend never holds a service lease.
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        if isinstance(event, AttendanceChanged):
+            with self._event_guard:
+                receivers_attendance = tuple(self._attendance_receivers) if event.session_id == self._session_id else ()
+            for receive_attendance in receivers_attendance:
+                receive_attendance()
+            return
         if isinstance(event, ProfileLanguageChanged):
             with self._event_guard:
                 receivers_language = tuple(self._language_receivers) if event.session_id == self._session_id else ()
@@ -544,15 +566,48 @@ class FrontendClient(ProfileViewFrontend):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return reply.page
 
-    def sign_in_status(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> SignInStatusReply:
+    def sign_in_status(
+        self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, watch: bool = False
+    ) -> SignInStatusReply:
         """Observe shared presence without borrowing proof or authenticating this connection."""
         return self._reply(
             self._connection.sign_in_status(
-                SignInStatusRequest(request_id=uuid4(), profile_id=self.profile_id),
+                SignInStatusRequest(request_id=uuid4(), profile_id=self.profile_id, watch=watch),
                 deadline=deadline_after(timeout),
             ),
             SignInStatusReply,
         )
+
+    def watch_sign_in(
+        self, receive: Callable[[], None], *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+    ) -> SignInStatusReply:
+        """Read presence, then cue ``receive`` whenever any sign-in may have changed, until the connection closes.
+
+        A cue is only a reason to read the status again; it carries no state.
+        """
+        self._observe_events()
+        with self._event_guard:
+            self._sign_in_receivers.append(receive)
+        return self.sign_in_status(timeout=timeout, watch=True)
+
+    def subscribe_attendance_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """Cue ``receive`` when asks pending for this session's person change; re-read the inventory to see them."""
+        self._observe_events()
+        with self._event_guard:
+            self._attendance_receivers.append(receive)
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._attendance_receivers:
+                    self._attendance_receivers.remove(receive)
+
+        return unsubscribe
+
+    def _observe_events(self) -> None:
+        if self._event_subscription is None:
+            self._event_subscription = self._connection.subscribe_session_events(
+                self._session_retired, disconnected=self._connection_failed
+            )
 
     def human_sign_out(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> HumanSignedOut:
         """Revoke profile-wide human access using this connection's proven human session."""
