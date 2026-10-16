@@ -176,7 +176,9 @@ class FrontendClient(ProfileViewFrontend):
             self._retirement_epoch += 1
             self._session_id = None
             receivers = tuple(self._retirement_receivers)
-        for receive in receivers:
+            # A sign-in watch reads its status again and learns the connection is gone.
+            watchers = tuple(self._sign_in_receivers)
+        for receive in (*receivers, *watchers):
             receive()
 
     def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:

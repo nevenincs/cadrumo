@@ -3555,6 +3555,7 @@
         "cadrumo_runtime.host.session_events",
         "cadrumo_runtime.host.session_hold",
         "cadrumo_runtime.host.session_owner",
+        "cadrumo_runtime.host.session_watch",
         "cadrumo_runtime.host.shutdown",
         "cadrumo_runtime.host.sign_in_status",
         "cadrumo_runtime.host.sign_in_sweep",

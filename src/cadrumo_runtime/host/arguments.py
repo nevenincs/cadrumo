@@ -20,7 +20,8 @@ def parse_runtime_arguments(arguments: list[str] | None = None) -> argparse.Name
         epilog=(
             "Runtime command doors:\n"
             "  cadrumo-runtime [root options] config ...\n"
-            "  cadrumo-runtime session hold --profile-id UUID [--password-stdin]"
+            "  cadrumo-runtime session hold --profile-id UUID [--password-stdin]\n"
+            "  cadrumo-runtime session watch"
         ),
     )
     binding = parser.add_mutually_exclusive_group(required=True)

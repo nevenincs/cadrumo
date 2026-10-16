@@ -53,6 +53,10 @@ def main() -> None:
         from .session_hold import main as hold_main
 
         raise SystemExit(hold_main(sys.argv[3:]))
+    if sys.argv[1:3] == ["session", "watch"]:
+        from .session_watch import main as watch_main
+
+        raise SystemExit(watch_main(sys.argv[3:]))
     from cadrumo_runtime.commands.arguments import owns_command_args
 
     if owns_command_args(sys.argv[1:]):
