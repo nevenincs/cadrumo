@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tempfile
 import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -36,6 +37,8 @@ from .application_environment import (
     compile_section,
     parse,
 )
+from .build_directory import require_enrolled_build
+from .build_paths import build_paths
 
 LOG_RELOCATION: Final = "relocated-logs"
 """A relative diagnostic-log directory the command line must anchor beneath its storage root."""
@@ -492,7 +495,14 @@ def collect_facts(python: Path, request: Mapping[str, Any], *, cwd: Path) -> dic
     return facts
 
 
-def run(package: Path, manifest: str, source: Path, *, python: Path | None = None) -> int:
+def run(
+    package: Path,
+    manifest: str,
+    source: Path,
+    *,
+    scratch_root: Path,
+    python: Path | None = None,
+) -> int:
     """Check the package at ``package``; return 1 on any disagreement and 2 when the package cannot be asked.
 
     ``python`` replaces the package's own interpreter only where a caller needs
@@ -503,10 +513,13 @@ def run(package: Path, manifest: str, source: Path, *, python: Path | None = Non
     if reference.family != ("windows" if installed_platform() == "windows" else "posix"):
         sys.stderr.write("The package was built for another platform family; run its conformance check there.\n")
         return 2
-    request = build_request(reference)
+    scratch_root.mkdir(parents=True, exist_ok=True)
+    scratch_root = scratch_root.resolve(strict=True)
     interpreter = package / layout["paths"]["executable"] if python is None else python
     try:
-        facts = collect_facts(interpreter, request, cwd=package)
+        with tempfile.TemporaryDirectory(prefix="environment-conformance-", dir=scratch_root) as scratch:
+            request: dict[str, Any] = {**build_request(reference), "scratch": scratch}
+            facts = collect_facts(interpreter, request, cwd=package)
     except (RuntimeError, ValueError, OSError) as error:
         sys.stderr.write(f"{error}\n")
         return 2
@@ -530,8 +543,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--manifest", default="data/package-manifest.json", help="The manifest, relative to the package."
     )
     parser.add_argument("--source", type=Path, default=REPO_ROOT, help="The source tree holding the declaration.")
+    parser.add_argument(
+        "--build", type=require_enrolled_build, required=True, help="The owning CMake binary directory."
+    )
     arguments = parser.parse_args(argv)
-    return run(arguments.package.resolve(strict=True), arguments.manifest, arguments.source)
+    paths = build_paths(arguments.build)
+    return run(
+        arguments.package.resolve(strict=True),
+        arguments.manifest,
+        arguments.source,
+        scratch_root=paths["testing"],
+    )
 
 
 if __name__ == "__main__":

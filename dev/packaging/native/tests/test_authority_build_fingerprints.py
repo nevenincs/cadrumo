@@ -1,8 +1,9 @@
-"""Every build republishes a missing or stale authority; a rebuild republishes it unconditionally."""
+"""Native builds admit registry publications without becoming authoring commands."""
 
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -30,45 +31,39 @@ def _publication(root: Path) -> tuple[Path, Path]:
     return descriptor, database
 
 
-@pytest.mark.parametrize(
-    ("rebuild", "arguments"), [(False, ["publish-authority", "--if-stale"]), (True, ["publish-authority"])]
-)
-def test_a_build_asks_the_publisher_to_publish_a_missing_or_stale_authority(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, rebuild: bool, arguments: list[str]
-) -> None:
-    root = tmp_path / ".authority"
-    monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(root))
-    monkeypatch.setattr(authority_build, "REPO_ROOT", tmp_path)
-    commands: list[list[str]] = []
-
-    def run(command: list[str], **kwargs: object) -> SimpleNamespace:
-        commands.append(command)
-        _publication(root)
-        return SimpleNamespace(returncode=0, stdout="", stderr="")
-
-    monkeypatch.setattr(authority_build, "run_command", run)
-    authority_build.publish(tmp_path, rebuild=rebuild)
-    # The publisher decides staleness from the registry sources and compiler;
-    # an existing publication never short-circuits a normal build.
-    authority_build.publish(tmp_path, rebuild=rebuild)
-    assert len(commands) == 2
-    assert all(command[-len(arguments) :] == arguments for command in commands)
-
-
-@pytest.mark.parametrize("rebuild", [False, True])
-def test_failed_publication_preserves_existing_pair(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, rebuild: bool
-) -> None:
+@pytest.mark.parametrize("current", [False, True])
+def test_authority_admission_never_republishes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, current: bool) -> None:
     root = tmp_path / ".authority"
     pair = _publication(root)
-    before = [path.read_bytes() for path in pair]
+    build = tmp_path / "build"
+    build.mkdir()
+    (build / "build-paths.json").write_text(json.dumps({"paths": {"generated": "generated"}}))
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(root))
-    monkeypatch.setattr(
-        authority_build,
-        "run_command",
-        lambda *args, **kwargs: SimpleNamespace(returncode=7, stdout="", stderr="refused"),
-    )
-    with pytest.raises(SystemExit) as error:
-        authority_build.publish(tmp_path, rebuild=rebuild)
-    assert error.value.code == 7
-    assert [path.read_bytes() for path in pair] == before
+    monkeypatch.setattr(authority_build, "REPO_ROOT", tmp_path)
+    admitted: list[Path] = []
+
+    def currency(descriptor: Path, **kwargs: Path) -> SimpleNamespace:
+        admitted.append(descriptor)
+        assert kwargs["registry_root"] == tmp_path / "src/cadrumo/_data/registry/aeat"
+        return SimpleNamespace(is_current=current, detail="sources changed")
+
+    monkeypatch.setattr(authority_build, "authority_database_currency", currency)
+    before = {path.relative_to(tmp_path): path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
+    if current:
+        authority_build.publish(build)
+    else:
+        with pytest.raises(SystemExit, match="registry-publish-authority"):
+            authority_build.publish(build)
+    assert admitted == [pair[0]]
+    assert before == {path.relative_to(tmp_path): path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
+
+
+def test_missing_publication_reports_the_explicit_authoring_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {}}))
+    missing = tmp_path / "missing"
+    monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(missing))
+    with pytest.raises(SystemExit, match="registry-publish-authority"):
+        authority_build.publish(tmp_path)
+    assert not missing.exists()

@@ -193,6 +193,15 @@ def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
     assert docs_html_root(_REPO_ROOT) == resolved / "html"
 
 
+def test_docs_build_root_defaults_to_the_checkout_build_tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo_root = tmp_path / "checkout"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "separate-storage"))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
+
+    assert docs_build_root(repo_root) == repo_root / "build" / "docs"
+
+
 def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
     """Canonical docs builds clear stale preview files from their build root."""
     from ..build import remove_noncanonical_build_entries

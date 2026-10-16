@@ -1,4 +1,4 @@
-"""Reclaim abandoned release-build scratch under the repository's ``var/``.
+"""Reclaim registered build scratch and legacy release-build scratch under ``var/``.
 
 ``var/`` is not a scratch directory. It is a mixed one: the readiness gate
 reads its cohort, smoke and evidence trees out of it, an operator keeps
@@ -63,15 +63,17 @@ from cadrumo.tests.collection_storage_root import process_is_live
 
 @dataclass(frozen=True)
 class ScratchFamily:
-    """One build-scratch naming family under ``var/``, anchored at both ends.
+    """One build-scratch naming family, anchored at both ends.
 
     Both anchors are required. A prefix alone would make the staging family --
     whose prefix is a single leading dot -- cover every hidden entry an
-    operator ever put under ``var/``.
+    operator ever put under one of the scratch roots.
     """
 
     prefix: str
     suffix: str
+    auto_reclaim_on_dead_owner: bool = True
+    operator_age_reclaim: bool = True
 
 
 RELEASE_COHORT_INTEGRATION_FAMILY: Final[ScratchFamily] = ScratchFamily(
@@ -99,6 +101,21 @@ lands between those two, leaving a full cohort's worth of bytes behind -- both
 sdists, the wheelhouse and the several-hundred-megabyte source archive. The
 name carries its owner, so the next build's sweep reclaims it on an observed
 liveness answer rather than leaving it for an operator.
+"""
+
+RELEASE_SOURCE_SNAPSHOT_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix="release-source-",
+    suffix="-snapshot",
+    auto_reclaim_on_dead_owner=False,
+    operator_age_reclaim=False,
+)
+"""Bracket the clean source snapshot a release parent hands to its child builder.
+
+The snapshot and its child staging output live under the admitted build root.
+The parent PID alone cannot prove the child has stopped using this tree, so a
+sweep reports it as spared even when that PID is gone or its mtime is old.
+After reviewing the report, an operator removes abandoned snapshots manually.
+Normal completion removes the directory in a ``finally`` block.
 """
 
 COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(
@@ -137,6 +154,7 @@ every path the probe returns from, and left behind by every path it does not.
 VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (
     RELEASE_COHORT_INTEGRATION_FAMILY,
     RELEASE_STAGING_FAMILY,
+    RELEASE_SOURCE_SNAPSHOT_FAMILY,
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
     COMMAND_SPEC_BYTECODE_FAMILY,
@@ -209,6 +227,31 @@ def var_scratch_name(family: ScratchFamily, body: str) -> str:
     return f"{family.prefix}{os.getpid()}-{body}{family.suffix}"
 
 
+def require_build_path(path: Path, *, repo_root: Path) -> Path:
+    """Admit a lexical path under the physical repository ``build/`` root.
+
+    Resolve the repository root once, then reject every linked or junctioned
+    component from that root to the selected path. Calling ``resolve`` on the
+    build directory first would bless a linked ``build/`` that redirected
+    otherwise valid-looking outputs outside the checkout.
+    """
+    if ".." in path.parts:
+        raise ValueError("build output path must not contain traversal components")
+    root = repo_root.resolve(strict=True)
+    owner = root / "build"
+    selected = path.absolute()
+    try:
+        relative = selected.relative_to(owner)
+    except ValueError as error:
+        raise ValueError(f"build output must stay beneath {owner}: {selected}") from error
+    member = root
+    for part in ("build", *relative.parts):
+        member /= part
+        if is_link_like(member):
+            raise ValueError(f"build output must not use symlinks or junctions: {member}")
+    return selected
+
+
 def matching_family(name: str) -> ScratchFamily | None:
     """Return the scratch family ``name`` belongs to, or ``None`` for anything else.
 
@@ -262,8 +305,9 @@ def _is_reclaimable(
 
     Two independent grounds. The first is OBSERVED: the name carries an owner,
     that process no longer resolves, and the short abandonment grace has
-    elapsed. The second is INFERRED: nothing is left to ask, and the directory
-    has simply been quiet past the day ceiling.
+    elapsed, unless the family's ownership model requires a stronger signal.
+    The second is INFERRED: nothing is left to ask, and the directory has
+    simply been quiet past the day ceiling.
 
     Only the observed ground is applied by default, and that split is the whole
     reason this sweep is safe to run automatically over ``var/``. The temp-file
@@ -286,9 +330,11 @@ def _is_reclaimable(
     disappearance and the abandonment grace.
     """
     age = reference - candidate.stat().st_mtime
-    if reclaim_by_age and age > _STALE_AFTER_SECONDS:
+    if reclaim_by_age and family.operator_age_reclaim and age > _STALE_AFTER_SECONDS:
         return True
     if age <= _ABANDONED_AFTER_SECONDS:
+        return False
+    if not family.auto_reclaim_on_dead_owner:
         return False
     pid = _owning_pid(candidate.name, family)
     return pid is not None and not process_is_live(pid)
@@ -435,6 +481,24 @@ def sweep_var_scratch(
     return removed, retained
 
 
+def sweep_build_scratch(
+    build_root: Path,
+    *,
+    now: float | None = None,
+    exclude: Path | None = None,
+    reclaim_by_age: bool = False,
+) -> tuple[int, int]:
+    """Reclaim registered, abandoned scratch below the canonical build root.
+
+    The registry and owner checks are shared with legacy ``var/`` scratch, but
+    the caller supplies ``build/`` so ordinary build artifacts remain outside
+    this sweep's naming families.
+    """
+    if is_link_like(build_root) or not build_root.is_dir():
+        return (0, 0)
+    return sweep_var_scratch(build_root, now=now, exclude=exclude, reclaim_by_age=reclaim_by_age)
+
+
 def _scratch_bytes(candidate: Path) -> int:
     if candidate.is_file():
         return candidate.stat().st_size
@@ -556,11 +620,47 @@ def report_var_scratch(
     return total
 
 
+def report_build_scratch(
+    stream: TextIO,
+    build_root: Path,
+    *,
+    apply: bool,
+    measure: Callable[[Path], int] | None = None,
+) -> int:
+    """Report only registered scratch families below ``build/``.
+
+    Ordinary build outputs are reclaimed by the worktree cleaner. This section
+    owns the narrower decision about whether a registered, owner-tagged scratch
+    directory is still in use.
+    """
+    print(f"\nRegistered build scratch under {build_root}", file=stream)
+    if is_link_like(build_root) or not build_root.is_dir():
+        print("  build root unavailable or linked; no scratch inspected", file=stream)
+        return 0
+    reclaimable, spared = reclaimable_scratch(build_root)
+    for candidate in sorted(spared):
+        size = measure(candidate) if measure else _scratch_bytes(candidate)
+        print(f"  SPARE {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+    total = 0
+    for candidate in sorted(reclaimable):
+        size = measure(candidate) if measure else _scratch_bytes(candidate)
+        total += size
+        print(f"  REAP  {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+    verb = "reclaimed" if apply else "reclaimable"
+    print(f"  {verb}: {total / 1_000_000_000:.3f} GB   spared: {len(spared)}", file=stream)
+    if apply:
+        for candidate in reclaimable:
+            remove_scratch(candidate)
+        return total
+    return 0
+
+
 __all__ = [
     "COHORT_BUILD_TREE_FAMILY",
     "COHORT_SOURCE_ARCHIVE_FAMILY",
     "COMMAND_SPEC_BYTECODE_FAMILY",
     "RELEASE_COHORT_INTEGRATION_FAMILY",
+    "RELEASE_SOURCE_SNAPSHOT_FAMILY",
     "RELEASE_STAGING_FAMILY",
     "VAR_SCRATCH_FAMILIES",
     "ScratchFamily",
@@ -568,7 +668,10 @@ __all__ = [
     "reclaimable_scratch",
     "remove_scratch",
     "remove_tree",
+    "report_build_scratch",
     "report_var_scratch",
+    "require_build_path",
+    "sweep_build_scratch",
     "sweep_var_scratch",
     "var_scratch_name",
 ]

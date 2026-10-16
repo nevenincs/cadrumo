@@ -58,15 +58,22 @@ def _initialize(hook: ModuleType, root: Path, *, version: str, target_name: str)
     return build_data
 
 
-def _record_resolutions(hook: ModuleType, monkeypatch: pytest.MonkeyPatch, pair_root: Path) -> list[Path]:
+def _record_resolutions(
+    hook: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    pair_root: Path,
+    publication_flags: list[bool] | None = None,
+) -> list[Path]:
     """Stand the resolution in with a published pair, recording each request."""
     pair_root.mkdir(parents=True, exist_ok=True)
     descriptor = pair_root / "authority.current.json"
     database = pair_root / ("authority-" + "0" * 64 + ".sqlite3")
     resolved: list[Path] = []
 
-    def resolve(build_root: Path) -> Path:
+    def resolve(build_root: Path, *, allow_publication: bool = False) -> Path:
         resolved.append(build_root)
+        if publication_flags is not None:
+            publication_flags.append(allow_publication)
         return pair_root
 
     monkeypatch.setattr(hook, "_authority_root", resolve)
@@ -93,12 +100,14 @@ def test_a_real_distribution_ignores_the_editable_skip(
 ) -> None:
     """DISCRIMINATING: no wheel may ship without its authority because of an env knob."""
     hook = _hook_module()
-    resolved = _record_resolutions(hook, monkeypatch, tmp_path / "pair")
+    publication_flags: list[bool] = []
+    resolved = _record_resolutions(hook, monkeypatch, tmp_path / "pair", publication_flags)
     monkeypatch.setenv("CADRUMO_EDITABLE_AUTHORITY", "skip")
 
     build_data = _initialize(hook, tmp_path, version="standard", target_name="wheel")
 
     assert resolved == [tmp_path]
+    assert publication_flags == [False]
     assert build_data["force_include"], "the wheel lost its authority payload"
 
 
@@ -120,8 +129,7 @@ def test_distributions_embed_selected_client_and_clean_staging(
     assert resource.read_text(encoding="utf-8") == client_document()
     assert not resource.is_relative_to(tmp_path)
     assert not any(name.endswith(".env") for name in selected)
-    if target_name == "sdist":
-        assert "dev/packaging/google_oauth.py" in selected
+    assert not any(name.startswith("dev/") for name in selected)
     instance.finalize("standard", build_data, "unused-artifact")
     assert not resource.exists()
 
@@ -132,11 +140,36 @@ def test_an_editable_build_still_resolves_by_default(
 ) -> None:
     """A checkout's first sync keeps publishing the authority it will need."""
     hook = _hook_module()
-    resolved = _record_resolutions(hook, monkeypatch, tmp_path / "pair")
+    publication_flags: list[bool] = []
+    resolved = _record_resolutions(hook, monkeypatch, tmp_path / "pair", publication_flags)
     monkeypatch.delenv("CADRUMO_EDITABLE_AUTHORITY", raising=False)
 
     assert _initialize(hook, tmp_path, version="editable", target_name="wheel") == {}
     assert resolved == [tmp_path]
+    assert publication_flags == [True]
+
+
+def test_distribution_build_refuses_to_publish_missing_source_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ordinary builds consume published authority and never author checkout state."""
+    hook = _hook_module()
+    publisher_calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        publisher_calls.append((build_root, destination))
+        destination.mkdir(parents=True, exist_ok=True)
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    with pytest.raises(FileNotFoundError, match="just registry-publish-authority"):
+        _initialize(hook, tmp_path, version="standard", target_name="wheel")
+
+    assert publisher_calls == []
+    assert not (tmp_path / ".authority").exists()
 
 
 @pytest.mark.parametrize("seeded_override", [False, True])
@@ -158,7 +191,7 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
         monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(expected))
     monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
 
-    assert hook._authority_root(tmp_path) == expected
+    assert hook._authority_root(tmp_path, allow_publication=True) == expected
     assert calls == [(tmp_path, expected)]
 
 
@@ -230,7 +263,7 @@ def test_an_interrupted_publication_is_completed_rather_than_read(
     monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
     monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
 
-    assert hook._authority_root(tmp_path) == interrupted
+    assert hook._authority_root(tmp_path, allow_publication=True) == interrupted
     assert calls == [(tmp_path, interrupted)]
 
 

@@ -71,6 +71,7 @@ if (-not $BuildDirectory) {
 $BuildDirectory = [IO.Path]::GetFullPath($BuildDirectory)
 if (-not $DevPython) { $DevPython = Join-Path $Repository '.venv\Scripts\python.exe' }
 if (-not (Test-Path -LiteralPath $DevPython)) { throw "Development interpreter not found: $DevPython (pass -DevPython)" }
+$DevPython = (Resolve-Path -LiteralPath $DevPython).ProviderPath
 
 $session = [Diagnostics.Process]::GetCurrentProcess().SessionId
 if ($session -eq 0 -and -not $PrepareOnly) {
@@ -89,6 +90,28 @@ function Invoke-Checked([string]$File, [string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) { throw "$File exited with $LASTEXITCODE" }
 }
 
+function Assert-UnlinkedBuildMember([string]$Path) {
+    $root = [IO.Path]::GetFullPath($BuildDirectory).TrimEnd([char[]]@('\','/'))
+    $candidate = [IO.Path]::GetFullPath($Path)
+    $prefix = $root + [IO.Path]::DirectorySeparatorChar
+    if (-not $candidate.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Output path is outside the selected build directory: $candidate"
+    }
+    $current = $root
+    $relative = $candidate.Substring($prefix.Length)
+    $separators = [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+    foreach ($part in $relative.Split($separators)) {
+        if (-not $part) { continue }
+        $current = Join-Path $current $part
+        if (Test-Path -LiteralPath $current) {
+            $item = Get-Item -LiteralPath $current -Force
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw "Output path contains a symlink or junction: $current"
+            }
+        }
+    }
+}
+
 # The package ------------------------------------------------------------------
 $source = $null
 if ($PSCmdlet.ParameterSetName -eq 'Kit') {
@@ -99,42 +122,16 @@ if ($PSCmdlet.ParameterSetName -eq 'Kit') {
         if (-not (Test-Path -LiteralPath $required)) { throw "Kit file missing: $required" }
     }
     $PackageRoot = Join-Path $BuildDirectory 'desktop\testing\packaged\package'
-    $marker = Join-Path $PackageRoot 'kit-source.json'
     $wanted = [ordered]@{
         kit                  = $Kit
         packageManifestSha256 = Get-Sha256 (Join-Path $kitApp 'data\package-manifest.json')
         docsManifestSha256   = Get-Sha256 (Join-Path $kitDocs 'manifest.json')
-    }
-    $current = $null
-    if (Test-Path -LiteralPath $marker) { $current = Get-Content -LiteralPath $marker -Raw | ConvertFrom-Json }
-    $same = $current -and $current.kit -eq $wanted.kit -and
-        $current.packageManifestSha256 -eq $wanted.packageManifestSha256 -and
-        $current.docsManifestSha256 -eq $wanted.docsManifestSha256
-    if (-not $same) {
-        if (Test-Path -LiteralPath $PackageRoot) {
-            $resolved = (Resolve-Path -LiteralPath $PackageRoot).ProviderPath
-            $owned = $resolved.StartsWith((Join-Path $BuildDirectory 'desktop\testing\packaged\'), [StringComparison]::OrdinalIgnoreCase)
-            if (-not $owned -or -not (Test-Path -LiteralPath $marker)) {
-                throw "Refusing to replace ${resolved}: it is not a kit copy this script made."
-            }
-            Remove-Item -LiteralPath $resolved -Recurse -Force
-        }
-        Write-Host "Copying the kit package and staged documentation into $PackageRoot"
-        & robocopy.exe $kitApp $PackageRoot /E /MT:16 /NFL /NDL /NJH /NJS /NP /XF cadrumo.exe cadrumo-production.exe | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "robocopy of the package failed with $LASTEXITCODE" }
-        & robocopy.exe $kitDocs (Join-Path $PackageRoot 'docs\user') /E /MT:16 /NFL /NDL /NJH /NJS /NP | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "robocopy of the documentation failed with $LASTEXITCODE" }
-        $wanted | ConvertTo-Json | Set-Content -LiteralPath $marker -Encoding UTF8
     }
     $source = "a copy of the smoke kit $Kit (not a package built from HEAD)"
 } else {
     $PackageRoot = (Resolve-Path -LiteralPath $PackageRoot).ProviderPath.TrimEnd('\')
     $source = "the assembled package $PackageRoot"
 }
-foreach ($required in @('python.exe', 'data\package-manifest.json', 'docs\user\manifest.json')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $PackageRoot $required))) { throw "The package has no $required" }
-}
-
 Write-Host ''
 Write-Host 'CADRUMO packaged desktop test'
 Write-Host "  package: $source"
@@ -153,6 +150,8 @@ if (-not $PrepareOnly) {
 }
 
 # Build and run -------------------------------------------------------------------
+# Configure first. CMake admits the physical preset directory and writes its
+# output manifest before the kit is copied anywhere inside the selected build.
 $configure = @('-S', $Desktop)
 if ($Preset) {
     # The preset pins the generator and the binary directory.
@@ -165,6 +164,49 @@ if ($Preset) {
 }
 $configure += @("-DCADRUMO_DESKTOP_PACKAGE_ROOT=$PackageRoot", "-DCADRUMO_DEV_PYTHON=$DevPython")
 Invoke-Checked 'cmake' $configure
+Push-Location $Repository
+try {
+    $admittedBuild = & $DevPython -B -c 'import sys; from dev.packaging.native.build_directory import require_enrolled_build; print(require_enrolled_build(sys.argv[1]))' $BuildDirectory
+    if ($LASTEXITCODE -ne 0 -or -not $admittedBuild) {
+        throw 'The configured directory is not an enrolled desktop build preset.'
+    }
+} finally {
+    Pop-Location
+}
+$BuildDirectory = [IO.Path]::GetFullPath([string]$admittedBuild)
+
+if ($PSCmdlet.ParameterSetName -eq 'Kit') {
+    $marker = Join-Path $PackageRoot 'kit-source.json'
+    $kitDocsDestination = Join-Path $PackageRoot 'docs\user'
+    Assert-UnlinkedBuildMember $PackageRoot
+    Assert-UnlinkedBuildMember $kitDocsDestination
+    Assert-UnlinkedBuildMember $marker
+    $current = $null
+    if (Test-Path -LiteralPath $marker) { $current = Get-Content -LiteralPath $marker -Raw | ConvertFrom-Json }
+    $same = $current -and $current.kit -eq $wanted.kit -and
+        $current.packageManifestSha256 -eq $wanted.packageManifestSha256 -and
+        $current.docsManifestSha256 -eq $wanted.docsManifestSha256
+    if (-not $same) {
+        if (Test-Path -LiteralPath $PackageRoot) {
+            if (-not (Test-Path -LiteralPath $marker)) {
+                throw "Refusing to replace ${PackageRoot}: it is not a kit copy this script made."
+            }
+            Remove-Item -LiteralPath $PackageRoot -Recurse -Force
+        }
+        Write-Host "Copying the kit package and staged documentation into $PackageRoot"
+        & robocopy.exe $kitApp $PackageRoot /E /MT:16 /NFL /NDL /NJH /NJS /NP /XF cadrumo.exe cadrumo-production.exe | Out-Null
+        if ($LASTEXITCODE -ge 8) { throw "robocopy of the package failed with $LASTEXITCODE" }
+        Assert-UnlinkedBuildMember $kitDocsDestination
+        & robocopy.exe $kitDocs $kitDocsDestination /E /MT:16 /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { throw "robocopy of the documentation failed with $LASTEXITCODE" }
+        Assert-UnlinkedBuildMember $marker
+        $wanted | ConvertTo-Json | Set-Content -LiteralPath $marker -Encoding UTF8
+    }
+}
+foreach ($required in @('python.exe', 'data\package-manifest.json', 'docs\user\manifest.json')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $PackageRoot $required))) { throw "The package has no $required" }
+}
+
 Push-Location $Repository
 try { Invoke-Checked $DevPython @('-B', '-m', 'dev.packaging.native.generate', (Join-Path $BuildDirectory 'generated')) }
 finally { Pop-Location }

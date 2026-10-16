@@ -4,11 +4,11 @@ The serial `just` aggregates ran every flavor lane back-to-back; on the
 Windows runner the host-portable campaign measured 26.3 minutes because each
 lane provisions a fresh venv and re-installs the same wheel cohort, and venv
 installs there are disk-bound. Every lane already writes into its own
-prefixed work directory under ``var/packaging-smoke/`` and consumes the
-cohort directory read-only, so the lanes are disk-disjoint and safe to run
-concurrently. This driver builds the cohort exactly once, fans the flavor
-lanes out across a bounded worker pool, streams each lane's captured log on
-completion (no interleaving), and finishes with the isolation-sensitive
+prefixed work directory and consumes the cohort directory read-only, so the
+lanes are disk-disjoint and safe to run concurrently. This driver keeps its
+preflight and captured logs under ``build/packaging-smoke/``, builds the cohort
+exactly once, fans the flavor lanes out across a bounded worker pool, streams
+each lane's captured log on completion (no interleaving), and finishes with the isolation-sensitive
 installed-oracles pytest pass, which must stay serial (``-n0 -m "integration
 and serial"``).
 
@@ -42,7 +42,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
-COHORT_DIR: Final[str] = "var/packaging-smoke-cohort/python"
+COHORT_DIR: Final[str] = "build/packaging-smoke-cohort/python"
 # Lane concurrency is sized against the PHYSICAL MACHINE, not "a runner": the
 # fleet is six runners on two machines (three per box), so a CI leg must
 # assume two co-resident jobs. Workflows pass the per-leg value via the env
@@ -73,7 +73,7 @@ class Form:
 
     def command(self) -> list[str]:
         """Return the subprocess argv for this form."""
-        argv = [sys.executable, "-m", self.module]
+        argv = [sys.executable, "-B", "-m", self.module]
         if self.takes_cohort:
             argv += ["--cohort-dir", COHORT_DIR]
         argv += list(self.extra_args)
@@ -329,7 +329,7 @@ def preflight_basetemp_root(repo_root: Path) -> Path:
     Returns:
         The root each pass takes its own dedicated subdirectory under.
     """
-    return repo_root / "var" / "packaging-smoke" / "pytest-basetemp"
+    return repo_root / "build" / "packaging-smoke" / "pytest-basetemp"
 
 
 def pytest_pass_argv(pytest_pass: PytestPass, repo_root: Path, test_workers: int | None) -> list[str]:
@@ -348,7 +348,7 @@ def pytest_pass_argv(pytest_pass: PytestPass, repo_root: Path, test_workers: int
     Returns:
         The argv, ready for :func:`_run_step`.
     """
-    argv = [sys.executable, "-m", "pytest", "-q"]
+    argv = [sys.executable, "-B", "-m", "pytest", "-q"]
     if pytest_pass.timeout_seconds is not None:
         argv.append(f"--timeout={pytest_pass.timeout_seconds}")
     if pytest_pass.pinned_basetemp:
@@ -525,7 +525,7 @@ def _adopt_cohort(source: Path, repo_root: Path) -> None:
     """
     cohort = source.resolve(strict=True)
     _run_step(
-        [sys.executable, "-m", "dev.packaging.python_cohort", "verify", "--cohort-dir", str(cohort)],
+        [sys.executable, "-B", "-m", "dev.packaging.python_cohort", "verify", "--cohort-dir", str(cohort)],
         repo_root,
         "verify-cohort",
     )
@@ -590,10 +590,10 @@ def main(argv: list[str] | None = None) -> int:
     workers = _worker_count(args.max_workers)
 
     if not args.skip_preflight:
-        _run_step([sys.executable, "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
+        _run_step([sys.executable, "-B", "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
         # pytest mkdirs each pass's basetemp itself but does NOT create its
         # parents, so a clean checkout would die with an internal error here:
-        # the campaign only creates `var/packaging-smoke/` later, for the lane
+        # the campaign only creates `build/packaging-smoke/` later, for the lane
         # logs.
         preflight_basetemp_root(repo_root).mkdir(parents=True, exist_ok=True)
         test_workers = _test_worker_count(args.test_workers)
@@ -607,18 +607,18 @@ def main(argv: list[str] | None = None) -> int:
 
     # Fail before any wheel or venv work if a source shipped-data file is
     # missing from the worktree (seconds).
-    _run_step([sys.executable, "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
+    _run_step([sys.executable, "-B", "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
 
     if args.cohort_dir is None:
         _run_step(
-            [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],
+            [sys.executable, "-B", "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],
             repo_root,
             "build-cohort",
         )
     else:
         _adopt_cohort(args.cohort_dir, repo_root)
 
-    log_dir = repo_root / "var" / "packaging-smoke" / "lane-logs"
+    log_dir = repo_root / "build" / "packaging-smoke" / "lane-logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     print(f"[campaign] profile={args.profile} forms={', '.join(selectors)} workers={workers}", flush=True)
     for lane_name in dict.fromkeys(selector.split("/", 1)[0] for selector in selectors):

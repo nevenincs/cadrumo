@@ -25,6 +25,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
 concurrency:
   group: release-${{ inputs.phase }}-${{ inputs.version }}
   cancel-in-progress: ${{ inputs.phase == 'prove' }}
@@ -374,35 +377,35 @@ jobs:
             exit 1
           fi
           uv run --no-sync python -m dev.packaging.release_cohort build \
-            --output var/release-cohort \
+            --output build/release-cohort \
             --source-tag "v${INPUT_VERSION#v}" \
             --source-commit "$GITHUB_SHA"
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
 
       - name: Refuse a distribution over the index file cap
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p var/release-dist
-          cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz var/release-dist/
-          test "$(find var/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
-          uv run --no-sync python -m dev.packaging.distribution_cap --directory var/release-dist
+          mkdir -p build/release-dist
+          cp build/release-cohort/python/*.whl build/release-cohort/python/*.tar.gz build/release-dist/
+          test "$(find build/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
+          uv run --no-sync python -m dev.packaging.distribution_cap --directory build/release-dist
 
       - name: Seal the release cohort
         shell: bash
         run: |
           set -euo pipefail
           tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
-            -czf cadrumo-release-cohort.tar.gz -C var/release-cohort .
-          sha256sum cadrumo-release-cohort.tar.gz > cadrumo-release-cohort.tar.gz.sha256
+            -czf build/cadrumo-release-cohort.tar.gz -C build/release-cohort .
+          sha256sum build/cadrumo-release-cohort.tar.gz > build/cadrumo-release-cohort.tar.gz.sha256
 
       - name: Upload the sealed release cohort
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cadrumo-release-cohort
           path: |
-            cadrumo-release-cohort.tar.gz
-            cadrumo-release-cohort.tar.gz.sha256
+            build/cadrumo-release-cohort.tar.gz
+            build/cadrumo-release-cohort.tar.gz.sha256
           if-no-files-found: error
           retention-days: 30
 
@@ -441,15 +444,15 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
 
       - name: Extract and verify the sealed release cohort
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p var/release-cohort
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          mkdir -p build/release-cohort
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
 
       - name: Install the cohort, run installed oracles, emit the row
         shell: bash
@@ -457,7 +460,7 @@ jobs:
           ROW_ID: ${{ matrix.row-id }}
         run: |
           uv run --no-sync python -m dev.packaging.oracle_emit_cohort \
-            --release-cohort-dir var/release-cohort \
+            --release-cohort-dir build/release-cohort \
             --row-id "$ROW_ID" \
             --work-dir var/oracle-emit-work \
             --distribution-evidence-dir var/distribution-install-readiness
@@ -511,15 +514,15 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
 
       - name: Extract and verify the sealed release cohort
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p var/release-cohort
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          mkdir -p build/release-cohort
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
 
       - name: Packaging campaign against the sealed cohort
         shell: bash
@@ -530,7 +533,7 @@ jobs:
         run: |
           uv run --no-sync python -m dev.packaging.campaign \
             --profile "$CAMPAIGN_PROFILE" \
-            --cohort-dir var/release-cohort/python
+            --cohort-dir build/release-cohort/python
 
       - name: Checkpoint packaging evidence
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
@@ -892,16 +895,16 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
 
       - name: Extract and verify the sealed release cohort
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p var/release-cohort dist
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
-          cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz dist/
+          mkdir -p build/release-cohort build/release-dist
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
+          cp build/release-cohort/python/*.whl build/release-cohort/python/*.tar.gz build/release-dist/
 
       - name: Smoke test the built wheels
         shell: bash
@@ -909,7 +912,7 @@ jobs:
           INPUT_VERSION: ${{ inputs.version }}
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          uv run --isolated --no-project --python "$PYTHON_VERSION" --find-links dist \
+          uv run --isolated --no-project --python "$PYTHON_VERSION" --find-links build/release-dist \
             --with "cadrumo==${INPUT_VERSION#v}" \
             dev/smoke/smoke_check.py
 
@@ -1081,7 +1084,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
           run-id: ${{ steps.locate.outputs.run-id }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
@@ -1096,13 +1099,13 @@ jobs:
           set -euo pipefail
           version="${INPUT_VERSION#v}"
           test "$CHECKOUT_COMMIT" = "$TAG_COMMIT"
-          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
-          mkdir -p var/release-cohort
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
-          test "$(jq -r .version var/release-cohort/release-cohort.json)" = "$version"
-          test "$(jq -r .source.tag var/release-cohort/release-cohort.json)" = "v${version}"
-          cohort_commit="$(jq -r .source.commit var/release-cohort/release-cohort.json)"
+          (cd build/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p build/release-cohort
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
+          test "$(jq -r .version build/release-cohort/release-cohort.json)" = "$version"
+          test "$(jq -r .source.tag build/release-cohort/release-cohort.json)" = "v${version}"
+          cohort_commit="$(jq -r .source.commit build/release-cohort/release-cohort.json)"
           if [ "$cohort_commit" != "$TAG_COMMIT" ] && \
              [ "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${cohort_commit}" --jq .tree.sha)" != \
                "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${TAG_COMMIT}" --jq .tree.sha)" ]; then
@@ -1143,7 +1146,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
           run-id: ${{ needs.locate-cohort.outputs.run-id }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
@@ -1151,13 +1154,13 @@ jobs:
       - name: Select the sealed distribution bytes
         run: |
           set -euo pipefail
-          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
-          mkdir -p var/release-cohort dist
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
-          cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz dist/
-          test "$(find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
-          uv run --no-sync python -m dev.packaging.distribution_cap --directory dist
+          (cd build/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p build/release-cohort build/release-dist
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
+          cp build/release-cohort/python/*.whl build/release-cohort/python/*.tar.gz build/release-dist/
+          test "$(find build/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
+          uv run --no-sync python -m dev.packaging.distribution_cap --directory build/release-dist
 
       - name: Compare the sealed bytes with the package index
         id: index
@@ -1166,7 +1169,7 @@ jobs:
         run: |
           uv run --no-sync python -m dev.release.pypi_publication_state \
             --version "${INPUT_VERSION#v}" \
-            --dist-dir dist \
+            --dist-dir build/release-dist \
             --github-output "$GITHUB_OUTPUT"
 
       - name: Refuse a version any destination already owns
@@ -1186,12 +1189,12 @@ jobs:
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
-            dist/*.whl
-            dist/*.tar.gz
+            build/release-dist/*.whl
+            build/release-dist/*.tar.gz
 
       - name: Publish to PyPI
         if: steps.index.outputs.state != 'published'
-        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ dist/*.whl dist/*.tar.gz
+        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ build/release-dist/*.whl build/release-dist/*.tar.gz
 
       - name: Report an already published version
         if: steps.index.outputs.state == 'published'
@@ -1238,7 +1241,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
           run-id: ${{ needs.locate-cohort.outputs.run-id }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
@@ -1246,10 +1249,10 @@ jobs:
       - name: Extract and verify the proven release cohort
         run: |
           set -euo pipefail
-          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
-          mkdir -p var/release-cohort
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          (cd build/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p build/release-cohort
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
 
       - name: Checkout the tap
         id: tap-checkout
@@ -1269,7 +1272,7 @@ jobs:
         run: |
           set -euo pipefail
           version="${INPUT_VERSION#v}"
-          incoming=var/release-cohort/homebrew/Formula/cadrumo.rb
+          incoming=build/release-cohort/homebrew/Formula/cadrumo.rb
           existing=var/homebrew-tap/Formula/cadrumo.rb
           if [ -f "$existing" ]; then
             echo "existed=true" >> "$GITHUB_OUTPUT"
@@ -1349,7 +1352,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
           run-id: ${{ needs.locate-cohort.outputs.run-id }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
@@ -1357,10 +1360,10 @@ jobs:
       - name: Extract and verify the proven release cohort
         run: |
           set -euo pipefail
-          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
-          mkdir -p var/release-cohort
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
-          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          (cd build/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p build/release-cohort
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir build/release-cohort
 
       - name: Checkout the bucket
         id: bucket-checkout
@@ -1380,7 +1383,7 @@ jobs:
         run: |
           set -euo pipefail
           version="${INPUT_VERSION#v}"
-          incoming=var/release-cohort/scoop/cadrumo.json
+          incoming=build/release-cohort/scoop/cadrumo.json
           existing=var/scoop-bucket/bucket/cadrumo.json
           if [ -f "$existing" ]; then
             echo "existed=true" >> "$GITHUB_OUTPUT"
@@ -1449,7 +1452,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
           run-id: ${{ needs.locate-cohort.outputs.run-id }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
@@ -1457,13 +1460,13 @@ jobs:
       - name: Extract the proven release cohort
         run: |
           set -euo pipefail
-          mkdir -p var/release-cohort
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          mkdir -p build/release-cohort
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
 
       - name: Reacquire the cohort from PyPI
         run: |
           uv run --no-sync python -m dev.packaging.acquire_pypi \
-            --cohort-dir var/release-cohort/python \
+            --cohort-dir build/release-cohort/python \
             --evidence-dir var/acquisition/pypi
 
   acquire-homebrew:
@@ -1508,7 +1511,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
           run-id: ${{ needs.locate-cohort.outputs.run-id }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
@@ -1516,15 +1519,15 @@ jobs:
       - name: Extract the proven release cohort
         run: |
           set -euo pipefail
-          mkdir -p var/release-cohort
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          mkdir -p build/release-cohort
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
 
       - name: Reacquire the cohort from the public tap
         env:
           BREW_PATH: ${{ matrix.brew }}
         run: |
           uv run --no-sync python -m dev.packaging.acquire_homebrew \
-            --cohort-dir var/release-cohort/python \
+            --cohort-dir build/release-cohort/python \
             --evidence-dir var/acquisition/homebrew \
             --brew "$BREW_PATH"
 
@@ -1558,7 +1561,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cadrumo-release-cohort
-          path: var/cohort-download
+          path: build/cohort-download
           run-id: ${{ needs.locate-cohort.outputs.run-id }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
@@ -1568,12 +1571,12 @@ jobs:
         env:
           BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY }}
         run: |
-          New-Item -ItemType Directory -Force var/release-cohort | Out-Null
-          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          New-Item -ItemType Directory -Force build/release-cohort | Out-Null
+          tar -xzf build/cohort-download/cadrumo-release-cohort.tar.gz -C build/release-cohort
           if ($LASTEXITCODE -ne 0) { throw "release cohort extraction failed" }
           & ./dev/packaging/acquire_scoop.ps1 `
             -Mode Host `
-            -CohortDir var/release-cohort/python `
+            -CohortDir build/release-cohort/python `
             -BucketSource "https://github.com/$env:BUCKET_REPOSITORY" `
             -EvidenceDir var/acquisition/scoop
 

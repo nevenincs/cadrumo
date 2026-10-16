@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -10,14 +12,19 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
+  bundledNpmCli,
   ensureInstalled,
   installDecision,
 } from "../scripts/frontend-install.mjs";
 
 const PLATFORM = { os: "testos", cpu: "testcpu", libc: undefined };
 const RECORD = "node_modules/.package-lock.json";
+const FRONTEND_INSTALL = fileURLToPath(
+  new URL("../scripts/frontend-install.mjs", import.meta.url),
+);
 
 function entry(version, extra = {}) {
   return {
@@ -85,9 +92,8 @@ const INSTALLED = [
   "node_modules/tool-here",
 ];
 
-function frontend(t, packages = locked(), installed = INSTALLED) {
-  const root = mkdtempSync(join(tmpdir(), "cadrumo-frontend-install-"));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+function populateFrontend(root, packages, installed) {
+  mkdirSync(root, { recursive: true });
   writeFileSync(
     join(root, "package-lock.json"),
     JSON.stringify({ lockfileVersion: 3, packages }),
@@ -109,6 +115,28 @@ function frontend(t, packages = locked(), installed = INSTALLED) {
     JSON.stringify({ lockfileVersion: 3, packages: recorded }),
   );
   return root;
+}
+
+function frontend(t, packages = locked(), installed = INSTALLED) {
+  const root = mkdtempSync(join(tmpdir(), "cadrumo-frontend-install-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  return populateFrontend(root, packages, installed);
+}
+
+function frontendProject(t, packages = locked(), installed = INSTALLED) {
+  const root = mkdtempSync(join(tmpdir(), "cadrumo-frontend-project-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const desktop = join(root, "native", "desktop");
+  const frontendRoot = populateFrontend(
+    join(desktop, "frontend"),
+    packages,
+    installed,
+  );
+  const scripts = join(desktop, "scripts");
+  mkdirSync(scripts, { recursive: true });
+  const script = join(scripts, "frontend-install.mjs");
+  copyFileSync(FRONTEND_INSTALL, script);
+  return { frontend: frontendRoot, script };
 }
 
 function record(root, change) {
@@ -211,6 +239,58 @@ test("a tree holding what npm installs on this platform is kept", (t) => {
     install: false,
     reason: "5 installed packages match package-lock.json",
   });
+});
+
+test("the check CLI is read-only and tells the operator to run npm ci", (t) => {
+  const ready = frontendProject(t);
+  const packageJson = readFileSync(
+    join(ready.frontend, "package.json"),
+    "utf8",
+  );
+  const packageLock = readFileSync(
+    join(ready.frontend, "package-lock.json"),
+    "utf8",
+  );
+  const checked = spawnSync(process.execPath, [ready.script, "--check"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.match(checked.stdout, /Frontend dependencies are ready/);
+  assert.equal(existsSync(join(ready.frontend, ".cadrumo-npm.lock")), false);
+  assert.equal(
+    readFileSync(join(ready.frontend, "package.json"), "utf8"),
+    packageJson,
+  );
+  assert.equal(
+    readFileSync(join(ready.frontend, "package-lock.json"), "utf8"),
+    packageLock,
+  );
+
+  const missing = frontendProject(t);
+  const missingPackageLock = readFileSync(
+    join(missing.frontend, "package-lock.json"),
+    "utf8",
+  );
+  rmSync(join(missing.frontend, "node_modules"), {
+    recursive: true,
+    force: true,
+  });
+  const rejected = spawnSync(process.execPath, [missing.script, "--check"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  assert.equal(rejected.status, 1);
+  assert.match(
+    rejected.stderr,
+    /Run `just setup-desktop-frontend` before building/,
+  );
+  assert.equal(existsSync(join(missing.frontend, "node_modules")), false);
+  assert.equal(existsSync(join(missing.frontend, ".cadrumo-npm.lock")), false);
+  assert.equal(
+    readFileSync(join(missing.frontend, "package-lock.json"), "utf8"),
+    missingPackageLock,
+  );
 });
 
 test("a tree without a readable record is installed", (t) => {
@@ -346,4 +426,23 @@ cpSync("record.json", ${JSON.stringify(RECORD)});
   assert.deepEqual(call.arguments, ["ci", "--include=dev"]);
   assert.equal(realpathSync(call.cwd), realpathSync(root));
   assert.equal(installDecision(root).install, false);
+});
+
+test("setup finds the npm CLI installed beside the selected Node binary", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "cadrumo-frontend-node-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const windows = join(root, "windows");
+  const posix = join(root, "posix");
+  const windowsCli = join(windows, "node_modules/npm/bin/npm-cli.js");
+  const posixCli = join(posix, "lib/node_modules/npm/bin/npm-cli.js");
+  for (const cli of [windowsCli, posixCli]) {
+    mkdirSync(join(cli, ".."), { recursive: true });
+    writeFileSync(cli, "");
+  }
+  assert.equal(bundledNpmCli(join(windows, "node.exe")), windowsCli);
+  assert.equal(bundledNpmCli(join(posix, "bin/node")), posixCli);
+  assert.throws(
+    () => bundledNpmCli(join(root, "absent/node")),
+    /No npm CLI is installed beside/,
+  );
 });

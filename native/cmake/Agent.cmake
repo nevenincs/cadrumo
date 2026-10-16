@@ -44,7 +44,7 @@ add_custom_target(agent-checksum
   DEPENDS agent_project WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 foreach(agent_target windows-x86-64 linux-x86-64 linux-aarch64 macos-arm64)
   cadrumo_build_step(step_comment "agent-lock-${agent_target}" GROUP dependencies
-    SUMMARY "explicitly update the agent dependency lock for ${agent_target}")
+    SUMMARY "generate a build-owned candidate dependency lock for ${agent_target}")
   add_custom_target("agent-lock-${agent_target}"
     COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.agent lock
       --build "${PROJECT_BINARY_DIR}" --target "${agent_target}"

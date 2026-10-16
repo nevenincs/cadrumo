@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import sys
 import zipfile
 from collections.abc import Sequence
 from pathlib import Path
@@ -11,6 +12,7 @@ from typing import Never
 
 import pytest
 
+from dev.packaging.command_execution import run_command
 from dev.source_tree import content_digest, repository_files, snapshot
 
 from .. import python_cohort, release_cohort
@@ -61,9 +63,11 @@ def test_ordinary_cohort_names_the_bytes_actually_captured(
         source_files: Sequence[str],
         source_digest: str,
         authority_source_root: Path | None,
+        scratch_root: Path,
         remove_build_root: bool,
     ) -> Never:
         assert authority_source_root == root and remove_build_root
+        assert scratch_root == root / "build"
         assert source_digest == _expected_identity(expected)
         archive_path = python_cohort._archive_source_snapshot(
             build_root, source_files, output / "captured.zip", expected_source_digest=source_digest
@@ -75,7 +79,7 @@ def test_ordinary_cohort_names_the_bytes_actually_captured(
     monkeypatch.setattr(python_cohort, "snapshot", changing_snapshot)
     monkeypatch.setattr(python_cohort, "_build_python_cohort_from_snapshot", inspect_capture)
     with pytest.raises(_BuildInterceptedError):
-        python_cohort.build_python_cohort(root, root / "var" / "cohort")
+        python_cohort.build_python_cohort(root, root / "build" / "cohort")
 
 
 @pytest.mark.parametrize("mutation", ("unchanged", "wrong_identity", "changed_before_archive"))
@@ -106,13 +110,47 @@ def test_clean_release_identity_is_verified_before_staging(
     with pytest.raises(expected_error) as caught:
         python_cohort.build_python_cohort_from_clean_snapshot(
             root,
-            root / "var" / "cohort",
+            root / "build" / "cohort",
             source_files=("program.py",),
             source_digest="0" * 64 if mutation == "wrong_identity" else expected,
         )
     if mutation != "unchanged":
         assert "source archive does not match its source digest" in str(caught.value)
-    assert not list((root / "var" / "cohort").glob("*.whl"))
+    assert not list((root / "build" / "cohort").glob("*.whl"))
+
+
+def test_cohort_builders_refuse_a_linked_output_without_removing_its_target(tmp_path: Path) -> None:
+    """Both builder entry points reject a linked output before resolving it."""
+    root = tmp_path / "repo"
+    build = root / "build"
+    target = build / "target"
+    link = build / "linked"
+    target.mkdir(parents=True)
+    (root / ".gitignore").write_text("build/\n", encoding="utf-8")
+    protected = target / "keep.txt"
+    protected.write_text("preserve", encoding="utf-8")
+    if sys.platform == "win32":
+        command_shell = os.environ.get("COMSPEC", "cmd.exe")
+        completed = run_command(
+            [command_shell, "/c", "mklink", "/J", str(link), str(target)],
+            cwd=link.parent,
+        )
+        assert completed.returncode == 0, completed.stderr
+    else:
+        link.symlink_to(target, target_is_directory=True)
+
+    with pytest.raises(SystemExit, match="symlinks or junctions"):
+        python_cohort.build_python_cohort(root, link)
+    assert protected.read_text(encoding="utf-8") == "preserve"
+
+    with pytest.raises(SystemExit, match="symlinks or junctions"):
+        python_cohort.build_python_cohort_from_clean_snapshot(
+            root,
+            link,
+            source_files=(),
+            source_digest="",
+        )
+    assert protected.read_text(encoding="utf-8") == "preserve"
 
 
 @pytest.mark.parametrize("changed_during_copy", (False, True))
@@ -121,7 +159,7 @@ def test_release_wrapper_preserves_requested_identity_in_default_snapshot_branch
 ) -> None:
     root = tmp_path / "release-source"
     (root / "packaging").mkdir(parents=True)
-    (root / ".gitignore").write_text("var/\n", encoding="utf-8")
+    (root / ".gitignore").write_text("build/\n", encoding="utf-8")
     (root / "program.py").write_bytes(b"requested source\n")
     (root / "packaging" / "build-system-constraints.txt").write_bytes(b"fixture constraints\n")
     expected = content_digest(root, repository_files(root))
@@ -163,7 +201,7 @@ def test_release_wrapper_preserves_requested_identity_in_default_snapshot_branch
     with pytest.raises(expected_error) as caught:
         release_cohort.build_from_clean_source(
             clean_root=root,
-            output_dir=tmp_path / "release-output",
+            output_dir=root / "build" / "release-output",
             expected_source_digest=expected,
             requested_tag=None,
         )

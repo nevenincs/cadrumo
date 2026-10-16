@@ -28,6 +28,7 @@ from dev.docs.language_roots import (
     text_file,
 )
 
+from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .hashing import digest
@@ -615,7 +616,7 @@ def verified_stage(stage_root: Path, declaration: Mapping[str, Any]) -> Path:
 def main() -> None:
     """Stage the built roots for the CMake documentation target."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--target")
     arguments = parser.parse_args()
     try:

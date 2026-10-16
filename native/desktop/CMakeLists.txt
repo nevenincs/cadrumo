@@ -18,6 +18,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/../cmake/DesktopTools.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/DesktopRust.cmake")
 cadrumo_desktop_rust_environment(desktop_rust_environment)
 set(desktop_environment "CADRUMO_CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}")
+set(desktop_temporary "${CADRUMO_PATH_DESKTOP_TESTING}/temporary")
+cadrumo_require_physical_build_member("${desktop_temporary}" "Desktop test temporary directory")
+file(MAKE_DIRECTORY "${desktop_temporary}")
+list(APPEND desktop_environment
+  "TEMP=${desktop_temporary}" "TMP=${desktop_temporary}" "TMPDIR=${desktop_temporary}")
 set(desktop_configuration "CADRUMO_BUILD_CONFIG=$<CONFIG>")
 set(desktop_server_contract "${CMAKE_CURRENT_SOURCE_DIR}/development-server.json")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${desktop_server_contract}")
@@ -63,16 +68,14 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
 endif()
 
-# Every binary directory shares the one node_modules, and a clean install deletes it under
-# whatever runs from it. The script runs the install only when the installed tree differs
-# from the lockfile.
+# The checkout's shared node_modules tree is an explicit developer prerequisite. A build
+# may validate it, but installation and removal belong to the operator outside CMake.
 cadrumo_build_step(step_comment desktop-frontend-install GROUP desktop
-  SUMMARY "install the frontend packages when the installed tree differs from the lockfile"
-  OUTPUTS "${desktop_frontend}/node_modules")
+  SUMMARY "verify the checkout-owned frontend packages match the lockfile")
 add_custom_target(desktop-frontend-install
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_node_path_arguments}
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/frontend-install.mjs"
-    "${CADRUMO_NPM_CLI}" ci --include=dev --no-audit --no-fund
+    --check
   WORKING_DIRECTORY "${desktop_frontend}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment desktop-frontend-build GROUP desktop
   SUMMARY "build the desktop frontend bundle"
@@ -82,10 +85,10 @@ add_custom_target(desktop-frontend-build
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/frontend-build.mjs" "${CADRUMO_NPM_CLI}"
   DEPENDS desktop-frontend-install
   WORKING_DIRECTORY "${desktop_frontend}" COMMENT "${step_comment}" VERBATIM)
-# This intentionally cleans the one shared install used by every binary directory.
 add_custom_target(clean-desktop-frontend-install
-  COMMAND "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/frontend-install.mjs" clean
-  WORKING_DIRECTORY "${desktop_frontend}" VERBATIM)
+  COMMAND "${CMAKE_COMMAND}" -E echo
+    "[cadrumo:clean-desktop-frontend-install] Frontend dependencies are checkout-owned; run just setup-desktop-frontend to replace them."
+  VERBATIM)
 set(CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS "" CACHE STRING
   "Optional Playwright worker count for desktop-frontend-test")
 option(CADRUMO_DESKTOP_FRONTEND_TEST_LAST_FAILED "Rerun only the last failed frontend tests" OFF)
@@ -120,7 +123,7 @@ endforeach()
 # outputs of this binary directory, never written into the source tree, and
 # regenerate whenever a source or a generator changes.
 set(desktop_generated "${CADRUMO_PATH_DESKTOP_FRONTEND_GENERATED}")
-set(desktop_generator "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
+set(desktop_generator "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --build "${PROJECT_BINARY_DIR}" --
   "${CADRUMO_DEV_PYTHON}" -B -m)
 file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*.yml"
@@ -129,9 +132,12 @@ file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py")
 list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
 list(APPEND desktop_chrome_inputs "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/render.py"
-  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py")
+  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
 set(desktop_palette_inputs "${CADRUMO_SOURCE_ROOT}/docs/conf.py" "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-docs.css"
-  "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/_paths.py")
+  "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
 set(desktop_chrome_output chrome-strings.json)
 set(desktop_palette_output palette.css)
 set(desktop_chrome_module dev.locales.desktop_chrome)
@@ -212,7 +218,8 @@ add_custom_target(desktop-host-prepare
 cadrumo_build_step(step_comment desktop-build-test GROUP verification
   SUMMARY "test the desktop build scripts")
 add_custom_target(desktop-build-test
-  COMMAND "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/content-build.test.mjs"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
+    "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/content-build.test.mjs"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/backend-snapshot.test.mjs"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/frontend-clean.test.mjs"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/frontend-install.test.mjs"

@@ -11,9 +11,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from cadrumo.core.storage_environment import storage_directory
-
 from ...command_execution import CommandResult, run_command
+from ..build_directory import require_enrolled_build
+from ..build_paths import build_paths
 from ..hashing import digest
 from ..layout import application_images, entrypoint_files
 from ..verification_paths import relocated_verification_package, verification_destination
@@ -78,7 +78,7 @@ print(json.dumps({'pid': os.getpid(), 'executable': sys.executable, 'version': s
 """
 
 KDF_READY_PROBE = r"""
-import json, time
+import json, sys, time
 from pathlib import Path
 from cadrumo.adapters.persistence.storage.custody import _kdf_process
 from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
@@ -89,7 +89,9 @@ with _SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker:
     payload = worker._ready_payload
     neutral = worker._neutral_directory
     assert payload is not None and neutral is not None
-    expected = sorted(_kdf_process.worker_environment(neutral_root=Path(neutral.name)))
+    fixed = sys.cadrumo_build['fixed_environment_names']
+    assert isinstance(fixed, tuple) and all(isinstance(name, str) for name in fixed)
+    expected = sorted(set(_kdf_process.worker_environment(neutral_root=Path(neutral.name))) | set(fixed))
     assert payload['environment_keys'] == expected
     process = worker._process
     assert process is not None
@@ -278,8 +280,10 @@ def verify(
     """Verify an isolated artifact, materializing it only when not already extracted."""
     if already_relocated and (destination is not None or build_root is None):
         raise ValueError("Already relocated verification requires its owning build root without a destination")
-    build_root = build_root or storage_directory("CADRUMO_NATIVE_BUILD_ROOT", "development/build/native")
-    build_root = build_root.resolve()
+    if build_root is None:
+        raise ValueError("Windows acceptance requires its owning build output directory")
+    build_root.mkdir(parents=True, exist_ok=True)
+    build_root = build_root.resolve(strict=True)
     build_root.mkdir(parents=True, exist_ok=True)
     package = relocated_verification_package(package, build_root) if already_relocated else package.resolve(strict=True)
     manifest = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))
@@ -296,14 +300,15 @@ def verify(
         else destination.parent / (destination.name + " unrelated cwd")
     )
     cwd.mkdir()
+    temporary_root = cwd / "temporary"
+    temporary_root.mkdir()
     (cwd / "python313.dll").write_bytes(b"host DLL must not load")
     (cwd / "pikepdf.py").write_text("raise RuntimeError('ambient import')", encoding="utf-8")
     environment = dict(os.environ)
     for name in tuple(environment):
-        if name.upper().startswith("CADRUMO_"):
+        if name.upper().startswith("CADRUMO_") or name.upper() in {"TEMP", "TMP", "TMPDIR"}:
             environment.pop(name)
     storage_root = cwd / "storage"
-    temporary_root = cwd / "temporary"
     environment.update(
         {
             "PYTHONHOME": str(cwd),
@@ -318,6 +323,9 @@ def verify(
             # Neither the former tool-cache override nor an ambient XDG cache may place packaged state.
             "CADRUMO_TOOL_CACHE_DIR": str(cwd / "hostile-tool-cache"),
             "XDG_CACHE_HOME": str(cwd / "hostile-xdg-cache"),
+            "TEMP": str(temporary_root),
+            "TMP": str(temporary_root),
+            "TMPDIR": str(temporary_root),
         }
     )
     exe = destination / "python.exe"
@@ -355,7 +363,8 @@ def verify(
         cli = run(
             [
                 "-c",
-                "from cadrumo_runtime.host.frontend.cli.bootstrap import main; import sys; sys.argv=['aeat','--version']; main()",
+                "from cadrumo_runtime.host.frontend.cli.bootstrap import main; "
+                "import sys; sys.argv=['aeat','--version']; main()",
             ]
         )
         evidence["cli_version"] = cli.stdout.strip()
@@ -445,6 +454,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", type=Path, required=True)
     parser.add_argument("--destination", type=Path)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--product", action="store_true")
     arguments = parser.parse_args()
-    verify(arguments.package, arguments.destination, product=arguments.product)
+    verification = build_paths(arguments.build)["verification"]
+    verify(arguments.package, arguments.destination, product=arguments.product, build_root=verification)

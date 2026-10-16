@@ -33,9 +33,15 @@ def test_the_compile_carries_product_storage_and_no_documentation_selector(
     monkeypatch.setenv(DOCS_FLAVOR_ENV, "web")
     monkeypatch.setenv("CADRUMO_DOCS_PAGEFIND_MODE", "full")
     monkeypatch.setenv(SEQUENCE_CHECK_SKIP_ENV, "1")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "ambient-storage"))
     environment = compile_environment(tmp_path / "storage")
 
     assert environment[STORAGE_ROOT.variable] == str(tmp_path / "storage")
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "storage")
+    assert Path(environment["CADRUMO_DEV_CACHE_ROOT"]).is_relative_to(tmp_path)
+    assert Path(environment["CADRUMO_REGISTRY_DISK_CACHE_DIR"]).is_relative_to(tmp_path)
+    assert Path(environment["CADRUMO_LOG_DIR"]).is_relative_to(tmp_path / "storage")
+    assert Path(environment["TMP"]).is_dir()
     carried = sorted(key for key in environment if key.startswith("CADRUMO_DOCS_"))
     assert not carried, f"the packaging driver carried documentation selectors the compile owns: {carried}"
 

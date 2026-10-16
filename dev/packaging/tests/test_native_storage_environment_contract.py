@@ -18,7 +18,6 @@ from cadrumo.core.storage_environment import (
     StorageMode,
     StoragePlatform,
     StorageRootRefusal,
-    development_tool_env_var_names,
 )
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
@@ -32,6 +31,8 @@ from dev.packaging.native.storage_vectors import storage_member_vectors, storage
 from dev.packaging.native.verification_paths import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_DEVELOPMENT_VARIABLES = frozenset(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values())
 
 
 def _rust_strings(generated: str, constant: str) -> list[str]:
@@ -88,7 +89,7 @@ def test_native_contract_names_the_declared_locations_and_no_allowlist(tmp_path:
     generated = (destination / "contract.rs").read_text(encoding="utf-8")
     expected = sorted({declaration.root["variable"], *declaration.groups["locations"]})
     assert contract["application_environment"]["location_names"] == expected
-    assert not set(expected) & development_tool_env_var_names()
+    assert not set(expected) & _DEVELOPMENT_VARIABLES
     assert "CADRUMO_STRICT_SECURITY" not in expected
     for retired in ("PRODUCT_ENV_ALLOWLIST", "PACKAGE_ENV_ALLOWLIST", "RESERVED_ENV"):
         assert f"pub const {retired}:" not in generated
@@ -107,7 +108,7 @@ def test_native_contract_names_the_declared_locations_and_no_allowlist(tmp_path:
     )
 
 
-def test_native_verification_stage_is_under_the_refined_build_root(tmp_path: Path) -> None:
+def test_native_verification_stage_is_under_its_declared_output_root(tmp_path: Path) -> None:
     build_root = tmp_path / "build"
     build_root.mkdir()
 
@@ -115,15 +116,9 @@ def test_native_verification_stage_is_under_the_refined_build_root(tmp_path: Pat
     relative = verification_destination(Path("verification/package-one"), build_root)
     assert default.is_relative_to(build_root.resolve())
     assert relative == build_root.resolve() / "verification" / "package-one"
-    checkout = tmp_path / "checkout"
-    checkout.mkdir()
-    explicit_absolute = verification_destination(
-        tmp_path / "external-package",
-        build_root,
-        repository_root=checkout,
-    )
-    assert explicit_absolute == tmp_path / "external-package"
-    with pytest.raises(ValueError, match="CADRUMO_NATIVE_BUILD_ROOT"):
+    with pytest.raises(ValueError, match="beneath its owning build output directory"):
+        verification_destination(tmp_path / "external-package", build_root)
+    with pytest.raises(ValueError, match="beneath its owning build output directory"):
         verification_destination(Path("../outside"), build_root)
 
 
@@ -202,7 +197,7 @@ def test_packaged_contract_carries_no_development_tool_location(tmp_path: Path) 
     generate(REPO_ROOT, tmp_path)
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
     installed_bases = {candidate.variable for rule in STORAGE_ROOT.installed_defaults for candidate in rule.candidates}
-    tool_names = development_tool_env_var_names() | (set(TOOL_STORAGE_LOCATIONS) - installed_bases)
+    tool_names = _DEVELOPMENT_VARIABLES | (set(TOOL_STORAGE_LOCATIONS) - installed_bases)
     assert not {name for name in tool_names if f'"{name}"' in generated}
     for retired in ("TOOL_CACHE_ENV", "TOOL_CACHE_DEFAULT", "STORAGE_ENV_ALLOWLIST", "STORAGE_ROOT_ENV"):
         assert f"pub const {retired}:" not in generated
@@ -221,7 +216,7 @@ def _location_variable_names() -> frozenset[str]:
             *declaration.groups["locations"],
             *declaration.temporary,
             declaration.authority.name,
-            *development_tool_env_var_names(),
+            *_DEVELOPMENT_VARIABLES,
         }
     )
 

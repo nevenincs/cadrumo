@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile
 from typing import Literal
 
 from ..command_execution import run_command
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .identity import DistributionIdentity
@@ -190,7 +191,7 @@ def main() -> None:
     """Expose native artifact checks to the CMake distribution graph."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("author-gates", "inspect", "check-installation"))
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--identity", type=Path, required=True)
     parser.add_argument("--artifact", type=Path)
     parser.add_argument("--format", choices=("deb", "rpm"))

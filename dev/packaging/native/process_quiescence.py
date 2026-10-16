@@ -13,6 +13,7 @@ from pathlib import Path
 
 import psutil
 
+from .build_directory import require_enrolled_build
 from .build_log import BuildLog
 from .layout import application_images, load_layout
 
@@ -70,26 +71,19 @@ def wait_for_exit(processes: list[psutil.Process], timeout: float) -> list[psuti
     return alive
 
 
-def product_process(executable: Path, build: Path, application_id: str, names: set[str]) -> bool:
-    """Require an owned build image or an installation identifying this product."""
-    image = executable.resolve()
-    if image.is_relative_to(build / "stage"):
-        return True
+def product_process(executable: Path, build: Path, names: set[str]) -> bool:
+    """Require a named product image physically inside this build's owned trees."""
+    try:
+        image = executable.resolve()
+        build_root = build.resolve()
+    except (OSError, RuntimeError):
+        return False
     if image.name.casefold() not in names:
         return False
-    if image.is_relative_to(build / "cargo") or image.is_relative_to(build / "bin"):
-        return True
-    for parent in image.parents:
-        for relative in ("data/installation.json", "data/package-manifest.json"):
-            try:
-                document = json.loads((parent / relative).read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                continue
-            if not isinstance(document, dict):
-                continue
-            identity = document.get("installation_identity", document.get("build", document))
-            if isinstance(identity, dict) and identity.get("application_id") == application_id:
-                return True
+    for relative in ("stage", "cargo", "bin"):
+        owned_root = (build_root / relative).resolve()
+        if owned_root.is_relative_to(build_root) and image.is_relative_to(owned_root):
+            return True
     return False
 
 
@@ -155,7 +149,7 @@ def terminate(process: psutil.Process) -> None:
 
 
 def stop_service(build: Path, application_id: str, names: set[str]) -> None:
-    """Fence the verified machine broker before it can respawn user managers."""
+    """Stop a build-owned machine broker before replacement, leaving installed copies alone."""
     if sys.platform != "win32":
         return
     import pywintypes
@@ -185,8 +179,13 @@ def stop_service(build: Path, application_id: str, names: set[str]) -> None:
             if not command.startswith('"') or '"' not in command[1:]:
                 raise RuntimeError("Installed Cadrumo service image could not be verified")
             image, arguments = command[1:].split('"', 1)
-            if arguments.strip() != "--service" or not product_process(Path(image), build, application_id, names):
+            if arguments.strip() != "--service":
                 raise RuntimeError("Installed Cadrumo service image could not be verified")
+            if not product_process(Path(image), build, names):
+                # The product service may be installed outside this build. It
+                # belongs to the operator's active installation, not this
+                # build's images, so package replacement must leave it alone.
+                return
             state = win32service.QueryServiceStatus(service)[1]
             if state not in {win32service.SERVICE_STOPPED, win32service.SERVICE_STOP_PENDING}:
                 stop_handle = win32service.OpenService(scm, service_name, win32service.SERVICE_STOP)
@@ -231,9 +230,7 @@ def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate
         found: dict[int, psutil.Process] = {}
         for process in psutil.process_iter(["name"], ad_value=""):
             try:
-                if process.pid in excluded or not product_process(
-                    Path(process.exe()), build, identity["application_id"], names
-                ):
+                if process.pid in excluded or not product_process(Path(process.exe()), build, names):
                     continue
                 # Cache creation time before any shutdown request. psutil checks
                 # this identity again before signals, killing and descendant reads.
@@ -302,7 +299,7 @@ def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--target", required=True)
     arguments = parser.parse_args()
     quiesce(arguments.build, arguments.target)

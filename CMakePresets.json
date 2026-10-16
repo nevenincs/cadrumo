@@ -19,9 +19,9 @@
       },
       "environment": {
         "CADRUMO_BUILD_DIR": "${sourceDir}/build/windows-x64",
-        "TEMP": "$env{CADRUMO_BUILD_DIR}/tmp",
-        "TMP": "$env{CADRUMO_BUILD_DIR}/tmp",
-        "TMPDIR": "$env{CADRUMO_BUILD_DIR}/tmp"
+        "TEMP": "$env{CADRUMO_BUILD_DIR}/temporary",
+        "TMP": "$env{CADRUMO_BUILD_DIR}/temporary",
+        "TMPDIR": "$env{CADRUMO_BUILD_DIR}/temporary"
       },
       "cacheVariables": {
         "CADRUMO_TARGET": "windows-x86-64"

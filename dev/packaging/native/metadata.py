@@ -10,6 +10,7 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
+from .build_directory import require_enrolled_output
 from .identity import identity
 from .layout import backend, bundled_images, distribution_target, load_layout
 from .stable_output import write_text
@@ -59,7 +60,7 @@ def generate(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("destination", type=Path)
+    parser.add_argument("destination", type=require_enrolled_output)
     parser.add_argument("--number", type=int, required=True)
     parser.add_argument("--date", required=True)
     parser.add_argument("--tools", type=Path, required=True)

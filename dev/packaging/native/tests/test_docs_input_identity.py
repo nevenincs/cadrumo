@@ -41,10 +41,7 @@ def test_separate_checkouts_reuse_identical_enrollment(tmp_path: Path) -> None:
     assert _identity(first, *a) == _identity(second, *b)
 
 
-def test_docs_owner_reuses_portable_site_and_rebuilds_changed_copy(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    shared = tmp_path / "cache/docs"
+def test_docs_owner_keeps_reuse_inside_each_binary_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     produced: list[Path] = []
 
     def produce(destination: Path, _work: Path, _languages: tuple[str, ...]) -> None:
@@ -54,7 +51,6 @@ def test_docs_owner_reuses_portable_site_and_rebuilds_changed_copy(
 
     monkeypatch.setattr(docs_build, "_compile_roots", produce)
     monkeypatch.setattr(docs_build, "_index_site", lambda *_args: None)
-    monkeypatch.setattr(docs_build, "dev_cache_dir", lambda _name: shared)
     for name in ("first", "second"):
         source = tmp_path / name
         build, inputs, authority = _checkout(source)
@@ -66,10 +62,11 @@ def test_docs_owner_reuses_portable_site_and_rebuilds_changed_copy(
         docs_build.build_roots(build, inputs, target="windows-x86-64")
         assert (build / "docs/index.html").read_text() == "compiled site"
         assert (build / "docs/ready").is_file()
-    assert len(produced) == 1
+        assert (build / "work/user-docs/ready").is_file()
+    assert len(produced) == 2
     (source / "docs/page.md").write_text("changed checkout", encoding="utf-8")
     docs_build.build_roots(build, inputs, target="windows-x86-64")
-    assert len(produced) == 2
+    assert len(produced) == 3
 
 
 @pytest.mark.parametrize("change", ["content", "name", "add", "remove", "descriptor", "database", "language"])

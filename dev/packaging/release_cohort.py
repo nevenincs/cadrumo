@@ -11,7 +11,6 @@ import platform
 import re
 import shutil
 import sys
-import tempfile
 import uuid
 import zipfile
 from dataclasses import replace
@@ -19,8 +18,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import UTF_8
+from dev.packaging.build_storage import build_storage
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 
@@ -41,8 +40,11 @@ snapshot = _SOURCE_TREE.snapshot
 stage_published_authority = importlib.import_module("dev.packaging.authority_staging").stage_published_authority
 _BUILD_SCRATCH = importlib.import_module("dev.packaging.build_scratch_reclaim")
 RELEASE_STAGING_FAMILY = _BUILD_SCRATCH.RELEASE_STAGING_FAMILY
+RELEASE_SOURCE_SNAPSHOT_FAMILY = _BUILD_SCRATCH.RELEASE_SOURCE_SNAPSHOT_FAMILY
 matching_family = _BUILD_SCRATCH.matching_family
-sweep_var_scratch = _BUILD_SCRATCH.sweep_var_scratch
+remove_tree = _BUILD_SCRATCH.remove_tree
+require_build_path = _BUILD_SCRATCH.require_build_path
+sweep_build_scratch = _BUILD_SCRATCH.sweep_build_scratch
 var_scratch_name = _BUILD_SCRATCH.var_scratch_name
 _COHORT_MANIFEST = importlib.import_module("dev.packaging.cohort_manifest")
 ArtifactKind = _COHORT_MANIFEST.ArtifactKind
@@ -99,10 +101,13 @@ def _run(
 
 def _safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
     root = repo_root.resolve(strict=True)
-    var = (root / "var").resolve()
-    output = output_dir.resolve()
-    if output.parent != var and var not in output.parents:
-        raise SystemExit(f"release cohort output must stay under {var}: {output}")
+    build = root / "build"
+    try:
+        output = require_build_path(output_dir, repo_root=root)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    if output == build:
+        raise SystemExit(f"release cohort output must be below {build}")
     if output.exists():
         raise SystemExit(f"immutable release cohort output already exists: {output}")
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -228,6 +233,7 @@ def _generate_channel_artifacts(
     _run(
         [
             sys.executable,
+            "-B",
             str(clean_root / "packaging" / "scoop" / "generate.py"),
             "--cohort-dir",
             str(cohort.directory),
@@ -243,6 +249,7 @@ def _generate_channel_artifacts(
     _run(
         [
             sys.executable,
+            "-B",
             str(clean_root / "packaging" / "homebrew" / "generate.py"),
             "--cohort-dir",
             str(cohort.directory),
@@ -368,10 +375,7 @@ def build_from_clean_source(
         raise SystemExit(
             f"clean source digest drifted: expected {expected_source_digest}, got {observed_digest}",
         )
-    output = output_dir.resolve()
-    if output.exists():
-        raise SystemExit(f"release cohort staging output already exists: {output}")
-    output.mkdir(parents=True)
+    output = _safe_new_output(output_dir, repo_root=root)
 
     builder = _build_identity(root)
     build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
@@ -381,32 +385,46 @@ def build_from_clean_source(
     os.environ["UV_REQUIRE_HASHES"] = "1"
     os.environ["UV_PYTHON"] = sys.executable
     os.environ["UV_PYTHON_DOWNLOADS"] = "never"
-    env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
 
-    python_work = root / "var" / f"release-python-{uuid.uuid4().hex}"
-    python_cohort = (
-        build_python_cohort_from_clean_snapshot(
-            root,
-            python_work,
-            source_files=source_files,
-            source_digest=expected_source_digest,
+    try:
+        build_root = require_build_path(root / "build", repo_root=root)
+        python_work = require_build_path(
+            build_root / var_scratch_name(RELEASE_STAGING_FAMILY, f"release-python-{uuid.uuid4().hex}"),
+            repo_root=root,
         )
-        if use_prepared_source
-        else build_python_cohort(root, python_work)
-    )
-    if python_cohort.source_digest != expected_source_digest:
-        raise SystemExit(
-            "captured Python cohort source differs from the requested release source: "
-            f"expected {expected_source_digest}, got {python_cohort.source_digest}",
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    build_root.mkdir(parents=True, exist_ok=True)
+    with build_storage(output.parent / "work", repo_root=root):
+        try:
+            python_cohort = (
+                build_python_cohort_from_clean_snapshot(
+                    root,
+                    python_work,
+                    source_files=source_files,
+                    source_digest=expected_source_digest,
+                )
+                if use_prepared_source
+                else build_python_cohort(root, python_work)
+            )
+            if python_cohort.source_digest != expected_source_digest:
+                raise SystemExit(
+                    "captured Python cohort source differs from the requested release source: "
+                    f"expected {expected_source_digest}, got {python_cohort.source_digest}",
+                )
+            cohort = _copy_python_cohort(python_cohort, output / "python")
+        finally:
+            if python_work.exists():
+                shutil.rmtree(python_work)
+    with build_storage(output.parent / "work", repo_root=root):
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
+        scoop, homebrew = _generate_channel_artifacts(
+            clean_root=root,
+            cohort=cohort,
+            output=output,
+            env=env,
         )
-    cohort = _copy_python_cohort(python_cohort, output / "python")
-    scoop, homebrew = _generate_channel_artifacts(
-        clean_root=root,
-        cohort=cohort,
-        output=output,
-        env=env,
-    )
     tag = _source_tag(
         version=cohort.version,
         requested=requested_tag,
@@ -489,6 +507,18 @@ def build_from_clean_source(
     )
 
 
+def _clean_builder_command() -> list[str]:
+    """Select the declared builder without changing the caller's development environment."""
+    if platform.python_implementation() == "CPython" and platform.python_version() == REQUIRED_PYTHON_VERSION:
+        return [sys.executable]
+    uv = shutil.which("uv")
+    if uv is None:
+        raise SystemExit("uv is required to provision the pinned release-cohort builder")
+    # Resolve the clean source's frozen project closure in an isolated environment.
+    # The child still validates its exact interpreter before producing any artifact.
+    return [uv, "run", "--isolated", "--frozen", "--no-editable", "--python", REQUIRED_PYTHON_VERSION, "python"]
+
+
 def build_release_cohort(
     *,
     repo_root: Path,
@@ -502,7 +532,10 @@ def build_release_cohort(
     output = _safe_new_output(output_dir, repo_root=root)
     source_files = repository_files(root)
     digest = content_digest(root, source_files)
-    var = (root / "var").resolve()
+    try:
+        build = require_build_path(root / "build", repo_root=root)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
     # A build that is killed leaves its staging directory -- a full cohort's
     # worth of bytes -- behind, and runs no cleanup of its own. The staging name
     # below carries this process as its owner, so a previous build's leftovers
@@ -510,53 +543,72 @@ def build_release_cohort(
     # the day ceiling an operator has to ask for. The start of a build is the
     # only moment that survives a kill.
     with contextlib.suppress(OSError):
-        sweep_var_scratch(var)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-release-", dir=prepare_temporary_directory()) as temporary:
-        clean_root = Path(temporary) / "source"
-        # An isolated copy of the enumerated tree, not the live one: the rest
-        # of this build runs in a child process against `clean_root`, so a
-        # peer's concurrent edit to `root` cannot land inside a build already
-        # in flight.
-        snapshot(root, source_files, clean_root)
-        snapshot_digest = content_digest(clean_root, repository_files(clean_root))
-        if snapshot_digest != digest:
-            raise SystemExit(
-                f"release source snapshot content drifted from its digest: expected {digest}, got {snapshot_digest}",
+        sweep_build_scratch(build)
+    snapshot_work = require_build_path(
+        build / var_scratch_name(RELEASE_SOURCE_SNAPSHOT_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
+        repo_root=root,
+    )
+    snapshot_work.mkdir(parents=True)
+    staging = require_build_path(
+        build / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
+        repo_root=root,
+    )
+    try:
+        with build_storage(snapshot_work, repo_root=root):
+            clean_root = snapshot_work / "source"
+            # An isolated copy of the enumerated tree, not the live one: the rest
+            # of this build runs in a child process against `clean_root`, so a
+            # peer's concurrent edit to `root` cannot land inside a build already
+            # in flight.
+            snapshot(root, source_files, clean_root)
+            snapshot_digest = content_digest(clean_root, repository_files(clean_root))
+            if snapshot_digest != digest:
+                raise SystemExit(
+                    "release source snapshot content drifted from its digest: "
+                    f"expected {digest}, got {snapshot_digest}",
+                )
+            # Staged after the drift check, and into the gitignored location the
+            # origin keeps it in, so the release identity digest stays a statement
+            # about enumerated source and is unaffected by generated payload the
+            # build nonetheless has to carry.
+            stage_published_authority(root, clean_root)
+            child_build = require_build_path(clean_root / "build", repo_root=clean_root)
+            child_build.mkdir(parents=True, exist_ok=True)
+            child_staging = require_build_path(
+                child_build / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
+                repo_root=clean_root,
             )
-        # Staged after the drift check, and into the gitignored location the
-        # origin keeps it in, so the release identity digest stays a statement
-        # about enumerated source and is unaffected by generated payload the
-        # build nonetheless has to carry.
-        stage_published_authority(root, clean_root)
-        staging = var / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}")
-        env = os.environ.copy()
-        env[GOOGLE_OAUTH_ENV] = build_client_json(root).get_secret_value()
-        env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
-        argv = [
-            sys.executable,
-            "-m",
-            "dev.packaging.release_cohort",
-            "build-clean",
-            "--output",
-            str(staging),
-            "--expected-source-digest",
-            digest,
-            "--use-prepared-source",
-            "--defer-output-validation",
-        ]
-        if source_tag is not None:
-            argv.extend(("--source-tag", source_tag))
-        if source_commit is not None:
-            argv.extend(("--source-commit", source_commit))
-        try:
-            _run(argv, cwd=clean_root, env=env)
-            staging.replace(output)
-        except (OSError, SystemExit):
-            # Judged by the same registry the sweep uses, so the guard cannot
-            # drift from the name that was minted a few lines above.
-            if staging.parent == var and matching_family(staging.name) is not None and staging.exists():
-                shutil.rmtree(staging)
-            raise
+            env = os.environ.copy()
+            env[GOOGLE_OAUTH_ENV] = build_client_json(root).get_secret_value()
+            env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
+            argv = [
+                *_clean_builder_command(),
+                "-m",
+                "dev.packaging.release_cohort",
+                "build-clean",
+                "--output",
+                str(child_staging),
+                "--expected-source-digest",
+                digest,
+                "--use-prepared-source",
+                "--defer-output-validation",
+            ]
+            if source_tag is not None:
+                argv.extend(("--source-tag", source_tag))
+            if source_commit is not None:
+                argv.extend(("--source-commit", source_commit))
+            try:
+                _run(argv, cwd=clean_root, env=env)
+                child_staging.replace(staging)
+                staging.replace(output)
+            except (OSError, SystemExit):
+                # Judged by the same registry the sweep uses, so the guard cannot
+                # drift from the name that was minted a few lines above.
+                if staging.parent == build and matching_family(staging.name) is not None and staging.exists():
+                    shutil.rmtree(staging)
+                raise
+    finally:
+        remove_tree(snapshot_work)
     cohort = load_release_cohort(output)
     if cohort.manifest.source.source_digest != digest:
         raise SystemExit("completed release cohort lost its requested source digest")

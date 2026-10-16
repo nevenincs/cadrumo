@@ -14,6 +14,8 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 
+from .build_directory import require_enrolled_output
+
 PREVIEW_NAME_SUFFIX = " Preview"
 """User-facing suffix that separates the preview installation family from stable."""
 MANAGER_NAME_SUFFIX = " Background Services"
@@ -101,7 +103,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", required=True, choices=[item.name for item in SUPPORTED_TARGETS])
     parser.add_argument("--channel", default="stable", choices=("stable", "preview"))
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=require_enrolled_output, required=True)
     args = parser.parse_args()
     value = identity(args.target, args.channel)
     args.output.mkdir(parents=True, exist_ok=True)

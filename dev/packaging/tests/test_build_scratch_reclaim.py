@@ -21,6 +21,7 @@ import stat
 import subprocess
 import sys
 import time
+from io import StringIO
 from pathlib import Path
 from typing import Final
 
@@ -33,6 +34,7 @@ from ..build_scratch_reclaim import (
     COHORT_SOURCE_ARCHIVE_FAMILY,
     COMMAND_SPEC_BYTECODE_FAMILY,
     RELEASE_COHORT_INTEGRATION_FAMILY,
+    RELEASE_SOURCE_SNAPSHOT_FAMILY,
     RELEASE_STAGING_FAMILY,
     VAR_SCRATCH_FAMILIES,
     ScratchFamily,
@@ -40,6 +42,9 @@ from ..build_scratch_reclaim import (
     matching_family,
     remove_scratch,
     remove_tree,
+    report_build_scratch,
+    require_build_path,
+    sweep_build_scratch,
     sweep_var_scratch,
     var_scratch_name,
 )
@@ -284,6 +289,39 @@ def test_sweep_spares_a_scratch_directory_a_concurrent_build_is_writing(tmp_path
     assert running.is_dir()
 
 
+def test_build_sweep_reclaims_only_abandoned_registered_scratch(tmp_path: Path) -> None:
+    """The canonical build root keeps normal outputs and active owned scratch."""
+    build = tmp_path / "build"
+    build.mkdir()
+    abandoned = _aged(_scratch_tree(build, _foreign_owner_name(RELEASE_STAGING_FAMILY, "cohort")), 20 * 60)
+    active = _scratch_tree(build, var_scratch_name(RELEASE_STAGING_FAMILY, "active"))
+    distribution = build / "distributions"
+    distribution.mkdir()
+    (distribution / "wheel.whl").write_bytes(b"build output")
+
+    assert sweep_build_scratch(build, now=time.time()) == (1, 1)
+
+    assert not abandoned.exists()
+    assert active.is_dir()
+    assert (distribution / "wheel.whl").is_file()
+
+
+def test_build_path_guard_rejects_paths_outside_build_and_linked_build_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A path guard rejects external destinations and a redirected build root."""
+    repo = tmp_path / "repo"
+    (repo / "build").mkdir(parents=True)
+    assert require_build_path(repo / "build" / "cohort", repo_root=repo) == repo / "build" / "cohort"
+
+    with pytest.raises(ValueError, match="beneath"):
+        require_build_path(tmp_path / "outside", repo_root=repo)
+
+    monkeypatch.setattr("dev.packaging.build_scratch_reclaim.is_link_like", lambda path: path == repo / "build")
+    with pytest.raises(ValueError, match="symlinks or junctions"):
+        require_build_path(repo / "build" / "cohort", repo_root=repo)
+
+
 def test_sweep_reclaims_an_owned_snapshot_once_its_owner_has_exited(tmp_path: Path) -> None:
     """A named owner that no longer runs reclaims in minutes, not a day.
 
@@ -404,6 +442,7 @@ def test_names_outside_every_family_are_not_scratch(name: str) -> None:
     [
         "release-cohort-integration-0979c0c733fe-source",
         "release-cohort-integration-4812-9f2a-source",
+        "release-source-4812-release-cohort-snapshot",
         ".release-cohort-9f2a.staging",
         ".packaging-smoke-cohort-1.staging",
         ".4812-release-cohort-9f2a.staging",
@@ -477,6 +516,31 @@ def test_an_abandoned_release_staging_directory_is_reclaimed(tmp_path: Path) -> 
 
     assert (removed, spared) == (1, 0)
     assert not abandoned.exists()
+
+
+def test_release_source_snapshot_stays_spared_for_operator_review(tmp_path: Path) -> None:
+    """A dead parent PID or old mtime cannot show the clean builder child exited."""
+    build = tmp_path / "build"
+    abandoned_parent = _aged(
+        _scratch_tree(
+            build,
+            _foreign_owner_name(RELEASE_SOURCE_SNAPSHOT_FAMILY, "release-cohort"),
+        ),
+        20 * 60,
+    )
+
+    assert sweep_build_scratch(build, now=time.time()) == (0, 1)
+    assert abandoned_parent.is_dir()
+
+    _aged(abandoned_parent, 2 * _DAY)
+    assert sweep_build_scratch(build, now=time.time(), reclaim_by_age=True) == (0, 1)
+    assert abandoned_parent.is_dir()
+
+    report = StringIO()
+    report_build_scratch(report, build, apply=True, measure=lambda _path: 1)
+    assert "SPARE" in report.getvalue()
+    assert "spared: 1" in report.getvalue()
+    assert abandoned_parent.is_dir()
 
 
 def test_an_abandoned_cohort_build_tree_and_its_archive_are_reclaimed(tmp_path: Path) -> None:

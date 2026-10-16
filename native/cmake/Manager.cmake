@@ -37,7 +37,7 @@ set(manager_manifest_check)
 if(WIN32)
   # build.rs embeds the canonical native-host manifest; reject a linked image that diverges.
   set(manager_manifest_check
-    COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
+    COMMAND ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
       "${CADRUMO_MANAGER_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/../interpreter/windows/host.manifest")
 endif()
 # Cargo owns freshness, including build.rs inputs such as the embedded process manifest.

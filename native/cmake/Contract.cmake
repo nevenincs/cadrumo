@@ -15,6 +15,7 @@ set(contract_inputs "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config_google.py"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config_google_client.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/linux_desktop_runtime.py")
 if(CADRUMO_TARGET MATCHES "^linux-")
   execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
@@ -32,6 +33,7 @@ file(GLOB manager_locale_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/locales/*/common.yml")
 cadrumo_cached_command(contract_command native_contract SHARED
   INPUTS ${contract_inputs} ${manager_locale_inputs} "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/generate.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/storage_vectors.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/transport_contract.py"
@@ -51,7 +53,7 @@ cadrumo_build_step(contract_comment native_contract GROUP contract
   SUMMARY "generate the native package contract for Rust, C and the assembler"
   OUTPUTS "${CONTRACT_DIR}/contract.json" "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h")
 add_custom_target(native_contract
-  COMMAND ${contract_command} ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B
+  COMMAND ${contract_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B
     -m dev.packaging.native.generate "${CONTRACT_DIR}"
     --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"

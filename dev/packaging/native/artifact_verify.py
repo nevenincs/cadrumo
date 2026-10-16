@@ -11,6 +11,7 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from .archive import extract_bundle
+from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .build_timing import BuildTimings, measure_build
@@ -147,7 +148,7 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--config", choices=("Debug", "Release"), required=True)
     parser.add_argument("--application-probe-command", type=Path, help="CMake-generated JSON argv for the Rust probe")
     args = parser.parse_args()

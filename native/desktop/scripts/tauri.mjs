@@ -9,7 +9,7 @@ import {
 import { delimiter, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildPath } from "./build-paths.mjs";
+import { buildPath, readBuildPaths } from "./build-paths.mjs";
 import { snapshotHostSources } from "./backend-snapshot.mjs";
 import { contentBuild, writeStable } from "./content-build.mjs";
 import {
@@ -24,6 +24,7 @@ const desktop = fileURLToPath(new URL("../", import.meta.url));
 const binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR;
 if (!binaryDir || !isAbsolute(binaryDir))
   throw new Error("Select an absolute CMake build directory.");
+readBuildPaths(binaryDir, resolve(desktop, "../.."));
 const identity = readIdentity();
 const selectedProfile = profile();
 const action = process.argv[2] ?? "build";
@@ -54,10 +55,7 @@ if (!contract || !isAbsolute(contract))
 const environment = {
   ...process.env,
   ...selectedProfile.environment,
-  CARGO_TARGET_DIR:
-    backendOnly && process.env.CARGO_TARGET_DIR
-      ? process.env.CARGO_TARGET_DIR
-      : buildPath("desktop_cargo"),
+  CARGO_TARGET_DIR: buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
   CADRUMO_ID_NAME: identity.name,

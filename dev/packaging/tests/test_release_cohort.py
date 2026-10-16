@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
 from typing import Final
@@ -13,6 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 from dev.source_tree import content_digest, repository_files
 
 from .. import release_cohort as release_cohort_module
@@ -43,15 +45,21 @@ def _assert_clean_builder_invocation(
     expected_source_digest: str,
 ) -> None:
     """Protect package imports, clean-source isolation, and digest binding."""
-    assert argv[1:3] == ["-m", "dev.packaging.release_cohort"], (
+    assert "-m" in argv, "clean release-cohort construction must invoke the package module"
+    module_start = argv.index("-m")
+    assert argv[module_start : module_start + 2] == ["-m", "dev.packaging.release_cohort"], (
         "clean release-cohort construction must invoke the package module"
     )
     assert cwd.name == "source"
     assert env is not None
     assert env["PYTHONPATH"] == os.pathsep.join((str(cwd / "src"), str(cwd)))
     assert argv[argv.index("--expected-source-digest") + 1] == expected_source_digest
+    child_output = Path(argv[argv.index("--output") + 1])
+    assert child_output.parent == cwd / "build"
     assert "--use-prepared-source" in argv
     assert "--defer-output-validation" in argv
+    for name in ("CADRUMO_STORAGE_ROOT", "CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR"):
+        assert Path(env[name]).is_relative_to(cwd.parent)
 
 
 def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
@@ -60,8 +68,8 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
 ) -> None:
     """The clean child keeps relative imports and the exact source assertion."""
     repo_root = tmp_path / "repo"
-    (repo_root / "var").mkdir(parents=True)
-    output = repo_root / "var" / "cohort"
+    (repo_root / "build").mkdir(parents=True)
+    output = repo_root / "build" / "cohort"
     expected_source_digest = content_digest(repo_root, repository_files(repo_root))
     captured: list[tuple[list[str], Path, dict[str, str] | None]] = []
 
@@ -95,7 +103,11 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
     )
 
     file_path_regression = list(argv)
-    file_path_regression[1:3] = [str(cwd / "dev" / "packaging" / "release_cohort.py"), "build-clean"]
+    module_start = file_path_regression.index("-m")
+    file_path_regression[module_start : module_start + 2] = [
+        str(cwd / "dev" / "packaging" / "release_cohort.py"),
+        "build-clean",
+    ]
     with pytest.raises(AssertionError, match="package module"):
         _assert_clean_builder_invocation(
             file_path_regression,
@@ -247,7 +259,7 @@ def test_clean_builder_subprocess_carries_the_requested_source_commit(
 ) -> None:
     """The caller's commit reaches the clean child that stamps the manifest."""
     repo_root = tmp_path / "repo"
-    (repo_root / "var").mkdir(parents=True)
+    (repo_root / "build").mkdir(parents=True)
     captured: list[list[str]] = []
 
     def fake_run(
@@ -263,7 +275,7 @@ def test_clean_builder_subprocess_carries_the_requested_source_commit(
     monkeypatch.setattr(release_cohort_module, "_run", fake_run)
 
     with pytest.raises(_CleanBuilderInvocationObservedError):
-        build_release_cohort(repo_root=repo_root, output_dir=repo_root / "var" / "cohort", source_commit=_COMMIT)
+        build_release_cohort(repo_root=repo_root, output_dir=repo_root / "build" / "cohort", source_commit=_COMMIT)
 
     assert len(captured) == 1
     argv = captured[0]
@@ -278,13 +290,59 @@ def test_clean_builder_subprocess_carries_the_requested_source_commit(
 def test_release_cohort_refuses_a_malformed_source_commit(tmp_path: Path, commit: str) -> None:
     """Only a full commit identifier is stamped; anything else fails before building."""
     repo_root = tmp_path / "repo"
-    (repo_root / "var").mkdir(parents=True)
-    output = repo_root / "var" / "cohort"
+    (repo_root / "build").mkdir(parents=True)
+    output = repo_root / "build" / "cohort"
 
     with pytest.raises(SystemExit, match="not a full lowercase commit identifier"):
         build_release_cohort(repo_root=repo_root, output_dir=output, source_commit=commit)
 
     assert not output.exists()
+
+
+def test_release_cohort_refuses_output_outside_the_canonical_build_root(tmp_path: Path) -> None:
+    """The release staging guard must not create output beyond repository build/."""
+    repo_root = tmp_path / "repo"
+    (repo_root / "build").mkdir(parents=True)
+    outside = tmp_path / "release-cohort"
+
+    with pytest.raises(SystemExit, match="beneath"):
+        release_cohort_module._safe_new_output(outside, repo_root=repo_root)
+
+    assert not outside.exists()
+
+
+def test_clean_builder_refuses_a_linked_output_without_removing_its_target(tmp_path: Path) -> None:
+    """The public clean builder rejects linked destinations before writing into them."""
+    clean_root = tmp_path / "clean"
+    build = clean_root / "build"
+    target = build / "target"
+    linked_output = build / "linked-output"
+    (clean_root / "packaging").mkdir(parents=True)
+    (clean_root / "packaging" / "build-system-constraints.txt").write_text("fixture\n", encoding="utf-8")
+    (clean_root / ".gitignore").write_text("build/\n", encoding="utf-8")
+    target.mkdir(parents=True)
+    protected = target / "keep.txt"
+    protected.write_text("preserve", encoding="utf-8")
+    if sys.platform == "win32":
+        command_shell = os.environ.get("COMSPEC", "cmd.exe")
+        completed = run_command(
+            [command_shell, "/c", "mklink", "/J", str(linked_output), str(target)],
+            cwd=linked_output.parent,
+        )
+        assert completed.returncode == 0, completed.stderr
+    else:
+        linked_output.symlink_to(target, target_is_directory=True)
+    expected_source_digest = content_digest(clean_root, repository_files(clean_root))
+
+    with pytest.raises(SystemExit, match="symlinks or junctions"):
+        build_from_clean_source(
+            clean_root=clean_root,
+            output_dir=linked_output,
+            expected_source_digest=expected_source_digest,
+            requested_tag=None,
+        )
+
+    assert protected.read_text(encoding="utf-8") == "preserve"
 
 
 def test_source_identity_records_the_commit_and_refuses_a_malformed_one() -> None:
@@ -390,3 +448,27 @@ def test_release_builder_refuses_a_non_exact_cpython_identity(
 
     with pytest.raises(SystemExit, match="release cohort requires"):
         release_cohort_module._build_identity(REPO_ROOT)
+
+
+def test_clean_builder_selects_the_declared_patch_without_replacing_the_callers_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(release_cohort_module.platform, "python_implementation", lambda: "CPython")
+    monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: "3.13.99")
+    monkeypatch.setattr(release_cohort_module.shutil, "which", lambda _name: "uv")
+    command = release_cohort_module._clean_builder_command()
+    assert command == [
+        "uv",
+        "run",
+        "--isolated",
+        "--frozen",
+        "--no-editable",
+        "--python",
+        REQUIRED_PYTHON_VERSION,
+        "python",
+    ]
+    monkeypatch.setattr(release_cohort_module.shutil, "which", lambda _name: None)
+    with pytest.raises(SystemExit, match="pinned release-cohort builder"):
+        release_cohort_module._clean_builder_command()
+    monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: REQUIRED_PYTHON_VERSION)
+    assert release_cohort_module._clean_builder_command() == [release_cohort_module.sys.executable]

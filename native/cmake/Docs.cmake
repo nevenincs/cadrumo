@@ -7,13 +7,21 @@ include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 # native/package-layout.json, shares the built site between identical enrolled source graphs,
 # while live cli-sequence verification runs separately. Staging copies the shippable
 # subset into the published layout and writes the docs manifest that the package delegates to.
-set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
+set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run
+  --build "${CMAKE_BINARY_DIR}"
+  --env "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/storage"
+  --env "CADRUMO_STORAGE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/storage"
+  --env "CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/cache"
+  --env "CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/test-logs"
+  --env "CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_USER_DOCS_WORK}/scratch"
+  --env "CADRUMO_TEMP_DIR=${CADRUMO_PATH_USER_DOCS_WORK}/temporary"
+  --
   "${CADRUMO_DEV_PYTHON}" -B -m)
 set(docs_target_args)
 if(DEFINED CADRUMO_TARGET)
   set(docs_target_args --target "${CADRUMO_TARGET}")
 endif()
-option(CADRUMO_DOCS_SHARED_CACHE "Reuse documentation across build configurations" ON)
+option(CADRUMO_DOCS_SHARED_CACHE "Reuse documentation from this binary directory's work target" ON)
 set(docs_build_args ${docs_target_args})
 if(NOT CADRUMO_DOCS_SHARED_CACHE)
   list(APPEND docs_build_args --no-shared-cache)
@@ -31,7 +39,7 @@ list(FILTER user_docs_inputs EXCLUDE REGEX "/\\.aeat-generated-export-transactio
 foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/_paths.py dev/cache_root.py
     dev/packaging/__init__.py dev/packaging/command_execution.py dev/packaging/authority_staging.py
     dev/packaging/native/__init__.py dev/packaging/native/docs_build.py dev/packaging/native/docs_stage.py
-    dev/packaging/native/docs_input_identity.py
+    dev/packaging/native/docs_input_identity.py dev/packaging/native/build_directory.py
     dev/packaging/native/package_inventory.py dev/packaging/native/build_paths.py dev/packaging/native/hashing.py
     dev/packaging/native/layout.py dev/packaging/native/identity.py dev/packaging/native/action_cache.py
     dev/packaging/native/cmake_build.py dev/packaging/runtime_wheelhouse_contract.py)
@@ -82,6 +90,13 @@ endif()
 set(docs_sequence_pages ${CADRUMO_DOCS_SEQUENCE_PAGES})
 list(REMOVE_DUPLICATES docs_sequence_pages)
 foreach(action check refresh)
+  if(action STREQUAL "refresh")
+    add_custom_target(user_docs_sequences_refresh
+      COMMAND "${CMAKE_COMMAND}" -E echo
+        "Documentation transcript refresh writes authored sources. Run just docs-generate-sequences outside the native build."
+      COMMAND "${CMAKE_COMMAND}" -E false VERBATIM)
+    continue()
+  endif()
   if(action STREQUAL "check")
     set(sequence_summary "check documented CLI transcripts")
   else()
@@ -122,7 +137,9 @@ cadrumo_cached_command(docs_stage_command user_docs_stage SHARED
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_stage.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/package_inventory.py"
-    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
   OUTPUTS "${CADRUMO_PATH_USER_DOCS_STAGE}")
 cadrumo_build_step(docs_comment user_docs_stage GROUP documentation
   SUMMARY "stage the shippable documentation subset and its manifest"
@@ -133,7 +150,9 @@ add_custom_target(user_docs_stage
   DEPENDS user_docs_build "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_stage.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/package_inventory.py"
-    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/layout.py"
   BYPRODUCTS "${CADRUMO_PATH_USER_DOCS_STAGE}/ready"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${docs_comment}" USES_TERMINAL VERBATIM)
 cadrumo_build_step(docs_comment user_docs GROUP documentation

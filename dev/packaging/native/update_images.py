@@ -14,6 +14,7 @@ from packaging.utils import canonicalize_name
 from pydantic import JsonValue, TypeAdapter
 
 from .assemble import image_artifact, named_application_images
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .layout import bundled_image_files, entrypoint_files, load_layout
@@ -172,7 +173,7 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
 def main() -> None:
     """Run the native-only CMake staging or explicit local recovery action."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--config", choices=("Debug", "Release"), required=True)
     parser.add_argument("--image", action="append", default=[])
     parser.add_argument("--recover", action="store_true")

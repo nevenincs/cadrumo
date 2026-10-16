@@ -16,11 +16,11 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
-from dev.cache_root import dev_cache_dir
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
+from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .docs_input_identity import shared_docs_inputs
@@ -39,8 +39,7 @@ _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
 #: sense read together.
 PACKAGE_INDEX_ENVIRONMENT: dict[str, str] = {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}
 
-#: The development cache holding the one built site every build configuration
-#: of this checkout takes its documentation from.
+#: A reusable site owned by this binary directory's documentation work target.
 SHARED_SITE_CACHE = "user-docs"
 
 
@@ -56,7 +55,30 @@ def compile_environment(storage: Path) -> dict[str, str]:
     the workstation's own.
     """
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_DOCS_")}
-    environment.update({STORAGE_ROOT.variable: str(storage), "PYTHONIOENCODING": "utf-8"})
+    temporary = storage.parent / "temporary"
+    temporary.mkdir(parents=True, exist_ok=True)
+    environment.update(
+        {
+            STORAGE_ROOT.variable: str(storage),
+            "CADRUMO_LOG_DIR": str(storage / "logs"),
+            "CADRUMO_DEV_CACHE_ROOT": str(storage.parent / "cache"),
+            "CADRUMO_TEMP_DIR": str(temporary),
+            "TEMP": str(temporary),
+            "TMP": str(temporary),
+            "TMPDIR": str(temporary),
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONIOENCODING": "utf-8",
+        }
+    )
+    environment[STORAGE_ROOT.development_variable] = str(storage)
+    for name in (
+        "CADRUMO_REGISTRY_DISK_CACHE_DIR",
+        "CADRUMO_RECORD_DESIGN_CACHE_DIR",
+        "CADRUMO_CORPUS_TEXT_CACHE_DIR",
+        "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
+        "CADRUMO_RUNTIME_WHEEL_CACHE_DIR",
+    ):
+        environment[name] = str(storage.parent / "cache" / name.lower())
     return environment
 
 
@@ -139,18 +161,18 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
 
         def produce(destination: Path) -> None:
             _compile_roots(destination, paths["user_docs_work"], languages)
-            _index_site(destination, languages)
+            _index_site(destination, languages, paths["user_docs_work"])
 
         built = take_shared_site(
             build_root,
-            dev_cache_dir(SHARED_SITE_CACHE),
+            paths["user_docs_work"] / SHARED_SITE_CACHE,
             shared_site_identity(shared_inputs, languages),
             produce,
             validate_inputs=validate_inputs,
             reuse_shared=shared_cache,
         )
         if not built:
-            _log().status("reusing the site another build configuration built from the same inputs")
+            _log().status("reusing the documentation work target's site from the same inputs")
         validate_inputs()
         completed(build_root, input_identity)
 
@@ -279,7 +301,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
         )
 
 
-def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
+def _index_site(build_root: Path, languages: tuple[str, ...], work: Path) -> None:
     """Build the site's ONE search index over every built root.
 
     Runs after every root has built, because the index spans all of them: each
@@ -294,7 +316,9 @@ def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
     Args:
         build_root: The documentation build root holding the language roots.
         languages: The declared languages, the apex language among them.
+        work: The build-owned documentation scratch directory.
     """
+    os.environ.update(compile_environment(work / "index-storage"))
     from dev.docs.build import ensure_isolated_storage_root, resolve_record_injector
     from dev.docs.pagefind_index import IndexedRoot, build_shared_search_index
     from dev.docs.pagefind_inject import InjectionStats
@@ -316,6 +340,8 @@ def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
     # The projections import the application to read the registry authority and
     # the live command tree, exactly as a root build does, so they get the same
     # scratch product storage rather than the workstation's own state.
+    # Index generation imports application services, so it must select build
+    # storage even when the invoking shell pins the operator's profile root.
     ensure_isolated_storage_root()
     stats: list[InjectionStats] = []
     _log().status(f"indexing the documentation site once over {', '.join(languages)}")
@@ -335,7 +361,7 @@ def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:
 def main() -> None:
     """Build the roots for the CMake documentation target."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--inputs", type=Path, required=True)
     parser.add_argument("--target")
     parser.add_argument("--no-shared-cache", action="store_true")

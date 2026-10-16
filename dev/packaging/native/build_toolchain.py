@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from .build_directory import require_enrolled_output
 from .hashing import digest
 
 
@@ -174,6 +175,6 @@ def native_toolchain_identity(toolchain: Mapping[str, Any]) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path)
-    parser.add_argument("output", type=Path)
+    parser.add_argument("output", type=require_enrolled_output)
     arguments = parser.parse_args()
     print(json.dumps(write_sysroot_inventory(arguments.root, arguments.output)))

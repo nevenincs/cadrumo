@@ -10,16 +10,22 @@ import tempfile
 from pathlib import Path
 
 from ..command_execution import CommandResult, run_command
+from .build_directory import require_enrolled_build
+from .build_paths import build_paths
 
 
-def check(executable: Path, contract_path: Path) -> None:
+def check(executable: Path, contract_path: Path, *, scratch_root: Path) -> None:
     """A structural installation must never fall through to portable launch."""
+    scratch_root = scratch_root.resolve(strict=True)
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     layout = contract["layout"]
-    with tempfile.TemporaryDirectory(
-        prefix="cadrumo-launch-admission-"
-    ) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-launch-admission-", dir=scratch_root) as temporary:
         prefix = Path(temporary).resolve()
+        storage = prefix / "storage"
+        temporary_root = storage / "tmp"
+        cache_root = storage / "cache"
+        temporary_root.mkdir(parents=True)
+        cache_root.mkdir(parents=True)
         package = prefix / layout["installation"]["versions"] / "1.0.0"
         package.mkdir(parents=True)
         manifest = package / layout["files"]["package_manifest"]
@@ -42,6 +48,30 @@ def check(executable: Path, contract_path: Path) -> None:
             # SDK loader settings belong to build tools; the application refuses
             # them before package admission, which is the subject of this check.
             environment = {key: value for key, value in os.environ.items() if not key.startswith(("LD_", "DYLD_"))}
+            for key in tuple(environment):
+                if key.upper() in {
+                    "CADRUMO_STORAGE_ROOT",
+                    "CADRUMO_LOCAL_STORAGE_ROOT",
+                    "CADRUMO_TEMP_DIR",
+                    "CADRUMO_TOOL_CACHE_DIR",
+                    "XDG_CACHE_HOME",
+                    "TEMP",
+                    "TMP",
+                    "TMPDIR",
+                }:
+                    environment.pop(key)
+            environment.update(
+                {
+                    "CADRUMO_STORAGE_ROOT": str(storage),
+                    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage),
+                    "CADRUMO_TEMP_DIR": str(temporary_root),
+                    "CADRUMO_TOOL_CACHE_DIR": str(cache_root),
+                    "XDG_CACHE_HOME": str(cache_root),
+                    "TEMP": str(temporary_root),
+                    "TMP": str(temporary_root),
+                    "TMPDIR": str(temporary_root),
+                }
+            )
             return run_command([str(target), *arguments], cwd=package, environment=environment)
 
         for present in (True, False):
@@ -67,8 +97,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--executable", required=True, type=Path)
     parser.add_argument("--contract", required=True, type=Path)
+    parser.add_argument(
+        "--build", required=True, type=require_enrolled_build, help="The owning CMake binary directory."
+    )
     arguments = parser.parse_args()
-    check(arguments.executable.resolve(strict=True), arguments.contract.resolve(strict=True))
+    paths = build_paths(arguments.build)
+    paths["testing"].mkdir(parents=True, exist_ok=True)
+    check(
+        arguments.executable.resolve(strict=True),
+        arguments.contract.resolve(strict=True),
+        scratch_root=paths["testing"],
+    )
 
 
 if __name__ == "__main__":

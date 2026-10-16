@@ -109,14 +109,14 @@ if(image_count GREATER 0)
       set_tests_properties(bundle.image.${image_file} PROPERTIES RESOURCE_LOCK package_inventory)
       if(WIN32 AND image_desktop)
         add_test(NAME bundle.health.${image_file} COMMAND "${CADRUMO_DEV_PYTHON}" -B -m
-          dev.packaging.native.package_launch_smoke --health
+          dev.packaging.native.package_launch_smoke --health --build "${PROJECT_BINARY_DIR}"
           "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" "${CADRUMO_STORAGE_ROOT_VARIABLE}")
         set_tests_properties(bundle.health.${image_file} PROPERTIES RESOURCE_LOCK package_inventory
           FIXTURES_REQUIRED desktop_package_ready FIXTURES_SETUP desktop_runtime_ready TIMEOUT 360
           WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
         add_test(NAME bundle.launch.${image_file} COMMAND "${CMAKE_COMMAND}" -E env
           "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
-          "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke
+          "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke --build "${PROJECT_BINARY_DIR}"
           "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" "${CADRUMO_VERSION}"
           "${CADRUMO_STORAGE_ROOT_VARIABLE}" "${CADRUMO_PATH_TESTING}/$<CONFIG>")
         set_tests_properties(bundle.launch.${image_file} PROPERTIES RESOURCE_LOCK package_inventory TIMEOUT 600
@@ -240,6 +240,7 @@ if(WIN32 AND desktop_image_staged)
     COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
       --output-on-failure --no-tests=error -R "^bundle[.]installer-bootstrap$"
     COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke --health
+    --build "${PROJECT_BINARY_DIR}"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${desktop_package_path}" "${CADRUMO_STORAGE_ROOT_VARIABLE}")
 endif()
 if(desktop_delivery_check)
@@ -274,7 +275,8 @@ if(BUILD_TESTING)
   add_test(NAME bundle.environment-conformance COMMAND "${CMAKE_COMMAND}" -E env
     "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
     "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.environment_conformance
-    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" --manifest "${CADRUMO_PACKAGE_MANIFEST}")
+    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" --manifest "${CADRUMO_PACKAGE_MANIFEST}"
+    --build "${PROJECT_BINARY_DIR}")
   set_tests_properties(bundle.environment-conformance PROPERTIES RESOURCE_LOCK package_inventory
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
   # Start the bundled agent image as the runtime does, with a hosted environment in a root the probe owns.
@@ -300,7 +302,8 @@ if(BUILD_TESTING AND WIN32)
     --lifecycle-package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     --junitxml "${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle.xml" -o junit_family=legacy)
   set_tests_properties(bundle.runtime-lifecycle PROPERTIES RESOURCE_LOCK package_inventory
-    RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" LABELS external_tool)
+    RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" LABELS external_tool
+    ENVIRONMENT "CADRUMO_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle-storage;CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/lifecycle-storage;CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/test-logs;CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_TESTING}/$<CONFIG>/scratch;CADRUMO_TEMP_DIR=${CADRUMO_PATH_TESTING}/$<CONFIG>/temporary;CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_TESTING}/$<CONFIG>/cache")
   if(desktop_image_staged)
     set_tests_properties(bundle.runtime-lifecycle PROPERTIES FIXTURES_REQUIRED "desktop_package_ready;desktop_runtime_ready")
   endif()
@@ -390,7 +393,7 @@ cadrumo_build_step(step_comment verify-package GROUP verification
   SUMMARY "extract the ZIP and verify the package it contains"
   OUTPUTS "${CADRUMO_PATH_VERIFICATION}/$<CONFIG>")
 add_custom_target(verify-package
-  COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.artifact_verify
+  COMMAND ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.artifact_verify
     --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
     --application-probe-command "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}"
   DEPENDS zip WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)

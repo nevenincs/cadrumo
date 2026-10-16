@@ -10,11 +10,32 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from ..build_directory import require_enrolled_build
+from ..build_paths import build_paths
 
-def analyze(directory: Path) -> None:
+
+def analyze(directory: Path, build: Path) -> None:
     """Require lossless capture and resolve each mutating file operation."""
     if sys.platform != "win32":
         raise RuntimeError("Windows ETW analysis requires Windows")
+    testing_root = build_paths(build)["testing"].resolve(strict=True)
+    if not directory.is_absolute() or not directory.is_dir():
+        raise ValueError("Trace analysis requires an existing absolute trace directory")
+    lexical = directory.absolute()
+    try:
+        relative = lexical.relative_to(testing_root)
+    except ValueError as error:
+        raise ValueError("Trace analysis output must be beneath the CMake testing output directory") from error
+    if not relative.parts:
+        raise ValueError("Trace analysis requires a dedicated trace directory")
+    member = testing_root
+    for part in relative.parts:
+        member = member / part
+        if member.is_symlink() or member.is_junction():
+            raise ValueError("Trace analysis directory must not use linked directories")
+    directory = directory.resolve(strict=True)
+    if not directory.is_relative_to(testing_root):
+        raise ValueError("Trace analysis output must be beneath the CMake testing output directory")
     report = (directory / "capture-summary.txt").read_text(errors="replace")
     lost = re.search(r"Total Events\s+Lost\s+(\d+)", report)
     if lost is None or int(lost[1]):
@@ -67,5 +88,9 @@ def analyze(directory: Path) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--build", type=require_enrolled_build, required=True, help="The owning CMake binary directory."
+    )
     parser.add_argument("directory", type=Path)
-    analyze(parser.parse_args().directory)
+    arguments = parser.parse_args()
+    analyze(arguments.directory, arguments.build)

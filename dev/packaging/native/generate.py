@@ -13,6 +13,7 @@ from dev.locales.manager_chrome import manager_chrome_strings
 
 from . import application_environment
 from .application_environment import ApplicationEnvironment, channel_directory
+from .build_directory import require_enrolled_output
 from .identity import identity
 from .layout import bundled_image_files, distribution_target, entrypoint_files, load_layout
 from .linux_desktop_runtime import declaration as desktop_runtime_declaration
@@ -328,7 +329,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("destination", type=Path)
+    parser.add_argument("destination", type=require_enrolled_output)
     parser.add_argument("--channel", default="stable")
     parser.add_argument("--target")
     args = parser.parse_args()

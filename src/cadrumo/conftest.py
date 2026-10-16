@@ -13,17 +13,14 @@ import tempfile
 from pathlib import Path
 
 from .core.storage_environment import (
-    TOOL_STORAGE_LOCATIONS,
     prepare_temporary_directory,
-    tool_storage_environment,
+    storage_directory,
 )
 
 if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
-    _tool_environment = tool_storage_environment()
-    for _native_variable, (_refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
-        os.environ[_refinement_variable] = _tool_environment[_native_variable]
-    os.environ.update(_tool_environment)
-    sys.pycache_prefix = _tool_environment["PYTHONPYCACHEPREFIX"]
+    # Preserve the interpreter's standard tool environment while keeping
+    # bytecode from a standalone package test run under its test-owned root.
+    sys.pycache_prefix = str(storage_directory("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache"))
 
 # Child conftests import command-line interface (CLI) and internationalization
 # (`i18n`) modules while pytest is collecting tests. Those imports initialise

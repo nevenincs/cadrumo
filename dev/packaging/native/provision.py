@@ -15,6 +15,7 @@ from dev._paths import REPO_ROOT
 from ..command_execution import run_command
 from ..runtime_wheel_selection import plan_target_wheels
 from .agent import locked_requirements
+from .build_directory import require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_toolchain import selected_uv
 from .hashing import digest
@@ -154,7 +155,7 @@ def provision(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("destination", type=Path)
+    parser.add_argument("destination", type=require_enrolled_output)
     parser.add_argument("--target", required=True)
     parser.add_argument("--uv", type=Path, help="Explicit uv executable for a standalone invocation")
     parser.add_argument(

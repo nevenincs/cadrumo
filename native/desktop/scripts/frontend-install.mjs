@@ -268,6 +268,40 @@ export function installDecision(frontend, platform = currentPlatform()) {
   };
 }
 
+export const SETUP_INSTALL = ["ci", "--include=dev", "--no-audit", "--no-fund"];
+
+// The npm CLI shipped beside this Node binary, found the way DesktopTools.cmake
+// does: node_modules next to node on Windows, lib/node_modules on POSIX.
+export function bundledNpmCli(node = process.execPath) {
+  const directory = dirname(node);
+  const candidates = [
+    resolve(directory, "node_modules/npm/bin/npm-cli.js"),
+    resolve(directory, "../lib/node_modules/npm/bin/npm-cli.js"),
+  ];
+  const found = candidates.find((candidate) => existsSync(candidate));
+  if (!found)
+    throw new Error(
+      `No npm CLI is installed beside ${node}: ${candidates.join(", ")}`,
+    );
+  return found;
+}
+
+/**
+ * Check the checkout-owned frontend install without creating a lock or changing files.
+ * `just setup-desktop-frontend` provisions the tree when it is absent or stale.
+ */
+export function checkInstalled(frontend) {
+  const decision = installDecision(frontend);
+  if (decision.install) {
+    console.error(
+      `Frontend dependencies are not ready: ${decision.reason}. Run \`just setup-desktop-frontend\` before building.`,
+    );
+    return 1;
+  }
+  console.log(`Frontend dependencies are ready: ${decision.reason}.`);
+  return 0;
+}
+
 /**
  * Runs the clean install with this Node binary when the tree needs it, says in
  * one line which it did and why, and returns the exit status.
@@ -307,8 +341,12 @@ if (
 ) {
   const [npmCli, ...cleanInstall] = process.argv.slice(2);
   const frontend = fileURLToPath(new URL("../frontend/", import.meta.url));
+  if (npmCli === "--check" && !cleanInstall.length)
+    process.exit(checkInstalled(frontend));
   if (npmCli === "clean" && !cleanInstall.length)
     process.exit(cleanInstalled(frontend));
+  if (npmCli === "setup" && !cleanInstall.length)
+    process.exit(ensureInstalled(frontend, bundledNpmCli(), SETUP_INSTALL));
   if (!npmCli || !isAbsolute(npmCli) || !cleanInstall.length)
     throw new Error(
       "Pass the absolute npm CLI and its clean-install arguments.",

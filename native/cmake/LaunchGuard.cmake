@@ -29,7 +29,8 @@ if(BUILD_TESTING)
   foreach(target cadrumo_python cadrumo_python_d)
     add_test(NAME launch_guard.${target}
       COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.launch_guard_check
-        --executable "$<TARGET_FILE:${target}>" --contract "${CONTRACT_DIR}/contract.json")
+        --executable "$<TARGET_FILE:${target}>" --contract "${CONTRACT_DIR}/contract.json"
+        --build "${PROJECT_BINARY_DIR}")
     set_tests_properties(launch_guard.${target} PROPERTIES
       WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
   endforeach()

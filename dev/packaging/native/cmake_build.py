@@ -193,7 +193,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools", "agent"))
     parser.add_argument("--agent-source", type=Path)
-    parser.add_argument("--build", type=require_enrolled_build)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--config", choices=("Debug", "Release"))
     parser.add_argument("--env", action="append", default=[])

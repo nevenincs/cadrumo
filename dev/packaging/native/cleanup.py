@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
+from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 
@@ -95,11 +96,15 @@ def clean(build: Path, group: str) -> None:
             _build_directory(build, Path(ownership["source"]))
             targets.extend(Path(path) for target in ownership["targets"].values() for path in target["paths"])
     _remove(build, [str(target) for target in targets], BuildLog(f"clean-{group}"))
+    # Presets point TEMP/TMP/TMPDIR here; later builds and CTest need it present
+    # or tools fail and Python silently falls back to the OS temporary directory.
+    if "temporary" in paths and paths["temporary"] in targets:
+        paths["temporary"].mkdir()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("build", type=Path)
+    parser.add_argument("build", type=require_enrolled_build)
     parser.add_argument("group", help="CMake-defined cleanup group or all")
     parser.add_argument("--target", action="store_true", help="Clean an individual enrolled target")
     parser.add_argument("--config", default="", help="CMake build configuration")

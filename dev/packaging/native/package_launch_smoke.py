@@ -24,6 +24,8 @@ from cadrumo_runtime.adapters.boot_record import RuntimeBootRecord, read_runtime
 from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from ..command_execution import run_command
+from .build_directory import require_enrolled_build, require_enrolled_output
+from .build_paths import build_paths
 from .hashing import digest
 from .installation import member
 
@@ -238,13 +240,24 @@ def health_environment(root: Path, received: Mapping[str, str]) -> dict[str, str
     return child_environment(ChildEnvironmentProfile.STRICT, root, received=kept)
 
 
-def verify_health(executable: Path, storage_variable: str) -> None:
+def verify_health(executable: Path, storage_variable: str, *, scratch_root: Path) -> None:
     """Exercise shipping supervision and verified IPC in disposable native storage."""
     executable = executable.resolve(strict=True)
-    temporary = TemporaryDirectory(prefix="cadrumo-package-health-", delete=False)
+    scratch_root = scratch_root.resolve(strict=True)
+    temporary = TemporaryDirectory(prefix="cadrumo-package-health-", dir=scratch_root, delete=False)
     with temporary as directory:
         root = Path(directory) / "storage"
+        temporary_root = Path(directory) / "temporary"
+        temporary_root.mkdir()
         environment = health_environment(root, os.environ)
+        environment.update(
+            {
+                "CADRUMO_TEMP_DIR": str(temporary_root),
+                "TEMP": str(temporary_root),
+                "TMP": str(temporary_root),
+                "TMPDIR": str(temporary_root),
+            }
+        )
         if environment.get(storage_variable) != str(root):
             raise AssertionError("Package health storage variable does not match the canonical root setting")
         scope = WindowsProcessScope()
@@ -335,11 +348,38 @@ def main() -> None:
         verify_installation_kit(Path(sys.argv[2]).resolve(strict=True))
         return
     if sys.argv[1] == "--health":
-        verify_health(Path(sys.argv[2]), sys.argv[3])
+        import argparse
+
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument("--health", action="store_true")
+        parser.add_argument(
+            "--build", required=True, type=require_enrolled_build, help="The owning CMake binary directory."
+        )
+        parser.add_argument("executable", type=Path)
+        parser.add_argument("storage_variable")
+        arguments = parser.parse_args()
+        testing = build_paths(arguments.build)["testing"]
+        testing.mkdir(parents=True, exist_ok=True)
+        verify_health(arguments.executable, arguments.storage_variable, scratch_root=testing)
         return
-    executable = Path(sys.argv[1]).resolve(strict=True)
-    version, storage_variable = sys.argv[2:4]
-    directory = Path(sys.argv[4]).resolve()
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--build", required=True, type=require_enrolled_build, help="The owning CMake binary directory."
+    )
+    parser.add_argument("executable", type=Path)
+    parser.add_argument("version")
+    parser.add_argument("storage_variable")
+    parser.add_argument("directory", type=require_enrolled_output)
+    arguments = parser.parse_args()
+    executable = arguments.executable.resolve(strict=True)
+    version = arguments.version
+    storage_variable = arguments.storage_variable
+    testing = build_paths(arguments.build)["testing"]
+    directory = arguments.directory
+    if directory == testing or not directory.is_relative_to(testing):
+        raise ValueError(f"Packaged launch scratch directory must be below the build testing output: {directory}")
     directory.mkdir(parents=True, exist_ok=True)
     shell = Path(os.environ["SYSTEMROOT"]) / "System32" / "cmd.exe"
     if not shell.is_absolute() or not shell.is_file():

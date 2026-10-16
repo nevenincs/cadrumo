@@ -1,10 +1,10 @@
 """The native build recipes enter CMake by preset, and CMake owns everything after that.
 
 A recipe configures the host's preset and then builds one target; it passes
-CMake no interpreter and no agent source. CMake itself converges the release
-builder during configure (``native/cmake/Bootstrap.cmake``), publishes the
-registry authority as a build target (``native/cmake/Authority.cmake``), and
-reads the agent project folder from a cache variable alone
+CMake no interpreter and no agent source. CMake validates an existing
+development interpreter during configure (``native/cmake/Bootstrap.cmake``),
+checks the registry authority as a build target (``native/cmake/Authority.cmake``),
+and reads the agent project folder from a cache variable alone
 (``native/cmake/Agent.cmake``).
 
 Nothing here builds the product. The recipe cases ask the real ``just`` driver
@@ -177,7 +177,7 @@ def test_each_recipe_configures_the_host_preset_then_builds_its_target(recipe: s
     lines = _commands(output)
 
     # Configure runs on every entry, so a binary directory first configured elsewhere is moved onto this
-    # preset. Builder convergence and authority publication happen inside CMake, not in the recipe.
+    # preset. Toolchain validation and authority currency checks happen inside CMake.
     assert len(lines) == 2, lines
     assert lines[0] == f"cmake --preset {selected}"
     build = _BUILD_LINE.fullmatch(lines[1])
@@ -266,17 +266,18 @@ def test_no_committed_preset_names_the_agent_source() -> None:
             assert not [key for key in named if "AGENT" in key.upper()], (kind, name)
 
 
-def test_the_standalone_builder_recipe_converges_the_managed_environment_not_the_checkout_one() -> None:
-    status, output = _just("--dry-run", "setup-native-builder")
+def test_the_standalone_builder_recipe_only_validates_the_existing_toolchain() -> None:
+    status, output = _just_for_native_host("--dry-run", "setup-native-builder")
     assert status == 0, output
     lines = _commands(output)
-    environment = _evaluated("native_builder_environment")
-    provision = next(index for index, line in enumerate(lines) if "uv sync " in line)
-    assert any("UV_PROJECT_ENVIRONMENT" in line and environment in line for line in lines[:provision])
-    assert any("CADRUMO_EDITABLE_AUTHORITY" in line and "skip" in line for line in lines[:provision])
-    assert "--locked" in lines[provision]
-    assert "dev/packaging/release-python-version" in lines[provision]
-    assert not any(".venv" in line for line in lines)
+    assert lines == [
+        "cmake --preset windows-x64",
+        "cmake --build --preset release --target setup-native-builder",
+    ]
+    assert not any("uv " in line or "UV_PROJECT_ENVIRONMENT" in line for line in lines)
+    justfile = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
+    assert "native_builder_environment" not in justfile
+    assert "native_builder_python" not in justfile
 
 
 @pytest.mark.parametrize("recipe", sorted(_CHAIN))
@@ -321,84 +322,67 @@ def _configure(tmp_path: Path, body: str, *definitions: str, environment: Mappin
     return source, build, result
 
 
-def _same(left: str | Path, right: str | Path) -> bool:
-    return os.path.normcase(os.path.normpath(str(left))) == os.path.normcase(os.path.normpath(str(right)))
-
-
-def test_configure_converges_the_release_builder_inside_the_binary_directory(tmp_path: Path) -> None:
+def test_configure_selects_existing_tools_without_creating_a_builder_environment(tmp_path: Path) -> None:
+    uv = shutil.which("uv")
+    assert uv is not None, "system uv is required by the native configure contract"
     source = tmp_path / "source"
     (source / "dev" / "packaging").mkdir(parents=True)
-    # A version no installed interpreter reports, so only the file can be where the command got it.
-    (source / "dev" / "packaging" / "release-python-version").write_text("3.99.7\n", encoding="utf-8")
+    version = sys.version_info
+    (source / "dev" / "packaging" / "release-python-version").write_text(
+        f"{version.major}.{version.minor}.{version.micro}\n", encoding="utf-8"
+    )
     for name in ("pyproject.toml", "uv.lock"):
         (source / name).touch()
-    record = tmp_path / "uv-call.json"
-    script = tmp_path / "recording_uv.py"
-    script.write_text(
-        "import json, os, sys\n"
-        "from pathlib import Path\n"
-        "root = Path(os.environ['UV_PROJECT_ENVIRONMENT'])\n"
-        "python = root / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')\n"
-        "python.parent.mkdir(parents=True, exist_ok=True)\n"
-        "python.write_text('managed builder')\n"
-        f"Path({str(record)!r}).write_text(json.dumps({{'argv': sys.argv[1:], "
-        "'environment': os.environ['UV_PROJECT_ENVIRONMENT'], "
-        "'authority': os.environ.get('CADRUMO_EDITABLE_AUTHORITY')}))\n",
-        encoding="utf-8",
-    )
-    uv = tmp_path / ("uv.cmd" if os.name == "nt" else "uv")
-    uv.write_text(
-        f'@"{sys.executable}" "{script}" %*\n'
-        if os.name == "nt"
-        else f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n',
-        encoding="utf-8",
-    )
-    uv.chmod(0o755)
     (source / "CMakeLists.txt").write_text(
         "cmake_minimum_required(VERSION 4.4)\nproject(Contract LANGUAGES NONE)\n"
         'set(CADRUMO_SOURCE_ROOT "${CMAKE_SOURCE_DIR}")\n'
-        f'set(CADRUMO_UV "{uv.as_posix()}")\n'
         f'include("{(_CMAKE_MODULES / "Bootstrap.cmake").as_posix()}")\n',
         encoding="utf-8",
     )
     build = tmp_path / "build"
 
-    result = _cmake("-G", "Ninja", "-S", str(source), "-B", str(build), cwd=source)
+    result = _cmake(
+        "-G",
+        "Ninja",
+        "-S",
+        str(source),
+        "-B",
+        str(build),
+        f"-DCADRUMO_DEV_PYTHON:FILEPATH={sys.executable}",
+        cwd=source,
+    )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    call = json.loads(record.read_text(encoding="utf-8"))
-    assert call["argv"] == ["sync", "--locked", "--python", "3.99.7"]
-    assert _same(call["environment"], build / "_deps" / "builder")
-    assert not _same(call["environment"], source / ".venv")
-    assert call["authority"] == "skip"
     cache = (build / "CMakeCache.txt").read_text(encoding="utf-8")
     interpreter = re.search(r"^CADRUMO_DEV_PYTHON:FILEPATH=(.+)$", cache, re.MULTILINE)
     assert interpreter is not None
-    assert _same(
-        interpreter.group(1), build / "_deps" / "builder" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-    )
+    assert Path(interpreter.group(1)).resolve() == Path(sys.executable).resolve()
+    uv_path = re.search(r"^CADRUMO_UV:FILEPATH=(.+)$", cache, re.MULTILINE)
+    assert uv_path is not None
+    assert Path(uv_path.group(1)).resolve() == Path(uv).resolve()
+    assert not (build / "_deps" / "builder").exists()
 
 
-def test_the_authority_target_publishes_when_needed_and_only_the_rebuild_target_recompiles(tmp_path: Path) -> None:
+def test_authority_targets_validate_tools_before_checking_authority_currency(tmp_path: Path) -> None:
     body = (
         f'include("{(_CMAKE_MODULES / "BuildLog.cmake").as_posix()}")\n'
         'set(CADRUMO_DEV_PYTHON "builder-python")\n'
-        'add_custom_target(setup-native-builder COMMAND "${CMAKE_COMMAND}" -E echo converge-builder)\n'
+        'add_custom_target(setup-native-builder COMMAND "${CMAKE_COMMAND}" -E echo validate-existing-builder)\n'
         f'include("{(_CMAKE_MODULES / "Authority.cmake").as_posix()}")\n'
     )
     _, build, result = _configure(tmp_path, body)
     assert result.returncode == 0, result.stdout + result.stderr
 
-    publish = _ninja_commands(build, "registry_authority")
+    current = _ninja_commands(build, "registry_authority")
     rebuild = _ninja_commands(build, "registry_authority_rebuild")
 
-    for commands in (publish, rebuild):
-        # The builder is converged before the authority tool runs, and the tool runs the builder's interpreter.
-        assert commands.index("converge-builder") < commands.index(
+    for commands in (current, rebuild):
+        # Existing tools are validated before authority currency is checked.
+        assert commands.index("validate-existing-builder") < commands.index(
             "builder-python -B -m dev.packaging.native.authority_build"
         )
         assert f"--build {build.as_posix()}".lower() in commands.lower()
-    assert "--rebuild" not in publish
+    assert "--rebuild" not in current
     assert "--rebuild" in rebuild
 
 

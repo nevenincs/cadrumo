@@ -95,6 +95,11 @@ setup-repository-tools:
 setup-locale-spelling:
     npm ci --ignore-scripts --no-audit --no-fund
 
+[doc('Install the desktop frontend packages native builds require; keeps a current tree and serializes with other installs.')]
+[group('setup')]
+setup-desktop-frontend:
+    node native/desktop/scripts/frontend-install.mjs setup
+
 [doc('Check checkout setup state without writing a report or changing files.')]
 [group('setup')]
 setup-check:
@@ -149,7 +154,7 @@ doctor-browser:
     uv run --no-sync python -m dev.env.playwright_doctor
 
 # One reclamation surface over three families that used to be three commands:
-# ignored worktree output, release-build scratch under `var/`, and the temp
+# ignored worktree output, registered build scratch (now under `build/`, with legacy release-build scratch still swept from `var/`), and the temp
 # directory's pytest/session/test-run storage. They were split by which module
 # happened to own the rules, which is not a split an operator can act on -- the
 # largest accrual moves between `var/` and `.logs/` depending on what has been
@@ -207,7 +212,7 @@ doctor-browser:
 # output. Do not wire either recipe into a gate, a hook, or a pre-commit step.
 # Neither recipe is a dependency of any aggregate.
 
-# READ-ONLY. Report reclaimable disk across worktree output, var/ build scratch and temp storage. Deletes nothing, always exits 0.
+# READ-ONLY. Report reclaimable disk across worktree output, build scratch (build/ and legacy var/) and temp storage. Deletes nothing, always exits 0.
 [group('maintenance')]
 clean *ARGS:
     uv run --no-sync python -m dev.env.clean {{ARGS}}
@@ -516,11 +521,11 @@ build-release: build-distributions
 [doc('Build every published distribution and refuse any file over the index cap.')]
 [group('build')]
 build-distributions:
-    @uv build --out-dir var/distributions .
-    @uv build --out-dir var/distributions packaging/cadrumo_data_manuals
-    @uv build --out-dir var/distributions packaging/cadrumo_data_official
-    @uv build --out-dir var/distributions packaging/cadrumo_data_normatives
-    @uv run --no-sync python -m dev.packaging.distribution_cap --directory var/distributions
+    @uv run --no-sync python -B -m dev.packaging.build_storage --work build/distributions-work -- uv build --out-dir build/distributions .
+    @uv run --no-sync python -B -m dev.packaging.build_storage --work build/distributions-work -- uv build --out-dir build/distributions packaging/cadrumo_data_manuals
+    @uv run --no-sync python -B -m dev.packaging.build_storage --work build/distributions-work -- uv build --out-dir build/distributions packaging/cadrumo_data_official
+    @uv run --no-sync python -B -m dev.packaging.build_storage --work build/distributions-work -- uv build --out-dir build/distributions packaging/cadrumo_data_normatives
+    @uv run --no-sync python -B -m dev.packaging.distribution_cap --directory build/distributions
 
 # Run source and binary compatibility probes for every row in the checked-in
 # runtime inventory. The release cohort is built once; binary rows consume its
@@ -534,7 +539,7 @@ test-python-compatibility:
 [doc('Construct the temporary Python packaging cohort once for artifact qualification.')]
 [group('build')]
 build-packaging-cohort: test-packaging-source
-    @uv run --no-sync python -m dev.packaging.python_cohort build --output var/packaging-smoke-cohort/python
+    @uv run --no-sync python -B -m dev.packaging.python_cohort build --output build/packaging-smoke-cohort/python
 
 # Own the rest of the serial contracts in this directory. The preflight lane
 # selects `not serial` because these must not run concurrently, and the oracle
@@ -552,12 +557,12 @@ build-packaging-cohort: test-packaging-source
 [doc('Run the portable packaging campaign against one sealed temporary cohort.')]
 [group('test')]
 test-packaging-portable:
-    @uv run --no-sync python -m dev.packaging.campaign --profile portable
+    @uv run --no-sync python -B -m dev.packaging.campaign --profile portable
 
 [doc('Run the CI packaging campaign against one sealed temporary cohort.')]
 [group('test')]
 test-packaging-ci:
-    @uv run --no-sync python -m dev.packaging.campaign --profile ci
+    @uv run --no-sync python -B -m dev.packaging.campaign --profile ci
 
 # `windows_only` is excluded because the one such case here drives the
 # development environment's installed launchers, not the sealed cohort, and
@@ -1512,7 +1517,7 @@ docs-build:
 # disposable local output. PATH is relative to the repository or to docs/ and a
 # page may omit its suffix (`just docs-page how-to/modelo-303`, `just docs-page
 # how-to`). The preview renders cli-sequences from committed goldens without
-# executing them and keeps its doctree cache under var/docs-preview, so a repeat
+# executing them and keeps its doctree cache under the canonical build/docs root, so a repeat
 # run re-reads only changed pages; `docs-build` remains the full build and gate.
 [doc('Preview one documentation page or a directory of pages from committed goldens; uploads nothing.')]
 [group('docs')]

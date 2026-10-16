@@ -670,11 +670,6 @@ TOOL_STORAGE_LOCATIONS: Mapping[str, tuple[str, str]] = {
 }
 
 
-def development_tool_env_var_names() -> frozenset[str]:
-    """Return the development tool refinements; ``dev/`` and the justfile use them, the product does not."""
-    return frozenset(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values())
-
-
 def tool_storage_environment() -> dict[str, str]:
     """Bind external tool caches and bytecode to shared, overrideable storage."""
     return {

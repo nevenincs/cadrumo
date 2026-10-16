@@ -286,11 +286,14 @@ def test_every_family_reports_and_only_the_selected_one_runs(
     everything = capsys.readouterr().out
     missing = [family for family, heading in headings.items() if heading not in everything]
     assert not missing, f"the default run dropped a section: {missing}"
+    assert "Registered build scratch under" in everything
 
     for family, heading in headings.items():
         assert main(["--only", family]) == 0
         section = capsys.readouterr().out
         assert heading in section, f"--only {family} did not run its own section"
+        if family == VAR_SCRATCH_FAMILY:
+            assert "Registered build scratch under" in section
         others = [other for other, text in headings.items() if other != family and text in section]
         assert not others, f"--only {family} also ran {others}"
 
@@ -306,6 +309,19 @@ def test_var_scratch_is_deferred_by_the_worktree_section_rather_than_double_judg
     assert deferred[0] is Verdict.KEEP
     assert "owning section" in deferred[1], f"the deferral does not say who owns it: {deferred[1]}"
     assert _verdict_for(entries, "var/storage/cache")[0] is Verdict.REAP
+
+
+def test_registered_build_scratch_is_deferred_to_its_owner_section(repository: Path) -> None:
+    """The worktree sweep reaps build outputs but delegates owned scratch."""
+    scratch = _write(repository / "build" / ".1234-release-cohort.staging" / "member.txt", "scratch")
+    output = _write(repository / "build" / "distributions" / "member.whl", "output")
+
+    entries = assess(repository)
+
+    deferred = _verdict_for(entries, scratch.parent.relative_to(repository).as_posix())
+    assert deferred[0] is Verdict.KEEP
+    assert "owning section" in deferred[1]
+    assert _verdict_for(entries, output.parent.relative_to(repository).as_posix())[0] is Verdict.REAP
 
 
 def test_the_report_deletes_nothing_anywhere_including_the_temp_families(

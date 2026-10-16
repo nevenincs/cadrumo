@@ -13,6 +13,7 @@ from dev._paths import REPO_ROOT
 
 from ...command_execution import run_command
 from ..cleanup import clean, clean_target
+from .cmake_build_fixture import build_manifest_cmake, enrolled_cmake_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -74,6 +75,31 @@ def test_clean_all_includes_all_configured_target_outputs_but_preserves_identity
     assert (build / "_deps/builder/python.exe").exists()
 
 
+def test_clean_stage_empties_but_keeps_the_preset_temporary_directory(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    build = tmp_path / "build"
+    _manifest(build, source, [])
+    (build / "build-paths.json").write_text(
+        json.dumps(
+            {
+                "source": str(source),
+                "paths": {"stage": "stage", "temporary": "temporary"},
+                "cleanup": {"stage": ["stage", "temporary"]},
+            }
+        ),
+        encoding="utf-8",
+    )
+    for name in ["stage/app.exe", "temporary/ctest/left-over"]:
+        path = build / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("owned", encoding="utf-8")
+    clean(build, "stage")
+    assert not (build / "stage").exists()
+    assert (build / "temporary").is_dir()
+    assert not any((build / "temporary").iterdir())
+
+
 def test_object_file_list_is_enrolled_without_generator_metadata(tmp_path: Path) -> None:
     cmake = shutil.which("cmake")
     assert cmake is not None
@@ -96,27 +122,30 @@ def test_object_file_list_is_enrolled_without_generator_metadata(tmp_path: Path)
 
 
 @pytest.mark.parametrize("refuse", [False, True])
-def test_clean_product_waits_for_quiescence_and_preserves_output_on_refusal(tmp_path: Path, refuse: bool) -> None:
+def test_clean_product_waits_for_quiescence_and_preserves_output_on_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refuse: bool
+) -> None:
     cmake = shutil.which("cmake")
     assert cmake is not None
-    build = tmp_path / "build"
+    source, build = enrolled_cmake_root(tmp_path, monkeypatch)
     module = (REPO_ROOT / "native/cmake/Cleanup.cmake").as_posix()
     gate = 'COMMAND "${CMAKE_COMMAND}" -E false' if refuse else 'COMMAND "${CMAKE_COMMAND}" -E touch quiesced'
-    (tmp_path / "CMakeLists.txt").write_text(
+    (source / "CMakeLists.txt").write_text(
         "cmake_minimum_required(VERSION 4.4)\nproject(QuiescentCleanup LANGUAGES NONE)\n"
-        f'include("{module}")\nset(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
-        f"add_custom_target(native-process-quiesce {gate})\n"
-        "add_custom_target(product)\n"
-        'cadrumo_register_clean(TARGET product PATHS "${CMAKE_BINARY_DIR}/product.exe")\n'
-        "set_property(GLOBAL PROPERTY CADRUMO_QUIESCENT_CLEAN_TARGETS product)\n"
-        "cadrumo_finalize_clean_targets()\n",
+        + build_manifest_cmake()
+        + f'include("{module}")\nset(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
+        + f"add_custom_target(native-process-quiesce {gate})\n"
+        + "add_custom_target(product)\n"
+        + 'cadrumo_register_clean(TARGET product PATHS "${CMAKE_BINARY_DIR}/product.exe")\n'
+        + "set_property(GLOBAL PROPERTY CADRUMO_QUIESCENT_CLEAN_TARGETS product)\n"
+        + "cadrumo_finalize_clean_targets()\n",
         encoding="utf-8",
     )
-    configured = run_command([cmake, "-G", "Ninja", "-S", str(tmp_path), "-B", str(build)], cwd=tmp_path)
+    configured = run_command([cmake, "-G", "Ninja", "-S", str(source), "-B", str(build)], cwd=source)
     assert configured.returncode == 0, configured.stderr + configured.stdout
     image = build / "product.exe"
     image.write_text("retained product image", encoding="utf-8")
-    cleaned = run_command([cmake, "--build", str(build), "--target", "clean-product"], cwd=tmp_path)
+    cleaned = run_command([cmake, "--build", str(build), "--target", "clean-product"], cwd=source)
     if refuse:
         assert cleaned.returncode != 0
         assert image.read_text(encoding="utf-8") == "retained product image"
@@ -127,25 +156,26 @@ def test_clean_product_waits_for_quiescence_and_preserves_output_on_refusal(tmp_
 
 
 @pytest.mark.parametrize("generator", ["Ninja", "Ninja Multi-Config"])
-def test_individual_clean_rebuild_preserves_sibling_and_configuration(tmp_path: Path, generator: str) -> None:
+def test_individual_clean_rebuild_preserves_sibling_and_configuration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, generator: str
+) -> None:
     cmake = shutil.which("cmake")
     assert cmake is not None
-    source = tmp_path / "source"
-    source.mkdir()
-    build = tmp_path / "build"
+    source, build = enrolled_cmake_root(tmp_path, monkeypatch)
     module = (REPO_ROOT / "native/cmake/Cleanup.cmake").as_posix()
     (source / "input.txt").write_text("fixture", encoding="utf-8")
     (source / "CMakeLists.txt").write_text(
         "cmake_minimum_required(VERSION 4.4)\nproject(CleanupFixture LANGUAGES NONE)\n"
-        f'include("{module}")\nset(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
-        "foreach(name IN ITEMS one two)\n"
-        ' set(output "${CMAKE_BINARY_DIR}/$<CONFIG>/${name}.txt")\n'
-        ' add_custom_command(OUTPUT "${output}" COMMAND "${CMAKE_COMMAND}" -E make_directory '
-        '"${CMAKE_BINARY_DIR}/$<CONFIG>" COMMAND "${CMAKE_COMMAND}" -E copy '
-        '"${CMAKE_SOURCE_DIR}/input.txt" "${output}" DEPENDS "${CMAKE_SOURCE_DIR}/input.txt")\n'
-        ' add_custom_target(${name} ALL DEPENDS "${output}")\n'
-        ' cadrumo_register_clean(TARGET ${name} PATHS "${output}")\n'
-        "endforeach()\ncadrumo_finalize_clean_targets()\n",
+        + build_manifest_cmake()
+        + f'include("{module}")\nset(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")\n'
+        + "foreach(name IN ITEMS one two)\n"
+        + ' set(output "${CMAKE_BINARY_DIR}/$<CONFIG>/${name}.txt")\n'
+        + ' add_custom_command(OUTPUT "${output}" COMMAND "${CMAKE_COMMAND}" -E make_directory '
+        + '"${CMAKE_BINARY_DIR}/$<CONFIG>" COMMAND "${CMAKE_COMMAND}" -E copy '
+        + '"${CMAKE_SOURCE_DIR}/input.txt" "${output}" DEPENDS "${CMAKE_SOURCE_DIR}/input.txt")\n'
+        + ' add_custom_target(${name} ALL DEPENDS "${output}")\n'
+        + ' cadrumo_register_clean(TARGET ${name} PATHS "${output}")\n'
+        + "endforeach()\ncadrumo_finalize_clean_targets()\n",
         encoding="utf-8",
     )
 

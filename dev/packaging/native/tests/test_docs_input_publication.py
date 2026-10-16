@@ -33,10 +33,9 @@ def test_source_and_authority_changes_refuse_completion(
     )
     inputs = build / "inputs.txt"
     inputs.write_text(f"{source}\n{configuration}\n", encoding="utf-8")
-    destination, shared = build / "docs", tmp_path / "cache" / "docs"
+    destination, shared = build / "docs", build / "work/user-docs"
     monkeypatch.setattr(docs_build, "selected_published_authority", lambda _root: tuple(selected))
-    monkeypatch.setattr(docs_build, "dev_cache_dir", lambda _name: shared)
-    monkeypatch.setattr(docs_build, "_index_site", lambda _root, _languages: None)
+    monkeypatch.setattr(docs_build, "_index_site", lambda _root, _languages, _work: None)
 
     def produce(root: Path, _work: Path, _languages: tuple[str, ...]) -> None:
         root.mkdir(parents=True, exist_ok=True)

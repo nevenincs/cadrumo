@@ -19,6 +19,7 @@ from ..runtime_wheel_selection import marker_environment
 from ..runtime_wheelhouse_contract import target_platform
 from ..wheel_metadata import read_wheel_metadata
 from .agent import agent_wheel, validate_wheel_dependencies
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .layout import load_layout
@@ -144,7 +145,7 @@ def update(build: Path, config: str) -> None:
 def main() -> None:
     """Run the CMake-owned incremental agent publication."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--config", choices=("Debug", "Release"), required=True)
     arguments = parser.parse_args()
     update(arguments.build, arguments.config)

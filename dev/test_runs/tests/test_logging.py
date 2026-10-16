@@ -373,9 +373,8 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     run_root = Path(paths["run_root"]).resolve()
     scratch = Path(paths["scratch"]).resolve()
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
-    # Third-party tool caches are shared below configured Cadrumo storage.
-    assert paths["tool_cache_home"] == os.environ["XDG_CACHE_HOME"]
-    assert paths["tool_cache_home"] != str(ambient_cache)
+    # The child inherits machine-managed tool paths unchanged.
+    assert paths["tool_cache_home"] == str(ambient_cache)
     assert paths["log_dir"] == str(configured_storage / "diagnostic-logs")
     assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
     assert Path(paths["stdlib_temp"]).resolve() == scratch

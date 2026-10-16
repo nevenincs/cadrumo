@@ -731,8 +731,7 @@ def build_docs(
     """Run Sphinx against the selected targets.
 
     Full builds write the actual documentation output under
-    ``CADRUMO_DOCS_BUILD_ROOT/html`` (defaulting beneath the configured storage
-    root).
+    ``CADRUMO_DOCS_BUILD_ROOT/html`` (defaulting to the repository's ``build/docs``).
     Targeted changed-page checks copy ``docs/`` to an OS temporary source tree
     and write temporary output there, so generated API/CLI sources and preview
     artifacts never pollute the repository. Previews (``single_page``, one page
@@ -1148,7 +1147,7 @@ def _docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
             "Preview one documentation page, or every page under a directory, into the canonical HTML output. "
             "PATH is relative to the repository or to docs/, and a page may omit its suffix. The preview "
             "renders cli-sequences from committed goldens without executing them, skips generated "
-            "API/autodoc pages, and keeps a doctree cache under var/docs-preview so a repeat run re-reads "
+            "API/autodoc pages, and keeps a doctree cache under the canonical build/docs root so a repeat run re-reads "
             "only changed sources."
         ),
     )

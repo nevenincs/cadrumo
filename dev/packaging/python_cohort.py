@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import re
@@ -30,8 +31,11 @@ from .authority_staging import stage_published_authority
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
+    require_build_path,
+    sweep_build_scratch,
     var_scratch_name,
 )
+from .build_storage import build_storage
 from .command_spec_attestation import (
     _cached_artifact_command_projection,
     _forbidden_command_artifacts,
@@ -274,10 +278,13 @@ def _validate_sdist_contract(
 
 def _safe_recreate(directory: Path, *, repo_root: Path) -> None:
     resolved_repo = repo_root.resolve(strict=True)
-    resolved_var = (resolved_repo / "var").resolve()
-    resolved = directory.resolve()
-    if resolved_var not in resolved.parents:
-        raise SystemExit(f"cohort output must stay under {resolved_var}: {resolved}")
+    resolved_build = resolved_repo / "build"
+    try:
+        resolved = require_build_path(directory, repo_root=resolved_repo)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    if resolved == resolved_build:
+        raise SystemExit(f"cohort output must be below {resolved_build}")
     if resolved.exists():
         shutil.rmtree(resolved)
     resolved.mkdir(parents=True)
@@ -366,22 +373,29 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     """
     root = repo_root.resolve(strict=True)
     source_files = repository_files(root)
-    output = output_dir.resolve()
+    output = output_dir if output_dir.is_absolute() else root / output_dir
     _safe_recreate(output, repo_root=root)
-    build_root = output.parent / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
+    output = output.absolute()
+    scratch_root = (root / "build").resolve()
+    scratch_root.mkdir(parents=True, exist_ok=True)
+    with contextlib.suppress(OSError):
+        sweep_build_scratch(scratch_root)
+    build_root = scratch_root / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
     if build_root.exists():
         shutil.rmtree(build_root)
     try:
         snapshot(root, source_files, build_root)
         source_digest = member_content_digest(source_files, lambda relative: (build_root / relative).read_bytes())
-        return _build_python_cohort_from_snapshot(
-            build_root=build_root,
-            output=output,
-            source_files=source_files,
-            source_digest=source_digest,
-            authority_source_root=root,
-            remove_build_root=True,
-        )
+        with build_storage(build_root / "build-work", repo_root=root):
+            return _build_python_cohort_from_snapshot(
+                build_root=build_root,
+                output=output,
+                source_files=source_files,
+                source_digest=source_digest,
+                authority_source_root=root,
+                scratch_root=scratch_root,
+                remove_build_root=True,
+            )
     except BaseException:
         if build_root.exists():
             shutil.rmtree(build_root)
@@ -403,16 +417,23 @@ def build_python_cohort_from_clean_snapshot(
     callers whose source directory may still be changing.
     """
     root = clean_root.resolve(strict=True)
-    output = output_dir.resolve()
+    output = output_dir if output_dir.is_absolute() else root / output_dir
     _safe_recreate(output, repo_root=root)
-    return _build_python_cohort_from_snapshot(
-        build_root=root,
-        output=output,
-        source_files=source_files,
-        source_digest=source_digest,
-        authority_source_root=None,
-        remove_build_root=False,
-    )
+    output = output.absolute()
+    scratch_root = (root / "build").resolve()
+    scratch_root.mkdir(parents=True, exist_ok=True)
+    with contextlib.suppress(OSError):
+        sweep_build_scratch(scratch_root)
+    with build_storage(scratch_root / "cohort-work", repo_root=root):
+        return _build_python_cohort_from_snapshot(
+            build_root=root,
+            output=output,
+            source_files=source_files,
+            source_digest=source_digest,
+            authority_source_root=None,
+            scratch_root=scratch_root,
+            remove_build_root=False,
+        )
 
 
 def _build_python_cohort_from_snapshot(
@@ -422,10 +443,11 @@ def _build_python_cohort_from_snapshot(
     source_files: Sequence[str],
     source_digest: str,
     authority_source_root: Path | None,
+    scratch_root: Path,
     remove_build_root: bool,
 ) -> PythonCohort:
     """Build a cohort from a source tree whose identity was already verified."""
-    archive = output.parent / var_scratch_name(COHORT_SOURCE_ARCHIVE_FAMILY, output.name)
+    archive = scratch_root / var_scratch_name(COHORT_SOURCE_ARCHIVE_FAMILY, output.name)
     if archive.exists():
         archive.unlink()
     retained_source_archive = output / f"cadrumo-source-{source_digest}.zip"
@@ -567,7 +589,7 @@ def _build_python_cohort_from_snapshot(
             root_sdist=root_sdist,
             source_archive=retained_source_archive,
             source_digest=source_digest,
-            work_root=output.parent,
+            work_root=scratch_root,
             digests=(sha256["cadrumo"], sha256["cadrumo-sdist"], sha256["source-archive"]),
         )
     finally:

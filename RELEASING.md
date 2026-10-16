@@ -228,7 +228,7 @@ just build-distributions
 ```
 
 That runs the same two operations the publish workflow performs, in the same order, and
-writes to `var/distributions`.
+writes to `build/distributions`.
 
 ## Python runtime evidence and promotion
 

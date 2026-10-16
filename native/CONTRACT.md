@@ -79,6 +79,16 @@ then publishes its identity after a successful Cargo command. Debug and Release
 are the supported profiles; single-configuration generators require an explicit
 `CMAKE_BUILD_TYPE`.
 
+Native writer commands require an enrolled repository `build/<configure-preset>`
+directory. The build-path manifest and CMake cache must agree with its source and
+physical location; linked roots, traversal and external output destinations are
+refused before project writes. Configure-time generators can run after the manifest
+is emitted and before the cache exists, but their destinations must still belong to
+a declared output. Reconfigure older build directories when their manifests describe
+obsolete output layouts. Build verification scratch and evidence belong to the same
+build owner. Explicit source-authoring and installation commands retain their own
+destinations and are not prerequisites that a native build performs implicitly.
+
 Provisioning selects the base dependency closure from the lock with target
 markers and wheel ABI/floor checks. It installs exact wheel URLs with required
 SHA256 hashes, explicit target and Python version; it never executes the SDK
@@ -677,11 +687,10 @@ SDK and the locked base dependency closure; optional integrations remain outside
 this base package. The C host is compiled locally; CPython is the official binary
 build, with matching headers and import library. No CPython source patch is applied.
 
-CMake owns configure, builder setup, registry publication, build, installation and
-ZIP packaging. A fresh configuration uses `uv` to converge the pinned release
-interpreter and locked development dependencies in `<binary-dir>/_deps/builder`.
-An explicit `CADRUMO_DEV_PYTHON` selects an externally managed release interpreter;
-setup validates its version and cleanup never removes it. Compiler, Rust, Node and
+CMake owns configure, build, installation and ZIP packaging. Configuration selects
+an existing development interpreter through the system `uv` binary, or accepts
+an explicit `CADRUMO_DEV_PYTHON`. Setup validates its version and dependencies;
+builds never create or synchronize a Python environment. Compiler, Rust, Node and
 uv executables remain host toolchain prerequisites. The `just build-native`,
 `just test-native-bundle`, `just build-native-package` and `just test-native-package`
 recipes select the host's CMake preset and target; they no longer publish authority
@@ -784,11 +793,10 @@ enrolled name elsewhere, stops with the enrolled names.
 
 | Path beneath the binary directory | Contents |
 | --- | --- |
-| `_deps/builder/` | Configure-owned release builder, retained by output cleanup |
-| `_deps/python-sdk/` | Verified pinned CPython SDK, independent of runtime wheel changes |
-| `_deps/runtime/` | Locked third-party wheels installed for staging |
-| `_deps/build-tools/` | Pinned SVG renderer; never shipped |
-| `_deps/agent/` | Built agent wheel and content inventory; never used as a runtime import path |
+| `inputs/python-sdk/` | Verified pinned CPython SDK, independent of runtime wheel changes |
+| `inputs/runtime/` | Locked third-party wheels installed for staging |
+| `inputs/build-tools/` | Pinned SVG renderer; never shipped |
+| `inputs/agent/` | Built agent wheel and content inventory; never used as a runtime import path |
 | `product/build/wheels/` | Existing CADRUMO three-wheel cohort built from source |
 | `product/dependencies/` | Exact production closure plus those product wheels |
 | `generated/` | Native contracts, metadata, icon and resource source |
@@ -831,13 +839,12 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `agent-checksum` | Build or reuse the agent, then check its recorded wheel checksum |
 | `agent-lock-<target>` | Explicitly regenerate the target's hash-pinned supplemental dependency lock under `native/agent/`, constrained by Cadrumo's current locked versions |
 | `app-payload` | Internal payload assembly at `stage/<Config>/app`, including application images, runtime and documentation; a Windows desktop payload alone is not a complete delivery |
-| `native-process-quiesce` | Before replacing product images, request shutdown of verified running product processes and children, wait 10 seconds, then terminate survivors and refuse replacement if any remain alive |
+| `native-process-quiesce` | Before replacing this build's product images, request shutdown only for verified product processes whose executable images resolve inside this build's `stage`, `cargo` or `bin` trees, including their children; wait 10 seconds, then terminate survivors and refuse replacement if any remain alive |
 | `verify-app-distro` | Build the complete bundle, run its smoke tests and inspect the package inventory, without ZIP or release verification |
 | `zip` | Build the complete bundle, then create its install-based ZIP; Windows desktop archives retain sibling `app` and `services` directories |
 | `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
-| `setup-native-builder` | Converge the configure-owned builder or validate the selected external interpreter |
-| `registry_authority` | Reuse the existing publication; compile when its descriptor or selected database is missing |
-| `registry_authority_rebuild` | Explicitly recompile and publish authority, even when it exists |
+| `setup-native-builder` | Validate the existing development interpreter without installing tools |
+| `registry_authority` | Validate the existing publication and its source currency; refuse a missing or stale one without publishing |
 | `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts and executable resources |
 | `rust_platform_static`, `rust_platform_shared`, `rust_platform_consumer` | Build one platform library format or its Rust consumer; `rust_platform` groups the libraries |
 | `rust_application`, `rust_manager`, `desktop-host-build` | Build each application library, manager executable or desktop executable |
@@ -920,24 +927,21 @@ compilers and Cargo retain their normal source timestamp rules: touching a raw
 C/Rust source may rebuild its owning binary. Changes to shared code correctly
 rebuild its consumers. Individual Cargo clean targets remove public outputs;
 `clean-native` and `clean-desktop` also clear the shared compiler caches.
-Authority publication is an explicitly selected build input. Normal CMake and
-wheel builds reuse its descriptor and selected database when present, and compile
-when either is missing. Source or compiler changes do not trigger republication.
-After registry or compiler edits, run
-`cmake --build build/windows-x64 --config Release --target registry_authority_rebuild`
-(select the appropriate binary directory), or `just registry-publish-authority`.
-Malformed descriptors and altered database bytes still fail artifact validation.
-`just init` retains its explicit source-currency publication step. Fresh CI
-checkouts compile the missing authority; jobs restoring a published authority
-must explicitly republish if they require a fresh compile. Registry currency
-checks remain separate from ordinary builds.
+Authority publication is an explicitly provisioned build input. Native builds
+validate its descriptor, selected database and source currency. Missing or stale
+publications refuse the build; run `just registry-publish-authority` explicitly
+before retrying; no build target rewrites checkout state. `just init` retains its explicit publication
+step. Jobs restoring a publication must republish after source or compiler edits.
 
-`clean-setup-native-builder` removes a CMake-owned builder and forces configure
-to restore it before the next individual build. An explicitly selected external
-interpreter is retained with an ownership message. `clean-desktop-frontend-install`
-removes the checkout's shared npm installation under the install lock; subsequent
-frontend builds restore it. That explicit cleanup affects every binary directory
-using the checkout.
+`clean-setup-native-builder` and `clean-desktop-frontend-install` retain externally
+provisioned dependencies with an ownership message. `desktop-frontend-install`
+validates the existing frontend installation without creating a source-tree lock
+or running npm. Provision it explicitly with `just setup-desktop-frontend`
+before building; it keeps a current tree and serializes with other installs. Tool caches retain each
+tool's standard machine configuration; builds do not redirect uv installations
+or caches into application storage. Documentation reuse and verification scratch
+belong to the selected binary directory. `agent-lock-*` produces a candidate
+under `testing/agent-lock/<target>/requirements.txt` for manual author review.
 
 The root install rule preserves source permissions, including executable bits on
 POSIX hosts. Both installation and the ZIP consume the same staged application.
@@ -1027,20 +1031,21 @@ the contents of `inputs-user-docs.txt`:
 documentation sources, documentation tooling, `src/`, the layout and the selected
 published authority. Unchanged inputs reuse the previous roots. The documentation
 does not depend on the platform or on the build directory, so a build configuration
-whose inputs outside its own build directory match the site another configuration of
-the checkout built copies that site from the development cache (`user-docs`) instead
-of compiling again; the cache holds one site, checked against its recorded inventory
+can reuse its own `user-docs/work/user-docs` site after configuration-only input
+changes instead of compiling again. The cache holds one site beneath that binary
+directory, checked against its recorded inventory
 before it is reused. Authority and source inputs must remain unchanged during
 rendering. Live verification checks authority freshness. The previous search index is removed before
 the compile, so staging can never accept an older root after a failed build.
 
 For transcript maintenance, configure with
 `-DCADRUMO_DOCS_SEQUENCE_PAGES=how-to/filing-spine`, then build
-`user_docs_sequences_check` or `user_docs_sequences_refresh`. Use a semicolon-separated
+`user_docs_sequences_check`. Use a semicolon-separated
 list for multiple pages; CMake schedules them with the build parallelism. An empty
-list selects all enrolled sequences. Refresh executes the documented commands and checks their
-declared expectations before writing source goldens; review those changes before
-accepting them. The normal documentation build only checks goldens.
+list selects all enrolled sequences. Run `just docs-generate-sequences` separately
+to refresh authored transcripts, then review the changed goldens. The CMake
+`user_docs_sequences_refresh` target refuses source authoring. The normal
+documentation build only checks goldens.
 To maintain one sequence, leave the page list empty and set
 `-DCADRUMO_DOCS_SEQUENCE_ID=modelo-390-inspect`. Page and sequence selections are
 mutually exclusive.
@@ -1468,6 +1473,22 @@ with `invalid_arguments`.
 The host also writes its own diagnostics events to `cadrumo-native.jsonl` in the
 log directory, rotated by the same declared limits.
 
+Every native binary installs one panic hook at startup. It records each panic,
+on any thread, as a `panic` event before unwinding begins, so a panic that
+cannot unwind (inside a WebView2, window or service callback) is on disk before
+the process aborts. The record holds the crate-relative source file, line and
+column, the thread name and number, and a closed category derived from the
+message; the message itself is never written. The hook takes no lock the
+panicking code can hold: it joins the event ring only when its lock is free and
+appends one line to the configured file without rotation, or to standard error
+when no file is configured. Boundaries that contain a panic (app commands,
+detached tasks, window procedures, the manager core) add a `failure` event with
+the `panic` code for the operation it ended. The desktop configures its file
+before creating any window. The SYSTEM service broker has no file; a contained
+broker panic stops the service with `ERROR_PROCESS_ABORTED`, which the service
+control manager records. Aborts that bypass panicking (stack overflow,
+`std::process::abort`, fail-fast) leave no record here.
+
 ### Shell commands
 
 | Command | Arguments | Result and refusals |
@@ -1625,7 +1646,7 @@ defaults to `ON`.
 
 | Target | Operation |
 | --- | --- |
-| `desktop-frontend-install` | Run `npm ci` in the frontend only when `node_modules/.package-lock.json` does not match `package-lock.json` for this platform, or `package.json` and the lockfile declare a dependency differently; the check reads the installed tree, which every binary directory shares |
+| `desktop-frontend-install` | Validate checkout-owned dependencies against the lockfile without installing, deleting or locking the source tree |
 | `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
 | `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
 | `desktop-frontend-generated` | Write the chrome strings and the palette into the binary directory (`desktop/frontend-generated`), never into the source tree: with `npm ci`, all that developing the frontend in a browser needs (`native/desktop/frontend/README.md`) |

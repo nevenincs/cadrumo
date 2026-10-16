@@ -15,6 +15,7 @@ from dev._paths import REPO_ROOT
 from ...command_execution import run_command
 from ...google_oauth import GOOGLE_OAUTH_ENV
 from ..cached_command import run_cached
+from .cmake_build_fixture import build_manifest_cmake, enrolled_cmake_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -169,17 +170,16 @@ def test_release_graph_materializes_bundle_and_archive_once(tmp_path: Path) -> N
         assert (build / f"{name}.calls").read_text() == "1"
 
 
-def test_cmake_targets_reuse_siblings_and_cpack_uses_install(tmp_path: Path) -> None:
+def test_cmake_targets_reuse_siblings_and_cpack_uses_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     cmake = shutil.which("cmake")
     assert cmake is not None
-    source = tmp_path / "source"
-    source.mkdir()
-    build = tmp_path / "build"
+    source, build = enrolled_cmake_root(tmp_path, monkeypatch)
     for name in ("a", "b"):
         (source / name).write_text(name, encoding="utf-8")
     (source / "CMakeLists.txt").write_text(
         f'''cmake_minimum_required(VERSION 4.4)
 project(Currency LANGUAGES NONE)
+{build_manifest_cmake()}
 set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")
 include("{REPO_ROOT.as_posix()}/native/cmake/Cleanup.cmake")
 include("{REPO_ROOT.as_posix()}/native/cmake/CachedCommand.cmake")

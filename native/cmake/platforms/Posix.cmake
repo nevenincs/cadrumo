@@ -22,7 +22,7 @@ cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
   OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
 add_custom_target(native_metadata
-  COMMAND ${metadata_command} ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
+  COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"

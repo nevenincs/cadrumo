@@ -28,6 +28,7 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 from ..wheel_metadata import installed_wheel_matches, read_wheel_metadata
+from .build_directory import require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .build_toolchain import selected_uv
@@ -454,9 +455,9 @@ def build_product(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=require_enrolled_output, required=True)
     parser.add_argument("--python", type=Path, required=True)
-    parser.add_argument("--dependencies", type=Path, required=True)
+    parser.add_argument("--dependencies", type=require_enrolled_output, required=True)
     parser.add_argument("--target", required=True)
     parser.add_argument("--inputs", type=Path, help="CMake-enrolled product source inputs")
     parser.add_argument("--uv", type=Path, help="Explicit uv executable for a standalone invocation")

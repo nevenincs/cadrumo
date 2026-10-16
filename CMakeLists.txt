@@ -4,7 +4,10 @@ list(APPEND CMAKE_MESSAGE_CONTEXT cadrumo)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "Use an out-of-source build directory")
 endif()
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/tmp")
+include(native/cmake/BuildPaths.cmake)
+set(CADRUMO_CTEST_TEMPORARY "${CADRUMO_PATH_TEMPORARY}/ctest")
+cadrumo_require_physical_build_member("${CADRUMO_CTEST_TEMPORARY}" "CTest temporary directory")
+file(MAKE_DIRECTORY "${CADRUMO_CTEST_TEMPORARY}")
 
 # Toolchain version floors have one authored owner. Set compiler-selection inputs before project().
 include(native/cmake/ToolchainFloor.cmake)
@@ -140,6 +143,8 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 include(CTest)
+include(native/cmake/CTestEnvironment.cmake)
+cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_ctest_environment)
 add_subdirectory(native)
 include(native/cmake/ToolchainIdentity.cmake)
 option(CADRUMO_CONFIGURE_PAYLOAD "Configure full payload assembly, documentation and desktop targets" ON)

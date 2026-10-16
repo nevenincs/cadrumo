@@ -504,7 +504,7 @@ def check_distribution_evidence_set(
     required_rows: tuple[str, ...] = REQUIRED_DISTRIBUTION_ROWS,
 ) -> ReadinessCheck:
     """Require passing, exact-cohort evidence for every declared release row."""
-    cohort_root = cohort_directory or repo_root / "var" / "release-cohort"
+    cohort_root = cohort_directory or repo_root / "build" / "release-cohort"
     evidence_root = evidence_directory or repo_root / "var" / "distribution-install-readiness"
     try:
         cohort = load_release_cohort(cohort_root)
@@ -575,7 +575,7 @@ def check_generated_surface_versions(
     per-surface enumeration when any embedded value drifts from the cohort.
     """
     name = "generated-surface-versions"
-    cohort_root = (cohort_directory or repo_root / "var" / "release-cohort").resolve()
+    cohort_root = (cohort_directory or repo_root / "build" / "release-cohort").resolve()
     manifest_path = cohort_root / "release-cohort.json"
     try:
         cohort_manifest = _require_json_object(
@@ -617,7 +617,7 @@ def build_report(
     """Run every readiness check and return the aggregate report.
 
     ``cohort_directory`` / ``evidence_directory`` relocate the distribution-
-    evidence check off its ``var/release-cohort`` / ``var/distribution-install-
+    evidence check off its ``build/release-cohort`` / ``var/distribution-install-
     readiness`` defaults - the publish workflow downloads the promoted cohort
     and the aggregated rows into ``var/promotion/*`` and must point the gate at
     them rather than at a working-tree default that does not exist in CI.
@@ -658,7 +658,7 @@ def main(argv: list[str] | None = None) -> int:
         "--cohort-dir",
         type=Path,
         default=None,
-        help="Release-cohort directory to gate (default: var/release-cohort).",
+        help="Release-cohort directory to gate (default: build/release-cohort).",
     )
     parser.add_argument(
         "--evidence-dir",

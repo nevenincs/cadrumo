@@ -20,7 +20,6 @@ import importlib.util
 import json
 import os
 import sys
-import tempfile
 import types
 import typing
 from collections.abc import Callable, Generator, Mapping
@@ -276,13 +275,17 @@ def collect(request: Mapping[str, Any]) -> dict[str, Any]:
     to place. Directories the components create are made in a scratch tree
     that is removed afterwards.
     """
-    with tempfile.TemporaryDirectory(prefix="cadrumo-conformance-") as directory:
-        scratch = Path(directory)
-        return {
-            "cli": collect_cli(request, scratch),
-            "runtime": collect_runtime(request, scratch),
-            "agent": collect_agent(),
-        }
+    value = request.get("scratch")
+    if not isinstance(value, str) or not Path(value).is_absolute():
+        raise ValueError("The conformance request must name an absolute build-owned scratch directory")
+    scratch = Path(value).resolve(strict=True)
+    if not scratch.is_dir():
+        raise ValueError("The conformance scratch path must be a directory")
+    return {
+        "cli": collect_cli(request, scratch),
+        "runtime": collect_runtime(request, scratch),
+        "agent": collect_agent(),
+    }
 
 
 def main() -> int:

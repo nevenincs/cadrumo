@@ -254,10 +254,11 @@ all = [
 ]
 
 [build-system]
-# The build hook compiles a missing source-tree authority before packaging it.
-# Keep this closure aligned with the canonical compiler's direct import and
-# official-source extraction requirements; normal runtime dependencies remain
-# declared separately under project.dependencies.
+# Ordinary distributions consume an explicitly published source-tree authority
+# and instruct operators to run `just registry-publish-authority` if it is
+# missing. Editable `uv sync` may publish one for first-checkout setup. Keep this
+# closure aligned with the canonical compiler's requirements; runtime dependencies
+# remain declared separately under project.dependencies.
 requires = [
   "hatchling>=1.32.3,<2",
   "beautifulsoup4[lxml]>=4.12,<5",
@@ -289,8 +290,8 @@ only-include = [
   "src/cadrumo_harness",
   "src/cadrumo_agent_service",
   # The build hook that admits the published authority. It must travel in the
-  # sdist: a wheel built from the sdist runs the same hook, and without the
-  # hook module that rebuild would produce an authority-less wheel.
+  # sdist: a wheel built from the sdist runs the same hook and refuses to build
+  # if the embedded authority is missing.
   "packaging/authority/hatch_build.py",
   "pyproject.toml",
   "README.md",
@@ -489,9 +490,11 @@ include = [
 # admission path, and a static force-include table cannot serve both layouts at
 # once — in an sdist the pair already sits at the published path, and a table
 # naming `.authority/` fails the sdist-to-wheel rebuild outright. Hence a hook
-# on both targets. It selects exactly the descriptor and the database it names,
-# never the directory, which always also holds the retained publication lock
-# sidecar and may hold a superseded database whose retirement was deferred.
+# on both targets. Ordinary distribution builds consume an existing publication;
+# when it is missing, run `just registry-publish-authority` explicitly. Only an
+# editable `uv sync` may publish the checkout's initial authority. The hook
+# selects exactly the descriptor and database it names, never the directory,
+# which also holds a lock sidecar and may retain superseded databases.
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "packaging/authority/hatch_build.py"
 

@@ -36,7 +36,7 @@ cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
   OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
 add_custom_target(native_metadata
-  COMMAND ${metadata_command} ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
+  COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
@@ -161,7 +161,7 @@ foreach(target IN LISTS host_targets)
   # load-time imports from System32 only (LOAD_LIBRARY_SEARCH_SYSTEM32).
   target_link_options(${target} PRIVATE /MANIFEST:NO /DEPENDENTLOADFLAG:0x800)
   add_custom_command(TARGET ${target} POST_BUILD
-    COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
+    COMMAND ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
       "$<TARGET_FILE:${target}>" "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 endforeach()

@@ -22,6 +22,7 @@ from ..runtime_wheelhouse_contract import target_platform
 from .agent import locked_requirements
 from .agent_runtime import stage_agent_runtime
 from .assembly_transaction import AssemblyReuse, assembly_candidate
+from .build_directory import require_enrolled_build, require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .build_timing import BuildTimings
@@ -486,17 +487,19 @@ if __name__ == "__main__":
     parser.add_argument("--python", type=Path, required=True)
     parser.add_argument("--dependencies", type=Path, required=True)
     parser.add_argument("--agent-runtime", type=Path, required=True)
-    parser.add_argument("--build", type=Path, required=True)
-    parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_output, required=True)
+    parser.add_argument("--destination", type=require_enrolled_output, required=True)
     parser.add_argument("--metadata", type=Path, required=True)
     documentation = parser.add_mutually_exclusive_group(required=True)
     documentation.add_argument("--user-docs", type=Path)
     documentation.add_argument("--without-user-docs", action="store_true")
     parser.add_argument("--development", action="store_true")
     parser.add_argument("--image", action="append", default=[], help="FILE=ARTIFACT for each staged application image")
-    parser.add_argument("--binary-dir", type=Path, required=True)
+    parser.add_argument("--binary-dir", type=require_enrolled_build, required=True)
     parser.add_argument("--target", required=True)
     args = parser.parse_args()
+    if not args.destination.is_relative_to(args.binary_dir) or not args.build.is_relative_to(args.binary_dir):
+        parser.error("Assembly inputs and destination must belong to the selected binary directory")
     assemble(
         args.python,
         args.dependencies,
