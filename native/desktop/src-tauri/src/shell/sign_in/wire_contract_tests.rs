@@ -138,36 +138,6 @@ fn throttle_metadata_is_required_and_never_inferred_from_a_message_or_wait_alone
 }
 
 #[test]
-fn python_status_distinguishes_presence_unavailability_and_untrusted_runtime() {
-    for (case, presence, available, refusal) in [
-        ("status-present", "present", true, Value::Null),
-        ("status-absent", "absent", true, Value::Null),
-        ("status-unknown", "unknown", true, Value::Null),
-        (
-            "runtime-unavailable",
-            "unknown",
-            false,
-            json!({"code":"runtime_unavailable","retryAfterSeconds":null}),
-        ),
-        (
-            "runtime-untrusted",
-            "unknown",
-            true,
-            json!({"code":"runtime_peer_untrusted","retryAfterSeconds":null}),
-        ),
-    ] {
-        assert_eq!(
-            serde_json::to_value(status(from_document(fixture(case)).unwrap()).unwrap()).unwrap(),
-            json!({
-                "supported":true, "state":presence, "active_profile":"Test profile",
-                "runtimeAvailable":available, "refusal":refusal
-            }),
-            "{case}"
-        );
-    }
-}
-
-#[test]
 fn python_login_warning_does_not_claim_a_persisted_session() {
     assert_eq!(
         serde_json::to_value(login(from_document(fixture("login-true")).unwrap()).unwrap())

@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-16'
 body_schema: body-v2
-body_hash: 'sha256:eeb52d689d37dd8e49cf978110eb6214dd32b12f2a15f04601cc855efe92c8a0'
+body_hash: 'sha256:51489147800293744fd44933aa655a5f59b6e6a5ac4b19e93e91d0dfc742cf9c'
 ---
 
 <!-- LINK RULES:
@@ -127,7 +127,7 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 - [x] `S04` - Drive the agent service from its connection events and stdin lifetime with cached generations; `src/cadrumo_agent_service/main.py`.
 - [x] `S05` - Make the session hold block on one queue and emit unsolicited event lines; `src/cadrumo_runtime/host/session_hold.py`.
 - [x] `S06` - Add the cadrumo-runtime session watch child; `src/cadrumo_runtime/host/session_watch.py`.
-- [ ] `S07` - Share one watch-driven sign-in observation across the sign-in view, language host and agent host, and push attendance changes to the window; `native/desktop/src-tauri/src/shell/sign_in/observation.rs`.
+- [x] `S07` - Share one watch-driven sign-in observation across the sign-in view, language host and agent host, and push attendance changes to the window; `native/desktop/src-tauri/src/shell/sign_in/observation.rs`.
 - [ ] `S08` - Block idle transport loops on the channel and a wake handle; `src/cadrumo_client/transport/verified_transport.py`.
 - [ ] `S09` - Wake runtime lifecycle observation on deadlines, explicit wakes and Windows session notifications; `src/cadrumo_runtime/host/profile_connections.py`.
 - [ ] `S10` - Measure the rebuilt desktop at idle and record the result; `.vault/audit/2026-10-16-idle-churn-audit.md`.

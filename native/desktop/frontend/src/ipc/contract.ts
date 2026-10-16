@@ -758,6 +758,14 @@ export interface HostCommands {
       approved: boolean;
     };
   };
+  runtime_attendance_subscribe: {
+    args: Authorized<{ updates: Channel<null> }>;
+    result: number;
+  };
+  runtime_attendance_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
   shell_window_action: {
     args: Authorized<{ action: WindowAction }>;
     result: null;

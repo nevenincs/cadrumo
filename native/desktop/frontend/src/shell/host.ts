@@ -50,6 +50,9 @@ export type AttendanceCandidate = {
 export type Attendance = {
   inventory(): Promise<{ candidates: AttendanceCandidate[] }>;
   decide(id: string, approve: boolean): Promise<void>;
+  /** Calls `changed` whenever the asks pending for the person may have
+   * changed; the caller reads the inventory again. Resolves to unsubscribe. */
+  observe(changed: () => void): Promise<() => void>;
 };
 
 export type TerminalEvent =

@@ -31,11 +31,10 @@ use tauri::ipc::Channel;
 use tokio::sync::{Notify, mpsc};
 use zeroize::Zeroizing;
 
-/// How often the sign-in status is read while the agent is supervised: the
-/// cadence of the account menu's own observation.
-pub const POLL: Duration = Duration::from_secs(2);
 /// Initial retry delay; later failures back off, up to three retries.
 pub const RETRY: Duration = Duration::from_secs(30);
+/// How long a started launcher has to report its service before it is refused.
+const START_LIMIT: Duration = Duration::from_secs(30);
 
 pub use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
 use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
@@ -107,6 +106,9 @@ pub fn allowed(observed: &Result<Observation>) -> Allowed {
 
 pub type Observe =
     Arc<dyn Fn() -> Pin<Box<dyn Future<Output = Result<Observation>> + Send>> + Send + Sync>;
+/// Resolves at the next sign-in observation after it is called; supervision
+/// looks again then, and never on a timer of its own.
+pub type Changed = Arc<dyn Fn() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
 /// Builds the command for the profile, given the bearer minted for it.
 pub type Launch = Arc<dyn Fn(&str, &str) -> Result<Prepared> + Send + Sync>;
 
@@ -156,7 +158,6 @@ struct Shared {
     worker: Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
     diagnostics: Arc<Diagnostics>,
     grace: Duration,
-    poll: Duration,
     retry: Duration,
 }
 
@@ -164,6 +165,7 @@ struct Shared {
 pub struct Supervisor {
     shared: Arc<Shared>,
     observe: Observe,
+    changed: Changed,
     launch: Option<Launch>,
 }
 
@@ -190,23 +192,28 @@ fn mint_bearer() -> Result<Zeroizing<String>> {
 impl Supervisor {
     /// `launch` builds the launcher command; without one this host has no
     /// agent service and says so.
-    pub fn new(observe: Observe, launch: Option<Launch>, diagnostics: Arc<Diagnostics>) -> Self {
+    pub fn new(
+        observe: Observe,
+        changed: Changed,
+        launch: Option<Launch>,
+        diagnostics: Arc<Diagnostics>,
+    ) -> Self {
         Self::with_timing(
             observe,
+            changed,
             launch,
             diagnostics,
             runner::STOP_GRACE,
-            POLL,
             RETRY,
         )
     }
 
     pub fn with_timing(
         observe: Observe,
+        changed: Changed,
         launch: Option<Launch>,
         diagnostics: Arc<Diagnostics>,
         grace: Duration,
-        poll: Duration,
         retry: Duration,
     ) -> Self {
         let status = if launch.is_some() {
@@ -237,10 +244,10 @@ impl Supervisor {
                 worker: Mutex::new(None),
                 diagnostics,
                 grace,
-                poll,
                 retry,
             }),
             observe,
+            changed,
             launch,
         }
     }
@@ -339,7 +346,8 @@ impl Supervisor {
         }
         let shared = self.shared.clone();
         let observe = self.observe.clone();
-        let worker = tauri::async_runtime::spawn(supervise(shared, observe, launch));
+        let changed = self.changed.clone();
+        let worker = tauri::async_runtime::spawn(supervise(shared, observe, changed, launch));
         *lock(&self.shared.worker) = Some(worker);
     }
 
@@ -532,7 +540,7 @@ impl RetryBudget {
     }
 }
 
-async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
+async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, launch: Launch) {
     let (signals, mut received) = mpsc::unbounded_channel::<(u64, Signal)>();
     let mut retries = RetryBudget::default();
     let mut serving: Option<String> = None;
@@ -543,6 +551,9 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
         let wake = shared.wake.notified();
         tokio::pin!(wake);
         wake.as_mut().enable();
+        // Created before observing, so an observation arriving meanwhile still wakes this round.
+        let changed = changed();
+        tokio::pin!(changed);
         let observation = observe();
         tokio::pin!(observation);
         // CLI status reads can take seconds. Launcher refusal/exit must clear
@@ -569,7 +580,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
             break;
         }
         let starting_expired = lock(&shared.running).as_ref().is_some_and(|running| {
-            lock(&shared.admin).is_none() && running.started.elapsed() > Duration::from_secs(30)
+            lock(&shared.admin).is_none() && running.started.elapsed() >= START_LIMIT
         });
         if starting_expired {
             publish(
@@ -645,21 +656,44 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, launch: Launch) {
                 }
             }
         }
-        let deadline = tokio::time::sleep(shared.poll);
+        // Nothing is read on a timer: the next round starts at a new sign-in
+        // observation, an explicit wake, a launcher failure, or the one
+        // deadline this round set (a retry, or a start that must have finished).
+        let due = next_due(&shared, &retries);
+        let deadline = async move {
+            match due {
+                Some(at) => tokio::time::sleep_until(at.into()).await,
+                None => std::future::pending::<()>().await,
+            }
+        };
         tokio::pin!(deadline);
         loop {
             tokio::select! {
                 _ = &mut wake => break,
-                _ = &mut deadline => break,
+                () = &mut changed => break,
+                () = &mut deadline => break,
                 Some((generation, signal)) = received.recv() => {
                     if handle(&shared, generation, signal).await {
                         retries.failed(&shared);
+                        break;
                     }
                 }
             }
         }
     }
     let _ = stop_running(&shared, None, AgentStopCause::WindowClosing).await;
+}
+
+/// The one moment this round must look again without a new observation: when
+/// a refused start may be retried, or when a starting launcher has had its time.
+fn next_due(shared: &Shared, retries: &RetryBudget) -> Option<Instant> {
+    let retry = retries.after.filter(|at| *at > Instant::now());
+    let starting = lock(&shared.running).as_ref().and_then(|running| {
+        lock(&shared.admin)
+            .is_none()
+            .then_some(running.started + START_LIMIT)
+    });
+    retry.into_iter().chain(starting).min()
 }
 
 /// Acts on one launcher signal. True when the launcher ended unasked, which
@@ -808,6 +842,11 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
 mod tests {
     use super::*;
 
+    /// Stands in for new sign-in observations: the test's source is read again every `period`.
+    fn every(period: Duration) -> Changed {
+        Arc::new(move || Box::pin(tokio::time::sleep(period)))
+    }
+
     fn observed(present: bool, runtime: bool, profile: Option<&str>) -> Result<Observation> {
         Ok(Observation {
             supported: true,
@@ -932,9 +971,9 @@ mod tests {
         let diagnostics = Arc::new(Diagnostics::default());
         let supervisor = Supervisor::with_timing(
             observe,
+            every(Duration::from_millis(1)),
             Some(launch),
             diagnostics.clone(),
-            Duration::from_millis(1),
             Duration::from_millis(1),
             Duration::from_millis(2),
         );
@@ -1039,10 +1078,10 @@ mod tests {
         let launch: Launch = Arc::new(|_, _| panic!("retry cannot authorize a signed-out profile"));
         let supervisor = Supervisor::with_timing(
             observe,
+            every(Duration::from_secs(60)),
             Some(launch),
             Arc::new(Diagnostics::default()),
             Duration::from_millis(1),
-            Duration::from_secs(60),
             Duration::from_millis(1),
         );
         supervisor.status();
@@ -1087,7 +1126,12 @@ mod tests {
             })
         });
         let launch: Launch = Arc::new(|_, _| panic!("pending status cannot authorize launch"));
-        let supervisor = Supervisor::new(observe, Some(launch), Arc::new(Diagnostics::default()));
+        let supervisor = Supervisor::new(
+            observe,
+            every(Duration::from_millis(1)),
+            Some(launch),
+            Arc::new(Diagnostics::default()),
+        );
         supervisor.status();
         entered.notified().await;
         tokio::time::timeout(Duration::from_secs(1), supervisor.close())
@@ -1126,10 +1170,10 @@ mod tests {
             });
             let supervisor = Supervisor::with_timing(
                 observe,
+                every(Duration::from_millis(5)),
                 Some(launch),
                 Arc::new(Diagnostics::default()),
                 Duration::from_secs(5),
-                Duration::from_millis(5),
                 Duration::from_secs(60),
             );
             supervisor.status();
@@ -1270,10 +1314,10 @@ mod tests {
             let diagnostics = Arc::new(Diagnostics::default());
             let supervisor = Supervisor::with_timing(
                 observe,
+                every(Duration::from_millis(100)),
                 Some(launch),
                 diagnostics.clone(),
                 Duration::from_millis(if ignore_end { 500 } else { 10_000 }),
-                Duration::from_millis(100),
                 Duration::from_secs(60),
             );
             let statuses = Arc::new(Mutex::new(Vec::new()));
@@ -1502,10 +1546,10 @@ mod tests {
             });
             let supervisor = Supervisor::with_timing(
                 observe,
+                every(Duration::from_millis(100)),
                 Some(launch),
                 Arc::new(Diagnostics::default()),
                 Duration::from_secs(5),
-                Duration::from_millis(100),
                 Duration::from_secs(60),
             );
             supervisor.status();

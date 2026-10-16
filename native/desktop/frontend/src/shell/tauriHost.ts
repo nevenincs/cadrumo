@@ -91,6 +91,19 @@ export function tauriHost(): Host {
         )
           throw new Error("Attendance decision unavailable");
       },
+      async observe(changed) {
+        const updates = new Channel<null>();
+        updates.onmessage = () => changed();
+        const subscription = await call("runtime_attendance_subscribe", {
+          updates,
+        });
+        return () => {
+          updates.onmessage = () => undefined;
+          void call("runtime_attendance_unsubscribe", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
     },
     available: true,
     nativeMenus: true,

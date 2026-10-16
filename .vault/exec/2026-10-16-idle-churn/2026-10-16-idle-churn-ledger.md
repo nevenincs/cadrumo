@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca9e6e63c3894a28bfdcc7587b35d25ae6b4f143036b63b72083610faa9905a3'
+body_hash: 'sha256:6d9010f04801620a2fe41f1c6b0b9ec3dd1f6354cce68703d3a80a007741ad44'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -98,6 +98,28 @@ related:
 - `S06` `M` `dev/quality/metadata/import_load_targets.json`
 - `S06` `verify:` `pytest -n0 test_session_watch.py test_invalidation_cues.py` -> `pass`
 - `S06` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S07` `A` `native/desktop/src-tauri/src/shell/sign_in/watch.rs`
+- `S07` `D` `native/desktop/src-tauri/src/shell/sign_in/reads.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/observation.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/agent_access/wire.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/provider_settings/wire.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/language.rs`
+- `S07` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S07` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/agent/supervisor.rs`
+- `S07` `M` `native/desktop/frontend/src/components/AttendanceRequests.tsx`
+- `S07` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S07` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S07` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S07` `M` `src/cadrumo_runtime/host/session_watch.py`
+- `S07` `M` `src/cadrumo_runtime/host/tests/test_session_watch.py`
+- `S07` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-clippy` -> `pass`
+- `S07` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test` -> `pass`
+- `S07` `verify:` `pnpm tsc eslint prettier` -> `pass`
+- `S07` `verify:` `pytest src/cadrumo_runtime/host/tests/test_session_watch.py` -> `pass`
 
 ## Notes
 
@@ -107,3 +129,4 @@ related:
 - `S04` AgentDiagnosticFiles still tails the hosted agent's log files every 0.2 s while an agent runs; directory change notifications fire only when a writer closes its handle (measured: at exit), so moving it to them needs a decision on worker diagnostics with the cadrumo-agent owner.
 - `S05` `session_hold.py` carries another session's `_report_failure` and `OS_SESSION_UNAVAILABLE` hunks; this Step was staged as a HEAD-relative patch. Pushed lines are opt-in through `observe_events,` so a desktop built before S07 keeps its strict request-reply bridge.
 - `S06` End-to-end use against the packaged runtime is verified with the desktop in S10; the runtime cue path itself is covered by `test_sign_in_watch.py` from S03.
+- `S07` Commit carries CADRUMO-FIX1's shared-person hunks by agreement; CADRUMO-BUILD-DEBUG's diagnostics and `with_reason` calls stay uncommitted pending its ApplicationError reason API; the committed tree was not compiled separately from the working tree

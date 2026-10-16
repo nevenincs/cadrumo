@@ -5,7 +5,9 @@ for status only. It reads the selected profile's sign-in status once, then
 again only when the runtime pushes a sign-in cue, the connection is lost,
 the active-profile pointer changes, or the status's own deadline passes.
 Each line is the whole current observation, written only when it differs
-from the last one. The child ends when its parent closes standard input.
+from the last one, or when the parent asks with a newline, as it does after a
+sign-in or sign-out of its own. The child ends when its parent closes
+standard input.
 """
 
 from __future__ import annotations
@@ -44,12 +46,24 @@ class _Wakes:
         self._event = Event()
         self._cued = False
         self._pointer = False
+        self._forced = False
         self.stopping = Event()
 
     def cue(self) -> None:
         with self._guard:
             self._cued = True
         self._event.set()
+
+    def refresh(self) -> None:
+        """The parent asks for a fresh line, written even if nothing changed."""
+        with self._guard:
+            self._cued = self._forced = True
+        self._event.set()
+
+    def take_forced(self) -> bool:
+        with self._guard:
+            forced, self._forced = self._forced, False
+        return forced
 
     def pointer_moved(self) -> None:
         with self._guard:
@@ -163,9 +177,11 @@ def _watch_pointer_directory(directory: Path, wakes: _Wakes) -> None:
 
 
 def _watch_parent(stdin_fd: int, wakes: _Wakes) -> None:
+    """Each newline from the parent asks for a fresh line; the end of its input ends the watch."""
     with contextlib.suppress(OSError):
-        while os.read(stdin_fd, 1):
-            pass
+        while byte := os.read(stdin_fd, 1):
+            if byte == b"\n":
+                wakes.refresh()
     wakes.stop()
 
 
@@ -206,7 +222,7 @@ def _watch(wakes: _Wakes) -> int:
     previous: list[dict[str, object]] = []
 
     def publish(observation: dict[str, object]) -> None:
-        if previous != [observation]:
+        if wakes.take_forced() or previous != [observation]:
             previous[:] = [observation]
             _emit(observation)
 

@@ -378,7 +378,6 @@ mod tests {
                 code: code.into(),
                 retry_after_seconds: None,
             },
-            active_profile: None,
         }
     }
 

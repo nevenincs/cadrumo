@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 use std::{
     io::{BufRead, BufReader, Read, Write},
     process::{Child, ChildStdin, Command, Stdio},
-    sync::{Mutex, mpsc},
+    sync::{Arc, Mutex, mpsc},
     thread,
     time::Duration,
 };
@@ -29,10 +29,35 @@ pub fn request_id() -> Result<String> {
     ))
 }
 
+/// What the runtime pushed to the held session: only a reason to read again
+/// through an exchange, never a value or an authority.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PersonEvent {
+    LanguageChanged,
+    AttendanceChanged,
+    Retired,
+}
+
+pub type PersonEvents = tokio::sync::broadcast::Sender<PersonEvent>;
+
+/// The event a pushed line names, or none for a reply.
+fn pushed(value: &Value) -> Option<Option<PersonEvent>> {
+    match value["kind"].as_str() {
+        Some("runtime_event") => Some(match value["event"].as_str() {
+            Some("profile_language_changed") => Some(PersonEvent::LanguageChanged),
+            Some("attendance_changed") => Some(PersonEvent::AttendanceChanged),
+            _ => None,
+        }),
+        Some("session_retired") => Some(Some(PersonEvent::Retired)),
+        _ => None,
+    }
+}
+
 pub struct Person {
     child: Child,
     stdin: Option<ChildStdin>,
     received: mpsc::Receiver<Option<Value>>,
+    events: Arc<Mutex<Option<PersonEvents>>>,
     pub identity: Value,
 }
 
@@ -57,6 +82,8 @@ impl Person {
         let stdin = child.stdin.take().ok_or_else(failed)?;
         let stdout = child.stdout.take().ok_or_else(failed)?;
         let (sender, received) = mpsc::sync_channel(2);
+        let events: Arc<Mutex<Option<PersonEvents>>> = Arc::new(Mutex::new(None));
+        let routed = events.clone();
         thread::spawn(move || {
             let mut reader = BufReader::new(stdout);
             loop {
@@ -71,6 +98,18 @@ impl Person {
                     }
                     _ => None,
                 };
+                if let Some(push) = value.as_ref().and_then(pushed) {
+                    if let Some(event) = push
+                        && let Some(events) =
+                            routed.lock().unwrap_or_else(|e| e.into_inner()).as_ref()
+                    {
+                        let _ = events.send(event);
+                    }
+                    // A push is never a reply; a retirement still ends the stream as before.
+                    if push != Some(PersonEvent::Retired) {
+                        continue;
+                    }
+                }
                 let ended = value.is_none();
                 if sender.send(value).is_err() || ended {
                     break;
@@ -81,6 +120,7 @@ impl Person {
             child,
             stdin: Some(stdin),
             received,
+            events,
             identity: Value::Null,
         };
         person.identity = person.read()?;
@@ -108,6 +148,20 @@ impl Person {
             .recv_timeout(Duration::from_secs(12))
             .map_err(|_| failed())?
             .ok_or_else(failed)
+    }
+
+    /// From now on, each push from the runtime reaches `events`; the window then
+    /// reads language and attendance when they change instead of on a timer.
+    pub fn observe_events(&mut self, events: PersonEvents) -> Result<()> {
+        *self.events.lock().unwrap_or_else(|e| e.into_inner()) = Some(events);
+        self.exchange(json!({"action": "observe_events"}))
+            .map(|_| ())
+    }
+
+    /// Whether the bridge can still carry a request: no earlier exchange lost
+    /// it and the holder has not ended.
+    pub fn is_open(&mut self) -> bool {
+        self.stdin.is_some() && matches!(self.child.try_wait(), Ok(None))
     }
 
     pub fn exchange(&mut self, mut document: Value) -> Result<Value> {
@@ -197,6 +251,7 @@ impl Person {
             Some("language_read" | "language_observe" | "language_set") => {
                 language_reply(&self.identity, &reply)
             }
+            Some("observe_events") => reply["kind"] == "events_observed",
             _ => false,
         };
         if !valid {
@@ -240,6 +295,31 @@ mod language_tests {
     use super::*;
 
     #[test]
+    fn pushed_lines_are_events_and_never_replies() {
+        assert_eq!(
+            pushed(&json!({"kind":"runtime_event","event":"profile_language_changed"})),
+            Some(Some(PersonEvent::LanguageChanged))
+        );
+        assert_eq!(
+            pushed(&json!({"kind":"runtime_event","event":"attendance_changed"})),
+            Some(Some(PersonEvent::AttendanceChanged))
+        );
+        // A push this window does not know is still never taken for a reply.
+        assert_eq!(
+            pushed(&json!({"kind":"runtime_event","event":"later"})),
+            Some(None)
+        );
+        assert_eq!(
+            pushed(&json!({"kind":"session_retired","profile_id":"profile"})),
+            Some(Some(PersonEvent::Retired))
+        );
+        assert_eq!(
+            pushed(&json!({"kind":"profile_language","request_id":"id"})),
+            None
+        );
+    }
+
+    #[test]
     fn language_replies_bind_profile_session_and_validate_the_fact() {
         let identity = json!({"profile_id":"profile", "session_id":"session"});
         let reply = json!({"kind":"profile_language", "profile_id":"profile", "session_id":"session", "language":"hu", "record_revision":9});
@@ -257,5 +337,58 @@ mod language_tests {
         let mut unset = reply;
         unset["language"] = Value::Null;
         assert!(language_reply(&identity, &unset));
+    }
+}
+
+#[cfg(all(test, windows))]
+mod event_tests {
+    use super::*;
+    use crate::agent::runner::tests::powershell;
+
+    const PROFILE: &str = "12345678-1234-4234-8234-123456789abc";
+
+    #[test]
+    fn a_push_before_a_reply_reaches_the_events_and_the_reply_still_answers() {
+        let identity = json!({
+            "kind": "session_held",
+            "profile_id": PROFILE,
+            "session_id": request_id().unwrap(),
+            "runtime_boot_id": request_id().unwrap(),
+            "connection_id": request_id().unwrap(),
+        });
+        let observed = json!({
+            "kind": "events_observed",
+            "request_id": "",
+            "runtime_boot_id": identity["runtime_boot_id"],
+            "connection_id": identity["connection_id"],
+        });
+        let language = json!({
+            "kind": "profile_language",
+            "request_id": "",
+            "profile_id": PROFILE,
+            "session_id": identity["session_id"],
+            "runtime_boot_id": identity["runtime_boot_id"],
+            "connection_id": identity["connection_id"],
+            "language": "es",
+            "record_revision": 3,
+        });
+        let push = json!({"kind":"runtime_event","event":"profile_language_changed"});
+        let script = format!(
+            "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
+             $request = [Console]::In.ReadLine() | ConvertFrom-Json; \
+             $reply = '{observed}' | ConvertFrom-Json; $reply.request_id = $request.request_id; \
+             [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress)); [Console]::Out.Flush(); \
+             $request = [Console]::In.ReadLine() | ConvertFrom-Json; \
+             [Console]::Out.WriteLine('{push}'); \
+             $reply = '{language}' | ConvertFrom-Json; $reply.request_id = $request.request_id; \
+             [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress)); [Console]::Out.Flush(); \
+             [Console]::In.ReadLine() | Out-Null }}"
+        );
+        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let (events, mut heard) = tokio::sync::broadcast::channel(4);
+        person.observe_events(events).unwrap();
+        let reply = person.exchange(json!({"action": "language_read"})).unwrap();
+        assert_eq!(reply["language"], "es");
+        assert_eq!(heard.try_recv().unwrap(), PersonEvent::LanguageChanged);
     }
 }

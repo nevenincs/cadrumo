@@ -142,7 +142,6 @@ pub enum Outcome {
     },
     Refused {
         refusal: Refusal,
-        active_profile: Option<String>,
     },
 }
 
@@ -220,7 +219,6 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
                     code,
                     retry_after_seconds,
                 },
-                active_profile: envelope.active_profile,
             })
         }
         _ => Err(failure(ErrorCode::ReadFailed)),
@@ -262,43 +260,6 @@ pub fn activity(outcome: Outcome) -> std::result::Result<(), CommandFailure> {
             }
             Ok(())
         }
-    }
-}
-
-pub fn status(outcome: Outcome) -> Result<SignInStatus> {
-    match outcome {
-        Outcome::Success {
-            result,
-            active_profile,
-        } => {
-            #[derive(Deserialize)]
-            struct Status {
-                presence: Presence,
-            }
-            #[derive(Deserialize)]
-            struct StatusResult {
-                status: Status,
-            }
-            let result: StatusResult =
-                serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
-            Ok(SignInStatus {
-                supported: true,
-                state: result.status.presence,
-                active_profile,
-                runtime_available: true,
-                refusal: None,
-            })
-        }
-        Outcome::Refused {
-            refusal,
-            active_profile,
-        } => Ok(SignInStatus {
-            supported: true,
-            state: Presence::Unknown,
-            active_profile,
-            runtime_available: refusal.code != "runtime_unavailable",
-            refusal: Some(refusal),
-        }),
     }
 }
 
@@ -503,56 +464,6 @@ mod tests {
                 if code == "THROTTLED" { Some(9) } else { None }
             );
         }
-    }
-
-    #[test]
-    fn status_uses_outer_active_profile_and_preserves_unknown() {
-        let output = output(
-            true,
-            serde_json::json!({"schema_version":"2","command":"config.sign-in-status","status":"success","active_profile":"My profile", "result":{"profile_id":"id","status":{"presence":"unknown"}}}),
-        );
-        let status = status(decode("sign-in-status", &output).unwrap()).unwrap();
-        assert_eq!(status.state, Presence::Unknown);
-        assert_eq!(status.active_profile.as_deref(), Some("My profile"));
-        assert!(status.runtime_available);
-        assert!(!status.runtime_ready());
-    }
-
-    #[test]
-    fn runtime_unavailable_does_not_become_absent() {
-        let status = status(Outcome::Refused {
-            refusal: Refusal {
-                code: "runtime_unavailable".into(),
-                retry_after_seconds: None,
-            },
-            active_profile: None,
-        })
-        .unwrap();
-        assert_eq!(status.state, Presence::Unknown);
-        assert!(!status.runtime_available);
-        assert!(!status.runtime_ready());
-    }
-
-    #[test]
-    fn runtime_readiness_requires_a_successful_settled_status_not_an_error_envelope() {
-        for presence in ["present", "absent"] {
-            let observed = status(Outcome::Success {
-                result: serde_json::json!({"status":{"presence":presence}}),
-                active_profile: None,
-            })
-            .unwrap();
-            assert!(observed.runtime_ready());
-        }
-        let observed = status(Outcome::Refused {
-            refusal: Refusal {
-                code: "protocol_mismatch".into(),
-                retry_after_seconds: None,
-            },
-            active_profile: None,
-        })
-        .unwrap();
-        assert!(observed.runtime_available);
-        assert!(!observed.runtime_ready());
     }
 
     #[test]

@@ -1,6 +1,6 @@
 //! Shared language comes only from the verified person's canonical profile fact.
 use super::sign_in::{Presence, SignIn};
-use crate::agent::person::Person;
+use crate::agent::person::{HeldPerson, PersonEvent};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use serde::Serialize;
 use serde_json::json;
@@ -83,7 +83,7 @@ pub struct LanguageHost {
     sign_in: Arc<SignIn>,
     fallback: String,
     current: Mutex<Current>,
-    person: Arc<Mutex<Option<Person>>>,
+    person: Arc<Mutex<Option<HeldPerson>>>,
     operation: tokio::sync::Mutex<()>,
     worker: Mutex<Option<tokio::task::JoinHandle<()>>>,
     closed: AtomicBool,
@@ -151,20 +151,16 @@ impl LanguageHost {
         let reply = super::blocking(move || {
             let profile_id = sign_in.profile_id(&label)?;
             let mut held = lock(&bridge);
-            if held
-                .as_ref()
-                .is_none_or(|person| person.identity["profile_id"] != profile_id)
-            {
-                *held = None;
-                *held = Some(Person::hold(sign_in.runtime()?.command(), &profile_id)?);
-            }
+            // Replacing, not clearing first: the session stays held while it is shared.
+            let person = sign_in.person(&profile_id)?;
+            *held = Some(person.clone());
             let request = match language {
                 Some(language) => json!({"action":"language_set", "language":language}),
                 None => {
                     json!({"action": if observe { "language_observe" } else { "language_read" }})
                 }
             };
-            let reply = held.as_mut().ok_or_else(failed)?.exchange(request);
+            let reply = lock(&person).exchange(request);
             if reply.is_err() {
                 *held = None;
             }
@@ -213,21 +209,26 @@ impl LanguageHost {
         if worker.is_none() {
             let owner = self.clone();
             *worker = Some(tokio::spawn(async move {
+                let mut events = owner.sign_in.person_events();
                 loop {
+                    // Register every wake before reading, so none arriving meanwhile is lost.
                     let wake = owner.wake.notified();
                     tokio::pin!(wake);
                     wake.as_mut().enable();
+                    let signed_in = owner.sign_in.observation_changed();
+                    tokio::pin!(signed_in);
                     if owner.closed.load(Ordering::Acquire) {
                         break;
                     }
                     if lock(&owner.current).listener.is_some() {
                         // Failed reads publish no authoritative language. The
-                        // next bounded poll retries with freshly verified state.
+                        // next sign-in or language change reads again.
                         let _ = owner.refresh(None, true).await;
                     }
                     tokio::select! {
                         _ = &mut wake => {},
-                        _ = tokio::time::sleep(std::time::Duration::from_secs(2)) => {},
+                        () = &mut signed_in => {},
+                        () = language_pushed(&mut events) => {},
                     }
                 }
             }));
@@ -247,6 +248,22 @@ impl LanguageHost {
         }
         let _operation = self.operation.lock().await;
         self.release_person().await
+    }
+}
+
+/// Resolves when the held person session hears that the profile language may
+/// have changed, or ended; other pushes are not this host's.
+async fn language_pushed(events: &mut tokio::sync::broadcast::Receiver<PersonEvent>) {
+    use tokio::sync::broadcast::error::RecvError;
+    loop {
+        match events.recv().await {
+            Ok(PersonEvent::LanguageChanged | PersonEvent::Retired) | Err(RecvError::Lagged(_)) => {
+                return;
+            }
+            Ok(PersonEvent::AttendanceChanged) => {}
+            // The window is closing; nothing more will be pushed.
+            Err(RecvError::Closed) => std::future::pending::<()>().await,
+        }
     }
 }
 

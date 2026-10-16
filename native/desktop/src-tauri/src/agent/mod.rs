@@ -46,10 +46,16 @@ impl Refused {
 pub struct AgentHost {
     supervisor: Supervisor,
     session: Session,
+    sign_in: Arc<SignIn>,
+    attendance: std::sync::Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
 }
 
 impl AgentHost {
     fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>) -> Self {
+        let watched = sign_in.clone();
+        let changed: supervisor::Changed =
+            Arc::new(move || Box::pin(watched.observation_changed()));
+        let held = sign_in.clone();
         let observed = sign_in.clone();
         let observe = Arc::new(move || {
             let sign_in = observed.clone();
@@ -65,10 +71,7 @@ impl AgentHost {
         });
         let launch: supervisor::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
-            let person = Arc::new(std::sync::Mutex::new(person::Person::hold(
-                sign_in.runtime()?.command(),
-                &profile_id,
-            )?));
+            let person = sign_in.person(&profile_id)?;
             let mut command = sign_in.service()?.command();
             command.args(["serve", "--profile-id", &profile_id]);
             Ok(supervisor::Prepared {
@@ -77,15 +80,51 @@ impl AgentHost {
             })
         });
         Self {
-            supervisor: Supervisor::new(observe, Some(launch), diagnostics),
+            supervisor: Supervisor::new(observe, changed, Some(launch), diagnostics),
             session: Session::default(),
+            sign_in: held,
+            attendance: std::sync::Mutex::new(None),
         }
     }
 
     /// Stops the launcher and everything it started, for good.
     pub async fn close(&self) -> Result<()> {
+        self.stop_attendance(None);
         self.session.close();
         self.supervisor.close().await
+    }
+
+    /// The person's own session, held for the profile signed in now. Deciding
+    /// who follows the person's sign-in is the person's act, whether or not an
+    /// agent service runs.
+    fn person(&self) -> Result<person::HeldPerson> {
+        let status = self.sign_in.current_observation()?;
+        let signed_in = status.state == Presence::Present && status.runtime_ready();
+        let profile = status.active_profile.filter(|_| signed_in).ok_or_else(|| {
+            cadrumo_application::error::application::ApplicationError::new(
+                cadrumo_application::error::application::ErrorCode::ReadFailed,
+                cadrumo_application::error::application::Operation::Cli,
+            )
+        })?;
+        self.sign_in.person(&self.sign_in.profile_id(&profile)?)
+    }
+
+    fn person_request(&self, request: Value) -> Result<Value> {
+        let person = self.person()?;
+        let mut held = person.lock().unwrap_or_else(|e| e.into_inner());
+        held.exchange(request)
+    }
+
+    /// Ends the attendance forwarding `subscription`, or any when none is named.
+    fn stop_attendance(&self, subscription: Option<u32>) {
+        let mut attendance = self.attendance.lock().unwrap_or_else(|e| e.into_inner());
+        if attendance
+            .as_ref()
+            .is_some_and(|(id, _)| subscription.is_none_or(|wanted| *id == wanted))
+            && let Some((_, forwarding)) = attendance.take()
+        {
+            forwarding.abort();
+        }
     }
 
     pub(crate) fn administer(
@@ -150,7 +189,9 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_history,
         agent_documents,
         runtime_attendance_inventory,
-        runtime_attendance_decide
+        runtime_attendance_decide,
+        runtime_attendance_subscribe,
+        runtime_attendance_unsubscribe
     ]
 }
 
@@ -158,8 +199,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
 async fn runtime_attendance_inventory(host: State<'_, Arc<AgentHost>>) -> Result<Value> {
     let host = host.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        host.supervisor
-            .person_request(serde_json::json!({"action":"attendance_inventory"}))
+        host.person_request(serde_json::json!({"action":"attendance_inventory"}))
     })
     .await
     .map_err(|_| {
@@ -185,8 +225,42 @@ async fn runtime_attendance_decide(
         );
     }
     let host = host.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || host.supervisor.person_request(serde_json::json!({"action":"attendance_decision", "attendance_id":attendance_id,"approve":approve})))
+    tauri::async_runtime::spawn_blocking(move || host.person_request(serde_json::json!({"action":"attendance_decision", "attendance_id":attendance_id,"approve":approve})))
         .await.map_err(|_| cadrumo_application::error::application::ApplicationError::new(cadrumo_application::error::application::ErrorCode::Panic, cadrumo_application::error::application::Operation::Cli))?
+}
+
+/// Tells the window each time the asks pending for the person may have changed,
+/// as the runtime pushes it; the window then reads the inventory again. One
+/// window listens at a time, and a newer subscription replaces an older one.
+#[tauri::command]
+async fn runtime_attendance_subscribe(
+    host: State<'_, Arc<AgentHost>>,
+    updates: Channel<()>,
+) -> Result<u32> {
+    use person::PersonEvent;
+    use tokio::sync::broadcast::error::RecvError;
+    let subscription = updates.id();
+    let mut events = host.sign_in.person_events();
+    let forwarding = tauri::async_runtime::spawn(async move {
+        loop {
+            let changed = match events.recv().await {
+                Ok(PersonEvent::AttendanceChanged) | Err(RecvError::Lagged(_)) => true,
+                Ok(PersonEvent::LanguageChanged | PersonEvent::Retired) => false,
+                Err(RecvError::Closed) => return,
+            };
+            if changed && updates.send(()).is_err() {
+                return;
+            }
+        }
+    });
+    host.stop_attendance(None);
+    *host.attendance.lock().unwrap_or_else(|e| e.into_inner()) = Some((subscription, forwarding));
+    Ok(subscription)
+}
+
+#[tauri::command]
+fn runtime_attendance_unsubscribe(host: State<'_, Arc<AgentHost>>, subscription: u32) {
+    host.stop_attendance(Some(subscription));
 }
 
 /// Runs a gateway call off the async workers.

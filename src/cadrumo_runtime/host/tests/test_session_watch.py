@@ -105,6 +105,11 @@ def test_the_watch_follows_cues_pointer_moves_deadlines_and_reconnects(monkeypat
         _until(lambda: runtime.reads == reads + 1, "the cued read")
         time.sleep(0.2)
         assert len(lines) == 3, "an unchanged observation is not written again"
+        # After a sign-in or sign-out of its own the parent asks, and hears, even when nothing changed.
+        wakes.refresh()
+        _until(lambda: len(lines) == 4, "the requested observation")
+        assert lines[3] == lines[2]
+        del lines[3]
 
         reads = runtime.reads
         wakes.pointer_moved()
@@ -164,7 +169,9 @@ def test_the_watch_ends_when_its_parent_closes_standard_input() -> None:
     parent = Thread(target=session_watch._watch_parent, args=(reader, wakes), daemon=True)
     parent.start()
     try:
+        os.write(writer, b"\n")
         assert not wakes.stopping.wait(0.2)
+        assert wakes.take_forced(), "a newline from the parent asks for a fresh line"
         os.close(writer)
         assert wakes.stopping.wait(5)
     finally:

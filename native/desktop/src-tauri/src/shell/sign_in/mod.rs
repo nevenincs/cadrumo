@@ -1,6 +1,7 @@
-//! Short-lived canonical CLI invocations. No runtime connection or credential is retained.
+//! Short-lived canonical CLI invocations for sign-in acts, and one pushed
+//! status observation. No runtime connection or credential is retained here.
 mod observation;
-mod reads;
+mod watch;
 // The child runner and the envelope decoder are also the provider settings'
 // channel: one set of lanes, one deadline, one output bound, one settlement.
 pub(crate) mod process;
@@ -54,25 +55,8 @@ struct Call {
     runtime: bool,
     slow: bool,
     command: &'static str,
-    reveal_identifiers: bool,
 }
-const STATUS: Call = Call {
-    reveal_identifiers: false,
-    words: &["sign-in-status"],
-    leaf: "sign-in-status",
-    command: "config.sign-in-status",
-    reads: true,
-    runtime: true,
-    slow: false,
-};
-// Only this private machine read needs the exact opaque profile identity.
-// Ordinary status observations keep the CLI's privacy defaults.
-const PROFILE_ID: Call = Call {
-    reveal_identifiers: true,
-    ..STATUS
-};
 const ACTIVITY: Call = Call {
-    reveal_identifiers: false,
     words: &["activity"],
     leaf: "activity",
     command: "config.activity",
@@ -81,7 +65,6 @@ const ACTIVITY: Call = Call {
     slow: false,
 };
 const LOGIN: Call = Call {
-    reveal_identifiers: false,
     words: &["login"],
     leaf: "login",
     command: "config.login",
@@ -90,7 +73,6 @@ const LOGIN: Call = Call {
     slow: false,
 };
 const LOGOUT: Call = Call {
-    reveal_identifiers: false,
     words: &["logout"],
     leaf: "logout",
     command: "config.logout",
@@ -99,7 +81,6 @@ const LOGOUT: Call = Call {
     slow: false,
 };
 const LIST: Call = Call {
-    reveal_identifiers: false,
     words: &["profile", "list"],
     leaf: "profile.list",
     command: "config.profile.list",
@@ -108,7 +89,6 @@ const LIST: Call = Call {
     slow: false,
 };
 const CREATE: Call = Call {
-    reveal_identifiers: false,
     words: &["profile", "create", "--quiet"],
     leaf: "profile.create",
     command: "config.profile.create",
@@ -149,20 +129,60 @@ pub struct SignIn {
     // Person input must never occupy the nonqueueing credential mutation lane.
     activity_children: Children,
     observation: observation::Observer,
-    reads: Arc<reads::Reads>,
+    watch: watch::Watch,
+    // The one person session this window holds; each consumer keeps it alive
+    // only while it uses it.
+    person: std::sync::Mutex<std::sync::Weak<std::sync::Mutex<crate::agent::person::Person>>>,
+    // What every person session of this window was pushed, whichever is held.
+    person_events: crate::agent::person::PersonEvents,
 }
 
 impl SignIn {
     pub fn new(launch: &Launch) -> Self {
+        let runtime = resolve_image(launch, "cadrumo-runtime");
         Self {
             child: resolve_cli(launch),
-            runtime: resolve_image(launch, "cadrumo-runtime"),
+            watch: watch::Watch::new(runtime.clone()),
+            runtime,
             service: resolve_image(launch, "cadrumo-agent-service"),
             children: Children::new(launch.diagnostics.clone()),
             activity_children: Children::new(launch.diagnostics.clone()),
             observation: observation::Observer::default(),
-            reads: Arc::new(reads::Reads::default()),
+            person: std::sync::Mutex::new(std::sync::Weak::new()),
+            person_events: tokio::sync::broadcast::channel(16).0,
         }
+    }
+
+    /// The window's person session for `profile_id`, shared by every consumer
+    /// so one person holds one runtime session. A closed bridge or another
+    /// profile's session is replaced by a fresh hold.
+    pub(crate) fn person(&self, profile_id: &str) -> Result<crate::agent::person::HeldPerson> {
+        let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(held) = cached.upgrade() {
+            let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
+            if person.identity["profile_id"] == profile_id && person.is_open() {
+                drop(person);
+                return Ok(held);
+            }
+        }
+        let mut person = crate::agent::person::Person::hold(self.runtime()?.command(), profile_id)?;
+        person.observe_events(self.person_events.clone())?;
+        let held = Arc::new(std::sync::Mutex::new(person));
+        *cached = Arc::downgrade(&held);
+        Ok(held)
+    }
+
+    /// Every later push to whichever person session this window holds.
+    pub(crate) fn person_events(
+        &self,
+    ) -> tokio::sync::broadcast::Receiver<crate::agent::person::PersonEvent> {
+        self.person_events.subscribe()
+    }
+
+    /// Resolves at the next sign-in observation after this call; create it
+    /// before reading the status, so an observation meanwhile is not missed.
+    pub(crate) fn observation_changed(&self) -> impl Future<Output = ()> + Send + 'static {
+        self.watch.changed()
     }
 
     pub(crate) fn runtime(&self) -> Result<ChildConfiguration> {
@@ -172,20 +192,28 @@ impl SignIn {
         self.service.clone()
     }
 
+    /// The private identity of the profile `label` names, from the current
+    /// observation; another selected profile or a stale observation names none.
     pub(crate) fn profile_id(&self, label: &str) -> Result<String> {
-        profile_identity(self.run(&PROFILE_ID, None, None)?, label)
+        let observed = self.watch.latest()?;
+        if observed.status.active_profile.as_deref() != Some(label) {
+            return Err(failure(ErrorCode::ReadFailed));
+        }
+        observed
+            .profile_id
+            .ok_or_else(|| failure(ErrorCode::ReadFailed))
+    }
+
+    /// The current status if one is already known and fresh; never waits.
+    pub(crate) fn current_observation(&self) -> Result<SignInStatus> {
+        Ok(self.watch.latest()?.status)
     }
 
     pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {
         if !supported() {
             return Ok(SignInStatus::unsupported());
         }
-        let state = self.clone();
-        self.reads
-            .read(move || async move {
-                super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await
-            })
-            .await
+        Ok(self.watch.current().await?.status)
     }
 
     pub async fn stop(&self) -> Result<()> {
@@ -193,6 +221,12 @@ impl SignIn {
         let result = self.children.stop();
         let activity_result = self.activity_children.stop();
         let joined = self.observation.join().await;
+        let watch = self.watch.clone();
+        super::blocking(move || {
+            watch.close();
+            Ok(())
+        })
+        .await?;
         result?;
         activity_result?;
         joined
@@ -227,14 +261,13 @@ impl SignIn {
         label: Option<&str>,
         secret: Option<Zeroizing<Vec<u8>>>,
     ) -> Result<process::Output> {
-        let _mutation = (!call.reads).then(|| self.reads.mutation());
+        let _mutation = (!call.reads).then(|| self.watch.mutation());
         let image = if call.runtime {
             &self.runtime
         } else {
             &self.child
         };
         let mut command = image.as_ref().map_err(Clone::clone)?.command();
-        configure_environment(call, &mut command);
         command.args(arguments(call, label, secret.is_some()));
         let identity = HelperIdentity {
             command: call.command,
@@ -253,31 +286,6 @@ impl SignIn {
             self.children.run(identity, command, secret)
         }
     }
-}
-
-fn configure_environment(call: &Call, command: &mut std::process::Command) {
-    if call.reveal_identifiers {
-        command.env("CADRUMO_CLI_REVEAL_IDENTIFIERS", "1");
-    }
-}
-
-fn profile_identity(outcome: wire::Outcome, label: &str) -> Result<String> {
-    let wire::Outcome::Success {
-        result,
-        active_profile,
-    } = outcome
-    else {
-        return Err(failure(ErrorCode::ReadFailed));
-    };
-    if active_profile.as_deref() != Some(label) {
-        return Err(failure(ErrorCode::ReadFailed));
-    }
-    let id = result
-        .get("profile_id")
-        .and_then(serde_json::Value::as_str)
-        .filter(|id| super::agent_access::wire::is_uuid(id))
-        .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
-    Ok(id.to_owned())
 }
 
 /// The arguments of one call. A label is the person's own text: it follows
@@ -541,61 +549,20 @@ fn encoded(body: &InvokeBody, confirmed: bool) -> Result<Zeroizing<Vec<u8>>> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn a_private_identity_requires_the_exact_selected_profile_and_a_real_uuid() {
-        let id = "12345678-1234-4234-8234-123456789abc";
-        let outcome = |profile: &str, identity: &str| wire::Outcome::Success {
-            result: serde_json::json!({"profile_id": identity}),
-            active_profile: Some(profile.into()),
-        };
-        assert_eq!(profile_identity(outcome("Test", id), "Test").unwrap(), id);
-        for (profile, identity) in [("Other", id), ("Test", "<profile-id>")] {
-            assert_eq!(
-                profile_identity(outcome(profile, identity), "Test")
-                    .unwrap_err()
-                    .code,
-                ErrorCode::ReadFailed
-            );
-        }
-    }
-
-    #[test]
-    fn only_the_private_identity_read_requests_unredacted_identifiers() {
-        use std::{ffi::OsStr, process::Command};
-        let mut identity = Command::new("unused");
-        configure_environment(&PROFILE_ID, &mut identity);
-        assert_eq!(
-            identity.get_envs().collect::<Vec<_>>(),
-            vec![(
-                OsStr::new("CADRUMO_CLI_REVEAL_IDENTIFIERS"),
-                Some(OsStr::new("1"))
-            )]
-        );
-        for call in [&STATUS, &ACTIVITY, &LOGIN, &LOGOUT, &LIST, &CREATE] {
-            let mut ordinary = Command::new("unused");
-            configure_environment(call, &mut ordinary);
-            assert_eq!(ordinary.get_envs().count(), 0);
-        }
-        assert_eq!(
-            arguments(&PROFILE_ID, None, false),
-            arguments(&STATUS, None, false)
-        );
-    }
-
     fn status_observation(available: bool) -> Result<SignInStatus> {
-        wire::status(if available {
-            wire::Outcome::Success {
-                result: serde_json::json!({"status":{"presence":"absent"}}),
-                active_profile: Some("Test profile".into()),
-            }
-        } else {
-            wire::Outcome::Refused {
-                refusal: wire::Refusal {
-                    code: "runtime_unavailable".into(),
-                    retry_after_seconds: None,
-                },
-                active_profile: Some("Test profile".into()),
-            }
+        Ok(SignInStatus {
+            supported: true,
+            state: if available {
+                wire::Presence::Absent
+            } else {
+                wire::Presence::Unknown
+            },
+            active_profile: Some("Test profile".into()),
+            runtime_available: available,
+            refusal: (!available).then(|| wire::Refusal {
+                code: "runtime_unavailable".into(),
+                retry_after_seconds: None,
+            }),
         })
     }
 
@@ -789,10 +756,6 @@ mod tests {
         assert_eq!(
             arguments(&LIST, None, false),
             ["--format", "json", "config", "profile", "list"]
-        );
-        assert_eq!(
-            arguments(&STATUS, None, false),
-            ["--format", "json", "config", "sign-in-status"]
         );
         assert_eq!(
             arguments(&LOGOUT, None, false),

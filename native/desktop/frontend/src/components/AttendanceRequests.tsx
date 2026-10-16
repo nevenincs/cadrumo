@@ -4,7 +4,8 @@ import { failureCode } from "../errors";
 import { useStrings } from "../shell/strings";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 
-/** Exact runtime peer requests; passive polling never extends person activity. */
+/** Exact runtime peer requests, read when the runtime says they changed and
+ * when the earliest one lapses; reading never extends person activity. */
 export function AttendanceRequests({
   attendance,
   profile,
@@ -23,27 +24,57 @@ export function AttendanceRequests({
   useEffect(() => {
     if (!attendance || !profile) return;
     let active = true;
-    let timer: ReturnType<typeof setTimeout>;
-    const poll = async () => {
+    let lapse: ReturnType<typeof setTimeout> | undefined;
+    let stop: (() => void) | undefined;
+    let failures = 0;
+    const read = async () => {
+      clearTimeout(lapse);
       try {
         const reply = await attendance.inventory();
-        if (active)
-          setState((previous) => ({
-            ...previous,
-            profile,
-            candidates: reply.candidates,
-            failure: null,
-          }));
+        if (!active) return;
+        failures = 0;
+        setState((previous) => ({
+          ...previous,
+          profile,
+          candidates: reply.candidates,
+          failure: null,
+        }));
+        // An ask that lapses is not pushed: read once more when the earliest does.
+        const earliest = Math.min(
+          ...reply.candidates.map((candidate) =>
+            Date.parse(candidate.expires_at),
+          ),
+        );
+        if (Number.isFinite(earliest))
+          lapse = setTimeout(
+            () => void read(),
+            Math.max(0, earliest - Date.now()) + 500,
+          );
       } catch {
-        if (active)
-          setState((previous) => ({ ...previous, profile, candidates: [] }));
+        if (!active) return;
+        setState((previous) => ({ ...previous, profile, candidates: [] }));
+        // Until a read succeeds the runtime does not know this window decides
+        // for the person, so nothing is pushed: retry, backing off, meanwhile.
+        failures += 1;
+        lapse = setTimeout(
+          () => void read(),
+          Math.min(60_000, 2_000 * 2 ** (failures - 1)),
+        );
       }
-      if (active) timer = setTimeout(() => void poll(), 2000);
     };
-    void poll();
+    // The first read also tells the runtime this window decides for the person.
+    void read();
+    void attendance
+      .observe(() => void read())
+      .then((unsubscribe) => {
+        if (active) stop = unsubscribe;
+        else unsubscribe();
+      })
+      .catch(() => undefined);
     return () => {
       active = false;
-      clearTimeout(timer);
+      clearTimeout(lapse);
+      stop?.();
     };
   }, [attendance, profile]);
   const decide = async (candidate: AttendanceCandidate, approve: boolean) => {

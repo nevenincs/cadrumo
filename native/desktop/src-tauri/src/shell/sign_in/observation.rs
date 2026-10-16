@@ -1,5 +1,5 @@
-//! Public observations from the same canonical CLI status read as the account menu.
-//! One bounded observer per host; it never resumes a receipt or owns a runtime.
+//! Public observations from the window's pushed sign-in watch, as the account menu shows them.
+//! One observer per host, sending only changes; it never resumes a receipt or owns a runtime.
 
 use super::{SignIn, wire::SignInStatus};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Result};
@@ -60,10 +60,13 @@ impl Observer {
             *worker = Some(tokio::spawn(async move {
                 loop {
                     let observer = &owner.observation;
-                    // Register before observing to avoid losing a close notification.
+                    // Register both before observing, so neither a close nor a
+                    // new observation arriving meanwhile is lost.
                     let wake = observer.wake.notified();
                     tokio::pin!(wake);
                     wake.as_mut().enable();
+                    let changed = owner.observation_changed();
+                    tokio::pin!(changed);
                     if observer.closed.load(Ordering::Acquire) {
                         break;
                     }
@@ -72,13 +75,13 @@ impl Observer {
                         .lock()
                         .unwrap_or_else(|error| error.into_inner())
                         .is_some()
-                        && !owner.reads.mutating()
+                        && !owner.watch.mutating()
                     {
                         observer.publish(owner.read_status().await);
                     }
                     tokio::select! {
                         _ = &mut wake => {},
-                        _ = tokio::time::sleep(std::time::Duration::from_secs(2)) => {},
+                        () = &mut changed => {},
                     }
                 }
             }));

@@ -540,7 +540,6 @@ mod tests {
                 code: code.into(),
                 retry_after_seconds: None,
             },
-            active_profile: Some("Profile".into()),
         };
         assert_eq!(
             failed(status(row("profile_locked"))),
