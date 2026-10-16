@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:147b3e4cb20e90c98169be1d1d03c2ace153308fa1f7b47e95a72a5b0cce58c1'
+body_hash: 'sha256:dca1bde3ee6960d357974ebb49578f5279865ea79140cf799a2b8b254ac5a56c'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -106,3 +106,7 @@ The Windows installer becomes a composed delivery rather than one combined produ
 The user's explicit requirement that the build compile only one MSI is accepted in 2026-10-16-native-build-incremental-adr. That successor supersedes only this record's physical separation into version/registration products and separate user/machine packages (constraints 2-5 and the corresponding implementation, transaction, companion-kit and consequences wording). One scope-aware MSI per release represents VersionFiles and SharedRegistration through independently authenticated, feature-qualified native ownership. The earlier discussion rejected combined products with undifferentiated lifetime; it does not authorize weakening the new role-qualified observation requirement.
 
 All scope isolation, immutable version inventory, independent registration lifetime and anchors, candidate-before-registration verification, committed transaction publication, protected callbacks, deferred in-use removal, rollback and native acceptance requirements remain binding. A product-presence check cannot substitute for observing the exact owned feature. Legacy product ownership is not silently converted. The desktop kit binds one MSI and the native runner instead of four compiled artifacts. This amendment records authorization, not completed implementation or disposable-host acceptance.
+
+## 2026-10-16 package identity registration amendment
+
+Accepted with 2026-10-16-application-distribution-windows-package-identity-adr on the operator's ruling that the application must be registered. Constraint 3's shared-registration resources additionally include the channel's Windows package identity registration, with the external location at the canonical prefix. Version products never register or remove it. A failed registration is reported as incomplete registration work and does not roll back a committed installation. No other obligation in this record changes.
