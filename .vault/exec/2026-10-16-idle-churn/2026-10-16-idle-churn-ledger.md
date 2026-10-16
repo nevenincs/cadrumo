@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:252707ea76aab70dc69ef9dc84284ba80195c68bac769f574a2e41cb04093608'
+body_hash: 'sha256:29d492b95e0af3403a3a007faa86429e0f1fca953c8492892f9ad116ee78da50'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -158,6 +158,14 @@ related:
 - `S08` `verify:` `pytest serial runtime host server-backed files` -> `fail`
 - `S08` `verify:` `pytest test_channel_readiness_wait test_server_idle_wait test_worker_request_wait test_session_events` -> `pass`
 - `S08` `verify:` `ruff ty basedpyright pyrefly lint-imports on touched files` -> `pass`
+- `S11` `M` `src/cadrumo_agent_service/adapters/agent_diagnostics.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/agent_process.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_diagnostics.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/agent_host_fixture.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_process_native.py`
+- `S11` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S11` `verify:` `pytest src/cadrumo_agent_service/adapters/tests` -> `pass`
+- `S11` `verify:` `ruff ty on touched files` -> `pass`
 
 ## Notes
 
@@ -169,3 +177,4 @@ related:
 - `S06` End-to-end use against the packaged runtime is verified with the desktop in S10; the runtime cue path itself is covered by `test_sign_in_watch.py` from S03.
 - `S07` Commit carries CADRUMO-FIX1's shared-person hunks by agreement; CADRUMO-BUILD-DEBUG's diagnostics and `with_reason` calls stay uncommitted pending its ApplicationError reason API; the committed tree was not compiled separately from the working tree
 - `S08` Adapter and transport suites: 913 passed, 1 failed `(test_posix_login_capture,` an unowned uncommitted pidfd option rename in `posix_channel.py).` Host suite: 211 passed, 5 failed, all from other sessions' uncommitted changes: the receipt handover in `profile_connection_sessions.py` and the `AUTHENTICATION_REQUIRED` session mismatch in `profile_connection_operations.py.` The stop-wake gate was shown to fail with the wake removed.
+- `S11` Depends on cadrumo-agent 09bfc8b relaying worker diagnostics on the agent's standard error, proved end to end on the rebuilt stage by CADRUMO-AGENT-SESSION1; the native fixture now models that relay.

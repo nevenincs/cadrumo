@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-16'
 body_schema: body-v2
-body_hash: 'sha256:c68a610e3572d056a180a17f0d2d3931bcd30696ab5a6f6acd098358ba2d177d'
+body_hash: 'sha256:791a8d3b5dab69c444b2ffe4a84719fd35309903a27ac3e54d231a3ddb11ca92'
 ---
 
 <!-- LINK RULES:
@@ -115,7 +115,7 @@ Remove every idle polling loop, so a Cadrumo installation with the desktop open 
 
 Approved 2026-10-16. The operator asked in this session for the root causes of idle runtime CPU and process churn to be fixed, for every recurring check to use proper signals, and for the Python wait-with-timeout process loops to be migrated.
 
-`2026-10-16-idle-churn-adr` governs every Step. Its evidence is `2026-10-16-idle-churn-audit`. S01 and S02 reduce per-turn cost with no new protocol. S03 adds the cues and the watch flag that S04-S07 consume. S08 and S09 replace the remaining timed waits in the transport and the runtime lifecycle. S10 re-measures the same idle desktop.
+`2026-10-16-idle-churn-adr` governs every Step. Its evidence is `2026-10-16-idle-churn-audit`. S01 and S02 reduce per-turn cost with no new protocol. S03 adds the cues and the watch flag that S04-S07 consume. S08 and S09 replace the remaining timed waits in the transport and the runtime lifecycle. S10 re-measures the same idle desktop. S11 was added during execution: once cadrumo-agent `09bfc8b` relayed worker diagnostics on the agent's standard error, and CADRUMO-AGENT-SESSION1 had proved this on the rebuilt stage, the service's 0.2 s log-file tail became a duplicate path.
 
 Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `shell/sign_in/mod.rs`, `agent/mod.rs`, `agent/person.rs` and `shell/language.rs`. CADRUMO-RUNTIME-DEBUG or CADRUMO-BUILD-DEBUG has a `_report_failure` hunk in `session_hold.py`, and RUNTIME-DEBUG has hunks in `session_authority_core.py`. Edits keep those hunks, and commits stage only this plan's hunks. The operator's running desktop (pid 60364) is not restarted. CADRUMO-BUILD-DEBUG rebuilds `stage/Debug` when the operator closes it.
 
@@ -131,6 +131,7 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 - [x] `S08` - Block idle transport loops on the channel and a wake handle; `src/cadrumo_client/transport/verified_transport.py`.
 - [ ] `S09` - Wake runtime lifecycle observation on deadlines, explicit wakes and Windows session notifications; `src/cadrumo_runtime/host/profile_connections.py`.
 - [ ] `S10` - Measure the rebuilt desktop at idle and record the result; `.vault/audit/2026-10-16-idle-churn-audit.md`.
+- [x] `S11` - Drop the agent service's 0.2 s diagnostic file tail now that the agent relays worker diagnostics on its standard error; `src/cadrumo_agent_service/adapters/agent_diagnostics.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

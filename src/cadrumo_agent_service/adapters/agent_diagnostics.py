@@ -7,19 +7,15 @@ import hashlib
 import json
 import logging
 import math
-import os
 import re
 from collections import OrderedDict
 from datetime import datetime
-from pathlib import Path
-from threading import Event, Lock, Thread
+from threading import Lock
 from typing import Final
 
 from cadrumo.core.hashing import reject_duplicate_json_members, reject_json_constant
 
 _LINE_BYTES: Final = 64 * 1024
-_READ_BYTES: Final = 1024 * 1024
-_FILES: Final = 64
 _CLI_DETAIL: Final = re.compile(
     rb"^(?:Traceback |[ \t]+|[\w.]+(?:Error|Exception):|During handling |The above exception).*$"
 )
@@ -222,104 +218,3 @@ class AgentDiagnosticLines:
         if self._partial or self._oversize:
             self.feed(b"\n")
         self._flush_cli()
-
-
-class AgentDiagnosticFiles:
-    """Follow only log files below one owned hosted root; worker stderr is otherwise isolated."""
-
-    def __init__(self, root: Path, sink: AgentDiagnosticSink) -> None:
-        """Baseline the hosted runtime logs before a new child can write."""
-        self._root = root.resolve()
-        self._directory = self._root / "home" / "runtime"
-        self._sink = sink
-        self._positions: dict[tuple[int, int], tuple[int, AgentDiagnosticLines, bytes]] = {}
-        self._stop = Event()
-        self._thread: Thread | None = None
-        # Copy new output for this run; retained history lives in Cadrumo's log.
-        # Baseline before spawning, so a fast child's first writes are retained.
-        try:
-            for path in self._paths():
-                with path.open("rb") as stream:
-                    stat = os.fstat(stream.fileno())
-                    self._positions[(stat.st_dev, stat.st_ino)] = (
-                        stat.st_size,
-                        AgentDiagnosticLines(sink, pid=0),
-                        stream.read(256),
-                    )
-        except OSError:
-            sink.problem("agent_diagnostic_files_unreadable")
-
-    def _paths(self) -> list[Path]:
-        try:
-            if not self._directory.resolve().is_relative_to(self._root):
-                return []
-            paths = [
-                path
-                for path in self._directory.iterdir()
-                if re.fullmatch(r".+\.log(?:\.[1-5])?", path.name)
-                and not path.is_symlink()
-                and path.is_file()
-                and path.resolve().is_relative_to(self._root)
-            ]
-            if len(paths) > _FILES:
-                self._sink.problem("agent_diagnostic_file_limit_reached")
-            return sorted(paths)[:_FILES]
-        except FileNotFoundError:
-            return []
-
-    def poll(self) -> bool:
-        """Read bounded new bytes, tracking file identity across numbered rotation."""
-        pending = False
-        for path in self._paths():
-            try:
-                with path.open("rb") as stream:
-                    stat = os.fstat(stream.fileno())
-                    key = stat.st_dev, stat.st_ino
-                    prefix = stream.read(256)
-                    offset, lines, previous = self._positions.get(
-                        key, (0, AgentDiagnosticLines(self._sink, pid=0), b"")
-                    )
-                    if stat.st_size < offset or not prefix.startswith(previous):
-                        offset, lines = 0, AgentDiagnosticLines(self._sink, pid=0)
-                    stream.seek(offset)
-                    data = stream.read(_READ_BYTES)
-                    lines.feed(data)
-                    self._positions[key] = (offset + len(data), lines, prefix)
-                    pending |= offset + len(data) < stat.st_size
-            except FileNotFoundError:
-                continue  # A writer renamed it between directory observation and open.
-        if len(self._positions) > 2 * _FILES:
-            self._positions = dict(list(self._positions.items())[-_FILES:])
-        return pending
-
-    def start(self) -> None:
-        """Begin live polling after the process starts."""
-        self._thread = Thread(target=self._follow, name="agent-diagnostic-files", daemon=True)
-        self._thread.start()
-
-    def _follow(self) -> None:
-        while not self._stop.is_set():
-            try:
-                self.poll()
-            except OSError:
-                self._sink.problem("agent_diagnostic_files_unreadable")
-            self._stop.wait(0.2)
-
-    def close(self) -> None:
-        """Stop after the process tree ends, then drain its last writes."""
-        self._stop.set()
-        if self._thread is not None:
-            self._thread.join(2.0)
-            if self._thread.is_alive():
-                self._sink.problem("agent_diagnostic_shutdown_unsettled")
-                return
-        try:
-            for _ in range(16):
-                if not self.poll():
-                    break
-            else:
-                self._sink.problem("agent_diagnostic_shutdown_backlog")
-            for _, lines, _ in self._positions.values():
-                lines.finish()
-        except OSError:
-            self._sink.problem("agent_diagnostic_files_unreadable")

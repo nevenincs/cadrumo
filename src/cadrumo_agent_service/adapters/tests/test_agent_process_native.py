@@ -286,7 +286,7 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
 def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Exercise the real job, pipe drain and file follower with a separate worker PID."""
+    """Exercise the real job and pipe drain with a separate worker PID whose records the agent relays."""
     import time
 
     hosted_root = str(tmp_path / "agent")
@@ -303,12 +303,12 @@ def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
         process.write_input(bytearray(b"{}\n"))
         assert b"agent_ready" in process.read_output_line(limit=4096, timeout=30)
         deadline = time.monotonic() + 10
-        while time.monotonic() < deadline and not any(r.msg == "worker file-only probe" for r in caplog.records):
+        while time.monotonic() < deadline and not any(r.msg == "worker relayed probe" for r in caplog.records):
             time.sleep(0.02)
     finally:
         process.terminate(timeout=10)
     gateway = [r for r in caplog.records if r.msg == "gateway live probe"]
-    worker = [r for r in caplog.records if r.msg == "worker file-only probe"]
+    worker = [r for r in caplog.records if r.msg == "worker relayed probe"]
     assert len(gateway) == len(worker) == 1
     assert gateway[0].levelno == logging.DEBUG
     assert worker[0].levelno == logging.ERROR

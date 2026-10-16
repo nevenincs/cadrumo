@@ -14,10 +14,9 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_runtime.adapters.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from ..host.controller import AgentHostError, AgentHostRefusal, AgentProcess
-from ..host.launch_environment import HOSTED_ROOT_VARIABLE
 from ..host.native_refusal import STANDARD_ERROR_TAIL_BYTES
 from ..host.store_lifecycle import AgentInvocationResult
-from .agent_diagnostics import AgentDiagnosticFiles, AgentDiagnosticLines, AgentDiagnosticSink
+from .agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
 
 _STANDARD_ERROR_CHUNK_BYTES: Final = 4096
 _STANDARD_ERROR_RELEASE_SECONDS: Final = 1.0
@@ -88,21 +87,20 @@ class WindowsAgentProcess:
         standard_output: BinaryIO,
         standard_error: BinaryIO,
         diagnostic_sink: AgentDiagnosticSink | None = None,
-        diagnostic_files: AgentDiagnosticFiles | None = None,
     ) -> None:
-        """Take ownership of the job, the agent and the parent pipe ends, and start draining standard error."""
+        """Take ownership of the job, the agent and the parent pipe ends, and start draining standard error.
+
+        Every diagnostic of the tree arrives there, the hosted worker's relayed by the agent.
+        """
         self._scope = scope
         self._process = process
         self._input: BinaryIO | None = standard_input
         self._output = standard_output
-        self._diagnostic_files = diagnostic_files
         self._standard_error = _StandardErrorTail(
             standard_error,
             limit=STANDARD_ERROR_TAIL_BYTES,
             diagnostics=AgentDiagnosticLines(diagnostic_sink or AgentDiagnosticSink(), pid=process.pid),
         )
-        if diagnostic_files is not None:
-            diagnostic_files.start()
         self._lines: Queue[bytes | BaseException] = Queue(maxsize=1)
         self._reader: Thread | None = None
 
@@ -162,8 +160,6 @@ class WindowsAgentProcess:
             self._output.close()
             # The drain closes its own end once the job's writers are gone.
             self._standard_error.release(timeout=_STANDARD_ERROR_RELEASE_SECONDS)
-            if self._diagnostic_files is not None:
-                self._diagnostic_files.close()
 
     def job_limit_flags(self) -> int:
         """The agent job's limit flags as the kernel holds them; it never admits breakaway."""
@@ -209,8 +205,6 @@ class WindowsAgentProcessLauncher:
         if sys.platform != "win32":
             raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED)
         sink = AgentDiagnosticSink()
-        root = environment.get(HOSTED_ROOT_VARIABLE)
-        files = AgentDiagnosticFiles(Path(root), sink) if root is not None and root != "" else None
         scope = WindowsProcessScope()
         try:
             process, standard_input, standard_output, standard_error = scope.launch_with_standard_pipes(
@@ -227,7 +221,6 @@ class WindowsAgentProcessLauncher:
                 standard_output=standard_output,
                 standard_error=standard_error,
                 diagnostic_sink=sink,
-                diagnostic_files=files,
             )
         except BaseException:
             # The drain could not start, so the tree has no owner: end it and release every pipe end.

@@ -109,15 +109,19 @@ import json, os, sys
 from pathlib import Path
 entry = {"schema": "cadrumo-agent.log/1", "pid": os.getpid(), "seq": 1,
          "timestamp": "2026-10-14T12:30:15.124+00:00", "level": "ERROR",
-         "service": "worker", "name": "cadrumo_agent.worker", "message": "worker file-only probe"}
+         "service": "worker", "name": "cadrumo_agent.worker", "message": "worker relayed probe"}
 line = json.dumps(entry) + "\\n"
 root = Path(sys.argv[1])
 (root / "worker.log").write_text(line, encoding="utf-8")
 (root / "worker-autospawn-54321.stderr.log").write_text(line, encoding="utf-8")
+sys.stdout.write(line)
 """
-        subprocess.run(  # noqa: S603 -- fixed diagnostic fixture under the real contained interpreter
-            [sys.executable, "-c", worker_program, str(logs)], check=True
-        )
+        relayed = subprocess.run(  # noqa: S603 -- fixed diagnostic fixture under the real contained interpreter
+            [sys.executable, "-c", worker_program, str(logs)], check=True, capture_output=True
+        ).stdout
+        # The agent relays its worker's records on its own standard error; the files are only copies.
+        sys.stderr.buffer.write(relayed)
+        sys.stderr.flush()
     if mode in {"ready", "chatty", "diagnostics"}:
         answer = {"event": "agent_ready", "gateway_port": 47001, "agent_version": "0.0.0-test", "hosting_contract": 1}
     elif mode == "future":

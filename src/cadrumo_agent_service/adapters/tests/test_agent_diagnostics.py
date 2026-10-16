@@ -1,4 +1,4 @@
-"""Agent diagnostics reach the real scrubbed log through pipes and rotating worker files."""
+"""Agent diagnostics, the hosted worker's relayed among them, reach the real scrubbed log through the agent's pipes."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import pytest
 from cadrumo.core import logging as project_logging
 from cadrumo.core.config import override_settings
 
-from ..agent_diagnostics import AgentDiagnosticFiles, AgentDiagnosticLines, AgentDiagnosticSink
+from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
 from ..agent_process import _StandardErrorTail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -112,30 +112,6 @@ def test_protocol_unknown_bytes_malformed_and_oversized_records(log_file: Path) 
     assert "worker diagnostic" in written
 
 
-def test_files_baseline_rotation_truncation_and_worker_stderr(log_file: Path, tmp_path: Path) -> None:
-    """Worker-only files are ingested, old output is not replayed, rotations deduplicate."""
-    directory = tmp_path / "agent" / "home" / "runtime"
-    directory.mkdir(parents=True)
-    worker = directory / "worker.log"
-    worker.write_bytes(_line(1, message="old output"))
-    sink = AgentDiagnosticSink()
-    files = AgentDiagnosticFiles(tmp_path / "agent", sink)
-    with worker.open("ab") as stream:
-        stream.write(_line(2, message="new worker output"))
-    files.poll()
-    worker.rename(directory / "worker.log.1")
-    worker.write_bytes(_line(3, message="rotated worker output"))
-    (directory / "worker-autospawn-54321.stderr.log").write_bytes(_line(3, message="rotated worker output"))
-    files.poll()
-    worker.write_bytes(_line(4, message="short"))
-    files.close()
-    written = _read(log_file)
-    assert "old output" not in written
-    assert written.count("new worker output") == 1
-    assert written.count("rotated worker output") == 1
-    assert "short" in written
-
-
 def test_real_pipe_is_forwarded_before_writer_closes(log_file: Path) -> None:
     """The drain must read a small live write without waiting for a 4KiB buffer."""
     import os
@@ -172,22 +148,14 @@ def test_cli_diagnostics_keep_launcher_pid_and_severity(log_file: Path) -> None:
     assert "RuntimeError: store locked" in written
 
 
-def test_exception_detail_and_same_size_file_replacement(log_file: Path, tmp_path: Path) -> None:
-    """Exception text survives scrubbing; rewritten files are detected even without shrinkage."""
-    directory = tmp_path / "agent" / "home" / "runtime"
-    directory.mkdir(parents=True)
-    worker = directory / "worker.log"
-    worker.write_bytes(_line(1, message="first probe"))
-    files = AgentDiagnosticFiles(tmp_path / "agent", AgentDiagnosticSink())
-    replacement = json.loads(_line(2, message="later probe"))
-    worker.write_bytes((json.dumps(replacement) + "\n").encode())
-    files.poll()
-    replacement["seq"] = 3
-    replacement["exception"] = "Traceback\nRuntimeError: diagnostic failure"
-    with worker.open("ab") as stream:
-        stream.write((json.dumps(replacement) + "\n").encode())
-    files.close()
+def test_a_relayed_worker_record_keeps_its_exception_detail(log_file: Path) -> None:
+    """A worker record the agent relays on its standard error keeps its exception text through scrubbing."""
+    record = json.loads(_line(2, message="relayed probe"))
+    record["exception"] = "Traceback\nRuntimeError: diagnostic failure"
+    lines = AgentDiagnosticLines(AgentDiagnosticSink(), pid=9876)
+    lines.feed((json.dumps(record) + "\n").encode())
+    lines.finish()
     written = _read(log_file)
-    assert written.count("later probe") == 2
+    assert written.count("relayed probe") == 1
     assert "RuntimeError: diagnostic failure" in written
-    assert "first probe" not in written
+    assert "PRIVATE-TOOL-CANARY" not in written
