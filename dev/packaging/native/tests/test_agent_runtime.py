@@ -137,6 +137,46 @@ def test_posix_archive_copies_only_regular_node_and_license_not_distribution_lin
         assert stat.S_IMODE((output / "node/bin/node").stat().st_mode) == 0o755
 
 
+def test_runtime_reuses_locked_node_closure_across_python_edits(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = _agent_source(tmp_path / "agent-source")
+    node, npm_cli = _build_tools(tmp_path)
+    archive = _node_archive("windows-x86-64")
+    _point_config_at_archive(tmp_path, monkeypatch, "windows-x86-64", archive)
+    _mock_download(monkeypatch, archive)
+    calls = _mock_npm(monkeypatch, node)
+    output = tmp_path / "build/agent/runtime"
+    agent_runtime.build_agent_runtime(output, source, "windows-x86-64", node=node, npm_cli=npm_cli)
+    previous = (output / "runtime-receipt.json").stat().st_mtime_ns
+    (source / "agent.py").write_text("changed = True\n", encoding="utf-8")
+
+    agent_runtime.build_agent_runtime(output, source, "windows-x86-64", node=node, npm_cli=npm_cli)
+
+    assert len(calls) == 2
+    assert (output / "runtime-receipt.json").stat().st_mtime_ns == previous
+
+
+def test_runtime_rebuilds_tampered_payload_without_destroying_previous_tree_first(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = _agent_source(tmp_path / "agent-source")
+    node, npm_cli = _build_tools(tmp_path)
+    archive = _node_archive("windows-x86-64")
+    _point_config_at_archive(tmp_path, monkeypatch, "windows-x86-64", archive)
+    _mock_download(monkeypatch, archive)
+    calls = _mock_npm(monkeypatch, node)
+    output = tmp_path / "build/agent/runtime"
+    agent_runtime.build_agent_runtime(output, source, "windows-x86-64", node=node, npm_cli=npm_cli)
+    (output / "node/node.exe").write_bytes(b"changed")
+
+    agent_runtime.build_agent_runtime(output, source, "windows-x86-64", node=node, npm_cli=npm_cli)
+
+    assert len(calls) == 4
+    assert (output / "node/node.exe").read_bytes() == b"pinned-node-binary"
+    agent_runtime.verify_agent_runtime(output)
+
+
 def test_builder_refuses_sdk_platform_cli_payload_and_does_not_publish_partial_output(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

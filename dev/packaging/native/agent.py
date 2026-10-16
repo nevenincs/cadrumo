@@ -19,16 +19,17 @@ from ..runtime_wheel_selection import active_requirements, marker_environment
 from ..runtime_wheelhouse_contract import target_platform
 from ..uv_constraints import export_runtime_constraints
 from ..wheel_metadata import read_wheel_metadata
+from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .build_toolchain import selected_uv
 from .hashing import digest
-from .product import BUNDLED_EXTRAS
+from .product import BUNDLED_EXTRAS, _wheel_input_digest
 from .target import uv_platform
 
 
-def locked_requirements(target: str, python: str) -> dict[str, Requirement]:
+def locked_requirements(target: str, python: str, *, lock: Path | None = None) -> dict[str, Requirement]:
     """Refuse unpinned, unhashed or conflicting supplemental dependencies."""
-    lock = REPO_ROOT / "native/agent" / f"{target}.txt"
+    lock = lock or REPO_ROOT / "native/agent" / f"{target}.txt"
     environment = marker_environment(target_platform(target), python)
     requirements: dict[str, Requirement] = {}
     for row in lock.read_text(encoding="utf-8").replace("\\\n", " ").splitlines():
@@ -70,6 +71,15 @@ def build_agent(output: Path, source: Path, uv: str) -> None:
         raise ValueError("Configured agent directory must contain cadrumo-agent")
     output.mkdir(parents=True, exist_ok=True)
     wheels = output / "wheels"
+    inputs = _wheel_input_digest(source, toolchain={"python": sys.version, "uv": uv})
+    input_receipt = output / "agent-inputs.json"
+    try:
+        prior = json.loads(input_receipt.read_text(encoding="utf-8"))
+        if prior == inputs:
+            agent_wheel(output)
+            return
+    except (OSError, ValueError, KeyError):
+        pass
     result = run_command(
         [
             uv,
@@ -87,7 +97,7 @@ def build_agent(output: Path, source: Path, uv: str) -> None:
     )
     if result.returncode:
         raise RuntimeError(result.stderr)
-    artifacts = list(wheels.glob("*.whl"))
+    artifacts = [wheel for wheel in wheels.glob("*.whl") if read_wheel_metadata(wheel)["Version"] == project["version"]]
     if len(artifacts) != 1:
         raise ValueError("Agent build must produce exactly one wheel")
     metadata = read_wheel_metadata(artifacts[0])
@@ -106,6 +116,10 @@ def build_agent(output: Path, source: Path, uv: str) -> None:
         + "\n",
         encoding="utf-8",
     )
+    for wheel in wheels.glob("*.whl"):
+        if wheel != artifacts[0]:
+            wheel.unlink()
+    input_receipt.write_text(json.dumps(inputs) + "\n", encoding="utf-8")
 
 
 def agent_wheel(output: Path) -> Path:
@@ -134,7 +148,8 @@ def validate_wheel_dependencies(wheel: Path, target: str, python: str) -> None:
 
 
 def update_lock(build: Path, target: str) -> None:
-    """Resolve a supplemental lock explicitly, constrained by the app's lock."""
+    """Resolve a candidate supplemental lock inside the build for author review."""
+    target_platform(target)
     paths = build_paths(build)
     receipt = json.loads((paths["agent"] / "agent-wheel.json").read_text(encoding="utf-8"))
     source = Path(receipt["source"])
@@ -149,8 +164,7 @@ def update_lock(build: Path, target: str) -> None:
     )
     configured = json.loads((paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8"))
     pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
-    lock = REPO_ROOT / "native/agent" / f"{target}.txt"
-    lock.parent.mkdir(parents=True, exist_ok=True)
+    lock = work / "requirements.txt"
     result = run_command(
         [
             selected_uv(configured),
@@ -175,14 +189,15 @@ def update_lock(build: Path, target: str) -> None:
     )
     if result.returncode:
         raise RuntimeError(result.stderr)
-    locked_requirements(target, pin)
+    locked_requirements(target, pin, lock=lock)
+    print(f"Candidate agent dependency lock: {lock}; review before updating native/agent/{target}.txt")
 
 
 def main() -> None:
     """Run explicit lock maintenance or checksum admission from CMake."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("lock", "checksum"))
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--target")
     arguments = parser.parse_args()
     if arguments.action == "lock":

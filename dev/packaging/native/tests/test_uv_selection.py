@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.source_tree import normalised_content
 
 from ...command_execution import run_command
 from .. import cmake_build, product, provision
@@ -75,12 +76,13 @@ def test_configured_actions_use_selected_uv_despite_path_reordering(
 
             def snapshot(root: Path, files: object, destination: Path) -> None:
                 destination.mkdir(parents=True)
-                shutil.copyfile(root / "pyproject.toml", destination / "pyproject.toml")
+                (destination / "pyproject.toml").write_bytes(normalised_content(root, "pyproject.toml"))
 
             monkeypatch.setattr(product, "run_command", observe)
-            monkeypatch.setattr(product, "repository_files", lambda root: ())
+            monkeypatch.setattr(product, "repository_files", lambda root, *, under=(): ())
             monkeypatch.setattr(product, "snapshot", snapshot)
-            monkeypatch.setattr(product, "stage_published_authority", lambda *args: None)
+            monkeypatch.setattr(product, "selected_published_authority", lambda *args: ())
+            monkeypatch.setattr(product, "_wheel_input_digest", lambda *args, **kwargs: "selected-inputs")
             dependencies = tmp_path / "dependencies"
             dependencies.mkdir()
             product.build_product(

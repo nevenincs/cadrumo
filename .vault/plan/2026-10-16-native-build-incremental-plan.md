@@ -10,7 +10,7 @@ related:
   - '[[2026-10-16-native-build-incremental-adr]]'
 modified: '2026-10-16'
 body_schema: body-v2
-body_hash: 'sha256:f903811755d0390080ff0ea486d6c3a360ce5a24b176d635268169a0fd5da0ff'
+body_hash: 'sha256:7f6ff30d0f4c6fef77b670d0428e0850cf4f93182dbb2fdf76dd22044bb2f926'
 ---
 
 # `native-build-incremental` plan
@@ -24,7 +24,7 @@ The user explicitly authorized fixing repeated copying and packaging, forbade bu
 ## Steps
 
 - [x] `S01` - Use existing developer tools and confine build writes to enrolled binary directories; `dev/_paths.py, native/cmake/Bootstrap.cmake, native/cmake/BuildPaths.cmake, dev/packaging/native/cmake_build.py and build storage tests`.
-- [ ] `S02` - Reuse unchanged wheel and agent runtime producers; `dev/packaging/native/product.py, agent.py, agent_runtime.py and tests`.
+- [x] `S02` - Reuse unchanged wheel and agent runtime producers; `dev/packaging/native/product.py, agent.py, agent_runtime.py and tests`.
 - [ ] `S03` - Publish assembly incrementally without erasing the previous application; `dev/packaging/native/assemble.py, assembly helpers and tests, native/desktop/tests/packaged/host.mjs`.
 - [ ] `S04` - Compile one MSI with incremental ownership and verified native installation lifecycle; `native/cmake/distribution, dev/packaging/native/windows_msi*.py, native/installer, native/application/src/installation/maintenance and tests`.
 - [ ] `S05` - Verify Debug and Release incremental packages, review installer, publish fixes and remove var uv caches; `native build verification, focused tests, .vault audit and execution ledger, var uv caches`.

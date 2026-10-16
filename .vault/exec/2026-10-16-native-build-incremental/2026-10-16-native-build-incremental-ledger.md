@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:111968f0bd60f3d2389579cbecccb3974e9d6188fc78b567eefebdac789ec290'
+body_hash: 'sha256:0c63bcd723065efe7f449c776e99539108f87251164c56d92465c01faee93791'
 related:
   - "[[2026-10-16-native-build-incremental-plan]]"
 ---
@@ -51,3 +51,13 @@ related:
 - `S01` `verify:` `focused storage builder cleanup tests 29` -> `pass`
 - `S01` `verify:` `build storage and selected uv tests 8` -> `pass`
 - `S01` `verify:` `changed parent Ruff and ty` -> `pass`
+- `S02` `M` `dev/packaging/native/product.py`
+- `S02` `M` `dev/packaging/native/agent.py`
+- `S02` `M` `dev/packaging/native/agent_runtime.py`
+- `S02` `M` `dev/packaging/wheel_metadata.py`
+- `S02` `A` `dev/packaging/tests/test_wheel_install_currency.py`
+- `S02` `A` `dev/packaging/native/tests/test_product_snapshot_links.py`
+- `S02` `verify:` `producer fixtures 28 tests` -> `pass`
+- `S02` `verify:` `authority and uv-selection 14 tests` -> `pass`
+- `S02` `verify:` `snapshot links and real uv deletion currency 5 tests` -> `pass`
+- `S02` `verify:` `scoped Ruff and ty` -> `pass`

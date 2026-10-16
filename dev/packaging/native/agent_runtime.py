@@ -10,6 +10,7 @@ import stat
 import tarfile
 import tempfile
 import zipfile
+from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -19,7 +20,6 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..runtime_wheelhouse_contract import SUPPORTED_TARGETS, target_platform
-from .archive import extract_bundle
 from .hashing import digest
 
 _RUNTIME_CONFIG = REPO_ROOT / "native/agent/runtime.json"
@@ -69,10 +69,21 @@ def build_agent_runtime(output: Path, source: Path, target: str, *, node: Path, 
     output_parent = output.parent.resolve()
     output_parent.mkdir(parents=True, exist_ok=True)
     output = output_parent / output.name
-    if _lstat(output) is not None:
-        raise ValueError("Agent runtime output path already exists")
     if output == source or output.is_relative_to(source):
         raise ValueError("Agent runtime output must be outside the agent source tree")
+    if _lstat(output) is not None:
+        if _is_link_or_reparse(output) or not output.is_dir():
+            raise ValueError("Agent runtime output must be a regular directory")
+        try:
+            prior = verify_agent_runtime(output)
+        except ValueError:
+            prior = None
+        if (
+            prior is not None
+            and prior["target"] == target
+            and all(prior["files"].get(name) == digest(source / name) for name in _RUNTIME_FILES)
+        ):
+            return
 
     with tempfile.TemporaryDirectory(prefix=".agent-runtime-", dir=output_parent) as temporary:
         work = Path(temporary)
@@ -126,7 +137,15 @@ def build_agent_runtime(output: Path, source: Path, target: str, *, node: Path, 
         receipt = _make_receipt(runtime, target, archive_record, node_version)
         (runtime / _RECEIPT_NAME).write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         verify_agent_runtime(runtime)
-        runtime.rename(output)
+        previous = work / "previous"
+        if output.exists():
+            output.rename(previous)
+        try:
+            runtime.rename(output)
+        except BaseException:
+            if previous.exists():
+                previous.rename(output)
+            raise
 
 
 def verify_agent_runtime(source: Path) -> dict[str, Any]:
@@ -189,7 +208,9 @@ def verify_agent_runtime(source: Path) -> dict[str, Any]:
     return receipt
 
 
-def stage_agent_runtime(source: Path, destination: Path) -> None:
+def stage_agent_runtime(
+    source: Path, destination: Path, *, copy_function: Callable[[Path, Path], object] = shutil.copyfile
+) -> None:
     """Copy a verified runtime into the installed ``app/cadrumo`` package root."""
     verify_agent_runtime(source)
     destination_parent = destination.parent.resolve()
@@ -208,10 +229,15 @@ def stage_agent_runtime(source: Path, destination: Path) -> None:
 
     source = source.resolve(strict=True)
     for name in ("node", "node_modules"):
-        shutil.copytree(source / name, destination / name, symlinks=False)
+        shutil.copytree(
+            source / name,
+            destination / name,
+            symlinks=False,
+            copy_function=lambda src, dst: copy_function(Path(src), Path(dst)),
+        )
     for name in _RUNTIME_FILES:
-        shutil.copyfile(source / name, destination / name)
-    shutil.copyfile(source / _RECEIPT_NAME, destination / _STAGED_RECEIPT_NAME)
+        copy_function(source / name, destination / name)
+    copy_function(source / _RECEIPT_NAME, destination / _STAGED_RECEIPT_NAME)
 
 
 def _load_configuration() -> dict[str, Any]:
@@ -378,20 +404,27 @@ def _install_node_from_zip(archive: Path, destination: Path, node_member: str, l
             or sum(item.file_size for item in members) > _MAX_NODE_ARCHIVE_EXPANSION_BYTES
         ):
             raise ValueError("Node runtime ZIP exceeds the archive expansion limit")
-    extracted = destination.parent.parent / "node-archive-extracted"
-    extract_bundle(archive, extracted)
-    for member in (node_member, license_member):
-        source = extracted.joinpath(*PurePosixPath(member).parts)
-        maximum = _MAX_NODE_EXECUTABLE_BYTES if member == node_member else _MAX_NODE_LICENSE_BYTES
-        if not source.is_file() or source.stat().st_size > maximum:
+        selected: dict[str, zipfile.ZipInfo] = {}
+        for item in members:
+            if item.orig_filename not in {node_member, license_member}:
+                continue
+            kind = stat.S_IFMT(item.external_attr >> 16)
+            maximum = _MAX_NODE_EXECUTABLE_BYTES if item.orig_filename == node_member else _MAX_NODE_LICENSE_BYTES
+            if (
+                item.orig_filename in selected
+                or item.is_dir()
+                or kind not in {0, stat.S_IFREG}
+                or item.file_size > maximum
+            ):
+                raise ValueError("Node runtime ZIP expected members must be bounded regular files")
+            selected[item.orig_filename] = item
+        if set(selected) != {node_member, license_member}:
             raise ValueError("Node runtime ZIP is missing an expected regular file")
-        target = destination / ("node.exe" if member == node_member and member.endswith("node.exe") else "bin/node")
-        if member == license_member:
-            target = destination / "LICENSE"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target)
-        if member == node_member and target.name != "node.exe":
-            target.chmod(0o755)
+        for name in (node_member, license_member):
+            target = destination / ("node.exe" if name == node_member else "LICENSE")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with bundle.open(selected[name]) as incoming, target.open("xb") as outgoing:
+                shutil.copyfileobj(incoming, outgoing)
 
 
 def _install_node_from_tar(archive: Path, destination: Path, node_member: str, license_member: str) -> None:

@@ -21,6 +21,7 @@ from ..authority_staging import selected_published_authority
 from ..command_execution import CommandResult, run_command
 from ..google_oauth import build_client_json, client_build_identity
 from ..runtime_wheel_selection import plan_target_wheels
+from ..wheel_metadata import installed_wheel_matches
 from .action_cache import action_lock, completed, fingerprint, modified_inputs, staleness
 from .agent import agent_wheel, build_agent, validate_wheel_dependencies
 from .agent_runtime import build_agent_runtime
@@ -382,7 +383,8 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
     if arguments.action == "agent":
         if arguments.agent_source is None:
             raise ValueError("Agent construction requires the configured source folder")
-        destination = reset(build, str(paths["agent"].relative_to(build)))
+        destination = paths["agent"]
+        destination.mkdir(parents=True, exist_ok=True)
         build_agent(destination, arguments.agent_source, selected_uv(configured))
         tools = configured["desktop_tools"]
         build_agent_runtime(
@@ -434,40 +436,42 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             sdk=sdk if "python_sdk" in paths else None,
         )
     elif arguments.action == "product":
-        destination = reset(build, str(paths["product"].relative_to(build)))
-        destination.mkdir(parents=True)
-        shutil.copytree(runtime / "dependencies", destination / "dependencies")
+        destination = paths["product"]
+        destination.mkdir(parents=True, exist_ok=True)
+        _sync_base_dependencies(runtime / "dependencies", destination)
         build_product(
             destination / "build",
             Path(sys.executable),
             destination / "dependencies",
             arguments.target,
+            inputs=arguments.inputs,
             build_toolchain=configured,
             timings=timings,
         )
         pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
         wheel = agent_wheel(paths["agent"])
         validate_wheel_dependencies(wheel, arguments.target, pin)
-        result = run_command(
-            [
-                selected_uv(configured),
-                "pip",
-                "install",
-                "--python",
-                sys.executable,
-                "--no-config",
-                "--no-deps",
-                "--link-mode",
-                "copy",
-                "--target",
-                str(destination / "dependencies"),
-                str(wheel),
-            ],
-            cwd=REPO_ROOT,
-        )
-        if result.returncode:
-            raise RuntimeError(result.stderr)
-        shutil.copy2(paths["agent"] / "agent-wheel.json", destination / "agent-wheel.json")
+        if not installed_wheel_matches(wheel, destination / "dependencies"):
+            result = run_command(
+                [
+                    selected_uv(configured),
+                    "pip",
+                    "install",
+                    "--python",
+                    sys.executable,
+                    "--no-deps",
+                    "--reinstall",
+                    "--link-mode",
+                    "copy",
+                    "--target",
+                    str(destination / "dependencies"),
+                    str(wheel),
+                ],
+                cwd=REPO_ROOT,
+            )
+            if result.returncode:
+                raise RuntimeError(result.stderr)
+        write_text(destination / "agent-wheel.json", (paths["agent"] / "agent-wheel.json").read_text(encoding="utf-8"))
     else:
         if arguments.config is None:
             raise ValueError("assemble requires --config")

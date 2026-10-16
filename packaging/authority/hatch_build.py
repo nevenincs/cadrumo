@@ -285,11 +285,6 @@ class CustomBuildHook(_CustomBuildHookBase):
             self.build_config.get_distribution_path(str(Path(resource_destination)))
         )
         force_include[str(staged)] = resource_destination
-        if self.target_name == "sdist":
-            # Only these build modules cross the existing dev/** exclusion;
-            # the wheel contains neither development tooling nor dotenv files.
-            for name in ("dev/__init__.py", "dev/packaging/__init__.py", "dev/packaging/google_oauth.py"):
-                force_include[str(build_root / name)] = name
 
     def _stage_oauth_client(self, build_root: Path) -> Path:
         """Write the validated publisher client into a private, transient directory.
@@ -304,13 +299,30 @@ class CustomBuildHook(_CustomBuildHookBase):
         stage: tempfile.TemporaryDirectory[str] | None = None
         try:
             sys.path[:0] = (str(build_root), str(build_root / "src"))
-            from dev.packaging.google_oauth import build_client_json, stage_build_client
+            from cadrumo.core.config_google import CLIENT_METADATA_MAX_BYTES
+            from cadrumo.core.config_google_client import decode_desktop_client
 
+            embedded = build_root / "src/cadrumo/_data/google/oauth_client.json"
+            if (build_root / "dev/packaging/google_oauth.py").is_file() or not embedded.is_file():
+                from dev.packaging.google_oauth import build_client_json
 
-            client = build_client_json(build_root)
+                encoded = build_client_json(build_root).get_secret_value()
+            else:
+                # A source distribution rebuild inherits its admitted publisher
+                # resource without shipping or importing developer tooling.
+                with embedded.open("rb") as stream:
+                    raw = stream.read(CLIENT_METADATA_MAX_BYTES + 1)
+                try:
+                    encoded = raw.decode("utf-8")
+                except UnicodeError:
+                    raise ValueError("Invalid packaged Google Desktop OAuth configuration") from None
+                if decode_desktop_client(encoded) is None:
+                    raise ValueError("Invalid packaged Google Desktop OAuth configuration")
             stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-")
             stage_root = Path(stage.name)
-            staged = stage_build_client(stage_root, client)
+            staged = stage_root / "src/cadrumo/_data/google/oauth_client.json"
+            staged.parent.mkdir(parents=True, exist_ok=True)
+            staged.write_text(encoded, encoding="utf-8", newline="")
             for directory in staged.relative_to(stage_root).parents:
                 (stage_root / directory).chmod(_OWNER_ONLY_DIRECTORY)
             staged.chmod(_OWNER_ONLY_FILE)
