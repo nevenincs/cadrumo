@@ -8,10 +8,10 @@ import json
 import os
 import struct
 import sys
-import time
 from collections.abc import Mapping
-from queue import Empty, Queue
-from threading import Event, Thread
+from queue import Queue
+from threading import Event, Semaphore, Thread
+from typing import Literal
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
@@ -25,6 +25,8 @@ from cadrumo_client.transport.profile_language import ProfileLanguage, read_prof
 _MAXIMUM_REQUEST_LINE_BYTES = 16_384
 _MAXIMUM_RESPONSE_LINE_BYTES = MAXIMUM_FRAME_BYTES + 1
 _MAXIMUM_PASSWORD_BYTES = 4_096
+
+type _Arrival = Literal["line", "retired", "profile_language_changed", "attendance_changed"]
 
 
 def _read_stdin_bytes(fd: int, size: int) -> bytearray:
@@ -104,38 +106,52 @@ async def _hold(
                 "connection_id": str(status.connection_id),
             }
         )
-        lines: Queue[bytes] = Queue(maxsize=1)
+        # One inbox for the parent's requests and the runtime's pushes: the hold
+        # sleeps until either arrives. Retirement, including a lost connection, is
+        # pushed, so the hold never asks the runtime whether its session lives.
+        inbox: Queue[tuple[_Arrival, bytes]] = Queue()
         retired = Event()
-        client.subscribe_session_retirement(retired.set)
+        # The parent writes one request and reads its reply, so one unread line is all the input kept.
+        line_slot = Semaphore(1)
         language_dirty = Event()
         language_dirty.set()
         language_cache: ProfileLanguage | None = None
-        language_subscription = None
+        observing = False
+
+        def retire() -> None:
+            retired.set()
+            inbox.put(("retired", b""))
+
+        def language_changed(_event: object) -> None:
+            language_dirty.set()
+            inbox.put(("profile_language_changed", b""))
+
+        client.subscribe_session_retirement(retire)
+        client.subscribe_profile_language_changes(language_changed)
+        client.subscribe_attendance_changes(lambda: inbox.put(("attendance_changed", b"")))
 
         def read_lines() -> None:
             while not retired.is_set():
+                line_slot.acquire()
                 line = _read_stdin_line(stdin_fd, _MAXIMUM_REQUEST_LINE_BYTES)
                 if retired.is_set():
                     return
-                lines.put(line)
+                inbox.put(("line", line))
                 if not line or len(line) > _MAXIMUM_REQUEST_LINE_BYTES:
                     return
 
         Thread(target=read_lines, name="human-session-input", daemon=True).start()
-        last_status = time.monotonic()
         while True:
+            arrival, line = inbox.get()
             if retired.is_set():
                 _emit({"kind": "session_retired", "profile_id": str(profile_id)})
                 return 0
-            try:
-                line = lines.get(timeout=0.25)
-            except Empty:
-                if time.monotonic() - last_status >= 5:
-                    current = client.status()
-                    if current.status.denial is not None:
-                        retired.set()
-                    last_status = time.monotonic()
+            if arrival != "line":
+                if observing:
+                    # Only a reason to read again through a request; the line carries no state.
+                    _emit({"kind": "runtime_event", "event": arrival})
                 continue
+            line_slot.release()
             if not line:
                 return 0
             if len(line) > _MAXIMUM_REQUEST_LINE_BYTES or not line.endswith(b"\n"):
@@ -172,6 +188,19 @@ async def _hold(
                 if action == "close":
                     _emit({"kind": "session_closed", "request_id": str(request_id)})
                     return 0
+                if action == "observe_events":
+                    # From here on, each push is also a line of its own: a parent that asks
+                    # has learned to tell a pushed line from the reply to its request.
+                    observing = True
+                    _emit(
+                        {
+                            "kind": "events_observed",
+                            "request_id": str(request_id),
+                            "runtime_boot_id": str(status.runtime_boot_id),
+                            "connection_id": str(status.connection_id),
+                        }
+                    )
+                    continue
                 if action == "service_admission":
                     current = client.status()
                     if current.status.session_id is None or current.status.denial is not None:
@@ -197,10 +226,6 @@ async def _hold(
                     reply = client.note_activity()
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
                 elif action in {"language_read", "language_set", "language_observe"}:
-                    if language_subscription is None:
-                        language_subscription = client.subscribe_profile_language_changes(
-                            lambda _event: language_dirty.set()
-                        )
                     if action != "language_observe" or language_cache is None or language_dirty.is_set():
                         # Clear before reading so a concurrent notification remains dirty.
                         language_dirty.clear()

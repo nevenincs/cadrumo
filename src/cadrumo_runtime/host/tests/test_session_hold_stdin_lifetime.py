@@ -105,6 +105,12 @@ class FakeClient:
         timer.daemon = True
         timer.start()
 
+    def subscribe_profile_language_changes(self, callback):
+        return lambda: None
+
+    def subscribe_attendance_changes(self, callback):
+        return lambda: None
+
     def close(self):
         pass
 
@@ -154,3 +160,111 @@ sys.exit(session_hold.main(["--profile-id", str(profile_id)]))
     assert exit_code == 0, (output, errors)
     assert b'"kind":"session_retired"' in output
     assert b"Fatal Python error" not in errors
+
+
+@pytest.mark.asyncio
+async def test_pushes_reach_the_parent_only_after_it_asks_and_retirement_needs_no_status_polling(
+    tmp_path: Path,
+) -> None:
+    """The hold sleeps until a request or a push; a parent that asked hears each push as its own line."""
+    source_root = Path(__file__).resolve().parents[3]
+    environment = os.environ.copy()
+    existing_pythonpath = environment.get("PYTHONPATH")
+    environment["PYTHONPATH"] = os.pathsep.join(
+        value for value in (str(source_root), existing_pythonpath) if value is not None and value != ""
+    )
+    script = r"""
+import contextlib
+import sys
+import threading
+from types import SimpleNamespace
+from uuid import UUID
+
+from cadrumo_runtime.host import session_hold
+
+profile_id = UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+
+class FakeClient:
+    def __init__(self):
+        self.status_snapshot = SimpleNamespace(
+            status=SimpleNamespace(session_id=UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")),
+            runtime_boot_id=UUID("cccccccc-cccc-4ccc-8ccc-cccccccccccc"),
+            connection_id=UUID("dddddddd-dddd-4ddd-8ddd-dddddddddddd"),
+        )
+        self.receivers = {}
+
+    def resume_receipt(self):
+        return self.status_snapshot
+
+    def status(self):
+        raise AssertionError("an idle hold must not ask the runtime for its status")
+
+    def subscribe_session_retirement(self, callback):
+        self.receivers["retired"] = callback
+
+    def subscribe_profile_language_changes(self, callback):
+        self.receivers["language"] = lambda: callback(None)
+        return lambda: None
+
+    def subscribe_attendance_changes(self, callback):
+        self.receivers["attendance"] = callback
+        return lambda: None
+
+    def close(self):
+        pass
+
+client = FakeClient()
+
+async def open_client(**_kwargs):
+    return client
+
+def pushes():
+    # A push before the parent asks is not written; pushes after it are, one line each.
+    client.receivers["attendance"]()
+    threading.Event().wait(0.5)
+    client.receivers["language"]()
+    client.receivers["attendance"]()
+    threading.Event().wait(0.5)
+    client.receivers["retired"]()
+
+session_hold.open_installed_client = open_client
+session_hold.composed_profile_persistence_ports = contextlib.nullcontext
+threading.Timer(0.5, pushes).start()
+sys.exit(session_hold.main(["--profile-id", str(profile_id)]))
+"""
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        script,
+        cwd=tmp_path,
+        env=environment,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    assert process.stdin is not None
+    assert process.stdout is not None
+    assert process.stderr is not None
+    try:
+        held = await asyncio.wait_for(process.stdout.readline(), timeout=5)
+        assert b'"kind":"session_held"' in held
+        await asyncio.sleep(0.7)
+        process.stdin.write(b'{"request_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","action":"observe_events"}\n')
+        await process.stdin.drain()
+        exit_code = await asyncio.wait_for(process.wait(), timeout=10)
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+        if not process.stdin.is_closing():
+            process.stdin.close()
+
+    output, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
+    assert exit_code == 0, (output, errors)
+    lines = output.splitlines()
+    assert b'"kind":"events_observed"' in lines[0]
+    assert lines[1:] == [
+        b'{"kind":"runtime_event","event":"profile_language_changed"}',
+        b'{"kind":"runtime_event","event":"attendance_changed"}',
+        b'{"kind":"session_retired","profile_id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}',
+    ], output

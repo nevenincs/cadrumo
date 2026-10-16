@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:f2bf775034677b4d251d994caa4e7e26d47f0376241e420be3be3366573384b2'
+body_hash: 'sha256:befc25e17f265f75d4c61d93fde8471581e5ea21c2987bc3dc8b251d9316aef3'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -85,6 +85,10 @@ related:
 - `S04` `A` `src/cadrumo_agent_service/providers/persistence/tests/test_store_generations.py`
 - `S04` `verify:` `pytest -n0 service stdin lifetime, store generations, hosted certification, admin authority` -> `pass`
 - `S04` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S05` `M` `src/cadrumo_runtime/host/session_hold.py`
+- `S05` `M` `src/cadrumo_runtime/host/tests/test_session_hold_stdin_lifetime.py`
+- `S05` `verify:` `pytest -n0 test_session_hold_stdin_lifetime.py test_session_hold_frontend.py` -> `pass`
+- `S05` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
 
 ## Notes
 
@@ -92,3 +96,4 @@ related:
 - `S02` `test_worker_human_login_receipt_lifecycle[success]` fails on CADRUMO-RUNTIME-DEBUG's uncommitted `_ended` change in `profile_worker_custody.retire` (retired sessions now refuse with `authentication_required);` the other seven modes pass and the failure was reported to that session.
 - `S03` Four files carry other sessions' uncommitted hunks; this Step's edits were staged as a HEAD-relative patch with git apply --cached, leaving theirs in the working tree. The S01 claim and admission recheck rides in the same patch.
 - `S04` AgentDiagnosticFiles still tails the hosted agent's log files every 0.2 s while an agent runs; directory change notifications fire only when a writer closes its handle (measured: at exit), so moving it to them needs a decision on worker diagnostics with the cadrumo-agent owner.
+- `S05` `session_hold.py` carries another session's `_report_failure` and `OS_SESSION_UNAVAILABLE` hunks; this Step was staged as a HEAD-relative patch. Pushed lines are opt-in through `observe_events,` so a desktop built before S07 keeps its strict request-reply bridge.
