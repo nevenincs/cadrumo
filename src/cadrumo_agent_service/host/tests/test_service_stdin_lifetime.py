@@ -59,9 +59,10 @@ def test_startup_frame_reader_stops_at_the_existing_size_limit() -> None:
             writer_thread.join(timeout=1)
 
 
-@pytest.mark.parametrize("ending", ("runtime_revocation", "extra_input", "eof"))
+@pytest.mark.parametrize("ending", ("runtime_revocation", "extra_input", "eof", "idle_then_eof"))
 @pytest.mark.asyncio
 async def test_service_stops_cleanly_for_parent_lifetime_endings(ending: str, tmp_path: Path) -> None:
+    """Each ending stops the service; while nothing is pushed, it never claims again."""
     source_root = Path(__file__).resolve().parents[3]
     environment = os.environ.copy()
     existing_pythonpath = environment.get("PYTHONPATH")
@@ -71,6 +72,7 @@ async def test_service_stops_cleanly_for_parent_lifetime_endings(ending: str, tm
     script = r"""
 import asyncio
 import sys
+import threading
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
@@ -88,10 +90,20 @@ class FakeClient:
 
     def __init__(self):
         self.claims = 0
+        self.changed = None
+
+    def subscribe_changes(self, changed):
+        self.changed = changed
+        return lambda: None
 
     def claim(self):
         self.claims += 1
-        return object() if self.claims == 1 else None
+        if self.claims > 1:
+            return None
+        if WITHDRAW_LEASE:
+            # The runtime later withdraws the lease and pushes that change on the connection.
+            threading.Timer(0.2, self.changed).start()
+        return object()
 
     async def close(self):
         pass
@@ -110,6 +122,9 @@ class FakeService:
 
     def observe(self):
         return True
+
+    def runtime_changed(self):
+        pass
 
     def stop(self):
         pass
@@ -135,7 +150,8 @@ service_main.AdminServer = FakeAdminServer
 service_main.effective_storage_root = lambda: Path(".")
 sys.argv = ["cadrumo-agent-service", "serve", "--profile-id", str(profile_id)]
 service_main._serve()
-"""
+print(f"claims={client.claims}", file=sys.stderr)
+""".replace("WITHDRAW_LEASE", repr(ending == "runtime_revocation"))
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-c",
@@ -153,7 +169,10 @@ service_main._serve()
         startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
         process.stdin.write(startup + (b"unexpected" if ending == "extra_input" else b""))
         await process.stdin.drain()
-        if ending == "eof":
+        if ending == "idle_then_eof":
+            # Long enough for a timed loop to have claimed several times.
+            await asyncio.sleep(1.5)
+        if ending in {"eof", "idle_then_eof"}:
             process.stdin.close()
         try:
             exit_code = await asyncio.wait_for(process.wait(), timeout=10)
@@ -174,3 +193,5 @@ service_main._serve()
     assert b"Fatal Python error" not in errors
     assert b"A" * 32 not in output + errors
     assert b"B" * 32 not in output + errors
+    if ending == "idle_then_eof":
+        assert b"claims=1" in errors, errors

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:bdc87f9781a6b9bc643a9c07a61ddb0fed8d8a17e2f14372091a3aa3b063c30d'
+body_hash: 'sha256:f2bf775034677b4d251d994caa4e7e26d47f0376241e420be3be3366573384b2'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -77,9 +77,18 @@ related:
 - `S03` `A` `src/cadrumo_client/transport/tests/test_invalidation_cues.py`
 - `S03` `verify:` `pytest -n0 connection cues, sign-in watch, attendance, lifecycle notices, session events, sign-in status, service records, client cue and language tests` -> `pass`
 - `S03` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S04` `M` `src/cadrumo_agent_service/main.py`
+- `S04` `M` `src/cadrumo_agent_service/service.py`
+- `S04` `M` `src/cadrumo_agent_service/providers/persistence/store.py`
+- `S04` `M` `src/cadrumo_client/transport/service_client.py`
+- `S04` `M` `src/cadrumo_agent_service/host/tests/test_service_stdin_lifetime.py`
+- `S04` `A` `src/cadrumo_agent_service/providers/persistence/tests/test_store_generations.py`
+- `S04` `verify:` `pytest -n0 service stdin lifetime, store generations, hosted certification, admin authority` -> `pass`
+- `S04` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
 
 ## Notes
 
 - `S01` `profile_connection_services.py` interleaves with another session's uncommitted lease-guard and refusal-check hunks; its claim and admission recheck stays uncommitted until those land, while HEAD's full verification there still works with the new verifier.
 - `S02` `test_worker_human_login_receipt_lifecycle[success]` fails on CADRUMO-RUNTIME-DEBUG's uncommitted `_ended` change in `profile_worker_custody.retire` (retired sessions now refuse with `authentication_required);` the other seven modes pass and the failure was reported to that session.
 - `S03` Four files carry other sessions' uncommitted hunks; this Step's edits were staged as a HEAD-relative patch with git apply --cached, leaving theirs in the working tree. The S01 claim and admission recheck rides in the same patch.
+- `S04` AgentDiagnosticFiles still tails the hosted agent's log files every 0.2 s while an agent runs; directory change notifications fire only when a writer closes its handle (measured: at exit), so moving it to them needs a decision on worker diagnostics with the cadrumo-agent owner.

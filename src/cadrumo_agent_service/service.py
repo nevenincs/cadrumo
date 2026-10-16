@@ -444,6 +444,10 @@ class AgentService:
         with self._hosted_certification_lock:
             self._hosted_certification_snapshot = None
 
+    def runtime_changed(self) -> None:
+        """Forget observed generations: a pushed frame may mean a new lease or a retired session."""
+        self._store.invalidate_generations()
+
     def observe(self) -> bool:
         """Revalidate exact generations and synchronously retire any stale tree."""
         with self._guard:

@@ -85,6 +85,17 @@ def _serve() -> None:
             emit=_publish,
         )
         server = AdminServer(service, bearer=bearer)
+        # The runtime pushes a frame on this connection for every lease issue or
+        # withdrawal and every retired session; nothing else changes what a claim
+        # answers, so each push, or the connection's loss, is the only reason to
+        # claim again.
+        wake = Event()
+
+        def runtime_changed() -> None:
+            service.runtime_changed()
+            wake.set()
+
+        client.subscribe_changes(runtime_changed)
 
         # Native keeps stdin open and owns the complete service/agent process tree.
         def lifetime_ended() -> None:
@@ -102,6 +113,7 @@ def _serve() -> None:
                     service.request_close()
                 finally:
                     stop.set()
+                    wake.set()
 
         Thread(target=lifetime_ended, name="agent-service-lifetime", daemon=True).start()
         connected = client.connected
@@ -120,23 +132,26 @@ def _serve() -> None:
         )
         admitted = False
         started = False
-        while not stop.wait(0.5):
+        while not stop.is_set():
+            # Clear before claiming, so a push that lands during the claim wakes the next turn.
+            wake.clear()
             lease = client.claim()
             if lease is None:
                 if admitted:
                     break
-                continue
-            admitted = True
-            if not started:
-                try:
-                    result = service.start()
-                    if result["event"] != "agent_ready":
-                        _publish(result)
-                except Exception as error:
-                    _publish(service_failure(error))
-                started = True
-            elif not service.observe():
-                service.stop()
+            else:
+                admitted = True
+                if not started:
+                    try:
+                        result = service.start()
+                        if result["event"] != "agent_ready":
+                            _publish(result)
+                    except Exception as error:
+                        _publish(service_failure(error))
+                    started = True
+                elif not service.observe():
+                    service.stop()
+            wake.wait()
     except Exception as error:
         _publish(service_failure(error))
     finally:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -22,6 +23,15 @@ class InstalledServiceClient:
         self.profile_id, self.service_id = profile_id, service_id
         self.connected: ServiceConnected | None = None
         self.lease: ServiceLease | None = None
+
+    def subscribe_changes(self, changed: Callable[[], None]) -> Callable[[], None]:
+        """Call ``changed`` for every frame the runtime pushes on this connection, and when it is lost.
+
+        Everything pushed to a service connection concerns its lease or session:
+        an issued or withdrawn lease, or a retired session. ``changed`` is only a
+        reason to claim again, never evidence of a lease.
+        """
+        return self.connection.subscribe_session_events(lambda _event: changed(), disconnected=changed)
 
     def claim(self) -> ServiceLease | None:
         """Request or refresh the service lease for this profile connection."""

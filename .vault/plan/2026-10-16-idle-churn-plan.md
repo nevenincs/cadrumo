@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-16'
 body_schema: body-v2
-body_hash: 'sha256:488da4e61a2c5487b802ec9b5fdc952e6d9befdff02757c168e63a52e8797f69'
+body_hash: 'sha256:fa40481b4f2bc060f9ff9f6ecaae137e46e206ef3dc42fb921593f0b07a37e48'
 ---
 
 <!-- LINK RULES:
@@ -124,7 +124,7 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 - [x] `S01` - Verify a service image once per connection and recheck only the kernel incarnation on later requests; `src/cadrumo_runtime/adapters/service_verification.py`.
 - [x] `S02` - Wait for the earliest lease deadline or a custody change instead of the 0.1 s worker expiry loop; `src/cadrumo_runtime/host/worker_service.py`.
 - [x] `S03` - Add sign-in, service-lease and attendance cues with coalesced publication and a sign-in watch flag, and publish language cues on operation completion; `src/cadrumo_client/contracts/session_events.py`.
-- [ ] `S04` - Drive the agent service from its connection events and stdin lifetime with cached generations; `src/cadrumo_agent_service/main.py`.
+- [x] `S04` - Drive the agent service from its connection events and stdin lifetime with cached generations; `src/cadrumo_agent_service/main.py`.
 - [ ] `S05` - Make the session hold block on one queue and emit unsolicited event lines; `src/cadrumo_runtime/host/session_hold.py`.
 - [ ] `S06` - Add the cadrumo-runtime session watch child; `src/cadrumo_runtime/host/session_watch.py`.
 - [ ] `S07` - Share one watch-driven sign-in observation across the sign-in view, language host and agent host, and push attendance changes to the window; `native/desktop/src-tauri/src/shell/sign_in/observation.rs`.

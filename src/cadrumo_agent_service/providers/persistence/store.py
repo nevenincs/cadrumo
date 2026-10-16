@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from threading import Lock
 from typing import Final
 
 from pydantic import ValidationError
@@ -33,6 +34,14 @@ class SecureProviderSettingsStore:
     def __init__(self, *, client: InstalledServiceClient) -> None:
         """Bind the store to one runtime-issued service lease."""
         self._client = client
+        self._generations_guard = Lock()
+        self._generations_epoch = 0
+        self._generations: tuple[int, StoreGenerations] | None = None
+
+    def invalidate_generations(self) -> None:
+        """Forget the observed generations; the next observation asks the runtime again."""
+        with self._generations_guard:
+            self._generations_epoch += 1
 
     def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
         """Decode bounded records while preserving absent and unreadable states."""
@@ -79,6 +88,8 @@ class SecureProviderSettingsStore:
             return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
         finally:
             material[:] = b"\0" * len(material)
+            # Whatever the outcome, the records generation may have moved.
+            self.invalidate_generations()
 
     def delete(self, provider_id: str, *, expected_revision: str) -> StoreRefusal | None:
         """Delete only the exact revision the caller observed."""
@@ -89,9 +100,28 @@ class SecureProviderSettingsStore:
             return _refusal(reply) if reply.state == "deleted" else _refusal(reply) or _unknown()
         except (RefusalError, FrontendRefusedError, OSError):
             return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+        finally:
+            self.invalidate_generations()
 
     def observe_generations(self) -> StoreGenerations | None:
-        """Observe the live lease and record generations without touching idle time."""
+        """Observe the live lease and record generations without touching idle time.
+
+        An observation stands until :meth:`invalidate_generations`: this store's own
+        writes and deletes call it, and the service calls it for every frame the
+        runtime pushes on its connection, which is how a lease or session change
+        arrives. A failed observation is never kept.
+        """
+        with self._generations_guard:
+            epoch, kept = self._generations_epoch, self._generations
+        if kept is not None and kept[0] == epoch:
+            return kept[1]
+        observed = self._observe_generations()
+        with self._generations_guard:
+            if observed is not None and self._generations_epoch == epoch:
+                self._generations = epoch, observed
+        return observed
+
+    def _observe_generations(self) -> StoreGenerations | None:
         try:
             lease = self._client.claim()
             if lease is None:
