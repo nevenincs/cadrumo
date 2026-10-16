@@ -1235,12 +1235,12 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/adapters/outbound/model_runtime/tests src/cadrumo_harness/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
 [group('test')]
 test-native-host:
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo_runtime/adapters/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and not os_keychain" src/cadrumo_runtime/adapters/tests/test_macos_worker_containment.py src/cadrumo_runtime/adapters/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
 
 # The opt-in native-host cases, which need a facility no runner provides: an
 # explicitly selected native macOS peer fixture, and a disposable GNOME Secret
@@ -1250,7 +1250,7 @@ test-native-host:
 [doc('Run the opt-in native macOS peer and Linux GNOME Secret Service cases on their owning host.')]
 [group('test')]
 test-native-host-facilities:
-    uv run --no-sync pytest -v -n0 -m "external_tool and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo_runtime/adapters/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
+    uv run --no-sync pytest -v -n0 -m "external_tool and not os_keychain" src/cadrumo_runtime/adapters/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
 
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
