@@ -48,7 +48,12 @@ class SessionAuthorityActivity(SessionAuthorityCore):
                     continue
                 if current.expires_at >= deadline:
                     continue
-                renewed = AccessSession.model_validate({**current.model_dump(), "expires_at": deadline})
+                renewed = AccessSession.model_validate(
+                    {
+                        **{name: getattr(current, name) for name in AccessSession.model_fields},
+                        "expires_at": deadline,
+                    }
+                )
                 with self._activation(current.session_id):
                     self.owner.refresh(renewed)
                 self._sessions[current.session_id] = renewed
