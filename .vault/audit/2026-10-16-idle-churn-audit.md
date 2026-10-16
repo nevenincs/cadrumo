@@ -93,3 +93,21 @@ The supervisor's wait is capped at `poll_interval`, 100 ms, even when it is only
 - For service-image-rehash: verify the image once per connection and recheck the kernel incarnation on later requests.
 - For runtime-lifecycle-poll and worker-expiry-loop: schedule work on deadlines and OS notifications instead of fixed intervals.
 - For transport-idle-waits: block on the channel handle.
+
+## Re-measurement after the fixes
+
+Both stages were rebuilt at 22:07-22:18 from source that includes S03-S09 and S11, and their probes passed. Each desktop was then started from `build/windows-x64/stage/<configuration>/app` and left idle for 45 s. Every process whose image lies under that directory was sampled, along with all of its descendants (WebView2 and console hosts), for 120 s. Each process's CPU time was diffed. The process tree was enumerated every 0.5 s to catch spawned children.
+
+Signed out, idle, as % of one core:
+
+| Process | Debug (22:30) | Release (23:04) |
+| --- | --- | --- |
+| Supervised runtime | 0.000 | 0.013 |
+| `session watch` child | 0.000 | 0.000 |
+| Desktop host (`cadrumo.exe`) | 0.765 | 0.427 |
+| WebView2 processes | about 0.74 | about 0.95 |
+| Total | 1.505 | 1.384 |
+
+No Cadrumo process was spawned in either window. The desktop's remaining wakeups, about 41 a second, are the manager core's 100 ms supervision wait and the 500 ms supervision check (see manager-supervision-poll). A WebView2 GPU process started at launch and exited inside the window. A further 90 s watch of the Release tree saw no new GPU process, so it does not recur.
+
+The signed-in idle state, which the baseline above measured, needs the operator's sign-in. Each stage's desktop was then held open for 30 minutes waiting for that sign-in: Debug until 23:02, Release until 23:38. No sign-in came, so the signed-in re-measurement is still open. It is recorded below once measured.
