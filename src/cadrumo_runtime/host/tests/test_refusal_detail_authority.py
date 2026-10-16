@@ -356,7 +356,7 @@ def test_refusal_detail_is_fenced_after_authority_revocation(
                     assert isinstance(denied, AccessRefusal), denied
                     assert denied.code in {
                         AccessDenialCode.SESSION_INACTIVE,
-                        AccessDenialCode.CONNECTION_MISMATCH,
+                        AccessDenialCode.AUTHENTICATION_REQUIRED,
                         AccessDenialCode.KEY_INACTIVE,
                     }
                     # A still-authorized human sees the same terminal receipt, never a replay or mutation.

@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
+    AccessDenialCode,
     AccessScope,
     AccessSession,
     SessionKind,
@@ -249,8 +250,10 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                 human.discard(successor.session_id)
                 custody.retire(successor.session_id)
                 assert all(not any(key) for key in keys)
-                with pytest.raises(AutomationCustodyError):
+                # A retired session is reported as ended, the way the runtime's authority reports it.
+                with pytest.raises(ProfileAccessRefusedError) as ended:
                     human.refresh(renewed)
+                assert ended.value.reason is AccessDenialCode.AUTHENTICATION_REQUIRED
                 store.available = True
             finally:
                 proof[:] = bytes(len(proof))

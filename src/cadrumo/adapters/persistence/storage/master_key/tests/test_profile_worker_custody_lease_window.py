@@ -35,7 +35,6 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.tests.audited_process import run_audited_process
@@ -122,6 +121,12 @@ def _assert_expired(custody: ProfileWorkerCustody, session_id: UUID) -> None:
     with pytest.raises(ProfileAccessRefusedError) as expired:
         custody.require(session_id)
     assert expired.value.reason is AccessDenialCode.SESSION_EXPIRED
+
+
+def _assert_retired(custody: ProfileWorkerCustody, session_id: UUID) -> None:
+    with pytest.raises(ProfileAccessRefusedError) as retired:
+        custody.require(session_id)
+    assert retired.value.reason is AccessDenialCode.AUTHENTICATION_REQUIRED
 
 
 def _child(parent: AccessSession, clock: _Clock, *, minutes: int) -> AccessSession:
@@ -221,10 +226,8 @@ def _mixed_leases(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> N
         assert shared.idle_deadline == human.expires_at
     with clock.at(minutes=3):
         custody.retire(human.session_id)
-        # A retired lease did not run out: it is refused as no longer presentable, never as expired.
-        with pytest.raises(AutomationCustodyError) as retired:
-            custody.require(human.session_id)
-        assert retired.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED
+        # A retired lease did not run out: it needs a fresh sign-in, and is never refused as expired.
+        _assert_retired(custody, human.session_id)
         assert custody.require(api_key.session_id) == api_key
         remaining = _key_session()
         assert remaining is not shared and shared.sealed
@@ -283,9 +286,7 @@ def _attended_child_lapse(custody: ProfileWorkerCustody, clock: _Clock, key: byt
         custody.retire(human.session_id)
         # Retiring the parent ends its child with it; neither ran out.
         for retired in (human.session_id, second.session_id):
-            with pytest.raises(AutomationCustodyError) as refused:
-                custody.require(retired)
-            assert refused.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED
+            _assert_retired(custody, retired)
         _assert_expired(custody, child.session_id)
 
 

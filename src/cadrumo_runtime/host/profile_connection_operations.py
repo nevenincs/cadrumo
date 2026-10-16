@@ -68,6 +68,15 @@ def _require_scope_admits(connection: ProfileConnection, definition_id: str) -> 
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
+def _session_mismatch(connection: ProfileConnection) -> AccessDenialCode:
+    """Name why a request's session is not this connection's: a retirement such as a sign-out leaves none."""
+    return (
+        AccessDenialCode.AUTHENTICATION_REQUIRED
+        if connection.session_id is None
+        else AccessDenialCode.CONNECTION_MISMATCH
+    )
+
+
 class ProfileConnectionOperationMixin:
     """Own the operation behavior of the profile connection service."""
 
@@ -196,7 +205,7 @@ class ProfileConnectionOperationMixin:
         if connection.context != context or connection.profile_id != request.profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         if connection.session_id != request.session_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
+            raise ProfileAccessRefusedError(_session_mismatch(connection))
         with self._guard:
             host = self._profiles.get(connection.profile_id)
         if host is None:
@@ -323,8 +332,10 @@ class ProfileConnectionOperationMixin:
         if not self._admitting():
             raise RefusalError(RefusalCode.DRAINING)
         current = self._connected(connection.context.connection_id)
-        if current is not connection or connection.session_id != request.session_id:
+        if current is not connection:
             raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
+        if connection.session_id != request.session_id:
+            raise ProfileAccessRefusedError(_session_mismatch(connection))
         with host.guard:
             status = self._status(connection, host, request.request_id, request.session_id)
             if isinstance(status, AccessDenied):

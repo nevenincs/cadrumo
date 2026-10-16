@@ -110,8 +110,9 @@ def test_worker_hosts_the_canonical_operation_services_and_rechecks_custody(tmp_
             with pytest.raises(AutomationCustodyError):
                 worker.describe(admitted.session_id, "user-profile.automation-approve")
             worker.retire(admitted.session_id)
-            with pytest.raises(AutomationCustodyError):
+            with pytest.raises(ProfileAccessRefusedError) as ended:
                 worker.describe(admitted.session_id, definition)
+            assert ended.value.reason is AccessDenialCode.AUTHENTICATION_REQUIRED
         finally:
             worker.close()
 
@@ -336,8 +337,9 @@ def test_custody_control_retires_while_operation_waits_for_profile_authority(tmp
                     assert authority.attempted.wait(5)
                     worker.retire(admitted.session_id)
                     assert not worker.status().sessions
-                with pytest.raises(AutomationCustodyError):
+                with pytest.raises(ProfileAccessRefusedError) as ended:
                     pending.result(timeout=5)
+                assert ended.value.reason is AccessDenialCode.AUTHENTICATION_REQUIRED
             assert authority.calls == [AccessAction.SUBMIT]
             worker.require_alive()
         finally:

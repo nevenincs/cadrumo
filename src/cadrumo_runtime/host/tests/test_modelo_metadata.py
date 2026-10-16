@@ -457,7 +457,10 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
                         result_request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 5
                     )
                     assert isinstance(after_lock, AccessRefusal), after_lock
-                    assert after_lock.code in {AccessDenialCode.SESSION_INACTIVE, AccessDenialCode.CONNECTION_MISMATCH}
+                    assert after_lock.code in {
+                        AccessDenialCode.SESSION_INACTIVE,
+                        AccessDenialCode.AUTHENTICATION_REQUIRED,
+                    }
                 finally:
                     api.close()
                     human.close()

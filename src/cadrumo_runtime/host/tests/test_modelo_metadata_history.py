@@ -456,7 +456,10 @@ def test_recorded_read_keeps_original_revision_after_new_catalogue_candidate(tmp
                         result_request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 5
                     )
                     assert isinstance(after_lock, AccessRefusal), after_lock
-                    assert after_lock.code in {AccessDenialCode.SESSION_INACTIVE, AccessDenialCode.CONNECTION_MISMATCH}
+                    assert after_lock.code in {
+                        AccessDenialCode.SESSION_INACTIVE,
+                        AccessDenialCode.AUTHENTICATION_REQUIRED,
+                    }
                 finally:
                     api.close()
                     human.close()

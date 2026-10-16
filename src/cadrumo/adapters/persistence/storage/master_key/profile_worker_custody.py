@@ -24,8 +24,8 @@ from .active_session import bind_active_bucket_session, close_active_bucket_sess
 from .bucket_session import BucketSession
 from .profile_worker_binding import profile_worker_binding
 
-_LAPSED_MEMORY = 256
-"""How many lapsed lease ids custody remembers, so a late request hears that its session ended."""
+_ENDED_MEMORY = 256
+"""How many ended lease ids custody remembers, so a late request hears how its session ended."""
 
 
 class ProfileWorkerCustody:
@@ -50,7 +50,7 @@ class ProfileWorkerCustody:
         profile_worker_binding.bind(identity, storage_root=storage_root)
         self.identity, self.root, self.clock, self.monotonic = identity, storage_root, clock, monotonic
         self._leases: dict[UUID, AccessSession] = {}
-        self._lapsed: dict[UUID, None] = {}
+        self._ended: dict[UUID, AccessDenialCode] = {}
         self._lock = RLock()
         self._closed = False
         self._sections = 0
@@ -130,9 +130,11 @@ class ProfileWorkerCustody:
             binding_validated = self._expire_locked()
             lease = self._leases.get(session_id)
             if lease is None:
-                if session_id in self._lapsed:
-                    # Its lifetime ran out: the session ended, and nothing presented was wrong.
-                    raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
+                ended = self._ended.get(session_id)
+                if ended is not None:
+                    # The session ended, by its lifetime or by a retirement such as a sign-out:
+                    # nothing presented was wrong, and only a lapse is reported as expiry.
+                    raise ProfileAccessRefusedError(ended)
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             self._validate_lease(lease)
             if not binding_validated:
@@ -193,9 +195,7 @@ class ProfileWorkerCustody:
         for identity in tuple(self._leases):
             if identity in self._leases and not self._live(self._leases[identity]):
                 for lapsed in self.retire(identity):
-                    self._lapsed[lapsed] = None
-        while len(self._lapsed) > _LAPSED_MEMORY:
-            del self._lapsed[next(iter(self._lapsed))]
+                    self._ended[lapsed] = AccessDenialCode.SESSION_EXPIRED
         return binding_validated
 
     def retire(self, session_id: UUID) -> frozenset[UUID]:
@@ -209,6 +209,10 @@ class ProfileWorkerCustody:
                 for identity in retired:
                     if self._leases.pop(identity, None) is not None:
                         dropped.add(identity)
+                        # As the runtime's authority answers for a session it no longer holds.
+                        self._ended[identity] = AccessDenialCode.AUTHENTICATION_REQUIRED
+            while len(self._ended) > _ENDED_MEMORY:
+                del self._ended[next(iter(self._ended))]
             if not self._leases:
                 self._release_material()
             else:

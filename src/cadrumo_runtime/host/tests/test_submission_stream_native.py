@@ -475,7 +475,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
             assert error.reason is RefusalCode.CONNECTION_CLOSED
         else:
             assert isinstance(outcome, AccessRefusal), outcome
-            assert outcome.code in {AccessDenialCode.SESSION_INACTIVE, AccessDenialCode.CONNECTION_MISMATCH}
+            assert outcome.code in {AccessDenialCode.SESSION_INACTIVE, AccessDenialCode.AUTHENTICATION_REQUIRED}
 
         # Native submission is not autostart; this proves no successful receipt and a live survivor submit,
         # while canonical inventory remains outside this test's evidence.
