@@ -72,6 +72,7 @@ def test_health_retains_primary_and_evidence_before_failed_process_settlement(
     primary = AssertionError("primary startup failure")
 
     def temporary(**kwargs: object) -> TemporaryDirectory[str]:
+        assert kwargs["dir"] == tmp_path
         directory = TemporaryDirectory(prefix="health-test-", dir=tmp_path, delete=False)
         retained.append(Path(directory.name))
         return directory
@@ -92,7 +93,7 @@ def test_health_retains_primary_and_evidence_before_failed_process_settlement(
     monkeypatch.setattr(health, "WindowsProcessScope", Scope)
     monkeypatch.setattr(health, "_recover_runtime", recover)
     with pytest.raises(AssertionError) as caught:
-        health.verify_health(executable, "CADRUMO_LOCAL_STORAGE_ROOT")
+        health.verify_health(executable, "CADRUMO_LOCAL_STORAGE_ROOT", scratch_root=tmp_path)
     assert caught.value is primary
     assert json.loads((retained[0] / "health-failure.json").read_text(encoding="utf-8")) == {
         "schema": 1,

@@ -1006,8 +1006,8 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         operator-overridable taxonomy member; ``FIXED`` members carry no
         variable, and the development root variable is honoured only in a
         checkout. Development tool locations are not settings of this command
-        line; ``dev/`` reads them from
-        :func:`~cadrumo.core.storage_environment.development_tool_env_var_names`.
+        line; development tools bind them through
+        :func:`~cadrumo.core.storage_environment.tool_storage_environment`.
         """
         from .storage_taxonomy import StorageOverridePolicy
         from .storage_taxonomy_locations import STORAGE_TAXONOMY
