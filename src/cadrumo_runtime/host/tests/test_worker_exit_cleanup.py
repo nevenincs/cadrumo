@@ -359,6 +359,25 @@ class _ServeCustody(_Release):
     def live_sessions(self) -> tuple[UUID, ...]:
         return ()
 
+    def seconds_until_expiry(self) -> float | None:
+        return None
+
+
+class _IdleUploads:
+    def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
+        assert live_sessions == ()
+
+    def seconds_until_expiry(self) -> float | None:
+        return None
+
+
+class _IdleHuman:
+    def expire(self) -> None:
+        pass
+
+    def seconds_until_expiry(self) -> float | None:
+        return None
+
 
 def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
@@ -406,6 +425,7 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
         failed=failed,
         operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
         upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        changed=asyncio.Event(),
     )
     receive_calls = 0
 
@@ -429,6 +449,7 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     assert expired == [()]
     assert forgotten == [True]
     assert output
+    assert context.changed.is_set(), "a handled command must wake idle custody expiry"
     started = next(
         record for record in caplog.records if record.getMessage() == "profile_worker_control_dispatch_started"
     )
@@ -476,21 +497,73 @@ def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:
                 loop.call_soon_threadsafe(stop.set)
                 return ()
 
-        class Uploads:
-            def expire(self, *, live_sessions: tuple[UUID, ...]) -> None:
-                assert live_sessions == ()
-
-        class Human:
-            def expire(self) -> None:
-                pass
-
         await worker_service._expire_custody(
             stop,
             failed,
             cast(ProfileWorkerCustody, Custody()),
-            cast(worker_service.WorkerSubmissionStaging, Uploads()),
-            cast(ProfileWorkerHumanLogin, Human()),
+            cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
+            cast(ProfileWorkerHumanLogin, _IdleHuman()),
+            _handled(),
         )
+        assert not failed.is_set()
+
+    asyncio.run(exercise())
+
+
+def _handled() -> asyncio.Event:
+    """The wake a handled command leaves behind; expiry runs only after one."""
+    changed = asyncio.Event()
+    changed.set()
+    return changed
+
+
+def test_idle_custody_expiry_runs_only_at_a_deadline_or_a_handled_command() -> None:
+    """Idle expiry must not tick: it waits for the next deadline or a command that changed custody."""
+
+    async def exercise() -> None:
+        stop, failed, changed = asyncio.Event(), asyncio.Event(), _handled()
+        passes = 0
+        # The first and third passes leave nothing to expire; the second leaves a lease due in 0.2 s.
+        deadlines = iter((None, 0.2, None))
+
+        class Custody(_ServeCustody):
+            @override
+            def live_sessions(self) -> tuple[UUID, ...]:
+                nonlocal passes
+                passes += 1
+                return ()
+
+            @override
+            def seconds_until_expiry(self) -> float | None:
+                return next(deadlines)
+
+        async def settled(count: int) -> None:
+            async def reached() -> None:
+                while passes < count:
+                    await asyncio.sleep(0.01)
+
+            await asyncio.wait_for(reached(), timeout=5)
+
+        expiry = asyncio.create_task(
+            worker_service._expire_custody(
+                stop,
+                failed,
+                cast(ProfileWorkerCustody, Custody()),
+                cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
+                cast(ProfileWorkerHumanLogin, _IdleHuman()),
+                changed,
+            )
+        )
+        await settled(1)
+        await asyncio.sleep(0.5)
+        assert passes == 1, "with nothing held, expiry waited for no deadline"
+        changed.set()
+        await settled(2)
+        await settled(3)
+        await asyncio.sleep(0.5)
+        assert passes == 3, "after the deadline nothing is held, so expiry waits again"
+        stop.set()
+        await asyncio.wait_for(expiry, timeout=5)
         assert not failed.is_set()
 
     asyncio.run(exercise())
@@ -513,6 +586,7 @@ def test_idle_custody_failure_retains_original_error_and_fences_work() -> None:
                 cast(ProfileWorkerCustody, Custody()),
                 cast(worker_service.WorkerSubmissionStaging, object()),
                 cast(ProfileWorkerHumanLogin, object()),
+                _handled(),
             )
         assert caught.value is failure
         assert failed.is_set()
@@ -626,6 +700,9 @@ async def test_serve_clean_stop_drains_once_and_keeps_native_and_custody_ownersh
     class IdleRelease(_Release):
         def expire(self, *, live_sessions: tuple[UUID, ...] = ()) -> None:
             assert live_sessions == ()
+
+        def seconds_until_expiry(self) -> float | None:
+            return None
 
     control, operation = _Channel(), _Channel()
     control.queue(ProfileWorkerRequest(root=ProfileWorkerControlRequest(action="stop", request_id=uuid4())))

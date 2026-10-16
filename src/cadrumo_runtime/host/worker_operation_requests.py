@@ -89,8 +89,12 @@ async def operate(
     operations: ProfileWorkerOperationHost,
     failed: asyncio.Event,
     uploads: WorkerSubmissionStaging,
+    changed: asyncio.Event,
 ) -> None:
-    """Dispatch operation-channel requests and serialize refusals on that channel."""
+    """Dispatch operation-channel requests and serialize refusals on that channel.
+
+    ``changed`` wakes custody expiry after each request, which may have staged an upload.
+    """
     try:
         while True:
             request = (await receive(channel, failed)).root
@@ -118,6 +122,7 @@ async def operate(
                 )
             finally:
                 del request
+                changed.set()
     except Exception:
         failed.set()
         raise

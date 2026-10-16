@@ -184,6 +184,23 @@ def test_capacity_expiry_retirement_and_abort_are_bounded() -> None:
     assert closed.value.reason is AutomationCustodyCode.UNAVAILABLE
 
 
+def test_the_earliest_staged_upload_names_the_next_expiry() -> None:
+    """Idle expiry waits exactly until the oldest upload elapses, and not at all while none is staged."""
+    now = 10.0
+    staging = WorkerSubmissionStaging(clock=lambda: now)
+    assert staging.seconds_until_expiry() is None
+    first, second = _begin(b'{"x":1}'), _begin(b'{"x":2}')
+    staging.begin(first)
+    now += 10
+    staging.begin(second)
+    assert staging.seconds_until_expiry() == SUBMISSION_PAYLOAD_TIMEOUT_SECONDS - 10
+    now += SUBMISSION_PAYLOAD_TIMEOUT_SECONDS
+    assert staging.seconds_until_expiry() == 0
+    staging.expire()
+    staging.abort(_abort(second))
+    assert staging.seconds_until_expiry() is None
+
+
 def test_retired_session_wipes_only_its_upload_and_abort_is_still_safe() -> None:
     """The worker's fresh custody snapshot discards retired payloads immediately."""
     body = b'{"x":1}'

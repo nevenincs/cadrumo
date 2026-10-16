@@ -311,6 +311,30 @@ class ProfileWorkerHumanLogin:
                 if _abandoned(pending.candidate, pending.deadline, pending.monotonic_deadline):
                     self.discard(session_id)
 
+    def seconds_until_expiry(self) -> float | None:
+        """Seconds until the earliest candidate or pending receipt is abandoned, or ``None``."""
+        with self._lock:
+            held = [
+                (pending.candidate, pending.deadline, pending.monotonic_deadline) for pending in self._pending.values()
+            ]
+            if self._candidate is not None:
+                held.append(self._candidate[1:])
+        if not held:
+            return None
+        instant, elapsed = now(), time.monotonic()
+        return max(
+            0.0,
+            min(
+                min(
+                    (
+                        min(deadline, candidate.outcome.idle_deadline, candidate.outcome.absolute_deadline) - instant
+                    ).total_seconds(),
+                    monotonic_deadline - elapsed,
+                )
+                for candidate, deadline, monotonic_deadline in held
+            ),
+        )
+
     def cancel(self) -> None:
         """Release the unbound candidate; pending receipts of bound sessions stay."""
         with self._lock:

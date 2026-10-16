@@ -333,7 +333,28 @@ def _require_binding_once(custody: ProfileWorkerCustody, clock: _Clock, key: byt
             assert calls == 6  # idle expiry also revalidates
 
 
+def _expiry_deadline(custody: ProfileWorkerCustody, clock: _Clock, key: bytes) -> None:
+    with clock.at(minutes=0):
+        # With no lease there is nothing to expire, so idle expiry has nothing to wait for.
+        assert custody.seconds_until_expiry() is None
+        api_key = _lease(custody.identity, clock, SessionKind.API_KEY, minutes=5)
+        human = _lease(custody.identity, clock, SessionKind.HUMAN, minutes=15)
+        custody.install(api_key, bytearray(key))
+        custody.install(human, bytearray(key))
+        assert custody.seconds_until_expiry() == 300
+    with clock.at(minutes=4):
+        assert custody.seconds_until_expiry() == 60
+    with clock.at(minutes=6):
+        assert custody.live_sessions() == (human.session_id,)
+        assert custody.seconds_until_expiry() == 540
+    with clock.at(minutes=15):
+        assert custody.seconds_until_expiry() == 0
+        assert custody.live_sessions() == ()
+        assert custody.seconds_until_expiry() is None
+
+
 _CASES: dict[str, Callable[[ProfileWorkerCustody, _Clock, bytes], None]] = {
+    "expiry_deadline": _expiry_deadline,
     "require_binding_once": _require_binding_once,
     "human_activity": _human_activity,
     "attended_child_lapse": _attended_child_lapse,

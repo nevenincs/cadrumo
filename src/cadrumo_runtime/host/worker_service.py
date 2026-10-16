@@ -61,6 +61,7 @@ from .worker_submission_staging import WorkerSubmissionStaging
 
 _ControlDisposition = Literal["handled", "status", "stop"]
 _CONTROL_DISPATCH_SLOW_SECONDS = 0.5
+_EXPIRY_MARGIN_SECONDS = 0.05
 _log = get_logger(__name__)
 
 _CONTROL_REQUEST_TYPES = (
@@ -131,6 +132,20 @@ class _WorkerControl:
     failed: asyncio.Event
     operation_release: _worker_cleanup.WorkerRelease[OperationDrainResult]
     upload_release: _worker_cleanup.WorkerRelease[None]
+    changed: asyncio.Event
+
+
+async def _until_change(stop: asyncio.Event, changed: asyncio.Event, delay: float | None) -> None:
+    """Wait for the next deadline, a handled command or service stop, whichever comes first."""
+    waiters = (asyncio.ensure_future(stop.wait()), asyncio.ensure_future(changed.wait()))
+    try:
+        # The margin lets a coarse OS timer wake after the deadline instead of just before it.
+        timeout = None if delay is None else delay + _EXPIRY_MARGIN_SECONDS
+        await asyncio.wait(waiters, timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        for waiter in waiters:
+            waiter.cancel()
+        await asyncio.gather(*waiters, return_exceptions=True)
 
 
 async def _expire_custody(
@@ -139,13 +154,29 @@ async def _expire_custody(
     custody: ProfileWorkerCustody,
     uploads: WorkerSubmissionStaging,
     human: ProfileWorkerHumanLogin,
+    changed: asyncio.Event,
 ) -> None:
-    while not stop.is_set():
-        await asyncio.sleep(0.1)
+    """Release custody at each lease, login and upload deadline; every handled command wakes it early."""
+    # A new worker holds nothing until a command arrives, so it starts by waiting.
+    delay: float | None = None
+    while True:
+        await _until_change(stop, changed, delay)
+        if stop.is_set():
+            return
+        changed.clear()
         try:
             live_sessions = await asyncio.to_thread(custody.live_sessions)
             uploads.expire(live_sessions=live_sessions)
             await asyncio.to_thread(human.expire)
+            deadlines = [
+                seconds
+                for seconds in (
+                    custody.seconds_until_expiry(),
+                    uploads.seconds_until_expiry(),
+                    human.seconds_until_expiry(),
+                )
+                if seconds is not None
+            ]
         except Exception as error:
             failed.set()
             diagnostic_event(
@@ -156,6 +187,7 @@ async def _expire_custody(
                 primary_error=error,
             )
             raise
+        delay = min(deadlines) if deadlines else None
 
 
 async def _handle_custody_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
@@ -431,6 +463,9 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
                 ),
                 deadline=time.monotonic() + 5,
             )
+        finally:
+            # Any handled command may have installed, refreshed or retired a lease or a login.
+            context.changed.set()
 
 
 async def _collect_task_failures(
@@ -499,7 +534,7 @@ async def _serve(
     human: ProfileWorkerHumanLogin,
     operations: ProfileWorkerOperationHost,
 ) -> None:
-    stop, failed = asyncio.Event(), asyncio.Event()
+    stop, failed, changed = asyncio.Event(), asyncio.Event(), asyncio.Event()
     uploads = WorkerSubmissionStaging()
     operation_release = _worker_cleanup.WorkerRelease(operations.close)
     human_release = _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(human.close))
@@ -513,10 +548,14 @@ async def _serve(
         failed=failed,
         operation_release=operation_release,
         upload_release=upload_release,
+        changed=changed,
     )
-    expiry = asyncio.create_task(_expire_custody(stop, failed, custody, uploads, human), name="profile-custody-expiry")
+    expiry = asyncio.create_task(
+        _expire_custody(stop, failed, custody, uploads, human, changed), name="profile-custody-expiry"
+    )
     executing = asyncio.create_task(
-        _worker_requests.operate(operation_channel, operations, failed, uploads), name="profile-operation-requests"
+        _worker_requests.operate(operation_channel, operations, failed, uploads, changed),
+        name="profile-operation-requests",
     )
     try:
         await _serve_control_requests(context)

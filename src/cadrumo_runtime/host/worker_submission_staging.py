@@ -127,6 +127,11 @@ class WorkerSubmissionStaging:
             if now >= upload.expires_at or (live_sessions is not None and upload.session_id not in live_sessions):
                 self._drop(upload_id)
 
+    def seconds_until_expiry(self) -> float | None:
+        """Seconds until the earliest staged upload elapses, or ``None`` while none is staged."""
+        remaining = [upload.expires_at - self._clock() for upload in self._uploads.values()]
+        return max(0.0, min(remaining)) if remaining else None
+
     def close(self) -> None:
         """Wipe all incomplete payloads on drain, failure, or worker exit."""
         self._closed = True

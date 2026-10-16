@@ -259,6 +259,19 @@ class ProfileWorkerCustody:
             self.expire()
             return tuple(sorted(self._leases))
 
+    def seconds_until_expiry(self) -> float | None:
+        """Seconds until the earliest held lease lapses on either clock, or ``None`` while none is held."""
+        with self._lock:
+            instant, elapsed = self.clock(), self.monotonic()
+            remaining = [
+                min(
+                    (lease.expires_at - instant).total_seconds(),
+                    lease.issued_monotonic + (lease.expires_at - lease.issued_at).total_seconds() - elapsed,
+                )
+                for lease in self._leases.values()
+            ]
+        return max(0.0, min(remaining)) if remaining else None
+
     def retire_password_successor(self, *, password_generation: int) -> None:
         """Retire old leases after verifying one committed, same-key successor.
 

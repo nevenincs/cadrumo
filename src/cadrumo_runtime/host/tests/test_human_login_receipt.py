@@ -127,8 +127,12 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                     assert refused.value.sign_in.remaining_seconds == 23
                     assert not custody.live_sessions() and not path.exists() and store.writes == 0
                     return
+                assert human.seconds_until_expiry() is None
                 candidate_id, outcome = human.authenticate(proof)
                 assert not outcome.session_persisted and not path.exists()
+                # An unbound candidate is abandoned within five minutes; idle expiry waits for exactly that.
+                waiting = human.seconds_until_expiry()
+                assert waiting is not None and 0 < waiting <= 300
                 lease = _human_lease(identity, outcome)
                 sign_in = SignInGenerationCustody(root=root, binding=identity.binding)
                 bound, pending = human.bind(candidate_id, lease, persist_receipt=mode != "default")
@@ -137,7 +141,10 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                 assert not bound.session_persisted and not path.exists() and store.writes == 0
                 assert custody.require(lease.session_id) == lease
                 if mode == "default":
+                    assert human.seconds_until_expiry() is None
                     return
+                waiting = human.seconds_until_expiry()
+                assert waiting is not None and 0 < waiting <= 300
                 if mode == "retired_before_mint":
                     # The runtime refused or retired the session before minting.
                     human.discard(lease.session_id)
