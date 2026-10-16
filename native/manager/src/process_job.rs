@@ -24,7 +24,7 @@ use windows_sys::Win32::{
             JobObjectBasicAccountingInformation, JobObjectExtendedLimitInformation,
             QueryInformationJobObject, SetInformationJobObject, TerminateJobObject,
         },
-        Threading::{OpenThread, ResumeThread, THREAD_SUSPEND_RESUME},
+        Threading::{GetCurrentProcess, OpenThread, ResumeThread, THREAD_SUSPEND_RESUME},
     },
 };
 
@@ -100,6 +100,15 @@ impl ProcessJob {
             AssignProcessToJobObject(self.job.as_raw_handle(), child.as_raw_handle())
         })?;
         resume_threads(child.id())
+    }
+
+    /// Places the calling process in the job, so every process it starts from
+    /// now on is born inside it. A process already in another job gets this job
+    /// nested beneath that one.
+    pub fn contain_current(&self) -> io::Result<()> {
+        // SAFETY: the current-process pseudo handle needs no closing, and the
+        // job handle is owned by `self`.
+        checked(unsafe { AssignProcessToJobObject(self.job.as_raw_handle(), GetCurrentProcess()) })
     }
 
     /// How many processes the job still holds.

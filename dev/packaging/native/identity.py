@@ -67,7 +67,7 @@ def identity(target: str, channel: str = "stable", *, project_file: Path | None 
     suffix = "" if channel == "stable" else f".{channel}"
     app_id = PRODUCT_IDENTITY.application_id + suffix
     author = project["authors"][0]
-    name = PRODUCT_IDENTITY.display_name + ("" if channel == "stable" else PREVIEW_NAME_SUFFIX)
+    name = PRODUCT_IDENTITY.prose_name + ("" if channel == "stable" else PREVIEW_NAME_SUFFIX)
     return DistributionIdentity(
         name=name,
         application_id=app_id,

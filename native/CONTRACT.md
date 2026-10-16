@@ -630,7 +630,7 @@ desktop project, so configuring it requires `npm` and `node`.
 directory scope. It is the per-user runtime manager, not the desktop application,
 so every package stages it, with or without the documentation. It is not a
 startup file. Its Windows version resource names the manager: `FileDescription`
-is the channel's manager name, such as `CADRUMO Background Services`,
+is the channel's manager name, such as `Cadrumo Background Services`,
 `ProductName` is the channel's product name, `FileVersion` and `ProductVersion`
 are the release version and `OriginalFilename` is `cadrumo-manager.exe`. The
 crate's build script writes that resource and the process manifest without a

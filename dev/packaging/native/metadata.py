@@ -6,7 +6,6 @@ import argparse
 import json
 from pathlib import Path
 
-from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
@@ -32,7 +31,7 @@ def generate(
     product = identity(distribution_target(layout), channel)
     destination.mkdir(parents=True, exist_ok=True)
     metadata = {
-        "product": PRODUCT_IDENTITY.display_name,
+        "product": product.name,
         "version": version,
         "build_number": number,
         "build_date": date,

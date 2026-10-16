@@ -28,7 +28,7 @@ _SOURCE = (REPO_ROOT / DECLARATION).read_text(encoding="utf-8")
 def test_the_layout_declares_the_agent_image_for_its_bundled_distribution() -> None:
     for target in ("windows-x86-64", "linux-x86-64", "macos-arm64"):
         layout = load_layout(target)
-        assert bundled_images(layout) == {_AGENT: {"distribution": "cadrumo-agent", "description": "CADRUMO agent"}}
+        assert bundled_images(layout) == {_AGENT: {"distribution": "cadrumo-agent", "description": "Cadrumo agent"}}
         assert bundled_image_files(layout) == {
             _AGENT: f"{layout['paths']['native']}/{_AGENT}{layout['entrypoint_suffix']}"
         }

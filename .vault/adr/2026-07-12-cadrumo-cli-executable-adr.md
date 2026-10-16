@@ -174,3 +174,7 @@ terms) stays `AEAT`/Spanish per the Spanish-stem rule.
 ## Boundary amendment 2026-10-14
 
 Authorized by the user's explicit deletion/migration instruction. `aeat` remains the sole human tax/profile CLI, directly bound to `cadrumo`; it has no agent/provider/attendance verbs. Agent management belongs to `cadrumo_agent_service`; generic runtime/login/custody/session authority belongs to `cadrumo_runtime`, shared client contracts to `cadrumo_client`; MCP belongs to `cadrumo_harness` and retains `cadrumo-mcp`. Former Implementation wording put all application Python under `cadrumo`; that ownership premise is replaced without relaxing naming or no-shim constraints. Original dates, acceptance and reconfirmation above remain history.
+
+## Application identity amendment 2026-10-16
+
+Authorized by the user's explicit ruling that the application is named `Cadrumo`, capital C followed by lowercase. Every name the operating system shows for the native application uses `Cadrumo`: the distribution identity name projected into the build (window title, Tauri product name, installer and Start menu names, manager name such as `Cadrumo Background Services`), and the Windows version-resource descriptions of the packaged executables and the controlled interpreter (`dev/packaging/native/identity.py`, `native/package-layout.json`, `dev/packaging/native/platforms/windows.py`). `PRODUCT_IDENTITY.display_name` stays `CADRUMO` for the CLI, documentation site and locale identity tokens until a separate ruling extends this amendment. The other tuple elements are unchanged.

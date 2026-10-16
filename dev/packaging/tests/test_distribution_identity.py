@@ -55,8 +55,8 @@ def test_cmake_metadata_is_literal() -> None:
 @pytest.mark.parametrize(
     "channel,manager_id,manager_name",
     [
-        ("stable", "md.neve.cadrumo.manager", "CADRUMO Background Services"),
-        ("preview", "md.neve.cadrumo.preview.manager", "CADRUMO Preview Background Services"),
+        ("stable", "md.neve.cadrumo.manager", "Cadrumo Background Services"),
+        ("preview", "md.neve.cadrumo.preview.manager", "Cadrumo Preview Background Services"),
     ],
 )
 def test_runtime_manager_names_follow_the_channel_identity(channel: str, manager_id: str, manager_name: str) -> None:
@@ -72,5 +72,5 @@ def test_cmake_projection_carries_every_identity_field_once() -> None:
     projection = cmake_projection(identity("windows-x86-64", "preview"))
     keys = [line.split(" ", 1)[0].removeprefix("set(") for line in projection.splitlines()]
     assert keys == [f"CADRUMO_ID_{field.name.upper()}" for field in fields(DistributionIdentity)]
-    assert "set(CADRUMO_ID_NAME [=[CADRUMO Preview]=])" in projection
+    assert "set(CADRUMO_ID_NAME [=[Cadrumo Preview]=])" in projection
     assert "set(CADRUMO_ID_APPLICATION_ID [=[md.neve.cadrumo.preview]=])" in projection

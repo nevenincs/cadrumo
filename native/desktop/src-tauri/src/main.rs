@@ -57,6 +57,8 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
     };
     let parent = environment::Parent::current()?;
     if matches!(mode, Ok(launch::Mode::Gui)) {
+        #[cfg(windows)]
+        contain_application()?;
         return app::run(root, parent, diagnostics);
     }
     startup_logging::configure(&parent, &diagnostics);
@@ -91,6 +93,24 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             process::passthrough(&configuration, &forwarded, diagnostics, cancelled)
         }
     }
+}
+
+/// One kill-on-close job for the window and everything it starts: the runtime
+/// it hosts, session holders, the agent service, terminals and short calls. The
+/// handle lives until the process ends, so however the window ends, nothing it
+/// started outlives it. The installed manager is dispatched through Explorer and
+/// stays outside.
+#[cfg(windows)]
+fn contain_application() -> Result<()> {
+    static APPLICATION: std::sync::OnceLock<cadrumo_manager::process_job::ProcessJob> =
+        std::sync::OnceLock::new();
+    let job = cadrumo_manager::process_job::ProcessJob::new()
+        .and_then(|job| job.contain_current().map(|()| job))
+        .map_err(|cause| {
+            ApplicationError::new(ErrorCode::SpawnFailed, Operation::Launch).caused_by(cause)
+        })?;
+    let _ = APPLICATION.set(job);
+    Ok(())
 }
 
 async fn check_health(launch: &environment::Launch, hold_seconds: u64) -> Result<i32> {

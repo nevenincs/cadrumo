@@ -199,7 +199,7 @@ def resources(
         icon.save(output, format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
         write_bytes(destination / "cadrumo.ico", output.getvalue())
     numeric = ",".join([*version.split(".")[:3], str(number)])
-    descriptions = {"interpreter": "CADRUMO controlled Python interpreter"} | {
+    descriptions = {"interpreter": "Cadrumo controlled Python interpreter"} | {
         f"entrypoint-{name}": description for name, description in entrypoints.items()
     }
     for stem, description in descriptions.items():

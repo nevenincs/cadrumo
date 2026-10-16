@@ -37,15 +37,15 @@
     "ensurepip"
   ],
   "entrypoints": {
-    "aeat": "CADRUMO command line",
-    "cadrumo-mcp": "CADRUMO MCP server",
-    "cadrumo-runtime": "CADRUMO local runtime",
-    "cadrumo-agent-service": "CADRUMO agent service"
+    "aeat": "Cadrumo command line",
+    "cadrumo-mcp": "Cadrumo MCP server",
+    "cadrumo-runtime": "Cadrumo local runtime",
+    "cadrumo-agent-service": "Cadrumo agent service"
   },
   "bundled_images": {
     "cadrumo-agent": {
       "distribution": "cadrumo-agent",
-      "description": "CADRUMO agent"
+      "description": "Cadrumo agent"
     }
   },
   "user_docs": {
