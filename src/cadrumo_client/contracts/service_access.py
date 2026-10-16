@@ -52,6 +52,8 @@ class VerifiedServicePeer:
     image_digest: str
     connection_id: UUID
     runtime_boot_id: UUID
+    image_identity: str
+    """The hashed image file's device, file id, size and modification time."""
 
 
 class NativeServiceVerifier(Protocol):
@@ -61,6 +63,10 @@ class NativeServiceVerifier(Protocol):
         self, context: ConnectionContext, channel: ByteChannel, descriptor: InstalledServiceDescriptor
     ) -> VerifiedServicePeer | None:
         """Match a retained kernel peer to a trusted dedicated installed image."""
+        ...
+
+    def recheck_service(self, context: ConnectionContext, channel: ByteChannel, peer: VerifiedServicePeer) -> bool:
+        """Prove the connection still carries the exact process incarnation and image ``peer`` admitted."""
         ...
 
     def installed_parent_image_matches(self, image_path: str, descriptor_path: str, image_digest: str) -> bool:

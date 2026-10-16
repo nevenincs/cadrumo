@@ -208,3 +208,5 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > 4. Implementation owner for the Tauri host: no running session claims `native/desktop/src-tauri`.
 > 5. How the cadrumo-agent repository is provisioned into Cadrumo's build, given that it is never published to PyPI.
 > 6. Withdrawn: providers, lanes and model selection belong to cadrumo-agent, not to Cadrumo.
+
+Amended 2026-10-16 under `2026-10-16-idle-churn-adr`: the service no longer polls its connection for the issued lease. The runtime pushes a `service_lease_changed` cue to the service connection, and retirement still arrives as a session event. The service claims once per cue and keeps observed generations until a cue or its own write invalidates them.

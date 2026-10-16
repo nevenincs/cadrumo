@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-15'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:2271baed26730fa6084df81088b1a3241397efac5153521fc218eec74d4ff6fe'
+body_hash: 'sha256:314e603344ff1409040f153fd8864199619bde8258d721b3f61570933fa5d40f'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -298,3 +298,5 @@ Accepted under the user's requirement that a live profile must not time out whil
 Renewal extends existing live human roots of the same profile and originating login, preserving their identities and original issuance for descendant compatibility. Existing attended descendants retain their own bounded deadlines and may be freshly issued through their existing approval. API leases and grant windows are unchanged. The worker retains only the supplied or minted receipt-sealing key while human custody is live, reseals the existing receipt with current generation and exact identity checks, and wipes the key when human custody ends. Receipt persistence failure is reported separately from live in-memory authority.
 
 An uncertain OS observation refuses private work without treating uncertainty as positive logout or destroying otherwise live human leases. Frontends distinguish unavailable authority from actual expiry, clear private presentation when authority cannot be confirmed, and remain open for explicit recovery. Shutdown settles frontend clients before stopping their owned runtime. This acceptance records policy and repair authorization, not successful package verification.
+
+Amended 2026-10-16 under `2026-10-16-idle-churn-adr`, on the operator's ruling that every recurring check is driven by a signal. Frontends and services observe sign-in, leases, attendance and language through pushed invalidation cues followed by one re-read. They do not poll while idle. A lost connection is the fallback: the client reconnects and re-reads. The sentence "Polling remains as a fallback that never extends anything" now covers only reconnection and platforms without an OS notification source. Observation still never extends anything.

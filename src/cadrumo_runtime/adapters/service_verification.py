@@ -128,6 +128,17 @@ def _require_channel(channel: ByteChannel, identity: NativeProcessIdentity) -> N
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
 
 
+def _file_identity(status: os.stat_result) -> str:
+    return f"{status.st_dev}:{status.st_ino}:{status.st_size}:{status.st_mtime_ns}"
+
+
+def _running_image_identity(identity: NativeProcessIdentity) -> str:
+    """Identify the file the process executes now; Linux names it even after replacement or exec."""
+    if sys.platform == "linux":
+        return _file_identity(os.stat(Path("/proc") / str(identity.pid) / "exe"))
+    return _file_identity(Path(identity.image).stat())
+
+
 class InstalledNativeServiceVerifier:
     """Match dedicated package images and rechecked kernel ancestry."""
 
@@ -153,7 +164,8 @@ class InstalledNativeServiceVerifier:
                 if isinstance(payload, HostPathRefusal):
                     return None
                 digest = sha256_hex(payload)
-            if digest != descriptor.image_digest:
+                image_identity = _file_identity(opened.status())
+            if digest != descriptor.image_digest or _running_image_identity(identity) != image_identity:
                 return None
             if native_process_identity(identity.pid, context.peer.os_owner_id) != identity:
                 return None
@@ -167,9 +179,37 @@ class InstalledNativeServiceVerifier:
                 digest,
                 context.connection_id,
                 context.runtime_boot_id,
+                image_identity,
             )
         except (RefusalError, OSError, ValueError, IndexError):
             return None
+
+    def recheck_service(self, context: ConnectionContext, channel: ByteChannel, peer: VerifiedServicePeer) -> bool:
+        """Prove a later request comes from the incarnation admitted, without hashing the image again.
+
+        A process keeps executing the image it was verified against: the same
+        kernel incarnation on the same retained channel, still running the same
+        image file, is the evidence ``verify_service`` established.
+        """
+        try:
+            if (
+                context.peer != channel.peer
+                or context.peer.process_id != peer.process_id
+                or context.connection_id != peer.connection_id
+                or context.runtime_boot_id != peer.runtime_boot_id
+            ):
+                return False
+            identity = native_process_identity(peer.process_id, context.peer.os_owner_id)
+            if (
+                str(identity.born) != peer.process_incarnation
+                or str(Path(identity.image).resolve(strict=True)) != peer.image_path
+                or _running_image_identity(identity) != peer.image_identity
+            ):
+                return False
+            _require_channel(channel, identity)
+            return True
+        except (RefusalError, OSError, ValueError, IndexError):
+            return False
 
     def installed_parent_image_matches(self, image_path: str, descriptor_path: str, image_digest: str) -> bool:
         """Verify a desktop parent against its exact bounded package image."""

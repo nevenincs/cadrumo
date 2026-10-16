@@ -361,6 +361,10 @@ class ConfinedFile:
             return HostPathRefusal.UNREADABLE
         return HostPathRefusal.TOO_LARGE
 
+    def status(self) -> os.stat_result:
+        """Return the opened file's own status, never that of whatever its path names now."""
+        return os.fstat(self._descriptor)
+
 
 def _opened_file_refusal(descriptor: int, max_bytes: int) -> HostPathRefusal | None:
     """Decide the kind and size of the opened object from its own handle."""

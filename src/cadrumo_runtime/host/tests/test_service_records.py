@@ -88,7 +88,12 @@ class ControlledServiceVerifier:
             image_digest=descriptor.image_digest,
             connection_id=context.connection_id,
             runtime_boot_id=context.runtime_boot_id,
+            image_identity="explicitly-controlled-fixture-image",
         )
+
+    def recheck_service(self, context: ConnectionContext, channel: ByteChannel, peer: VerifiedServicePeer) -> bool:
+        assert context.peer == channel.peer
+        return context.connection_id in self.connections and context.connection_id == peer.connection_id
 
     def installed_parent_image_matches(self, image_path: str, descriptor_path: str, image_digest: str) -> bool:
         return False

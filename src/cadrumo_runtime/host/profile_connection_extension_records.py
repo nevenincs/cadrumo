@@ -66,7 +66,7 @@ class ProfileConnectionExtensionRecordsMixin:
                 status = self._status(connection, host, request.request_id, request.session_id)
                 if not isinstance(status, ProfileStatus) or status.status.denial is not None:
                     return self._extension_refused(context, request, channel, refusal)
-                if self._service_verifier.verify_service(context, channel, service.descriptor) != service.peer:
+                if not self._service_verifier.recheck_service(context, channel, service.peer):
                     return self._extension_refused(context, request, channel, refusal)
                 if action == "write":
                     write_document(
@@ -90,7 +90,7 @@ class ProfileConnectionExtensionRecordsMixin:
                     not isinstance(status, ProfileStatus)
                     or status.status.denial is not None
                     or service.lease != lease
-                    or self._service_verifier.verify_service(context, channel, service.descriptor) != service.peer
+                    or not self._service_verifier.recheck_service(context, channel, service.peer)
                 ):
                     return self._extension_refused(context, request, channel, refusal)
                 result, material = host.owner.extension_record(
