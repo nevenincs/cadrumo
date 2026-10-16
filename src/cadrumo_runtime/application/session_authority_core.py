@@ -8,6 +8,7 @@ Durable grants remain in the existing automation control store.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from uuid import UUID
@@ -30,10 +31,14 @@ from cadrumo.application.user_profile.automation_custody_port import (
 )
 from cadrumo.application.user_profile.automation_enrollment import AutomationKeyIssuer
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.session_policy import evaluate_session_authority, session_requires_grant
 
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
+
+_log = get_logger(__name__)
 
 
 class SessionAuthorityCore:
@@ -227,6 +232,19 @@ class SessionAuthorityCore:
                 kind = SessionRetirementKind.PROFILE_LOCKED
             elif reason is AccessDenialCode.CUSTODY_CHANGED:
                 kind = SessionRetirementKind.CUSTODY_CHANGED
+        if published:
+            # A frontend hears only that its session ended; the runtime log keeps why.
+            # A connection's own end is routine, every other retirement ends a person's access.
+            diagnostic_event(
+                _log,
+                "runtime_sessions_retired",
+                fields={
+                    "reason": reason.value,
+                    "retirement_kind": kind.value,
+                    "session_kinds": ",".join(sorted(session.kind.value for session in published)),
+                },
+                level=logging.DEBUG if reason is AccessDenialCode.SESSION_INACTIVE else logging.INFO,
+            )
         # Delivery is a nonblocking owner queue. Only actually published leases
         # emit; retries of failed physical cleanup never emit a second event.
         if self._retired is not None:
