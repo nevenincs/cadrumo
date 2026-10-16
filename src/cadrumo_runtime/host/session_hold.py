@@ -16,6 +16,7 @@ from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
@@ -203,6 +204,10 @@ async def _hold(
                     continue
                 if action == "service_admission":
                     current = client.status()
+                    if current.status.denial is AccessDenialCode.OS_SESSION_UNAVAILABLE:
+                        # An uncertain OS observation refuses this admission but keeps the held sign-in.
+                        _emit_refusal("unavailable", request_id)
+                        continue
                     if current.status.session_id is None or current.status.denial is not None:
                         _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
                         return 1
