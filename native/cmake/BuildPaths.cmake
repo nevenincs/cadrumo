@@ -9,11 +9,12 @@ cadrumo_require_enrolled_binary_directory(
 # Build output ownership. Helpers consume build-paths.json.
 set(CADRUMO_BUILD_DIRECTORIES
   GENERATED generated
-  RUNTIME _deps/runtime
-  PYTHON_SDK _deps/python-sdk
-  TOOLS _deps/build-tools
+  TEMPORARY temporary
+  RUNTIME inputs/runtime
+  PYTHON_SDK inputs/python-sdk
+  TOOLS inputs/build-tools
   PRODUCT product
-  AGENT _deps/agent
+  AGENT inputs/agent
   BIN bin
   LIB lib
   SYMBOLS symbols
@@ -48,7 +49,7 @@ while(CADRUMO_BUILD_DIRECTORIES)
   string(JSON build_paths SET "${build_paths}" paths "${name}" "\"${relative}\"")
 endwhile()
 set(cleanup_groups [=[{
-  "stage": ["stage", "verification", "testing"],
+  "stage": ["stage", "verification", "testing", "temporary"],
   "packages": ["packages"],
   "dependencies": ["runtime", "python_sdk", "tools", "product", "agent"],
   "native": ["bin", "lib", "symbols", "cargo"],

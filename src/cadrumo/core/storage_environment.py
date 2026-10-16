@@ -654,10 +654,6 @@ def child_environment(
 
 
 TOOL_STORAGE_LOCATIONS: Mapping[str, tuple[str, str]] = {
-    "UV_CACHE_DIR": ("CADRUMO_UV_CACHE_DIR", "development/cache/uv"),
-    "UV_PYTHON_INSTALL_DIR": ("CADRUMO_UV_PYTHON_DIR", "development/python"),
-    "UV_TOOL_DIR": ("CADRUMO_UV_TOOL_DIR", "development/tools/uv"),
-    "UV_TOOL_BIN_DIR": ("CADRUMO_UV_TOOL_BIN_DIR", "development/tools/bin"),
     "PIP_CACHE_DIR": ("CADRUMO_PIP_CACHE_DIR", "development/cache/pip"),
     "npm_config_cache": ("CADRUMO_NPM_CACHE_DIR", "development/cache/npm"),
     "CARGO_HOME": ("CADRUMO_CARGO_HOME", "development/cache/cargo"),

@@ -28,49 +28,12 @@ set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-CommandWithArgs", '
 storage_root_override := trim(env_var_or_default("CADRUMO_STORAGE_ROOT", ""))
 export CADRUMO_STORAGE_ROOT := if storage_root_override == "" { justfile_directory() / "var" / "storage" } else { storage_root_override }
 
-# Bootstrap exports bind tools before Python imports the shared resolver.
+# Resolve local storage before calculating the documentation build root.
 local_storage_root := trim(env_var_or_default("CADRUMO_LOCAL_STORAGE_ROOT", ""))
 resolved_storage_root := absolute_path(if local_storage_root == "" { CADRUMO_STORAGE_ROOT } else { local_storage_root })
 docs_build_root_override := trim(env_var_or_default("CADRUMO_DOCS_BUILD_ROOT", ""))
-export CADRUMO_DOCS_BUILD_ROOT := if docs_build_root_override == "" { resolved_storage_root / "development/build/docs" } else if docs_build_root_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { docs_build_root_override } else { resolved_storage_root / docs_build_root_override }
-uv_cache_dir_override := trim(env_var_or_default("CADRUMO_UV_CACHE_DIR", ""))
-export UV_CACHE_DIR := if uv_cache_dir_override == "" { resolved_storage_root / "development/cache/uv" } else if uv_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_cache_dir_override } else { resolved_storage_root / uv_cache_dir_override }
-uv_python_install_dir_override := trim(env_var_or_default("CADRUMO_UV_PYTHON_DIR", ""))
-export UV_PYTHON_INSTALL_DIR := if uv_python_install_dir_override == "" { resolved_storage_root / "development/python" } else if uv_python_install_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_python_install_dir_override } else { resolved_storage_root / uv_python_install_dir_override }
-uv_tool_dir_override := trim(env_var_or_default("CADRUMO_UV_TOOL_DIR", ""))
-export UV_TOOL_DIR := if uv_tool_dir_override == "" { resolved_storage_root / "development/tools/uv" } else if uv_tool_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_tool_dir_override } else { resolved_storage_root / uv_tool_dir_override }
-npm_config_cache_override := trim(env_var_or_default("CADRUMO_NPM_CACHE_DIR", ""))
-export npm_config_cache := if npm_config_cache_override == "" { resolved_storage_root / "development/cache/npm" } else if npm_config_cache_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { npm_config_cache_override } else { resolved_storage_root / npm_config_cache_override }
-cargo_target_dir_override := trim(env_var_or_default("CADRUMO_CARGO_TARGET_DIR", ""))
-export CARGO_TARGET_DIR := if cargo_target_dir_override == "" { resolved_storage_root / "development/build/cargo" } else if cargo_target_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { cargo_target_dir_override } else { resolved_storage_root / cargo_target_dir_override }
-pythonpycacheprefix_override := trim(env_var_or_default("CADRUMO_PYTHON_CACHE_DIR", ""))
-export PYTHONPYCACHEPREFIX := if pythonpycacheprefix_override == "" { resolved_storage_root / "development/cache/pycache" } else if pythonpycacheprefix_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { pythonpycacheprefix_override } else { resolved_storage_root / pythonpycacheprefix_override }
-xdg_cache_home_override := trim(env_var_or_default("CADRUMO_TOOL_CACHE_DIR", ""))
-export XDG_CACHE_HOME := if xdg_cache_home_override == "" { resolved_storage_root / "development/cache/tools" } else if xdg_cache_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_cache_home_override } else { resolved_storage_root / xdg_cache_home_override }
-
-uv_tool_bin_dir_override := trim(env_var_or_default("CADRUMO_UV_TOOL_BIN_DIR", ""))
-export UV_TOOL_BIN_DIR := if uv_tool_bin_dir_override == "" { resolved_storage_root / "development/tools/bin" } else if uv_tool_bin_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_tool_bin_dir_override } else { resolved_storage_root / uv_tool_bin_dir_override }
-pip_cache_dir_override := trim(env_var_or_default("CADRUMO_PIP_CACHE_DIR", ""))
-export PIP_CACHE_DIR := if pip_cache_dir_override == "" { resolved_storage_root / "development/cache/pip" } else if pip_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { pip_cache_dir_override } else { resolved_storage_root / pip_cache_dir_override }
-cargo_home_override := trim(env_var_or_default("CADRUMO_CARGO_HOME", ""))
-export CARGO_HOME := if cargo_home_override == "" { resolved_storage_root / "development/cache/cargo" } else if cargo_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { cargo_home_override } else { resolved_storage_root / cargo_home_override }
-
-xdg_config_home_override := trim(env_var_or_default("CADRUMO_TOOL_CONFIG_DIR", ""))
-export XDG_CONFIG_HOME := if xdg_config_home_override == "" { resolved_storage_root / "development/config/tools" } else if xdg_config_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_config_home_override } else { resolved_storage_root / xdg_config_home_override }
-xdg_data_home_override := trim(env_var_or_default("CADRUMO_TOOL_DATA_DIR", ""))
-export XDG_DATA_HOME := if xdg_data_home_override == "" { resolved_storage_root / "development/data/tools" } else if xdg_data_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_data_home_override } else { resolved_storage_root / xdg_data_home_override }
-xdg_state_home_override := trim(env_var_or_default("CADRUMO_TOOL_STATE_DIR", ""))
-export XDG_STATE_HOME := if xdg_state_home_override == "" { resolved_storage_root / "development/state/tools" } else if xdg_state_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_state_home_override } else { resolved_storage_root / xdg_state_home_override }
-ruff_cache_dir_override := trim(env_var_or_default("CADRUMO_RUFF_CACHE_DIR", ""))
-export RUFF_CACHE_DIR := if ruff_cache_dir_override == "" { resolved_storage_root / "development/cache/ruff" } else if ruff_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { ruff_cache_dir_override } else { resolved_storage_root / ruff_cache_dir_override }
-
-# Homebrew's mutable tool state uses the same canonical bootstrap bindings.
-homebrew_cache_override := trim(env_var_or_default("CADRUMO_HOMEBREW_CACHE_DIR", ""))
-export HOMEBREW_CACHE := if homebrew_cache_override == "" { resolved_storage_root / "development/cache/homebrew" } else if homebrew_cache_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_cache_override } else { resolved_storage_root / homebrew_cache_override }
-homebrew_logs_override := trim(env_var_or_default("CADRUMO_HOMEBREW_LOGS_DIR", ""))
-export HOMEBREW_LOGS := if homebrew_logs_override == "" { resolved_storage_root / "development/logs/homebrew" } else if homebrew_logs_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_logs_override } else { resolved_storage_root / homebrew_logs_override }
-homebrew_temp_override := trim(env_var_or_default("CADRUMO_HOMEBREW_TEMP_DIR", ""))
-export HOMEBREW_TEMP := if homebrew_temp_override == "" { resolved_storage_root / "tmp/homebrew" } else if homebrew_temp_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_temp_override } else { resolved_storage_root / homebrew_temp_override }
+export CADRUMO_DOCS_BUILD_ROOT := if docs_build_root_override == "" { justfile_directory() / "build" / "docs" } else if docs_build_root_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { docs_build_root_override } else { resolved_storage_root / docs_build_root_override }
+# Tool caches and installed tools retain the machine configuration.
 
 # Direct product commands use the same published generation as the developer
 # tooling. Blank overrides are unset, as they are in the product settings.
@@ -615,22 +578,10 @@ test-packaging-artifacts: test-installed-oracles test-packaging-serial test-pyth
 
 # ── Native build ─────────────────────────────────────────────────────────────
 
-# CMake owns the native build graph; these recipes own how it is entered. They
-# select the host's configure preset, so the binary directory is the one
-# `native/cmake/BinaryDirectory.cmake` admits, and they run CMake under this
-# file's exported tool locations, so bytecode, Cargo, npm and uv state land in
-# managed storage rather than beside the sources.
+# CMake owns the native build graph; these recipes enter it through the host's
+# configure preset, which confines generated build outputs to the declared
+# binary directory. External tools retain their machine-managed cache locations.
 #
-# The wheel step refuses a configuring interpreter that is not the exact patch
-# in `dev/packaging/release-python-version`, while the development `.venv`
-# follows only the minor in `.python-version`. The builder is therefore a
-# second locked environment. It is a member of the managed tool data location,
-# so it follows the storage root and `CADRUMO_TOOL_DATA_DIR` as every other
-# tool location does. CMake receives its interpreter as `CADRUMO_DEV_PYTHON`
-# with forward slashes, the form in which CMake stores a program it found.
-native_builder_environment := XDG_DATA_HOME / "native-builder"
-native_builder_python := replace(native_builder_environment, '\', '/') / if os_family() == "windows" { "Scripts/python.exe" } else { "bin/python" }
-
 # One configure preset per enrolled host. An unenrolled host leaves the
 # selection empty and is refused before anything is provisioned. Windows names
 # its build presets by configuration alone; every other host prefixes them with
@@ -639,37 +590,17 @@ native_host := os() + "-" + arch()
 native_preset := if native_host == "windows-x86_64" { "windows-x64" } else if native_host == "linux-x86_64" { "linux-x86-64" } else if native_host == "linux-aarch64" { "linux-aarch64" } else if native_host == "macos-aarch64" { "macos-arm64" } else { "" }
 native_build_preset_prefix := if os() == "windows" { "" } else { native_preset + "-" }
 
-# Converging is safe to repeat: a current environment is audited and left as it
-# is. The editable install skips authority resolution because the builder reads
-# the authority this checkout publishes. `build-native` republishes it whenever it is
-# missing or stale; `registry-publish-authority` recompiles it unconditionally.
-[doc('Create or converge the native release-builder Python environment at the pinned patch in managed storage; never touches .venv.')]
+# Validate the externally provisioned development tools through CMake.
+[doc('Validate existing native build tools; never creates a Python environment.')]
 [group('setup')]
-[unix]
-setup-native-builder:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export UV_PROJECT_ENVIRONMENT={{quote(native_builder_environment)}}
-    export CADRUMO_EDITABLE_AUTHORITY=skip
-    uv sync --locked --python "$(cat dev/packaging/release-python-version)"
-
-[doc('Create or converge the native release-builder Python environment at the pinned patch in managed storage; never touches .venv.')]
-[group('setup')]
-[windows]
-setup-native-builder:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $env:UV_PROJECT_ENVIRONMENT = {{quote(native_builder_environment)}}
-    $env:CADRUMO_EDITABLE_AUTHORITY = 'skip'
-    uv sync --locked --python (Get-Content -Raw dev/packaging/release-python-version).Trim()
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+setup-native-builder: (_native-configure "Release")
+    cmake --build --preset {{ if native_host == "windows-x86_64" { "release" } else { native_preset + "-release" } }} --target setup-native-builder
 
 [private]
 _native-selection CONFIGURATION:
     @{{ if native_preset == "" { error("No native configure preset is enrolled for host " + native_host) } else if CONFIGURATION =~ '^(Debug|Release)$' { "" } else { error("CONFIGURATION must be Release or Debug, not " + CONFIGURATION) } }}
 
-# CMake owns builder setup and authority publication. An explicitly selected
-# CADRUMO_DEV_PYTHON remains externally owned; fresh builds provision their builder.
+# CMake validates existing developer tools and owns authority publication.
 [private]
 _native-configure CONFIGURATION: (_native-selection CONFIGURATION)
     cmake --preset {{native_preset}}
@@ -678,7 +609,7 @@ _native-configure CONFIGURATION: (_native-selection CONFIGURATION)
 # target depends on: `verify` and `zip` build the bundle first, and
 # `verify-package` packages first. CONFIGURATION is `Release` or `Debug`; any
 # other value is refused before anything runs.
-[doc('Configure the host preset with the managed builder interpreter and build a native target, the bundle by default.')]
+[doc('Configure the host preset with the existing development interpreter and build a native target, the bundle by default.')]
 [group('build')]
 build-native CONFIGURATION="Release" TARGET="bundle": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target {{quote(TARGET)}}

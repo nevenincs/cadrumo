@@ -8,13 +8,13 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 import time
 from collections.abc import Mapping
 from contextlib import nullcontext
 from dataclasses import asdict
 from pathlib import Path
 
-from cadrumo.core.storage_environment import prepare_temporary_directory, tool_storage_environment
 from dev._paths import REPO_ROOT
 
 from ..authority_staging import selected_published_authority
@@ -34,6 +34,7 @@ from .layout import backend, load_layout
 from .process_quiescence import quiesce
 from .product import BUNDLED_EXTRAS, build_product
 from .provision import provision, provisioning_tools
+from .stable_output import write_text
 from .target import toolchain_for_target
 
 
@@ -186,7 +187,7 @@ def _announce(timings: BuildTimings | None, command: list[str]) -> None:
 
 
 def main() -> None:
-    """Run one CMake action with scoped development-tool storage."""
+    """Run one CMake action without changing machine-managed tool caches."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("sdk", "provision", "product", "assemble", "run", "tools", "agent"))
     parser.add_argument("--agent-source", type=Path)
@@ -203,11 +204,12 @@ def main() -> None:
     boundary = argv.index("--") if "--" in argv else len(argv)
     arguments = parser.parse_args(argv[:boundary])
     command = argv[boundary + 1 :]
-    environment = tool_storage_environment()
-    environment.update(dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(prepare_temporary_directory())))
-    for path in environment.values():
-        Path(path).mkdir(parents=True, exist_ok=True)
-    environment.update(item.split("=", 1) for item in arguments.env)
+    environment = dict(item.split("=", 1) for item in arguments.env)
+    if arguments.build is not None:
+        temporary = build_paths(arguments.build)["temporary"]
+        temporary.mkdir(exist_ok=True)
+        environment.update(dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(temporary)))
+        tempfile.tempdir = str(temporary)
     os.environ.update(environment)
     if arguments.action == "run":
         if not command:
@@ -331,6 +333,42 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
         timings.log.status(f"assembling the {arguments.config} payload")
         destination = build_action(build, arguments, timings=timings)
         (destination / "ready").write_text("complete\n", encoding="utf-8")
+
+
+def _sync_base_dependencies(source: Path, product: Path) -> None:
+    """Refresh only changed base wheels, retaining the separately owned product build."""
+    from .hashing import digest
+
+    destination = product / "dependencies"
+    receipt = product / "base-dependencies.json"
+    previous = json.loads(receipt.read_text(encoding="utf-8")) if receipt.is_file() else {}
+    members: dict[str, str] = {}
+    for member in sorted(source.rglob("*")):
+        if member.is_symlink() or member.is_junction():
+            raise ValueError("Base dependency closure contains a linked member")
+        if not member.is_file():
+            continue
+        relative = member.relative_to(source).as_posix()
+        identity = digest(member)
+        members[relative] = identity
+        target = destination / relative
+        for ancestor in (target, *target.parents):
+            if ancestor == product:
+                break
+            if ancestor.is_symlink() or ancestor.is_junction():
+                raise ValueError("Base dependency destination contains a linked member")
+        if not target.is_file() or digest(target) != identity:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(member, target)
+    for relative, identity in previous.items():
+        target = destination / relative
+        if not target.resolve().is_relative_to(destination.resolve()):
+            raise ValueError("Base dependency receipt escapes its owning directory")
+        if relative not in members and target.is_file():
+            if digest(target) != identity:
+                raise ValueError(f"Obsolete base dependency changed outside its producer: {relative}")
+            target.unlink()
+    write_text(receipt, json.dumps(members, sort_keys=True) + "\n")
 
 
 def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTimings | None = None) -> Path:

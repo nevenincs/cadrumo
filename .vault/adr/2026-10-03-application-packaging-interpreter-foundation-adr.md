@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-13'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:367b18bb3cf7f64ec6370c3c0ba0f35d771a4b8b6221488ca7c3b620de14d417'
+body_hash: 'sha256:b374e34966f340e5d4f428b6a6cf313bc3f5a0118132bff198cfb006f63c88f3'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -102,3 +102,7 @@ The later accepted application-distribution ADR authorizes native installer defi
 ## 2026-10-04 runtime manager extension
 
 The accepted `2026-10-04-runtime-manager-architecture-adr` authorizes the per-user runtime manager (`cadrumo-manager`) on top of this foundation's platform crate. It extends this foundation's runtime-manager exclusion only. Roots and child environments still come from `native/platform`, and the interpreter, storage and loader contracts are unchanged.
+
+## 2026-10-16 externally managed builder amendment
+
+The user's explicit no-environment/no-local-cache instruction, recorded in 2026-10-16-native-build-incremental-adr, supersedes build-local environment provisioning. CMake selects and validates an existing developer interpreter with the release runtime's major/minor and at least its pinned patch; the packaged runtime and SDK retain their exact pin. It never synchronizes dependencies or creates a virtual environment. Machine uv configuration remains authoritative. Build-owned dependency outputs move from `_deps` to `inputs` within the same enrolled binary directory; final application paths stay unchanged. Build actions do not write to repository `var`. This is a development-build exception only and changes no installed runtime storage policy.

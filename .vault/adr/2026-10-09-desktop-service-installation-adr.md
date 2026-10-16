@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-service-installation'
 date: '2026-10-09'
-modified: '2026-10-13'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:b915c104db3b5954c8bcbcd7e6c235599e151e7ba4a3f1f7759f06c0ccf19192'
+body_hash: 'sha256:b125c6bb7cb1d7cdc4f2272c1a7779baff7870d87cad0e59d77d6c8faa279855'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-07-application-distribution-windows-versioned-msi-adr]]"
@@ -58,3 +58,7 @@ This implements the operator's 2026-10-09 instruction using existing package and
 ## Consequences
 
 Launching an unregistered distribution can establish login startup and start its manager. Delivery adds a companion kit; missing/damaged kits produce explicit installation refusal. Actual login registration acceptance requires a disposable interactive Windows host. This decision does not establish that acceptance.
+
+## 2026-10-16 single-MSI delivery amendment
+
+The user-authorized 2026-10-16-native-build-incremental-adr and Windows ownership amendment replace the two-MSI/four-artifact kit topology with one scope-aware MSI and its authenticated native runner. Version and shared-registration ownership remain independently represented and observed as MSI features. This supersedes physical-artifact-count wording above; desktop scope admission, payload/runner authentication, optional installation, committed publication and independent disposable-host acceptance remain unchanged.

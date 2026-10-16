@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-07'
-modified: '2026-10-12'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:6196808693551147b516d1a36b85cc0f64cb424a7bf380010410d93a606211ca'
+body_hash: 'sha256:147b3e4cb20e90c98169be1d1d03c2ace153308fa1f7b47e95a72a5b0cce58c1'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -100,3 +100,9 @@ Separating immutable version ownership from shared registration lets Windows Ins
 ## Consequences
 
 The Windows installer becomes a composed delivery rather than one combined product. Disk use increases while anchor or in-use versions are retained. Transaction publication and safe maintenance require shared catalogue integration and new native acceptance evidence. The existing accepted ADRs need no wording change or supersession. Linux/RPM/DEB and macOS ownership remain separate platform-specific ownership and acceptance gates; this Windows proposal establishes none of their acceptance. Approval authorizes this ownership design, not public distribution, tool-term acceptance, deployment or profile migration.
+
+## 2026-10-16 single-compilation ownership amendment
+
+The user's explicit requirement that the build compile only one MSI is accepted in 2026-10-16-native-build-incremental-adr. That successor supersedes only this record's physical separation into version/registration products and separate user/machine packages (constraints 2-5 and the corresponding implementation, transaction, companion-kit and consequences wording). One scope-aware MSI per release represents VersionFiles and SharedRegistration through independently authenticated, feature-qualified native ownership. The earlier discussion rejected combined products with undifferentiated lifetime; it does not authorize weakening the new role-qualified observation requirement.
+
+All scope isolation, immutable version inventory, independent registration lifetime and anchors, candidate-before-registration verification, committed transaction publication, protected callbacks, deferred in-use removal, rollback and native acceptance requirements remain binding. A product-presence check cannot substitute for observing the exact owned feature. Legacy product ownership is not silently converted. The desktop kit binds one MSI and the native runner instead of four compiled artifacts. This amendment records authorization, not completed implementation or disposable-host acceptance.

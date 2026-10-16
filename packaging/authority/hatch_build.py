@@ -306,10 +306,9 @@ class CustomBuildHook(_CustomBuildHookBase):
             sys.path[:0] = (str(build_root), str(build_root / "src"))
             from dev.packaging.google_oauth import build_client_json, stage_build_client
 
-            from cadrumo.core.storage_environment import prepare_temporary_directory
 
             client = build_client_json(build_root)
-            stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-", dir=prepare_temporary_directory())
+            stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-")
             stage_root = Path(stage.name)
             staged = stage_build_client(stage_root, client)
             for directory in staged.relative_to(stage_root).parents:
