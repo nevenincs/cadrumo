@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:eeea679508c56f75b281fafaca38dbb2f467ce6c85d9154f5753c6b162026ba4'
+body_hash: 'sha256:adabdcd46ae097ce2e1f3a729c4c8be6207910f2b11423b2a50d6bfd67b8802f'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -291,6 +291,9 @@ related:
 - `S20` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S20` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
 - `S20` `verify:` `rustfmt --edition 2024 (stdin) supervisor.rs supervision.rs fixture/runtime.rs` -> `pass`
+- `S20` `verify:` `check_manager_lifecycle (clippy -D warnings, build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `ctest manager.rust (build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `ctest manager.supervision incl. both new idle heartbeat tests (build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
 
 ## Notes
 
