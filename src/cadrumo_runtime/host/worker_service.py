@@ -426,6 +426,7 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
         request = (await _worker_requests.receive(context.channel, context.failed, control=True)).root
         if context.failed.is_set():
             raise RefusalError(RefusalCode.UNAVAILABLE)
+        observed = False
         try:
             _record_control_dispatch_started(request)
             dispatch_started = time.monotonic()
@@ -450,6 +451,9 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
                     in_flight_operations=context.operations.in_flight_operation_count(),
                 )
                 write_document(context.channel, result, deadline=time.monotonic() + 5)
+                # The supervisor's heartbeat asks this every few seconds. Answering it adds and
+                # moves no deadline, so expiry keeps sleeping until the one it already waits for.
+                observed = isinstance(request, ProfileWorkerControlRequest) and request.action == "status"
         except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
             if context.failed.is_set():
                 raise
@@ -464,8 +468,9 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
                 deadline=time.monotonic() + 5,
             )
         finally:
-            # Any handled command may have installed, refreshed or retired a lease or a login.
-            context.changed.set()
+            # Any other handled command may have installed, refreshed or retired a lease or a login.
+            if not observed:
+                context.changed.set()
 
 
 async def _collect_task_failures(

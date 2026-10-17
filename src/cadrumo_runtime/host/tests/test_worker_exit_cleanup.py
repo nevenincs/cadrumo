@@ -489,6 +489,48 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     assert "session_id" not in slow.__dict__ and str(session_id) not in repr(slow.__dict__)
 
 
+def test_a_status_request_is_answered_without_waking_idle_custody_expiry(monkeypatch: pytest.MonkeyPatch) -> None:
+    request = ProfileWorkerRequest(root=ProfileWorkerControlRequest(action="status", request_id=uuid4()))
+    output: list[bytes] = []
+
+    class Operations:
+        def in_flight_operation_count(self) -> int:
+            return 2
+
+    class Channel:
+        def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+            assert deadline > 0
+            output.append(bytes(payload))
+
+    context = worker_service._WorkerControl(
+        channel=cast(WorkerChannel, Channel()),
+        custody=cast(ProfileWorkerCustody, _ServeCustody()),
+        human=cast(ProfileWorkerHumanLogin, _IdleHuman()),
+        operations=cast(ProfileWorkerOperationHost, Operations()),
+        uploads=cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
+        failed=asyncio.Event(),
+        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        changed=asyncio.Event(),
+    )
+    receive_calls = 0
+
+    async def receive(*_arguments: object, **_keywords: object) -> ProfileWorkerRequest:
+        nonlocal receive_calls
+        receive_calls += 1
+        if receive_calls == 1:
+            return request
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+
+    with pytest.raises(RefusalError):
+        asyncio.run(worker_service._serve_control_requests(context))
+
+    assert b'"in_flight_operations":2' in b"".join(output), "the status was not answered"
+    assert not context.changed.is_set(), "a heartbeat's status read woke idle custody expiry"
+
+
 def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:
     """A storage-bound custody check must permit concurrent IPC task progress."""
 
