@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:2396738366df0cc5f2e3184ad1dc43b1a4a34396cf8062babfb63aaf7afadd7e'
+body_hash: 'sha256:d568e0c6d0932ff9222066fed853454efb68ae664dcdb7f761afbf99b05553ba'
 ---
 
 # `idle-churn` plan
@@ -50,7 +50,7 @@ S20 was added on 2026-10-17 when the operator ruled on the ping, accepting the r
 - [x] `S17` - Wait in the TUI's Windows input loop for console input or stop, with a deadline only while an escape sequence is pending; `src/cadrumo/entrypoints/tui/windows_input.py`.
 - [x] `S18` - Move the TUI's remaining interval checks to the deadlines and events they already know: the recovery-code handoff, the API-key status and the automation screen lifetimes; `src/cadrumo/entrypoints/tui/secret/registration.py`.
 - [x] `S19` - Answer the supervisor heartbeat's in-flight count with a worker activity read that revalidates no custody; `src/cadrumo_runtime/host/session_owner.py`.
-- [ ] `S20` - Ping a runtime that reports no work in flight every 60 s instead of every 5 s, moving its hang bound with the later ping; `native/manager/src/supervision/supervisor.rs`.
+- [x] `S20` - Ping a runtime that reports no work in flight every 60 s instead of every 5 s, moving its hang bound with the later ping; `native/manager/src/supervision/supervisor.rs`.
 
 ## Parallelization
 
