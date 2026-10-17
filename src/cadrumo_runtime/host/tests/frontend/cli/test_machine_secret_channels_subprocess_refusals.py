@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Literal
 
@@ -35,7 +35,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(autouse=True)
-def _cleanup_keychain(tmp_path: Path) -> None:
+def _cleanup_keychain(tmp_path: Path) -> Iterator[None]:
+    # A refusal that regressed into a login would mint a key in the real OS credential store.
+    yield
     cleanup_keychain(tmp_path)
 
 

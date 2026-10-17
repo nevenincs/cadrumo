@@ -528,6 +528,11 @@ async def run(package: Path, scratch: Path) -> Receipt:
             require(closed.get("kind") == "session_closed", "runtime did not acknowledge held-session closure")
         finally:
             await holder.close()
+        # A passing run removes the disposable root, and a stored sign-in left in it would
+        # orphan its key in the OS credential store.
+        code, envelope = run_cli(programs, environment, "config", "logout")
+        require(code == 0, f"logout: {code} {envelope}")
+        receipt.record("signed_out")
         stopped = runtime.stop()
         require(stopped == 64, f"runtime exit: {stopped}")
         receipt.record("runtime_stopped", exit_code=stopped)

@@ -23,6 +23,7 @@ import json
 import subprocess
 import sys
 import sysconfig
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
@@ -30,6 +31,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
@@ -51,6 +53,15 @@ from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixtu
 from .fresh_process import run_fresh_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _reap_session_keys(tmp_path: Path) -> Iterator[None]:
+    # These tests root their storage at ``tmp_path`` and a login there mints its key in the
+    # real OS credential store, which outlives the discarded root unless it is reaped.
+    yield
+    reap_profile_session_keys(tmp_path)
+
 
 # The two ways a host cannot custody a session key: no usable backend at all,
 # and a backend that passes the usability probe and then refuses every call

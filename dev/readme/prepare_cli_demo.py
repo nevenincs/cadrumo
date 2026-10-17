@@ -10,6 +10,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
+from cadrumo.adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from cadrumo.application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
 from cadrumo.application.aggregation.withholding_recognition import (
@@ -50,6 +51,8 @@ def _reset_demo_root() -> None:
     if is_link_like(DEMO_ROOT):
         raise RuntimeError(f"refusing to clean symlinked demo root: {DEMO_ROOT}")
     if DEMO_ROOT.exists():
+        # The last demo signed in, and its key in the OS credential store would outlive the root.
+        reap_profile_session_keys(resolved_demo)
         shutil.rmtree(resolved_demo)
     DEMO_ROOT.mkdir(parents=True)
 

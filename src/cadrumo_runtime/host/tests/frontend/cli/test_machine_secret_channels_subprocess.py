@@ -64,7 +64,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(autouse=True)
-def _cleanup_keychain(tmp_path: Path) -> None:
+def _cleanup_keychain(tmp_path: Path) -> Iterator[None]:
+    # A login here mints its key in the real OS credential store, which outlives the
+    # discarded root unless it is reaped once the test has run.
+    yield
     cleanup_keychain(tmp_path)
 
 
