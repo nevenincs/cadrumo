@@ -186,6 +186,8 @@ struct WindowState {
     /// Signaled when a version discovery query finishes.
     wake: Arc<Event>,
     stop: Option<BorrowedHandle<'static>>,
+    /// Tells an observing desktop when the status this manager serves changes.
+    status_record: Option<crate::session::status_cue::StatusPublisher>,
 }
 impl WindowState {
     fn readiness<'a>(&'a self, into: &mut Readiness<'a>) {
@@ -405,6 +407,9 @@ unsafe fn tick(window: Handle, state: &mut WindowState) {
         if let Some(tray) = &mut state.tray {
             let _ = tray.update(state.background.status());
         }
+        if let Some(record) = &mut state.status_record {
+            record.publish(state.background.status());
+        }
         if let Some(upgrades) = &mut state.upgrades {
             match upgrades.poll(&mut *state.background, &mut state.session, &mut state.ipc) {
                 Ok(true) => {
@@ -474,7 +479,13 @@ fn run_window(
     if let Some(upgrades) = &upgrades {
         upgrades.notify_with(wake.notifier());
     }
+    // Only a manager that serves its status publishes changes to it.
+    let status_record = ipc.as_ref().and(background.root()).and_then(|root| {
+        let session = crate::session::ManagerSession::current().ok()?;
+        crate::session::status_cue::StatusPublisher::new(root, &session.session).ok()
+    });
     let mut state = Box::new(WindowState {
+        status_record,
         background,
         ipc,
         failed: false,

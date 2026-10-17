@@ -2,10 +2,16 @@
 
 use crate::{
     background::Background,
+    change_watch::ChangeWatch,
     identity,
     installed::InstalledRuntime,
     ipc::{self, Outcome, Request},
-    session::{ManagerSession, instance::claim_session, ownership::StartKind},
+    session::{
+        ManagerSession,
+        instance::{SessionRelease, claim_session},
+        ownership::StartKind,
+        status_cue::{StatusPublisher, owner_publishes, status_cue_directory},
+    },
     supervision::environment::ManagedLocations,
     wake::{
         Notify, NotifyOnDrop, Slot,
@@ -34,8 +40,8 @@ use std::{
 const CLOSE_BOUND: Duration = Duration::from_secs(35);
 // Back-off before re-admitting after a transient host fault.
 const RESTART_DELAY: Duration = Duration::from_secs(1);
-// Pacing: another manager owns the runtime and publishes no change notification,
-// so its status, and the release of its session claim, are observed at this interval.
+// Pacing: another manager owns the runtime but publishes no status record, as an
+// older manager does, so its status is observed at this interval.
 const EXTERNAL_PACE: Duration = Duration::from_secs(1);
 // Pacing: a full supervisor input queue publishes no notification when it drains.
 const CLOSE_RETRY: Duration = Duration::from_millis(100);
@@ -54,7 +60,27 @@ struct Inbox {
 struct Owner {
     background: Background,
     server: ipc::windows::Server,
+    /// Tells another observing desktop when this owner's status changes.
+    status_record: Option<StatusPublisher>,
     _claim: crate::session::instance::SessionLock,
+}
+
+/// What wakes a desktop observing another manager: a rewrite of that manager's
+/// status record, and the release of its session lock.
+struct ExternalOwner {
+    changes: ChangeWatch,
+    release: Option<SessionRelease>,
+}
+
+impl ExternalOwner {
+    fn watch(manager_id: &str, storage_root: &Path) -> Self {
+        let mut changes = ChangeWatch::default();
+        changes.directory(status_cue_directory(storage_root), false);
+        Self {
+            changes,
+            release: SessionRelease::watch(manager_id).ok(),
+        }
+    }
 }
 
 /// The worker's latest outcome; every change, and the worker's end, is notified.
@@ -301,7 +327,12 @@ fn run(
     let mut closing = false;
     let mut close_refused = false;
     let mut terminal_error = None;
-    let mut next_external = Instant::now();
+    let storage_root = installed.target.storage_root().to_path_buf();
+    let session = ManagerSession::current()?.session;
+    let mut external: Option<ExternalOwner> = None;
+    // Due at once when another owner is first found; afterwards only when it
+    // publishes no status record or its lock cannot be watched.
+    let mut next_external = Some(Instant::now());
     loop {
         closing |= closed.load(Ordering::Acquire);
         let mut retry = false;
@@ -312,7 +343,10 @@ fn run(
             }
         }
         if let Some(Owner {
-            background, server, ..
+            background,
+            server,
+            status_record,
+            ..
         }) = &mut owner
         {
             let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -328,6 +362,9 @@ fn run(
                     background.retry()?;
                 }
                 background.poll()?;
+                if let Some(record) = status_record {
+                    record.publish(background.status());
+                }
                 if !closing {
                     server.poll(|request| match request {
                         Request::Status { .. } => ipc::status(background.status()),
@@ -353,8 +390,14 @@ fn run(
         } else if closing {
             // An externally owned manager and runtime are never stopped by this host.
             return Ok(());
-        } else if !retry && Instant::now() < next_external {
-            // Woken before the paced observation of the external owner is due.
+        } else if !external_due(
+            &mut external,
+            &manager_id,
+            &storage_root,
+            retry,
+            next_external,
+        ) {
+            // Woken by nothing that concerns the external owner.
         } else if let Some(claim) = claim_session(&manager_id, Duration::ZERO)? {
             diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
             let server =
@@ -367,9 +410,11 @@ fn run(
                 StartKind::Manual,
             )?;
             diagnostics.host_event(EventKind::StageCompleted, HostStage::Admission);
+            external = None;
             owner = Some(Owner {
                 background,
                 server,
+                status_record: StatusPublisher::new(&storage_root, &session).ok(),
                 _claim: claim,
             });
         } else {
@@ -389,7 +434,11 @@ fn run(
                     },
                 );
             state.set(response.map_or(Outcome::Waiting, |reply| reply.outcome));
-            next_external = Instant::now() + EXTERNAL_PACE;
+            let signalled = external
+                .as_ref()
+                .is_some_and(|watch| watch.release.is_some())
+                && owner_publishes(&storage_root, &session);
+            next_external = (!signalled).then(|| Instant::now() + EXTERNAL_PACE);
         }
         let mut readiness = Readiness::default();
         readiness.handle(inbox.wake.as_handle());
@@ -407,10 +456,36 @@ fn run(
                     readiness.after(CLOSE_RETRY);
                 }
             }
-            None => readiness.at(next_external),
+            None => {
+                if let Some(watch) = &external {
+                    watch.changes.readiness(&mut readiness);
+                    if let Some(release) = &watch.release {
+                        readiness.handle(release.handle());
+                    }
+                }
+                if let Some(at) = next_external {
+                    readiness.at(at);
+                }
+            }
         }
         readiness.wait()?;
     }
+}
+
+/// Whether another owner needs observing now: asked to retry, its lock was
+/// released, its status record changed, or its paced observation is due.
+fn external_due(
+    external: &mut Option<ExternalOwner>,
+    manager_id: &str,
+    storage_root: &Path,
+    retry: bool,
+    next_external: Option<Instant>,
+) -> bool {
+    let watch = external.get_or_insert_with(|| ExternalOwner::watch(manager_id, storage_root));
+    // Both are taken every pass, so neither leaves a signaled handle behind.
+    let released = watch.release.as_ref().is_some_and(SessionRelease::take);
+    let changed = watch.changes.take();
+    retry || released || changed || next_external.is_some_and(|at| Instant::now() >= at)
 }
 
 #[cfg(test)]
@@ -504,6 +579,112 @@ mod tests {
                 .unwrap()
                 .is_some()
         );
+    }
+
+    /// Wait as the host does for an external owner, bounded by `bound`, then
+    /// answer whether that owner needs observing.
+    fn woken_for_external(
+        external: &mut Option<ExternalOwner>,
+        manager_id: &str,
+        root: &Path,
+        bound: Duration,
+    ) -> bool {
+        if let Some(watch) = external.as_ref() {
+            let mut readiness = Readiness::default();
+            watch.changes.readiness(&mut readiness);
+            if let Some(release) = &watch.release {
+                readiness.handle(release.handle());
+            }
+            readiness.after(bound);
+            readiness.wait().unwrap();
+        }
+        external_due(external, manager_id, root, false, None)
+    }
+
+    #[test]
+    fn another_owners_status_change_and_release_each_wake_the_observer_and_nothing_else_does() {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let manager_id = format!("test.desktop.external.{}.{nanos}", std::process::id());
+        let root =
+            std::env::temp_dir().join(format!("desktop-external-{}-{nanos}", std::process::id()));
+        crate::custody::ensure_local_directory(&root).unwrap();
+        let session = ManagerSession::current().unwrap().session;
+        let (claimed, ready) = mpsc::channel();
+        let (step, steps) = mpsc::channel::<&'static str>();
+        let owner_id = manager_id.clone();
+        let owner_root = root.clone();
+        let owner_session = session.clone();
+        // Another manager: holds the session lock and publishes its status.
+        let other = thread::spawn(move || {
+            let _claim = claim_session(&owner_id, Duration::ZERO).unwrap().unwrap();
+            let mut record = StatusPublisher::new(&owner_root, &owner_session).unwrap();
+            record.publish("starting");
+            claimed.send(()).unwrap();
+            while let Ok(status) = steps.recv() {
+                if status == "release" {
+                    return;
+                }
+                record.publish(status);
+            }
+        });
+        ready.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert!(owner_publishes(&root, &session));
+        let mut external = None;
+        // Finding the owner arms the watches; nothing has happened since.
+        assert!(!external_due(
+            &mut external,
+            &manager_id,
+            &root,
+            false,
+            None
+        ));
+        assert!(external.as_ref().unwrap().release.is_some());
+        let started = Instant::now();
+        assert!(!woken_for_external(
+            &mut external,
+            &manager_id,
+            &root,
+            Duration::from_millis(400)
+        ));
+        assert!(started.elapsed() >= Duration::from_millis(350));
+        step.send("running").unwrap();
+        assert!(woken_for_external(
+            &mut external,
+            &manager_id,
+            &root,
+            Duration::from_secs(5)
+        ));
+        while woken_for_external(
+            &mut external,
+            &manager_id,
+            &root,
+            Duration::from_millis(200),
+        ) {}
+        assert!(
+            claim_session(&manager_id, Duration::ZERO)
+                .unwrap()
+                .is_none(),
+            "the observer holds no acquisition of a held lock"
+        );
+        step.send("release").unwrap();
+        other.join().unwrap();
+        assert!(woken_for_external(
+            &mut external,
+            &manager_id,
+            &root,
+            Duration::from_secs(5)
+        ));
+        // The observer gave its acquisition back, so its claim decides the takeover.
+        drop(external);
+        assert!(
+            claim_session(&manager_id, Duration::ZERO)
+                .unwrap()
+                .is_some()
+        );
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

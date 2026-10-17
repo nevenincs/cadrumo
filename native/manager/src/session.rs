@@ -10,6 +10,8 @@ pub mod claim;
 pub mod instance;
 pub mod ownership;
 pub mod quit;
+#[cfg(windows)]
+pub mod status_cue;
 
 #[cfg(target_os = "linux")]
 mod linux;

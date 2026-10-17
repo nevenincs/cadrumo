@@ -244,6 +244,57 @@ fn owner_only(sid: &str) -> io::Result<LocalMemory> {
     Ok(LocalMemory(descriptor))
 }
 
+/// An open, unowned handle to the per-session mutex, for a wait that ends when
+/// its holder releases it or ends.
+///
+/// A wait that ends on this handle acquires the mutex for the waiting thread;
+/// [`ReleaseWatch::take`] gives every such acquisition back before the waiter
+/// claims the lock through [`claim`], which another manager may win first.
+pub(crate) struct ReleaseWatch {
+    mutex: OwnedHandle,
+    _thread: PhantomData<*const ()>,
+}
+
+impl ReleaseWatch {
+    pub(crate) fn handle(&self) -> std::os::windows::io::BorrowedHandle<'_> {
+        use std::os::windows::io::AsHandle;
+        self.mutex.as_handle()
+    }
+
+    /// Whether a wait acquired the mutex since the last call; every acquisition is released.
+    pub(crate) fn take(&self) -> bool {
+        let mut released = false;
+        // SAFETY: the handle is open; a release fails once this thread holds no acquisition.
+        while unsafe { ReleaseMutex(raw(&self.mutex)) } != 0 {
+            released = true;
+        }
+        released
+    }
+}
+
+/// Open the mutex called `name` for `user` without waiting on or claiming it.
+pub(crate) fn watch_release(name: &str, user: &User) -> io::Result<ReleaseWatch> {
+    let descriptor = owner_only(&user.sid)?;
+    let attributes = SecurityAttributes {
+        length: u32::try_from(size_of::<SecurityAttributes>()).map_err(io::Error::other)?,
+        descriptor: descriptor.0,
+        inherit: 0,
+    };
+    let text = wide(name);
+    // SAFETY: as in `claim`; an existing mutex is opened and none is acquired.
+    let mutex = owned(unsafe { CreateMutexW(&attributes, 0, text.as_ptr()) })?;
+    if !user.owns(&mutex)? {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "another account owns the session lock",
+        ));
+    }
+    Ok(ReleaseWatch {
+        mutex,
+        _thread: PhantomData,
+    })
+}
+
 /// The per-session mutex, held by the thread that claimed it.
 pub(crate) struct SessionMutex {
     mutex: OwnedHandle,

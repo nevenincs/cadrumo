@@ -90,6 +90,31 @@ fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<Ses
     Ok(super::windows::claim(&name, &user, patience)?.map(|mutex| SessionLock { _mutex: mutex }))
 }
 
+/// A wait handle that ends when this session's holder of `manager_id`'s lock
+/// releases it or ends, so a waiting manager claims it again only then.
+#[cfg(windows)]
+pub struct SessionRelease(super::windows::ReleaseWatch);
+
+#[cfg(windows)]
+impl SessionRelease {
+    pub fn watch(manager_id: &str) -> io::Result<Self> {
+        let current = super::ManagerSession::current()?;
+        let user = super::windows::User::current()?;
+        let name = session_lock_name(manager_id, &user.sid, &current.session)?;
+        super::windows::watch_release(&name, &user).map(Self)
+    }
+
+    /// Wait on this beside the loop's other handles.
+    pub fn handle(&self) -> std::os::windows::io::BorrowedHandle<'_> {
+        self.0.handle()
+    }
+
+    /// Whether the lock was released since the last call; claim it after a true answer.
+    pub fn take(&self) -> bool {
+        self.0.take()
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn claim_platform(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
     let current = super::ManagerSession::current()?;
