@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from time import monotonic
 from typing import ClassVar, override
@@ -261,59 +260,66 @@ class GoogleSavedReviewScreen(Screen[None]):
             return False
         deadline = monotonic() + 20
         rejection_sent = False
-        while True:
-            self._require_session()
-            observed = await controller.observe(0, page_limit=1)
-            if not isinstance(observed, OperationObservationSuccessV1):
-                raise RefusalError(RefusalCode.INVALID_FRAME)
-            projection = observed.projection
-            if (
-                projection.operation_id != controller.operation_id
-                or projection.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
-                or projection.subject_ref != profile_operation_subject(str(self._profile_id))
-                or projection.effect is not OperationEffect.NONE
-            ):
-                raise RefusalError(RefusalCode.INVALID_FRAME)
-            if projection.lifecycle is OperationLifecycle.TERMINAL:
-                if rejection_sent and projection.terminal_condition is not OperationTerminalCondition.REFUSED:
+        with controller.operation_changes() as changes:
+            while True:
+                self._require_session()
+                if changes.armed:
+                    changes.arm()
+                observed = await controller.observe(0, page_limit=1)
+                if not isinstance(observed, OperationObservationSuccessV1):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
-                return rejection_sent
-            pending = projection.pending_interaction
-            if not rejection_sent and isinstance(pending, OperationReviewAvailableInteractionV1):
-                if pending.response_schema != GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity:
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                control = await controller.response_control(
-                    interaction_id=pending.interaction_id, revision=pending.revision
-                )
-                allowed = await control.inspect()
+                projection = observed.projection
                 if (
-                    not isinstance(allowed, OperationResponseControlSuccessV1)
-                    or "reject" not in allowed.permitted_intents
-                    or (allowed.operation_id, allowed.interaction_id, allowed.revision)
-                    != (controller.operation_id, pending.interaction_id, pending.revision)
+                    projection.operation_id != controller.operation_id
+                    or projection.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
+                    or projection.subject_ref != profile_operation_subject(str(self._profile_id))
+                    or projection.effect is not OperationEffect.NONE
                 ):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
-                self._require_session()
-                rejected = await control.reject(
-                    OperationResponseRejectRequestV1(
-                        operation_id=controller.operation_id,
-                        interaction_id=pending.interaction_id,
-                        revision=pending.revision,
-                        actor_ref=controller.actor_ref,
-                        responded_at=now(),
+                if projection.lifecycle is OperationLifecycle.TERMINAL:
+                    if rejection_sent and projection.terminal_condition is not OperationTerminalCondition.REFUSED:
+                        raise RefusalError(RefusalCode.INVALID_FRAME)
+                    return rejection_sent
+                pending = projection.pending_interaction
+                if not rejection_sent and isinstance(pending, OperationReviewAvailableInteractionV1):
+                    if pending.response_schema != GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity:
+                        raise RefusalError(RefusalCode.INVALID_FRAME)
+                    control = await controller.response_control(
+                        interaction_id=pending.interaction_id, revision=pending.revision
                     )
-                )
-                if not isinstance(rejected, OperationResponseMutationSuccessV1) or (
-                    rejected.operation_id,
-                    rejected.interaction_id,
-                    rejected.response_action,
-                ) != (controller.operation_id, pending.interaction_id, "reject"):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                rejection_sent = True
-                continue
-            if monotonic() >= deadline:
-                raise TimeoutError("the original prepublication review did not become rejectable")
-            await asyncio.sleep(0.1)
+                    allowed = await control.inspect()
+                    if (
+                        not isinstance(allowed, OperationResponseControlSuccessV1)
+                        or "reject" not in allowed.permitted_intents
+                        or (allowed.operation_id, allowed.interaction_id, allowed.revision)
+                        != (controller.operation_id, pending.interaction_id, pending.revision)
+                    ):
+                        raise RefusalError(RefusalCode.INVALID_FRAME)
+                    self._require_session()
+                    rejected = await control.reject(
+                        OperationResponseRejectRequestV1(
+                            operation_id=controller.operation_id,
+                            interaction_id=pending.interaction_id,
+                            revision=pending.revision,
+                            actor_ref=controller.actor_ref,
+                            responded_at=now(),
+                        )
+                    )
+                    if not isinstance(rejected, OperationResponseMutationSuccessV1) or (
+                        rejected.operation_id,
+                        rejected.interaction_id,
+                        rejected.response_action,
+                    ) != (controller.operation_id, pending.interaction_id, "reject"):
+                        raise RefusalError(RefusalCode.INVALID_FRAME)
+                    rejection_sent = True
+                    continue
+                if monotonic() >= deadline:
+                    raise TimeoutError("the original prepublication review did not become rejectable")
+                if not changes.armed:
+                    # Subscribed only now; observe once more so nothing between the two reads is missed.
+                    changes.arm()
+                    continue
+                await changes.wait(deadline - monotonic())
 
     async def _read_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection

@@ -7,7 +7,7 @@ import hmac
 import time
 from collections.abc import Callable
 from threading import RLock
-from typing import TYPE_CHECKING, Final, Literal, Self
+from typing import TYPE_CHECKING, Final, Literal, Self, override
 from uuid import UUID, uuid4
 
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
@@ -662,6 +662,7 @@ class FrontendClient(ProfileViewFrontend):
 
         return unsubscribe
 
+    @override
     def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
         """Cue ``receive`` when an operation this session observes may have advanced, or the connection is lost.
 

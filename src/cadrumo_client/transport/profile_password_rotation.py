@@ -50,6 +50,7 @@ from ..contracts.operation_access import (
 )
 from .frontend_client import FrontendClient
 from .frontend_client_contracts import FrontendRefusedError, frontend_failure_code
+from .operation_changes import OperationChanges
 from .operation_settlement import PinnedConnection, submit_operation
 from .profile_mutations import ProfileMutationRunError
 
@@ -126,21 +127,28 @@ def _settled(
     *,
     deadline: float,
 ) -> OperationObservationSuccessV1:
-    while True:
-        observed = _observe(client, operation_id, contract, deadline=deadline)
-        projection = observed.projection
-        if projection.lifecycle is OperationLifecycle.TERMINAL:
-            if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-                raise ProfileMutationRunError(
-                    operation_id=operation_id,
-                    code=projection.refusal_ref or projection.failure_error_code or "rotation_unsettled",
-                    terminal_condition=projection.terminal_condition,
-                    effect=projection.effect,
-                )
-            if projection.effect is not OperationEffect.UPDATED:
-                raise RefusalError(RefusalCode.INVALID_FRAME)
-            return observed
-        time.sleep(min(0.02, remaining_budget(deadline)))
+    with OperationChanges(client) as changes:
+        while True:
+            if changes.armed:
+                changes.arm()
+            observed = _observe(client, operation_id, contract, deadline=deadline)
+            projection = observed.projection
+            if projection.lifecycle is OperationLifecycle.TERMINAL:
+                if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+                    raise ProfileMutationRunError(
+                        operation_id=operation_id,
+                        code=projection.refusal_ref or projection.failure_error_code or "rotation_unsettled",
+                        terminal_condition=projection.terminal_condition,
+                        effect=projection.effect,
+                    )
+                if projection.effect is not OperationEffect.UPDATED:
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                return observed
+            if not changes.armed:
+                # Subscribed only now; observe once more so nothing between the two reads is missed.
+                changes.arm()
+                continue
+            changes.wait(remaining_budget(deadline))
 
 
 def _fresh_result(

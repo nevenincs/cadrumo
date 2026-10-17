@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from uuid import uuid4
 
 from cadrumo.adapters.outbound.google.errors import GoogleAuthNonInteractiveError
@@ -22,6 +21,7 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import frontend_failure_code
+from cadrumo_client.transport.operation_changes import OperationChanges
 
 from .errors import CliRefusedBoundaryError
 from .google_consent_admission import admit_google_consent_connection, admit_google_consent_contract
@@ -71,18 +71,25 @@ def login_google_with_runtime(
     reviewed: tuple[str, int] | None = None
     try:
         start_google_consent(client, profile_id, session_id, submitted, operation_id, deadline)
-        while True:
-            state = observe_google_consent(
-                client, profile_id, session_id, operation_id, subject_ref, contract, deadline
-            )
-            condition, effect, refusal_code = state.terminal_condition, state.effect, state.refusal_ref
-            if state.lifecycle is OperationLifecycle.TERMINAL:
-                break
-            if state.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
-                reviewed = review_google_consent_once(
-                    state, reviewed, client, profile_id, session_id, request, contract, deadline
+        with OperationChanges(client) as changes:
+            while True:
+                if changes.armed:
+                    changes.arm()
+                state = observe_google_consent(
+                    client, profile_id, session_id, operation_id, subject_ref, contract, deadline
                 )
-            time.sleep(min(0.02, google_consent_remaining(deadline)))
+                condition, effect, refusal_code = state.terminal_condition, state.effect, state.refusal_ref
+                if state.lifecycle is OperationLifecycle.TERMINAL:
+                    break
+                if state.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
+                    reviewed = review_google_consent_once(
+                        state, reviewed, client, profile_id, session_id, request, contract, deadline
+                    )
+                if not changes.armed:
+                    # Subscribed only now; observe once more so nothing between the two reads is missed.
+                    changes.arm()
+                    continue
+                changes.wait(google_consent_remaining(deadline))
         condition = require_google_consent_settlement(operation_id, state, condition, effect, refusal_code, contract)
         projection = read_google_consent_result(
             client, profile_id, session_id, operation_id, state, contract, expected_result, deadline

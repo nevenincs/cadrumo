@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from collections.abc import Callable
 from uuid import UUID, uuid4
 
@@ -20,6 +19,7 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, frontend_failure_code
+from cadrumo_client.transport.operation_changes import OperationChanges
 
 from ....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
 from ....application.operations.frontend_requests import (
@@ -236,34 +236,41 @@ def _await_censal_terminal(
     apply: bool,
 ) -> CensalReviewResult:
     """Observe to settlement while preserving the latest receipt for failure presentation."""
-    while True:
-        remaining_budget(deadline)
-        terminal = _observe(
-            client,
-            profile_id=profile_id,
-            session_id=session_id,
-            operation_id=operation_id,
-            deadline=deadline,
-        )
-        _validate_observation(
-            terminal,
-            operation_id=operation_id,
-            subject_ref=subject_ref,
-            contract=contract,
-        )
-        state = terminal.projection
-        receipt.condition, receipt.effect, receipt.refusal_code = (
-            state.terminal_condition,
-            state.effect,
-            state.refusal_ref,
-        )
-        if state.lifecycle is OperationLifecycle.TERMINAL:
-            if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
-                _raise_censal_terminal_error(client, terminal, contract, deadline)
-            _validate_terminal(client, terminal, contract=contract, review=review, apply=apply, deadline=deadline)
-            if client.profile_id != profile_id or client.session_id != session_id:
+    with OperationChanges(client) as changes:
+        while True:
+            remaining_budget(deadline)
+            if changes.armed:
+                changes.arm()
+            terminal = _observe(
+                client,
+                profile_id=profile_id,
+                session_id=session_id,
+                operation_id=operation_id,
+                deadline=deadline,
+            )
+            _validate_observation(
+                terminal,
+                operation_id=operation_id,
+                subject_ref=subject_ref,
+                contract=contract,
+            )
+            state = terminal.projection
+            receipt.condition, receipt.effect, receipt.refusal_code = (
+                state.terminal_condition,
+                state.effect,
+                state.refusal_ref,
+            )
+            if state.lifecycle is OperationLifecycle.TERMINAL:
+                if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
+                    _raise_censal_terminal_error(client, terminal, contract, deadline)
+                _validate_terminal(client, terminal, contract=contract, review=review, apply=apply, deadline=deadline)
+                if client.profile_id != profile_id or client.session_id != session_id:
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                return CensalReviewResult(projection=review, applied=apply)
+            if state.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
-            return CensalReviewResult(projection=review, applied=apply)
-        if state.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        time.sleep(min(0.02, remaining_budget(deadline)))
+            if not changes.armed:
+                # Subscribed only now; observe once more so nothing between the two reads is missed.
+                changes.arm()
+                continue
+            changes.wait(remaining_budget(deadline))

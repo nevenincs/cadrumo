@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import math
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -90,6 +92,31 @@ def _review(request: GoogleReviewRequest) -> GoogleReviewProjection:
     )
 
 
+class _Cued:
+    """The runtime's operation cue: it wakes only when the operation's response changes."""
+
+    def __init__(self, changed: asyncio.Event) -> None:
+        self._changed = changed
+        self.armed = False
+
+    def arm(self) -> None:
+        self.armed = True
+        self._changed.clear()
+
+    async def wait(self, timeout: float) -> None:
+        with contextlib.suppress(TimeoutError):
+            await asyncio.wait_for(self._changed.wait(), timeout if math.isfinite(timeout) else None)
+
+    def close(self) -> None:
+        self.armed = False
+
+    def __enter__(self) -> _Cued:
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        self.close()
+
+
 class _Controller:
     operation_id = _OPERATION
     actor_ref = "operator:test-human"
@@ -99,12 +126,26 @@ class _Controller:
         self.review = _review(request)
         self.defect = defect
         self.client = client
-        self.response: str | None = None
+        self.changed = asyncio.Event()
+        self._response: str | None = None
         self.starts = self.applies = self.rejects = self.reads = 0
+
+    @property
+    def response(self) -> str | None:
+        return self._response
+
+    @response.setter
+    def response(self, value: str | None) -> None:
+        # A response is the one committed change this script's operation makes.
+        self._response = value
+        self.changed.set()
 
     async def start(self) -> str:
         self.starts += 1
         return self.operation_id
+
+    def operation_changes(self) -> _Cued:
+        return _Cued(self.changed)
 
     async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
         contracts = _contracts()

@@ -52,7 +52,12 @@ from ....core.operator_notice_messages import operation_notice_message
 from ....core.time.clock import now
 from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import tokenised
-from .controller_port import OperationControllerPort, OperationErrorDetailPort
+from .controller_port import (
+    OperationChangeSourcePort,
+    OperationChangeWaiterPort,
+    OperationControllerPort,
+    OperationErrorDetailPort,
+)
 from .interactions import (
     OperationModalInteractionStateV1,
     OperationModalReviewInteractionV1,
@@ -64,7 +69,11 @@ from .logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
 from .refusal_explanation import operation_error_explanation, public_refusal_explanation
 
+# Only for a controller whose runtime sends no operation cue.
 _POLL_INTERVAL = timedelta(milliseconds=200)
+# A refused observation is not watched, so no cue follows it: retry with backoff.
+_REFUSED_RETRY_FIRST = timedelta(milliseconds=200)
+_REFUSED_RETRY_MAX = timedelta(seconds=5)
 
 
 class OperationModalSettledOutcomeV1(BaseModel):
@@ -207,16 +216,30 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             self._runtime_access_lost(error)
 
     async def _observe_until_stopped(self) -> None:
+        controller = self._controller
+        changes = controller.operation_changes() if isinstance(controller, OperationChangeSourcePort) else None
+        try:
+            await self._observe_with(changes)
+        finally:
+            if changes is not None:
+                changes.close()
+
+    async def _observe_with(self, changes: OperationChangeWaiterPort | None) -> None:
         cursor = self._log_view.next_cursor
+        refused_retry = _REFUSED_RETRY_FIRST
         while self._observing():
+            if changes is not None and changes.armed:
+                changes.arm()
             observed = await self._controller.observe(cursor)
             if not self._observing():
                 return
             if not isinstance(observed, OperationObservationSuccessV1):
                 self._clear_private_view(observed.code.value)
                 cursor = 0
-                await asyncio.sleep(_POLL_INTERVAL.total_seconds())
+                await asyncio.sleep(refused_retry.total_seconds())
+                refused_retry = min(refused_retry * 2, _REFUSED_RETRY_MAX)
                 continue
+            refused_retry = _REFUSED_RETRY_FIRST
             self._log_view = fold_event_page(self._log_view, observed.event_page)
             restart_cursor = self._log_view.restart_cursor
             if self._log_view.resynchronized and restart_cursor is not None:
@@ -237,7 +260,13 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 explanation = await self._settled_error_explanation(observed.projection)
                 self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model, error_explanation=explanation))
                 return
-            await asyncio.sleep(_POLL_INTERVAL.total_seconds())
+            if changes is None:
+                await asyncio.sleep(_POLL_INTERVAL.total_seconds())
+            elif not changes.armed:
+                # Subscribed only now; observe once more so nothing between the two reads is missed.
+                changes.arm()
+            else:
+                await changes.wait(float("inf"))
 
     def _observing(self) -> bool:
         """Read the current state, which another action may change across an await."""

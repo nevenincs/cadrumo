@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from uuid import UUID, uuid4
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -13,6 +12,7 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.operation_changes import OperationChanges
 
 from ....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
 from ....application.operations.frontend_requests import (
@@ -90,36 +90,43 @@ def _review_interaction(
     contract: OperationPublicDefinitionContractV1,
     deadline: float,
 ) -> tuple[OperationObservationSuccessV1, OperationReviewAvailableInteractionV1 | None]:
-    while True:
-        remaining_budget(deadline)
-        observed = _observe(
-            client,
-            profile_id=profile_id,
-            session_id=session_id,
-            operation_id=operation_id,
-            deadline=deadline,
-        )
-        _validate_observation(
-            observed,
-            operation_id=operation_id,
-            subject_ref=subject_ref,
-            contract=contract,
-        )
-        projection = observed.projection
-        if projection.lifecycle is OperationLifecycle.TERMINAL:
-            return observed, None
-        pending = projection.pending_interaction
-        if isinstance(pending, OperationReviewAvailableInteractionV1):
-            reference = pending.review_reference
-            if (
-                pending.operation_id != operation_id
-                or pending.response_schema != CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
-                or reference.operation_id != operation_id
-                or reference.review_projection_schema != CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
-                or reference.definition_contract_digest != contract.definition_contract_digest
-            ):
+    with OperationChanges(client) as changes:
+        while True:
+            remaining_budget(deadline)
+            if changes.armed:
+                changes.arm()
+            observed = _observe(
+                client,
+                profile_id=profile_id,
+                session_id=session_id,
+                operation_id=operation_id,
+                deadline=deadline,
+            )
+            _validate_observation(
+                observed,
+                operation_id=operation_id,
+                subject_ref=subject_ref,
+                contract=contract,
+            )
+            projection = observed.projection
+            if projection.lifecycle is OperationLifecycle.TERMINAL:
+                return observed, None
+            pending = projection.pending_interaction
+            if isinstance(pending, OperationReviewAvailableInteractionV1):
+                reference = pending.review_reference
+                if (
+                    pending.operation_id != operation_id
+                    or pending.response_schema != CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
+                    or reference.operation_id != operation_id
+                    or reference.review_projection_schema != CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
+                    or reference.definition_contract_digest != contract.definition_contract_digest
+                ):
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                return observed, pending
+            if projection.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
-            return observed, pending
-        if projection.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        time.sleep(min(0.02, remaining_budget(deadline)))
+            if not changes.armed:
+                # Subscribed only now; observe once more so nothing between the two reads is missed.
+                changes.arm()
+                continue
+            changes.wait(remaining_budget(deadline))

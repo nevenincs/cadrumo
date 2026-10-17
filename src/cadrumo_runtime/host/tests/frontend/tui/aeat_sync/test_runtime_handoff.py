@@ -105,6 +105,28 @@ class _StartedController:
         return self.operation_id
 
 
+class _CommittedEachRead:
+    """The runtime's operation cue for a script whose every read follows a committed change."""
+
+    armed = False
+
+    def arm(self) -> None:
+        self.armed = True
+
+    async def wait(self, timeout: float) -> None:
+        # Yield, as a real wait does, so the script's own tasks can move the operation on.
+        await asyncio.sleep(0)
+
+    def close(self) -> None:
+        self.armed = False
+
+    def __enter__(self) -> _CommittedEachRead:
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        self.close()
+
+
 class _PreparedController:
     def __init__(
         self,
@@ -126,6 +148,9 @@ class _PreparedController:
     async def start(self) -> str:
         self.events.append("start:censo-prepare")
         return self.operation_id
+
+    def operation_changes(self) -> _CommittedEachRead:
+        return _CommittedEachRead()
 
     async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
         self.events.append("observe:censo-prepare")

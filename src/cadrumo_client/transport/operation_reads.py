@@ -52,7 +52,6 @@ async def read_operation[ResultT: BaseModel](
         subject_ref=subject_ref,
         request_schema=expected_request,
         deadline=deadline,
-        poll_seconds=0.02,
     )
     if state.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
         raise FrontendRefusedError(

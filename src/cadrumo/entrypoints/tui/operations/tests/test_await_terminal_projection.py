@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import threading
 import time
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import cast
 from uuid import UUID
@@ -105,14 +107,35 @@ def _observed(projection: OperationPublicProjectionV1) -> OperationObservationSu
     )
 
 
+class _Client:
+    """The runtime's cue as the controller's client delivers it, from the connection's reader thread."""
+
+    def __init__(self) -> None:
+        self.observers: list[Callable[[], None]] = []
+
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.observers.append(receive)
+        return lambda: self.observers.remove(receive)
+
+    def cue(self) -> None:
+        for receive in tuple(self.observers):
+            threading.Thread(target=receive).start()
+
+
 class _Controller:
-    def __init__(self, *observations: OperationObservationResultV1) -> None:
+    """Answers scripted observations; with ``cue``, each answer is a committed change that cues its observers."""
+
+    def __init__(self, *observations: OperationObservationResultV1, cue: bool = True) -> None:
         self.operation_id = _OPERATION_ID
         self._observations = list(observations)
         self.requests: list[tuple[int, int]] = []
+        self.client = _Client()
+        self._cue = cue
 
     async def observe(self, after_cursor: int, *, page_limit: int) -> OperationObservationResultV1:
         self.requests.append((after_cursor, page_limit))
+        if self._cue:
+            self.client.cue()
         return self._observations.pop(0)
 
 
@@ -123,12 +146,11 @@ async def _await(controller: _Controller, *, deadline: float | None = None) -> O
         subject_ref=_SUBJECT,
         request_schema=_REQUEST_SCHEMA,
         deadline=time.monotonic() + 30 if deadline is None else deadline,
-        poll_seconds=0.001,
     )
 
 
 @pytest.mark.asyncio
-async def test_polls_the_latest_projection_until_terminal() -> None:
+async def test_observes_the_latest_projection_until_terminal() -> None:
     terminal = _projection(terminal=True)
     controller = _Controller(_observed(_projection(terminal=False)), _observed(terminal))
 
@@ -168,3 +190,20 @@ async def test_an_expired_deadline_refuses_before_observing() -> None:
         await _await(controller, deadline=time.monotonic() - 1)
     assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
     assert controller.requests == []
+
+
+@pytest.mark.asyncio
+async def test_a_running_operation_is_observed_again_only_on_a_cue() -> None:
+    running = _observed(_projection(terminal=False))
+    terminal = _projection(terminal=True)
+    cued = _Controller(running, running, running, _observed(terminal))
+    assert await _await(cued) == terminal
+    assert len(cued.requests) == 4
+
+    silent = _Controller(running, running, running, cue=False)
+    with pytest.raises(RefusalError) as expired:
+        await _await(silent, deadline=time.monotonic() + 0.5)
+    assert expired.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    # The first read subscribes and reads once more; nothing then reads again without a cue.
+    assert len(silent.requests) == 2
+    assert silent.client.observers == []

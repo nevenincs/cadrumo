@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
@@ -39,6 +38,7 @@ from ..contracts.operation_access import (
 )
 from .frontend_client_contracts import FrontendRefusedError, ProfileViewCollection
 from .frontend_operation_client import OperationFrontend
+from .operation_changes import OperationChanges
 
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.view_operation import (
@@ -262,13 +262,20 @@ class ProfileViewFrontend(OperationFrontend):
 
     def _await_profile_view_terminal(self, operation_id: OperationId, deadline: float) -> OperationPublicProjectionV1:
         """Poll one submitted read within the shared deadline and require success."""
-        while True:
-            remaining_budget(deadline)
-            observed = self.observe(operation_id, deadline=exchange_deadline(deadline))
-            projection = observed.projection
-            if projection.lifecycle is OperationLifecycle.TERMINAL:
-                break
-            time.sleep(min(0.02, remaining_budget(deadline)))
+        with OperationChanges(self) as changes:
+            while True:
+                remaining_budget(deadline)
+                if changes.armed:
+                    changes.arm()
+                observed = self.observe(operation_id, deadline=exchange_deadline(deadline))
+                projection = observed.projection
+                if projection.lifecycle is OperationLifecycle.TERMINAL:
+                    break
+                if not changes.armed:
+                    # Subscribed only now; observe once more so nothing between the two reads is missed.
+                    changes.arm()
+                    continue
+                changes.wait(remaining_budget(deadline))
         if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
             if projection.terminal_condition is None:
                 raise RefusalError(RefusalCode.INVALID_FRAME)

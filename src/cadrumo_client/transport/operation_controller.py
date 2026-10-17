@@ -68,6 +68,7 @@ from ..contracts.operation_access import (
 )
 from .frontend_client import FrontendClient
 from .frontend_client_contracts import FrontendRefusedError
+from .operation_changes import AsyncOperationChanges
 
 _CANCELLATION = TypeAdapter[OperationCancellationResultV1](OperationCancellationResultV1)
 _DETACH = TypeAdapter[OperationDetachResultV1](OperationDetachResultV1)
@@ -434,6 +435,10 @@ class OperationController:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return result.projection
 
+    def operation_changes(self) -> AsyncOperationChanges:
+        """A new waiter on this controller's connection for the runtime's operation cue."""
+        return AsyncOperationChanges(self.client)
+
     async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
         """Read a refused or failed operation's recorded public detail, or ``None`` when it has none.
 
@@ -601,16 +606,30 @@ async def await_terminal_projection(
     subject_ref: str,
     request_schema: OperationSchemaIdentityV1,
     deadline: float,
-    poll_seconds: float = 0.05,
 ) -> OperationPublicProjectionV1:
-    """Poll one started operation's current projection until it is terminal.
+    """Observe one started operation's current projection on each runtime cue until it is terminal.
 
-    Each poll reads only the latest projection, never the event history. A
-    projection naming another operation, definition, subject or request schema
-    is an invalid frame; the deadline bounds both observation and waiting.
+    Each observation reads only the latest projection, never the event
+    history. A projection naming another operation, definition, subject or
+    request schema is an invalid frame; the deadline bounds both observation
+    and waiting.
     """
+    with AsyncOperationChanges(controller.client) as changes:
+        return await _await_terminal(controller, changes, definition_id, subject_ref, request_schema, deadline)
+
+
+async def _await_terminal(
+    controller: OperationController,
+    changes: AsyncOperationChanges,
+    definition_id: str,
+    subject_ref: str,
+    request_schema: OperationSchemaIdentityV1,
+    deadline: float,
+) -> OperationPublicProjectionV1:
     while True:
         remaining_budget(deadline)
+        if changes.armed:
+            changes.arm()
         observed = await controller.observe(0, page_limit=1)
         if isinstance(observed, OperationObservationRefusalV1):
             raise FrontendRefusedError(observed.code.value)
@@ -626,7 +645,11 @@ async def await_terminal_projection(
             raise RefusalError(RefusalCode.INVALID_FRAME)
         if state.lifecycle is OperationLifecycle.TERMINAL:
             return state
-        await asyncio.sleep(min(poll_seconds, remaining_budget(deadline)))
+        if not changes.armed:
+            # Subscribed only now; observe once more so nothing between the two reads is missed.
+            changes.arm()
+            continue
+        await changes.wait(remaining_budget(deadline))
 
 
 def _decode[T](adapter: TypeAdapter[T], document: dict[str, JsonValue]) -> T:

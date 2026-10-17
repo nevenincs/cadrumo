@@ -198,29 +198,36 @@ async def _wait_for_censal_preparation(
     contract: OperationPublicDefinitionContractV1,
     deadline: float,
 ) -> CensalOperationRequest:
-    while True:
-        remaining = remaining_budget(deadline)
-        observed = await controller.observe(0, page_limit=1)
-        if isinstance(observed, OperationObservationRefusalV1):
-            raise FrontendRefusedError(observed.code.value)
-        if not isinstance(observed, OperationObservationSuccessV1):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        projection = observed.projection
-        if not _valid_censal_prepare_projection(
-            client,
-            projection,
-            controller,
-            profile_id=profile_id,
-            session_id=session_id,
-            subject_ref=subject_ref,
-            contract=contract,
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        if projection.lifecycle is OperationLifecycle.TERMINAL:
-            return await _read_censal_preparation_result(
-                client, controller, projection, profile_id=profile_id, session_id=session_id
-            )
-        await asyncio.sleep(min(0.05, remaining))
+    with controller.operation_changes() as changes:
+        while True:
+            remaining = remaining_budget(deadline)
+            if changes.armed:
+                changes.arm()
+            observed = await controller.observe(0, page_limit=1)
+            if isinstance(observed, OperationObservationRefusalV1):
+                raise FrontendRefusedError(observed.code.value)
+            if not isinstance(observed, OperationObservationSuccessV1):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            projection = observed.projection
+            if not _valid_censal_prepare_projection(
+                client,
+                projection,
+                controller,
+                profile_id=profile_id,
+                session_id=session_id,
+                subject_ref=subject_ref,
+                contract=contract,
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            if projection.lifecycle is OperationLifecycle.TERMINAL:
+                return await _read_censal_preparation_result(
+                    client, controller, projection, profile_id=profile_id, session_id=session_id
+                )
+            if not changes.armed:
+                # Subscribed only now; observe once more so nothing between the two reads is missed.
+                changes.arm()
+                continue
+            await changes.wait(remaining)
 
 
 def _valid_censal_prepare_projection(

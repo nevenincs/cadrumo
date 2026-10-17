@@ -36,7 +36,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.access_contracts import (
+    AccessDenialCode,
     AccessSession,
     Availability,
     LoginEligibility,
@@ -208,7 +210,7 @@ class _LoanCustody(ProfileWorkerCustody):
         self.identity, self.root, self.oracle = identity, storage_root, oracle
         self.clock, self.monotonic = clock, monotonic
         self._leases: dict[UUID, AccessSession] = {}
-        self._lapsed: dict[UUID, None] = {}
+        self._ended: dict[UUID, AccessDenialCode] = {}
         self._lock = RLock()
         self._closed = False
         self._sections = 0
@@ -254,6 +256,11 @@ class _Authorization(WorkerAuthorizationClient):
     async def inventory(self, request: WorkerAutomationInventoryRequest) -> AutomationInventory:
         with self.owner.automation_inventory(request) as allowed:
             return allowed.inventory
+
+    @override
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        # The runtime owner receives the worker's report as its endpoint would hand it on.
+        self.owner.operations_advanced(operation_ids)
 
 
 class _Worker(ProfileWorkerHumanAdmission):

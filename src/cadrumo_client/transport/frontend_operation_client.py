@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable
 from typing import NoReturn
 from uuid import UUID, uuid4
 
@@ -62,6 +63,10 @@ class OperationFrontend:
     def session_id(self) -> UUID:
         """Return this connection's admitted identity; it is not transferable proof."""
         return self._session()
+
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """Cue ``receive`` when an operation this session observes may have advanced; the client owns delivery."""
+        raise NotImplementedError
 
     def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
         """Exchange a canonical operation message under this exact connection lease.
