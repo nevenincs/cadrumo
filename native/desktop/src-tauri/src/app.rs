@@ -366,7 +366,9 @@ pub(crate) async fn assemble<R: Runtime>(
             HostStage::Manager,
             async move {
                 let mut lost_since = None;
+                let mut changes = manager.supervision_changes();
                 while !manager.is_closed() {
+                    changes.borrow_and_update();
                     if let Err(error) = supervision_continues(
                         manager.supervision_status(),
                         &mut lost_since,
@@ -377,7 +379,23 @@ pub(crate) async fn assemble<R: Runtime>(
                         host.exit(1);
                         break;
                     }
-                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                    // Only a status change or the loss bound can change the verdict.
+                    let bound = lost_since.map(|since| {
+                        tokio::time::Instant::from_std(since + SUPERVISION_LOSS_BOUND)
+                    });
+                    tokio::select! {
+                        changed = changes.changed() => {
+                            if changed.is_err() {
+                                break;
+                            }
+                        }
+                        () = async {
+                            match bound {
+                                Some(bound) => tokio::time::sleep_until(bound).await,
+                                None => std::future::pending().await,
+                            }
+                        } => {}
+                    }
                 }
             },
         );
@@ -406,6 +424,9 @@ fn spawn_detached<R: Runtime>(
     });
 }
 
+/// How long the GUI tolerates lost supervision while the manager repairs it.
+const SUPERVISION_LOSS_BOUND: std::time::Duration = std::time::Duration::from_secs(90);
+
 pub(crate) fn supervision_continues(
     status: Result<bool>,
     lost_since: &mut Option<std::time::Instant>,
@@ -413,9 +434,7 @@ pub(crate) fn supervision_continues(
 ) -> Result<()> {
     if status? {
         *lost_since = None;
-    } else if now.duration_since(*lost_since.get_or_insert(now))
-        >= std::time::Duration::from_secs(90)
-    {
+    } else if now.duration_since(*lost_since.get_or_insert(now)) >= SUPERVISION_LOSS_BOUND {
         return Err(ApplicationError::new(
             ErrorCode::ManagerUnavailable,
             Operation::Manager,

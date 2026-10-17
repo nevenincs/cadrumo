@@ -169,6 +169,7 @@ fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
         cancellation: Arc::new(Cancellation::default()),
         spawn_fence: Arc::new(Mutex::new(())),
         closing: tokio::sync::Notify::new(),
+        supervision: Arc::new(tokio::sync::watch::Sender::new(0)),
         observation: observation::Observer::new(cfg!(windows)),
         #[cfg(windows)]
         host: Mutex::new(None),

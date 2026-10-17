@@ -7,7 +7,10 @@ use crate::{
     ipc::{self, Outcome, Request},
     session::{ManagerSession, instance::claim_session, ownership::StartKind},
     supervision::environment::ManagedLocations,
-    wake::windows::{Event, Readiness, wait_thread},
+    wake::{
+        Notify, NotifyOnDrop, Slot,
+        windows::{Event, Readiness, wait_thread},
+    },
     windows_lifecycle,
 };
 use cadrumo_application::{
@@ -54,12 +57,46 @@ struct Owner {
     _claim: crate::session::instance::SessionLock,
 }
 
+/// The worker's latest outcome; every change, and the worker's end, is notified.
+struct Published {
+    outcome: Mutex<Outcome>,
+    changed: Slot,
+}
+
+impl Published {
+    fn new(outcome: Outcome) -> Self {
+        Self {
+            outcome: Mutex::new(outcome),
+            changed: Slot::default(),
+        }
+    }
+
+    fn get(&self) -> Outcome {
+        *self
+            .outcome
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+    }
+
+    fn set(&self, outcome: Outcome) {
+        let mut current = self
+            .outcome
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if *current != outcome {
+            *current = outcome;
+            drop(current);
+            self.changed.notify();
+        }
+    }
+}
+
 /// The worker owns its thread-affine session claim through final runtime settlement.
 pub struct DesktopHost {
     commands: mpsc::SyncSender<Command>,
     /// Signaled after each command, so the worker never polls its queue.
     wake: Arc<Event>,
-    state: Arc<Mutex<Outcome>>,
+    state: Arc<Published>,
     worker: Option<JoinHandle<io::Result<()>>>,
     closed: Arc<AtomicBool>,
     cancellation: Arc<Cancellation>,
@@ -80,7 +117,7 @@ impl DesktopHost {
             commands: receive,
             wake: wake.clone(),
         };
-        let state = Arc::new(Mutex::new(Outcome::Starting));
+        let state = Arc::new(Published::new(Outcome::Starting));
         let observed = state.clone();
         let closed = Arc::new(AtomicBool::new(false));
         let stopping = closed.clone();
@@ -90,6 +127,8 @@ impl DesktopHost {
         let worker = thread::Builder::new()
             .name("desktop-manager".into())
             .spawn(move || {
+                // A finished worker is a status change the host observes too.
+                let _ended = NotifyOnDrop(observed.changed.clone());
                 let mut failures = 0;
                 loop {
                     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -110,15 +149,14 @@ impl DesktopHost {
                     });
                     if result.is_ok() || stopping.load(Ordering::Acquire) || failures == 3 {
                         if result.is_err() {
-                            *observed.lock().unwrap_or_else(|error| error.into_inner()) =
-                                Outcome::Unavailable;
+                            observed.set(Outcome::Unavailable);
                         }
                         return result;
                     }
                     // The failed owner has drained and joined before re-admission.
                     // Retry transient host faults without leaving a cached dead worker.
                     failures += 1;
-                    *observed.lock().unwrap_or_else(|error| error.into_inner()) = Outcome::Starting;
+                    observed.set(Outcome::Starting);
                     let resume = Instant::now() + RESTART_DELAY;
                     while Instant::now() < resume {
                         if stopping.load(Ordering::Acquire) {
@@ -148,7 +186,13 @@ impl DesktopHost {
     }
 
     pub fn status(&self) -> Outcome {
-        *self.state.lock().unwrap_or_else(|error| error.into_inner())
+        self.state.get()
+    }
+
+    /// Notify on every status change and when the worker finishes. Changes
+    /// before installation are not delivered, so read the status after it.
+    pub fn notify_with(&self, notify: Notify) {
+        self.state.changed.install(notify);
     }
 
     pub fn finished(&self) -> bool {
@@ -226,7 +270,7 @@ fn run(
     diagnostics: Arc<Diagnostics>,
     inbox: &Inbox,
     closed: &AtomicBool,
-    state: &Mutex<Outcome>,
+    state: &Published,
     cancellation: &Cancellation,
 ) -> io::Result<()> {
     if closed.load(Ordering::Acquire) {
@@ -302,8 +346,7 @@ fn run(
                     terminal_error = Some(error);
                 }
             }
-            *state.lock().unwrap_or_else(|error| error.into_inner()) =
-                ipc::status(background.status()).outcome;
+            state.set(ipc::status(background.status()).outcome);
             if closing && background.quit_completed() {
                 return terminal_error.map_or(Ok(()), Err);
             }
@@ -345,8 +388,7 @@ fn run(
                         })
                     },
                 );
-            *state.lock().unwrap_or_else(|error| error.into_inner()) =
-                response.map_or(Outcome::Waiting, |reply| reply.outcome);
+            state.set(response.map_or(Outcome::Waiting, |reply| reply.outcome));
             next_external = Instant::now() + EXTERNAL_PACE;
         }
         let mut readiness = Readiness::default();
@@ -374,6 +416,29 @@ fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_a_changed_status_and_the_workers_end_reach_the_notify() {
+        let published = Arc::new(Published::new(Outcome::Starting));
+        let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let counted = count.clone();
+        published.changed.install(Arc::new(move || {
+            counted.fetch_add(1, Ordering::SeqCst);
+        }));
+        published.set(Outcome::Starting);
+        assert_eq!(count.load(Ordering::SeqCst), 0);
+        published.set(Outcome::Running);
+        published.set(Outcome::Running);
+        assert_eq!(count.load(Ordering::SeqCst), 1);
+        assert_eq!(published.get(), Outcome::Running);
+        let ended = published.changed.clone();
+        thread::spawn(move || {
+            let _ended = NotifyOnDrop(ended);
+        })
+        .join()
+        .unwrap();
+        assert_eq!(count.load(Ordering::SeqCst), 2);
+    }
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
@@ -412,7 +477,7 @@ mod tests {
         let mut host = DesktopHost {
             commands,
             wake: Event::new().unwrap(),
-            state: Arc::new(Mutex::new(Outcome::Stopping)),
+            state: Arc::new(Published::new(Outcome::Stopping)),
             worker: Some(worker),
             closed: closed.clone(),
             cancellation,
@@ -448,7 +513,7 @@ mod tests {
         let mut host = DesktopHost {
             commands,
             wake: Event::new().unwrap(),
-            state: Arc::new(Mutex::new(Outcome::Unavailable)),
+            state: Arc::new(Published::new(Outcome::Unavailable)),
             worker: Some(worker),
             closed: Arc::new(AtomicBool::new(false)),
             cancellation: Arc::new(Cancellation::default()),
@@ -491,7 +556,7 @@ mod tests {
             let mut host = DesktopHost {
                 commands,
                 wake,
-                state: Arc::new(Mutex::new(Outcome::Starting)),
+                state: Arc::new(Published::new(Outcome::Starting)),
                 worker: Some(worker),
                 closed: Arc::new(AtomicBool::new(false)),
                 cancellation: Arc::new(Cancellation::default()),

@@ -70,6 +70,9 @@ pub struct ManagerStart {
     cancellation: Arc<Cancellation>,
     spawn_fence: Arc<Mutex<()>>,
     closing: tokio::sync::Notify,
+    /// Bumped on every supervision status change and at close, so watchers wait
+    /// on it instead of polling the host.
+    supervision: Arc<tokio::sync::watch::Sender<u64>>,
     observation: observation::Observer,
     #[cfg(windows)]
     host: Mutex<Option<cadrumo_manager::desktop_host::DesktopHost>>,
@@ -89,6 +92,7 @@ impl ManagerStart {
             cancellation: Arc::new(Cancellation::default()),
             spawn_fence: Arc::new(Mutex::new(())),
             closing: tokio::sync::Notify::new(),
+            supervision: Arc::new(tokio::sync::watch::Sender::new(0)),
             observation: observation::Observer::new(cfg!(windows)),
             #[cfg(windows)]
             host: Mutex::new(None),
@@ -120,9 +124,16 @@ impl ManagerStart {
             if self.start_existing().await? != StartOutcome::Dispatched {
                 return Err(failure(ErrorCode::ManagerUnavailable));
             }
+            let mut supervision = self.supervision_changes();
             loop {
+                // Subscribed before reading, so a change meanwhile still wakes.
+                supervision.borrow_and_update();
+                let observed = sign_in.observation_changed();
                 if !self.supervision_status()? {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    supervision
+                        .changed()
+                        .await
+                        .map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
                     continue;
                 }
                 let status = sign_in.read_status().await?;
@@ -134,7 +145,12 @@ impl ManagerStart {
                 if status.runtime_available && status.refusal.is_some() {
                     return Err(failure(ErrorCode::ReadFailed));
                 }
-                tokio::time::sleep(Duration::from_millis(500)).await;
+                tokio::select! {
+                    changed = supervision.changed() => {
+                        changed.map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
+                    }
+                    () = observed => {}
+                }
             }
         })
         .await
@@ -279,6 +295,8 @@ impl ManagerStart {
             self.cancellation.cancel();
         }
         self.closing.notify_waiters();
+        self.supervision
+            .send_modify(|count| *count = count.wrapping_add(1));
         let _settled = self.attempt.lock().await;
         let result = self.stop_owned().await;
         match &result {
@@ -312,6 +330,11 @@ impl ManagerStart {
             }
         }
         Ok(())
+    }
+
+    /// Changes whenever the supervision status may have changed, or at close.
+    pub fn supervision_changes(&self) -> tokio::sync::watch::Receiver<u64> {
+        self.supervision.subscribe()
     }
 
     pub fn supervision_status(&self) -> Result<bool> {
@@ -438,15 +461,21 @@ impl ManagerStart {
                         .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
                 }
             } else {
-                *host = Some(
-                    cadrumo_manager::desktop_host::DesktopHost::start(
-                        &package_root,
-                        &self.storage_root,
-                        manager,
-                        self.diagnostics.clone(),
-                    )
-                    .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?,
-                );
+                let started = cadrumo_manager::desktop_host::DesktopHost::start(
+                    &package_root,
+                    &self.storage_root,
+                    manager,
+                    self.diagnostics.clone(),
+                )
+                .map_err(|error| failure(ErrorCode::ManagerUnavailable).caused_by(error))?;
+                let supervision = self.supervision.clone();
+                started.notify_with(Arc::new(move || {
+                    supervision.send_modify(|count| *count = count.wrapping_add(1));
+                }));
+                *host = Some(started);
+                // Changes before the notify was installed are read by this bump.
+                self.supervision
+                    .send_modify(|count| *count = count.wrapping_add(1));
             }
             Ok(StartOutcome::Dispatched)
         }
