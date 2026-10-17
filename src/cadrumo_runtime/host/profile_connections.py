@@ -14,6 +14,7 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.bucket.output_language_hint import read_bucket_output_language_hint
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     Availability,
@@ -138,6 +139,8 @@ class RuntimeProfileConnections(
         self._connections: dict[UUID, ProfileConnection] = {}
         self._attendance: dict[UUID, PendingAttendance] = {}
         self._attendance_holders: dict[UUID, UUID] = {}
+        # Per connection, the non-terminal operations it observed and the session it observed them under.
+        self._operation_watches: dict[UUID, dict[OperationId, UUID]] = {}
         self._attended: dict[UUID, AttendedConnection] = {}
         # Connections whose approval ended with the person's session; only a new connection may ask again.
         self._attendance_spent: set[UUID] = set()

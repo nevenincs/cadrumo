@@ -89,8 +89,26 @@ class AttendanceChanged(BaseModel):
     session_id: UUID
 
 
+class OperationChanged(BaseModel):
+    """An operation this exact session observes may have advanced; observe it again, which grants nothing."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["operation_changed"] = "operation_changed"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    session_id: UUID
+
+
 type ConnectionEvent = (
-    SessionEvent | LifecycleNotice | ProfileLanguageChanged | SignInChanged | ServiceLeaseChanged | AttendanceChanged
+    SessionEvent
+    | LifecycleNotice
+    | ProfileLanguageChanged
+    | SignInChanged
+    | ServiceLeaseChanged
+    | AttendanceChanged
+    | OperationChanged
 )
 
 CONNECTION_EVENT_TYPES = (
@@ -100,6 +118,7 @@ CONNECTION_EVENT_TYPES = (
     SignInChanged,
     ServiceLeaseChanged,
     AttendanceChanged,
+    OperationChanged,
 )
 """Every frame the runtime may push between replies, for exhaustive transport checks."""
 

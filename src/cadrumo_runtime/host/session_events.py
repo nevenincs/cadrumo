@@ -10,6 +10,7 @@ from cadrumo_client.contracts.session_events import (
     AttendanceChanged,
     ConnectionEvent,
     LifecycleNotice,
+    OperationChanged,
     ServiceLeaseChanged,
     SignInChanged,
 )
@@ -18,7 +19,7 @@ from cadrumo_client.transport.native_wake import NativeWake
 
 SESSION_EVENT_QUEUE_LIMIT = 64
 
-type InvalidationCue = SignInChanged | ServiceLeaseChanged | AttendanceChanged
+type InvalidationCue = SignInChanged | ServiceLeaseChanged | AttendanceChanged | OperationChanged
 
 
 @dataclass(frozen=True, slots=True)

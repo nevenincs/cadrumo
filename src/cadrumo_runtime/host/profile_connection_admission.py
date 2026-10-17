@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from functools import partial
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -91,6 +92,7 @@ class ProfileConnectionAdmissionMixin:
                         worker_script=self._worker_script,
                         wall_clock=self._wall_clock,
                         retired=self._publish_retirement,
+                        operations_advanced=partial(self._operations_advanced, profile_id),
                     )
                     if not self._admitting():
                         raise RefusalError(RefusalCode.DRAINING)

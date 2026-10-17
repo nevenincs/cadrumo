@@ -514,6 +514,7 @@ class ProfileConnectionSessionMixin:
                 self._notice_connections.pop(context.connection_id, None)
                 self._services.pop(context.connection_id, None)
                 self._sign_in_watchers.discard(context.connection_id)
+                self._operation_watches.pop(context.connection_id, None)
             if connection is not None and connection.session_id is not None:
                 # A held sign-in lives on its connection and ends with it.
                 self._sign_in_changed()

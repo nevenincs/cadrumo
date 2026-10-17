@@ -10,6 +10,11 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
+from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+)
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
@@ -20,11 +25,14 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLoginContext,
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
+from cadrumo.core.operations import OperationLifecycle
 from cadrumo_client.contracts.contracts import ByteChannel, Peer
 from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
+from cadrumo_client.contracts.operation_access import OperationObserve, OperationObserved
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, ServiceLease, VerifiedServicePeer
 from cadrumo_client.contracts.session_events import (
     AttendanceChanged,
+    OperationChanged,
     ServiceLeaseChanged,
     SessionEvent,
     SignInChanged,
@@ -227,3 +235,62 @@ def test_attendance_cues_reach_only_the_profiles_current_holders(tmp_path: Path)
     )
     assert profiles.take_events(stale) == ()
     assert profiles.take_events(other_profile) == ()
+
+
+def _observe(
+    profiles: RuntimeProfileConnections, context: ConnectionContext, operation_id: str, lifecycle: OperationLifecycle
+) -> None:
+    """Record what one OperationObserve reply showed this connection, as the request handler does."""
+    connection = profiles._connections[context.connection_id]
+    assert connection.session_id is not None
+    request = OperationObserve(
+        request_id=uuid4(),
+        profile_id=connection.profile_id,
+        session_id=connection.session_id,
+        observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=1),
+    )
+    # Only the lifecycle decides the watch; the rest of the projection is not read.
+    observation = OperationObservationSuccessV1.model_construct(
+        projection=OperationPublicProjectionV1.model_construct(lifecycle=lifecycle)
+    )
+    profiles._watch_observed_operation(connection, request, OperationObserved.model_construct(observation=observation))
+
+
+def test_operation_cues_reach_only_connections_still_observing_a_reported_operation(tmp_path: Path) -> None:
+    profiles = _runtime(tmp_path)
+    profile_id = uuid4()
+    operation, unrelated = "a" * 64, "b" * 64
+    watcher, idle, finished, foreign = (
+        _person(profiles, profile_id),
+        _person(profiles, profile_id),
+        _person(profiles, profile_id),
+        _person(profiles, uuid4()),
+    )
+    _observe(profiles, watcher, operation, OperationLifecycle.RUNNING)
+    _observe(profiles, finished, operation, OperationLifecycle.RUNNING)
+    _observe(profiles, finished, operation, OperationLifecycle.TERMINAL)
+    # Another profile's connection observing the same id is never cued by this profile's worker.
+    _observe(profiles, foreign, operation, OperationLifecycle.RUNNING)
+
+    profiles._operations_advanced(profile_id, (unrelated,))
+    assert profiles.take_events(watcher) == ()
+    profiles._operations_advanced(profile_id, (operation,))
+    profiles._operations_advanced(profile_id, (operation, unrelated))
+
+    session_id = profiles._connections[watcher.connection_id].session_id
+    assert session_id is not None
+    assert profiles.take_events(watcher) == (
+        OperationChanged(
+            runtime_boot_id=profiles.boot,
+            connection_id=watcher.connection_id,
+            profile_id=profile_id,
+            session_id=session_id,
+        ),
+    )
+    assert profiles.take_events(idle) == ()
+    assert profiles.take_events(finished) == ()
+    assert profiles.take_events(foreign) == ()
+
+    profiles.disconnect(watcher)
+    profiles._operations_advanced(profile_id, (operation,))
+    assert watcher.connection_id not in profiles._operation_watches

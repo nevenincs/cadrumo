@@ -76,6 +76,7 @@ from ..contracts.session_events import (
     AttendanceChanged,
     ConnectionEvent,
     LifecycleNotice,
+    OperationChanged,
     ProfileLanguageChanged,
     ServiceLeaseChanged,
     SignInChanged,
@@ -154,6 +155,7 @@ class FrontendClient(ProfileViewFrontend):
         self._lifecycle_notice: LifecycleNotice | None = None
         self._sign_in_receivers: list[Callable[[], None]] = []
         self._attendance_receivers: list[Callable[[], None]] = []
+        self._operation_receivers: list[Callable[[], None]] = []
 
     def _session_retired(self, event: ConnectionEvent) -> None:
         if isinstance(event, LifecycleNotice):
@@ -178,6 +180,12 @@ class FrontendClient(ProfileViewFrontend):
             for receive_attendance in receivers_attendance:
                 receive_attendance()
             return
+        if isinstance(event, OperationChanged):
+            with self._event_guard:
+                receivers_operation = tuple(self._operation_receivers) if event.session_id == self._session_id else ()
+            for receive_operation in receivers_operation:
+                receive_operation()
+            return
         if isinstance(event, ProfileLanguageChanged):
             with self._event_guard:
                 receivers_language = tuple(self._language_receivers) if event.session_id == self._session_id else ()
@@ -200,7 +208,9 @@ class FrontendClient(ProfileViewFrontend):
             receivers = tuple(self._retirement_receivers)
             # A sign-in watch reads its status again and learns the connection is gone.
             watchers = tuple(self._sign_in_receivers)
-        for receive in (*receivers, *watchers):
+            # An operation waiter observes again and is refused at once.
+            observers = tuple(self._operation_receivers)
+        for receive in (*receivers, *watchers, *observers):
             receive()
 
     def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
@@ -649,6 +659,22 @@ class FrontendClient(ProfileViewFrontend):
             with self._event_guard:
                 if receive in self._attendance_receivers:
                     self._attendance_receivers.remove(receive)
+
+        return unsubscribe
+
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """Cue ``receive`` when an operation this session observes may have advanced, or the connection is lost.
+
+        The cue names no operation; observe again to learn what changed.
+        """
+        self._observe_events()
+        with self._event_guard:
+            self._operation_receivers.append(receive)
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._operation_receivers:
+                    self._operation_receivers.remove(receive)
 
         return unsubscribe
 

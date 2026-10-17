@@ -7,12 +7,16 @@ from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
+from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessDenied
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationLifecycle
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
@@ -22,6 +26,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationFinancialInput,
     OperationManage,
     OperationObserve,
+    OperationObserved,
     OperationReply,
     OperationRequest,
     OperationResult,
@@ -32,6 +37,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmitPayload,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SecretReady
+from cadrumo_client.contracts.session_events import OperationChanged
 from cadrumo_client.contracts.submission_payload import (
     SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
     FinancialOperandInputDescriptor,
@@ -45,6 +51,9 @@ from .profile_host import ProfileConnection, RuntimeProfileHost
 from .submission_stream import stream_operation_submission
 
 _log = get_logger(__name__)
+
+# Operations one connection may wait on at once; the oldest watch gives way.
+_OPERATION_WATCHES_PER_CONNECTION = 64
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -159,6 +168,7 @@ class ProfileConnectionOperationMixin:
                 reply, expires_at = self._operation_reply(
                     connection, host, context, channel, request, release_guard=release_guard
                 )
+                self._watch_observed_operation(connection, request, reply)
                 deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
@@ -179,6 +189,50 @@ class ProfileConnectionOperationMixin:
             # Write errors propagate: a partially written frame is never retried
             # as a refusal. No private payload escapes the scope of its fence.
             write_document(channel, reply, deadline=deadline)
+
+    def _watch_observed_operation(
+        self: RuntimeProfileConnections, connection: ProfileConnection, request: OperationRequest, reply: OperationReply
+    ) -> None:
+        """Keep cueing a connection about an operation it observed until it observes it terminal."""
+        if not isinstance(request, OperationObserve) or connection.session_id is None:
+            return
+        operation_id = request.observation.operation_id
+        observation = reply.observation if isinstance(reply, OperationObserved) else None
+        running = (
+            isinstance(observation, OperationObservationSuccessV1)
+            and observation.projection.lifecycle is not OperationLifecycle.TERMINAL
+        )
+        with self._guard:
+            watches = self._operation_watches.setdefault(connection.context.connection_id, {})
+            watches.pop(operation_id, None)
+            if running:
+                watches[operation_id] = connection.session_id
+                while len(watches) > _OPERATION_WATCHES_PER_CONNECTION:
+                    del watches[next(iter(watches))]
+            elif not watches:
+                del self._operation_watches[connection.context.connection_id]
+
+    def _operations_advanced(
+        self: RuntimeProfileConnections, profile_id: UUID, operation_ids: tuple[OperationId, ...]
+    ) -> None:
+        """Cue each connection of this profile still observing one of the operations its worker reported."""
+        reported = set(operation_ids)
+        with self._guard:
+            cues = [
+                OperationChanged(
+                    runtime_boot_id=self.boot,
+                    connection_id=connection_id,
+                    profile_id=profile_id,
+                    session_id=connection.session_id,
+                )
+                for connection_id, watches in self._operation_watches.items()
+                if (connection := self._connections.get(connection_id)) is not None
+                and connection.profile_id == profile_id
+                and connection.session_id is not None
+                and any(watches.get(operation_id) == connection.session_id for operation_id in reported)
+            ]
+        for cue in cues:
+            self._events.publish_cue(cue)
 
     @contextmanager
     def _language_observed_after(self: RuntimeProfileConnections, context: ConnectionContext) -> Generator[None]:
