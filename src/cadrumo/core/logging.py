@@ -773,9 +773,9 @@ def _rotating_file_handler_path() -> str:
     until the first file-logging run; imported here because only a host that
     configures file logging needs the handler module.
     """
-    from logging.handlers import RotatingFileHandler
+    from .log_file_handler import AnnouncingRotatingFileHandler
 
-    return f"{RotatingFileHandler.__module__}.{RotatingFileHandler.__qualname__}"
+    return f"{AnnouncingRotatingFileHandler.__module__}.{AnnouncingRotatingFileHandler.__qualname__}"
 
 
 def configure_logging() -> None:

@@ -5,8 +5,11 @@
 //! Downloads. Terminal bytes and captured child output never become records.
 //!
 //! One poller thread owns the tail and does every file and directory read,
-//! and only while a subscription exists. The commands and the page-load hook
-//! take a lock that is never held across file I/O or a delivery.
+//! and only while a subscription exists. It polls when a file in a log
+//! directory changes, a host event is recorded or a subscription changes,
+//! and at the deadlines its own pending work sets; otherwise it sleeps. The
+//! commands and the page-load hook take a lock that is never held across
+//! file I/O or a delivery.
 mod format;
 mod host;
 mod manager;
@@ -22,6 +25,7 @@ use cadrumo_application::{
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
+use cadrumo_platform::file_changes::{FileChanges, Waker};
 pub use format::Level;
 use record::{Aggregate, LogBatch, LogSourceState, LogSourceStates, Prepared, Sink, SourceKind};
 use serde::Serialize;
@@ -33,10 +37,6 @@ use std::{
 use tauri::{
     Manager, Runtime, State, Webview, ipc::Channel, plugin::TauriPlugin, webview::PageLoadEvent,
 };
-
-/// How often the files and the diagnostics events are polled while a
-/// subscription exists.
-const TICK: Duration = Duration::from_millis(100);
 
 struct Inner {
     aggregate: Aggregate,
@@ -69,6 +69,8 @@ pub struct LogHub {
     manager_file: PathBuf,
     refusal: Option<ApplicationError>,
     diagnostics: Arc<Diagnostics>,
+    /// Ends the poller's wait for a change.
+    waker: Waker,
 }
 
 /// The poller's side: the tail and the host events, read on its own thread.
@@ -80,6 +82,8 @@ pub struct Poller {
     manager_tail: tail::Tail,
     host: host::HostEvents,
     diagnostics: Arc<Diagnostics>,
+    /// The log files' directories.
+    changes: FileChanges,
 }
 
 impl LogHub {
@@ -115,12 +119,22 @@ impl LogHub {
             }),
             wake: Condvar::new(),
         });
+        let changes = FileChanges::new(
+            [&log_file, &manager_log_file]
+                .into_iter()
+                .filter_map(|file| file.parent().map(PathBuf::from))
+                .collect(),
+        );
+        let waker = changes.waker();
+        let recorded = waker.clone();
+        diagnostics.on_recorded(Arc::new(move || recorded.wake()));
         let hub = Self {
             shared: shared.clone(),
             file: log_file,
             manager_file: manager_log_file,
             refusal: tail.refusal(),
             diagnostics: diagnostics.clone(),
+            waker,
         };
         let poller = Poller {
             since_ms: Some(diagnostics.started_ms()),
@@ -129,6 +143,7 @@ impl LogHub {
             manager_tail,
             host: host::HostEvents::default(),
             diagnostics,
+            changes,
         };
         (hub, poller)
     }
@@ -141,6 +156,7 @@ impl LogHub {
             let mut inner = self.shared.lock();
             let subscription = inner.aggregate.subscribe(sink);
             self.shared.wake.notify_all();
+            self.waker.wake();
             (
                 subscription,
                 inner.polled.then(|| inner.aggregate.states.clone()),
@@ -167,6 +183,8 @@ impl LogHub {
 
     fn unsubscribe(&self, subscription: u64) -> Result<()> {
         if self.shared.lock().aggregate.unsubscribe(subscription) {
+            // The last one going lets the poller rest without waiting for a change.
+            self.waker.wake();
             Ok(())
         } else {
             Err(ApplicationError::new(
@@ -178,6 +196,7 @@ impl LogHub {
 
     fn clear_subscriptions(&self) {
         self.shared.lock().aggregate.clear_subscriptions();
+        self.waker.wake();
     }
 }
 
@@ -185,16 +204,22 @@ impl Drop for LogHub {
     fn drop(&mut self) {
         self.shared.lock().closed = true;
         self.shared.wake.notify_all();
+        self.waker.wake();
     }
 }
 
 impl Poller {
-    /// Polls while a subscription exists and waits without polling while none
+    /// Polls while a subscription exists, each time something may have changed
+    /// or a pending deadline passes, and waits without polling while none
     /// does, until the hub is dropped.
     pub fn run(mut self) {
         while self.ready() {
-            self.tick(Instant::now());
-            std::thread::sleep(TICK);
+            // Batches are paced from when they go, not from when the poll
+            // began: reading a large backlog can outlast the pacing interval,
+            // and a change that wakes the next poll at once must not send a
+            // second batch right behind the first.
+            let due = self.poll(Instant::now(), Instant::now);
+            self.changes.wait(due);
         }
     }
 
@@ -228,15 +253,24 @@ impl Poller {
         }
     }
 
-    /// Reads new records without the lock, then numbers them and picks the
-    /// due batches under it, then sends the batches without it.
-    pub fn tick(&mut self, now: Instant) {
+    /// One poll in which every step happens at `now`.
+    #[cfg(test)]
+    pub fn tick(&mut self, now: Instant) -> Option<Duration> {
+        self.poll(now, || now)
+    }
+
+    /// Reads new records at `now` without the lock, then numbers them and
+    /// picks the due batches under it at the instant `sending` reports, then
+    /// sends the batches without it. Returns how long until a poll is due
+    /// with no change at all: a record settling, a batch held by the pacing
+    /// interval, or a tail's retry.
+    fn poll(&mut self, now: Instant, sending: impl Fn() -> Instant) -> Option<Duration> {
         let shared = self.shared.clone();
         {
             let mut inner = shared.lock();
             if inner.aggregate.idle() {
                 self.rest(&mut inner);
-                return;
+                return None;
             }
             inner.resting = false;
         }
@@ -266,7 +300,9 @@ impl Poller {
                 })
                 .map(Prepared::new),
         );
-        let deliveries = {
+        // Every deadline below counts from the same instant.
+        let sent = sending();
+        let (deliveries, held) = {
             let mut inner = shared.lock();
             for record in prepared {
                 inner.aggregate.push(record);
@@ -278,12 +314,17 @@ impl Poller {
                 host: host::source(&self.diagnostics),
             };
             inner.polled = true;
-            inner.aggregate.deliver(now)
+            let deliveries = inner.aggregate.deliver(sent);
+            (deliveries, inner.aggregate.due(sent))
         };
         let refused = record::send(deliveries);
         if !refused.is_empty() {
             shared.lock().aggregate.end(&refused);
         }
+        [held, self.tail.due(sent), self.manager_tail.due(sent)]
+            .into_iter()
+            .flatten()
+            .min()
     }
 }
 

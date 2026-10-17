@@ -24,7 +24,7 @@ use std::{
     collections::VecDeque,
     io::Write,
     path::{Path, PathBuf},
-    sync::{Mutex, MutexGuard, TryLockError},
+    sync::{Arc, Mutex, MutexGuard, TryLockError},
 };
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -156,8 +156,15 @@ pub struct Diagnostics {
     // The panic path reads this without the state lock, which the panicking
     // code may hold; configuration is its only writer.
     panic_log: Mutex<Option<PathBuf>>,
+    recorded: Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
 }
 impl Diagnostics {
+    /// Calls `notify` after each event recorded from now on, outside the
+    /// state lock, in place of any earlier one. A reader of
+    /// [`Diagnostics::snapshot`] learns of events without polling.
+    pub fn on_recorded(&self, notify: Arc<dyn Fn() + Send + Sync>) {
+        *self.recorded.lock().unwrap_or_else(|e| e.into_inner()) = Some(notify);
+    }
     /// The first event of this process, retained even after the event ring wraps.
     pub fn started_ms(&self) -> u64 {
         self.state
@@ -268,6 +275,15 @@ impl Diagnostics {
             state.events.pop_front();
         }
         state.events.push_back(event);
+        drop(state);
+        let notify = self
+            .recorded
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone();
+        if let Some(notify) = notify {
+            notify();
+        }
     }
     /// The panic hook's record. It runs on the panicking thread before unwinding,
     /// so it never waits for a diagnostics lock: the event ring is joined only when its lock

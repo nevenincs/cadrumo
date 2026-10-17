@@ -13,6 +13,7 @@ include!(env!("CADRUMO_CONTRACT_RS"));
 mod conformance_tests;
 #[cfg(windows)]
 pub mod desktop;
+pub mod file_changes;
 #[cfg(windows)]
 pub mod installation;
 pub mod launch;

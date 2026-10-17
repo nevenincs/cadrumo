@@ -45,6 +45,9 @@ const INITIAL_BYTES: u64 = 16 * 1024 * 1024;
 const _: () = assert!(6 * (LINE_BYTES + DETAIL_BYTES) + LINE_BYTES < BATCH_BYTES);
 /// A record whose file has not grown for this long is complete.
 pub const SETTLE: Duration = Duration::from_millis(250);
+/// How soon a tail polls again while it defers a new file, has bytes past
+/// its read cap, or its last read failed.
+pub const RETRY: Duration = Duration::from_millis(100);
 /// Identified files kept beyond those present, so a file missed during a
 /// racing rotation is still recognised when it reappears.
 const RETAINED: usize = 64;
@@ -255,6 +258,8 @@ pub struct Tail {
     /// The file last seen under the log file's own name.
     current: Option<u64>,
     deferred: u32,
+    /// The last poll left bytes past its read cap.
+    backlog: bool,
     next_id: u64,
     rejected: u64,
     #[cfg(test)]
@@ -296,6 +301,7 @@ impl Tail {
             reported: None,
             current: None,
             deferred: 0,
+            backlog: false,
             next_id: 0,
             rejected: 0,
             #[cfg(test)]
@@ -323,7 +329,25 @@ impl Tail {
         self.reported = None;
         self.current = None;
         self.deferred = 0;
+        self.backlog = false;
         self.rejected = 0;
+    }
+
+    /// How long until this tail has work that no file change announces: a
+    /// deferred new file, bytes past the read cap or a failed read to retry,
+    /// or a Python record that completes once its file stops growing.
+    pub fn due(&self, now: Instant) -> Option<Duration> {
+        if self.deferred > 0 || self.backlog || self.failing > 0 {
+            return Some(RETRY);
+        }
+        if !matches!(self.parser, Ok(LineParser::Python(_))) {
+            return None;
+        }
+        self.tracked
+            .iter()
+            .filter(|tracked| tracked.draft.is_some() || !tracked.partial.is_empty())
+            .map(|tracked| (tracked.progressed + SETTLE).saturating_duration_since(now))
+            .min()
     }
 
     fn state(&self, kind: SourceKind, failure: Option<ApplicationError>) -> LogSourceState {
@@ -344,6 +368,7 @@ impl Tail {
             }
         };
         self.polls += 1;
+        self.backlog = false;
         let polls = self.polls;
         // A rotation between two opens can show one file under two names or
         // hide one, and reading a successor before its predecessor reorders
@@ -446,6 +471,7 @@ impl Tail {
                     Vec::new()
                 }
             };
+            self.backlog |= tracked.offset + (bytes.len() as u64) < file.length;
             if !bytes.is_empty() {
                 // Writers complete a record in one write, so a record pending
                 // in another file precedes these bytes.

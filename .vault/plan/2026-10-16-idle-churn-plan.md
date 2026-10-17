@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:1f6a68bfe4e792e593863c6f4b899627f818586892e46f1d47c36633946ea9a5'
+body_hash: 'sha256:dcaf277355894d0aa1abb379e6c4b68ae4764ddd21b029d36352ade1770e5c4c'
 ---
 
 # `idle-churn` plan
@@ -41,7 +41,7 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 - [x] `S12` - Note person activity through the held person session instead of a spawned config activity child; `native/desktop/src-tauri/src/shell/sign_in/mod.rs`.
 - [x] `S13` - Answer a profile worker status request without waking its custody expiry pass; `src/cadrumo_runtime/host/worker_service.py`.
 - [x] `S14` - Show a steady terminal cursor so a focused pane stops redrawing on a blink timer; `native/desktop/frontend/src/components/TerminalPane.tsx`.
-- [ ] `S15` - Wait for log records or file changes in the desktop log hub instead of a 100 ms tick; `native/desktop/src-tauri/src/logs/mod.rs`.
+- [x] `S15` - Wait for log records or file changes in the desktop log hub instead of a 100 ms tick; `native/desktop/src-tauri/src/logs/mod.rs`.
 - [ ] `S16` - Stop TUI widgets animating while idle: the status spinner only while progress shows, a steady text cursor in both Textual apps, and onboarding progress without a ticking bar; `src/cadrumo/entrypoints/tui/components/status.py`.
 - [ ] `S17` - Wait in the TUI's Windows input loop for console input or stop, with a deadline only while an escape sequence is pending; `src/cadrumo/entrypoints/tui/windows_input.py`.
 - [ ] `S18` - Move the TUI's remaining interval checks to the deadlines and events they already know: the recovery-code handoff, the API-key status and the automation screen lifetimes; `src/cadrumo/entrypoints/tui/secret/registration.py`.

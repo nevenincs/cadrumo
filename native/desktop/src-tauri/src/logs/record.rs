@@ -354,6 +354,31 @@ impl Aggregate {
         }
         deliveries
     }
+
+    /// How long until a batch [`Aggregate::deliver`] held back may go: a
+    /// subscription with records, losses or states it has not been sent waits
+    /// out [`BATCH_INTERVAL`] from its last batch.
+    pub fn due(&self, now: Instant) -> Option<Duration> {
+        let backlog = self
+            .oldest()
+            .max(self.next_seq.saturating_sub(BACKLOG as u64));
+        self.subscribers
+            .iter()
+            .filter(|subscriber| {
+                subscriber.next.unwrap_or(backlog) < self.next_seq
+                    || subscriber.dropped != 0
+                    || subscriber
+                        .sent_states
+                        .as_ref()
+                        .is_none_or(|sent| !sent.same(&self.states))
+            })
+            .map(|subscriber| {
+                subscriber.last_sent.map_or(Duration::ZERO, |sent| {
+                    (sent + BATCH_INTERVAL).saturating_duration_since(now)
+                })
+            })
+            .min()
+    }
 }
 
 #[cfg(test)]

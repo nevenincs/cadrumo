@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:4a6bcf9a0ccc186ea1682be0c4722ae3725117ec3aff512a39272e361dda8ac0'
+body_hash: 'sha256:cf7d53ce2c26198f4bf42e9cf88569978d06291db26be2af8ef17b8cabb7f42e'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -207,6 +207,20 @@ related:
 - `S14` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S14` `verify:` `npm run test -- tests/terminal-rendering.spec.ts -g 'nothing to draw' --project product (managed desktop-frontend-test env, by CADRUMO-BUILD-DEBUG)` -> `pass`
 - `S14` `verify:` `tsc --noEmit, eslint and prettier --check on both files` -> `pass`
+- `S15` `A` `native/platform/src/file_changes.rs`
+- `S15` `M` `native/platform/src/lib.rs`
+- `S15` `M` `native/application/src/diagnostics/mod.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S15` `A` `src/cadrumo/core/log_file_handler.py`
+- `S15` `A` `src/cadrumo/core/tests/test_log_file_handler.py`
+- `S15` `M` `src/cadrumo/core/logging.py`
+- `S15` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S15` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S15` `verify:` `platform.resolver (64 passed), application.rust, desktop-host-unit-test (341 passed), desktop-host-unit-clippy (by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S15` `verify:` `pytest core logging modules and test_log_file_handler (73 passed), ruff, pyrefly, basedpyright, lint-imports` -> `pass`
 
 ## Notes
 
@@ -226,3 +240,4 @@ related:
 - `S09` Re-review: the tick is refreshed at the park's end so a heartbeat right after a long rest reads no age; the new test fails against the previous code
 - `S13` The new status test fails against the previous code. The source runtime with a held synthetic profile measured 0.000% CPU over 60 s, so the stage runtime and worker costs are requests from other processes: every 5 s the manager ping reaches the worker as a status read
 - `S14` With cursorBlink true the test fails: 6 animation frames requested over 2 s, expected 0 (run by CADRUMO-BUILD-DEBUG, file restored byte for byte)
+- `S15` With Poller::run sleeping 100 ms instead of waiting, `a_subscribed_poller_reads_nothing_until_a_log_file_changes` fails; without the handler's announce, the Python signal test fails. Linux and macOS still observe the log files every 100 ms: no notification source is used there yet

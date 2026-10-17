@@ -1,9 +1,9 @@
 use super::{
-    LogHub, Poller, TICK,
+    LogHub, Poller,
     format::Level,
     host,
     record::{BACKLOG, BATCH_BYTES, Entry, LogBatch, SourceKind},
-    tail::{self, LINE_BYTES, SETTLE, Tail},
+    tail::{self, LINE_BYTES, RETRY as TICK, SETTLE, Tail},
 };
 use cadrumo_application::{
     diagnostics::Diagnostics,
@@ -970,6 +970,39 @@ fn no_batch_exceeds_the_byte_cap_and_a_large_backlog_spreads_over_paced_batches(
 fn io_of(io: &tail::Io) -> (u64, u64) {
     use std::sync::atomic::Ordering::Relaxed;
     (io.listings.load(Relaxed), io.opens.load(Relaxed))
+}
+
+// Other platforms have no directory notification yet and observe the files on an interval.
+#[cfg(windows)]
+#[test]
+fn a_subscribed_poller_reads_nothing_until_a_log_file_changes() {
+    let scratch = Scratch::new("subscribed-quiet");
+    let base = scratch.log();
+    append(&base, (0..10).map(line).collect::<String>().as_bytes());
+    let (hub, poller) = hub(base.clone(), Arc::new(Diagnostics::default()));
+    let io = poller.tail.io.clone();
+    let manager_io = poller.manager_tail.io.clone();
+    let poller = start(poller);
+    let (_, frames) = subscribe(&hub);
+    wait_for(&frames, Duration::from_secs(10), |frames| {
+        messages_of(&records_of(frames)).contains(&"rec-000009".to_owned())
+    });
+    // Past the last record's settling and the pacing interval.
+    std::thread::sleep(SETTLE + TICK * 3);
+    let quiet = (io_of(&io), io_of(&manager_io));
+    std::thread::sleep(TICK * 10);
+    assert_eq!(
+        (io_of(&io), io_of(&manager_io)),
+        quiet,
+        "files listed or opened while nothing changed"
+    );
+
+    append(&base, line(10).as_bytes());
+    wait_for(&frames, Duration::from_secs(10), |frames| {
+        messages_of(&records_of(frames)).contains(&"rec-000010".to_owned())
+    });
+    drop(hub);
+    poller.join().unwrap();
 }
 
 #[test]

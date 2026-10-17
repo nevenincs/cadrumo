@@ -204,3 +204,29 @@ Only `FrontendRefusedError` is routed (`src/cadrumo_runtime/host/session_hold.py
 The re-review of the fixes (`7f2894fb8a`, `416ae208ed`) passed: a kept bridge cannot read a stale reply, because only a refusal carrying the request's own id keeps it, and the session-change event cannot be lost between a report and the pass. Its two remaining points, the tick refreshed at the park's end and these locators, are corrected here.
 
 Pending verification, not code defects: the POSIX `wait_readable` and accept paths have no integration test; real WTS delivery, RDP and Session 0 are untested; `test_lifecycle_wake.py` fakes the profile host, so no test ties `lifecycle_due()` to every deadline a pass acts on (binding replacement has none and relies on request-driven passes); and the `CancelIo` and handle-close race in `src/cadrumo_client/transport/windows_channel.py:227-245` when a peer closes during a wake.
+
+## Zero idle work
+
+On 2026-10-17 the operator ruled that an app doing nothing must do no work, after the signed-in Release figure of 3.366% of one core. A source runtime on an isolated root, signed in to a synthetic profile with a held CLI session and its profile worker, measured 0.000% over 60 s. Every runtime and worker thread was parked in a blocking wait. What the stage runtime and worker spend at idle is therefore requests from other processes.
+
+### heartbeat-wakes-the-worker-custody-pass | medium | Each supervisor heartbeat ran a custody revalidation pass in the profile worker
+
+The supervisor pings every 5 s (`native/manager/src/supervision/supervisor.rs:63`). The runtime answers with the workers' in-flight count, which starts a thread that reads the worker's status (`src/cadrumo_runtime/host/session_owner.py:163`). The worker woke its expiry pass after every control request, the status read included. That pass revalidated the custody binding from disk a second time, through two thread hops. A status now leaves the pass asleep, because it adds and moves no deadline; a status that fails still wakes it (`src/cadrumo_runtime/host/worker_service.py:456`, `:472`). `test_a_status_request_is_answered_without_waking_idle_custody_expiry` fails against the previous code.
+
+### idle-supervisor-heartbeat | medium | The supervisor's 5 s ping keeps the runtime and its workers waking while idle
+
+With S13 in place, each ping still wakes the supervisor, the runtime's supervision reader, a status thread and the worker, and the worker's status revalidates the binding once. `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` makes the heartbeat the minimum needed to restart after a hang, so removing it while idle changes that decision. Recommendation: decide whether hang supervision may stop while the runtime reports no in-flight work, and how a hang that starts at idle is then found.
+
+### terminal-cursor-blink | medium | A focused terminal pane redrew on a 600 ms blink timer
+
+`cursorBlink: true` (`native/desktop/frontend/src/components/TerminalPane.tsx:118`) runs the WebGL addon's blink interval and an animation frame per tick for as long as the pane has focus. The TUI pane takes focus after sign-in, so this ran through the signed-in idle state. The cursor is now steady.
+
+### log-hub-tick | medium | The desktop's log hub polled the log files every 100 ms while its list was mounted
+
+`HostRecordList` is mounted even with the Logs panel hidden, so the logs subscription never ended. The poller listed and opened the log files twice per tail on each tick, and it copied the host event ring as well (`native/desktop/src-tauri/src/logs/mod.rs:194`, `tail.rs:353`, `host.rs:32`). It now waits on a directory change notification for the log files' directories (`native/platform/src/file_changes.rs`), on a hook called after each host event is recorded (`native/application/src/diagnostics/mod.rs`), on subscription changes, and on the deadlines its own work sets: a record settling, a paced batch, or a tail's retry. Windows reports no directory change for an append through a handle that stays open, which is how the Python file handler writes. That handler now sets a session-local event named for its directory after each record (`src/cadrumo/core/log_file_handler.py`), and the wait includes it. The native log opens and closes its file for each append, so the directory notification covers it. Linux and macOS have no notification source here yet, so their wait still ends every 100 ms. Batches are now paced from when they are sent: pacing from the start of a poll let a wake right after a long backlog read send two batches back to back.
+
+### textual-driver-poll | low | The TUI's Windows input loop wakes every 100 ms
+
+Textual 8.2.8's Windows driver waits on console input for at most 100 ms, then ticks its escape-sequence parser (`textual/drivers/win32.py`, `EventMonitor.run`). It is third-party code running inside the TUI pane's process, which measured 142 context switches a second while idle. Owner not yet assigned.
+
+`agent-recovery-poll` is fixed in cadrumo-agent `c89d305`. That commit is not yet in a packaged build, and the gateway's remaining 0.36% of one core is not traced; CADRUMO-AGENT-SESSION1 owns both.
