@@ -108,7 +108,6 @@ class AdminServer:
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind(("127.0.0.1", 0))
         self._socket.listen(4)
-        self._socket.settimeout(0.5)
         self.port = self._socket.getsockname()[1]
         self._thread = Thread(target=self._serve, name="agent-service-admin", daemon=True)
         self._thread.start()
@@ -117,8 +116,6 @@ class AdminServer:
         while not self._stop.is_set():
             try:
                 stream, _ = self._socket.accept()
-            except TimeoutError:
-                continue
             except OSError:
                 return
             if not self._capacity.acquire(blocking=False):
@@ -191,6 +188,10 @@ class AdminServer:
     def close(self) -> None:
         """Close admission and await the bounded current exchange."""
         self._stop.set()
+        # Accept blocks without a timeout; a connection of its own is the event
+        # that wakes it, and the loop then sees the stop and returns.
+        with contextlib.suppress(OSError), socket.create_connection(("127.0.0.1", self.port), timeout=1):
+            pass
         self._socket.close()
         with self._active_guard:
             for stream in self._active:
