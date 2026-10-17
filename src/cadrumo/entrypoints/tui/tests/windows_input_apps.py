@@ -1,6 +1,6 @@
 """Small Cadrumo apps that the Windows input loop tests run in a console of their own.
 
-Run as ``python -m cadrumo.entrypoints.tui.tests.windows_input_apps idle|escape``.
+Run as ``python -m cadrumo.entrypoints.tui.tests.windows_input_apps idle|resumed|escape``.
 The escape app writes what it received to the file named by
 ``CADRUMO_TEST_RESULT``.
 """
@@ -31,6 +31,19 @@ class IdleApp(QuietApp[None]):
 
     def on_mount(self) -> None:
         self.set_timer(4.0, self.exit)
+
+
+class ResumedApp(IdleApp):
+    """Suspends and resumes its driver once, then sits idle like ``IdleApp``."""
+
+    @override
+    def on_mount(self) -> None:
+        # Textual runs ``IdleApp``'s own mount handler as well, which arms the exit.
+        self.set_timer(0.3, self._suspend_once)
+
+    def _suspend_once(self) -> None:
+        with self.suspend():
+            pass
 
 
 def _press_escape() -> None:
@@ -71,4 +84,4 @@ class EscapeApp(QuietApp[None]):
 
 
 if __name__ == "__main__":
-    {"idle": IdleApp, "escape": EscapeApp}[sys.argv[1]]().run()
+    {"idle": IdleApp, "resumed": ResumedApp, "escape": EscapeApp}[sys.argv[1]]().run()

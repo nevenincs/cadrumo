@@ -51,13 +51,24 @@ def test_a_lone_escape_reaches_the_app_after_the_input_loop_sleeps(tmp_path: Pat
     assert result.read_text(encoding="utf-8") == "escape"
 
 
-def test_an_idle_app_wakes_no_input_thread_and_its_stop_still_ends_input() -> None:
-    import psutil
-
-    child = subprocess.Popen(
+def _idle_child(resumed: bool) -> subprocess.Popen[Any]:
+    if resumed:
+        # Textual closes the driver on a suspend and starts it again on resume.
+        return subprocess.Popen(
+            [sys.executable, "-m", "cadrumo.entrypoints.tui.tests.windows_input_apps", "resumed"],
+            **_hidden_console(),
+        )
+    return subprocess.Popen(
         [sys.executable, "-m", "cadrumo.entrypoints.tui.tests.windows_input_apps", "idle"],
         **_hidden_console(),
     )
+
+
+@pytest.mark.parametrize("resumed", [False, True], ids=["started", "resumed"])
+def test_an_idle_app_wakes_no_input_thread_and_its_stop_still_ends_input(resumed: bool) -> None:
+    import psutil
+
+    child = _idle_child(resumed)
     try:
         launched = psutil.Process(child.pid)
         # Past startup, inside the idle stretch before the app's own stop.

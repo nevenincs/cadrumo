@@ -65,9 +65,15 @@ if sys.platform == "win32":
 
         def __init__(self) -> None:
             super().__init__()
-            self.handle: int | None = _create_event(
-                None, None, _CREATE_EVENT_MANUAL_RESET, _EVENT_MODIFY_STATE | _SYNCHRONIZE
-            )
+            self.handle: int | None = None
+            self.open()
+
+        def open(self) -> None:
+            """Create the kernel event if a suspend closed it, in the flag's current state."""
+            if self.handle is None:
+                self.handle = _create_event(None, None, _CREATE_EVENT_MANUAL_RESET, _EVENT_MODIFY_STATE | _SYNCHRONIZE)
+                if self.handle and self.is_set():
+                    _set_event(self.handle)
 
         @override
         def set(self) -> None:
@@ -172,6 +178,8 @@ if sys.platform == "win32":
             self.write("\x1b[>1u")  # https://sw.kovidgoyal.net/kitty/keyboard-protocol/
             self.flush()
             self._enable_bracketed_paste()
+            # Textual closes the driver on a suspend and starts it again on resume.
+            self._waking.open()
             self._event_thread = _InputMonitor(loop, self._app, self._waking, self.process_message)
             self._event_thread.start()
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a719b71e8622c7d29d161410fa362a65248b03bc7dc40671cc2452ebe3d4a2e'
+body_hash: 'sha256:2d894348d2962776d17ab33b1000bac83a652b66a27cd53f7d94ec04f0984430'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -268,6 +268,12 @@ related:
 - `S16` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S16` `verify:` `pytest components/tests, test_registration_screen, test_theme and the affected TUI and core suites (134 passed); registration, installation and secret screens (56 passed)` -> `pass`
 - `S16` `verify:` `ruff, ruff format, ty, lint-imports (25 kept)` -> `pass`
+- `S17` `M` `src/cadrumo/entrypoints/tui/windows_input.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/tests/windows_input_apps.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/tests/test_windows_input.py`
+- `S17` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S17` `verify:` `pytest src/cadrumo/entrypoints/tui/tests/test_windows_input.py (3 passed, idle started and resumed, lone Escape)` -> `pass`
+- `S17` `verify:` `ruff, ruff format, ty` -> `pass`
 
 ## Notes
 
@@ -293,3 +299,4 @@ related:
 - `S18` Each new test fails against the previous behaviour: an enrolment wait with both release paths removed hangs, a lapse timer never armed leaves the shell open, and a watch on an interval checks before anything ended. A Windows timer can wake a few milliseconds early, so the expiry timer runs past the deadline and re-arms when woken before it
 - `S19` The new test fails when the activity read wakes custody expiry. The heartbeat's 5 s cadence is unchanged pending the operator's ruling on idle-heartbeat; this step only stops each ping revalidating custody from disk
 - `S16` Reopened by the plan-close review (tui-quiet-app-coverage, high): ScreenHostApp ran the registration, credential and installation screens on a plain Textual App. The new test fails with the plain base
+- `S17` Reopened by the plan-close review (quiet-driver-lost-after-suspend): a suspend closed the stop event for good. Without the reopen the resumed app measured 112 switches in 1.5 s
