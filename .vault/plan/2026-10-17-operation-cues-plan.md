@@ -8,8 +8,11 @@ related:
   - '[[2026-10-17-idle-churn-operation-observation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:5b28c824136c97496e3d5d56c9b139c4114f8313fc7f600514b5809d631e3f21'
+body_hash: 'sha256:71fccad91adc98f7ff800517588db2e2720d596832751a3ab96deb57882b0e70'
 ---
+
+<!-- RETIRED: S07 -->
+
 # `operation-cues` plan
 
 Clients wait for running operations on a pushed `operation_changed` cue instead of polling `OperationObserve`.
