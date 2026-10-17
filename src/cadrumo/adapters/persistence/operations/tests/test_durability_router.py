@@ -24,6 +24,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest, new_operation_id
 from cadrumo.application.operations.observation import OperationObservationService
 from cadrumo.application.operations.persistence.journal import OperationObservationUnknownOperationError
+from cadrumo.application.operations.persistence.leases import OperationOwnerLease
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
@@ -250,3 +251,58 @@ async def test_an_abandoned_admission_leaves_neither_routing_nor_operands(tmp_pa
     # The durable operand store of this router is a separate in-memory store; it never held the operand.
     with pytest.raises(RepositoryError, match="absent"):
         await persistence.resolve(reference, SyntheticResult)
+
+
+@pytest.mark.asyncio
+async def test_each_committed_snapshot_and_settlement_is_reported_and_a_refused_commit_is_not(
+    tmp_path: Path,
+) -> None:
+    storage_root = tmp_path / "synthetic-state"
+    journal = OperationJournalRepository(storage_root=storage_root)
+    reported: list[str] = []
+    persistence = DurabilityRoutedOperationPersistence(
+        journal=journal,
+        event_stream=journal,
+        reader=journal,
+        leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+        operands=EphemeralOperationStore(),
+        committed=reported.append,
+    )
+    supervisor = OperationSupervisor(
+        registry=synthetic_routed_registry(),
+        authority_operation=unread_authority_operation(),
+        journal=persistence,
+        event_stream=persistence,
+        leases=persistence,
+        operands=persistence,
+        owner_id="1" * 64,
+        lease_token_factory=lambda: "2" * 64,
+        clock=lambda: datetime.now(UTC),
+        lease_duration=timedelta(minutes=1),
+        ephemeral=persistence,
+    )
+    try:
+        settled = []
+        for definition_id in (EPHEMERAL_DEFINITION_ID, RECORDED_DEFINITION_ID):
+            operation_id = await supervisor.submit(
+                OperationRequest[BaseModel](
+                    definition_id=definition_id, subject_ref="synthetic", payload=SyntheticRequest()
+                )
+            )
+            await supervisor.start(operation_id)
+            settled.append(await asyncio.wait_for(supervisor.settled(operation_id), timeout=10))
+        for terminal in settled:
+            # At least the start and the settlement of each, durable and ephemeral alike.
+            assert reported.count(terminal.identity.operation_id) >= 2
+        recorded = settled[1]
+        before = list(reported)
+        # The journal refuses a terminal snapshot through commit; a refusal is never reported.
+        with pytest.raises(RepositoryError):
+            await persistence.commit(
+                recorded,
+                expected_revision=recorded.revision,
+                lease=OperationOwnerLease.model_construct(operation_id=recorded.identity.operation_id),
+            )
+        assert reported == before
+    finally:
+        await supervisor.shutdown()

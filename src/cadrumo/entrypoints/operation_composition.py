@@ -78,6 +78,7 @@ if TYPE_CHECKING:
     from ..application.operations.authorization import OperationExecutionAuthority
     from ..application.operations.composition import OperationComposedServices
     from ..application.operations.execution_actor import OperationExecutionCallerReader
+    from ..application.operations.models import OperationId
     from ..application.operations.operation_definition import OperationDefinition
     from ..application.operations.registry import OperationPublicDefinitionRegistrationV1
     from ..application.overview.pipeline_read_ports import PipelineReadPortsFactory
@@ -3111,6 +3112,7 @@ def compose_operation_dependencies(
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver | None = None,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
     runtime_server_owner_start: RuntimeServerOwnerStart | None = None,
+    journal_committed: Callable[[OperationId], None] | None = None,
 ) -> OperationComposedServices:
     """Compose the manifest-backed production registry and all public services.
 
@@ -3119,7 +3121,8 @@ def compose_operation_dependencies(
     graph shares. It opens no browser and starts no supervised operation.
     Profile-bound repositories resolve only when an operation uses them, so
     the same graph can own pre-login and post-login execution without retaining
-    a stale profile repository.
+    a stale profile repository. ``journal_committed`` is told each operation
+    whose journal commit succeeded, for a host that reports progress.
     """
     from ..adapters.persistence.operations.durability_router import DurabilityRoutedOperationPersistence
     from ..adapters.persistence.operations.journal import OperationJournalRepository
@@ -3180,6 +3183,7 @@ def compose_operation_dependencies(
         reader=journal,
         leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
         operands=operation_secure_reference_repository(),
+        committed=journal_committed,
     )
     return compose_operation_services(
         registry=registry,

@@ -9,6 +9,7 @@ exactly as before.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from threading import Lock
 from typing import override
@@ -60,8 +61,15 @@ class DurabilityRoutedOperationPersistence(
         leases: OperationLeaseRepository,
         operands: OperationSecureReferenceStore,
         ephemeral: EphemeralOperationStore | None = None,
+        committed: Callable[[OperationId], None] | None = None,
     ) -> None:
-        """Wrap the durable ports; ephemeral operations go to ``ephemeral`` or a fresh store."""
+        """Wrap the durable ports; ephemeral operations go to ``ephemeral`` or a fresh store.
+
+        ``committed`` is told the operation after each snapshot or settlement
+        commit succeeds, so an observer can learn of progress without
+        re-reading. It must return at once; it is never told of a refused commit.
+        """
+        self._committed = committed
         self._journal = journal
         self._event_stream = event_stream
         self._reader = reader
@@ -138,6 +146,8 @@ class DurabilityRoutedOperationPersistence(
             await self._ephemeral.commit(snapshot, expected_revision=expected_revision, lease=lease)
         else:
             await self._journal.commit(snapshot, expected_revision=expected_revision, lease=lease)
+        if self._committed is not None:
+            self._committed(snapshot.operation_id)
 
     @override
     async def commit_settlement(
@@ -153,6 +163,8 @@ class DurabilityRoutedOperationPersistence(
                 self._registered.discard(snapshot.operation_id)
         else:
             await self._journal.commit_settlement(snapshot, expected_revision=expected_revision, lease=lease)
+        if self._committed is not None:
+            self._committed(snapshot.operation_id)
 
     @override
     async def read_after(

@@ -32,7 +32,7 @@ from cadrumo.adapters.persistence.storage.profile_custody import build_profile_c
 from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.disclosure_projections import registered_disclosure_projections
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.operations.models import OperationIdentity
+from cadrumo.application.operations.models import OperationId, OperationIdentity
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
@@ -220,6 +220,7 @@ class RuntimeProfileHost:
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
         retired: Callable[[SessionEvent], None] | None = None,
+        operations_advanced: Callable[[tuple[OperationId, ...]], None] | None = None,
     ) -> None:
         """Compose existing authorities without opening keys or selecting a profile."""
         self.store, self._registry = store, registry
@@ -233,6 +234,7 @@ class RuntimeProfileHost:
         self._password_rotation: OperationIdentity | None = None
         self._locked_logins: set[str] = set()
         self._retired_event = retired
+        self._operations_advanced = operations_advanced
         self._sign_in_generation: SignInGeneration | None = None
         self.issuer = CustodyAutomationKeyIssuer()
         self.owner = ProfileWorkerSessionOwner(
@@ -297,6 +299,11 @@ class RuntimeProfileHost:
         if self._recipient is None:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         return self._recipient(requester)
+
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        """Hand the worker's report of committed operations to whoever cues their observers."""
+        if self._operations_advanced is not None:
+            self._operations_advanced(operation_ids)
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         """Validate the exact worker and current human before any password frame."""

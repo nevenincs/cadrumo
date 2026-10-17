@@ -63,6 +63,7 @@ class Authority:
         self.members_at_exit: tuple[int, ...] | None = None
         self.root = root
         self.signed_out = False
+        self.advanced: list[tuple[str, ...]] = []
 
     @contextmanager
     def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed]:
@@ -100,6 +101,9 @@ class Authority:
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
+    def operations_advanced(self, operation_ids: tuple[str, ...]) -> None:
+        self.advanced.append(operation_ids)
+
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
@@ -136,9 +140,9 @@ def wait_process(process_handle: int) -> int:
     return win32process.GetExitCodeProcess(process_handle) & 0xFFFFFFFF
 
 
-@pytest.mark.parametrize("mode", ["release", "disconnect", "outlast", "deny", "cancel"])
+@pytest.mark.parametrize("mode", ["release", "disconnect", "outlast", "deny", "cancel", "advance"])
 def test_native_worker_fence_release_loss_and_long_stage(
-    tmp_path: Path, mode: Literal["release", "disconnect", "outlast", "deny", "cancel"]
+    tmp_path: Path, mode: Literal["release", "disconnect", "outlast", "deny", "cancel", "advance"]
 ) -> None:
     """A held stage ends only by release or worker loss, never by its age.
 
@@ -215,7 +219,13 @@ def test_native_worker_fence_release_loss_and_long_stage(
         )
         servers.append(server)
         (tmp_path / "listening").write_text("1", encoding="ascii")
-        if mode == "deny":
+        if mode == "advance":
+            # A progress report is acknowledged and reaches the owner; it opens no stage.
+            assert wait_process(process_handle) == 0, (tmp_path / "refusal").read_text(encoding="ascii")
+            assert (tmp_path / "advanced").is_file() and not (tmp_path / "inside").exists()
+            assert authority.advanced == [("c" * 64, "d" * 64)]
+            server.require_healthy()
+        elif mode == "deny":
             assert wait_process(process_handle) == 0, (tmp_path / "refusal").read_text(encoding="ascii")
             assert (tmp_path / "denied").is_file() and not (tmp_path / "inside").exists()
         elif mode == "cancel":

@@ -8,9 +8,11 @@ from collections.abc import AsyncGenerator
 from contextlib import ExitStack, asynccontextmanager
 from importlib.metadata import version
 from pathlib import Path
+from uuid import uuid4
 
 from pydantic import SecretBytes
 
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
@@ -27,6 +29,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorizationReply,
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
+    WorkerOperationsAdvanced,
     WorkerResponseScopePermit,
 )
 from cadrumo_runtime.contracts.worker_enrollment import (
@@ -79,31 +82,44 @@ class WorkerAuthorizationClient:
             asyncio.to_thread(self._approval_phase, request, password), task_name="worker-approval-phase"
         )
 
-    def _approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
-        if (request.phase == "prepare") != (password is not None):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        """Report committed operations to the runtime parent; it acknowledges and grants nothing."""
+        report = WorkerOperationsAdvanced(request_id=uuid4(), operation_ids=operation_ids)
+        with ExitStack() as resources:
+            channel = self._verified_parent_channel(resources, time.monotonic() + 5)
+            deadline = time.monotonic() + 5
+            write_document(channel, report, deadline=deadline)
+            acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=deadline)
+            if acknowledged.request_id != report.request_id:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+
+    def _verified_parent_channel(self, resources: ExitStack, deadline: float) -> WorkerChannel:
+        """Connect to this worker's runtime parent and prove both ends before any request."""
         endpoint = worker_endpoint(
             storage_root=self.root, worker_namespace=worker_authorization_namespace(self.identity.worker_id)
         )
+        resources.callback(endpoint.close)
+        channel = endpoint.connect(timeout=5)
+        resources.callback(channel.close)
+        if channel.peer.process_id != self.parent_pid or channel.peer.os_owner_id != self.identity.binding.os_owner_id:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        if isinstance(channel, PosixChannel):
+            require_live_native_peer(channel)
+        verified = VerifiedConnection(
+            channel,
+            expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
+            deadline=deadline,
+        )
+        if verified.hello.boot_id != self.identity.runtime_boot_id:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        return channel
+
+    def _approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
+        if (request.phase == "prepare") != (password is not None):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
         with ExitStack() as resources:
-            resources.callback(endpoint.close)
-            channel = endpoint.connect(timeout=5)
-            resources.callback(channel.close)
-            if (
-                channel.peer.process_id != self.parent_pid
-                or channel.peer.os_owner_id != self.identity.binding.os_owner_id
-            ):
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-            if isinstance(channel, PosixChannel):
-                require_live_native_peer(channel)
             deadline = time.monotonic() + 60
-            verified = VerifiedConnection(
-                channel,
-                expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-                deadline=deadline,
-            )
-            if verified.hello.boot_id != self.identity.runtime_boot_id:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            channel = self._verified_parent_channel(resources, deadline)
             write_document(channel, request, deadline=deadline)
             reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
             reply = _complete_password_phase(channel, reply, request, password, self.identity, deadline)

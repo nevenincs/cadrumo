@@ -48,6 +48,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
+    WorkerOperationsAdvanced,
     WorkerResponseScopePermit,
     WorkerResponseScopeRequest,
     WorkerServerStart,
@@ -163,7 +164,11 @@ class WorkerAuthorizationServer:
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest | None = None
         try:
             self._verify_worker_channel(channel)
-            request = read_document(channel, WorkerAuthorityEnvelope, deadline=time.monotonic() + 5).root
+            envelope = read_document(channel, WorkerAuthorityEnvelope, deadline=time.monotonic() + 5).root
+            if isinstance(envelope, WorkerOperationsAdvanced):
+                self._operations_advanced(channel, envelope)
+                return
+            request = envelope
             owner = self._request_owner(request)
             if isinstance(request, WorkerApprovalRequest):
                 try:
@@ -246,6 +251,27 @@ class WorkerAuthorizationServer:
         finally:
             channel.close()
             self._slots.release()
+
+    def _operations_advanced(self, channel: WorkerChannel, report: WorkerOperationsAdvanced) -> None:
+        """Cue observers of the reported operations; a report holds no authority, so nothing here contains."""
+        if self._owner is not None:
+            try:
+                self._owner.operations_advanced(report.operation_ids)
+            except Exception as error:
+                # A missed cue costs a client its wait, bounded by its deadline.
+                diagnostic_event(
+                    _LOGGER,
+                    "profile_worker_progress_cue_failed",
+                    fields=diagnostic_error_fields(error),
+                    level=logging.WARNING,
+                    primary_error=error,
+                )
+        with suppress(RefusalError):
+            write_document(
+                channel,
+                WorkerAuthorizationAcknowledgement(request_id=report.request_id),
+                deadline=time.monotonic() + 5,
+            )
 
     def _approval_phase(self, channel: WorkerChannel, request: WorkerApprovalRequest) -> None:
         if self._owner is None or self._stop.is_set():

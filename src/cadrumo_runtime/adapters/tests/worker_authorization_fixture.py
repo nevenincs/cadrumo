@@ -28,7 +28,7 @@ class Seed(BaseModel):
     identity: ProfileWorkerIdentity
     request: WorkerAuthorizationRequest
     parent_pid: int
-    mode: Literal["release", "disconnect", "outlast", "deny", "cancel"]
+    mode: Literal["release", "disconnect", "outlast", "deny", "cancel", "advance"]
 
 
 async def exercise(root: Path, seed: Seed) -> int:
@@ -38,6 +38,14 @@ async def exercise(root: Path, seed: Seed) -> int:
     client = WorkerAuthorizationClient(identity=seed.identity, root=root, parent_pid=seed.parent_pid)
     while not (root / "listening").exists():
         await asyncio.sleep(0.01)
+    if seed.mode == "advance":
+        try:
+            client.operations_advanced(("c" * 64, "d" * 64))
+        except RefusalError as error:
+            (root / "refusal").write_text(error.reason.value, encoding="ascii")
+            return 2
+        (root / "advanced").write_text("1", encoding="ascii")
+        return 0
     if seed.mode == "cancel":
 
         async def cancelled_body() -> None:

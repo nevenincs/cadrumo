@@ -90,13 +90,35 @@ class WorkerAutomationInventoryRequest(BaseModel):
         return self
 
 
+WORKER_OPERATIONS_ADVANCED_MAX = 64
+"""Operations one progress report may name; a busier worker sends another."""
+
+
+class WorkerOperationsAdvanced(BaseModel):
+    """Operations whose journal the worker has committed since its last report.
+
+    It names operations only and grants nothing: the runtime cues the
+    connections observing them, which then observe again under their own
+    authority.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operations_advanced"] = "operations_advanced"
+    request_id: UUID
+    operation_ids: Annotated[tuple[OperationId, ...], Field(min_length=1, max_length=WORKER_OPERATIONS_ADVANCED_MAX)]
+
+
 type WorkerAuthorityRequest = Annotated[
     WorkerAuthorizationRequest | WorkerResponseScopeRequest, Field(discriminator="kind")
 ]
 
 
 type WorkerAuthorityEnvelopeRequest = Annotated[
-    WorkerAuthorizationRequest | WorkerResponseScopeRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest,
+    WorkerAuthorizationRequest
+    | WorkerResponseScopeRequest
+    | WorkerAutomationInventoryRequest
+    | WorkerApprovalRequest
+    | WorkerOperationsAdvanced,
     Field(discriminator="kind"),
 ]
 
@@ -242,6 +264,10 @@ class WorkerAuthorizationOwner(Protocol):
         self, request: WorkerAutomationInventoryRequest
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         """Read inventory for the original human session while its fence is held."""
+        ...
+
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        """Cue the connections observing these operations of the worker's profile; never blocks."""
         ...
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:

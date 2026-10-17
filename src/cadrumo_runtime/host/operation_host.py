@@ -59,6 +59,8 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.operation_access import OperationManagementRequest, operation_management_action
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 
+from .operation_progress_reporter import OperationProgressReporter
+
 if TYPE_CHECKING:
     from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
     from cadrumo.application.operations.composition import OperationComposedServices, OperationSubmission
@@ -123,6 +125,8 @@ class ProfileWorkerOperationHost:
         self._authority: PinnedAuthorityOperation | None = None
         self._services: OperationComposedServices | None = None
         self._client = authorization
+        # Committed operations reach the runtime as a cue to their observers.
+        self._progress = OperationProgressReporter(self._report_progress)
         self._execution: ProfileWorkerOperationAuthority | None = None
         self._closed = False
         self._drain_result: OperationDrainResult | None = None
@@ -138,6 +142,9 @@ class ProfileWorkerOperationHost:
         # One composition and one authority lease, whichever thread asks first:
         # a worker thread serving an operation or the service loop.
         self._composition_lock = RLock()
+
+    def _report_progress(self, operation_ids: tuple[OperationId, ...]) -> None:
+        self._client.operations_advanced(operation_ids)
 
     def _bind_execution(self, registry: OperationRegistry) -> ProfileWorkerOperationAuthority:
         from .operation_authority import ProfileWorkerOperationAuthority
@@ -196,6 +203,7 @@ class ProfileWorkerOperationHost:
                 modelo_profile_resolver=self._modelo_profile,
                 execution_caller_reader=self._execution_caller,
                 runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
+                journal_committed=self._progress.committed,
             )
 
     def in_flight_operation_count(self) -> int:
@@ -897,6 +905,10 @@ class ProfileWorkerOperationHost:
                 recovery_required=result.recovery_required,
             )
         self._drain_result = result
+        # The drain's settlements are reported before the host lets go.
+        await await_cancellation_complete(
+            asyncio.to_thread(self._progress.close), task_name="profile-operation-progress-close"
+        )
         if not result.needs_containment:
             self._lifetime.close()
             if self._authority is not None:
