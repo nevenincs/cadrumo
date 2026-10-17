@@ -8,7 +8,7 @@ related:
   - '[[2026-10-17-idle-churn-operation-observation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:d7856a6ee05c09fd69ecca58d025cda3ba0b692ab22785ebd385b35f1b991642'
+body_hash: 'sha256:7db4723de064b097550371a054b075f8c4c102453a96f4728f485b333d68e554'
 ---
 
 <!-- RETIRED: S07 -->
@@ -31,6 +31,7 @@ The governing decision is `2026-10-17-idle-churn-operation-observation-adr`, whi
 - [ ] `S04` - Move the remaining client and TUI observation loops onto the cue; `src/cadrumo_client/transport/operation_controller.py, src/cadrumo/entrypoints/tui/operations/modal.py, src/cadrumo/entrypoints/tui/google_saved_review.py, src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py, the other OperationObserve poll sites`.
 - [ ] `S05` - Wait for the person's attendance decision on attendance_changed in the MCP harness; `src/cadrumo_harness/mcp/runtime_admission.py`.
 - [ ] `S06` - Rebuild both stages and prove concurrent sign-in, backend calls and a live operation settle on the cue; `build/windows-x64/stage, dev/runtime_lifecycle`.
+- [ ] `S08` - Wake the installed manager and an observing desktop on installation and ownership events instead of the 2 s installation watch, the 30 s discovery deadline and the 1 s external-owner pace; `native/manager/src/installation_watch.rs, native/manager/src/cutover_coordinator.rs, native/manager/src/desktop_host.rs, native/manager/src/background.rs, native/platform/src/file_changes.rs`.
 
 ## Parallelization
 
