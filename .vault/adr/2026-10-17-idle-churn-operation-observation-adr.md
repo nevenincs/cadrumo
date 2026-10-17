@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:5ec0b752862bd5d3222ae23b010225efa33b975913be4cc27d80a8ee557c0e12'
+body_hash: 'sha256:d7b57718bc5fb976fbd68dd805a988cdad4f24b6e3caa88ba60aece102cb8d08'
 related:
   - "[[2026-10-16-idle-churn-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -67,3 +67,5 @@ Correctness never depended on the polls, only on the re-read each one triggered.
 Accepted 2026-10-17 on the operator's approval in this session ("1 - yes"), extending the ruling recorded in `2026-10-16-idle-churn-adr` that every recurring check is driven by a real signal.
 
 Amended 2026-10-17 on the operator's approval in this session ("go ahead with the recommendation. amend adr and go"): the producer is the worker's report on its existing request endpoint, not a runtime-held wait on a worker channel, after the worker channels were found to carry one exchange at a time.
+
+Amended 2026-10-17 on the operator's approval in this session ("ok add it"): a desktop that observes another manager waits for that manager's status to change instead of asking every second. The manager's pipe has a single instance and serves one exchange at a time (`native/manager/src/ipc/windows.rs`), so a held status request would block the tray, the CLI and a cutover's successor report for its whole wait; it is rejected for the same reason as the long-poll above. Instead each manager publishes its status to an owner-only record, `.runtime/manager-status/<session>.json` under its storage root, rewritten only when the status changes and naming the publishing process. The record is a cue and carries no authority: an observing desktop watches its directory, waits on the session lock's release for a takeover, and re-reads the status through the authenticated `status` request on either signal. A missing record, or one whose publisher is no longer running, means an older manager or a crashed one, and the desktop then keeps its one-second observation as the bounded fallback.
