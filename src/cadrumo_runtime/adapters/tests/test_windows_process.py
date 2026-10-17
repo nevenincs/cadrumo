@@ -6,6 +6,7 @@ import asyncio
 import json
 import math
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -74,6 +75,26 @@ def test_normal_exit_and_environment_are_preserved(tmp_path: Path) -> None:
     with pytest.raises(RefusalError) as caught:
         scope.launch(executable=native_python(), arguments=(), directory=tmp_path, environment={})
     assert caught.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
+
+
+def test_a_refused_creation_names_the_failed_call_and_its_win32_error(tmp_path: Path) -> None:
+    not_an_image = tmp_path / "synthetic.exe"
+    not_an_image.write_bytes(b"synthetic, not a Windows image")
+    scope = WindowsProcessScope()
+    try:
+        with pytest.raises(RefusalError) as caught:
+            scope.launch(
+                executable=not_an_image,
+                arguments=(),
+                directory=tmp_path,
+                environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+            )
+    finally:
+        scope.terminate()
+    assert caught.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
+    # Windows picks which image-format error it reports; a captured one is never zero.
+    assert re.fullmatch(r"create_process_winerror_[1-9][0-9]*", caught.value.check or "")
+    assert str(tmp_path) not in str(caught.value)
 
 
 def test_launch_does_not_inherit_ambient_inheritable_handles(tmp_path: Path) -> None:

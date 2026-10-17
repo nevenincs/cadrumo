@@ -55,6 +55,13 @@ if sys.platform == "win32":
         ]
 
 
+def _win32_check(step: str) -> str:
+    # The Win32 error number is the only cause a failed containment call reports; it names no payload.
+    if sys.platform == "win32":
+        return f"{step}_winerror_{ctypes.get_last_error()}"
+    return step
+
+
 def _launch_in_job(
     job: int,
     *,
@@ -102,16 +109,16 @@ def _launch_in_job(
     size = ctypes.c_size_t()
     initialize(None, count, 0, ctypes.byref(size))
     if size.value == 0:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("attribute_list_size"))
     attributes = ctypes.create_string_buffer(size.value)
     if not initialize(attributes, count, 0, ctypes.byref(size)):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("attribute_list_initialize"))
     try:
         jobs = (wintypes.HANDLE * 1)(job)
         # PROC_THREAD_ATTRIBUTE_JOB_LIST: the kernel assigns before any child
         # code runs. No create-then-assign or suspended unowned orphan window.
         if not update(attributes, 0, 0x0002000D, jobs, ctypes.sizeof(jobs), None, None):
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("job_list_attribute"))
         startup = _StartupInfoEx()
         startup.startup.cb = ctypes.sizeof(startup)
         startup.attributes = ctypes.addressof(attributes)
@@ -121,7 +128,7 @@ def _launch_in_job(
             # are inherited, so no other inheritable handle of this process leaks.
             inherited = (wintypes.HANDLE * 3)(*standard_handles)
             if not update(attributes, 0, 0x00020002, inherited, ctypes.sizeof(inherited), None, None):
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("handle_list_attribute"))
             startup.startup.dwFlags = 0x00000100  # STARTF_USESTDHANDLES
             startup.startup.hStdInput, startup.startup.hStdOutput, startup.startup.hStdError = standard_handles
         information = _ProcessInformation()
@@ -145,7 +152,7 @@ def _launch_in_job(
             ctypes.byref(startup),
             ctypes.byref(information),
         ):
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("create_process"))
         return int(information.process), int(information.thread), int(information.pid)
     finally:
         destroy(attributes)
