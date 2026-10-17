@@ -16,12 +16,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 class _Runtime:
     """Records each report; the first one can be held in flight."""
 
-    def __init__(self, *, hold_first: bool = False, fail_first: bool = False) -> None:
+    def __init__(self, *, hold_first: bool = False, fail_first: bool = False, escape_first: bool = False) -> None:
         self.reports: list[tuple[OperationId, ...]] = []
         self.in_flight = Event()
         self.release = Event()
         self.arrived = Event()
-        self._hold_first, self._fail_first = hold_first, fail_first
+        self._hold_first, self._fail_first, self._escape_first = hold_first, fail_first, escape_first
         self._lock = Lock()
 
     def send(self, batch: tuple[OperationId, ...]) -> None:
@@ -34,6 +34,9 @@ class _Runtime:
             assert self.release.wait(5)
         if first and self._fail_first:
             raise OSError("synthetic undeliverable report")
+        if first and self._escape_first:
+            # Not an ``Exception``: the send guard lets it end the reporting thread.
+            raise SystemExit("synthetic escape from the reporting thread")
 
 
 def test_commits_during_a_report_in_flight_join_one_next_report() -> None:
@@ -51,6 +54,19 @@ def test_commits_during_a_report_in_flight_join_one_next_report() -> None:
 
 def test_an_undeliverable_report_is_dropped_not_retried() -> None:
     runtime = _Runtime(fail_first=True)
+    reporter = OperationProgressReporter(runtime.send)
+    lost, later = new_operation_id(), new_operation_id()
+    reporter.committed(lost)
+    assert runtime.arrived.wait(5)
+    runtime.arrived.clear()
+    reporter.committed(later)
+    assert runtime.arrived.wait(5)
+    reporter.close()
+    assert runtime.reports == [(lost,), (later,)]
+
+
+def test_a_reporting_thread_ended_by_an_escaping_error_is_replaced() -> None:
+    runtime = _Runtime(escape_first=True)
     reporter = OperationProgressReporter(runtime.send)
     lost, later = new_operation_id(), new_operation_id()
     reporter.committed(lost)

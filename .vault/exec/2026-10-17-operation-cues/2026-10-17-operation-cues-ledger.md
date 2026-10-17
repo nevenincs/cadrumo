@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:0234d7398dec70e7530811b088514b3950a3ebdf64e1a57b4dc33bce77eb5088'
+body_hash: 'sha256:9a965f80a84bde7ec365f8385082a98e731eb2578cc35ba2ada374a82f5eda2e'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -126,6 +126,14 @@ related:
 - `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle` -> `pass`
 - `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-clippy` -> `pass`
 - `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `pass`
+- `S01` `M` `src/cadrumo_runtime/host/operation_progress_reporter.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/test_operation_progress_reporter.py`
+- `S01` `A` `.vault/audit/2026-10-17-operation-cues-audit.md`
+- `S01` `verify:` `pytest -n0 test_operation_progress_reporter.py` -> `pass`
+- `S01` `verify:` `escaping-error test against the previous reporter (expected to fail)` -> `fail`
+- `S01` `verify:` `ruff check, ruff format --check, ty check on the reporter and its test` -> `pass`
+- `S01` `verify:` `dev.quality.types diagnostics in the reporter (none)` -> `pass`
+- `S01` `by:` `tui-41 (took over from CADRUMO-BUILD-DEBUG)`
 
 ## Notes
 
@@ -133,3 +141,4 @@ related:
 - `S03` Pre-existing, unchanged by this Step: 9 CLI structural/inventory tests, `test_frontend_boundaries` (deleted file), and `test_runtime_ledger_reads_native::test_native_api_ledger_status_requires_all_periods_even_when_query_selects_one,` which fails one run in three even with the reporter disabled and the old client code
 - `S04` The wide run's pre-existing failures were fixed separately in d07ae808aa (resolution-cost child import, environment reference conformance); the portable fixture's stale `_lapsed` field is fixed in this Step's commit.
 - `S08` Partial: the desktop host's 1 s external-owner pace remains. It mirrors the external manager's status, and the manager IPC has no change signal; removing it needs a status-wait in the manager protocol, pending the user's decision.
+- `S01` Plan-close review finding reporter-thread-not-replaced, fixed after S01 closed; the medium finding modal-waits-unbounded-on-a-dropped-report stays open for the operator's decision.

@@ -42,8 +42,7 @@ class OperationProgressReporter:
                 return
             self._pending[operation_id] = None
             if self._thread is None:
-                self._thread = Thread(target=self._run, name="profile-operation-progress", daemon=True)
-                self._thread.start()
+                self._start()
             self._condition.notify()
 
     def close(self) -> None:
@@ -55,7 +54,22 @@ class OperationProgressReporter:
         if thread is not None:
             thread.join(_CLOSE_JOIN_SECONDS)
 
+    def _start(self) -> None:
+        self._thread = Thread(target=self._run, name="profile-operation-progress", daemon=True)
+        self._thread.start()
+
     def _run(self) -> None:
+        try:
+            self._report_until_closed()
+        finally:
+            with self._condition:
+                # However this thread ended, pending and later commits get a fresh one. Each
+                # run takes a batch before it can fail, so replacements end with the backlog.
+                self._thread = None
+                if self._pending and not self._closed:
+                    self._start()
+
+    def _report_until_closed(self) -> None:
         while True:
             with self._condition:
                 while not self._pending and not self._closed:
