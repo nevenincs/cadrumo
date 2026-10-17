@@ -127,8 +127,7 @@ impl ManagerLifecycle for Background {
 /// Unknown observations and transient upgrade gaps must not report removal.
 pub trait RemovalObservation {
     fn removed(&mut self) -> bool;
-    /// When the next observation is due, for an observation with no native notification.
-    fn next_check(&self) -> Option<std::time::Instant> {
-        None
-    }
+    /// The notifications and any deadline after which `removed` may answer differently.
+    #[cfg(windows)]
+    fn readiness<'a>(&'a self, into: &mut crate::wake::windows::Readiness<'a>);
 }

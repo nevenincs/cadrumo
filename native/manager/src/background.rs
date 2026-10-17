@@ -138,6 +138,11 @@ impl Background {
         {
             into.handle(settlement);
         }
+        if !self.quitting
+            && let Some(watch) = &self.installation_watch
+        {
+            watch.readiness(into);
+        }
         if let Some(deadline) = self.next_deadline() {
             into.at(deadline);
         }
@@ -151,13 +156,6 @@ impl Background {
         }
         deadlines.extend(self.control_retry);
         deadlines.extend(self.stop_retry);
-        if !self.quitting {
-            deadlines.extend(
-                self.installation_watch
-                    .as_ref()
-                    .and_then(|watch| watch.next_check()),
-            );
-        }
         if self.running.is_none() && !self.start_withheld() {
             deadlines.push(self.next_start.unwrap_or_else(Instant::now));
         }
