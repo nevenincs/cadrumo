@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:59b94fbf7b32bea8724f53bfe35933ad887f33827f69450331136a8f93b0cecb'
+body_hash: 'sha256:2abdb2c60b39399bc13d7c1babeeeac63148051c395100203c45746e65486c17'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -93,6 +93,20 @@ The real one-time package proof reached a gateway but failed before a turn: `bui
 Independent Luna max review found no high or medium code defects in S01, S02, S03 or S05. Refusal diagnostics remain bounded, the CLI holder preserves person-session authority, and the public external-directory value is validated by each native launch. Manual retry can retain the old visible refusal until the next ready/refused event. Publishing Starting after its asynchronous acknowledgement could overwrite a result that arrived first; this minor progress limitation is retained without adding a new lifecycle protocol. Review verdict PENDING until refreshed packaged live-provider/tool-access evidence and the unresolved shared checks are accounted for. The user subsequently confirmed separate sign-in in each profile-owned provider CLI home, rather than importing an external account.
 
 ## Recommendations
+
+### build-owned-quiescence | medium | Independent package copies must survive unrelated native builds
+
+The user cannot pause concurrent native builds. The previous quiescence matcher treated a matching application manifest identity as build ownership and terminated the disposable held session before the operator could log in. The repaired matcher resolves executable paths and confines ownership to this binary directory's stage, cargo and bin trees; external same-product copies and installed services are excluded. Five focused tests, formatting, lint, types and independent source review pass. A direct check using the actual manifest-verified copied Cadrumo interpreter survived quiescence of a separate synthetic build root, exited zero after its stop marker, and left zero Windows job members without forced cleanup. S09 is complete. A low residual SCM edge remains if service configuration is changed while a previously external service instance still runs.
+
+The shared windows-x64 Release payload correctly refused completion when another build removed a product dependency during input fingerprinting. That failed stage was not accepted. Acceptance now builds through the enrolled windows-installers-x64 preset, with separate product, agent and stage outputs and payload assembly enabled. The shared frontend install verified and retained its existing matching dependency tree. Fresh profile login, active hosted model behavior and relay proof remain pending until the new payload completes and is copied with manifest verification.
+
+### product-snapshot-capture | medium | Source capture can omit a newly added imported module
+
+The independent product producer completed its four wheels while warning that source inputs changed. Inspection found all35 agent-service modules matched current source, but packaged runtime session_hold.py imports cadrumo_client.transport.profile_language while that transport module is absent. The existing producer takes one source snapshot, but lists files before copying them sequentially without validating membership/content stability during capture. Consequently, this output cannot be described as a coherent snapshot. Assembly was interrupted and the cohort was not accepted for login or model verification. The existing allowance for later edits after a stable captured snapshot remains valid; S10 must distinguish those later edits from a mixed capture before any wheel build.
+
+S10 is now complete. The capture guard compares enrolled normalized content before, in and after the copy; checks live and copied wheel-root membership against the CMake source census; and preserves explicitly enrolled owners such as root uv.lock. Twenty focused packaging tests, lint, formatting, targeted types and independent review pass. The real Python-only product producer completed successfully in602.1seconds with capture and input-stability checks passing. All35 installed service modules, the session-holder module and the previously missing transport module match current source. Isolated imports of the runtime session holder, service, agent hosting contract and lane admission pass from this same dependency tree. Provider login/model behavior remains pending.
+
+The user explicitly excludes installer and documentation work. The full native app build was stopped and its processes verified gone; no further desktop, installer, documentation or app-payload build target is permitted in this run. The narrowed path invokes the existing Python product action and canonical assembler with existing native images and without-user-docs. The reusable-cache wrapper was stopped to avoid its repeated full-tree bookkeeping during manual testing; the assembler itself is running directly. This produces a local manual-test payload only. Its generated manifest, exact-file verified copy and agent source comparison govern acceptance; it does not claim CMake cache eligibility, app-payload target success or release acceptance.
 
 ### profile-cli-sign-in-review | low | Operator preparation passes review; interactive package proof remains pending
 

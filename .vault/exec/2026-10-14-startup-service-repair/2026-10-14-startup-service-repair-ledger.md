@@ -5,7 +5,7 @@ tags:
 date: '2026-10-14'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a9a59bbcc039bd4e2961bed5845554096fddcabcafe5d3e7cc988d51aca3ab7'
+body_hash: 'sha256:684ae02a0bafa8ff7f75152c27c46557618cb14304527061a1d3c5d060620347'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -167,6 +167,32 @@ related:
 - `S03` `M` `dev/runtime_lifecycle/tests/test_agent_live.py`
 - `S03` `verify:` `full person proof driver suite17=pass; handoff client focused source checks` -> `pass`
 - `S08` `verify:` `status-cache focused12=pass; entire service285=pass; integrated source review=pass; agent focused188` -> `pass`
+- `S09` `M` `dev/packaging/native/process_quiescence.py`
+- `S09` `M` `dev/packaging/native/tests/test_process_quiescence.py`
+- `S09` `M` `native/CONTRACT.md`
+- `S09` `verify:` `focused process quiescence tests five cases` -> `pass`
+- `S09` `verify:` `actual verified package copy survives foreign build quiescence and exits cleanly` -> `pass`
+- `S09` `verify:` `source review of owned path boundaries` -> `pass`
+- `S09` `verify:` `shared windows-x64 Release payload completion` -> `fail`
+- `S03` `verify:` `isolated payload with checkout development interpreter` -> `fail`
+- `S03` `verify:` `configure isolated payload with managed Python 3.13.11` -> `pass`
+- `S03` `verify:` `manual acceptance source review after exit-code assertions` -> `pass`
+- `S03` `verify:` `completed product snapshot all 35 service production modules match current source` -> `pass`
+- `S03` `verify:` `completed product snapshot all 15 KDF-named modules match current source` -> `pass`
+- `S10` `verify:` `independent snapshot runtime transport import closure inspection` -> `fail`
+- `S10` `M` `dev/packaging/native/product.py`
+- `S10` `M` `dev/packaging/native/cmake_build.py`
+- `S10` `A` `dev/packaging/native/tests/test_product_snapshot.py`
+- `S10` `M` `dev/packaging/native/tests/test_uv_selection.py`
+- `S10` `verify:` `focused product snapshot and native packaging tests 20 cases` -> `pass`
+- `S10` `verify:` `Ruff lint format and targeted ty` -> `pass`
+- `S10` `verify:` `independent snapshot guard source review` -> `pass`
+- `S10` `verify:` `refresh independent CMake manifest with managed builder` -> `pass`
+- `S03` `verify:` `cancel root full native app build and confirm its processes gone` -> `pass`
+- `S10` `verify:` `actual guarded Python-only product producer completion 602.1 seconds` -> `pass`
+- `S10` `verify:` `isolated same-cohort runtime service and agent imports four modules` -> `pass`
+- `S10` `verify:` `all35 service modules and runtime session holder match current source` -> `pass`
+- `S10` `verify:` `previously missing profile_language and session holder local import closure` -> `pass`
 
 ## Notes
 
@@ -207,3 +233,11 @@ related:
 - `S08` Current service status projection passed all283 service tests in7.62s; test log20261015T084736.070515Z-pytest-68080-3c429b3f. Agent production admission/frozen-selection work and new packaged proof pending; source suite does not establish interactive login or hosted turn.
 - `S03` Handoff preserves exact driver profile/root/scenario with distinct nonsecret held-session provenance; standalonefreshprofile path retained. Root caught Optional narrowing and forbidden source-client Cadrumo imports; both corrected. Marker check uses inventory-verified packaged interpreter with restrictedenv and10sbound, never sourceproductimports. Real package relay proof pending afternativebuild and updatedagent.
 - `S08` Replaced status networkread with immutable5s currentgeneration snapshot fromnormal authenticatedcatalog; no newstatus HTTP latency versusnative6sdeadline. Reviewer finds no mustfix across ordinaryproof admission, catalog/frozen certification, cache and packaged marker helper. Release app-payload rebuild running; concurrentDebug build is read-only distribution preparation on separateDebugstage. No native live proof while builds remain.
+- `S09` The actual same-product copied interpreter survived quiescence of a separate synthetic build root, then exited zero with zero remaining job members. The shared Release assembly refused completion because a concurrent build removed `product/dependencies/adodbapi/__init__.py` during input fingerprinting. No failed stage was accepted. Configured the supported windows-installers-x64 preset with payload ON and an independent product/stage/agent output tree; its frontend install kept the matching 361-package tree. Independent Release app-payload is running; all live model and profile-login proofs remain pending.
+- `S03` The first independent build caught an incorrectly selected external development Python 3.13.15 at the Release builder version check. It was not accepted. Reconfigured the same independent binary directory with the owning managed builder, which converged Python 3.13.11; app-payload is running again. Manual verification now requires normal child exits zero, expected runtime supervisor exit64 and zero remaining job members; prepared login command uses its declared working directory. Formal hosted certification remains pending: its aggregate runner currently creates an ephemeral provider home without an interactive login preparation hook, so the manual service turn must not be represented as that formal test.
+- `S03` Product producer completed a coherent snapshot but withheld reusable checkout identity after 10 concurrent source changes. Read-only normalized comparison confirms all35 service production modules match current source; runtime209/214 match and client transport36/38 match, with additional source `profile_language.py.` Therefore acceptance may describe this verified package snapshot and scoped repaired source only, not whole-checkout currentness. Assembly is running.
+- `S10` Correction to earlier coherent-snapshot wording: packaged `session_hold.py` imports `cadrumo_client.transport.profile_language` but that module was added after the source file census and is absent from the product. The existing sequential snapshot lacks a capture-boundary guard. Interrupted assembly; exit1, no accepted copy or login session. S10 guards existing enrolled product sources before wheel construction; later edits after a stable capture may still invalidate reuse without invalidating the captured output.
+- `S10` Capture now compares enrolled normalized content before/captured/after, checks fresh wheel-source membership against CMake inputs and captured tree, and rejects membership drift before any wheel command. Explicit root uv.lock remains enrolled; unrelated frontend/vault churn does not invalidate capture. Later source edits after valid capture still only invalidate cache reuse. Source frozen; independent review and rebuilt package verification pending.
+- `S10` Reviewer found no high-confidence defect in requested capture path. Root uv.lock and copied-source membership regressions included. Existing post-producer deletion still fails closed, an availability edge without accepting an inconsistent artifact. Independent Release app-payload restarted after source freeze and review.
+- `S03` User explicitly limits work to agent and Cadrumo app without docs or installer work. Stopped root app-payload build and verified no matching build processes remain. Resume through existing Python-only `cmake_build` product action, then generated cached assembly command reusing existing native images, with without-user-docs. Do not invoke app-payload, desktop, installer, distribution or documentation build targets. Other sessions remain untouched.
+- `S10` Ran the existing Python-only product action directly; capture/input stability and final producer receipt completed successfully. No desktop/compiler/installer/docs target invoked. Same-cohort import preflight loaded only product dependencies. Continue through the generated cached assembly command reusing existing native images, with user docs omitted; real provider login/model/shutdown still pending.
