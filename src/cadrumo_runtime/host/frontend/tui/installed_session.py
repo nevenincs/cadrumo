@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import time
 from collections.abc import Callable
 from logging import DEBUG, ERROR
 from typing import TYPE_CHECKING
@@ -67,6 +68,9 @@ SESSION_INVENTORY_UNAVAILABLE = 1
 
 _UNLISTED_STATES = frozenset({ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED})
 """Observations that could not say which profiles exist."""
+
+_RESUME_AFTER_UNAVAILABLE_SECONDS = 10.0
+"""How long a session must have lasted for its loss to be resumed without a password."""
 
 _LOGGER = get_logger(__name__)
 
@@ -388,6 +392,7 @@ def run_installed_workbench_session(
                 continue
             if headless and auto_pilot is None:
                 return SESSION_COMPLETED
+            started = time.monotonic()
             recompose = _attempt_runtime_session(
                 inventory,
                 operation_registry,
@@ -401,12 +406,20 @@ def run_installed_workbench_session(
             if recompose is None:
                 return SESSION_COMPLETED
             choose_profile = recompose.reason is AccountRecomposeReasonV1.CHANGE_USER
-            # After session loss or explicit logout, let the operator retry.
-            # Repeated receipt admission while the runtime is stopping loops
-            # back into an unavailable authority and hides the recovery form.
-            auto_resume = False
+            # A runtime that dropped an established session is resumed with the
+            # stored sign-in. A session lost soon after admission is not: repeated
+            # receipt admission while the runtime is stopping loops back into an
+            # unavailable authority and hides the recovery form. Logout, expiry
+            # and a profile change always ask the operator.
+            auto_resume = (
+                recompose.reason is AccountRecomposeReasonV1.UNAVAILABLE
+                and time.monotonic() - started >= _RESUME_AFTER_UNAVAILABLE_SECONDS
+            )
             diagnostic_event(
-                _LOGGER, "tui_session_recompose_requested", fields={"reason_code": recompose.reason.value}, level=DEBUG
+                _LOGGER,
+                "tui_session_recompose_requested",
+                fields={"reason_code": recompose.reason.value, "auto_resume": auto_resume},
+                level=DEBUG,
             )
 
 

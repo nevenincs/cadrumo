@@ -426,6 +426,42 @@ def test_the_operation_registry_is_shared_across_recomposition_but_fresh_in_a_se
     assert choices == [False, True, False]
 
 
+def test_only_an_established_session_dropped_by_the_runtime_is_resumed_without_a_password(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    profile_id = uuid4()
+    _bootstrap(monkeypatch, iter((_recognized_inventory(profile_id),) * 4))
+    now = [0.0]
+    # (seconds the session lasts, how it ends); the last attempt closes the TUI.
+    outcomes = iter(
+        (
+            (30.0, AccountRecomposeReasonV1.UNAVAILABLE),
+            (1.0, AccountRecomposeReasonV1.UNAVAILABLE),
+            (30.0, AccountRecomposeReasonV1.EXPIRED),
+            (0.0, None),
+        )
+    )
+    resumed: list[bool] = []
+
+    def attempt(
+        inventory: ProfileLoginInventoryV1,
+        supplier: Callable[[], OperationRegistry],
+        choose_profile: bool,
+        headless: bool,
+        auto_pilot: AutopilotCallbackType | None,
+        auto_resume: bool = True,
+    ) -> AccountRecomposeRequiredV1 | None:
+        resumed.append(auto_resume)
+        lasted, reason = next(outcomes)
+        now[0] += lasted
+        return None if reason is None else AccountRecomposeRequiredV1(reason=reason)
+
+    monkeypatch.setattr(installed_session.time, "monotonic", lambda: now[0])
+    monkeypatch.setattr(installed_session, "_attempt_runtime_session", attempt)
+    assert installed_session.run_installed_workbench_session() == 0
+    assert resumed == [True, True, False, False]
+
+
 def test_a_failed_registry_composition_propagates_and_publishes_nothing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
