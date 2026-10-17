@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from ....core.errors.hierarchy import CadrumoError
 
-class AeatAuthFieldSaveError(Exception):
+
+class AeatAuthFieldSaveError(CadrumoError):
     """Identify the attempted field without retaining its rejected input."""
 
     def __init__(self, path: str) -> None:

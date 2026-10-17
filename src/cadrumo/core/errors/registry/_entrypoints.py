@@ -159,6 +159,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.tui.profile.auth_fields.AeatAuthFieldSaveError",
+        ErrorCode(
+            code="FAIL_TUI_AEAT_AUTH_FIELD_SAVE",
+            category=ErrorCategory.FAIL,
+            message_key="tui.aeat_auth.failed",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.tui.profile.client_errors.ProfileManagerCompletedViewUnavailableError",
         ErrorCode(
             code="FAIL_TUI_PROFILE_COMPLETED_VIEW_UNAVAILABLE",
