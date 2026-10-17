@@ -247,7 +247,7 @@ struct Server {
 }
 
 /// An owned kernel handle, closed once on drop.
-struct Owned(*mut c_void);
+pub(crate) struct Owned(*mut c_void);
 
 // SAFETY: a kernel object handle is a process-wide value that any thread may
 // use. `Owned` is its only closer, and every thread that borrows it through
@@ -534,7 +534,7 @@ fn current_session() -> io::Result<u32> {
     Ok(session)
 }
 
-enum Kind {
+pub(crate) enum Kind {
     Mutex,
     Event,
 }
@@ -572,6 +572,37 @@ fn open_owned(
         return Err(io::Error::last_os_error());
     }
     owned(Owned(handle), user)
+}
+
+/// The string form of this process's user SID.
+pub(crate) fn current_user_sid() -> io::Result<String> {
+    Ok(User::current()?.text)
+}
+
+/// Creates or opens this user's manual-reset event `name` with an owner-only
+/// descriptor, refusing one another account owns or an object of another
+/// type. The caller owns the returned handle and closes it.
+pub(crate) fn user_manual_reset_event(name: &str) -> io::Result<*mut c_void> {
+    let user = User::current()?;
+    let descriptor = owner_only(&user.text)?;
+    let attributes = SecurityAttributes {
+        length: size_of::<SecurityAttributes>() as u32,
+        descriptor: descriptor.0,
+        inherit: 0,
+    };
+    let name = wide(name);
+    // SAFETY: the attributes and their descriptor outlive the call and the
+    // name is nul-terminated. An existing object is opened with full access,
+    // which another account's descriptor refuses, and a null result is a
+    // failure the caller reports.
+    let handle = unsafe { CreateEventW(&attributes, 1, 0, name.as_ptr()) };
+    if handle.is_null() {
+        return Err(io::Error::last_os_error());
+    }
+    let handle = owned(Owned(handle), &user)?;
+    let raw = handle.0;
+    std::mem::forget(handle);
+    Ok(raw)
 }
 
 /// Opens an existing named event without creating it: `None` when no
@@ -769,6 +800,39 @@ impl Drop for InstanceLock {
         }
         HELD.with(|held| held.borrow_mut().retain(|name| name != &self.name));
     }
+}
+
+/// Takes `name` first with the descriptor `sddl`, as a squatter would.
+#[cfg(test)]
+pub(crate) fn squat(kind: Kind, name: &str, sddl: &str) -> Owned {
+    let text = wide(sddl);
+    let mut descriptor = ptr::null_mut();
+    // SAFETY: as in `owner_only`.
+    checked(unsafe {
+        ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            text.as_ptr(),
+            SDDL_REVISION_1,
+            &mut descriptor,
+            ptr::null_mut(),
+        )
+    })
+    .unwrap();
+    let descriptor = LocalMemory(descriptor);
+    let attributes = SecurityAttributes {
+        length: size_of::<SecurityAttributes>() as u32,
+        descriptor: descriptor.0,
+        inherit: 0,
+    };
+    let name = wide(name);
+    // SAFETY: as in `open_owned`.
+    let handle = unsafe {
+        match kind {
+            Kind::Mutex => CreateMutexW(&attributes, 0, name.as_ptr()),
+            Kind::Event => CreateEventW(&attributes, 0, 0, name.as_ptr()),
+        }
+    };
+    assert!(!handle.is_null(), "{}", io::Error::last_os_error());
+    Owned(handle)
 }
 
 #[cfg(test)]
@@ -1191,35 +1255,27 @@ mod tests {
 
     /// Creates `name` as `kind` with `sddl`, standing in for an object that
     /// another account placed first.
-    fn squat(kind: Kind, name: &str, sddl: &str) -> Owned {
-        let text = wide(sddl);
-        let mut descriptor = ptr::null_mut();
-        // SAFETY: as in `owner_only`.
-        checked(unsafe {
-            ConvertStringSecurityDescriptorToSecurityDescriptorW(
-                text.as_ptr(),
-                SDDL_REVISION_1,
-                &mut descriptor,
-                ptr::null_mut(),
-            )
-        })
-        .unwrap();
-        let descriptor = LocalMemory(descriptor);
-        let attributes = SecurityAttributes {
-            length: size_of::<SecurityAttributes>() as u32,
-            descriptor: descriptor.0,
-            inherit: 0,
-        };
-        let name = wide(name);
-        // SAFETY: as in `open_owned`.
-        let handle = unsafe {
-            match kind {
-                Kind::Mutex => CreateMutexW(&attributes, 0, name.as_ptr()),
-                Kind::Event => CreateEventW(&attributes, 0, 0, name.as_ptr()),
-            }
-        };
-        assert!(!handle.is_null(), "{}", io::Error::last_os_error());
-        Owned(handle)
+    #[test]
+    fn a_user_event_is_refused_where_a_squatter_or_another_type_holds_the_name() {
+        let user = User::current().unwrap();
+        let base = format!("Local\\{}.user-event", family("user-event"));
+        // Only SYNCHRONIZE for this user: the event cannot be opened fully.
+        let _squatter = squat(
+            Kind::Event,
+            &format!("{base}.squatted"),
+            &format!("D:P(A;;0x00100000;;;{})", user.text),
+        );
+        assert!(user_manual_reset_event(&format!("{base}.squatted")).is_err());
+        let _mutex = squat(
+            Kind::Mutex,
+            &format!("{base}.mutex"),
+            &format!("O:{0}D:P(A;;GA;;;{0})", user.text),
+        );
+        assert!(user_manual_reset_event(&format!("{base}.mutex")).is_err());
+        // A free name is created owner-only and opened again by this user.
+        let first = Owned(user_manual_reset_event(&format!("{base}.free")).unwrap());
+        let second = Owned(user_manual_reset_event(&format!("{base}.free")).unwrap());
+        assert!(user.owns(first.0).unwrap() && user.owns(second.0).unwrap());
     }
 
     #[test]

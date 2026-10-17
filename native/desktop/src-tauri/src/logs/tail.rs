@@ -384,6 +384,9 @@ impl Tail {
                 Ok((consistent, files)) if consistent || attempts == OBSERVATIONS => break files,
                 Ok(_) => {}
                 Err(error) => {
+                    // A listing that fails for permissions changes nothing a
+                    // directory notification reports, so the retry is due.
+                    self.failing = self.failing.saturating_add(1);
                     let failure = unreadable().caused_by(error);
                     return (out, self.state(SourceKind::Unreadable, Some(failure)));
                 }

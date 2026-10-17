@@ -5,7 +5,10 @@
 //! and write times. A writer that keeps its file open changes no directory
 //! entry Windows reports until it closes the file, so such a writer also sets
 //! a named event for the directory after each append ([`announce_append`]),
-//! and the wait includes that event. Elsewhere no notification source is used
+//! and the wait includes that event. The event belongs to this user alone: its
+//! name carries the user's SID, it is created owner-only, and one another
+//! account owns, or an object of another type, is refused, which leaves that
+//! directory observed on [`OBSERVATION`] rather than silenced. Elsewhere no notification source is used
 //! yet, and every wait ends within [`OBSERVATION`], so callers observe the
 //! files on that interval.
 //!
@@ -70,11 +73,13 @@ impl Waker {
     }
 }
 
-/// The session-local event name a writer sets after appending to a file in
-/// `directory`. Python's file log handler derives the same name: the path
-/// without a `\\?\` prefix, with `\` separators, no trailing separator and
-/// ASCII letters lowered, hashed with 64-bit FNV-1a over its UTF-8 bytes.
-pub fn append_signal_name(directory: &Path) -> String {
+/// The session-local event name the user whose SID string is `sid` sets after
+/// appending to a file in `directory`. Python's file log handler derives the
+/// same name: the absolute path without a `\\?\` prefix, with `\` separators,
+/// no trailing separator and ASCII letters lowered, hashed with 64-bit FNV-1a
+/// over its UTF-8 bytes.
+pub fn append_signal_name(directory: &Path, sid: &str) -> String {
+    let directory = std::path::absolute(directory).unwrap_or_else(|_| directory.to_path_buf());
     let text = directory.to_string_lossy();
     let text = text
         .strip_prefix(r"\\?\")
@@ -82,7 +87,7 @@ pub fn append_signal_name(directory: &Path) -> String {
         .replace('/', "\\");
     let text = text.trim_end_matches('\\');
     format!(
-        "Local\\cadrumo-log-append-{:016x}",
+        "Local\\cadrumo-log-append-{sid}-{:016x}",
         fnv1a(&text.as_bytes().to_ascii_lowercase())
     )
 }
@@ -115,7 +120,6 @@ mod imp {
     const FILE_NOTIFY_CHANGE_FILE_NAME: u32 = 0x0000_0001;
     const FILE_NOTIFY_CHANGE_SIZE: u32 = 0x0000_0008;
     const FILE_NOTIFY_CHANGE_LAST_WRITE: u32 = 0x0000_0010;
-    const CREATE_EVENT_MANUAL_RESET: u32 = 0x0000_0001;
     const EVENT_MODIFY_STATE: u32 = 0x0000_0002;
     const SYNCHRONIZE: u32 = 0x0010_0000;
     const WAIT_OBJECT_0: u32 = 0;
@@ -159,26 +163,28 @@ mod imp {
     unsafe impl Sync for Event {}
 
     impl Event {
-        /// An unnamed auto-reset event, or the named manual-reset append
-        /// signal, opened if another process created it first.
-        fn create(name: Option<&str>) -> Option<Self> {
-            let name = name.map(|name| wide(name.as_ref()));
-            let flags = if name.is_some() {
-                CREATE_EVENT_MANUAL_RESET
-            } else {
-                0
-            };
-            // SAFETY: no attributes; `name` is NUL-terminated and outlives
-            // the call. The handle is owned by the returned `Event`.
+        /// An unnamed auto-reset event.
+        fn wake() -> Option<Self> {
+            // SAFETY: no attributes and no name; the handle is owned by the
+            // returned `Event`.
             let handle = unsafe {
                 CreateEventExW(
                     ptr::null(),
-                    name.as_ref().map_or(ptr::null(), |name| name.as_ptr()),
-                    flags,
+                    ptr::null(),
+                    0,
                     EVENT_MODIFY_STATE | SYNCHRONIZE,
                 )
             };
             (!handle.is_null()).then_some(Self(handle))
+        }
+
+        /// This user's manual-reset append signal for `directory`, opened if
+        /// another of this user's processes created it first; `None` when an
+        /// object of that name belongs to another account or is not an event.
+        fn signal(directory: &Path, sid: &str) -> Option<Self> {
+            crate::desktop::user_manual_reset_event(&append_signal_name(directory, sid))
+                .ok()
+                .map(Self)
         }
 
         fn set(&self) {
@@ -274,7 +280,9 @@ mod imp {
     }
 
     pub fn announce_append(directory: &Path) {
-        if let Some(signal) = Event::create(Some(&append_signal_name(directory))) {
+        if let Ok(sid) = crate::desktop::current_user_sid()
+            && let Some(signal) = Event::signal(directory, &sid)
+        {
             signal.set();
         }
     }
@@ -287,15 +295,16 @@ mod imp {
                 .iter()
                 .map(|directory| Watch::open(directory))
                 .collect();
+            let sid = crate::desktop::current_user_sid().ok();
             let signals = directories
                 .iter()
-                .map(|directory| Event::create(Some(&append_signal_name(directory))))
+                .map(|directory| sid.as_deref().and_then(|sid| Event::signal(directory, sid)))
                 .collect();
             Self {
                 directories,
                 watches,
                 signals,
-                wake: Event::create(None).map(Arc::new),
+                wake: Event::wake().map(Arc::new),
             }
         }
 
@@ -441,23 +450,46 @@ mod name_tests {
         assert_eq!(fnv1a(b"foobar"), 0x8594_4171_f739_67e8);
     }
 
+    // Windows path spellings only resolve as absolute paths on Windows.
+    #[cfg(windows)]
     #[test]
     fn spellings_of_one_directory_share_a_name_and_python_derives_the_same() {
-        let name = append_signal_name(Path::new(r"C:\Users\Example\AppData\Local\cadrumo\logs"));
+        const SID: &str = "S-1-5-21-1-2-3-1001";
+        let name = append_signal_name(
+            Path::new(r"C:\Users\Example\AppData\Local\cadrumo\logs"),
+            SID,
+        );
         // Pinned by the Python handler's test as well.
-        assert_eq!(name, r"Local\cadrumo-log-append-c2f24f27d31c8a0a");
+        assert_eq!(
+            name,
+            r"Local\cadrumo-log-append-S-1-5-21-1-2-3-1001-c2f24f27d31c8a0a"
+        );
         for spelling in [
             r"c:\users\example\appdata\local\cadrumo\logs",
             r"C:/Users/Example/AppData/Local/cadrumo/logs",
             r"C:\Users\Example\AppData\Local\cadrumo\logs\",
             r"\\?\C:\Users\Example\AppData\Local\cadrumo\logs",
+            r"C:\Users\Example\AppData\Local\cadrumo\.\logs",
+            r"C:\Users\Example\AppData\Local\cadrumo\tmp\..\logs",
         ] {
-            assert_eq!(append_signal_name(Path::new(spelling)), name, "{spelling}");
+            assert_eq!(
+                append_signal_name(Path::new(spelling), SID),
+                name,
+                "{spelling}"
+            );
         }
         assert_ne!(
-            append_signal_name(Path::new(
-                r"C:\Users\Example\AppData\Local\cadrumo-dev\logs"
-            )),
+            append_signal_name(
+                Path::new(r"C:\Users\Example\AppData\Local\cadrumo-dev\logs"),
+                SID
+            ),
+            name
+        );
+        assert_ne!(
+            append_signal_name(
+                Path::new(r"C:\Users\Example\AppData\Local\cadrumo\logs"),
+                "S-1-5-21-1-2-3-1002"
+            ),
             name
         );
     }
@@ -552,6 +584,27 @@ mod tests {
         });
         assert_eq!(changes.wait(None), Wake::Woken);
         waking.join().unwrap();
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn a_squatted_signal_falls_back_to_observation_instead_of_going_quiet() {
+        use crate::desktop::{Kind, current_user_sid, squat};
+        let directory = scratch("squatted");
+        let sid = current_user_sid().unwrap();
+        // Another holder of the name grants this user only SYNCHRONIZE, so
+        // neither side can set the signal.
+        let _squatter = squat(
+            Kind::Event,
+            &append_signal_name(&directory, &sid),
+            &format!("D:P(A;;0x00100000;;;{sid})"),
+        );
+        let mut changes = FileChanges::new(vec![directory.clone()]);
+        announce_append(&directory);
+        let started = Instant::now();
+        // With no signal the directory is observed on the interval, never waited on forever.
+        assert_eq!(changes.wait(None), Wake::Elapsed);
+        assert!(started.elapsed() < Duration::from_secs(2));
         fs::remove_dir_all(directory).unwrap();
     }
 

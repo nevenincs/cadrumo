@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:2118ea7da387ee09854c82b3e66f25bbfc4510af21b754e5c3ece165a9ddc537'
+body_hash: 'sha256:dc300ce0f7e3762440c3a006c1b8936017f9aa49bfada0fa9d0caef051285715'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -276,6 +276,12 @@ related:
 - `S17` `verify:` `ruff, ruff format, ty` -> `pass`
 - `S18` `verify:` `pytest test_bound_session, test_runtime_session, automation inventory (in the 134 passed)` -> `pass`
 - `S18` `verify:` `ruff, ruff format, ty` -> `pass`
+- `S15` `M` `native/platform/src/desktop.rs`
+- `S15` `M` `native/platform/src/file_changes.rs`
+- `S15` `M` `src/cadrumo/core/log_file_handler.py`
+- `S15` `M` `src/cadrumo/core/tests/test_log_file_handler.py`
+- `S15` `verify:` `platform.resolver (66 passed), desktop-host-unit-test (342 passed), desktop-host-unit-clippy, by CADRUMO-BUILD-DEBUG` -> `pass`
+- `S15` `verify:` `pytest test_log_file_handler (4 passed), ruff, ty, pyrefly, basedpyright` -> `pass`
 
 ## Notes
 
@@ -303,3 +309,4 @@ related:
 - `S16` Reopened by the plan-close review (tui-quiet-app-coverage, high): ScreenHostApp ran the registration, credential and installation screens on a plain Textual App. The new test fails with the plain base
 - `S17` Reopened by the plan-close review (quiet-driver-lost-after-suspend): a suspend closed the stop event for good. Without the reopen the resumed app measured 112 switches in 1.5 s
 - `S18` Plan-close review, low findings: the API-key shell's lapse timer now shares BoundSession's early-wake margin, and BoundSession.watch refuses a second watch instead of replacing the first
+- `S15` Reopened by the plan-close review (log-append-signal-squatting, medium; tail-observe-failure-schedules-no-retry and append-signal-name-normalisation-asymmetry, low). Without the failing count on the listing error the retry test fails; without the pywin32 refusal the squat test raises

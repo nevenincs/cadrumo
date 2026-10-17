@@ -1632,3 +1632,16 @@ for index in range(total):
         );
     }
 }
+
+#[test]
+fn a_failed_directory_listing_schedules_a_retry() {
+    let scratch = Scratch::new("listing-retry");
+    let blocked = scratch.0.join("blocked-parent");
+    fs::write(&blocked, b"not a directory").unwrap();
+    let mut tail = Tail::new(blocked.join("cadrumo.log"), FORMAT);
+    let now = Instant::now();
+    let (_, state) = tail.poll(now);
+    assert_eq!(state.kind, SourceKind::Unreadable);
+    // No file change announces the end of a listing failure, so the tail asks to look again.
+    assert_eq!(tail.due(now), Some(TICK));
+}
