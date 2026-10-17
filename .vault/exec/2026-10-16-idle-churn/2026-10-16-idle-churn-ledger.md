@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:dc300ce0f7e3762440c3a006c1b8936017f9aa49bfada0fa9d0caef051285715'
+body_hash: 'sha256:3c0ab0692b57ed346b2b2456841f3c594c2a321978428da2a4b99d1d396025e5'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -282,6 +282,8 @@ related:
 - `S15` `M` `src/cadrumo/core/tests/test_log_file_handler.py`
 - `S15` `verify:` `platform.resolver (66 passed), desktop-host-unit-test (342 passed), desktop-host-unit-clippy, by CADRUMO-BUILD-DEBUG` -> `pass`
 - `S15` `verify:` `pytest test_log_file_handler (4 passed), ruff, ty, pyrefly, basedpyright` -> `pass`
+- `S15` `verify:` `pytest test_log_file_handler and test_logging_rotation (7 passed), ruff, ty, pyrefly, basedpyright` -> `pass`
+- `S17` `verify:` `pytest test_windows_input (3 passed)` -> `pass`
 
 ## Notes
 
@@ -310,3 +312,5 @@ related:
 - `S17` Reopened by the plan-close review (quiet-driver-lost-after-suspend): a suspend closed the stop event for good. Without the reopen the resumed app measured 112 switches in 1.5 s
 - `S18` Plan-close review, low findings: the API-key shell's lapse timer now shares BoundSession's early-wake margin, and BoundSession.watch refuses a second watch instead of replacing the first
 - `S15` Reopened by the plan-close review (log-append-signal-squatting, medium; tail-observe-failure-schedules-no-retry and append-signal-name-normalisation-asymmetry, low). Without the failing count on the listing error the retry test fails; without the pywin32 refusal the squat test raises
+- `S15` Re-review passed; its low points fixed: Python normalises with ntpath.abspath inside `append_signal_name,` the announce path swallows any exception, and a stray doc comment on a desktop.rs test is removed (comment only)
+- `S17` The resumed case now also asserts the resumed input loop still waits on its stop event; without the reopen it fails

@@ -13,6 +13,7 @@ Elsewhere the handler is the standard rotating handler.
 from __future__ import annotations
 
 import logging
+import ntpath
 import os
 import sys
 from functools import cache
@@ -33,11 +34,17 @@ def append_signal_name(directory: str, sid: str) -> str:
     prefix, with ``\`` separators, no trailing separator and ASCII letters
     lowered, hashed with 64-bit FNV-1a over its UTF-8 bytes.
     """
-    text = directory.removeprefix("\\\\?\\").replace("/", "\\").rstrip("\\")
+    # Windows path rules on every platform: the signal only exists on Windows.
+    text = ntpath.abspath(directory).removeprefix("\\\\?\\").replace("/", "\\").rstrip("\\")
+    return f"Local\\cadrumo-log-append-{sid}-{_fnv1a(text.encode('utf-8').lower()):016x}"
+
+
+def _fnv1a(data: bytes) -> int:
+    """64-bit FNV-1a, which the desktop's platform crate computes alike."""
     digest = _FNV_OFFSET
-    for byte in text.encode("utf-8").lower():
+    for byte in data:
         digest = ((digest ^ byte) * _FNV_PRIME) & 0xFFFFFFFFFFFFFFFF
-    return f"Local\\cadrumo-log-append-{sid}-{digest:016x}"
+    return digest
 
 
 @cache
@@ -48,14 +55,14 @@ def _append_signal(directory: str) -> PyHANDLE | None:
     another type, or by a descriptor this user cannot fully open.
     """
     if sys.platform == "win32":
-        # Imported here: pywin32 costs several milliseconds to import, and only
-        # a process that writes the diagnostic log file needs it.
-        import pywintypes
-        import win32api
-        import win32event
-        import win32security
-
         try:
+            # Imported here: pywin32 costs several milliseconds to import, and
+            # only a process that writes the diagnostic log file needs it.
+            import pywintypes
+            import win32api
+            import win32event
+            import win32security
+
             token = win32security.OpenProcessToken(win32api.GetCurrentProcess(), win32security.TOKEN_QUERY)
             user = win32security.GetTokenInformation(token, win32security.TokenUser)[0]
             sid = win32security.ConvertSidToStringSid(user)
@@ -67,7 +74,8 @@ def _append_signal(directory: str) -> PyHANDLE | None:
             owner = win32security.GetSecurityInfo(
                 handle, win32security.SE_KERNEL_OBJECT, win32security.OWNER_SECURITY_INFORMATION
             ).GetSecurityDescriptorOwner()
-        except pywintypes.error:
+        except Exception:
+            # A reader that cannot be told must never cost a log record.
             return None
         if owner != user:
             handle.Close()
@@ -79,15 +87,14 @@ def _append_signal(directory: str) -> PyHANDLE | None:
 def announce_append(directory: str) -> None:
     """Set ``directory``'s append event on Windows; elsewhere, and on any refusal, do nothing."""
     if sys.platform == "win32":
-        import pywintypes
-        import win32event
-
         handle = _append_signal(os.path.abspath(directory))
         if handle is None:
             return
         try:
+            import win32event
+
             win32event.SetEvent(handle)
-        except pywintypes.error:
+        except Exception:
             # A reader that cannot be told must never cost a log record.
             return
 

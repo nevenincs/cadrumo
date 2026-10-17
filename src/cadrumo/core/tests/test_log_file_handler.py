@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..log_file_handler import AnnouncingRotatingFileHandler, append_signal_name
+from ..log_file_handler import AnnouncingRotatingFileHandler, _fnv1a, append_signal_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -17,9 +17,9 @@ _SID = "S-1-5-21-1-2-3-1001"
 
 def test_the_signal_name_hashes_with_fnv1a_64() -> None:
     # The published FNV-1a 64 test vectors.
-    assert append_signal_name("", _SID) == f"Local\\cadrumo-log-append-{_SID}-cbf29ce484222325"
-    assert append_signal_name("a", _SID) == f"Local\\cadrumo-log-append-{_SID}-af63dc4c8601ec8c"
-    assert append_signal_name("foobar", _SID) == f"Local\\cadrumo-log-append-{_SID}-85944171f73967e8"
+    assert _fnv1a(b"") == 0xCBF29CE484222325
+    assert _fnv1a(b"a") == 0xAF63DC4C8601EC8C
+    assert _fnv1a(b"foobar") == 0x85944171F73967E8
 
 
 def test_spellings_of_one_directory_share_the_name_the_desktop_derives() -> None:
@@ -31,6 +31,8 @@ def test_spellings_of_one_directory_share_the_name_the_desktop_derives() -> None
         "C:/Users/Example/AppData/Local/cadrumo/logs",
         "C:\\Users\\Example\\AppData\\Local\\cadrumo\\logs\\",
         r"\\?\C:\Users\Example\AppData\Local\cadrumo\logs",
+        r"C:\Users\Example\AppData\Local\cadrumo\.\logs",
+        r"C:\Users\Example\AppData\Local\cadrumo\tmp\..\logs",
     ):
         assert append_signal_name(spelling, _SID) == name, spelling
     assert append_signal_name(r"C:\Users\Example\AppData\Local\cadrumo-dev\logs", _SID) != name

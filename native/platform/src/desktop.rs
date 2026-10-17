@@ -1253,8 +1253,6 @@ mod tests {
         );
     }
 
-    /// Creates `name` as `kind` with `sddl`, standing in for an object that
-    /// another account placed first.
     #[test]
     fn a_user_event_is_refused_where_a_squatter_or_another_type_holds_the_name() {
         let user = User::current().unwrap();
