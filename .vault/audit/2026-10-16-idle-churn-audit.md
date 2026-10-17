@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:96f0f712e30f4caba9e14d4a244261e329b88c04fcd9fa938904501c73e98e40'
+body_hash: 'sha256:45c0a9fa0262a0952ab5a3c2d5313879bcd6cffca2159b1da60d6e27dfe218ec'
 related: []
 ---
 
@@ -211,11 +211,11 @@ On 2026-10-17 the operator ruled that an app doing nothing must do no work, afte
 
 ### heartbeat-wakes-the-worker-custody-pass | medium | Each supervisor heartbeat ran a custody revalidation pass in the profile worker
 
-The supervisor pings every 5 s (`native/manager/src/supervision/supervisor.rs:63`). The runtime answers with the workers' in-flight count, which starts a thread that reads the worker's status (`src/cadrumo_runtime/host/session_owner.py:163`). The worker woke its expiry pass after every control request, the status read included. That pass revalidated the custody binding from disk a second time, through two thread hops. A status now leaves the pass asleep, because it adds and moves no deadline; a status that fails still wakes it (`src/cadrumo_runtime/host/worker_service.py:456`, `:472`). `test_a_status_request_is_answered_without_waking_idle_custody_expiry` fails against the previous code.
+The supervisor pinged every 5 s (`native/manager/src/supervision/supervisor.rs:69`; an idle runtime is pinged every 60 s since S20). The runtime answers with the workers' in-flight count, which starts a thread that reads the worker's status (`src/cadrumo_runtime/host/session_owner.py:163`). The worker woke its expiry pass after every control request, the status read included. That pass revalidated the custody binding from disk a second time, through two thread hops. A status now leaves the pass asleep, because it adds and moves no deadline; a status that fails still wakes it (`src/cadrumo_runtime/host/worker_service.py:456`, `:472`). `test_a_status_request_is_answered_without_waking_idle_custody_expiry` fails against the previous code.
 
 ### idle-supervisor-heartbeat | medium | The supervisor's 5 s ping keeps the runtime and its workers waking while idle
 
-Each ping still wakes the supervisor, the runtime's supervision reader, a status thread and the worker. Since S19 the worker answers an activity read that touches no custody and leaves the expiry pass asleep (`src/cadrumo_runtime/host/worker_service.py:300-310`). `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` makes the heartbeat the minimum needed to restart after a hang. On 2026-10-17 the operator ruled for the recommendation, recorded as that ADR's idle heartbeat amendment: after a fresh heartbeat reporting exactly no work in flight, the next ping is due 60 s on, and any work, an unknown count or a stale tick keeps 5 s (`native/manager/src/supervision/supervisor.rs:1141-1156`). The hang bound starts from the later ping, so a busy hang is still found within 30 s and an idle one within 85 s. An idle runtime now wakes for the heartbeat once a minute instead of twelve times. The runtime treats only end of input as the supervisor gone, so a minute's silence is not read as loss (`src/cadrumo_runtime/host/supervised_channel.py:252`).
+Each ping still wakes the supervisor, the runtime's supervision reader, a status thread and the worker. Since S19 the worker answers an activity read that touches no custody and leaves the expiry pass asleep (`src/cadrumo_runtime/host/worker_service.py:300-310`). `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` makes the heartbeat the minimum needed to restart after a hang. On 2026-10-17 the operator ruled for the recommendation, recorded as that ADR's idle heartbeat amendment: after a fresh heartbeat reporting exactly no work in flight, the next ping is due 60 s on, and any work, an unknown count or a stale tick keeps 5 s (`native/manager/src/supervision/supervisor.rs:1142-1164`). Any reply other than a fresh idle one also brings a ping that a late idle reply pushed out back to 5 s, so a runtime that is busy again is asked before its 30 s bound passes. The hang bound starts from the later ping, so a busy hang is still found within 30 s and an idle one within 85 s. An idle runtime now wakes for the heartbeat once a minute instead of twelve times. The runtime treats only end of input as the supervisor gone, so a minute's silence is not read as loss (`src/cadrumo_runtime/host/supervised_channel.py:252`).
 
 ### terminal-cursor-blink | medium | A focused terminal pane redrew on a 600 ms blink timer
 
@@ -290,3 +290,23 @@ The heartbeat entry and the plan's Description now describe S16-S19. The heartbe
 Pending verification, not code defects: no end-to-end test crosses the Python handler to the Rust hub, so the contract rests on the shared pinned vector plus one test on each side. Two tests are sensitive to load: `test_an_idle_app_wakes_no_input_thread_and_its_stop_still_ends_input` (fewer than 8 switches, against 14 or more without the fix) and the watch test, which leaves 200 ms of slack.
 
 The re-review of `e1fe2eacf1`, `b603de688a`, `0ccfb898f2` and `bda6b03a3e` passed. It found that refusal paths can neither hang nor lose a record, and that both sides of the SID name contract match. It also found the visibility changes sound and that the resumed test exercises a real resume. Its three low points are fixed in the follow-up. A stray comment on a test is gone. Python's `append_signal_name` now applies Windows path rules (`ntpath.abspath`) itself, so both implementations derive one name from any spelling of a directory. Every error on the announce path is now swallowed, imports included, as the module promises. The resumed test also asserts that the resumed input loop still waits on its stop event, and the S16 Step names every Cadrumo app. The plan is complete. The heartbeat cadence stays the operator's open decision.
+
+## Plan-close review of S20
+
+The review of `f2536a9157` passed with one medium finding. Every finding below was fixed within S20 before the plan closed again.
+
+### late-reply-after-idle-keeps-far-ping | medium | A late idle reply could leave a busy runtime unpinged past its hang bound
+
+With replies slower than the 5 s interval, an idle reply set the next ping 60 s out, and a busy reply after it moved only the 30 s hang bound, so a healthy busy runtime could be stopped without being pinged. Every reply other than a fresh idle one now brings the next ping back to the busy interval, and busy timing equals the previous rule (`native/manager/src/supervision/supervisor.rs:1144-1150`). `a_runtime_busy_again_after_a_late_idle_reply_is_pinged_before_its_hang_bound` fails against `f2536a9157`.
+
+### pings-equality-assert-is-load-sensitive | low | The idle ping count depended on a reply within 30 ms
+
+The idle half of the cadence test now uses a 100 ms interval. The fixture records its count after the reply and never stops serving on a failed write (`native/manager/tests/fixture/runtime.rs`).
+
+### untested-boundaries | low | An unknown count had no test, and the idle hang only a loose lower bound
+
+The cadence test covers an unknown count. The idle hang test uses a 1 s idle interval, with bounds of 1.2 s and 5 s around the expected 1.57 s.
+
+### stale-line-citations and module-doc-overlong | low | Records cited moved lines, and the module doc had a 152-character line
+
+The heartbeat findings cite current lines, the plan's Verification names S20's checks and allows the minute ping under S10, and the module doc is reflowed. The `manager-supervision-poll` finding keeps its citations as evidence of the code it described.

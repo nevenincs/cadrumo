@@ -1,10 +1,11 @@
 //! The supervision state machine for one storage root.
 //!
 //! It launches the runtime, awaits `ready` while the process lives, pings on an interval that
-//! lengthens while the runtime reports no work in flight, and escalates a stale heartbeat (`stop`, then the drain and watchdog bound, then termination,
-//! with effects left UNKNOWN), classifies every exit and restarts with exponential backoff on
-//! monotonic time up to a crash-loop ceiling. On OWNER_BUSY it adopts a runtime only by
-//! identity and reports a foreign one without ever stopping it.
+//! lengthens while the runtime reports no work in flight, and escalates a stale heartbeat
+//! (`stop`, then the drain and watchdog bound, then termination, with effects left UNKNOWN),
+//! classifies every exit and restarts with exponential backoff on monotonic time up to a
+//! crash-loop ceiling. On OWNER_BUSY it adopts a runtime only by identity and reports a foreign
+//! one without ever stopping it.
 
 use super::adoption::{ForeignReason, InstalledVersions, assess};
 use super::boot_record::{BootRecordUnavailable, read_boot_record};
@@ -1139,20 +1140,27 @@ impl Supervisor {
         let ceiling =
             u64::try_from(self.config.accept_tick_ceiling.as_millis()).unwrap_or(u64::MAX);
         let fresh = heartbeat.tick_age_ms.is_some_and(|age| age <= ceiling);
+        // Only an exact count of zero is evidence of idleness.
+        let idle = fresh && heartbeat.in_flight_operations == Some(0);
+        let now = Instant::now();
+        if !idle {
+            // A late idle reply may have pushed the next ping out; any other reply brings it
+            // back, so a runtime that is busy again is asked before its hang bound passes.
+            *next_ping = (*next_ping).min(now + self.config.heartbeat_interval);
+        }
         if !fresh {
             return;
         }
-        let now = Instant::now();
         *stale_at = now + self.config.heartbeat_staleness;
-        // Only an exact count of zero is evidence of idleness. An idle runtime is next asked
-        // an idle interval on, and its hang bound moves with that ask.
-        if heartbeat.in_flight_operations == Some(0) {
-            let idle = self
+        // An idle runtime is next asked an idle interval on, and its hang bound moves with
+        // that ask.
+        if idle {
+            let interval = self
                 .config
                 .idle_heartbeat_interval
                 .max(self.config.heartbeat_interval);
-            *next_ping = now + idle;
-            *stale_at += idle - self.config.heartbeat_interval;
+            *next_ping = now + interval;
+            *stale_at += interval - self.config.heartbeat_interval;
         }
     }
 

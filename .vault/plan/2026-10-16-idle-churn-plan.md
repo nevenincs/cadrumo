@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:ee05af499950391c8edec5c7a34ef79ded46d5981876df6cea9bb7e0a4b9ca89'
+body_hash: 'sha256:2396738366df0cc5f2e3184ad1dc43b1a4a34396cf8062babfb63aaf7afadd7e'
 ---
 
 # `idle-churn` plan
@@ -50,7 +50,7 @@ S20 was added on 2026-10-17 when the operator ruled on the ping, accepting the r
 - [x] `S17` - Wait in the TUI's Windows input loop for console input or stop, with a deadline only while an escape sequence is pending; `src/cadrumo/entrypoints/tui/windows_input.py`.
 - [x] `S18` - Move the TUI's remaining interval checks to the deadlines and events they already know: the recovery-code handoff, the API-key status and the automation screen lifetimes; `src/cadrumo/entrypoints/tui/secret/registration.py`.
 - [x] `S19` - Answer the supervisor heartbeat's in-flight count with a worker activity read that revalidates no custody; `src/cadrumo_runtime/host/session_owner.py`.
-- [x] `S20` - Ping a runtime that reports no work in flight every 60 s instead of every 5 s, moving its hang bound with the later ping; `native/manager/src/supervision/supervisor.rs`.
+- [ ] `S20` - Ping a runtime that reports no work in flight every 60 s instead of every 5 s, moving its hang bound with the later ping; `native/manager/src/supervision/supervisor.rs`.
 
 ## Parallelization
 
@@ -60,5 +60,6 @@ S01, S02 and S08 are independent of the rest. S04, S05, S06 and S07 depend on S0
 
 - Each Step's focused tests drive the real owner. A cue test performs the mutation and observes the cue on the connection. Expiry tests use the injected clock.
 - Ruff, the format check, the import linter and the type runner pass on the touched files. For S07, cargo check, clippy and the crate's unit tests pass, along with the frontend type check.
-- S10: with the rebuilt desktop open, signed in and idle for at least 60 s, the 30 s process enumeration shows no new Cadrumo child processes. Every long-lived Cadrumo process stays below 1% of one core. A `py-spy record` of the runtime and the worker shows no recurring work.
+- S10: with the rebuilt desktop open, signed in and idle for at least 60 s, the 30 s process enumeration shows no new Cadrumo child processes. Every long-lived Cadrumo process stays below 1% of one core. A `py-spy record` of the runtime and the worker shows no recurring work other than the supervisor's heartbeat, which since S20 an idle runtime answers once a minute.
+- S20: the manager's clippy check and its `manager.rust` and `manager.supervision` tests pass through CADRUMO-BUILD-DEBUG's managed build, including the idle cadence, unknown count, late idle reply and idle hang cases.
 - The plan closes after an integrated review of the changed behavior against the ADR.

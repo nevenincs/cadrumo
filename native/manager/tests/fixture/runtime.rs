@@ -376,6 +376,9 @@ mod fixture {
         let hang_after = number("hang_after");
         let hard_hang = options.get("hang").is_some_and(|hang| hang == "hard");
         let busy = options.contains_key("busy");
+        let busy_after = number("busy_after");
+        let unknown_in_flight = options.contains_key("unknown_in_flight");
+        let first_reply_delay = number("first_reply_delay_ms");
         let tick_age = number("tick_age_ms").unwrap_or(3);
         publish_boot_record(&arguments.root, &boot, &options);
         ready(&mut announcer, &boot, &arguments.identity);
@@ -418,14 +421,25 @@ mod fixture {
             match command.get("type").and_then(Value::as_str) {
                 Some("ping") if !hung => {
                     let seq = command.get("seq").and_then(Value::as_u64).expect("seq");
+                    if answered == 0
+                        && let Some(delay) = first_reply_delay
+                    {
+                        thread::sleep(Duration::from_millis(delay));
+                    }
                     answered += 1;
-                    fs::write(arguments.root.join("fixture-pings"), answered.to_string())
-                        .expect("record the answered pings");
+                    let in_flight = if unknown_in_flight {
+                        "null".to_owned()
+                    } else {
+                        let busy = busy || busy_after.is_some_and(|after| answered > after);
+                        u8::from(busy).to_string()
+                    };
                     announcer.line(&format!(
                         "{{\"type\":\"heartbeat\",\"seq\":{seq},\"tick_age_ms\":{tick_age},\
-                         \"frontends\":0,\"in_flight_operations\":{}}}",
-                        u8::from(busy)
+                         \"frontends\":0,\"in_flight_operations\":{in_flight}}}"
                     ));
+                    // Evidence for the case, written after the reply so it never delays one;
+                    // a failed write is never a reason to stop serving.
+                    let _ = fs::write(arguments.root.join("fixture-pings"), answered.to_string());
                 }
                 Some("ping") => {}
                 Some("stop") if hung && hard_hang => {}

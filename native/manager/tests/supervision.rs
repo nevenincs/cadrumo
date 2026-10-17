@@ -832,15 +832,22 @@ fn an_accept_loop_that_stopped_turning_counts_as_a_hang() {
 }
 
 #[test]
-fn an_idle_runtime_is_pinged_at_the_idle_interval_and_a_busy_one_at_the_heartbeat_interval() {
-    for plan in ["serve", "serve busy"] {
+fn an_idle_runtime_is_pinged_at_the_idle_interval_and_any_other_at_the_heartbeat_interval() {
+    // The idle case's interval leaves its first reply ample time to land before a second
+    // ping would be due.
+    for (plan, interval, idle) in [
+        ("serve", Duration::from_millis(100), true),
+        ("serve busy", Duration::from_millis(30), false),
+        ("serve unknown_in_flight", Duration::from_millis(30), false),
+    ] {
         let mut case = Case::default();
+        case.config.heartbeat_interval = interval;
         case.config.idle_heartbeat_interval = Duration::from_secs(30);
         let root = Root::new(&[plan]);
         let (_seen, outcome) = case.run(&root, |event, handle| {
             if matches!(event, Event::Ready { .. }) {
-                // Over a dozen heartbeat intervals pass before the stop.
-                thread::sleep(Duration::from_millis(400));
+                // Several heartbeat intervals pass before the stop.
+                thread::sleep(Duration::from_millis(600));
                 handle.request(Request::Stop);
             }
         });
@@ -849,10 +856,11 @@ fn an_idle_runtime_is_pinged_at_the_idle_interval_and_a_busy_one_at_the_heartbea
             .expect("the answered pings")
             .parse()
             .expect("a ping count");
-        if plan == "serve" {
+        if idle {
             // The first reply reported no work, so the next ping was due 30 s later.
             assert_eq!(answered, 1, "{plan}");
         } else {
+            // Work in flight, or a count the runtime could not give, is never idleness.
             assert!(answered >= 5, "{plan}: {answered} pings");
         }
     }
@@ -861,21 +869,43 @@ fn an_idle_runtime_is_pinged_at_the_idle_interval_and_a_busy_one_at_the_heartbea
 #[test]
 fn a_hang_after_an_idle_heartbeat_is_found_after_the_idle_ping_goes_unanswered() {
     let mut case = Case::default();
-    case.config.idle_heartbeat_interval = Duration::from_millis(500);
+    case.config.idle_heartbeat_interval = Duration::from_secs(1);
     let root = Root::new(&["serve hang_after=1 hang=hard", "serve"]);
     let (seen, outcome) = case.run(&root, stop_on_ready(2));
     assert_eq!(outcome, SETTLED);
     assert_eq!(restarts(&seen), [RestartClass::Hang]);
     let ready = first_at(&seen, |event| matches!(event, Event::Ready { .. }));
     let hang = first_at(&seen, |event| matches!(event, Event::HangDetected { .. }));
-    // The idle ping is due 500 ms after the first reply, and the runtime then has the
-    // staleness bound less one heartbeat interval to answer: 1070 ms in all, where a
+    // The idle ping is due 1 s after the first reply, and the runtime then has the
+    // staleness bound less one heartbeat interval to answer: 1570 ms in all, where a
     // busy runtime would count as hung 600 ms after its last reply.
+    let found = hang.duration_since(ready);
     assert!(
-        hang.duration_since(ready) >= Duration::from_millis(900),
-        "{:?}",
-        hang.duration_since(ready)
+        found >= Duration::from_millis(1200) && found < Duration::from_secs(5),
+        "{found:?}"
     );
+}
+
+#[test]
+fn a_runtime_busy_again_after_a_late_idle_reply_is_pinged_before_its_hang_bound() {
+    // The first reply reports no work but arrives after three more pings were sent; their
+    // replies report work. Each must bring the next ping back from the idle interval.
+    let mut case = Case::default();
+    case.config.idle_heartbeat_interval = Duration::from_secs(30);
+    let root = Root::new(&["serve first_reply_delay_ms=100 busy_after=1"]);
+    let (seen, outcome) = case.run(&root, |event, handle| {
+        if matches!(event, Event::Ready { .. }) {
+            // Past the 600 ms bound the busy replies set, so a missing ping would be a hang.
+            thread::sleep(Duration::from_millis(1500));
+            handle.request(Request::Stop);
+        }
+    });
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(
+        count(&seen, |event| matches!(event, Event::HangDetected { .. })),
+        0
+    );
+    assert!(restarts(&seen).is_empty());
 }
 
 #[test]

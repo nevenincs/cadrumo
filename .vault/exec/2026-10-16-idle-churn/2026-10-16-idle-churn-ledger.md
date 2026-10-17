@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:adabdcd46ae097ce2e1f3a729c4c8be6207910f2b11423b2a50d6bfd67b8802f'
+body_hash: 'sha256:01ac15ed9854618178495ec200f898587c3ca777aa506c46450d0bd95960f5b7'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -294,6 +294,7 @@ related:
 - `S20` `verify:` `check_manager_lifecycle (clippy -D warnings, build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
 - `S20` `verify:` `ctest manager.rust (build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
 - `S20` `verify:` `ctest manager.supervision incl. both new idle heartbeat tests (build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `rustfmt --edition 2024 (stdin) supervisor.rs supervision.rs fixture/runtime.rs after review fixes` -> `pass`
 
 ## Notes
 
@@ -325,3 +326,4 @@ related:
 - `S15` Re-review passed; its low points fixed: Python normalises with ntpath.abspath inside `append_signal_name,` the announce path swallows any exception, and a stray doc comment on a desktop.rs test is removed (comment only)
 - `S17` The resumed case now also asserts the resumed input loop still waits on its stop event; without the reopen it fails
 - `S20` The manager's Rust tests and clippy run through CADRUMO-BUILD-DEBUG's managed targets after this commit; S20 closes on their result.
+- `S20` Reopened for the plan-close review's medium finding (late idle reply left a busy runtime unpinged) and its lows; closes again on the managed Rust run of the fix commit.
