@@ -115,6 +115,27 @@ def test_identity_manifest_adds_only_the_claim_to_each_authored_manifest(image: 
     assert rendered.replace(claim_line, b"", 1) == authored
 
 
+WINDOWS_10 = "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
+
+
+@pytest.mark.parametrize("image", sorted(windows.APPLICATION_MANIFESTS))
+def test_each_application_manifest_claims_windows_10_and_long_paths(image: str) -> None:
+    # Every application image hosts the interpreter, and an image without the Windows 10
+    # claim makes the hosted runtime read version 6.2 and refuse its native login checks.
+    root = ElementTree.fromstring(windows.APPLICATION_MANIFESTS[image].read_bytes())
+    supported = root.findall(
+        "{urn:schemas-microsoft-com:compatibility.v1}compatibility/"
+        "{urn:schemas-microsoft-com:compatibility.v1}application/"
+        "{urn:schemas-microsoft-com:compatibility.v1}supportedOS"
+    )
+    assert WINDOWS_10 in [entry.get("Id") for entry in supported]
+    long_paths = root.findall(
+        "{urn:schemas-microsoft-com:asm.v3}application/{urn:schemas-microsoft-com:asm.v3}windowsSettings/"
+        "{http://schemas.microsoft.com/SMI/2016/WindowsSettings}longPathAware"
+    )
+    assert [entry.text for entry in long_paths] == ["true"]
+
+
 def test_identity_manifest_quotes_attribute_values() -> None:
     rendered = windows.identity_manifest(
         b'<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">\n</assembly>\n',

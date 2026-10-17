@@ -11,7 +11,8 @@ fn main() {
     let mut windows = tauri_build::WindowsAttributes::new();
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         // The window claims the package identity of its build kind, rendered beside the contract
-        // from windows/desktop.manifest: Tauri's Common Controls dependency plus that claim.
+        // from windows/desktop.manifest: Tauri's Common Controls dependency, the interpreter
+        // host's Windows 10 and long-path claims its runtime and CLI roles rely on, plus that claim.
         let kind = match std::env::var("PROFILE").as_deref() {
             Ok("debug") => "development",
             _ => "release",
