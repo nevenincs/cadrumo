@@ -53,6 +53,9 @@ impl Settle for Scripted {
             Err(failure(ErrorCode::CleanupFailed))
         }
     }
+    fn settle_ended(&mut self) -> bool {
+        self.settles.load(Ordering::SeqCst)
+    }
 }
 
 fn scripted(
@@ -129,19 +132,49 @@ fn closing_all_attempts_every_kind_when_one_fails() {
     );
     assert_eq!(failures.len(), 1);
     assert_eq!(failures[0].code, ErrorCode::CleanupFailed);
-    // The failed session stays owned and is retried, not forgotten.
-    assert_eq!(registry.occupied(), [Kind::Console]);
-    assert!(registry.session(console).is_ok());
-    assert_eq!(
-        registry
-            .open(Kind::Console, scripted(&settles, &attempts))
-            .unwrap_err()
-            .code,
-        ErrorCode::CleanupFailed
-    );
+    // The failed session stays owned and is retried, not forgotten, but its
+    // kind can start again.
+    assert!(registry.occupied().is_empty());
+    assert_eq!(registry.lingering(), 1);
+    assert!(registry.session(console).is_err());
+    registry
+        .open(Kind::Console, scripted(&settles, &attempts))
+        .unwrap();
+    assert_eq!(registry.lingering(), 1);
     stuck.store(true, Ordering::SeqCst);
     assert!(registry.close_all().is_empty());
     assert!(registry.occupied().is_empty());
+    assert_eq!(registry.lingering(), 0);
+}
+
+/// A stopped session that misses its settlement bound must not keep its kind
+/// from starting again; it stays owned and settles once its workers end.
+#[test]
+fn a_session_that_cannot_settle_does_not_block_its_kind() {
+    let stuck = Arc::new(AtomicBool::new(false));
+    let settles = Arc::new(AtomicBool::new(true));
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let mut registry = Registry::default();
+    let first = registry
+        .open(Kind::Tui, scripted(&stuck, &attempts))
+        .unwrap();
+    registry.session(first).unwrap().live = false;
+    let second = registry
+        .open(Kind::Tui, scripted(&settles, &attempts))
+        .unwrap();
+    assert!(second > first);
+    assert_eq!(attempts.load(Ordering::SeqCst), 1);
+    assert_eq!(registry.lingering(), 1);
+    assert!(registry.session(first).is_err());
+    stuck.store(true, Ordering::SeqCst);
+    registry
+        .open(Kind::Console, scripted(&settles, &attempts))
+        .unwrap();
+    assert_eq!(
+        registry.lingering(),
+        0,
+        "an ended session settles on the next open"
+    );
 }
 
 #[test]
@@ -346,7 +379,7 @@ fn an_open_for_a_replaced_document_is_refused_and_its_session_settled() {
 /// A session that misses its settlement bound stays owned, and the open
 /// reports the settlement failure rather than the refusal.
 #[test]
-fn a_stale_session_that_cannot_settle_stays_owned() {
+fn a_stale_session_that_cannot_settle_lingers_owned() {
     let stuck = Arc::new(AtomicBool::new(false));
     let attempts = Arc::new(AtomicUsize::new(0));
     let registry = Mutex::new(Registry::default());
@@ -358,9 +391,11 @@ fn a_stale_session_that_cannot_settle_stays_owned() {
     })
     .unwrap_err();
     assert_eq!(error.code, ErrorCode::CleanupFailed);
-    assert_eq!(registry.lock().unwrap().occupied(), [Kind::Tui]);
+    assert!(registry.lock().unwrap().occupied().is_empty());
+    assert_eq!(registry.lock().unwrap().lingering(), 1);
     stuck.store(true, Ordering::SeqCst);
     assert!(registry.lock().unwrap().close_all().is_empty());
+    assert_eq!(registry.lock().unwrap().lingering(), 0);
 }
 
 /// A launch whose sessions cannot start: every path is absolute and the
@@ -687,6 +722,15 @@ fn a_session_whose_frames_cannot_be_delivered_stops_itself() {
                 .as_ref()
                 .is_some_and(|error| error.code == ErrorCode::WriteFailed)
     }));
+    // portable-pty's Windows killer answers a successful termination with an
+    // error; the session must not report it as a cleanup failure.
+    assert!(
+        snapshot.events.iter().all(|event| event
+            .failure
+            .as_ref()
+            .is_none_or(|error| error.code != ErrorCode::CleanupFailed)),
+        "a successful termination was reported as a cleanup failure"
+    );
     assert!(snapshot.output.is_empty());
     // The refused started frame ends delivery; later output is discarded.
     assert_eq!(attempts.load(Ordering::SeqCst), 1);
@@ -762,7 +806,8 @@ fn shutdown_refuses_new_children_and_retains_failed_cleanup_for_retry() {
         .open(Kind::Tui, scripted(&settles, &attempts))
         .unwrap();
     assert_eq!(registry.shutdown().len(), 1);
-    assert_eq!(registry.occupied(), [Kind::Tui]);
+    assert!(registry.occupied().is_empty());
+    assert_eq!(registry.lingering(), 1);
     for kind in Kind::ALL {
         assert_eq!(
             registry
@@ -774,7 +819,7 @@ fn shutdown_refuses_new_children_and_retains_failed_cleanup_for_retry() {
     }
     settles.store(true, Ordering::SeqCst);
     assert!(registry.shutdown().is_empty());
-    assert!(registry.occupied().is_empty());
+    assert_eq!(registry.lingering(), 0);
     assert_eq!(
         registry
             .open(Kind::Tui, || panic!("shutdown is permanent"))

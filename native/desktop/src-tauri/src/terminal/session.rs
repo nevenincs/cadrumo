@@ -73,6 +73,22 @@ type Master = Arc<Mutex<Option<Box<dyn MasterPty + Send>>>>;
 
 type Killer = Box<dyn ChildKiller + Send + Sync>;
 
+/// Terminates the child. portable-pty 0.9.0's Windows killer inverts
+/// `TerminateProcess`: it answers a successful termination with the thread's
+/// previous, unrelated error and a refused one with `Ok`. Read it the right
+/// way round, so only a refused termination is reported, with its own code.
+fn terminate(killer: &mut Killer) -> std::io::Result<()> {
+    let outcome = killer.kill();
+    if !cfg!(windows) {
+        return outcome;
+    }
+    match outcome {
+        // The refusal's code is still the thread's last error.
+        Ok(()) => Err(std::io::Error::last_os_error()),
+        Err(_) => Ok(()),
+    }
+}
+
 /// State shared between the session handle and its workers.
 struct Shared {
     process: u64,
@@ -122,7 +138,8 @@ impl Shared {
         self.stop_input();
         self.credit.stop();
         if !self.exited.load(Ordering::Acquire)
-            && let Err(error) = self.killer.lock().unwrap_or_else(|e| e.into_inner()).kill()
+            && let Err(error) =
+                terminate(&mut self.killer.lock().unwrap_or_else(|e| e.into_inner()))
         {
             diagnostics.failure_for(
                 self.process,
@@ -147,7 +164,7 @@ pub struct Session {
     shared: Arc<Shared>,
     input: SyncSender<Input>,
     master: Master,
-    killer: Box<dyn ChildKiller + Send + Sync>,
+    killer: Killer,
     kill_error: Option<ApplicationError>,
     finisher: Option<JoinHandle<Result<()>>>,
     /// Closed when the finisher returns, so settlement is awaited as an event.
@@ -280,7 +297,7 @@ impl Session {
             Ok(finisher) => finisher,
             Err(error) => {
                 // Nothing can wait for this child; terminate it and close the PTY.
-                if let Err(kill) = killer.kill() {
+                if let Err(kill) = terminate(&mut killer) {
                     diagnostics
                         .failure_for(process, failure(ErrorCode::CleanupFailed).caused_by(kill));
                 }
@@ -461,9 +478,7 @@ impl Session {
         if !self.shared.exited.load(Ordering::Acquire) {
             // A child that exits concurrently can refuse termination; only a
             // missed settlement deadline makes this error the reported cause.
-            self.kill_error = self
-                .killer
-                .kill()
+            self.kill_error = terminate(&mut self.killer)
                 .err()
                 .map(|e| failure(ErrorCode::CleanupFailed).caused_by(e));
         }
@@ -504,6 +519,15 @@ impl Session {
             // The finisher's end closes this channel; nothing is ever sent.
             let _ = self.finished.recv_timeout(remaining);
         }
+    }
+
+    /// Settles without waiting once every worker has ended; a session whose
+    /// workers still run stays unsettled and reports nothing.
+    pub fn settle_ended(&mut self) -> bool {
+        if !self.settled && self.finisher.as_ref().is_none_or(JoinHandle::is_finished) {
+            let _ = self.await_stop(Instant::now());
+        }
+        self.settled
     }
 
     pub fn stop(&mut self) -> Result<()> {
