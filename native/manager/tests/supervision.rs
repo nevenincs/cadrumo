@@ -138,6 +138,7 @@ impl Default for Case {
             config: SupervisorConfig {
                 readiness_ceiling: Duration::from_secs(20),
                 heartbeat_interval: Duration::from_millis(30),
+                idle_heartbeat_interval: Duration::from_millis(30),
                 heartbeat_staleness: Duration::from_millis(600),
                 accept_tick_ceiling: Duration::from_millis(500),
                 drain_bound: Duration::from_millis(1500),
@@ -242,6 +243,13 @@ fn events(seen: &[Seen]) -> Vec<&Event> {
 
 fn count(seen: &[Seen], matches: impl Fn(&Event) -> bool) -> usize {
     seen.iter().filter(|seen| matches(&seen.event)).count()
+}
+
+fn first_at(seen: &[Seen], matches: impl Fn(&Event) -> bool) -> Instant {
+    seen.iter()
+        .find(|seen| matches(&seen.event))
+        .expect("the event was observed")
+        .at
 }
 
 fn restarts(seen: &[Seen]) -> Vec<RestartClass> {
@@ -821,6 +829,53 @@ fn an_accept_loop_that_stopped_turning_counts_as_a_hang() {
     let (seen, outcome) = Case::default().run(&root, stop_on_ready(2));
     assert_eq!(outcome, SETTLED);
     assert_eq!(restarts(&seen), [RestartClass::Hang]);
+}
+
+#[test]
+fn an_idle_runtime_is_pinged_at_the_idle_interval_and_a_busy_one_at_the_heartbeat_interval() {
+    for plan in ["serve", "serve busy"] {
+        let mut case = Case::default();
+        case.config.idle_heartbeat_interval = Duration::from_secs(30);
+        let root = Root::new(&[plan]);
+        let (_seen, outcome) = case.run(&root, |event, handle| {
+            if matches!(event, Event::Ready { .. }) {
+                // Over a dozen heartbeat intervals pass before the stop.
+                thread::sleep(Duration::from_millis(400));
+                handle.request(Request::Stop);
+            }
+        });
+        assert_eq!(outcome, SETTLED);
+        let answered: u64 = fs::read_to_string(root.path().join("fixture-pings"))
+            .expect("the answered pings")
+            .parse()
+            .expect("a ping count");
+        if plan == "serve" {
+            // The first reply reported no work, so the next ping was due 30 s later.
+            assert_eq!(answered, 1, "{plan}");
+        } else {
+            assert!(answered >= 5, "{plan}: {answered} pings");
+        }
+    }
+}
+
+#[test]
+fn a_hang_after_an_idle_heartbeat_is_found_after_the_idle_ping_goes_unanswered() {
+    let mut case = Case::default();
+    case.config.idle_heartbeat_interval = Duration::from_millis(500);
+    let root = Root::new(&["serve hang_after=1 hang=hard", "serve"]);
+    let (seen, outcome) = case.run(&root, stop_on_ready(2));
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(restarts(&seen), [RestartClass::Hang]);
+    let ready = first_at(&seen, |event| matches!(event, Event::Ready { .. }));
+    let hang = first_at(&seen, |event| matches!(event, Event::HangDetected { .. }));
+    // The idle ping is due 500 ms after the first reply, and the runtime then has the
+    // staleness bound less one heartbeat interval to answer: 1070 ms in all, where a
+    // busy runtime would count as hung 600 ms after its last reply.
+    assert!(
+        hang.duration_since(ready) >= Duration::from_millis(900),
+        "{:?}",
+        hang.duration_since(ready)
+    );
 }
 
 #[test]

@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:99672d1f88a3cce1cd43b75fa54cad5e69a8cca04032187e4ae62b366d5b635c'
+body_hash: 'sha256:8bc117bfdcfc773349f2f39db8123dcb49688d3328bfbc459e079b17cd575cc7'
 ---
 
 # `idle-churn` plan
@@ -26,6 +26,8 @@ S13-S15 were added on 2026-10-17. Signed-in idle measured 3.366% of one core, an
 S16-S19 were added on the same day under the same ruling. The operator asked for the TUI to be combed further, and five parallel combs plus a headless timer listing found what still woke it. S16 stops idle widgets animating. S17 replaces Textual's 100 ms Windows input loop. S18 moves the TUI's remaining interval checks to the deadlines and events they already know. S19 narrows the heartbeat's worker read to an activity count that revalidates no custody. The ping's 5 s cadence stays with `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. The plan-close review then reopened S15-S17: the screen host still ran a plain Textual app, and the append signal had no owner-only descriptor.
 
 Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `shell/sign_in/mod.rs`, `agent/mod.rs`, `agent/person.rs` and `shell/language.rs`. CADRUMO-RUNTIME-DEBUG or CADRUMO-BUILD-DEBUG has a `_report_failure` hunk in `session_hold.py`, and RUNTIME-DEBUG has hunks in `session_authority_core.py`. Edits keep those hunks, and commits stage only this plan's hunks. The operator's running desktop (pid 60364) is not restarted. CADRUMO-BUILD-DEBUG rebuilds `stage/Debug` when the operator closes it.
+
+S20 was added on 2026-10-17 when the operator ruled on the ping, accepting the recommendation of 60 s while the runtime reports no work in flight and 5 s otherwise. It amends `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` under that ruling. CADRUMO-BUILD-DEBUG handed `supervisor.rs` over for it and runs the manager's Rust tests, since Rust tests here run only through its managed targets.
 
 ## Steps
 
@@ -48,6 +50,7 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 - [x] `S17` - Wait in the TUI's Windows input loop for console input or stop, with a deadline only while an escape sequence is pending; `src/cadrumo/entrypoints/tui/windows_input.py`.
 - [x] `S18` - Move the TUI's remaining interval checks to the deadlines and events they already know: the recovery-code handoff, the API-key status and the automation screen lifetimes; `src/cadrumo/entrypoints/tui/secret/registration.py`.
 - [x] `S19` - Answer the supervisor heartbeat's in-flight count with a worker activity read that revalidates no custody; `src/cadrumo_runtime/host/session_owner.py`.
+- [ ] `S20` - Ping a runtime that reports no work in flight every 60 s instead of every 5 s, moving its hang bound with the later ping; `native/manager/src/supervision/supervisor.rs`.
 
 ## Parallelization
 

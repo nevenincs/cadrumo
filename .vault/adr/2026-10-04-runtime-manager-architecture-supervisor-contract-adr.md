@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:f162063af82d60144a28bc2173bf05b98c95c47629cd3ca688c00156978ba5d6'
+body_hash: 'sha256:1e9ec4b84947f2f45f626fffc7a99ab6dad1b4f98126b0461d29f134413aca27'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
@@ -111,6 +111,10 @@ The user explicitly removed desktop/logon launch-context admission. Earlier requ
 ### 2026-10-10 authorized Windows optional-installation amendment
 
 The user's explicit continuation accepts the revised topology in 2026-10-04-runtime-manager-architecture-adr: optional machine installation owns an automatic SCM lifecycle broker, user installation owns unprivileged login startup, and a running GUI hosts the shared manager core when no installed manager owns its session. This supersedes earlier no-service, mandatory-installation and separate-manager-only statements within Windows product startup. The boot broker launches only verified machine-installed manager workers using genuine per-user logon tokens and owns no taxpayer runtime or credentials as SYSTEM. Native authentication, profile/session binding, runtime supervisor framing, operation custody and connect-only CLI/TUI/MCP remain unchanged. Registered service existence is distinct from running state and authenticated runtime readiness. Actual boot/login/service acceptance must be reported independently from authored metadata and command-only package fallback evidence.
+
+### 2026-10-17 authorized idle heartbeat amendment
+
+The user accepted the recommendation that the heartbeat follow the work the runtime reports ("go with rexommedstion", 2026-10-17). After a fresh heartbeat whose in-flight operation count is exactly zero, the next ping is due 60 s later. A nonzero or unknown count, or a reply whose accept-loop tick is not fresh, keeps the 5 s interval. After an idle heartbeat the hang bound starts from that later ping, so the runtime keeps 25 s past an unanswered ping to answer fresh: a busy runtime counts as hung 30 s after its last fresh heartbeat, as before, and an idle one 85 s after. A hang that begins while the runtime is idle, or as work starts within the idle interval, is therefore found within 85 s rather than 30 s. The ping and heartbeat lines, accept-loop freshness, stop escalation and restart classes are unchanged. Evidence: `2026-10-16-idle-churn-audit`, finding idle-supervisor-heartbeat. Implementation: `2026-10-16-idle-churn-plan` S20.
 
 ## Implementation
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a65be7b0aad2be31f517515034a129556197ee1fda94b5b35f49a2151c46281'
+body_hash: 'sha256:96f0f712e30f4caba9e14d4a244261e329b88c04fcd9fa938904501c73e98e40'
 related: []
 ---
 
@@ -215,7 +215,7 @@ The supervisor pings every 5 s (`native/manager/src/supervision/supervisor.rs:63
 
 ### idle-supervisor-heartbeat | medium | The supervisor's 5 s ping keeps the runtime and its workers waking while idle
 
-Each ping still wakes the supervisor, the runtime's supervision reader, a status thread and the worker. Since S19 the worker answers an activity read that touches no custody and leaves the expiry pass asleep (`src/cadrumo_runtime/host/worker_service.py:300-310`). `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` makes the heartbeat the minimum needed to restart after a hang, so removing it while idle changes that decision. Recommendation: decide whether hang supervision may stop while the runtime reports no in-flight work, and how a hang that starts at idle is then found.
+Each ping still wakes the supervisor, the runtime's supervision reader, a status thread and the worker. Since S19 the worker answers an activity read that touches no custody and leaves the expiry pass asleep (`src/cadrumo_runtime/host/worker_service.py:300-310`). `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` makes the heartbeat the minimum needed to restart after a hang. On 2026-10-17 the operator ruled for the recommendation, recorded as that ADR's idle heartbeat amendment: after a fresh heartbeat reporting exactly no work in flight, the next ping is due 60 s on, and any work, an unknown count or a stale tick keeps 5 s (`native/manager/src/supervision/supervisor.rs:1141-1156`). The hang bound starts from the later ping, so a busy hang is still found within 30 s and an idle one within 85 s. An idle runtime now wakes for the heartbeat once a minute instead of twelve times. The runtime treats only end of input as the supervisor gone, so a minute's silence is not read as loss (`src/cadrumo_runtime/host/supervised_channel.py:252`).
 
 ### terminal-cursor-blink | medium | A focused terminal pane redrew on a 600 ms blink timer
 

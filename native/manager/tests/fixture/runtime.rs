@@ -419,6 +419,8 @@ mod fixture {
                 Some("ping") if !hung => {
                     let seq = command.get("seq").and_then(Value::as_u64).expect("seq");
                     answered += 1;
+                    fs::write(arguments.root.join("fixture-pings"), answered.to_string())
+                        .expect("record the answered pings");
                     announcer.line(&format!(
                         "{{\"type\":\"heartbeat\",\"seq\":{seq},\"tick_age_ms\":{tick_age},\
                          \"frontends\":0,\"in_flight_operations\":{}}}",

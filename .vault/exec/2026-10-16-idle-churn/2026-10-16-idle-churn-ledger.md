@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c0ab0692b57ed346b2b2456841f3c594c2a321978428da2a4b99d1d396025e5'
+body_hash: 'sha256:eeea679508c56f75b281fafaca38dbb2f467ce6c85d9154f5753c6b162026ba4'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -284,6 +284,13 @@ related:
 - `S15` `verify:` `pytest test_log_file_handler (4 passed), ruff, ty, pyrefly, basedpyright` -> `pass`
 - `S15` `verify:` `pytest test_log_file_handler and test_logging_rotation (7 passed), ruff, ty, pyrefly, basedpyright` -> `pass`
 - `S17` `verify:` `pytest test_windows_input (3 passed)` -> `pass`
+- `S20` `M` `native/manager/src/supervision/supervisor.rs`
+- `S20` `M` `native/manager/tests/supervision.rs`
+- `S20` `M` `native/manager/tests/fixture/runtime.rs`
+- `S20` `M` `.vault/adr/2026-10-04-runtime-manager-architecture-supervisor-contract-adr.md`
+- `S20` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S20` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S20` `verify:` `rustfmt --edition 2024 (stdin) supervisor.rs supervision.rs fixture/runtime.rs` -> `pass`
 
 ## Notes
 
@@ -314,3 +321,4 @@ related:
 - `S15` Reopened by the plan-close review (log-append-signal-squatting, medium; tail-observe-failure-schedules-no-retry and append-signal-name-normalisation-asymmetry, low). Without the failing count on the listing error the retry test fails; without the pywin32 refusal the squat test raises
 - `S15` Re-review passed; its low points fixed: Python normalises with ntpath.abspath inside `append_signal_name,` the announce path swallows any exception, and a stray doc comment on a desktop.rs test is removed (comment only)
 - `S17` The resumed case now also asserts the resumed input loop still waits on its stop event; without the reopen it fails
+- `S20` The manager's Rust tests and clippy run through CADRUMO-BUILD-DEBUG's managed targets after this commit; S20 closes on their result.

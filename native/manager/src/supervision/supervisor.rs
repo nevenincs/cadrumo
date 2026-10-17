@@ -1,7 +1,7 @@
 //! The supervision state machine for one storage root.
 //!
-//! It launches the runtime, awaits `ready` while the process lives, pings on an interval and
-//! escalates a stale heartbeat (`stop`, then the drain and watchdog bound, then termination,
+//! It launches the runtime, awaits `ready` while the process lives, pings on an interval that
+//! lengthens while the runtime reports no work in flight, and escalates a stale heartbeat (`stop`, then the drain and watchdog bound, then termination,
 //! with effects left UNKNOWN), classifies every exit and restarts with exponential backoff on
 //! monotonic time up to a crash-loop ceiling. On OWNER_BUSY it adopts a runtime only by
 //! identity and reports a foreign one without ever stopping it.
@@ -39,9 +39,14 @@ pub const EVENT_QUEUE: usize = 512;
 pub struct SupervisorConfig {
     /// How long a live runtime may take to report `ready`, including first-run scanning.
     pub readiness_ceiling: Duration,
-    /// Interval between pings once the runtime is ready.
+    /// Interval between pings once the runtime is ready, while it reports work in flight or
+    /// has not shown that it has none.
     pub heartbeat_interval: Duration,
-    /// How long without a fresh heartbeat before the runtime counts as hung.
+    /// Interval after a fresh heartbeat that reported no work in flight; never shorter than
+    /// `heartbeat_interval`.
+    pub idle_heartbeat_interval: Duration,
+    /// How long without a fresh heartbeat before the runtime counts as hung. After an idle
+    /// heartbeat the bound starts from the later ping, so the reply allowance is unchanged.
     pub heartbeat_staleness: Duration,
     /// A heartbeat whose accept-loop tick is older than this is not fresh.
     pub accept_tick_ceiling: Duration,
@@ -61,6 +66,7 @@ impl Default for SupervisorConfig {
         Self {
             readiness_ceiling: Duration::from_secs(180),
             heartbeat_interval: Duration::from_secs(5),
+            idle_heartbeat_interval: Duration::from_secs(60),
             heartbeat_staleness: Duration::from_secs(30),
             accept_tick_ceiling: Duration::from_secs(30),
             // The runtime drains for 15 s and its watchdog forces an exit 2 s later.
@@ -455,7 +461,8 @@ enum Phase {
     Ready {
         sent: u64,
         acknowledged: u64,
-        last_fresh: Instant,
+        /// When the runtime counts as hung unless a fresh heartbeat arrives first.
+        stale_at: Instant,
         next_ping: Instant,
     },
     /// An adopted runtime: no channel, so no readiness or heartbeat.
@@ -967,11 +974,11 @@ impl Supervisor {
             Phase::Starting { deadline } => (now >= *deadline).then_some(false),
             Phase::Ready {
                 sent,
-                last_fresh,
+                stale_at,
                 next_ping,
                 ..
             } => {
-                if now.saturating_duration_since(*last_fresh) >= self.config.heartbeat_staleness {
+                if now >= *stale_at {
                     Some(true)
                 } else {
                     if now >= *next_ping {
@@ -1041,12 +1048,12 @@ impl Supervisor {
             (Phase::Starting { deadline }, None) => Some(*deadline),
             (
                 Phase::Ready {
-                    last_fresh,
+                    stale_at,
                     next_ping,
                     ..
                 },
                 None,
-            ) => Some((*next_ping).min(*last_fresh + self.config.heartbeat_staleness)),
+            ) => Some((*next_ping).min(*stale_at)),
             (Phase::Unmonitored, None) => None,
         };
         deadline.map_or(unbounded, |deadline| Some(bounded(deadline)))
@@ -1083,7 +1090,7 @@ impl Supervisor {
         watch.phase = Phase::Ready {
             sent: 0,
             acknowledged: 0,
-            last_fresh: now,
+            stale_at: now + self.config.heartbeat_staleness,
             next_ping: now,
         };
         self.reprobed = false;
@@ -1119,8 +1126,8 @@ impl Supervisor {
         let Phase::Ready {
             sent,
             acknowledged,
-            last_fresh,
-            ..
+            stale_at,
+            next_ping,
         } = &mut watch.phase
         else {
             return;
@@ -1131,8 +1138,21 @@ impl Supervisor {
         *acknowledged = heartbeat.seq;
         let ceiling =
             u64::try_from(self.config.accept_tick_ceiling.as_millis()).unwrap_or(u64::MAX);
-        if heartbeat.tick_age_ms.is_some_and(|age| age <= ceiling) {
-            *last_fresh = Instant::now();
+        let fresh = heartbeat.tick_age_ms.is_some_and(|age| age <= ceiling);
+        if !fresh {
+            return;
+        }
+        let now = Instant::now();
+        *stale_at = now + self.config.heartbeat_staleness;
+        // Only an exact count of zero is evidence of idleness. An idle runtime is next asked
+        // an idle interval on, and its hang bound moves with that ask.
+        if heartbeat.in_flight_operations == Some(0) {
+            let idle = self
+                .config
+                .idle_heartbeat_interval
+                .max(self.config.heartbeat_interval);
+            *next_ping = now + idle;
+            *stale_at += idle - self.config.heartbeat_interval;
         }
     }
 
