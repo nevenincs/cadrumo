@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:b21b773411dcac7c314d1a542c3cc48b9f8fadb79adcf8867f1c960452f0013e'
+body_hash: 'sha256:e4531b84e27a4de5d44c022037b3df2deb687f93eb4dbcf67b604357dee897a9'
 related:
   - "[[2026-10-17-single-binary-process-tree-plan]]"
 ---
@@ -80,6 +80,18 @@ related:
 - `S02` `verify:` `pytest test_native_service_descriptors.py and test_session_holder.py` -> `pass`
 - `S02` `verify:` `concurrent_sessions_probe on stage/Debug: fan_in, cross_profile, race, sign_out and resume_race checks` -> `pass`
 - `S02` `verify:` `concurrent_sessions_probe no_error_records` -> `fail`
+- `S03` `M` `src/cadrumo_client/contracts/service_access.py`
+- `S03` `M` `src/cadrumo_runtime/adapters/service_verification.py`
+- `S03` `M` `src/cadrumo_runtime/adapters/tests/test_service_verification.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_services.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/test_desktop_holder_ancestry.py`
+- `S03` `M` `dev/packaging/native/service_descriptors.py`
+- `S03` `M` `dev/packaging/tests/test_native_service_descriptors.py`
+- `S03` `verify:` `pytest service verification, holder ancestry, service records, frontend matrix, contracts 225 tests` -> `pass`
+- `S03` `verify:` `ty, pyrefly and basedpyright on changed modules` -> `pass`
+- `S03` `verify:` `cmake app-payload debug` -> `pass`
+- `S03` `verify:` `concurrent_sessions_probe stage/Debug with launch_arguments bound` -> `pass`
+- `S03` `verify:` `backend_probe stage/Debug` -> `pass`
 
 ## Notes
 
@@ -87,3 +99,4 @@ related:
 - `S01` session watch helper (cadrumo-runtime.exe) still shows as its own row until S02; WebView2 children show under the WebView2 Manager row
 - `S02` Task Manager groups only process trees present when it opens; processes started while it is open get their own rows, so grouping is judged in a freshly opened Task Manager. WebView2 stays under its own Microsoft row. Roles run on Windows only until S08.
 - `S02` desktop-session admission still matches by image and parent image only; once runtime workers run as cadrumo.exe (S03) they would pass it, so admission must bind role and invocation or parent incarnation before S03 lands. `no_error_records` fails on refusal boundaries logged at ERROR since 262e873ce3, outside this change.
+- `S03` Admission part of S03 done; sys.executable re-entry for workers and the KDF child is still open.
