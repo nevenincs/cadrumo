@@ -16,7 +16,9 @@ desktop:
     attachments_uploading: 'Feltöltés alatt: {count}'
     can_read_images: képeket olvasni
     can_read_pdfs: PDF-eket olvasni
+    can_run_subagents: alügynököket indítani
     can_search_web: a weben keresni
+    can_stop_subagent: egy alügynököt leállítani
     can_use_tools: eszközöket használni
     can_write: fájlokat írni
     cancel: Mégse

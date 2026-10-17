@@ -131,6 +131,21 @@ def verify(root: Path) -> None:
         hosted.CREDENTIAL_FRAME_VERSION == frame.CREDENTIAL_FRAME_VERSION,
         "Bundled agent reads another credential frame version",
     )
+    catalog_source = importlib.import_module("cadrumo_agent_service.adapters.agent_provider_catalog")
+    programs = importlib.import_module("cadrumo_agent_service.adapters.agent_programs")
+    agent_image = (
+        root / manifest["layout"]["paths"]["native"] / ("cadrumo-agent" + manifest["layout"]["entrypoint_suffix"])
+    )
+    source = catalog_source.AgentProviderCatalogSource(
+        received={**os.environ, programs.PACKAGE_AGENT_VARIABLE: str(agent_image)}
+    )
+    catalog = source.catalog()
+    identities = {entry.provider for entry in catalog.providers}
+    require(
+        set(source.gui_sign_in_providers()) <= identities,
+        "GUI sign-in capability names a provider absent from the packaged catalog",
+    )
+    sys.stdout.write(f"provider catalog {catalog.schema_version}, {len(catalog.providers)} lanes parsed by host\n")
     sys.stdout.write(
         f"hosting contract {hosted.HOSTING_CONTRACT}, credential frame {hosted.CREDENTIAL_FRAME_VERSION}\n"
     )

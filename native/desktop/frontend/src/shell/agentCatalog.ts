@@ -8,7 +8,6 @@ import type {
 import type {
   AgentCatalogEntry,
   AgentEffort,
-  AgentLaneCapability,
   AgentProviderCatalog,
   AgentProviderLane,
   AgentSelectionRecord,
@@ -16,7 +15,7 @@ import type {
 import type { Translate } from "./strings";
 
 // The agent column's choices, deduced from cadrumo-agent's provider catalog
-// alone. The column adds only the words for the catalog's closed values; it
+// alone. The column adds only the words for the catalog's known values; it
 // names no provider, model, effort or capability of its own, and this is the
 // one place any of it is worked out.
 //
@@ -38,8 +37,9 @@ import type { Translate } from "./strings";
 // A run takes a provider, a transport, a model and an effort, and nothing
 // else (AgentSpec, agent/spec.py): the execution mode and the catalog entry
 // are the service's to resolve, and a model's native controls are not part of
-// it, so none is offered. A capability proof names a tool server, not a model,
-// so what a lane has been proven to do is shown for the way, not for a model.
+// it, so none is offered. A capability proof may name a tool server or a
+// multi-agent generation. This way-level summary only shows proofs that apply
+// across the lane, never a model- or generation-specific proof.
 
 /** The identity of a lane: one provider, reached one way. */
 const wayId = (lane: AgentProviderLane) =>
@@ -71,7 +71,7 @@ const effortChoice = (t: Translate, effort: AgentEffort): Choice => ({
   name: effortWords(t, effort),
 });
 
-function capabilityWords(t: Translate, capability: AgentLaneCapability) {
+function capabilityWords(t: Translate, capability: string): string | undefined {
   switch (capability) {
     case "tool_access":
       return t("desktop.agent.can_use_tools");
@@ -83,16 +83,29 @@ function capabilityWords(t: Translate, capability: AgentLaneCapability) {
       return t("desktop.agent.can_read_images");
     case "pdf_reading":
       return t("desktop.agent.can_read_pdfs");
+    case "subagents":
+      return t("desktop.agent.can_run_subagents");
+    case "subagent_cancel":
+      return t("desktop.agent.can_stop_subagent");
+    default:
+      return undefined;
   }
 }
 
 /** What the lane has been proven to do on this host. A proof is the lane's,
  * not a model's: `entry` on one names a tool server, not a model, so the
- * proofs are shown for the way into a provider and never for a model. */
+ * proofs are shown for the way into a provider and never for a model. A
+ * generation-scoped proof is not a claim about the whole way, so it is left
+ * out of this lane-level summary. */
 function provenCapabilities(t: Translate, lane: AgentProviderLane): string[] {
   const words = (lane.capability_proofs ?? [])
-    .filter((proof) => proof.state === "proven")
-    .map((proof) => capabilityWords(t, proof.capability));
+    .filter(
+      (proof) =>
+        proof.state === "proven" &&
+        (proof.generation === undefined || proof.generation === null),
+    )
+    .map((proof) => capabilityWords(t, proof.capability))
+    .filter((word): word is string => word !== undefined);
   return [...new Set(words)];
 }
 

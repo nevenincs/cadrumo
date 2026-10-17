@@ -16,7 +16,9 @@ desktop:
     attachments_uploading: 'S''estan pujant: {count}'
     can_read_images: llegir imatges
     can_read_pdfs: llegir PDF
+    can_run_subagents: executar subagents
     can_search_web: cercar al web
+    can_stop_subagent: aturar un subagent
     can_use_tools: fer servir eines
     can_write: escriure fitxers
     cancel: Cancel·la

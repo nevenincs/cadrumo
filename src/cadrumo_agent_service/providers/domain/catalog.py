@@ -129,13 +129,14 @@ class ProviderCatalogEntry(BaseModel):
     transport: ProviderTransport
     display_name: str = Field(min_length=1, max_length=64)
     """The identity's product name, the same on every lane of that identity."""
+    description: str
     auth_kind: ProviderAuthKind
     default_base_url: str | None
     agent_credential_id: ProviderId | None
     """The id the agent's hosting frame keys this lane's credential by; absent when the lane takes none."""
     cli_programs: tuple[CliProgram, ...]
     """The executables a cli lane runs; empty for an api lane."""
-    icon: str | None = None
+    icon: dict[str, JsonValue] | None = None
     platform: dict[str, JsonValue] = Field(default_factory=dict)
     default_model: str | None = None
     models: tuple[dict[str, JsonValue], ...] = ()
@@ -180,8 +181,9 @@ class ProviderCatalog(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    schema_version: Literal[2]
+    schema_version: Literal[3]
     providers: tuple[ProviderCatalogEntry, ...] = Field(min_length=1, max_length=MAX_CATALOG_LANES)
+    icon_attribution: dict[str, JsonValue]
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

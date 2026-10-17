@@ -218,7 +218,10 @@ class AgentService:
         if self.client.lease is None:
             return {"kind": "refused", "code": "signed_out"}
         if action == "status":
-            status = self._providers.status().model_dump(mode="json")
+            observed = self._providers.status()
+            if isinstance(observed, ProviderSettingsRefusal):
+                return observed.model_dump(mode="json")
+            status = observed.model_dump(mode="json")
             status["hosted_certifications"] = self._hosted_certifications()
             try:
                 status["sign_in_providers"] = (

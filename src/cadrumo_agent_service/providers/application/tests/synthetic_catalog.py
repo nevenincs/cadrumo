@@ -44,6 +44,7 @@ def _lane(
         "provider": provider,
         "transport": transport,
         "display_name": provider.capitalize(),
+        "description": "Synthetic provider lane",
         "auth_kind": auth_kind,
         "default_base_url": default_base_url,
         "agent_credential_id": credential_id,
@@ -52,7 +53,7 @@ def _lane(
 
 
 def synthetic_document() -> str:
-    """Return the schema-version-2 document the synthetic agent serves."""
+    """Return the schema-version-3 document the synthetic agent serves."""
     lanes = [
         _lane("bare", "cli", "api_key_with_base_url", credential_id="bare", cli_programs=("example",)),
         _lane(
@@ -75,7 +76,7 @@ def synthetic_document() -> str:
         _lane("other", "api", "api_key", credential_id="other"),
         _lane("third", "cli", "api_key", credential_id="third", cli_programs=("third",)),
     ]
-    return json.dumps({"schema_version": 2, "providers": lanes})
+    return json.dumps({"schema_version": 3, "providers": lanes, "icon_attribution": {}})
 
 
 def synthetic_catalog() -> ProviderCatalog:

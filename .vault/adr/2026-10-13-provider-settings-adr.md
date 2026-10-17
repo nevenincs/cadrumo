@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#provider-settings'
 date: '2026-10-13'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:e3437376d8bd5181843ae8b019999d6c3060c62e4eac444528d3cdaf26a53b14'
+body_hash: 'sha256:dd7bb1f6c3a1bd05736bb232a6c389632e1a3742856efde40d2ee12222d18c2f'
 related:
   - "[[2026-10-13-provider-settings-reference]]"
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
@@ -21,7 +21,6 @@ related:
   - "[[2026-07-14-google-optional-adapter-boundary-adr]]"
   - '[[2026-10-13-provider-settings-desktop-contract-reference]]'
 ---
-
 # `provider-settings` adr: `Each signed-in profile owns its model-provider credentials in encrypted custody, and they reach cadrumo-agent only on a standard-input frame` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -56,7 +55,7 @@ Historical options from initial approval. Settings owned by the execution agent 
 
 Binding, amended 2026-10-14 under the user's explicit agent boundary deletion/migration authorization.
 
-1. **Owners and profile isolation.** `cadrumo_agent_service` owns all provider/lane catalog consumption, settings interpretation, credential resolution and agent lifecycle. `src/cadrumo` owns deterministic tax operations; `src/cadrumo_runtime` owns generic login/session authority and encrypted custody, with neutral contracts in `src/cadrumo_client`; it has no provider record, profile-schema section, catalog, agent process or harness protocol. Provider/lane descriptors are derived from actual cadrumo-agent contracts, never a service-owned list: declared schema 2 is projected into the credential schema, while full v1 model/catalog metadata is preserved. Offline verified agent declarations truthfully report unobserved health as unknown/unselectable; a ready service proxies the actual gateway and rechecks exact generation afterward. Provider policy and CLI sign-in remain agent/provider owned.
+1. **Owners and profile isolation.** `cadrumo_agent_service` owns all provider/lane catalog consumption, settings interpretation, credential resolution and agent lifecycle. `src/cadrumo` owns deterministic tax operations; `src/cadrumo_runtime` owns generic login/session authority and encrypted custody, with neutral contracts in `src/cadrumo_client`; it has no provider record, profile-schema section, catalog, agent process or harness protocol. Provider/lane descriptors are derived from actual cadrumo-agent contracts, never a service-owned list: declared schema 3 is projected into the credential schema, while full v1 model/catalog metadata is preserved. Offline verified agent declarations truthfully report unobserved health as unknown/unselectable; a ready service proxies the actual gateway and rechecks exact generation afterward. Provider policy and CLI sign-in remain agent/provider owned.
 2. **Ciphertext compatibility.** Preserve existing encrypted records under their exact legacy `cadrumo.provider_settings` namespace, key, schema and AES-GCM AAD identities. These are compatibility storage bytes owned by the service descriptor, not runtime provider concepts. Runtime validates a package-allowlisted opaque custody descriptor and SECRET, PROFILE_LOCAL, PROCESS_LOCAL, LOCAL_ONLY policies. Generic authenticated CRUD/CAS preserves guarded revisions, non-secret opaque generations and the service's existing typed record shape. Client JSON cannot select arbitrary namespaces, policies or secret access. No profile DEK is exported, no record reset is substituted for migration and no new native key store is introduced.
 3. **Record semantics.** Service records retain schema/provider identity; independent assistant authentication and direct-credential axes; unset/configured/disabled credential state; kind-specific material, validated preferences, optional base URL, generation and update time. Absent means unset; corrupt, unreadable or stale refuses and never means absent. Persisted disabled blocks development fallback. Provider-owned sign-in credentials are never imported into profile custody. The service derives each supported lane/transport, credential identity and development variable from the actual agent descriptor. No tax-extraction consumer is added: document extraction retains its existing consent and credential authority.
 4. **Resolution and locality.** Installed/package lanes have no environment fallback. Only admitted development service execution may resolve an unset record from its declared development environment; configured records win and disabled state blocks it. No automatic `.env` loading. Keys are machine-local and excluded from portable export, remote mirroring and restorative backup. The descriptor participates in generic inventory, deletion, reset and uninstall. Local removal does not revoke a provider key or erase old backups.
@@ -94,7 +93,7 @@ Historical initial affected-record handoff, before the 2026-10-14 service bounda
 > - `2026-10-11-mcp-parity-full-parity-adr`, constraint 1: managing a provider credential is a person's act, refused at dispatch on MCP and generic `execute`.
 > - `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`, constraint 1: managing a provider credential is a credential act even without a secret.
 > - `2026-10-04-canonical-environment-adr`, the "Scope exclusion" constraint: installed builds read no provider key from the environment; development storage mode falls back for unset records.
-> 
+>
 > Not amended by this record: `2026-10-12-desktop-agent-host-adr` and `2026-10-13-desktop-agent-host-live-lane-adr` belong to another session. Both agree with constraint 8. The live-lane record now delivers the key on a standard-input frame; its environment wording survives only as historical owner quotations. The desktop design sessions (UI-DESIGN1 and UI-DESIGN2) own the desktop side: the Tauri host commands and the webview, including the profile settings section and the agent panel's status.
 
 ## Boundary amendment 2026-10-14
@@ -104,9 +103,9 @@ Authorized by the user's explicit deletion/migration instruction. Provider owner
 ### Former constraints and implementation (history)
 
 > ## Constraints
-> 
+>
 > Binding:
-> 
+>
 > 1. **Profile ownership.** Provider settings belong to one authenticated profile. They are kept as one typed record per provider in a dedicated secure-object namespace that is SECRET, PROFILE_LOCAL and PROCESS_LOCAL, after `GOOGLE_OAUTH_TOKEN_NAMESPACE` (`src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py:868-876`). Each record is written with a guarded revision. Each carries an opaque generation that is not secret and is never derived from the key. No credential goes into profile facts, global `Settings`, plaintext files, run definitions or prompts.
 > 2. **Record shape.** A record holds:
 >    - its schema version and its provider;
@@ -115,7 +114,7 @@ Authorized by the user's explicit deletion/migration instruction. Provider owner
 >    - the credential material its kind requires, present only when `configured`, and an optional base URL, which is not secret;
 >    - preferences that are not secret and are validated;
 >    - its generation and `updated_at`.
-> 
+>
 >    An absent record means `unset`. A record that is corrupt, unreadable or stale refuses; it never reads as absent.
 > 3. **Provider catalog.** Cadrumo keeps no list of providers or lanes anywhere: not in data, code, settings fields, environment declarations, fixtures or tests. Which providers exist, their descriptors below, and which are selectable are cadrumo-agent's capability. Cadrumo obtains them from cadrumo-agent at run time, through the agent's own provider catalog, and stores credentials for whatever providers it reports. Every provider-specific name is constructed from the provider id the agent reports, never enumerated: the development environment value is `CADRUMO_LLM_<PROVIDER>_API_KEY`, and the record is keyed `{provider_id}`. Cadrumo decides nothing about which providers exist, which lanes they serve, which are hosted or which are proven, and gates nothing on it. When cadrumo-agent cannot report its providers, provider settings report that plainly, and the failure is not hidden behind a stored copy. (Amended 2026-10-14 on the owner's first-hand ruling: "we should not maintain any lists of providers … that is capability that is to be derived from the cadrumo-agent"; "user profile settings are constructable PREFIX_<provider>_API_KEY". Before that, the catalog was a committed, generated Cadrumo data file.)
 >    - `auth_kind` is one of `api_key`, `api_key_with_base_url`, `oauth_token_or_provider_sign_in` or `provider_sign_in_only`, as cadrumo-agent declares for each provider.
@@ -134,15 +133,15 @@ Authorized by the user's explicit deletion/migration instruction. Provider owner
 >    - **Set or replace.** Stores the key. The base URL is set with `--base-url <url>`, reverted to the catalogue default with `--clear-base-url`, and kept when neither is given. Changing only the base URL still takes the key, because the record is written as one unit. (Amended 2026-10-13 after review by the other sessions; before that the base-URL behaviour was unstated.)
 >    - **Remove.** Persists `disabled`, which blocks the environment fallback.
 >    - **Reset.** Returns the provider to `unset`. In development this re-enables the fallback; in an installed build `unset` means unavailable.
-> 
+>
 >    There is no separate "use development environment" action. Every action:
 >    - is served by human frontends only;
 >    - takes the secret on the protected standard-input or secret channel, never in argv;
 >    - sends the `revision` it read as its guard;
 >    - is enrolled with the person's acts at application dispatch, so the runtime refuses it on MCP and through generic `execute`, not merely leaves it unlisted.
-> 
+>
 >    Setting only stores the key. There is no remote validation, and readiness stays `not_verified` until first use. A key the provider rejects surfaces as a typed refusal from the consumer that used it, distinct from a storage error. A masked placeholder is never accepted as a new value.
-> 
+>
 >    A single status read lists every provider. It is an ordinary read on every frontend. The envelope is `{development, providers}`, where `development` says whether the environment fallback applies. (Amended 2026-10-13 after review by the other sessions; before that the envelope did not say which mode applied.) Each entry carries:
 >    - `id`, `display_name`, `auth_kind` and `consumers`;
 >    - `mode`, one of `key`, `oauth_token`, `provider_sign_in`, `disabled` or `unset`;
@@ -151,11 +150,11 @@ Authorized by the user's explicit deletion/migration instruction. Provider owner
 >    - an optional `reason`;
 >    - `default_base_url`, and `base_url` when the person stored one;
 >    - `revision`.
-> 
+>
 >    Every field is a closed enumeration, starting from the values listed. `reason` is a closed code set covering each state that is not ready and each refusal. Status never returns the secret or a reversible fingerprint of it. The webview words every value except `display_name` from its stable id.
-> 
+>
 >    Typed refusals for the actions are `not_signed_in`, `profile_locked`, `invalid_key_format`, `base_url_rejected`, `revision_conflict`, `committed_readback_failed`, `person_act_required` and `unknown`. `person_act_required` is returned when a frontend that may not change credentials, such as MCP or generic `execute`, asks for one of these actions.
-> 
+>
 >    This is a narrow exception beside `2026-10-11-mcp-parity-full-parity-adr`; every business operation is unchanged.
 > 7. **Desktop.** The desktop manages provider settings only through `aeat` children, the same pattern as its sign-in view, which runs `aeat config login --secrets-stdin` (`native/desktop/src-tauri/src/shell/sign_in/mod.rs:174`, `:589-607`):
 >    - The key goes from the input straight to the child's standard input. The shell keeps no copy and holds no runtime connection, and nothing ever reads the key back.
@@ -184,35 +183,39 @@ Authorized by the user's explicit deletion/migration instruction. Provider owner
 >    - Credentials are durable on this machine only. They are excluded from portable export, from remote mirroring (`remote_mirror_policy` `LOCAL_ONLY`) and from restorative backup. After a restore the person enters them again.
 >    - The namespace is enrolled in inventory, deletion, reset and uninstall.
 >    - Removing a key locally does not revoke it at the provider, and does not erase backups taken earlier.
-> 
+>
 > 11. **Owner rulings of the afternoon of 2026-10-13, first-hand, relayed by UI-DESIGN1.** These supersede the parts of constraints 3, 4 and 7 they contradict. (Amended 2026-10-13; before that the record served extraction as well, had one entry per provider, and placed the settings in the profile area.)
 >    - "The cadrumo app has no API keys to use, it doesn't make any sense. API keys are for MCPs that operate outside of the cadrumo application." Provider settings serve the agent's lanes only. The `extraction` consumer and the extraction-only entry are dropped. Cadrumo's own document reading keeps its existing key handling until the owner rules on it, and plan step P03.S12 is held for that ruling.
 >    - A provider reached both by API and by CLI is two separate entries that both need to be exposed. Each lane cadrumo-agent declares is its own entry with `transport` `api` or `cli`, taken from cadrumo-agent's declaration. `display_name` is the product name. A `cli` entry also reports whether its program is installed and signed in, without reading the provider's own credential files.
 >    - "The AI settings are bound to the agent panel." The desktop shows provider settings only in the agent column, not in profile management or sign-in.
 >    - "The user profile schema needs to be extended and enriched with the API keys." The user profile schema declares the provider-settings section. Its secret values are held only in the SECRET namespace of constraint 1. They are never profile facts, never readable through profile reads, MCP or the agent, and never exported.
 >    - "We have already established that the agent operates against a signed-in user profile, so there should be no agent capability at all if the user is not authenticated." This covers the agent Cadrumo itself hosts: signing out, a lock or expiry of the person's sign-in stops the desktop's agent tree (constraint 9). It does not cover API keys the person issued. Owner correction, first-hand, 2026-10-13: "the api key exists so that it isn't pegged to the login cycle". A key-admitted session survives sign-out, and a key admits whether or not the person is signed in. The sign-out result reports `agent_access_remains` truthfully: true while an issued key can still admit. (Amended 2026-10-13 on the owner's correction; before that this bullet also ended key-admitted sessions at sign-out and amended `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` accordingly, which was withdrawn.)
-> 
+>
 > ## Implementation
-> 
+>
 > We will add typed records under Cadrumo's domain, application and persistence layers, and read the provider catalog (providers, kinds, base URLs and consumers) from cadrumo-agent at run time, never from a committed copy (amended 2026-10-14, constraint 3). We will build one resolver bound to the exact session generation, and route extraction and every `LLMClient` construction through it. We will build the hosted-agent controller with a single seam that writes the standard-input frame, and integrate the lifecycle barrier with the runtime's one-signed-in-profile rule (`src/cadrumo_runtime/host/profile_connection_sessions.py:126`). The plan `2026-10-13-provider-settings-plan` sequences this work.
-> 
+>
 > Hypotheses, free to change within the constraints:
-> 
+>
 > - The namespace name (`cadrumo.provider_settings`), the object key (`{provider_id}`) and module placement (`domain/provider_settings`, `application/provider_settings`, `adapters/persistence/provider_settings`).
 > - Whether preferences later split into a portable record.
 > - The frame's exact field layout, within constraint 8. (Amended 2026-10-13: the controller's placement is no longer a hypothesis; constraint 8 now fixes it in the runtime's profile host.)
 > - The frame's field names, which follow the hosting-contract version that cadrumo-agent publishes.
-> 
+>
 > ## Rationale
-> 
+>
 > Cadrumo already owns encrypted per-profile custody and the sign-in lifecycle, so the credential belongs there. An agent-side or installation-wide store would duplicate that authority or lose profile isolation. Making credential management the person's act keeps secrets out of agent transcripts, as the agent-inside record already requires. A standard-input frame is the only hand-off the owner allowed. It is also the one channel a descendant process does not inherit.
-> 
+>
 > ## Consequences
-> 
+>
 > - A person manages every supported provider's credential per profile, at the TUI, the CLI or the desktop. An agent can read masked status but cannot change a credential.
 > - Installed and release builds stop reading provider keys from the environment, so installations that relied on `CADRUMO_LLM_*` must enter keys in the profile. Development checkouts keep working from named environment values with no manual step.
 > - cadrumo-agent must add a frame reader and a worker pipe before hosted use. Its provider-settings and hosting-contract records need amending in its own vault.
 > - Restoring a profile loses its provider keys by design.
 > - Secrets held in process memory, provider CLI files and the agent's existing plaintext history are outside this record's at-rest guarantee.
 > - Reconsider if the owner wants portable credentials, production environment fallback, or provider CLI credentials held by Cadrumo.
-> 
+>
+
+
+Implementation reconciliation 2026-10-17: the bundled declared catalog uses version 3 with lane descriptions, structured icon metadata and icon attribution. The service consumes that current version while retaining opaque presentation metadata and the existing credential authority. This updates the supplier contract reference without changing profile custody or provider admission decisions.
+

@@ -171,3 +171,19 @@ def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
         "kind": "refused",
         "code": "signed_out",
     }
+
+
+@pytest.mark.parametrize("code", list(ProviderSettingsRefusalCode))
+def test_status_preserves_refusal_without_adding_success_metadata(
+    code: ProviderSettingsRefusalCode, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = AgentService(
+        client=cast(InstalledServiceClient, SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))),
+        storage_root=tmp_path,
+        agent_source=None,
+        gateway_bearer=bytearray(),
+        emit=lambda _event: None,
+    )
+    monkeypatch.setattr(service._providers, "status", lambda: ProviderSettingsRefusal(code=code))
+
+    assert service.admin("status") == {"code": code.value}

@@ -72,9 +72,18 @@ export type AgentAdmissionState =
  * a model accepts is the model's own, in its catalog entry. */
 export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
 
-/** A capability a lane has, or has not, been proven to have. */
+/** The provider runtime a model's native subagents use. */
+export type AgentMultiAgentGeneration = "disabled" | "v1" | "v2";
+
+/** A capability for which a lane may report a proof. */
 export type AgentLaneCapability =
-  "tool_access" | "writing" | "web_retrieval" | "image_reading" | "pdf_reading";
+  | "tool_access"
+  | "writing"
+  | "web_retrieval"
+  | "image_reading"
+  | "pdf_reading"
+  | "subagents"
+  | "subagent_cancel";
 
 export type AgentLaneVerification =
   "proven" | "unproven_version" | "unproven" | "not_applicable";
@@ -87,6 +96,8 @@ export type AgentCatalogEntry = {
   display_name: string;
   description?: string | null;
   capabilities?: string[];
+  /** The provider runtime this model's native subagents use, if any. */
+  multi_agent_generation?: AgentMultiAgentGeneration | null;
   /** The lane's native controls this model takes. */
   native_control_ids?: string[];
   /** The efforts this model accepts; none when it takes no effort. */
@@ -152,10 +163,12 @@ export type AgentProviderLane = {
     native_controls?: AgentNativeControl[];
   };
   capability_proofs?: {
-    capability: AgentLaneCapability;
-    /** The tool server the proof is for: given for tool access and for
-     * writing, and for no other capability. It is not a model. */
+    /** Kept open at the wire boundary so a newer service can add a value. */
+    capability: string;
+    /** Tool-server entry, present for tool access and writing proofs only. */
     entry?: string | null;
+    /** A generation-scoped proof does not describe the whole lane. */
+    generation?: AgentMultiAgentGeneration | null;
     state: AgentLaneVerification;
   }[];
 };

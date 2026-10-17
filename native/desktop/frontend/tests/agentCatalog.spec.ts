@@ -222,3 +222,57 @@ test("what a way has been proven to do is the way's, and no model's", () => {
     for (const model of models)
       expect(model).not.toHaveProperty("capabilities");
 });
+
+test("known lane capabilities are localized and unknown proofs are skipped before formatting", () => {
+  const catalog = structuredClone(FIXTURE_CATALOG);
+  const alpha = catalog.providers?.find(
+    (lane) => lane.provider_id === "alpha" && lane.transport === "api",
+  );
+  expect(alpha).toBeDefined();
+  if (!alpha) return;
+
+  alpha.capability_proofs = [
+    ...(alpha.capability_proofs ?? []),
+    { capability: "subagents", state: "proven" },
+    { capability: "subagent_cancel", state: "proven" },
+    { capability: "future_capability", state: "proven" },
+  ];
+
+  const provider = catalogChoices(words, catalog).providers.find(
+    (held) => held.id === "alpha",
+  );
+  const capabilities = provider?.ways[0]?.capabilities ?? [];
+  expect(capabilities).toEqual([
+    "desktop.agent.can_use_tools",
+    "desktop.agent.can_search_web",
+    "desktop.agent.can_read_pdfs",
+    "desktop.agent.can_run_subagents",
+    "desktop.agent.can_stop_subagent",
+  ]);
+  expect(() => new Intl.ListFormat("en").format(capabilities)).not.toThrow();
+});
+
+test("generation-scoped proofs are not presented as lane-wide capabilities", () => {
+  const catalog = structuredClone(FIXTURE_CATALOG);
+  const alpha = catalog.providers?.find(
+    (lane) => lane.provider_id === "alpha" && lane.transport === "api",
+  );
+  expect(alpha).toBeDefined();
+  if (!alpha) return;
+
+  alpha.catalog.models![0]!.multi_agent_generation = "v1";
+  alpha.capability_proofs = [
+    ...(alpha.capability_proofs ?? []),
+    { capability: "subagents", generation: "v1", state: "proven" },
+    { capability: "subagent_cancel", generation: "v1", state: "proven" },
+  ];
+
+  const provider = catalogChoices(words, catalog).providers.find(
+    (held) => held.id === "alpha",
+  );
+  expect(provider?.ways[0]?.capabilities).toEqual([
+    "desktop.agent.can_use_tools",
+    "desktop.agent.can_search_web",
+    "desktop.agent.can_read_pdfs",
+  ]);
+});

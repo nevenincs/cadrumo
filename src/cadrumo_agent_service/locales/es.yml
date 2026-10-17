@@ -16,7 +16,9 @@ desktop:
     attachments_uploading: 'Subiendo: {count}'
     can_read_images: leer imágenes
     can_read_pdfs: leer PDF
+    can_run_subagents: ejecutar subagentes
     can_search_web: buscar en la web
+    can_stop_subagent: detener un subagente
     can_use_tools: usar herramientas
     can_write: escribir archivos
     cancel: Cancelar

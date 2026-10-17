@@ -16,7 +16,9 @@ desktop:
     attachments_uploading: 'Uploading: {count}'
     can_read_images: read images
     can_read_pdfs: read PDFs
+    can_run_subagents: run subagents
     can_search_web: search the web
+    can_stop_subagent: stop one subagent
     can_use_tools: use tools
     can_write: write files
     cancel: Cancel

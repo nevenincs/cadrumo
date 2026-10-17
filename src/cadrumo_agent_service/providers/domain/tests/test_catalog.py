@@ -21,8 +21,8 @@ from ..catalog import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _document(*lanes: dict[str, Any], schema_version: int = 2) -> str:
-    return json.dumps({"schema_version": schema_version, "providers": list(lanes)})
+def _document(*lanes: dict[str, Any], schema_version: int = 3) -> str:
+    return json.dumps({"schema_version": schema_version, "providers": list(lanes), "icon_attribution": {}})
 
 
 def _key_lane(**overrides: Any) -> dict[str, Any]:
@@ -31,6 +31,7 @@ def _key_lane(**overrides: Any) -> dict[str, Any]:
         "provider": "example",
         "transport": "api",
         "display_name": "Example",
+        "description": "Synthetic API provider",
         "auth_kind": "api_key",
         "default_base_url": None,
         "agent_credential_id": "example",
@@ -46,6 +47,7 @@ def _cli_lane(**overrides: Any) -> dict[str, Any]:
         "provider": "example",
         "transport": "cli",
         "display_name": "Example",
+        "description": "Synthetic CLI provider",
         "auth_kind": "provider_sign_in_only",
         "default_base_url": None,
         "agent_credential_id": None,
@@ -97,6 +99,22 @@ def test_the_development_variable_is_constructed_from_the_provider_id() -> None:
     assert development_key_variable("zz_provider") == "CADRUMO_LLM_ZZ_PROVIDER_API_KEY"
 
 
+def test_version_three_retains_presentation_metadata_without_affecting_authentication() -> None:
+    icon = {"key": "example", "variants": [{"variant": "mono", "media_type": "image/svg+xml", "sha256": "a" * 64}]}
+    effort = {"reasoning": "supported", "control": "levels", "levels": ["low", "high"], "default": "low"}
+    document = json.loads(_document(_cli_lane(icon=icon, models=[{"id": "sample", "effort": effort}])))
+    document["icon_attribution"] = {"title": "Synthetic artwork", "licence": "MIT"}
+
+    catalog = parse_provider_catalog(json.dumps(document))
+
+    assert catalog.providers[0].description == "Synthetic CLI provider"
+    assert catalog.providers[0].icon == icon
+    assert catalog.providers[0].models[0]["effort"] == effort
+    assert catalog.icon_attribution == document["icon_attribution"]
+    assert catalog.credential_lane_ids == ()
+    assert catalog.providers[0].auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY
+
+
 def test_entry_lookup_refuses_ids_outside_the_lane_grammar() -> None:
     catalog = parse_provider_catalog(_document(_key_lane()))
 
@@ -137,7 +155,8 @@ def test_acceptable_base_url_passes() -> None:
 @pytest.mark.parametrize(
     "document",
     [
-        pytest.param(_document(_key_lane(), schema_version=3), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=4), id="unknown-schema-version"),
+        pytest.param(_document(_key_lane(), schema_version=2), id="retired-schema-version"),
         pytest.param(_document(_key_lane(), schema_version=0), id="schema-version-zero"),
         pytest.param(_document(), id="no-lanes"),
         pytest.param(_document(_key_lane(), _key_lane()), id="duplicate-lane"),
