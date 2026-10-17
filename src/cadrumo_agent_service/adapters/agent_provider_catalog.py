@@ -46,6 +46,7 @@ CATALOG_VERB: Final = ("providers", "--declared", "--json")
 """The agent's offline provider declaration, serving schema version 2."""
 CATALOG_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, *CATALOG_VERB)
 AUTH_CAPABILITIES_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "auth", "providers", "--json")
+GUI_AUTH_CAPABILITIES_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "auth", "providers", "--interface", "gui", "--json")
 CATALOG_TIMEOUT_SECONDS: Final = 30.0
 CATALOG_OUTPUT_MAX_BYTES: Final = 256 * 1024
 
@@ -74,6 +75,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         self._lock = Lock()
         self._catalog: ProviderCatalog | None = None
         self._sign_ins: tuple[str, ...] | None = None
+        self._gui_sign_ins: tuple[str, ...] | None = None
 
     @override
     def catalog(self) -> ProviderCatalog:
@@ -106,6 +108,19 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
                     raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED) from error
                 self._sign_ins = result.providers
             return self._sign_ins
+
+    def gui_sign_in_providers(self) -> tuple[str, ...]:
+        """Read GUI support from the agent, separately from terminal handlers."""
+        with self._lock:
+            if self._gui_sign_ins is None:
+                try:
+                    result = _SignInCapabilities.model_validate_json(self._invoke(GUI_AUTH_CAPABILITIES_ARGUMENTS))
+                    if len(set(result.providers)) != len(result.providers):
+                        raise ValueError("duplicate_sign_in_provider")
+                except ValueError as error:
+                    raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED) from error
+                self._gui_sign_ins = result.providers
+            return self._gui_sign_ins
 
     def _invoke(self, arguments: tuple[str, ...]) -> bytes:
         directory = Path(tempfile.gettempdir())

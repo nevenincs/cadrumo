@@ -8,7 +8,7 @@ use tauri::{
     State,
     ipc::{InvokeBody, Request},
 };
-use wire::{CommandFailure, Entry, Refusal, Status};
+use wire::{CommandFailure, Entry, Refusal, SignInSnapshot, Status};
 use zeroize::Zeroizing;
 
 fn invalid() -> ApplicationError {
@@ -33,6 +33,8 @@ fn outcome(result: Value) -> Outcome {
     {
         let code = match result["code"].as_str().unwrap_or("unknown") {
             "signed_out" => "not_signed_in",
+            "sign_in_unavailable" => "unsupported_flow",
+            "service_stopping" => "runtime_unavailable",
             "invalid_request" | "service_failed" => "unknown",
             code => code,
         };
@@ -63,7 +65,10 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         provider_settings_status,
         provider_settings_set,
         provider_settings_remove,
-        provider_settings_reset
+        provider_settings_reset,
+        provider_sign_in_start,
+        provider_sign_in_status,
+        provider_sign_in_cancel
     ]
 }
 #[tauri::command]
@@ -118,6 +123,53 @@ pub async fn provider_settings_reset(
 ) -> Result<Entry, CommandFailure> {
     change(&state, "reset", &provider, &revision).await
 }
+
+#[tauri::command]
+pub async fn provider_sign_in_start(
+    state: State<'_, Arc<AgentHost>>,
+    provider: String,
+    revision: String,
+    method: String,
+) -> Result<SignInSnapshot, CommandFailure> {
+    let mut request = target(&provider, &revision)?;
+    let method = wire::SignInMethod::parse(&method).ok_or_else(invalid)?;
+    request["action"] = json!("connect");
+    request["method"] = json!(method);
+    wire::sign_in_snapshot(execute(&state, request, None).await?, Some(&provider), None)
+}
+
+#[tauri::command]
+pub async fn provider_sign_in_status(
+    state: State<'_, Arc<AgentHost>>,
+    attempt_id: String,
+) -> Result<SignInSnapshot, CommandFailure> {
+    if !wire::is_attempt_id(&attempt_id) {
+        return Err(invalid().into());
+    }
+    let request = json!({"action":"connect_status","attempt_id":attempt_id});
+    wire::sign_in_snapshot(
+        execute(&state, request, None).await?,
+        None,
+        Some(&attempt_id),
+    )
+}
+
+#[tauri::command]
+pub async fn provider_sign_in_cancel(
+    state: State<'_, Arc<AgentHost>>,
+    attempt_id: String,
+) -> Result<SignInSnapshot, CommandFailure> {
+    if !wire::is_attempt_id(&attempt_id) {
+        return Err(invalid().into());
+    }
+    let request = json!({"action":"connect_cancel","attempt_id":attempt_id});
+    wire::sign_in_snapshot(
+        execute(&state, request, None).await?,
+        None,
+        Some(&attempt_id),
+    )
+}
+
 async fn change(
     state: &State<'_, Arc<AgentHost>>,
     action: &str,

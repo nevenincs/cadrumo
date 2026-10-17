@@ -53,7 +53,17 @@ def _entry() -> ProviderStatusEntry:
 
 
 @pytest.mark.parametrize(
-    "outcome", ("prepared", "prepared_node", "revision_conflict", "revoked", "unsupported", "api_lane")
+    "outcome",
+    (
+        "prepared",
+        "prepared_node",
+        "revision_conflict",
+        "revoked",
+        "unsupported",
+        "api_lane",
+        "gui_unsupported",
+        "gui_unmarked",
+    ),
 )
 def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     outcome: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -89,6 +99,11 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     monkeypatch.setattr(service_module, "hosted_python", lambda: python)
     monkeypatch.setattr(service._catalog, "catalog", synthetic_catalog)
     monkeypatch.setattr(service._catalog, "sign_in_providers", lambda: () if outcome == "unsupported" else ("example",))
+    monkeypatch.setattr(
+        service._catalog, "gui_sign_in_providers", lambda: () if outcome == "gui_unsupported" else ("example",)
+    )
+    if outcome == "gui_unmarked":
+        service._agent_source = str(tmp_path / "source")
     calls: list[str] = []
 
     def select_mode(provider: str, **_kwargs: object) -> ProviderSettingsActionAccepted | ProviderSettingsRefusal:
@@ -104,8 +119,18 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     monkeypatch.setenv("CODEX_HOME", "must-not-cross")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "must-not-cross")
     lane = "example_api" if outcome == "api_lane" else "example_cli"
-    answer = service.admin("sign_in", provider=lane, expected_revision="0" * 64)
-    if outcome in {"unsupported", "api_lane"}:
+    answer = service.admin(
+        "connect" if outcome.startswith("gui_") else "sign_in",
+        provider=lane,
+        expected_revision="0" * 64,
+        method="browser",
+    )
+    if outcome == "gui_unmarked":
+        assert answer == {"kind": "refused", "code": "root_unmarked"}
+        assert calls == []
+        assert list(tmp_path.iterdir()) == []
+        return
+    if outcome in {"unsupported", "api_lane", "gui_unsupported"}:
         assert calls == []
         assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
         assert not (tmp_path / "agent").exists()

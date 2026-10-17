@@ -26,7 +26,10 @@ import {
 } from "./agentFixtureHost";
 import { agentAccessFixture } from "./agentAccessFixture";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
-import { providerSettingsFixture } from "./providerSettingsFixture";
+import {
+  providerSettingsFixture,
+  type ProviderSignInFixtureControls,
+} from "./providerSettingsFixture";
 import {
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
@@ -103,6 +106,8 @@ declare global {
       deferNextSet(): void;
       completeSet(state: DesktopLanguage): void;
     };
+    /** Controls for synthetic, presentation-only provider sign-in attempts. */
+    __scenarioProviderSignIn?: ProviderSignInFixtureControls;
   }
 }
 
@@ -269,11 +274,13 @@ export function scenarioHost(
     refused: () => failure("timed_out", "cli"),
   });
 
-  const providerSettings = providerSettingsFixture({
+  const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
     readable,
   });
+  const providerSettings = providerFixture.settings;
+  window.__scenarioProviderSignIn = providerFixture.signInControls;
 
   const agentAccess = agentAccessFixture({
     say,

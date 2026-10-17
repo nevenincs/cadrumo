@@ -1,5 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { FIXTURE_SETTINGS_LANES } from "../../src/dev/providerSettingsFixture";
+import {
+  FIXTURE_SETTINGS_LANES,
+  FIXTURE_SIGN_IN_PROVIDERS,
+} from "../../src/dev/providerSettingsFixture";
 import { label } from "../support/strings";
 
 // The agent's settings: the signed-in profile's model providers, one card
@@ -34,6 +37,17 @@ const lane = (target: Page, id: string) =>
 const nameOf = (id: string) =>
   FIXTURE_SETTINGS_LANES.find((declared) => declared.id === id)?.display_name ??
   id;
+
+const signInCapableLane = FIXTURE_SETTINGS_LANES.find(
+  (declared) =>
+    declared.auth_kind === "provider_sign_in_only" &&
+    FIXTURE_SIGN_IN_PROVIDERS.includes(declared.provider),
+)!;
+const signInUnavailableLanes = FIXTURE_SETTINGS_LANES.filter(
+  (declared) =>
+    declared.auth_kind === "provider_sign_in_only" &&
+    !FIXTURE_SIGN_IN_PROVIDERS.includes(declared.provider),
+);
 
 async function openSettings(target: Page) {
   await settingsButton(target).click();
@@ -90,6 +104,9 @@ const NO_TRACE = {
   address: false,
   calls: false,
 };
+
+const hostCalls = (target: Page) =>
+  target.evaluate(() => window.__scenarioHostCalls ?? []);
 
 test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
@@ -311,6 +328,236 @@ test("a lane is disabled and reset by the person alone", async ({
   );
   // A lane that signs in on its own offers no key to change.
   await expect(lane(target, "beta_cli").getByRole("button")).toHaveCount(0);
+});
+
+test("GUI sign-in is capability-gated by the agent's declared provider list", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openSettings(target);
+
+  await expect(
+    lane(target, signInCapableLane.id).getByRole("button", {
+      name: label("desktop.providers.sign_in_action"),
+    }),
+  ).toBeVisible();
+  for (const unsupported of signInUnavailableLanes) {
+    const card = lane(target, unsupported.id);
+    await expect(card.getByRole("note")).toHaveText(
+      label("desktop.providers.sign_in_unavailable"),
+    );
+    await expect(
+      card.getByRole("button", {
+        name: label("desktop.providers.sign_in_action"),
+      }),
+    ).toHaveCount(0);
+  }
+  expect(signInUnavailableLanes.length).toBeGreaterThan(0);
+});
+
+test("browser sign-in opens only on the person's click and cancel clears the URL", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openSettings(target);
+  const card = lane(target, signInCapableLane.id);
+  await card
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_action"),
+    })
+    .click();
+
+  const dialog = target.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_start_browser"),
+    })
+    .click();
+  await expect(dialog).toContainText(
+    label("desktop.providers.sign_in_waiting"),
+  );
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.providers.sign_in_continue_browser"),
+    }),
+  ).toBeVisible();
+
+  const beforeOpening = await hostCalls(target);
+  expect(
+    beforeOpening.filter((call) =>
+      call.startsWith("providerSignInOpenExternal"),
+    ),
+  ).toEqual([]);
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_continue_browser"),
+    })
+    .click();
+  await expect
+    .poll(async () =>
+      (await hostCalls(target)).filter(
+        (call) => call === "providerSignInOpenExternal",
+      ),
+    )
+    .toHaveLength(1);
+
+  const authUrl = "https://provider.example/sign-in";
+  await expect(dialog).not.toContainText(authUrl);
+  expect(
+    await target.evaluate(
+      (url) =>
+        document.documentElement.outerHTML.includes(url) ||
+        (window.__scenarioHostCalls ?? []).join("\n").includes(url) ||
+        location.href.includes(url),
+      authUrl,
+    ),
+  ).toBe(false);
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.providers.sign_in_continue_browser"),
+    }),
+  ).toHaveCount(0);
+
+  await dialog
+    .getByRole("button", { name: label("desktop.providers.sign_in_cancel") })
+    .click();
+  await expect(dialog).toContainText(
+    label("desktop.providers.sign_in_cancelled"),
+  );
+  const calls = await hostCalls(target);
+  expect(calls).toContain(
+    `providerSignInStart ${signInCapableLane.id} browser`,
+  );
+  expect(calls).toContain("providerSignInCancel");
+  expect(
+    calls.filter((call) => call === "providerStatus").length,
+  ).toBeGreaterThan(1);
+  expect(calls.join("\n")).not.toContain(authUrl);
+});
+
+test("closing during active sign-in refreshes the committed provider revision", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openSettings(target);
+  const card = lane(target, signInCapableLane.id);
+  await card
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_action"),
+    })
+    .click();
+  const dialog = target.getByRole("dialog");
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_start_browser"),
+    })
+    .click();
+  await expect(dialog).toContainText(
+    label("desktop.providers.sign_in_waiting"),
+  );
+
+  const previousReads = (await hostCalls(target)).filter(
+    (call) => call === "providerStatusResolved",
+  ).length;
+  await dialog
+    .getByRole("button", { name: label("desktop.providers.sign_in_close") })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  await expect
+    .poll(async () =>
+      (await hostCalls(target)).filter(
+        (call) => call === "providerSignInCancelSettled",
+      ),
+    )
+    .toHaveLength(1);
+  await expect
+    .poll(
+      async () =>
+        (await hostCalls(target)).filter(
+          (call) => call === "providerStatusResolved",
+        ).length,
+    )
+    .toBeGreaterThan(previousReads);
+
+  // Starting again succeeds only with the revision returned by that refresh.
+  await card
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_action"),
+    })
+    .click();
+  const nextDialog = target.getByRole("dialog");
+  await nextDialog
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_start_browser"),
+    })
+    .click();
+  await expect(nextDialog).toContainText(
+    label("desktop.providers.sign_in_waiting"),
+  );
+  await nextDialog
+    .getByRole("button", { name: label("desktop.providers.sign_in_cancel") })
+    .click();
+  await expect(nextDialog).toContainText(
+    label("desktop.providers.sign_in_cancelled"),
+  );
+});
+
+test("a late active start is cancelled after the signed-in profile changes", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openSettings(target);
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.deferNextStart(),
+  );
+  await lane(target, signInCapableLane.id)
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_action"),
+    })
+    .click();
+  const dialog = target.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_start_browser"),
+    })
+    .click();
+  await expect
+    .poll(async () =>
+      (await hostCalls(target)).filter((call) =>
+        call.startsWith("providerSignInStart "),
+      ),
+    )
+    .toHaveLength(1);
+
+  const readsBeforeSwitch = (await hostCalls(target)).filter(
+    (call) => call === "providerStatusResolved",
+  ).length;
+  await target.evaluate(() =>
+    window.__scenarioLanguage!.switchAccount("Other profile", "en"),
+  );
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    target.getByRole("button", { name: /Other profile Signed in/ }),
+  ).toBeVisible();
+  await target.evaluate(() => window.__scenarioProviderSignIn!.completeStart());
+  await expect
+    .poll(async () =>
+      (await hostCalls(target)).filter(
+        (call) => call === "providerSignInCancelSettled",
+      ),
+    )
+    .toHaveLength(1);
+  expect(
+    (await hostCalls(target)).filter((call) => call === "providerSignInStatus"),
+  ).toEqual([]);
+  await target.waitForTimeout(100);
+  expect(
+    (await hostCalls(target)).filter(
+      (call) => call === "providerStatusResolved",
+    ).length,
+  ).toBe(readsBeforeSwitch);
 });
 
 test("without a profile signed in here, the agent and its settings are not offered and nothing is asked", async ({

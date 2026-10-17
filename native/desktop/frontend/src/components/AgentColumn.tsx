@@ -1,6 +1,7 @@
 import {
   useCallback,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
   type Ref,
@@ -153,6 +154,8 @@ export function AgentColumn({
   onToggleMaximize: () => void;
 }) {
   const t = useStrings();
+  const currentReader = useRef(reader);
+  currentReader.current = reader;
   // What the column is showing belongs to the profile it was shown for: a
   // new reader starts on a new conversation with nothing open, and nothing
   // asked or chosen for the last one carries over.
@@ -287,6 +290,9 @@ export function AgentColumn({
     settingsOpen && shown,
   );
   const access = useAgentAccess(agentAccess, reader, settingsOpen && shown);
+  const refreshProviderAfterSignIn = () => {
+    if (currentReader.current === reader) settings.refresh();
+  };
   const openSettings =
     (providerSettings || agentAccess) && reader !== null
       ? () => change({ panel: "settings" })
@@ -478,19 +484,24 @@ export function AgentColumn({
       >
         {settingsOpen ? (
           // Each section the host offers is read, and shown or said, on its
-          // own: the providers' keys and the keys of agents outside Cadrumo.
+          // own: provider settings and sign-in, plus keys for agents outside Cadrumo.
           <div className="grid gap-6 p-3">
             {providerSettings &&
               (settings.read.kind === "ready" ? (
                 <ProviderSettingsSection
                   providers={settings.read.value.providers}
                   development={settings.read.value.development}
+                  signIn={providerSettings.signIn}
+                  signInProviders={settings.read.value.signInProviders}
+                  revisions={settings.read.value.revisions}
+                  identity={reader}
                   busyId={settings.busyId}
                   outcomes={settings.outcomes}
                   onSave={settings.save}
                   onTurnOff={settings.turnOff}
                   onReset={settings.reset}
                   onRefresh={settings.refresh}
+                  onSignInTerminal={refreshProviderAfterSignIn}
                 />
               ) : (
                 <ReadState read={settings.read} icon="settings" />

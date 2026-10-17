@@ -26,6 +26,7 @@ import type {
 import type {
   ProviderSettingsAnswer,
   ProviderSettingsRecord,
+  ProviderSignInSnapshot,
 } from "../shell/providerSettings";
 
 // ---------------------------------------------------------------------------
@@ -1033,6 +1034,24 @@ export interface HostCommands {
   provider_settings_reset: {
     args: Authorized<{ provider: string; revision: string }>;
     result: ProviderSettingsRecord;
+  };
+  // An attended provider sign-in is transient. Its URL and device code are
+  // returned only while the person is completing this attempt.
+  provider_sign_in_start: {
+    args: Authorized<{
+      provider: string;
+      revision: string;
+      method: "browser" | "device";
+    }>;
+    result: ProviderSignInSnapshot;
+  };
+  provider_sign_in_status: {
+    args: Authorized<{ attemptId: string }>;
+    result: ProviderSignInSnapshot;
+  };
+  provider_sign_in_cancel: {
+    args: Authorized<{ attemptId: string }>;
+    result: ProviderSignInSnapshot;
   };
   // The keys issued to agents outside Cadrumo. None carries a password or a
   // key; issuing is refused with `issue_unavailable` for now.

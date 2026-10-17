@@ -239,8 +239,29 @@ desktop:
     save: Mentés
     saved_unread: Mentve, de az állapotát nem sikerült beolvasni.
     saving: Mentés…
-    sign_in_only: A szolgáltató ({provider}) saját bejelentkezését használja. A Cadrumo
-      csak azt mutatja, hogy elérhető-e.
+    sign_in_only: A szolgáltató ({provider}) saját bejelentkezését használja.
+    sign_in_action: Bejelentkezés
+    sign_in_cancel: Bejelentkezés megszakítása
+    sign_in_cancel_failed: A Cadrumo még nem tudta megszakítani a bejelentkezést.
+      Hagyd nyitva ezt az ablakot, amíg ellenőrzi.
+    sign_in_cancelled: A bejelentkezés megszakadt.
+    sign_in_close: Bejelentkezés bezárása
+    sign_in_continue_browser: Folytatás a böngészőben
+    sign_in_description: 'Folytasd a bejelentkezést itt: {provider}. A jelszavadat csak a szolgáltató oldalán add meg.'
+    sign_in_failure: Nem sikerült befejezni a bejelentkezést. Próbáld meg később újra.
+    sign_in_open_failed: A Cadrumo nem tudta megnyitni a szolgáltató bejelentkezési oldalát.
+    sign_in_security: A Cadrumo soha nem kéri el a szolgáltatói jelszavadat.
+    sign_in_start_browser: Bejelentkezés böngészőben
+    sign_in_start_device: Eszközkód használata
+    sign_in_starting: Bejelentkezés indítása…
+    sign_in_success: 'Sikeresen bejelentkeztél ide: {provider}. A Cadrumónak még igazolnia kell, hogy ez a sáv képes ügynököt futtatni.'
+    sign_in_timeout: A bejelentkezés túl sokáig tartott, ezért megszakadt.
+    sign_in_title: 'Bejelentkezés: {provider}'
+    sign_in_unavailable: Ebből a Cadrumo-verzióból még nem lehet bejelentkezni ehhez
+      a szolgáltatóhoz.
+    sign_in_user_code: Eszközkód
+    sign_in_waiting: Fejezd be a bejelentkezést a szolgáltató oldalán, majd térj vissza ide.
+    sign_in_waiting_device: A bejelentkezés befejezéséhez írd be ezt a kódot a szolgáltató oldalán.
     source_environment: A fejlesztői környezet kulcsát használja
     source_profile: A kulcs ebben a profilban van mentve
     through: 'Ezen keresztül: {url}'

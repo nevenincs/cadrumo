@@ -38,6 +38,7 @@ from .adapters.agent_programs import (
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
 from .adapters.provider_catalog_metadata import declared_provider_catalog_response
 from .contracts import HostedCertificationStatus
+from .host.auth_attempt import AuthAttempt
 from .host.controller import (
     AgentCredentialSource,
     AgentGenerations,
@@ -56,6 +57,7 @@ from .host.launch_environment import (
     HOSTED_ROOT_VARIABLE,
     agent_binary_directories,
     agent_launch_environment,
+    system_environment,
 )
 from .host.launcher_protocol import launcher_refusal_for
 from .host.store_lifecycle import AgentStoreLifecycle
@@ -149,6 +151,7 @@ class AgentService:
             store=self._store, catalog_source=self._catalog, environment=os.environ, storage_mode=storage_mode().mode
         )
         self._controller: AgentHostController | None = None
+        self._auth_attempt: AuthAttempt | None = None
         self._hosted_certification_lock = Lock()
         self._hosted_certification_snapshot: (
             tuple[AgentHostController, AgentReady, tuple[HostedCertificationStatus, ...], float] | None
@@ -166,9 +169,35 @@ class AgentService:
         expected_revision: str | None = None,
         base_url: str | None = None,
         choice: str | None = None,
+        method: str | None = None,
+        attempt_id: str | None = None,
         secret: bytearray | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
+        with self._guard:
+            return self._admin(
+                action,
+                provider=provider,
+                expected_revision=expected_revision,
+                base_url=base_url,
+                choice=choice,
+                method=method,
+                attempt_id=attempt_id,
+                secret=secret,
+            )
+
+    def _admin(
+        self,
+        action: str,
+        *,
+        provider: str | None,
+        expected_revision: str | None,
+        base_url: str | None,
+        choice: str | None,
+        method: str | None,
+        attempt_id: str | None,
+        secret: bytearray | None,
+    ) -> Any:
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         if action == "catalog":
@@ -191,7 +220,26 @@ class AgentService:
         if action == "status":
             status = self._providers.status().model_dump(mode="json")
             status["hosted_certifications"] = self._hosted_certifications()
+            try:
+                status["sign_in_providers"] = (
+                    []
+                    if self._agent_source is not None and not is_marked_lane_root(self._root)
+                    else list(self._catalog.gui_sign_in_providers())
+                )
+            except ProviderCatalogUnavailableError:
+                # Missing GUI capability disables login, not existing key management.
+                # A later request retries; the source never caches a failed lookup.
+                status["sign_in_providers"] = []
             return status
+        if action in {"connect_status", "connect_cancel"}:
+            attempt = self._auth_attempt
+            if attempt is None or attempt.id != attempt_id:
+                return {"kind": "refused", "code": "invalid_request"}
+            if action == "connect_cancel":
+                attempt.cancel()
+            return attempt.observe()
+        if self._auth_attempt is not None and self._auth_attempt.active and action != "stop":
+            return {"kind": "refused", "code": "busy"}
         if action == "start":
             with self._start_request_guard:
                 if self._closing.is_set():
@@ -201,12 +249,16 @@ class AgentService:
                     self._start_thread.start()
             return {"kind": "starting"}
         if action == "stop":
+            if self._auth_attempt is not None:
+                self._auth_attempt.cancel()
             self.stop()
             return {"kind": "stopped"}
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
         if action == "sign_in":
             return self._prepare_sign_in(provider, expected_revision=expected_revision)
+        if action == "connect" and method in {"browser", "device"}:
+            return self._connect(provider, expected_revision=expected_revision, method=method)
         if action == "set" and secret is not None:
             result = self._providers.set_credential(
                 provider,
@@ -231,7 +283,7 @@ class AgentService:
         # Startup and background observation revalidate the committed generation.
         return result.model_dump(mode="json")
 
-    def _prepare_sign_in(self, provider: str, *, expected_revision: str) -> dict[str, Any]:
+    def _prepare_sign_in(self, provider: str, *, expected_revision: str, gui: bool = False) -> dict[str, Any]:
         """Prepare a person-terminal launch without observing provider credentials.
 
         The caller owns the terminal and must contain its child in the person's
@@ -245,11 +297,20 @@ class AgentService:
             if (
                 lane is None
                 or not lane.auth_kind.accepts_provider_sign_in
-                or lane.provider not in self._catalog.sign_in_providers()
+                or lane.provider
+                not in (self._catalog.gui_sign_in_providers() if gui else self._catalog.sign_in_providers())
             ):
                 return {"kind": "refused", "code": "sign_in_unavailable"}
+            if gui and self._agent_source is not None and not is_marked_lane_root(self._root):
+                return {"kind": "refused", "code": "root_unmarked"}
             root = profile_agent_root(self._root, lease.profile_id)
             image = agent_image(self._agent_source, agent_root=root)
+            if gui and not self._owned:
+                try:
+                    self._ownership.enter_context(exclusive_file_lock(root / "service-owner", timeout=0))
+                except LockAcquisitionError:
+                    return {"kind": "refused", "code": "busy"}
+                self._owned = True
             result = self._providers.set_assistant_auth(
                 provider, choice=AssistantAuthChoice.PROVIDER_SIGN_IN, expected_revision=expected_revision
             )
@@ -274,11 +335,52 @@ class AgentService:
                 },
             }
 
+    def _connect(self, provider: str, *, expected_revision: str, method: str) -> dict[str, Any]:
+        """Start a profile-bound helper; its provider owns OAuth and credential storage."""
+        lease = self.client.lease
+        prepared = self._prepare_sign_in(provider, expected_revision=expected_revision, gui=True)
+        if prepared.get("kind") != "sign_in_prepared":
+            return prepared
+        generations = self._credentials.current_generations()
+        if lease is None or generations is None or self.client.lease != lease:
+            return {"kind": "refused", "code": "signed_out"}
+
+        def valid() -> bool:
+            if self._closing.is_set() or self.client.lease != lease:
+                return False
+            current = self._credentials.current_generations()
+            return current == generations and self.client.lease == lease and not self._closing.is_set()
+
+        launch = prepared["launch"]
+        attempt = AuthAttempt(
+            provider=prepared["entry"]["provider"],
+            lane=provider,
+            executable=Path(launch["executable"]),
+            directory=Path(launch["directory"]),
+            arguments=(
+                *AGENT_COMMAND_LINE,
+                "auth",
+                "connect",
+                "--provider",
+                prepared["entry"]["provider"],
+                "--method",
+                method,
+                "--timeout",
+                "300",
+            ),
+            environment=system_environment(os.environ) | launch["environment"],
+            valid=valid,
+        )
+        self._auth_attempt = attempt
+        return attempt.observe()
+
     def start(self) -> dict[str, Any]:
         """Prepare stores and launch one tree under an exclusive cross-process reservation."""
         with self._guard:
             if self._closing.is_set():
                 return {"event": "refused", "code": "service_stopping"}
+            if self._auth_attempt is not None and self._auth_attempt.active:
+                return {"event": "refused", "code": "busy"}
             lease = self.client.lease
             if lease is None or self._credentials.current_generations() is None:
                 return {"event": "refused", "code": "signed_out"}
@@ -472,6 +574,8 @@ class AgentService:
         finally:
             try:
                 self.stop()
+                if self._auth_attempt is not None:
+                    self._auth_attempt.close()
                 thread = self._start_thread
                 if thread is not None:
                     thread.join()
@@ -483,6 +587,8 @@ class AgentService:
     def request_close(self) -> None:
         """Invalidate startup publication immediately without waiting on lifecycle work."""
         self._closing.set()
+        if self._auth_attempt is not None:
+            self._auth_attempt.cancel()
         self._clear_hosted_certifications()
         self.client.lease = None
         self.client.connection.close()

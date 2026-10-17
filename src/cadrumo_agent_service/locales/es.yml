@@ -237,8 +237,30 @@ desktop:
     save: Guardar
     saved_unread: Guardada, pero no se ha podido leer su estado.
     saving: Guardando…
-    sign_in_only: Usa el inicio de sesión de {provider}. Cadrumo solo muestra si está
-      disponible.
+    sign_in_only: Usa el inicio de sesión propio de {provider}.
+    sign_in_action: Iniciar sesión
+    sign_in_cancel: Cancelar el inicio de sesión
+    sign_in_cancel_failed: Cadrumo aún no ha podido cancelar el inicio de sesión.
+      Mantén este cuadro abierto mientras lo comprueba.
+    sign_in_cancelled: Se canceló el inicio de sesión.
+    sign_in_close: Cerrar el inicio de sesión
+    sign_in_continue_browser: Continuar en el navegador
+    sign_in_description: Continúa en la página de inicio de sesión de {provider}.
+      Escribe tu contraseña solo allí.
+    sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo más tarde.
+    sign_in_open_failed: Cadrumo no pudo abrir la página de inicio de sesión del proveedor.
+    sign_in_security: Cadrumo nunca te pedirá la contraseña del proveedor.
+    sign_in_start_browser: Iniciar sesión en el navegador
+    sign_in_start_device: Usar un código de dispositivo
+    sign_in_starting: Iniciando sesión…
+    sign_in_success: Has iniciado sesión en {provider}. Cadrumo aún tiene que comprobar
+      que este canal puede ejecutar un agente.
+    sign_in_timeout: El inicio de sesión tardó demasiado y se canceló.
+    sign_in_title: Iniciar sesión con {provider}
+    sign_in_unavailable: El inicio de sesión desde Cadrumo aún no está disponible para este proveedor.
+    sign_in_user_code: Código de dispositivo
+    sign_in_waiting: Termina de iniciar sesión en la página del proveedor y vuelve aquí.
+    sign_in_waiting_device: Escribe este código en la página del proveedor para terminar de iniciar sesión.
     source_environment: Usa la clave del entorno de desarrollo
     source_profile: Clave guardada en este perfil
     through: A través de {url}

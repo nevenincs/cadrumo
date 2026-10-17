@@ -617,6 +617,51 @@ arguments = [
   { literal = "--json" },
 ]
 
+[[invocations]]
+profile = "agent-providers"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "providers" },
+  { literal = "--interface" },
+  { literal = "gui" },
+  { literal = "--json" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "connect" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+  { literal = "--method" },
+  { literal = "browser" },
+  { literal = "--timeout" },
+  { literal = "300" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "connect" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+  { literal = "--method" },
+  { literal = "device" },
+  { literal = "--timeout" },
+  { literal = "300" },
+]
+
 # The Windows supervisor starts the worker without site (-S): that is the exact
 # invocation it sends, so it is the exact invocation declared here.
 [[invocations]]
@@ -1282,6 +1327,56 @@ environment = { HOME = "/home/ada", LANG = "C.UTF-8" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]
+name = "windows-agent-gui-auth-capabilities-takes-the-system-base-only"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", PATH = "C:\\elsewhere" }
+profile = "agent-providers"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-gui-auth-capabilities-takes-the-system-base-only"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui", "--json"]
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", PATH = "/elsewhere" }
+profile = "agent-providers"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-auth-admits-browser-connect-in-its-profile"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "browser", "--timeout", "300"]
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+profile = "agent-auth"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-auth-admits-device-connect-in-its-profile"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "300"]
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_LOCAL_STORAGE_ROOT = "/elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+profile = "agent-auth"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
+name = "windows-agent-auth-keeps-the-legacy-login-invocation"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "login", "--provider", "codex"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent" }
+profile = "agent-auth"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
 name = "windows-agent-refuses-providers-without-its-declared-flags"
 platform = "windows"
 image = "cadrumo-agent"
@@ -1327,6 +1422,46 @@ platform = "posix"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json", "extra"]
 ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-a-gui-auth-interface-other-than-gui"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "terminal", "--json"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-gui-auth-capabilities-without-json"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-provider-connect-with-an-unlisted-method"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "terminal", "--timeout", "300"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-provider-connect-without-the-fixed-timeout"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "browser"]
+ambient = { HOME = "/home/ada" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-provider-connect-with-a-different-timeout"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "301"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
 refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
 
 # A refused launch parameter is named and its value is not: the refusal carries the

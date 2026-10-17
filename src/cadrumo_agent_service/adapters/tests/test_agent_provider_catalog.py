@@ -15,7 +15,12 @@ from ...providers.application.ports import ProviderCatalogUnavailableError, Prov
 from ...providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
 from ..agent_process import WindowsAgentInvocationRunner
 from ..agent_programs import PACKAGE_AGENT_VARIABLE
-from ..agent_provider_catalog import AUTH_CAPABILITIES_ARGUMENTS, CATALOG_ARGUMENTS, AgentProviderCatalogSource
+from ..agent_provider_catalog import (
+    AUTH_CAPABILITIES_ARGUMENTS,
+    CATALOG_ARGUMENTS,
+    GUI_AUTH_CAPABILITIES_ARGUMENTS,
+    AgentProviderCatalogSource,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -140,6 +145,17 @@ def test_sign_in_actions_are_agent_reported_and_credential_free(tmp_path: Path) 
     assert len(runner.calls) == 1
     assert runner.calls[0]["arguments"] == AUTH_CAPABILITIES_ARGUMENTS
     assert "CADRUMO_LLM_X_API_KEY" not in json.dumps(runner.calls[0]["environment"])
+
+
+def test_gui_capability_is_independent_of_terminal_support(tmp_path: Path) -> None:
+    source, runner = _source(tmp_path, _ok('{"schema_version":1,"providers":["example"]}'))
+    assert source.sign_in_providers() == ("example",)
+    runner.result = _ok('{"schema_version":1,"providers":[]}')
+    assert source.gui_sign_in_providers() == ()
+    assert source.gui_sign_in_providers() == ()
+    assert len(runner.calls) == 2
+    assert runner.calls[1]["arguments"] == GUI_AUTH_CAPABILITIES_ARGUMENTS
+    assert "CADRUMO_LLM_X_API_KEY" not in json.dumps(runner.calls[1]["environment"])
 
 
 @pytest.mark.parametrize(

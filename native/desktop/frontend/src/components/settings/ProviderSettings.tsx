@@ -6,6 +6,8 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
+import { ProviderSignInDialog } from "./ProviderSignInDialog";
+import type { ProviderSignIn } from "../../shell/providerSettings";
 import type {
   CliState,
   ProviderOutcome,
@@ -229,6 +231,8 @@ function WayRow({
   onTurnOff,
   onReset,
   onRefresh,
+  signInSupported,
+  onSignIn,
 }: {
   provider: ProviderStatus;
   busy: boolean;
@@ -237,6 +241,8 @@ function WayRow({
   onTurnOff: () => void;
   onReset: () => void;
   onRefresh: () => void;
+  signInSupported: boolean;
+  onSignIn: () => void;
 }) {
   const t = useStrings();
   const headingId = useId();
@@ -302,7 +308,17 @@ function WayRow({
           <span>{refusalWords(t, outcome.code)}</span>
         </p>
       )}
-      {signInOnly ? null : editing ? (
+      {signInOnly ? (
+        signInSupported ? (
+          <Button variant="outline" size="sm" onClick={onSignIn}>
+            {t("desktop.providers.sign_in_action")}
+          </Button>
+        ) : (
+          <p role="note" className="text-sm text-muted-foreground">
+            {t("desktop.providers.sign_in_unavailable")}
+          </p>
+        )
+      ) : editing ? (
         <SecretForm
           provider={provider}
           saving={busy}
@@ -359,9 +375,9 @@ function inListOrder(providers: readonly ProviderStatus[]) {
 /**
  * The AI providers of the signed-in profile, one card for each lane the agent
  * has: named and drawn as the agent's provider list names and draws it, with
- * what it needs and where it stands, and the person's ways to add, replace,
- * disable or reset its key. A stored key is never shown, and only these
- * controls, pressed by the person, change one.
+ * what it needs and where it stands, and the person's available way to set a
+ * direct credential or start provider-owned sign-in. A stored key is never
+ * shown, and only these controls, pressed by the person, change one.
  */
 export function ProviderSettings({
   providers,
@@ -372,6 +388,11 @@ export function ProviderSettings({
   onTurnOff,
   onReset,
   onRefresh,
+  onSignInTerminal,
+  signIn,
+  signInProviders = [],
+  revisions = {},
+  identity = null,
 }: {
   providers: readonly ProviderStatus[];
   /** A development build, where a provider with no key uses the
@@ -385,9 +406,34 @@ export function ProviderSettings({
   onTurnOff: (providerId: string) => void;
   onReset: (providerId: string) => void;
   onRefresh: () => void;
+  /** Refreshes only if the profile that opened sign-in remains current. */
+  onSignInTerminal?: () => void;
+  signIn?: ProviderSignIn;
+  /** Canonical provider slugs declared by the agent as GUI sign-in capable. */
+  signInProviders?: readonly string[];
+  /** Current lane revisions from the same provider status read. */
+  revisions?: Readonly<Record<string, string>>;
+  /** Signed-in profile identity, used to discard an open attempt on switch. */
+  identity?: string | null;
 }) {
   const t = useStrings();
   const titleId = useId();
+  const [selection, setSelection] = useState<{
+    laneId: string;
+    identity: string | null;
+  } | null>(null);
+  const currentIdentity = useRef(identity);
+  currentIdentity.current = identity;
+  const refreshCurrent = useRef(onSignInTerminal ?? onRefresh);
+  refreshCurrent.current = onSignInTerminal ?? onRefresh;
+  const selectedProvider =
+    selection?.identity === identity
+      ? providers.find((provider) => provider.id === selection.laneId)
+      : undefined;
+  const selectedIdentity = selection?.identity ?? null;
+  const selectedRevision = selectedProvider
+    ? revisions[selectedProvider.id]
+    : undefined;
   return (
     <section aria-labelledby={titleId} className="provider-settings grid gap-2">
       <div className="grid gap-1">
@@ -416,6 +462,12 @@ export function ProviderSettings({
             provider={lane}
             busy={busyId === lane.id}
             outcome={outcomes[lane.id]}
+            signInSupported={Boolean(
+              signIn?.openExternal &&
+              revisions[lane.id] &&
+              signInProviders.includes(lane.provider),
+            )}
+            onSignIn={() => setSelection({ laneId: lane.id, identity })}
             onSave={(secret) => onSave(lane.id, secret)}
             onTurnOff={() => onTurnOff(lane.id)}
             onReset={() => onReset(lane.id)}
@@ -423,6 +475,22 @@ export function ProviderSettings({
           />
         ))}
       </ul>
+      {selectedProvider && selectedRevision && signIn?.openExternal && (
+        <ProviderSignInDialog
+          open
+          identity={identity}
+          provider={selectedProvider}
+          revision={selectedRevision}
+          signIn={signIn}
+          onOpenChange={(open) => {
+            if (!open) setSelection(null);
+          }}
+          onTerminal={() => {
+            if (currentIdentity.current === selectedIdentity)
+              refreshCurrent.current();
+          }}
+        />
+      )}
     </section>
   );
 }

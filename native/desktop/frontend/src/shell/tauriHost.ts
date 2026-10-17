@@ -18,6 +18,7 @@ import type { Host } from "./host";
 import type { HostCall } from "./hostCall";
 import { hostCall } from "./hostCall";
 import type {
+  ProviderSignInSnapshot,
   ProviderSettings,
   ProviderSettingsAnswer,
   ProviderSettingsRecord,
@@ -42,6 +43,8 @@ function takeToken(): ShellToken | null {
 export function tauriHost(): Host {
   const token = takeToken();
   const call = hostCall(token);
+  const openExternal = (url: string) =>
+    call("open_external", { url }).then(() => undefined);
   // A command whose body is a password and nothing else. The token travels
   // as a header, and so does the label of the profile it names,
   // percent-encoded, since a header carries no other text.
@@ -203,8 +206,8 @@ export function tauriHost(): Host {
       );
       return chosen;
     },
-    openExternal: (url) => call("open_external", { url }).then(() => undefined),
-    providerSettings: tauriProviderSettings(token),
+    openExternal,
+    providerSettings: tauriProviderSettings(token, openExternal),
     agentAccess: tauriAgentAccess(call),
     ...tauriAgent(call),
   };
@@ -229,7 +232,10 @@ function refusal(code: string): Error & { code: string } {
   return Object.assign(new Error(code), { code });
 }
 
-function tauriProviderSettings(token: ShellToken | null): ProviderSettings {
+function tauriProviderSettings(
+  token: ShellToken | null,
+  openExternal: (url: string) => Promise<void>,
+): ProviderSettings {
   const unavailable = () =>
     Promise.reject(new Error("Missing desktop launch token."));
   const command = <Result>(
@@ -281,6 +287,23 @@ function tauriProviderSettings(token: ShellToken | null): ProviderSettings {
         provider,
         revision,
       }),
+    signIn: {
+      start: ({ provider, revision, method }) =>
+        command<ProviderSignInSnapshot>("provider_sign_in_start", {
+          provider,
+          revision,
+          method,
+        }),
+      status: ({ attemptId }) =>
+        command<ProviderSignInSnapshot>("provider_sign_in_status", {
+          attemptId,
+        }),
+      cancel: ({ attemptId }) =>
+        command<ProviderSignInSnapshot>("provider_sign_in_cancel", {
+          attemptId,
+        }),
+      openExternal,
+    },
   };
 }
 

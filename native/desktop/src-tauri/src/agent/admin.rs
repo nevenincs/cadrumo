@@ -114,7 +114,13 @@ impl Endpoint {
             return Err(failed("admin_request_too_large"));
         }
         let address = SocketAddr::from(([127, 0, 0, 1], self.port));
-        let bound = Duration::from_secs(6);
+        // Login preparation must first reap the running gateway (up to 20 s).
+        // Only the attended start request gets that grace; polling stays short.
+        let bound = Duration::from_secs(if request["action"] == "connect" {
+            60
+        } else {
+            6
+        });
         let deadline = Instant::now() + bound;
         let mut stream = TcpStream::connect_timeout(&address, bound)
             .map_err(|e| io_failed(ErrorCode::ReadFailed, "admin_connect", e))?;
@@ -184,6 +190,43 @@ mod tests {
         endpoint(port)
             .exchange(json!({"action": "catalog"}), None)
             .unwrap_err()
+    }
+
+    #[test]
+    fn connect_exchange_allows_the_gateway_shutdown_grace_before_reply() {
+        let port = serve(|mut stream| {
+            let mut header = [0u8; 4];
+            stream.read_exact(&mut header).unwrap();
+            let mut bearer = vec![0u8; u32::from_be_bytes(header) as usize];
+            stream.read_exact(&mut bearer).unwrap();
+            assert_eq!(bearer, b"b".repeat(64));
+
+            stream.read_exact(&mut header).unwrap();
+            let mut body = vec![0u8; u32::from_be_bytes(header) as usize];
+            stream.read_exact(&mut body).unwrap();
+            let request: Value = serde_json::from_slice(&body).unwrap();
+            assert_eq!(request["action"], "connect");
+
+            // The normal admin bound is six seconds. Login preparation can
+            // first spend twenty seconds stopping the hosted gateway.
+            std::thread::sleep(Duration::from_secs(7));
+
+            let reply = serde_json::to_vec(&json!({
+                "version": 1,
+                "request_id": request["request_id"],
+                "result": {"kind": "connected"},
+            }))
+            .unwrap();
+            stream
+                .write_all(&(reply.len() as u32).to_be_bytes())
+                .unwrap();
+            stream.write_all(&reply).unwrap();
+        });
+
+        let reply = endpoint(port)
+            .exchange(json!({"action": "connect"}), None)
+            .unwrap();
+        assert_eq!(reply["kind"], "connected");
     }
 
     #[test]

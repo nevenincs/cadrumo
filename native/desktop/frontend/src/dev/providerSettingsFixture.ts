@@ -1,4 +1,5 @@
 import type {
+  ProviderSignInSnapshot,
   ProviderSettings,
   ProviderSettingsRecord,
 } from "../shell/providerSettings";
@@ -64,6 +65,25 @@ export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
 
 const SEEDS: readonly Seed[] = FIXTURE_SETTINGS_LANES;
 
+/** Only one made-up provider advertises GUI sign-in in scenario evidence. */
+export const FIXTURE_SIGN_IN_PROVIDERS: readonly string[] = [
+  ...new Set(
+    SEEDS.filter((seed) => seed.auth_kind === "provider_sign_in_only").map(
+      (seed) => seed.provider,
+    ),
+  ),
+].slice(0, 1);
+
+export type ProviderSignInFixtureControls = {
+  deferNextStart: () => void;
+  completeStart: () => void;
+};
+
+export type ProviderSettingsFixture = {
+  settings: ProviderSettings;
+  signInControls: ProviderSignInFixtureControls;
+};
+
 /** Where a lane stands before anything is set. A lane that signs in with the
  * provider's own app stands on that app. */
 function initial(
@@ -125,7 +145,7 @@ export function providerSettingsFixture({
   wait: () => Promise<void>;
   /** A profile is signed in whose providers these are. */
   readable: () => boolean;
-}): ProviderSettings {
+}): ProviderSettingsFixture {
   let changes = 0;
   const records = new Map<string, ProviderSettingsRecord>(
     SEEDS.map((seed) => [
@@ -151,13 +171,116 @@ export function providerSettingsFixture({
     return kept;
   };
 
-  return {
+  const ATTEMPT_ID = "3d9e8452-6ce3-4f70-9dd5-6ff018a68e04";
+  const AUTH_URL = "https://provider.example/sign-in";
+  let attempt: ProviderSignInSnapshot | null = null;
+  let cancelRequested = false;
+  let deferStart = false;
+  let completeDeferredStart: (() => void) | null = null;
+  const signInControls: ProviderSignInFixtureControls = {
+    deferNextStart() {
+      deferStart = true;
+    },
+    completeStart() {
+      completeDeferredStart?.();
+      completeDeferredStart = null;
+    },
+  };
+  const makeAttempt = async (
+    provider: string,
+    method: "browser" | "device",
+  ): Promise<ProviderSignInSnapshot> => {
+    const record = records.get(provider);
+    if (
+      !record ||
+      record.auth_kind !== "provider_sign_in_only" ||
+      !FIXTURE_SIGN_IN_PROVIDERS.includes(record.provider)
+    )
+      throw coded("unsupported");
+    records.set(provider, {
+      ...record,
+      // The service commits assistant_auth before launching the helper, so
+      // the next provider read must carry a new revision even if login closes.
+      revision: await revisionOf(record.id, ++changes),
+    });
+    attempt = {
+      attempt_id: ATTEMPT_ID,
+      provider,
+      event: method === "browser" ? "browser_action" : "started",
+      ...(method === "browser"
+        ? { url: AUTH_URL }
+        : { user_code: "EXAMPLE-1234" }),
+    };
+    cancelRequested = false;
+    return attempt;
+  };
+
+  const signInControlsSettings: NonNullable<ProviderSettings["signIn"]> = {
+    async start({ provider, revision, method }) {
+      say(`providerSignInStart ${provider} ${method}`);
+      if (!readable()) throw coded("not_signed_in");
+      const record = records.get(provider);
+      if (!record || record.revision !== revision)
+        throw coded("revision_conflict");
+      if (deferStart) {
+        deferStart = false;
+        return new Promise<ProviderSignInSnapshot>((resolve, reject) => {
+          completeDeferredStart = () => {
+            void makeAttempt(provider, method).then(resolve, reject);
+          };
+        });
+      }
+      await wait();
+      if (!readable()) throw coded("not_signed_in");
+      return makeAttempt(provider, method);
+    },
+    async status({ attemptId }) {
+      say("providerSignInStatus");
+      await wait();
+      if (!attempt || attempt.attempt_id !== attemptId) throw coded("unknown");
+      if (cancelRequested) {
+        attempt = {
+          attempt_id: attempt.attempt_id,
+          provider: attempt.provider,
+          event: "cancelled",
+        };
+        return attempt;
+      }
+      return attempt;
+    },
+    async cancel({ attemptId }) {
+      say("providerSignInCancel");
+      await wait();
+      say("providerSignInCancelSettled");
+      if (!attempt || attempt.attempt_id !== attemptId) throw coded("unknown");
+      cancelRequested = true;
+      // Model the service's cleanup window: still active, but its one-time URL
+      // and device code have already been removed.
+      return {
+        attempt_id: attempt.attempt_id,
+        provider: attempt.provider,
+        event: "browser_action",
+      };
+    },
+    async openExternal() {
+      // Deliberately do not retain or report the transient address.
+      say("providerSignInOpenExternal");
+    },
+  };
+
+  const settings: ProviderSettings = {
     async status() {
       say("providerStatus");
       await wait();
       if (!readable()) throw coded("not_signed_in");
-      return { development: false, providers: [...records.values()] };
+      say("providerStatusResolved");
+      return {
+        development: false,
+        providers: [...records.values()],
+        sign_in_providers: [...FIXTURE_SIGN_IN_PROVIDERS],
+      };
     },
+    signIn: signInControlsSettings,
     async set({ provider, revision, secret, base_url }) {
       say(`providerSet ${provider}`);
       const record = await take(provider, revision);
@@ -208,4 +331,5 @@ export function providerSettingsFixture({
       return forgotten;
     },
   };
+  return { settings, signInControls };
 }

@@ -22,7 +22,20 @@ ADMIN_DOCUMENT_MAX_BYTES = 4096
 ADMIN_RESPONSE_MAX_BYTES = 256 * 1024
 ADMIN_SECRET_MAX_BYTES = 16 * 1024
 
-type AdminAction = Literal["catalog", "status", "set", "remove", "reset", "auth", "sign_in", "start", "stop"]
+type AdminAction = Literal[
+    "catalog",
+    "status",
+    "set",
+    "remove",
+    "reset",
+    "auth",
+    "sign_in",
+    "start",
+    "stop",
+    "connect",
+    "connect_status",
+    "connect_cancel",
+]
 
 
 class AdminTarget(Protocol):
@@ -36,6 +49,8 @@ class AdminTarget(Protocol):
         expected_revision: str | None = None,
         base_url: str | None = None,
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
+        method: Literal["browser", "device"] | None = None,
+        attempt_id: str | None = None,
         secret: bytearray | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
@@ -53,6 +68,8 @@ class AdminRequest(BaseModel):
     expected_revision: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")] | None = None
     base_url: Annotated[str, Field(max_length=2048)] | None = None
     choice: Literal["direct_api", "provider_sign_in"] | None = None
+    method: Literal["browser", "device"] | None = None
+    attempt_id: UUID | None = None
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None
 
 
@@ -172,6 +189,8 @@ class AdminServer:
                 expected_revision=request.expected_revision,
                 base_url=request.base_url,
                 choice=request.choice,
+                method=request.method,
+                attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
                 secret=secret,
             )
         except ProviderCatalogUnavailableError:

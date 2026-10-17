@@ -266,6 +266,13 @@ if(BUILD_TESTING)
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}"
     "${PROJECT_SOURCE_DIR}/native/tests/agent_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
   set_tests_properties(bundle.agent PROPERTIES RESOURCE_LOCK package_inventory)
+  if(WIN32)
+    add_test(NAME bundle.provider-auth COMMAND "${CMAKE_COMMAND}" -E env
+      "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+      "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}"
+      "${PROJECT_SOURCE_DIR}/native/tests/provider_auth_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+    set_tests_properties(bundle.provider-auth PROPERTIES RESOURCE_LOCK package_inventory TIMEOUT 120)
+  endif()
   add_test(NAME bundle.python COMMAND "${CMAKE_COMMAND}" -E env
     "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"

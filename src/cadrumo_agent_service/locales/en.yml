@@ -233,7 +233,30 @@ desktop:
     save: Save
     saved_unread: Saved, but its status couldn't be read.
     saving: Saving…
-    sign_in_only: Uses {provider}'s own sign-in. Cadrumo only shows whether it's available.
+    sign_in_action: Sign in
+    sign_in_cancel: Cancel sign-in
+    sign_in_cancel_failed: Cadrumo couldn't cancel sign-in yet. Keep this dialog open
+      while it checks.
+    sign_in_cancelled: Sign-in was cancelled.
+    sign_in_close: Close sign-in
+    sign_in_continue_browser: Continue in browser
+    sign_in_description: Continue to {provider}'s sign-in page. Enter your password
+      only on that page.
+    sign_in_failure: Sign-in couldn't be completed. Try again later.
+    sign_in_only: Uses {provider}'s own sign-in.
+    sign_in_open_failed: Cadrumo couldn't open the provider's sign-in page.
+    sign_in_security: Cadrumo never asks for your provider password.
+    sign_in_start_browser: Start browser sign-in
+    sign_in_start_device: Use a device code
+    sign_in_starting: Starting sign-in…
+    sign_in_success: Signed in to {provider}. Cadrumo still needs to prove this lane
+      can run an agent.
+    sign_in_timeout: Sign-in took too long and was cancelled.
+    sign_in_title: Sign in to {provider}
+    sign_in_unavailable: Sign-in from Cadrumo isn't available for this provider yet.
+    sign_in_user_code: Device code
+    sign_in_waiting: Finish signing in on the provider's page, then return here.
+    sign_in_waiting_device: Enter this code on the provider's page to finish signing in.
     source_environment: Using the development environment's key
     source_profile: Key saved in this profile
     through: Through {url}

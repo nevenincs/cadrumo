@@ -359,6 +359,20 @@ stops the hosted tree and returns `sign_in_prepared` with a fixed package comman
 and its profile root. The terminal owner must bind that child to the person's
 session lifetime. This preparation neither reads a provider credential nor proves
 that authentication succeeded.
+
+Desktop sign-in uses the separate `auth providers --interface gui --json`
+capability catalog. The service's authenticated `connect` action checks that
+capability and the settings revision, stops the gateway, reserves the profile
+root and owns a hidden `auth connect --provider IDENTIFIER --method browser|device
+--timeout 300` process. Private JSONL pipes carry a versioned start handshake,
+bounded browser actions and terminal outcomes; the provider CLI owns the OAuth
+callback and writes credentials directly into its profile-specific home.
+`connect_status` and `connect_cancel` correlate one opaque attempt id. The dialog
+observes only while open; 15 seconds without observation cancels the helper.
+Lease or settings generation changes, service shutdown and explicit cancellation
+also retire its Windows job before ownership is released. Browser URLs and device
+codes are transient UI data and never diagnostics or persisted settings. A login
+success does not certify model readiness or automatically resume a model request.
 An unknown flag, a flag without a valid value, a reordered or repeated flag, a
 spelling such as `--flag=value` and a trailing argument each leave the invocation
 undeclared. A match selects the invocation's profile. The image's profile without an

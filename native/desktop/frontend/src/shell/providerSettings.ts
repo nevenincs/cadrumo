@@ -49,7 +49,44 @@ export type ProviderSettingsAnswer = {
    * environment's. The host says which build it is. */
   development: boolean;
   providers: ProviderSettingsRecord[];
+  /** Canonical providers the agent declares usable from the GUI sign-in flow.
+   * Missing means no provider supports it. */
+  sign_in_providers?: string[];
 };
+
+export type ProviderSignInMethod = "browser" | "device";
+export type ProviderSignInEvent =
+  | "starting"
+  | "started"
+  | "browser_action"
+  | "succeeded"
+  | "cancelled"
+  | "failed";
+
+/** Transient progress for a person-started provider sign-in attempt. */
+export type ProviderSignInSnapshot = {
+  attempt_id: string;
+  /** Lane id, such as `codex_cli`. */
+  provider: string;
+  event: ProviderSignInEvent;
+  reason?: string;
+  /** Present only while the person can open the provider's sign-in page. */
+  url?: string;
+  /** Device-flow code; shown only while this attempt is active. */
+  user_code?: string;
+};
+
+export interface ProviderSignIn {
+  start(change: {
+    provider: string;
+    revision: string;
+    method: ProviderSignInMethod;
+  }): Promise<ProviderSignInSnapshot>;
+  status(change: { attemptId: string }): Promise<ProviderSignInSnapshot>;
+  cancel(change: { attemptId: string }): Promise<ProviderSignInSnapshot>;
+  /** Same user-gesture-only operation as Host.openExternal. */
+  openExternal?(url: string): Promise<void>;
+}
 
 /** Why a change was refused, as a stable code. `committed_readback_failed`
  * means the change was saved but its status could not be read back. */
@@ -67,6 +104,8 @@ export type ProviderSettingsRefusal =
 
 export interface ProviderSettings {
   status(): Promise<ProviderSettingsAnswer>;
+  /** Attended GUI sign-in is absent unless this host implements it. */
+  readonly signIn?: ProviderSignIn;
   /** Saves a key or token. The secret is handed on once and never kept.
    * Each change answers with the provider's new status. */
   set(change: {
@@ -105,7 +144,12 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
 });
 
 export type ProviderSettingsView = {
-  read: AgentRead<{ development: boolean; providers: ProviderStatus[] }>;
+  read: AgentRead<{
+    development: boolean;
+    providers: ProviderStatus[];
+    signInProviders: string[];
+    revisions: Readonly<Record<string, string>>;
+  }>;
   busyId: string | null;
   outcomes: Readonly<Record<string, ProviderOutcome>>;
   save: (providerId: string, secret: ProviderSecret) => void;
@@ -144,6 +188,14 @@ export function useProviderSettings(
             value: {
               development: answer.value.development,
               providers: answer.value.providers.map(providerStatus),
+              signInProviders: Array.isArray(answer.value.sign_in_providers)
+                ? [...new Set(answer.value.sign_in_providers)]
+                : [],
+              revisions: Object.fromEntries(
+                answer.value.providers.map(
+                  ({ id, revision }) => [id, revision] as const,
+                ),
+              ),
             },
           }
         : answer,

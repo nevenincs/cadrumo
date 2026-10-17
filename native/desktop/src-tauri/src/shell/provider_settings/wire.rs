@@ -8,6 +8,7 @@ use std::collections::BTreeSet;
 const NAME_LIMIT: usize = 100;
 const URL_LIMIT: usize = 2048;
 const PROVIDER_LIMIT: usize = 64;
+const AUTH_URL_LIMIT: usize = 8192;
 
 fn protocol() -> ApplicationError {
     ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
@@ -26,6 +27,9 @@ pub enum Refusal {
     CatalogUnavailable,
     RuntimeUnavailable,
     PersonActRequired,
+    UnsupportedFlow,
+    Busy,
+    RootUnmarked,
     Unknown,
 }
 
@@ -138,6 +142,7 @@ pub enum CliState {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Entry {
     pub id: String,
+    pub provider: String,
     pub display_name: String,
     pub transport: Transport,
     pub auth_kind: AuthKind,
@@ -160,6 +165,71 @@ pub struct Entry {
 pub struct Status {
     pub development: bool,
     pub providers: Vec<Entry>,
+    #[serde(default)]
+    pub sign_in_providers: Vec<String>,
+}
+
+/// The attended sign-in route the person selected.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SignInMethod {
+    Browser,
+    Device,
+}
+
+impl SignInMethod {
+    pub fn parse(text: &str) -> Option<Self> {
+        match text {
+            "browser" => Some(Self::Browser),
+            "device" => Some(Self::Device),
+            _ => None,
+        }
+    }
+}
+
+/// A service-owned attempt's current transient event.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SignInEvent {
+    Starting,
+    Started,
+    BrowserAction,
+    Succeeded,
+    Cancelled,
+    Failed,
+}
+
+/// Helper failures are closed protocol values; arbitrary process output never
+/// becomes an error detail sent to the window.
+#[derive(Clone, Copy, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SignInReason {
+    InvalidRequest,
+    HostDisconnected,
+    Timeout,
+    Busy,
+    ProviderUnavailable,
+    ProviderError,
+    UnsupportedFlow,
+    CleanupFailed,
+    ProfileRequired,
+}
+
+/// The snapshot returned to the person during a provider sign-in attempt.
+/// Deliberately has no `Debug` implementation: URL and device-code fields are
+/// transient and must not be written to diagnostics by formatting this value.
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct SignInSnapshot {
+    pub attempt_id: String,
+    pub provider: String,
+    pub event: SignInEvent,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<SignInReason>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_code: Option<String>,
 }
 
 /// A provider's identifier: a lower-case token the product's command line
@@ -170,6 +240,103 @@ pub fn is_provider_id(text: &str) -> bool {
         && text
             .bytes()
             .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
+}
+
+/// The helper uses canonical lower-case UUID text for each attempt.
+pub fn is_attempt_id(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    bytes.len() == 36
+        && bytes.iter().enumerate().all(|(index, byte)| match index {
+            8 | 13 | 18 | 23 => *byte == b'-',
+            _ => byte.is_ascii_digit() || (b'a'..=b'f').contains(byte),
+        })
+}
+
+fn is_https_url(text: &str) -> bool {
+    if text.len() > AUTH_URL_LIMIT
+        || !text.starts_with("https://")
+        || !text
+            .bytes()
+            .all(|byte| byte.is_ascii_graphic() && byte != b'\\')
+    {
+        return false;
+    }
+    let Some(authority) = text
+        .strip_prefix("https://")
+        .and_then(|rest| rest.split(['/', '?', '#']).next())
+    else {
+        return false;
+    };
+    if authority.is_empty() || authority.contains('@') {
+        return false;
+    }
+    let Ok(url) = tauri::Url::parse(text) else {
+        return false;
+    };
+    url.scheme() == "https"
+        && url.host_str().is_some_and(|host| !host.is_empty())
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.port().is_none_or(|port| port == 443)
+        && url.fragment().is_none()
+        && url
+            .query_pairs()
+            .all(|(key, _)| !is_sensitive_auth_query_key(&key))
+}
+
+fn is_sensitive_auth_query_key(key: &str) -> bool {
+    matches!(
+        key.to_ascii_lowercase().as_str(),
+        "access_token" | "refresh_token" | "id_token" | "code"
+    )
+}
+
+fn valid_user_code(text: &str) -> bool {
+    (4..=32).contains(&text.len())
+        && text
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+}
+
+impl SignInSnapshot {
+    fn checked(self) -> Result<Self, ApplicationError> {
+        let active_event = self.event == SignInEvent::BrowserAction;
+        let terminal_event = matches!(
+            self.event,
+            SignInEvent::Succeeded | SignInEvent::Cancelled | SignInEvent::Failed
+        );
+        let valid = is_attempt_id(&self.attempt_id)
+            && is_provider_id(&self.provider)
+            && (self.reason.is_none()
+                || matches!(self.event, SignInEvent::Cancelled | SignInEvent::Failed))
+            && (self
+                .url
+                .as_ref()
+                .is_none_or(|url| active_event && is_https_url(url)))
+            && (self
+                .user_code
+                .as_ref()
+                .is_none_or(|code| active_event && valid_user_code(code)))
+            && (!terminal_event || self.url.is_none() && self.user_code.is_none());
+        if valid { Ok(self) } else { Err(protocol()) }
+    }
+}
+
+/// Parse a service attempt snapshot and bind it to the request that observed it.
+pub fn sign_in_snapshot(
+    outcome: Outcome,
+    expected_provider: Option<&str>,
+    expected_attempt: Option<&str>,
+) -> Result<SignInSnapshot, CommandFailure> {
+    let snapshot: SignInSnapshot =
+        serde_json::from_value(result_of(outcome)?).map_err(|_| protocol())?;
+    let snapshot = snapshot.checked()?;
+    if expected_provider.is_some_and(|provider| snapshot.provider != provider)
+        || expected_attempt.is_some_and(|attempt| snapshot.attempt_id != attempt)
+    {
+        return Err(protocol().into());
+    }
+    Ok(snapshot)
 }
 
 /// A revision the product handed out: opaque, and safe to hand back as one
@@ -189,6 +356,7 @@ fn is_plain_text(text: &str, limit: usize) -> bool {
 impl Entry {
     fn checked(self) -> Result<Self, ApplicationError> {
         let ok = is_provider_id(&self.id)
+            && is_provider_id(&self.provider)
             && is_plain_text(&self.display_name, NAME_LIMIT)
             && is_revision(&self.revision)
             && self
@@ -232,7 +400,13 @@ fn result_of(outcome: Outcome) -> Result<serde_json::Value, CommandFailure> {
 pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
     let status: Status = serde_json::from_value(result_of(outcome)?).map_err(|_| protocol())?;
     let mut seen = BTreeSet::new();
+    let mut seen_sign_in = BTreeSet::new();
     let coherent = status.providers.len() <= PROVIDER_LIMIT
+        && status.sign_in_providers.len() <= PROVIDER_LIMIT
+        && status
+            .sign_in_providers
+            .iter()
+            .all(|provider| is_provider_id(provider) && seen_sign_in.insert(provider.clone()))
         && status
             .providers
             .iter()
@@ -254,6 +428,7 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
     Ok(Status {
         development: status.development,
         providers,
+        sign_in_providers: status.sign_in_providers,
     })
 }
 
@@ -274,7 +449,7 @@ mod tests {
 
     fn api() -> Value {
         json!({
-            "id": "alpha_api", "display_name": "Alpha API", "transport": "api",
+            "id": "alpha_api", "provider": "alpha", "display_name": "Alpha API", "transport": "api",
             "auth_kind": "api_key", "consumers": ["assistant"], "mode": "key",
             "available": true, "source": "profile", "readiness": "not_verified",
             "reason": null, "base_url": null, "default_base_url": null,
@@ -284,7 +459,7 @@ mod tests {
 
     fn cli() -> Value {
         json!({
-            "id": "beta_cli", "display_name": "Beta CLI", "transport": "cli",
+            "id": "beta_cli", "provider": "beta", "display_name": "Beta CLI", "transport": "cli",
             "auth_kind": "provider_sign_in_only", "consumers": ["assistant"],
             "mode": "provider_sign_in", "available": false, "source": "none",
             "readiness": "sign_in_required", "reason": "sign_in_with_provider_tool",
@@ -307,11 +482,19 @@ mod tests {
         serde_json::to_value(result.unwrap_err()).unwrap()
     }
 
+    fn sign_in_failure(result: Result<SignInSnapshot, CommandFailure>) -> Value {
+        match result {
+            Err(error) => serde_json::to_value(error).unwrap(),
+            Ok(_) => panic!("expected sign-in protocol failure"),
+        }
+    }
+
     #[test]
     fn a_status_read_parses_into_the_closed_shapes_and_serializes_as_the_window_reads_it() {
         let status = status(success(envelope(&[api(), cli()]))).unwrap();
         assert!(!status.development);
         assert_eq!(status.providers.len(), 2);
+        assert!(status.sign_in_providers.is_empty());
         assert_eq!(status.providers[0].mode, Mode::Key);
         assert_eq!(status.providers[0].readiness, Readiness::NotVerified);
         assert_eq!(
@@ -324,12 +507,14 @@ mod tests {
         );
         let sent = serde_json::to_value(&status).unwrap();
         assert_eq!(sent["providers"][0]["auth_kind"], "api_key");
+        assert_eq!(sent["providers"][0]["provider"], "alpha");
         assert_eq!(sent["providers"][0]["reason"], Value::Null);
         // Absent stays absent: a web API has no app state, and an unset URL is not sent.
         assert!(sent["providers"][0].get("cli_state").is_none());
         assert!(sent["providers"][0].get("base_url").is_none());
         assert_eq!(sent["providers"][1]["cli_state"], "installed_signed_out");
         assert_eq!(sent["providers"][1]["auth_kind"], "provider_sign_in_only");
+        assert_eq!(sent["sign_in_providers"], json!([]));
         assert_eq!(status.providers[1].revision, "absent");
         // A listing with nothing in it is a listing.
         assert!(status_of(&[]).providers.is_empty());
@@ -370,6 +555,7 @@ mod tests {
             ("available", json!("yes")),
             ("id", json!("Alpha_api")),
             ("id", json!("-x")),
+            ("provider", json!("Alpha")),
             ("display_name", json!("")),
             ("display_name", json!("Any\nthing")),
             ("revision", json!("")),
@@ -386,6 +572,7 @@ mod tests {
         }
         for field in [
             "id",
+            "provider",
             "display_name",
             "transport",
             "auth_kind",
@@ -456,6 +643,143 @@ mod tests {
             })
             .collect();
         assert!(status(success(envelope(&many))).is_err());
+    }
+
+    #[test]
+    fn gui_sign_in_capabilities_are_a_bounded_unique_provider_slug_list() {
+        let mut read = envelope(&[cli()]);
+        read["sign_in_providers"] = json!(["codex", "claude"]);
+        let parsed = status(success(read)).unwrap();
+        assert_eq!(
+            parsed.sign_in_providers,
+            vec!["codex".to_owned(), "claude".to_owned()]
+        );
+
+        for providers in [
+            json!(["codex", "codex"]),
+            json!(["Codex"]),
+            json!(["-codex"]),
+            json!(["codex provider"]),
+            json!("codex"),
+        ] {
+            let mut read = envelope(&[]);
+            read["sign_in_providers"] = providers;
+            assert_eq!(failed(status(success(read)))["code"], "read_failed");
+        }
+
+        let too_many = (0..=PROVIDER_LIMIT)
+            .map(|index| format!("p{index}"))
+            .collect::<Vec<_>>();
+        let mut read = envelope(&[]);
+        read["sign_in_providers"] = json!(too_many);
+        assert_eq!(failed(status(success(read)))["code"], "read_failed");
+    }
+
+    #[test]
+    fn sign_in_snapshots_are_closed_bounded_and_correlated_to_the_request() {
+        let active = json!({
+            "attempt_id":"123e4567-e89b-42d3-a456-426614174000",
+            "provider":"codex_cli",
+            "event":"browser_action",
+            "url":"https://auth.openai.com/oauth/authorize?state=opaque",
+            "user_code":"A1-B2"
+        });
+        let parsed = sign_in_snapshot(
+            success(active.clone()),
+            Some("codex_cli"),
+            Some("123e4567-e89b-42d3-a456-426614174000"),
+        )
+        .unwrap();
+        let sent = serde_json::to_value(parsed).unwrap();
+        assert_eq!(sent["event"], "browser_action");
+        assert_eq!(sent["url"], active["url"]);
+        assert_eq!(sent["user_code"], "A1-B2");
+
+        let cancellation_pending = json!({
+            "attempt_id":"123e4567-e89b-42d3-a456-426614174000",
+            "provider":"codex_cli",
+            "event":"browser_action"
+        });
+        let pending = sign_in_snapshot(
+            success(cancellation_pending),
+            Some("codex_cli"),
+            Some("123e4567-e89b-42d3-a456-426614174000"),
+        )
+        .unwrap();
+        assert_eq!(pending.event, SignInEvent::BrowserAction);
+        assert!(pending.url.is_none() && pending.user_code.is_none());
+        assert_eq!(
+            sign_in_failure(sign_in_snapshot(
+                success(active.clone()),
+                Some("other_cli"),
+                None
+            ))["code"],
+            "read_failed"
+        );
+        assert_eq!(
+            sign_in_failure(sign_in_snapshot(
+                success(active.clone()),
+                None,
+                Some("123e4567-e89b-42d3-a456-426614174001")
+            ))["code"],
+            "read_failed"
+        );
+
+        for invalid in [
+            json!({"attempt_id":"not-a-uuid","provider":"codex_cli","event":"starting"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"Codex_cli","event":"starting"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"ready"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"failed","reason":"raw output"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"started","url":"https://auth.openai.com/"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"http://auth.openai.com/"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://user@auth.openai.com/"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com:444/"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/#fragment"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/?access_token=secret"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/?refresh_token=secret"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/?id_token=secret"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/?code=secret"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/?%63ode=secret"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/","user_code":"bad code"}),
+            json!({"attempt_id":"123e4567-e89b-42d3-a456-426614174000","provider":"codex_cli","event":"browser_action","url":"https://auth.openai.com/","unexpected":"not forwarded"}),
+        ] {
+            assert_eq!(
+                sign_in_failure(sign_in_snapshot(success(invalid.clone()), None, None))["code"],
+                "read_failed",
+                "{invalid}"
+            );
+        }
+
+        let failed_snapshot = json!({
+            "attempt_id":"123e4567-e89b-42d3-a456-426614174000",
+            "provider":"codex_cli",
+            "event":"failed",
+            "reason":"unsupported_flow"
+        });
+        assert_eq!(
+            sign_in_snapshot(success(failed_snapshot), None, None)
+                .unwrap()
+                .event,
+            SignInEvent::Failed
+        );
+    }
+
+    #[test]
+    fn sign_in_method_and_attempt_identifiers_have_closed_forms() {
+        assert_eq!(SignInMethod::parse("browser"), Some(SignInMethod::Browser));
+        assert_eq!(SignInMethod::parse("device"), Some(SignInMethod::Device));
+        for method in ["", "Browser", "terminal", "browser "] {
+            assert_eq!(SignInMethod::parse(method), None);
+        }
+        assert!(is_attempt_id("123e4567-e89b-42d3-a456-426614174000"));
+        for attempt in [
+            "123E4567-E89B-42D3-A456-426614174000",
+            "123e4567e89b42d3a456426614174000",
+            "x23e4567-e89b-42d3-a456-426614174000",
+            "123e4567-e89b-42d3-a456-42661417400g",
+        ] {
+            assert!(!is_attempt_id(attempt), "{attempt}");
+        }
     }
 
     #[test]
