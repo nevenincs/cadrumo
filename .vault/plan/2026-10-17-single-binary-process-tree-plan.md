@@ -11,7 +11,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:e08e589b9a569f1bb19525365d20328a0723e763769e9ded5c42f8634e74b339'
+body_hash: 'sha256:b405f14f9b37a8b4fc0388098a72d6f74ed133e55099547acb5ad4a35c8971e9'
 ---
 
 # `single-binary-process-tree` plan
@@ -26,7 +26,7 @@ Decision coverage: 2026-10-17-single-binary-process-tree-adr governs every Step 
 
 ## Steps
 
-- [ ] `S01` - Start the runtime from the desktop as the cadrumo binary in its runtime role through a linked interpreter host, and have the operator confirm the grouping; `native/desktop/src-tauri/src/main.rs`.
+- [x] `S01` - Start the runtime from the desktop as the cadrumo binary in its runtime role through a linked interpreter host, and have the operator confirm the grouping; `native/desktop/src-tauri/src/main.rs`.
 - [ ] `S02` - Dispatch every declared role before window initialization, refuse unknown roles, and select the linked host per role at run time instead of by compile-time defines; `native/desktop/src-tauri/src/launch.rs`.
 - [ ] `S03` - Make sys.executable the cadrumo binary in its interpreter role so runtime workers and the KDF child re-enter the same binary; `native/interpreter/windows/host.c`.
 - [ ] `S04` - Identify the manager and runtime by image plus role for supervision, startup items, quiescence and termination, with tests; `native/manager/src/supervision/launch.rs`.
