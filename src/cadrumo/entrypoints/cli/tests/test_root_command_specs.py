@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
-from cadrumo_client.commands.target import resolve_deferred_target
 
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..main import cli_app
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> None:
-    graph = CommandSpecGraph(ROOT_COMMAND_SPECS)
+    graph = CommandSpecGraph(ROOT_COMMAND_SPECS, resolver=resolve_deferred_target)
 
     assert tuple(node.path for node in graph.nodes()) == (
         ("aeat",),

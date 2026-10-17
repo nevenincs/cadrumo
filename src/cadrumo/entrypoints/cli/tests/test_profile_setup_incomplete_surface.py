@@ -28,7 +28,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
 from .profile_lifecycle_support import create_profile_via_cli

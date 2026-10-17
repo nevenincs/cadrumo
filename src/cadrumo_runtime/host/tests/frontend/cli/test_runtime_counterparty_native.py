@@ -165,11 +165,11 @@ def test_native_counterparty_denies_finite_period_and_missing_commit(
         assert result.exit_code == 2, result.output
         error = require_error_document(result.output)["error"]
         if finite_period:
-            assert error["code"] in {"REFUSED_CLI_BOUNDARY", "REFUSED_RUNTIME_FRONTEND"}
-            assert error["context"]["reason"] == "period_denied"
+            assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
+            assert error["context"]["reason"] == "period_denied", error
         else:
-            assert error["code"] == "REFUSED_PROFILE_ACCESS"
-            assert error["context"]["reason"] in {"operation_denied", "REFUSED_PROFILE_ACCESS"}
+            assert error["code"] == "REFUSED_RUNTIME_FRONTEND", error
+            assert error["context"]["reason"] == "operation_denied"
             untouched = session.invoke_credential_reference("app", "ledger", "counterparty", "view", _IDENTIFIER)
             assert untouched.exit_code == 0, untouched.output
             assert unwrap_cli_result(untouched)["confirmed"] is False

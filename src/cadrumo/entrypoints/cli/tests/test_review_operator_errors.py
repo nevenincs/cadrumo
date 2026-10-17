@@ -9,7 +9,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,7 +51,7 @@ def test_review_queue_unknown_kind_lists_accepted_set() -> None:
     # renderer inserts mid-token at the right margin.
     flattened = " ".join(result.output.replace("│", " ").replace("│", " ").split())
     for accepted in ACCEPTED_KINDS:
-        assert accepted in flattened
+        assert accepted in flattened, result.output
     # The parseable-but-empty kinds are intentionally not advertised.
     assert "live_notification" not in flattened
     assert "sync_divergence" not in flattened

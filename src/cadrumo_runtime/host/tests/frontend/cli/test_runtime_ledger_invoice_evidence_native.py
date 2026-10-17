@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Mapping
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
@@ -43,14 +44,7 @@ _PROFILE_FACTS = {
     "iva.voluntary_sii_enrolled": "false",
     "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
-_STRUCTURED_INVOICE = (
-    Path(__file__).resolve().parents[3]
-    / "application"
-    / "ledger"
-    / "tests"
-    / "_evidence_corpus"
-    / "facturae_32_recargo_invoice.xml"
-)
+_STRUCTURED_INVOICE = files("cadrumo.application.ledger.tests") / "_evidence_corpus" / "facturae_32_recargo_invoice.xml"
 
 
 def _invoke(

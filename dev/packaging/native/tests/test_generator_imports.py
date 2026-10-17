@@ -25,6 +25,9 @@ _NON_ENVIRONMENT_INPUTS = frozenset(
     }
 )
 
+# Build-only publisher provisioning is separate from runtime environment policy.
+_PUBLISHER_IDENTITY_INPUTS = frozenset({"dev.packaging.google_oauth"})
+
 
 def _imports(source: str, package: str) -> set[str]:
     """Return every module a source imports, with relative imports resolved against ``package``."""
@@ -78,11 +81,13 @@ def _outside_imports(closure: dict[str, set[str]]) -> set[str]:
     }
 
 
-def test_the_generator_imports_no_cadrumo_environment_declaration() -> None:
+def test_the_generator_uses_package_policy_and_canonical_publisher_provisioning() -> None:
     closure = _generator_closure()
     assert f"{_PACKAGE_NAME}.application_environment" in closure
     assert f"{_PACKAGE_NAME}.storage_vectors" in closure
-    assert _outside_imports(closure) <= _NON_ENVIRONMENT_INPUTS
+    outside = _outside_imports(closure)
+    assert outside >= _PUBLISHER_IDENTITY_INPUTS
+    assert outside <= _NON_ENVIRONMENT_INPUTS | _PUBLISHER_IDENTITY_INPUTS
 
 
 def test_the_import_check_detects_a_planted_cli_declaration() -> None:

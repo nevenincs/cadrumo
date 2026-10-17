@@ -48,7 +48,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.model_catalogue import ModelRole
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ..operator_actions.models import PreconditionVerdict
 from .invoice_draft_records import LabelReadingFallback
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
@@ -873,6 +873,33 @@ def _run_planned_batch_item(
     read_draft: Callable[..., StoredExtractionDraft | None],
     write_draft: Callable[..., object],
 ) -> BatchItemResult:
+    try:
+        stored = _stored_batch_no_op(
+            content_address=content_address,
+            path=path,
+            bucket_id=bucket_id,
+            direction=direction,
+            needed_inference=not reads_without_a_model,
+            settings=settings,
+            service=service,
+            extraction_ports=extraction_ports,
+            read_draft=read_draft,
+        )
+    except Exception as exc:  # reason: one unreadable persisted item must not end the batch.
+        return BatchItemResult(
+            content_address=content_address,
+            identity=batch_item_identity(content_address=content_address, direction=direction),
+            direction=direction,
+            source_name=path.name,
+            status="refused",
+            refusal_code="evidence_refused",
+            refusal_verdict=_refusal_verdict(
+                exc, code="evidence_refused", condition=LedgerPreconditionCondition.EVIDENCE_DOCUMENT_BYTES_AVAILABLE
+            ),
+            needed_inference=not reads_without_a_model,
+        )
+    if stored is not None:
+        return stored
     if not lane.admits(deterministic=reads_without_a_model, role=role):
         return _paused_batch_item(content_address=content_address, direction=direction, path=path)
     row = _ingest_one_batch_item(
@@ -894,6 +921,57 @@ def _run_planned_batch_item(
     if row.status == "refused":
         lane.close_if_no_reader_is_available(role)
     return row
+
+
+def _stored_batch_no_op(
+    *,
+    content_address: str,
+    path: Path,
+    bucket_id: str,
+    direction: InvoiceKind,
+    needed_inference: bool,
+    settings: Settings,
+    service: PurchaseInvoiceEvidenceService,
+    extraction_ports: InvoiceDraftExtractionPorts,
+    read_draft: Callable[..., StoredExtractionDraft | None],
+) -> BatchItemResult | None:
+    """Reuse a stored reading before asking whether a model can run.
+
+    The draft alone is insufficient: its keyed evidence record and actual
+    encrypted attachment must still bind the planned bytes and profile.
+    Missing drafts or orphaned drafts remain work for the normal ingestion path.
+    """
+    from .evidence import derive_keyed_purchase_invoice_evidence_id
+    from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
+
+    identity = batch_item_identity(content_address=content_address, direction=direction)
+    evidence_id = derive_keyed_purchase_invoice_evidence_id(bucket_id=bucket_id, idempotency_key=identity)
+    stored = read_draft(bucket_id=bucket_id, evidence_reference=evidence_id, settings=settings)
+    if stored is None:
+        return None
+    try:
+        evidence = service.view(bucket_id=bucket_id, evidence_id=evidence_id)
+    except PurchaseInvoiceEvidenceNotFoundError:
+        return None
+    resolved = extraction_ports.resolve_evidence_input(bucket_id, evidence_id, None, settings)
+    if (
+        evidence.bucket_id != bucket_id
+        or evidence.source_sha256 != content_address
+        or evidence.attachment_id != content_address
+        or resolved.content_sha256 != content_address
+        or resolved.evidence_id != evidence_id
+        or stored.evidence_reference != evidence_id
+    ):
+        raise PurchaseInvoiceEvidenceInputError(translated_message="errors.refused.refused_ledger_evidence_input")
+    return BatchItemResult(
+        content_address=content_address,
+        identity=identity,
+        direction=direction,
+        source_name=path.name,
+        status="no_op",
+        needed_inference=needed_inference,
+        label_reading_fallback=stored.label_reading_fallback,
+    )
 
 
 def _paused_batch_item(*, content_address: str, direction: InvoiceKind, path: Path) -> BatchItemResult:

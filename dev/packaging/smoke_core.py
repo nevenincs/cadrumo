@@ -18,7 +18,7 @@ from dev._paths import UTF_8
 from ._distribution_names import normalise_distribution_name
 from .dependency_contract import assert_wheel_metadata_matches_pyproject, validate_frozen_exports, wheel_metadata
 from .hashing import sha256_path
-from .installed_tax_oracle import run_installed_tax_oracle
+from .installed_runtime import run_installed_tax_oracle_with_runtime as run_installed_tax_oracle
 from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,

@@ -154,10 +154,10 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("reason", ("--reason",), "cli.ledger.classify.reason_help"),
         ),
         policy=_POLICY_7,
-        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_classify", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_commands", "ledger_classify", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerClassifyResult", __package__),
+            target=DeferredTarget(".ledger_results", "LedgerClassifyResult", __package__),
             identity="ledger.classify",
         ),
     ),

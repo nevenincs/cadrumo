@@ -1,19 +1,4 @@
 cli:
-  censo_auth:
-    field_failed: No s’ha pogut desar {field}. Revisa el format i reintenta; es conserven els camps desats
-      abans.
-    configure_help: Configura o edita l’autenticació AEAT desada abans de consultar el cens (terminal interactiu).
-    offer: Vols configurar l’autenticació AEAT abans de sincronitzar?
-    method: Mètode d’autenticació
-    route: Via de Cl@ve Móvil
-    certificate: Ruta del certificat (en blanc conserva el valor desat)
-    field: '{field} (en blanc conserva el valor desat)'
-    still_missing: Encara falta {field}.
-    password: Contrasenya (en blanc conserva el valor desat)
-    saved: Autenticació desada.
-    required: 'La sincronització AEAT requereix: {requirements}. Configura o edita l’autenticació aquí:
-      {command}.'
-    console_required: 'Per editar l’autenticació cal un terminal interactiu: {command}. Requisits: {requirements}.'
   app:
     ledger:
       account:
@@ -1502,6 +1487,9 @@ cli:
           introduïts abans a la interfície de pantalla completa (aeat app tui) no
           es conserven tret que es tornin a indicar aquí; la interfície de pantalla
           completa sí que els conserva.
+        calculate_reused_sealed: 'Aquestes dades coincideixen amb el càlcul %{revision_id}
+          (estat: %{state}). No s’ha creat cap esborrany nou. Selecciona aquest càlcul
+          desat pel seu identificador de revisió o canvia les dades.'
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
@@ -1925,6 +1913,23 @@ cli:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> comprovar -> exportar. Només construeix
         i exporta; mai presenta a l''AEAT'
+  censo_auth:
+    certificate: Ruta del certificat (en blanc conserva el valor desat)
+    configure_help: Configura o edita l’autenticació AEAT desada abans de consultar
+      el cens (terminal interactiu).
+    console_required: 'Per editar l’autenticació cal un terminal interactiu: {command}.
+      Requisits: {requirements}.'
+    field: '{field} (en blanc conserva el valor desat)'
+    field_failed: No s’ha pogut desar {field}. Revisa el format i reintenta; es conserven
+      els camps desats abans.
+    method: Mètode d’autenticació
+    offer: Vols configurar l’autenticació AEAT abans de sincronitzar?
+    password: Contrasenya (en blanc conserva el valor desat)
+    required: 'La sincronització AEAT requereix: {requirements}. Configura o edita
+      l’autenticació aquí: {command}.'
+    route: Via de Cl@ve Móvil
+    saved: Autenticació desada.
+    still_missing: Encara falta {field}.
   common:
     errors:
       invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
@@ -1940,6 +1945,8 @@ cli:
         AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indica l''any amb --year
         (p. ex. --period 1T --year 2024).'
   config:
+    activity:
+      help: Registrar activitat del perfil connectat sense demanar una contrasenya.
     app_help: Configurar i reparar el perfil local, les credencials, l'emmagatzematge
       i l'enllaç amb Google.
     auth:
@@ -2785,8 +2792,6 @@ cli:
         config profile complete-setup` indica les dades que encara li falten. Suficient
         per si sol; combina amb --accept-defaults per omplir la resta amb els valors
         per defecte.
-    activity:
-      help: "Registrar activitat del perfil connectat sense demanar una contrasenya."
     sign_in_status:
       help: Comprova si has iniciat sessió sense reprendre-la ni prolongar-la.
     status:
@@ -3030,8 +3035,7 @@ cli:
         invalid_date: '{option} necessita una data amb format AAAA-MM-DD.'
         nothing_to_update: 'Res a canviar a {account}: indica una dada o envia camps
           del compte pel canal secret.'
-      none: 'Encara no hi ha comptes propis. Afegeix-ne un amb: aeat app ledger account
-        add'
+      none: Encara no hi ha comptes propis.
       prompts:
         bank_address: 'Adreça del banc: '
         bank_city: 'Ciutat del banc: '

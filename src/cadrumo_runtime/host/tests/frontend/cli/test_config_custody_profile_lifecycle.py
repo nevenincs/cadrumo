@@ -43,10 +43,12 @@ from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from cadrumo.tests.inventory import REPO_ROOT
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
-from cadrumo.tests.subprocess_cli import as_text_completed_process, run_cadrumo_subprocess, subprocess_cli_env
+from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
+
+from .fresh_process import run_fresh_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -70,18 +72,17 @@ def _run_cadrumo(
     stdin_payload: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     resolved_passphrase = passphrase or load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    return run_cadrumo_subprocess(
+    return run_fresh_cli(
         args,
         settings={
-            "cadrumo_local_storage_root": storage_root,
+            "cadrumo_local_storage_root": str(storage_root),
             "cadrumo_secret_passphrase": resolved_passphrase,
             "cadrumo_output_language": "en",
         },
         env_strip_prefixes=("AEAT_", "PYTEST_"),
         extra_env=extra_env,
         stdin_payload=stdin_payload,
-        timeout=None,
-    )
+    ).completed
 
 
 def _combined_output(result: subprocess.CompletedProcess[str]) -> str:

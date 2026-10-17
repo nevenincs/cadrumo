@@ -38,18 +38,18 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    GB_NON_RESIDENT_PROFILE_FACTS,
+    create_calculable_modelo_work_unit,
+    create_m130_work_unit,
+    invoke_modelo_scenario_cli,
+    operator_profile_facts,
+)
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
 
-from ._modelo_work_ux_support import (
-    GB_NON_RESIDENT_PROFILE_FACTS,
-    _create_calculable_work_unit,
-    _create_m130_work_unit,
-    _invoke,
-    operator_profile_facts,
-)
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
@@ -63,9 +63,9 @@ def test_work_history_records_creation_event(seed_profile: ProfileSeeder) -> Non
     ``modelo.work_unit.created`` event - not an empty stream."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
 
-    history = _invoke(["--format", "json", "app", "modelo", "work", "history", work_unit_id])
+    history = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "history", work_unit_id])
     assert history.exit_code == 0, history.output
     payload = _payload(history.output)
 
@@ -88,7 +88,7 @@ def test_first_work_calculate_names_the_unsatisfied_binding(seed_profile: Profil
     refuses by naming that binding rather than failing opaquely."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    created = _invoke(
+    created = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -99,7 +99,7 @@ def test_first_work_calculate_names_the_unsatisfied_binding(seed_profile: Profil
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
 
-    result = _invoke(["--language", "en", "app", "modelo", "work", "calculate", work_unit_id])
+    result = invoke_modelo_scenario_cli(["--language", "en", "app", "modelo", "work", "calculate", work_unit_id])
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     # Which binding the formula evaluator reaches first is not the subject;
@@ -113,9 +113,9 @@ def test_work_revisions_accepts_a_positional_work_unit_id(seed_profile: ProfileS
     `revisions` demanded `--work-unit-id` is gone."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
 
-    result = _invoke(["--format", "json", "app", "modelo", "work", "revisions", work_unit_id])
+    result = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "revisions", work_unit_id])
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
     assert payload["work_unit_id_filter"] == work_unit_id
@@ -125,9 +125,9 @@ def test_work_status_resolves_a_visible_filing_target(seed_profile: ProfileSeede
     """`work status` accepts the operator-facing modelo/year/period target."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "status",
@@ -148,14 +148,16 @@ def test_work_status_resolves_a_visible_filing_target(seed_profile: ProfileSeede
 def test_displayed_short_work_unit_id_drives_status_and_calculate(seed_profile: ProfileSeeder) -> None:
     """The short id surfaced by `work list` is a usable operator handle."""
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_calculable_work_unit()
+    work_unit_id = create_calculable_modelo_work_unit()
     short_work_unit_id = work_unit_id[-12:]
 
-    status = _invoke(["--format", "json", "app", "modelo", "work", "status", short_work_unit_id])
+    status = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "status", short_work_unit_id])
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["work_unit_id"] == work_unit_id
 
-    calculated = _invoke(["--format", "json", "app", "modelo", "work", "calculate", short_work_unit_id])
+    calculated = invoke_modelo_scenario_cli(
+        ["--format", "json", "app", "modelo", "work", "calculate", short_work_unit_id]
+    )
     assert calculated.exit_code == 0, calculated.output
     assert _payload(calculated.output)["work_unit_id"] == work_unit_id
 
@@ -164,14 +166,14 @@ def test_work_list_surfaces_revision_pointer_fields(seed_profile: ProfileSeeder)
     """`work list` exposes current/filed calculation pointers for discovery."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_calculable_work_unit()
-    calculated = _invoke(
+    work_unit_id = create_calculable_modelo_work_unit()
+    calculated = invoke_modelo_scenario_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert calculated.exit_code == 0, calculated.output
     revision_id = _payload(calculated.output)["calculation_revision_id"]
 
-    result = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    result = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
     matching = [unit for unit in payload["work_units"] if unit["work_unit_id"] == work_unit_id]
@@ -186,7 +188,7 @@ def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(s
     """The list cannot bind one target until the operator selects a work unit."""
     seed_profile(label="operator", facts=operator_profile_facts())
 
-    result = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    result = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
 
     assert result.exit_code == 0, result.output
     notice = next(item for item in _notices(result.output) if item["code"] == "modelo.work.list.selection_required")
@@ -201,11 +203,11 @@ def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(s
 def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders(seed_profile: ProfileSeeder) -> None:
     """Profile-scoped text uses the operator label, never a storage identity."""
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_m130_work_unit()
+    work_unit_id = create_m130_work_unit()
 
-    listed = _invoke(["app", "modelo", "work", "list"])
+    listed = invoke_modelo_scenario_cli(["app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    status = _invoke(["app", "modelo", "work", "status", work_unit_id[-12:]])
+    status = invoke_modelo_scenario_cli(["app", "modelo", "work", "status", work_unit_id[-12:]])
     assert status.exit_code == 0, status.output
 
     for result in (listed, status):
@@ -217,7 +219,7 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
     assert f"next_action\taeat app modelo work status {work_unit_id}" in listed.output
     assert f"next_action\taeat app modelo work calculate {work_unit_id}" in status.output
 
-    list_json = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    list_json = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert list_json.exit_code == 0, list_json.output
     list_action = next(
         item["action"] for item in _notices(list_json.output) if item["code"] == "modelo.work.list.next_action"
@@ -240,7 +242,9 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
         ],
     }
 
-    status_json = _invoke(["--format", "json", "app", "modelo", "work", "status", short_work_unit_id])
+    status_json = invoke_modelo_scenario_cli(
+        ["--format", "json", "app", "modelo", "work", "status", short_work_unit_id]
+    )
     assert status_json.exit_code == 0, status_json.output
     action = next(
         item["action"] for item in _notices(status_json.output) if item["code"] == "modelo.work.status.next_action"
@@ -267,8 +271,8 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
 def test_work_list_with_multiple_units_requires_an_explicit_selection(seed_profile: ProfileSeeder) -> None:
     """A multi-row list never projects an action with an invented target."""
     seed_profile(label="operator", facts=operator_profile_facts())
-    _create_m130_work_unit()
-    second = _invoke(
+    create_m130_work_unit()
+    second = invoke_modelo_scenario_cli(
         [
             "--format",
             "json",
@@ -288,12 +292,12 @@ def test_work_list_with_multiple_units_requires_an_explicit_selection(seed_profi
     )
     assert second.exit_code == 0, second.output
 
-    listed = _invoke(["app", "modelo", "work", "list"])
+    listed = invoke_modelo_scenario_cli(["app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
     assert "work_unit_count\t2" in listed.output
     assert "next_action\t" not in listed.output
 
-    listed_json = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    listed_json = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed_json.exit_code == 0, listed_json.output
     notice = next(
         item for item in _notices(listed_json.output) if item["code"] == "modelo.work.list.selection_required"
@@ -307,7 +311,7 @@ def test_work_list_with_multiple_units_requires_an_explicit_selection(seed_profi
 
 def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSeeder) -> None:
     seed_profile(label="operator", facts=operator_profile_facts(activity_start_date="2025-10-01"))
-    created = _invoke(
+    created = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -318,7 +322,7 @@ def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSe
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
 
-    calculated = _invoke(
+    calculated = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -330,7 +334,7 @@ def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSe
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
 
-    verified = _invoke(
+    verified = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
@@ -340,7 +344,7 @@ def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSe
     assert verified.exit_code == 0, verified.output
     assert _payload(verified.output)["granted_verificado_completo"] is True
 
-    filed = _invoke(
+    filed = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "file",
@@ -350,13 +354,13 @@ def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSe
     assert filed.exit_code == 0, filed.output
     filed_revision_id = _payload(filed.output)["calculation_revision_id"]
 
-    status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    status = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     status_payload = _payload(status.output)
     assert status_payload["state"] == "presentado"
     assert status_payload["filed_calculation_revision_id"] == filed_revision_id
 
-    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
     list_payload = _payload(listed.output)
     matching = [unit for unit in list_payload["work_units"] if unit["work_unit_id"] == work_unit_id]
@@ -369,14 +373,14 @@ def test_work_revisions_resolves_a_visible_filing_target(seed_profile: ProfileSe
     """`work revisions` can filter by modelo/year/period instead of raw id."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_calculable_work_unit()
-    calculated = _invoke(
+    work_unit_id = create_calculable_modelo_work_unit()
+    calculated = invoke_modelo_scenario_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert calculated.exit_code == 0, calculated.output
     revision_id = _payload(calculated.output)["calculation_revision_id"]
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "revisions",
@@ -396,7 +400,7 @@ def test_work_revisions_resolves_a_visible_filing_target(seed_profile: ProfileSe
         "created_at",
     }
 
-    detail = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    detail = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "revision", revision_id])
     assert detail.exit_code == 0, detail.output
     assert _payload(detail.output)["calculation_revision_id"] == revision_id
     assert "casilla_values" in _payload(detail.output)
@@ -406,9 +410,9 @@ def test_work_calculate_resolves_a_visible_filing_target(seed_profile: ProfileSe
     """`work calculate` can use modelo/year/period instead of a work-unit id."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_calculable_work_unit()
+    work_unit_id = create_calculable_modelo_work_unit()
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
@@ -425,8 +429,8 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(seed_profile: 
     """`work verify` defaults to the current draft under a natural target."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_calculable_work_unit()
-    calculated = _invoke(
+    work_unit_id = create_calculable_modelo_work_unit()
+    calculated = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
@@ -436,7 +440,7 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(seed_profile: 
     assert calculated.exit_code == 0, calculated.output
     revision_id = _payload(calculated.output)["calculation_revision_id"]
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
@@ -448,7 +452,7 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(seed_profile: 
     assert payload["calculation_revision_id"] == revision_id
     assert payload["granted_verificado_completo"] is True
 
-    status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    status = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["current_calculation_revision_id"] == revision_id
 
@@ -457,8 +461,8 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     """`work file` selects the current verified revision before workflow gating."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    _create_calculable_work_unit()
-    calculated = _invoke(
+    create_calculable_modelo_work_unit()
+    calculated = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
@@ -467,7 +471,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
 
-    verified = _invoke(
+    verified = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
@@ -476,7 +480,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
     revision_id = _payload(verified.output)["calculation_revision_id"]
-    status = _invoke(
+    status = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "status",
@@ -486,7 +490,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["current_calculation_revision_id"] == revision_id
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "app", "modelo", "work", "file",
             "--modelo", "111", "--year", "2025", "--period", "1T",
@@ -501,7 +505,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
 
 
 def test_work_file_help_exposes_explicit_result_elections() -> None:
-    result = _invoke(["app", "modelo", "work", "file", "--help"])
+    result = invoke_modelo_scenario_cli(["app", "modelo", "work", "file", "--help"])
     assert result.exit_code == 0, result.output
     assert "--refund-election" in result.output
     assert "--payment-election" in result.output
@@ -513,7 +517,7 @@ def test_work_dependencies_lists_cross_period_inventory(seed_profile: ProfileSee
 
     seed_profile(label="operator", facts=operator_profile_facts())
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "dependencies",
@@ -545,7 +549,7 @@ def test_work_dependencies_surfaces_current_clean_state_blockers(seed_profile: P
 
     seed_profile(label="operator", facts=operator_profile_facts())
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "dependencies",
@@ -591,7 +595,7 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(seed
         },
     )
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "dependencies",
@@ -622,9 +626,9 @@ def test_work_calculate_confirms_the_draft_was_saved(seed_profile: ProfileSeeder
     the bare casilla table left no save signal."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_calculable_work_unit()
+    work_unit_id = create_calculable_modelo_work_unit()
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
@@ -645,16 +649,16 @@ def test_work_revision_shows_persisted_casilla_values(seed_profile: ProfileSeede
     calculation instead of re-running it."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_calculable_work_unit()
+    work_unit_id = create_calculable_modelo_work_unit()
 
-    calculated = _invoke(
+    calculated = invoke_modelo_scenario_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert calculated.exit_code == 0, calculated.output
     revision_id = _payload(calculated.output)["calculation_revision_id"]
     saved_values = _payload(calculated.output)["casilla_values"]
 
-    shown = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    shown = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "revision", revision_id])
     assert shown.exit_code == 0, shown.output
     payload = _payload(shown.output)
     assert payload["operation"] == "modelo.work.revision"
@@ -668,7 +672,7 @@ def test_work_revision_rejects_an_unknown_revision_id(seed_profile: ProfileSeede
 
     seed_profile(label="operator", facts=operator_profile_facts())
     unknown = "0" * 64
-    result = _invoke(["--format", "json", "app", "modelo", "work", "revision", unknown])
+    result = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "revision", unknown])
     assert result.exit_code == 2
     assert "Traceback" not in result.output
     refused = require_error_document(result.output)
@@ -677,7 +681,7 @@ def test_work_revision_rejects_an_unknown_revision_id(seed_profile: ProfileSeede
     assert refused["error"]["context"]["reason"] == "operation_denied"
     assert unknown not in result.output
     assert "result" not in refused
-    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    listed = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
     assert _payload(listed.output)["work_units"] == []
 
@@ -688,7 +692,7 @@ def test_idempotent_work_create_reports_reuse(seed_profile: ProfileSeeder) -> No
     `modelo.work.create` that reads as a fresh creation."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    first = _invoke(
+    first = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -702,7 +706,7 @@ def test_idempotent_work_create_reports_reuse(seed_profile: ProfileSeeder) -> No
     assert first_payload["operation"] == "modelo.work.create"
     assert first_payload["name_applied"] is None
 
-    second = _invoke(
+    second = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -722,7 +726,7 @@ def test_work_create_without_revision_resumes_existing_visible_target(seed_profi
     """A natural-key create searches by visible filing target before revision defaults."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    first = _invoke(
+    first = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -733,7 +737,7 @@ def test_work_create_without_revision_resumes_existing_visible_target(seed_profi
     assert first.exit_code == 0, first.output
     first_payload = _payload(first.output)
 
-    second = _invoke(
+    second = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -766,7 +770,7 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(s
     modelo_131 = next(candidate for candidate in modelos_131 if candidate.id == "131")
     expected_revision = select_revision(modelo_131, filing_year=2026, period="2T").id
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -791,7 +795,7 @@ def test_modelo_303_workflow_json_resolves_each_quarter_once(seed_profile: Profi
     payloads: list[dict[str, object]] = []
 
     for period in ("1T", "2T", "3T", "4T"):
-        created = _invoke(
+        created = invoke_modelo_scenario_cli(
             [
                 "--format",
                 "json",
@@ -839,7 +843,7 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(seed_p
         },
     )
 
-    created_work = _invoke(
+    created_work = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -849,7 +853,7 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(seed_p
     assert created_work.exit_code == 0, created_work.output
     work_unit_id = _payload(created_work.output)["work_unit_id"]
 
-    calculated = _invoke(
+    calculated = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -877,7 +881,7 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(seed_p
     calculated_payload = _payload(calculated.output)
     revision_id = calculated_payload["calculation_revision_id"]
 
-    shown = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    shown = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "revision", revision_id])
     assert shown.exit_code == 0, shown.output
     revision_payload = _payload(shown.output)
 
@@ -899,7 +903,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(seed_profile: Pro
     silently dropped: it is applied as a rename and the result says so."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    first = _invoke(
+    first = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -909,7 +913,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(seed_profile: Pro
     )  # fmt: skip
     assert first.exit_code == 0, first.output
 
-    renamed = _invoke(
+    renamed = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -924,7 +928,9 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(seed_profile: Pro
     assert payload["name"] == "Renamed Unit"
 
     # The rename is durable: a fresh status read sees the new name.
-    status = _invoke(["--format", "json", "app", "modelo", "work", "status", payload["work_unit_id"]])
+    status = invoke_modelo_scenario_cli(
+        ["--format", "json", "app", "modelo", "work", "status", payload["work_unit_id"]]
+    )
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["name"] == "Renamed Unit"
 
@@ -935,7 +941,7 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(seed_profile: P
     statement - the operator already has ledger data."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    added = _invoke(
+    added = invoke_modelo_scenario_cli(
         [
             "app", "ledger", "add",
             "--date", "2025-01-15", "--amount", "1000.00",
@@ -944,7 +950,7 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(seed_profile: P
     )  # fmt: skip
     assert added.exit_code == 0, added.output
 
-    status = _invoke(["app", "overview", "status"])
+    status = invoke_modelo_scenario_cli(["app", "overview", "status"])
     assert status.exit_code == 0, status.output
     # The transaction is visible...
     assert "1" in status.output
@@ -959,7 +965,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(s
     """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
 
     seed_profile(label="operator", facts=GB_NON_RESIDENT_PROFILE_FACTS)
-    added = _invoke(
+    added = invoke_modelo_scenario_cli(
         [
             "app", "ledger", "add",
             "--date", "2025-01-15", "--amount", "1000.00",
@@ -969,7 +975,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(s
     )  # fmt: skip
     assert added.exit_code == 0, added.output
 
-    status = _invoke(["app", "overview", "status"])
+    status = invoke_modelo_scenario_cli(["app", "overview", "status"])
     assert status.exit_code == 0, status.output
     next_section = status.output.split("\n\n")[-1]
     assert "ledger import" not in next_section
@@ -1001,7 +1007,7 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(seed_profi
             "activities.description": "objective-estimation activity",
         },
     )
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "app", "modelo", "work", "create",
             "--modelo", "131", "--year", "2024", "--period", "2T",
@@ -1035,7 +1041,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(seed_profile: 
     """
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    created = _invoke(
+    created = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -1046,7 +1052,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(seed_profile: 
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
 
-    result = _invoke(
+    result = invoke_modelo_scenario_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "0001=38000",

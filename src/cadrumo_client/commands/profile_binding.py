@@ -134,8 +134,6 @@ def subscribe_profile_notices(ctx: typer.Context, client: FrontendClient) -> Non
         subscriptions.clients.add(client)
 
 
-
-
 def bound_profile_client(ctx: typer.Context) -> FrontendClient:
     """Return the authenticated connection and its immutable profile target."""
     client = ctx.meta.get(_CONTEXT_KEY)

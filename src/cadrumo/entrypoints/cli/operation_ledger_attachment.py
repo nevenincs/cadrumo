@@ -32,9 +32,9 @@ from ...application.ledger.transaction_projection import LedgerTransactionProjec
 from ...core.i18n.render import tr
 from ...core.json_contract import OutputSchema
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._ledger_payloads import TransactionPayload
 from ._ledger_support import ledger_validation_bad
 from .common import emit_envelope
+from .ledger_results import TransactionPayload
 
 
 def run_ledger_attach(

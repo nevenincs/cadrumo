@@ -13,9 +13,10 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.entrypoints.cli._ledger_support import ledger_invoice_validation_no_recovery
 from cadrumo.entrypoints.cli.common import cli_policy_refusal_projection
+
+from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -66,6 +66,7 @@ from typing import Final
 import pytest
 
 import cadrumo
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.compiler import build_command_app, runs_in_governed_fact_scope
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import (
@@ -424,7 +425,7 @@ def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
             )
             with (
                 outside_governed_fact_validation(),
-                observe_invocation(handler_code(handler.target)) as observed,
+                observe_invocation(handler_code(handler.target, resolver=COMMAND_GRAPH.resolver)) as observed,
                 observe_automation_proposal_validation() as operand_validation,
             ):
                 result = api_runtime.invoke(
@@ -436,7 +437,7 @@ def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
         with (
             cli_world_provider.human_probe(tmp_path, client_native_store=client_native) as runtime,
             outside_governed_fact_validation(),
-            observe_invocation(handler_code(handler.target)) as observed,
+            observe_invocation(handler_code(handler.target, resolver=COMMAND_GRAPH.resolver)) as observed,
         ):
             if key == "config_profile_automation_create":
                 # An expired, strictly typed ENROLL operand reaches the real
@@ -525,7 +526,7 @@ def _teeth_graph() -> CommandSpecGraph:
         handler=LazyBinding.available(_TEETH_TARGET),
         result_schema=_NO_SCHEMA,
     )
-    return CommandSpecGraph((root, leaf))
+    return CommandSpecGraph((root, leaf), resolver=resolve_deferred_target)
 
 
 def test_the_probe_flags_a_state_free_command_that_reads_a_governed_fact() -> None:
@@ -534,7 +535,10 @@ def test_the_probe_flags_a_state_free_command_that_reads_a_governed_fact() -> No
     assert [spec.key for spec in population] == ["under_declared_read"]
     argv = synthetic_argv(graph, population[0], Path())
 
-    with outside_governed_fact_validation(), observe_invocation(handler_code(_TEETH_TARGET)) as observed:
+    with (
+        outside_governed_fact_validation(),
+        observe_invocation(handler_code(_TEETH_TARGET, resolver=graph.resolver)) as observed,
+    ):
         result = invoke_uncached_typer_app(build_command_app(graph), argv)
 
     assert observed.handler_started

@@ -34,7 +34,7 @@ from ...application.operations.public_scalar import PublicDecimal
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._bienes_inversion_payloads import (
+from .bienes_inversion_results import (
     BienesInversionDeclareResult,
     BienesInversionListResult,
     BienInversionDisposalPayload,

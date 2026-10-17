@@ -35,7 +35,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 )
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
 

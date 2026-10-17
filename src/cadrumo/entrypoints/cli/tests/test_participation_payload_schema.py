@@ -2,7 +2,7 @@
 
 import pytest
 
-from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
+from ..ledger_results import LedgerTrackResult, LedgerTransactionParticipationPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

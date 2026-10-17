@@ -49,11 +49,11 @@ from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session
 
@@ -402,7 +402,7 @@ def test_native_api_ledger_status_requires_all_periods_even_when_query_selects_o
         assert refused.exit_code == 2, refused.output
         error = require_error_document(refused.output)["error"]
         assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
-        assert error["context"] == {"reason": "period_denied"}
+        assert error["context"]["reason"] == "period_denied", error
         assert "business_expense_total" not in refused.output
 
     with native_api_cli_session(

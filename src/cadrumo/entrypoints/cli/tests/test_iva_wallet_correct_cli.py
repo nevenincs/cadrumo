@@ -14,9 +14,9 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
-from .. import _modelo_iva_wallet_cli as handler
+from .. import modelo_iva_wallet_commands as handler
 from .. import operation_modelo_iva_wallet_correction as bridge
-from .._modelo_payloads_m036 import IvaWalletCorrectResult
+from ..modelo_results_m036 import IvaWalletCorrectResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

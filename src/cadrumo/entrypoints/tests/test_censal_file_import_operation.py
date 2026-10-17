@@ -143,9 +143,9 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
     monkeypatch.setattr(WorkflowStateRepository, "save", guarded_workflow_save)
 
     _profile_create_context, profile_decode_context = _profile_contexts_for_test()
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "censal-file-import",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
     ) as (driver, registry, profile_id):
         witness.profile_id = profile_id
         subject_ref = profile_operation_subject(str(profile_id))

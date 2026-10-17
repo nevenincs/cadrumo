@@ -349,6 +349,8 @@ errors:
       rekord, amely megfelelne a kért azonosítónak.
     m145_communication_service: A Modelo 145 helyi kommunikációs szolgáltatás egyik
       művelete meghiúsult.
+    modelo_calculation_revision_pointer_not_found: A(z) %{work_unit_id} bevalláshoz
+      (%{modelo} nyomtatvány) nem érhető el számítási verzió a kért állapotban.
     modelo_calculation_revision_selector: A számítási revízió kiválasztása sikertelen.
     modelo_calculation_revision_selector_not_found: Nincs a megadott választónak megfelelő
       számítási revízió.

@@ -69,10 +69,12 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante.errors import JustificanteParseError
+from ...domain.modelos.filing_text import ModeloActorLabel
 from .action_errors import CalculationRevisionNotFoundError, WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
+from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .reconciliation_parsing import (
     ReconciliationDeclaracionObservation,
     reconciliation_evidence_parser,
@@ -81,7 +83,6 @@ from .reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
     modelo_reconciliation_persistence,
@@ -211,7 +212,7 @@ class ModeloReconciliationCommand(BaseModel):
     calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
     source_path: Path
-    actor: str = Field(default="operator", min_length=1, max_length=64)
+    actor: ModeloActorLabel = "operator"
 
 
 class ModeloReconciliationBytesCommand(BaseModel):
@@ -236,7 +237,7 @@ class ModeloReconciliationBytesCommand(BaseModel):
     # operator-supplied filesystem path on the sibling command has no bound of
     # its own and is instead shortened at construction.
     source_ref: str = Field(min_length=1, max_length=_MAX_PAYLOAD_VALUE_LENGTH)
-    actor: str = Field(default="operator", min_length=1, max_length=64)
+    actor: ModeloActorLabel = "operator"
 
 
 class ModeloReconciliationReport(BaseModel):

@@ -84,7 +84,6 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.invoices.models import InvoiceCatalogue
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -97,6 +96,7 @@ from cadrumo.entrypoints.adapter_composition import build_calculation_action_por
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

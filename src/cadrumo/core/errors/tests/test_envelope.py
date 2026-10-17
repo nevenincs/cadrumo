@@ -105,6 +105,20 @@ def test_error_json_serializes_deterministically_with_shared_spine() -> None:
     assert payload["error"]["code"]
 
 
+def test_internal_policy_verdict_stays_out_of_context_without_losing_the_action() -> None:
+    metadata = object()
+    error = LockAcquisitionError(context={"reason": "held", "terminal_precondition_verdict": metadata})
+    vars(error)["terminal_precondition_verdict"] = metadata
+    action = _resolved_recovery_action()
+
+    assert public_error_context(error) == {"reason": "held"}
+    payload = json.loads(render_error_json(error, action=action))
+    assert payload["error"]["context"] == {"reason": "held"}
+    assert payload["error"]["action"] == action.model_dump(mode="json")
+    assert vars(error)["terminal_precondition_verdict"] is metadata
+    assert error.context is not None and error.context["terminal_precondition_verdict"] is metadata
+
+
 def test_error_envelope_carries_resolved_precondition_action_through_json() -> None:
     action = _resolved_recovery_action()
 

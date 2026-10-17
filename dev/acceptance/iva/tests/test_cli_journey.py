@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from dev.acceptance.installed_cli import build_installed_cli_environment
+from dev.packaging.installed_runtime import installed_cli_runtime
+
 from ..cli_journey import run_iva_m303_cli_journey
 from .journey_year_support import newest_fully_authored_journey_year
 
@@ -32,6 +35,11 @@ def test_installed_cli_exports_the_verified_ordinary_m303_with_the_development_i
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
         year=year,
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
     )
 
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") - Decimal("10.50")

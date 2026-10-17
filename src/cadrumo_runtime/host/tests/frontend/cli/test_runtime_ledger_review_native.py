@@ -28,7 +28,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
-from cadrumo.core.config import load_settings, reset_settings_cache
+from cadrumo.core.config import load_settings, override_settings, reset_settings_cache
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
@@ -43,6 +43,7 @@ from cadrumo.tests.loopback_llm import (
     write_json_response,
 )
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+from cadrumo_runtime.adapters import profile_worker
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from ._ledger_llm_support import _PROFILE_FACTS
@@ -186,8 +187,31 @@ def native_review(
             # it still refuses measured shortfalls. This server loads no model.
             environment.setenv("CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE", "true")
             environment.setenv("CADRUMO_LLM_CONTENTION_SAFETY_MARGIN_BYTES", "0")
+            launch_environment = profile_worker._worker_launch_environment
+
+            def review_worker_environment(*, storage_root: Path) -> dict[str, str]:
+                # Production clears ambient integration settings. This owned
+                # process fixture explicitly connects its real HTTP provider;
+                # it does not widen the installed launch environment contract.
+                return {
+                    **launch_environment(storage_root=storage_root),
+                    "CADRUMO_LLM_OLLAMA_CHAT_URL": endpoint,
+                    "CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE": "true",
+                    "CADRUMO_LLM_CONTENTION_SAFETY_MARGIN_BYTES": "0",
+                    "CADRUMO_LLM_OLLAMA_TEXT_MODEL": models[0],
+                    "CADRUMO_LLM_OLLAMA_VISION_MODEL": models[1],
+                }
+
+            environment.setattr(profile_worker, "_worker_launch_environment", review_worker_environment)
             reset_settings_cache()
-            with native_cli_profile_scope(tmp_path) as profile:
+            with (
+                override_settings(
+                    cadrumo_llm_ollama_chat_url=endpoint,
+                    cadrumo_llm_contention_check_override=True,
+                    cadrumo_llm_contention_safety_margin_bytes=0,
+                ),
+                native_cli_profile_scope(tmp_path) as profile,
+            ):
                 profile.register(label="native-ledger-reviewed-provider", facts=_PROFILE_FACTS)
                 yield _NativeReview(profile, authority_operation, state)
     finally:

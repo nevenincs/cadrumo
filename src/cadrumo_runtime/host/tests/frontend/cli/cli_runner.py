@@ -87,9 +87,6 @@ def bind_profile_cli(invoker: ProfileCliInvoker) -> Generator[None]:
         _BOUND_PROFILE.reset(token)
 
 
-#: The refusal reason of a command that found no runtime to submit to.
-_RUNTIME_UNAVAILABLE = "runtime_unavailable"
-
 _OPERATOR_SCOPE: ContextVar[ExitStack | None] = ContextVar("cli-test-operator-scope", default=None)
 
 
@@ -142,8 +139,10 @@ def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) 
     bound = _BOUND_PROFILE.get()
     if bound is not None:
         return bound.invoke(args, **kwargs)
+    from .profile_password_cli import refused_for_want_of_an_operator
+
     result = invoke_unbound_cli(args, **kwargs)
-    if result.exit_code == 0 or _RUNTIME_UNAVAILABLE not in result.output:
+    if not refused_for_want_of_an_operator(result):
         return result
     joined = _join_live_session()
     return result if joined is None else joined.invoke(args, **kwargs)

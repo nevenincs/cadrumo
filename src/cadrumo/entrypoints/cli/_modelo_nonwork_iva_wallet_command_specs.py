@@ -42,10 +42,12 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_balance_cmd", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_balance_cmd", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_iva_wallet_payloads", "IvaWalletBalanceResult", __package__),
+            DeferredTarget(".modelo_iva_wallet_results", "IvaWalletBalanceResult", __package__),
             identity="modelo.iva_wallet.balance",
         ),
     ),
@@ -104,10 +106,12 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_seed_cmd", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_seed_cmd", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_iva_wallet_payloads", "IvaWalletSeedResult", __package__),
+            DeferredTarget(".modelo_iva_wallet_results", "IvaWalletSeedResult", __package__),
             identity="modelo.iva_wallet.seed",
         ),
     ),
@@ -177,10 +181,12 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_correct_cmd", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_correct_cmd", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m036", "IvaWalletCorrectResult", __package__),
+            DeferredTarget(".modelo_results_m036", "IvaWalletCorrectResult", __package__),
             identity="modelo.iva_wallet.correct",
         ),
     ),
@@ -262,11 +268,11 @@ MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_iva_wallet_cli", "iva_wallet_override_cmd", __package__)
+            DeferredTarget(".modelo_iva_wallet_commands", "iva_wallet_override_cmd", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_iva_wallet_payloads", "IvaWalletOverrideResult", __package__),
+            DeferredTarget(".modelo_iva_wallet_results", "IvaWalletOverrideResult", __package__),
             identity="modelo.iva_wallet.override",
         ),
     ),

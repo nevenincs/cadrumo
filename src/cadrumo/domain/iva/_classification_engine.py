@@ -25,11 +25,10 @@ if TYPE_CHECKING:
         IvaClassificationResult,
         IvaClassificationRule,
         IvaInvoiceClassificationCriteria,
-        IvaTerritorialScope,
         PartyFact,
         TransactionKindCatalogue,
     )
-    from .schema import IvaCategory, IvaRateKind, IvaRateRecord
+    from .schema import IvaCategory, IvaRateKind, IvaRateRecord, IvaTerritorialScope
 
 _logger = get_logger(__name__)
 

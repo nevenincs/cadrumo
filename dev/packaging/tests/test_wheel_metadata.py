@@ -7,10 +7,42 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.dependency_contract import wheel_metadata
+from cadrumo.core.toml import load_toml
+from dev._paths import REPO_ROOT
+from dev.packaging.dependency_contract import (
+    assert_wheel_metadata_matches_pyproject,
+    pyproject_surfaces,
+    wheel_metadata,
+)
 from dev.packaging.wheel_metadata import read_wheel_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.mark.parametrize("leak_optional", [False, True])
+def test_shared_core_and_extra_names_preserve_both_metadata_rows(tmp_path: Path, leak_optional: bool) -> None:
+    configuration = load_toml(REPO_ROOT / "pyproject.toml")["project"]
+    surfaces = pyproject_surfaces(REPO_ROOT)
+    assert {"pillow", "pywin32"} <= surfaces.project_names & surfaces.external_optional_names
+    rows = ["Metadata-Version: 2.4", "Name: cadrumo", "Version: 1.0"]
+    rows.extend(f"Requires-Dist: {requirement}" for requirement in configuration["dependencies"])
+    for extra, requirements in configuration["optional-dependencies"].items():
+        rows.append(f"Provides-Extra: {extra}")
+        for requirement in requirements:
+            dependency, separator, marker = requirement.partition(";")
+            condition = f"({marker.strip()}) and " if separator else ""
+            rows.append(f'Requires-Dist: {dependency.strip()}; {condition}extra == "{extra}"')
+    if leak_optional:
+        rows.append("Requires-Dist: anthropic")
+    wheel = _wheel(
+        tmp_path / "cadrumo-1.0-py3-none-any.whl", {"cadrumo-1.0.dist-info/METADATA": "\n".join(rows) + "\n"}
+    )
+
+    if leak_optional:
+        with pytest.raises(SystemExit, match=r"optional dependencies leaked.*anthropic"):
+            assert_wheel_metadata_matches_pyproject(REPO_ROOT, wheel)
+    else:
+        assert_wheel_metadata_matches_pyproject(REPO_ROOT, wheel)
 
 
 def _wheel(path: Path, members: dict[str, str]) -> Path:

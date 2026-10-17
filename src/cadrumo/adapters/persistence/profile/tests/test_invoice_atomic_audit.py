@@ -28,7 +28,8 @@ from cadrumo.application.invoices.catalogue_lifecycle import CatalogueInvoicePat
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.iva.classification import InvoiceKind
+
+from .....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

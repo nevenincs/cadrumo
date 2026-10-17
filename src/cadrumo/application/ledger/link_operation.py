@@ -24,6 +24,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.buckets.event import BucketActorLabel
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.invoices.errors import InvoiceLinkError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -93,7 +94,7 @@ class LedgerLinkProjection(BaseModel):
     bucket_id: str
     transaction_id: _Identifier
     invoice_id: _Identifier
-    actor: Annotated[str, Field(min_length=1, max_length=64)]
+    actor: BucketActorLabel
     bucket_event_ids: Annotated[tuple[_Identifier, ...], Field(min_length=1, max_length=1)]
     review_status: LedgerReviewStatus
     transaction: LedgerTransactionProjection

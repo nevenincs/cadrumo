@@ -74,10 +74,10 @@ MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_CALCULATION_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_readiness_cli", "modelo_readiness", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_readiness_commands", "modelo_readiness", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._modelo_payloads", "ModeloReadinessResult", __package__),
+            target=DeferredTarget(".modelo_results", "ModeloReadinessResult", __package__),
             identity="modelo.readiness",
         ),
     ),

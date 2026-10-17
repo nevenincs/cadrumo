@@ -59,7 +59,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
 )
 
 from ..adapter_composition import build_calculation_action_ports, build_verification_repository_bundle
-from .registered_executor_case_support import _CloseWitness, _runtime
+from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 from .registered_executor_seeding_support import _seeded_modelo_filing_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -70,7 +70,11 @@ def test_verification_projects_persisted_report_and_authoritative_noop(
     tmp_path: Path, *, already_verified: bool, operation: PinnedAuthorityOperation
 ) -> None:
     """A fresh attempt writes a report; a sealed retry returns it without effects."""
-    with _runtime(tmp_path / "verify", cleanup=_CloseWitness()) as (driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "verify", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        registry,
+        profile_id,
+    ):
         if already_verified:
             revision_id, _report_id = seeded_modelo_verification_report(profile_id, operation=operation)
         else:
@@ -146,7 +150,11 @@ def test_revision_snapshot_reads_exact_historical_revision_under_sealed_period(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The encrypted snapshot reads the requested historical revision without mutation authority."""
-    with _runtime(tmp_path / "revision-snapshot", cleanup=_CloseWitness()) as (driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "revision-snapshot", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        registry,
+        profile_id,
+    ):
         historical_revision_id = seeded_modelo_calculation_revision(profile_id, operation=operation)
         historical = CalculationRevisionCatalogueRepository().load().get(historical_revision_id)
         assert historical is not None
@@ -258,7 +266,11 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The amendment subject and access period come from the persisted filing chain."""
-    with _runtime(tmp_path / "amend-access", cleanup=_CloseWitness()) as (_driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "amend-access", cleanup=OperationRuntimeCloseWitness()) as (
+        _driver,
+        registry,
+        profile_id,
+    ):
         filing_record_id, casilla_id = _seeded_modelo_filing_record(profile_id, operation=operation)
         filing = ModeloRecordCatalogueRepository().load().get(filing_record_id)
         assert filing is not None
@@ -318,7 +330,11 @@ def test_unfiltered_revision_inventory_requires_all_periods_and_returns_complete
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Profile-wide discovery refuses every bounded ceiling and returns the full stored inventory."""
-    with _runtime(tmp_path / "revision-inventory", cleanup=_CloseWitness()) as (driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "revision-inventory", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        registry,
+        profile_id,
+    ):
         revision_ids = (
             seeded_modelo_calculation_revision(profile_id, operation=operation),
             seeded_modelo_calculation_revision(profile_id, operation=operation),

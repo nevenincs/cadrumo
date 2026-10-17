@@ -20,8 +20,7 @@ from ...core.operations import (
     OperationEffect,
 )
 from ...core.time.clock import now
-from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest, OperationTerminalReceipt

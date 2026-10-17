@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_refusal
 from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.frontend_operation_client import OperationFrontend
@@ -18,7 +19,7 @@ from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
-from .._profile_session_gate import raise_connection_refusal, session_refusal_translation_key
+from .._profile_session_gate import session_refusal_translation_key
 from ..errors import render_error_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

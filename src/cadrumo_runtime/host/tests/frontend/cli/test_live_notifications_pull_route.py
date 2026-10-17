@@ -23,6 +23,8 @@ from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
     native_cli_profile_server,
 )
 
+from .cli_runner import invoke_cached_cli
+
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint]
 
 __all__ = ["live_clave_movil_profile"]
@@ -46,7 +48,8 @@ def test_live_notifications_pull_persists_a_grounded_snapshot_and_no_remote_writ
             storage_root=live_clave_movil_profile.storage_root, scope=scope, label=live_clave_movil_profile.label
         )
         scope.enter_context(native_cli_profile_server(profile.storage_root))
-        result = invoke_diagnostics_cli(["app", "live", "notifications", "pull"], profile=profile)
-
-    assert result.exit_code == 0, result.output
-    assert "snapshot" in result.output or "pulled" in result.output
+        result = invoke_diagnostics_cli(
+            ["app", "live", "notifications", "pull"], profile=profile, invoke_cli=invoke_cached_cli
+        )
+        assert result.exit_code == 0, result.output
+        assert "snapshot" in result.output or "pulled" in result.output

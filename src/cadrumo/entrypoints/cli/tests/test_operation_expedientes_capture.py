@@ -24,10 +24,10 @@ from ....application.live.expedientes_capture_operation import (
     ExpedientesSingleCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import _app_live_expedientes_cli as handler
+from .. import app_live_expedientes_commands as handler
 from .. import operation_expedientes_capture as bridge
-from .._app_live_expedientes_payloads import ExpedientesCaptureResult
 from .._profile_authentication_gate import _uses_profile_connection
+from ..app_live_expedientes_results import ExpedientesCaptureResult
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

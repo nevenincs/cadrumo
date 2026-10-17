@@ -34,6 +34,7 @@ _PORT = "application/user_profile/login_session_port.py"
 _LOGIN = "application/user_profile/login_session.py"
 _CUSTODY = "application/user_profile/custody_service.py"
 _RUNTIME_LOGIN = "cadrumo_runtime/host/profile_login.py"
+_RUNTIME_RECEIPT = "cadrumo_runtime/host/profile_receipt.py"
 _RUNTIME_HOST = "cadrumo_runtime/host/profile_host.py"
 _RUNTIME_SWEEP = "cadrumo_runtime/host/sign_in_sweep.py"
 _TAXONOMY = "core/storage_taxonomy_locations.py"
@@ -58,10 +59,10 @@ _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
     # The port the application login service drives.
     "mint_acceleration_receipt": frozenset({_PORT, _ADAPTER, _LOGIN}),
     "delete_acceleration_receipt": frozenset({_PORT, _ADAPTER, _LOGIN}),
-    "resume_acceleration_receipt_with_key": frozenset({_PORT, _ADAPTER, _LOGIN}),
+    "resume_acceleration_receipt_with_key": frozenset({_PORT, _ADAPTER, _RUNTIME_RECEIPT}),
     # The login service's own doors, opened only by the runtime and custody.
     "persist_acceleration_receipt": frozenset({_LOGIN, _RUNTIME_LOGIN}),
-    "resume_profile_candidate": frozenset({_LOGIN, _RUNTIME_LOGIN}),
+    "resume_profile_candidate": frozenset({_RUNTIME_RECEIPT, _RUNTIME_LOGIN}),
     "remove_profile_session_acceleration_for_custody_delete": frozenset({_LOGIN, _CUSTODY}),
 }
 """Each name that mutates a receipt, and the only modules that may name it."""

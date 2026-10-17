@@ -307,16 +307,12 @@ def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -
     assert read_profile_bucket("ghost") is None
 
 
-def test_config_login_emits_profile_activated_event() -> None:
-    """`config login` records a typed PROFILE_ACTIVATED event in the
-    bucket-event-history catalogue so downstream auditors can replay
-    the activation timeline. Distinct from PROFILE_SELECTED (which
-    captures workflow-state-level selection).
-    """
+def test_config_login_selects_profile_without_mutating_tax_history() -> None:
+    """Runtime authentication selects the capsule without a tax-history write."""
 
     from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-    from cadrumo.domain.buckets.event import BucketEventType
+    from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
     # Registered through the real credential door: ``seed`` provisions a raw
     # session key, not a passphrase-backed custody envelope, so ``config login``
@@ -324,20 +320,17 @@ def test_config_login_emits_profile_activated_event() -> None:
     register_cli_profile(log_in=False, label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
+    with open_test_profile_session(pointer.bucket_id):
+        before = BucketEventHistoryRepository().load()
     result = _login("operator")
     assert result.exit_code == 0, result.output
+    assert resolve_active_bucket_id() == pointer.bucket_id
 
     # The bucket-event-history catalogue is encrypted; reading it requires an
     # active session for the operator profile's UUID bucket.
     with open_test_profile_session(pointer.bucket_id):
         catalogue = BucketEventHistoryRepository().load()
-    matching = [
-        event
-        for event in catalogue.events.values()
-        if event.event_type is BucketEventType.PROFILE_ACTIVATED and event.object_id == pointer.bucket_id
-    ]
-    assert matching, [event.event_type for event in catalogue.events.values()]
-    assert matching[-1].payload["active_profile"] == pointer.bucket_id
+    assert catalogue == before
 
 
 @pytest.mark.windows_only

@@ -26,8 +26,8 @@ _READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
 )
 _LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
-_MODULE = "._overview"
-_PAYLOADS = "._overview_payloads"
+_MODULE = ".overview_commands"
+_PAYLOADS = ".overview_results"
 
 
 def _option(

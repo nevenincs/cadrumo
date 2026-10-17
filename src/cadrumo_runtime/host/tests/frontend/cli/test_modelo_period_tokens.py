@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_work_ux_support import operator_profile_facts
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
+
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 

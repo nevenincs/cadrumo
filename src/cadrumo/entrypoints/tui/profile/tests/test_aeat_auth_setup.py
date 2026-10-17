@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PATHS = ("identity.tax_id", "auth.dni_nie", "auth.fecha_validez", "auth.numero_soporte")
 
 
-def _overview(values: Mapping[str, str], revision: int = 1) -> ProfileOverview:
+def auth_setup_overview_projection(values: Mapping[str, str], revision: int = 1) -> ProfileOverview:
     return ProfileOverview(
         profile_id=str(uuid4()),
         label="Selected profile",
@@ -48,7 +48,7 @@ def _overview(values: Mapping[str, str], revision: int = 1) -> ProfileOverview:
     )
 
 
-def _readiness(provider: str = "", *, ready: bool = False) -> AuthSyncReadiness:
+def auth_setup_readiness_projection(provider: str = "", *, ready: bool = False) -> AuthSyncReadiness:
     return AuthSyncReadiness(
         provider=provider,
         ready=ready,
@@ -60,10 +60,10 @@ def _readiness(provider: str = "", *, ready: bool = False) -> AuthSyncReadiness:
     )
 
 
-class _Door:
+class AeatAuthSetupDoor:
     def __init__(self) -> None:
-        self.overview = _overview({})
-        self.readiness = _readiness()
+        self.overview = auth_setup_overview_projection({})
+        self.readiness = auth_setup_readiness_projection()
         self.calls: list[tuple[AuthProviderKind, ClaveMovilRoute, dict[str, str], str, bytes | None]] = []
         self.fail_read = False
         self.snapshot_calls = 0
@@ -92,10 +92,10 @@ class _Door:
         self.calls.append(
             (provider, route, fields.copy(), certificate_path, bytes(secret) if secret is not None else None)
         )
-        self.overview = _overview(fields, self.overview.record_revision + 1).model_copy(
+        self.overview = auth_setup_overview_projection(fields, self.overview.record_revision + 1).model_copy(
             update={"profile_id": self.overview.profile_id}
         )
-        self.readiness = _readiness(provider.value, ready=True)
+        self.readiness = auth_setup_readiness_projection(provider.value, ready=True)
         return await self.snapshot()
 
 
@@ -104,7 +104,7 @@ async def test_editor_processes_input_while_native_snapshot_is_pending() -> None
     """A pending runtime read must not hold the screen's message queue."""
     loaded = asyncio.Event()
 
-    class PendingDoor(_Door):
+    class PendingDoor(AeatAuthSetupDoor):
         @override
         async def snapshot(self) -> tuple[ProfileOverview, AuthSyncReadiness]:
             await loaded.wait()
@@ -124,7 +124,7 @@ async def test_editor_processes_input_while_native_snapshot_is_pending() -> None
 async def test_method_specific_editor_saves_then_reopens_stored_fields_and_hides_password(
     provider: AuthProviderKind,
 ) -> None:
-    door = _Door()
+    door = AeatAuthSetupDoor()
     screen = AeatAuthSetupScreen(door)
     async with ScreenHostApp(screen).run_test(size=(100, 55)) as pilot:
         await pilot.pause()
@@ -163,7 +163,7 @@ async def test_method_specific_editor_saves_then_reopens_stored_fields_and_hides
 
 @pytest.mark.asyncio
 async def test_profile_acquisition_stays_blocked_until_editor_saved_and_readback_is_ready() -> None:
-    door = _Door()
+    door = AeatAuthSetupDoor()
     launched: list[str] = []
 
     async def launch(source: object) -> None:
@@ -203,26 +203,29 @@ async def test_profile_acquisition_stays_blocked_until_editor_saved_and_readback
 
 @pytest.mark.asyncio
 async def test_returned_editor_projection_cannot_replace_a_newer_or_different_profile() -> None:
-    door = _Door()
+    door = AeatAuthSetupDoor()
     current = door.overview.model_copy(update={"record_revision": 5})
     screen = ProfileManagerScreen(current, persist=lambda *_args: current, aeat_auth_setup=door)
     async with ScreenHostApp(screen).run_test(size=(110, 65)) as pilot:
         await pilot.pause()
         await screen._reload_auth(
-            (current.model_copy(update={"record_revision": 2}), _readiness("clave_movil", ready=True))
+            (
+                current.model_copy(update={"record_revision": 2}),
+                auth_setup_readiness_projection("clave_movil", ready=True),
+            )
         )
         assert screen.overview is current
         assert screen._auth_readiness is not None and not screen._auth_readiness.ready
         assert door.snapshot_calls == 0
-        await screen._reload_auth((_overview({}, revision=6), _readiness("clave_movil", ready=True)))
+        await screen._reload_auth(
+            (auth_setup_overview_projection({}, revision=6), auth_setup_readiness_projection("clave_movil", ready=True))
+        )
         assert screen.overview is current
         assert screen._auth_readiness is None
 
 
-
-
 def test_missing_requirements_are_human_readable_and_private_reasons_do_not_become_locale_keys() -> None:
-    text = readiness_text(_readiness())
+    text = readiness_text(auth_setup_readiness_projection())
     assert "identity.tax_id" not in text
     assert "auth_method_required" not in text
     assert tr("tui.aeat_auth.blocked") in text
@@ -230,7 +233,7 @@ def test_missing_requirements_are_human_readable_and_private_reasons_do_not_beco
 
 @pytest.mark.asyncio
 async def test_invalid_field_reports_which_field_failed_without_disclosing_rejected_data() -> None:
-    class RefusingDoor(_Door):
+    class RefusingDoor(AeatAuthSetupDoor):
         @override
         async def save(
             self,

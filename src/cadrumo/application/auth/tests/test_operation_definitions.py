@@ -7,6 +7,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.auth.credential_operations import AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -55,6 +56,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
     registry = OperationRegistry(definitions=AUTH_DEFINITIONS)
     definition_ids = tuple(definition.definition_id for definition in AUTH_DEFINITIONS)
     assert definition_ids == (
+        AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
         AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
         AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
         AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -71,6 +73,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
     assert all(
         registry.lookup(definition_id).capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
         for definition_id in (
+            AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
             AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
             AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
             AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -80,6 +83,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
     )
     assert "auth.profile.login" not in definition_ids
     assert registry.lookup(PROFILE_ROTATION_OPERATION_DEFINITION_ID).ephemeral_secret is not None
+    assert registry.lookup(AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID).ephemeral_secret is not None
     assert all(
         registry.lookup(definition_id).ephemeral_secret is None
         for definition_id in (

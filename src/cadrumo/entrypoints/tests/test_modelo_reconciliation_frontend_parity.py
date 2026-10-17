@@ -17,6 +17,7 @@ from uuid import UUID
 import pytest
 
 from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import (
     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
     ModeloReconciliationImportProjection,
@@ -32,7 +33,6 @@ from ...application.modelo.reconciliation_pull_operation import (
     ModeloReconciliationPullRequest,
     reconciliation_pull_source_ref,
 )
-from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
 from ...application.operations.registry import OperationFrontendProjection
@@ -69,9 +69,9 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
 ) -> None:
     """The typed path of an import and the stored handle of a pull reach the result as they were recorded."""
     typed_path = str(_JUSTIFICANTE_FIXTURE)
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(frontend),
     ) as (driver, registry, profile_id):
         subject_ref = profile_operation_subject(str(profile_id))

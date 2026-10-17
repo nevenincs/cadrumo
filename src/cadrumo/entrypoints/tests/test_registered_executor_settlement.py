@@ -43,7 +43,12 @@ from ...domain.transactions.enums import BusinessClassification, TransactionDire
 from ..adapter_composition import build_amendment_action_ports, build_filing_action_ports
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
-from .registered_executor_case_support import _CloseWitness, _HeldClock, _resolve_result_projection, _runtime
+from .registered_executor_case_support import (
+    OperationRuntimeCloseWitness,
+    _HeldClock,
+    _resolve_result_projection,
+    conformance_operation_runtime,
+)
 from .registered_executor_payload_support import _payload
 from .registered_executor_scenario_constants import _OPERATOR_SCOPE_PORTS
 
@@ -54,7 +59,11 @@ def test_ledger_track_uses_null_when_no_finalized_revision_participates(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """An empty encrypted index stays JSON null for a real ledger transaction."""
-    with _runtime(tmp_path / "ledger-track-empty", cleanup=_CloseWitness()) as (driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "ledger-track-empty", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        registry,
+        profile_id,
+    ):
         ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
@@ -212,9 +221,9 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
             raise AssertionError(f"unknown amendment CAS catalogue: {raced_catalogue}")
         return ports
 
-    with _runtime(
+    with conformance_operation_runtime(
         tmp_path / f"amendment-cas-{raced_catalogue}",
-        cleanup=_CloseWitness(),
+        cleanup=OperationRuntimeCloseWitness(),
         amendment_action_ports_factory=amendment_ports_factory,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("modelo.work.amend")
@@ -297,7 +306,11 @@ def test_calculate_refused_before_persisting_reports_no_effect(
     the executor is still only reading, so nothing can have been written and
     the truthful effect is NONE.
     """
-    with _runtime(tmp_path / "calculate-refusal", cleanup=_CloseWitness()) as (driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "calculate-refusal", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        registry,
+        profile_id,
+    ):
         definition = registry.lookup("modelo.work.calculate")
         unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
         payload = definition.request_type.model_validate(
@@ -330,8 +343,8 @@ def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(
         reached_boundary.set()
         await release_boundary.wait()
 
-    cleanup = _CloseWitness()
-    with _runtime(
+    cleanup = OperationRuntimeCloseWitness()
+    with conformance_operation_runtime(
         tmp_path / "censo-cancellation",
         cleanup=cleanup,
         before_irreversible_section=before_irreversible_section,
@@ -380,9 +393,9 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
     before any review exists. Holding the supervisor clock until the review is
     on offer fixes that order on any host instead of racing a 50 ms budget.
     """
-    cleanup = _CloseWitness()
+    cleanup = OperationRuntimeCloseWitness()
     clock = _HeldClock()
-    with _runtime(
+    with conformance_operation_runtime(
         tmp_path / "censo-deadline",
         cleanup=cleanup,
         execution_timeout=timedelta(milliseconds=50),
@@ -426,7 +439,11 @@ def test_the_filing_authority_accepts_the_registered_operation_fixture(
     """
     from ...application.modelo.filing_actions import file_modelo_revision
 
-    with _runtime(tmp_path / "authority-control", cleanup=_CloseWitness()) as (_driver, _registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "authority-control", cleanup=OperationRuntimeCloseWitness()) as (
+        _driver,
+        _registry,
+        profile_id,
+    ):
         revision_id, report_id = modelo_operation_test_support.seeded_modelo_verification_report(
             profile_id, operation=operation
         )

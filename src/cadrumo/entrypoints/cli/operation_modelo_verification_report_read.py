@@ -24,8 +24,8 @@ from ...application.modelo.verification_report_read_projection import (
     ModeloVerificationReportViewProjection,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
 from ._modelo_rendering import verification_report_lines, verification_report_payload
+from .modelo_results import VerificationReportListResult, VerificationReportShowResult
 
 
 def _invalid_projection(completed: object) -> NoReturn:

@@ -14,6 +14,11 @@ from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_c
 
 _CONSOLE_SOURCE = """
 import json, os, sys
+settings_payload = json.loads(sys.argv.pop(1))
+settings_token = None
+if settings_payload is not None:
+    from cadrumo.core.config import Settings, settings_override
+    settings_token = settings_override.set(Settings(_env_file=None, **settings_payload))
 program_name = os.environ.get("CADRUMO_TEST_PROGRAM_NAME")
 if program_name is not None:
     sys.argv[0] = program_name
@@ -21,6 +26,8 @@ from cadrumo_runtime.host.frontend.cli.bootstrap import main
 try:
     main()
 finally:
+    if settings_token is not None:
+        settings_override.reset(settings_token)
     report = os.environ.get("CADRUMO_TEST_IMPORT_REPORT")
     if report is not None:
         watched = json.loads(os.environ["CADRUMO_TEST_WATCHED_MODULES"])
@@ -40,6 +47,8 @@ def run_fresh_cli(
     watched_modules: Sequence[str] = (),
     import_report: Path | None = None,
     site_dir: Path | None = None,
+    settings: Mapping[str, object] | None = None,
+    stdin_payload: str | None = None,
 ) -> FreshCliResult:
     """Execute the real console bootstrap and validate its optional import report."""
     if env is not None and extra_env is not None:
@@ -62,7 +71,7 @@ def run_fresh_cli(
         child_env["PYTHONPATH"] = os.pathsep.join(filter(None, (str(site_dir), child_env.get("PYTHONPATH"))))
     completed = as_text_completed_process(
         run_audited_process(
-            [sys.executable, "-c", _CONSOLE_SOURCE, *args],
+            [sys.executable, "-c", _CONSOLE_SOURCE, json.dumps(None if settings is None else dict(settings)), *args],
             env=child_env,
             cwd=cwd,
             capture_output=True,
@@ -70,6 +79,7 @@ def run_fresh_cli(
             encoding="utf-8",
             timeout=None,
             check=False,
+            input=stdin_payload,
         )
     )
     loaded: tuple[str, ...] = ()

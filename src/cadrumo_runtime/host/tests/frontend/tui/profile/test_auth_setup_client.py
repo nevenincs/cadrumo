@@ -25,7 +25,10 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import profile_output_language_precedence
 from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.entrypoints.tui.profile.tests.test_aeat_auth_setup import _overview, _readiness
+from cadrumo.entrypoints.tui.profile.tests.test_aeat_auth_setup import (
+    auth_setup_overview_projection,
+    auth_setup_readiness_projection,
+)
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, ProfileViewCollection
@@ -52,7 +55,7 @@ async def test_runtime_setup_serializes_cas_writes_keeps_secrets_off_profile_and
     def overview() -> ProfileOverview:
         nonlocal overview_reads
         overview_reads += 1
-        return _overview(values, revision[0])
+        return auth_setup_overview_projection(values, revision[0])
 
     def persist(path: str, value: str, expected: int, _digest: str) -> ProfileViewCollection:
         assert expected == revision[0]
@@ -100,9 +103,9 @@ async def test_runtime_setup_serializes_cas_writes_keeps_secrets_off_profile_and
 
     async def readiness(_client: FrontendClient) -> AuthSyncReadiness:
         if not configured:
-            return _readiness()
+            return auth_setup_readiness_projection()
         assert secrets
-        return _readiness("clave_permanente", ready=True)
+        return auth_setup_readiness_projection("clave_permanente", ready=True)
 
     monkeypatch.setattr(aeat_auth_client, "configure_profile_authentication", configure)
     monkeypatch.setattr(aeat_auth_client, "run_auth_operation", operation)
@@ -134,7 +137,9 @@ async def test_held_auth_setup_reads_live_locale_on_open_and_after_save_preservi
     client = cast(FrontendClient, fake_client)
     reads: list[tuple[OutputLanguage, int]] = []
     configured: list[AuthConfigureOperationRequest] = []
-    current = _overview({"identity.tax_id": "12345678Z"}, 7).model_copy(update={"profile_id": str(client.profile_id)})
+    current = auth_setup_overview_projection({"identity.tax_id": "12345678Z"}, 7).model_copy(
+        update={"profile_id": str(client.profile_id)}
+    )
 
     def overview(bound: FrontendClient, _label: str, language: OutputLanguage) -> ProfileOverview:
         assert bound is client
@@ -159,7 +164,7 @@ async def test_held_auth_setup_reads_live_locale_on_open_and_after_save_preservi
 
     async def readiness(bound: FrontendClient) -> AuthSyncReadiness:
         assert bound is client
-        return _readiness()
+        return auth_setup_readiness_projection()
 
     monkeypatch.setattr(aeat_auth_client, "configure_profile_authentication", configure)
     monkeypatch.setattr(aeat_auth_client, "read_sync_readiness", readiness)
@@ -205,7 +210,7 @@ def test_auth_overview_refuses_a_language_change_during_its_read(
         FrontendClient,
         SimpleNamespace(profile_id=uuid4(), session_id=uuid4(), frontend=OperationFrontendProjection.TUI),
     )
-    current = _overview({}, 4).model_copy(update={"profile_id": str(client.profile_id)})
+    current = auth_setup_overview_projection({}, 4).model_copy(update={"profile_id": str(client.profile_id)})
 
     def overview(_bound: FrontendClient, _label: str, language: OutputLanguage) -> ProfileOverview:
         assert language is OutputLanguage.EN

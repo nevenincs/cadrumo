@@ -22,8 +22,9 @@ from cadrumo.application.ledger.counterparty_establishment import (
 )
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.domain.iva.classification import IvaTerritorialScope
 from cadrumo.domain.iva.schema import EUMemberState
+
+from .....domain.iva.schema import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

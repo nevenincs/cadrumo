@@ -18,6 +18,8 @@ from ...application.ledger.bulk_classify_operation import (
     LedgerBulkClassifyRequest,
 )
 from ...application.ledger.models import BulkClassifyResult
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
 
@@ -34,6 +36,7 @@ def run_ledger_bulk_classify(
             profile_id=client.profile_id,
             csv_text=csv_text,
             actor=actor or str(client.profile_id),
+            output_language=OutputLanguage(output_language()),
         )
     except ValidationError:
         # Keep oversized or invalid private request data out of parser errors.

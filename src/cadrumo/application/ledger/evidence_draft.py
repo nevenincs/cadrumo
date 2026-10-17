@@ -40,7 +40,7 @@ from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.models import Invoice
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .invoice_draft_records import InvoiceDraft
 
 __all__ = [

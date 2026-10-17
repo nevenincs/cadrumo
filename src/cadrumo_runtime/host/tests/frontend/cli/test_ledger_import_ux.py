@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.application.ledger.actions_import import LedgerProviderID
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.tests.cli_json_support import _json_object
+from cadrumo.tests.cli_json_support import require_json_object
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from .ledger_ux_support import (
@@ -41,10 +41,10 @@ def _notice_projection(document: dict[str, object], code: str) -> dict[str, obje
 
 def _assert_transaction_validation_error(output: str) -> dict[str, object]:
     document = _json_document(output)
-    error = _json_object(document["error"])
+    error = require_json_object(document["error"])
     assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
     action = error["action"]
-    action = _json_object(action)
+    action = require_json_object(action)
     assert action["failed_condition_id"] == "cli.ledger.transaction.valid"
     assert action["evidence"] == [
         {
@@ -81,10 +81,10 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
     )
     assert result.exit_code != 0
     document = _json_document(result.output)
-    error = _json_object(document["error"])
+    error = require_json_object(document["error"])
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
     assert error["category"] == "REFUSED"
-    context = _json_object(error["context"])
+    context = require_json_object(error["context"])
     assert context["value"] == "quickbooks"
     accepted = context["accepted"]
     assert isinstance(accepted, str)
@@ -110,7 +110,7 @@ def test_missing_csv_is_refused_at_the_file_parameter(tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0, result.output
-    error = _json_object(_json_document(result.output)["error"])
+    error = require_json_object(_json_document(result.output)["error"])
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
     message = str(error["message"])
     assert "--file" in message
@@ -139,7 +139,7 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
     )
 
     assert result.exit_code == 0, result.output
-    payload = _json_object(_json_document(result.output)["result"])
+    payload = require_json_object(_json_document(result.output)["result"])
     # One file imported, so one report. The field is a list because a
     # DIRECTORY import folds several and used to keep only the first.
     validations = payload["validations"]
@@ -276,7 +276,7 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path, locale: s
     )
     assert result.exit_code == 0, result.output
     document = _json_document(result.output)
-    payload = _json_object(document["result"])
+    payload = require_json_object(document["result"])
     assert payload["imported"] == 0
     assert not {"empty_import_notice", "dry_run_notice", "likely_duplicate_notice"}.intersection(payload)
     assert _notice_projection(document, "ledger.import.no_rows_imported") == {
@@ -312,8 +312,8 @@ def test_import_period_keeps_only_rows_dated_inside_it(tmp_path: Path) -> None:
     statement = _two_quarter_statement(tmp_path)
     with native_cli_profile_scope(tmp_path / "native") as profile:
         profile.register(label="period-ledger-import", facts={})
-        scoped = _json_object(_period_import(profile, statement, "--period", "1T", "--year", "2026")["result"])
-        whole = _json_object(_period_import(profile, statement)["result"])
+        scoped = require_json_object(_period_import(profile, statement, "--period", "1T", "--year", "2026")["result"])
+        whole = require_json_object(_period_import(profile, statement)["result"])
 
     assert (scoped["rows"], scoped["imported"], scoped["skipped"]) == (1, 1, 0)
     assert (whole["rows"], whole["imported"], whole["skipped"]) == (2, 1, 1)
@@ -326,7 +326,7 @@ def test_import_period_matching_no_rows_explains_the_zero_import(tmp_path: Path)
         profile.register(label="period-ledger-import", facts={})
         document = _period_import(profile, statement, "--period", "4T", "--year", "2026")
 
-    assert _json_object(document["result"])["imported"] == 0
+    assert require_json_object(document["result"])["imported"] == 0
     assert _notice_projection(document, "ledger.import.no_rows_in_period") == {
         "severity": "info",
         "code": "ledger.import.no_rows_in_period",
@@ -359,10 +359,10 @@ def test_import_into_an_unregistered_own_account_is_refused(tmp_path: Path) -> N
         listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
 
     assert refused.exit_code != 0
-    error = _json_object(_json_document(refused.output)["error"])
+    error = require_json_object(_json_document(refused.output)["error"])
     assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
-    assert _json_object(error["context"])["effect"] == "none"
-    readback = _json_object(_json_document(listed.output)["result"])
+    assert require_json_object(error["context"])["effect"] == "none"
+    readback = require_json_object(_json_document(listed.output)["result"])
     assert readback["rows"] == []
 
 
@@ -380,7 +380,7 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
     )
     assert second.exit_code == 0, second.output
     document = _json_document(second.output)
-    payload = _json_object(document["result"])
+    payload = require_json_object(document["result"])
     assert payload["imported"] == 0
     assert payload["skipped"] == 1
     assert _notice_projection(document, "ledger.import.all_rows_skipped") == {
@@ -406,7 +406,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
     )
     assert dry_run.exit_code == 0, dry_run.output
     document = _json_document(dry_run.output)
-    payload = _json_object(document["result"])
+    payload = require_json_object(document["result"])
     assert payload["dry_run"] is True
     assert payload["imported"] == 4
     assert payload["skipped"] == 0
@@ -552,7 +552,7 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
     )
     assert result.exit_code == 0, result.output
     document = _json_document(result.output)
-    payload = _json_object(document["result"])
+    payload = require_json_object(document["result"])
     assert payload["imported"] == 1
     assert payload["likely_duplicates"] == 1
     assert _notice_projection(document, "ledger.import.likely_duplicates") == {
@@ -613,7 +613,7 @@ def test_relative_import_and_verification_source_use_the_callers_directory(
             ],
         )
         assert imported.exit_code == 0, imported.output
-        result = _json_object(_json_document(imported.output)["result"])
+        result = require_json_object(_json_document(imported.output)["result"])
         assert result["rows"] == result["imported"] == 4
         assert result["skipped"] == 0
         assert result["verify"] is True
@@ -627,7 +627,7 @@ def test_relative_import_and_verification_source_use_the_callers_directory(
 
         listed = _invoke_exact_profile(profile, ["--format", "json", "app", "ledger", "list"])
         assert listed.exit_code == 0, listed.output
-        readback = _json_object(_json_document(listed.output)["result"])
+        readback = require_json_object(_json_document(listed.output)["result"])
         persisted_rows = readback["rows"]
         assert isinstance(persisted_rows, list) and len(persisted_rows) == 4
 

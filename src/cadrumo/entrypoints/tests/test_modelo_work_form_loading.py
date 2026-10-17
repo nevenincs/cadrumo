@@ -33,7 +33,6 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperato
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from ...application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from ...application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAdmissionResultV1,
@@ -154,7 +153,7 @@ class _Context:
     operands: _Operands = field(default_factory=_Operands)
 
 
-def _verify(work: SeededOperatorWork) -> None:
+def _verify(work: SeededOperatorWork) -> ModeloWorkVerifyPublicResultV2:
     """Verify the current head through the production verify executor, as its operation would."""
     payload = ModeloWorkVerifyRequest(
         calculation_revision_id=work.require_head().calculation_revision_id, actor="operator:test"
@@ -182,6 +181,7 @@ def _verify(work: SeededOperatorWork) -> None:
     (result,) = context.operands.results
     assert isinstance(result, ModeloWorkVerifyPublicResultV2)
     assert result.calculation_revision_id == payload.calculation_revision_id
+    return result
 
 
 def _rebuilt(work: SeededOperatorWork, head: CalculationRevision, review: ModeloWorkReview) -> ModeloWorkForm:
@@ -329,16 +329,15 @@ def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_
     assert verified.deadline.days_remaining == (verified.deadline.closes_on - _REFERENCE_DAY).days
 
 
-def test_a_form_with_unresolved_prior_renta_keeps_its_failed_result_and_refuses_verification(tmp_path: Path) -> None:
+def test_a_form_with_unsatisfied_prior_renta_keeps_unknown_result_and_incomplete_verification(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         work.recalculate()
-        with pytest.raises(ModeloCalculationBlockedError) as refused:
-            _verify(work)
+        outcome = _verify(work)
         form = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
 
-    assert refused.value.context is not None
-    assert refused.value.context["reason"] == "unresolved_binding"
-    assert form.verification is None
+    assert not outcome.granted_verificado_completo
+    assert outcome.finding_count > 0
+    assert form.verification is not None
     assert form.result is not None
     assert form.result.box == "19"
     assert _field(form, "19").origin is ModeloFormOrigin.CALCULATION_FAILED

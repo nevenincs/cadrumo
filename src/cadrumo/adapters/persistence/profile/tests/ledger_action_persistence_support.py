@@ -37,7 +37,7 @@ from .....domain.calculations.registry.tests.registry_observations import regist
 from .....domain.currency.service import CurrencyNormalizationService as _CurrencyNormalizationService
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
-from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import InvoiceKind
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,

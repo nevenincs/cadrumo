@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from ....application.review.enums import ReviewSeverity, ReviewState
 from ....core.period import Period
-from .._review_payloads import (
+from ..review_results import (
     ReviewQueueResult,
     ReviewQueueRowPayload,
     ReviewViewResult,

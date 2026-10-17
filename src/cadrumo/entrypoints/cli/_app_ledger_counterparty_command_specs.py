@@ -39,7 +39,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 name="scope",
                 declarations=("--scope",),
                 value=ValueContract(
-                    DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__),
+                    DeferredTarget("...domain.iva.schema", "IvaTerritorialScope", __package__),
                     click_type=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
                 ),
                 default=ParameterDefault.value(None),
@@ -78,10 +78,12 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("actor", ("--actor",), "cli.app.ledger.counterparty.actor_help"),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("._ledger_counterparty_cli", "counterparty_confirm", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_counterparty_commands", "counterparty_confirm", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_counterparty_payloads", "CounterpartyConfirmResult", __package__),
+            target=DeferredTarget(".ledger_counterparty_results", "CounterpartyConfirmResult", __package__),
             identity="ledger.counterparty.confirm",
         ),
     ),
@@ -100,7 +102,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 name="evidenced_scope",
                 declarations=("--evidenced-scope",),
                 value=ValueContract(
-                    DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__),
+                    DeferredTarget("...domain.iva.schema", "IvaTerritorialScope", __package__),
                     click_type=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
                 ),
                 default=ParameterDefault.value(None),
@@ -117,10 +119,12 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_counterparty_cli", "counterparty_view", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_counterparty_commands", "counterparty_view", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_counterparty_payloads", "CounterpartyViewResult", __package__),
+            target=DeferredTarget(".ledger_counterparty_results", "CounterpartyViewResult", __package__),
             identity="ledger.counterparty.view",
         ),
     ),
@@ -138,11 +142,11 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("._ledger_counterparty_cli", "counterparty_withdraw", __package__)
+            DeferredTarget(".ledger_counterparty_commands", "counterparty_withdraw", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_counterparty_payloads", "CounterpartyWithdrawResult", __package__),
+            target=DeferredTarget(".ledger_counterparty_results", "CounterpartyWithdrawResult", __package__),
             identity="ledger.counterparty.withdraw",
         ),
     ),

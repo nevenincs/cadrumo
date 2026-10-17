@@ -52,6 +52,7 @@ from ...application.live.filed_single_capture_operation import (
     build_filed_single_capture_registration,
 )
 from ...application.live.session import SessionWriteReporter
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ...application.modelo.reconciliation_pull_operation import (
     MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
@@ -60,10 +61,7 @@ from ...application.modelo.reconciliation_pull_operation import (
     build_modelo_reconciliation_pull_registration,
     reconciliation_pull_source_ref,
 )
-from ...application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
-)
+from ...application.modelo.reconciliation_records import ModeloReconciliationVerdict
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
@@ -378,8 +376,10 @@ def test_a_receipt_capture_is_reconciled_by_the_filings_coordinates_on_every_fro
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
     """The snapshot a receipt capture stored, and the filing's coordinates, are all a client sends."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_session_host(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_session_host(frontend),
     ) as (driver, registry, profile_id):
         subject_ref = profile_operation_subject(str(profile_id))
         with override_settings(cadrumo_active_profile=str(profile_id)):

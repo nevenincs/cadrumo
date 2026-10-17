@@ -16,7 +16,7 @@ from click.testing import Result
 from ....adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from ....application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from ....tests.live_gate import requires_live_enabled
-from ...tests.ledger_corpus_support import _CORPUS, _invoke
+from ...tests.ledger_corpus_support import LEDGER_CORPUS_ROOT, invoke_corpus_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
@@ -31,7 +31,7 @@ def test_a_multi_currency_statement_converts_against_the_live_series(invoke_cli:
     requires_live_enabled()
 
     with bind_exchange_rate_provider_factory(default_ecb_rate_provider):
-        result = _invoke(
+        result = invoke_corpus_cli(
             [
                 "--format",
                 "json",
@@ -39,7 +39,7 @@ def test_a_multi_currency_statement_converts_against_the_live_series(invoke_cli:
                 "ledger",
                 "import",
                 "--file",
-                str(_CORPUS / _MULTI_CURRENCY_STATEMENT),
+                str(LEDGER_CORPUS_ROOT / _MULTI_CURRENCY_STATEMENT),
                 "--provider",
                 "csv",
             ],

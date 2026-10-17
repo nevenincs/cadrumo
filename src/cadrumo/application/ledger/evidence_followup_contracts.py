@@ -24,8 +24,8 @@ from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.attachments.protocols import AttachmentStoreProtocol
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.establishment import StatedCountryCodeStatus
+from ...domain.iva.schema import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
 from ..operations.public_scalar import PublicDecimal
 from .attachment_review import AttachmentReviewItem

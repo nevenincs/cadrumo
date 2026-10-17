@@ -63,13 +63,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal, cast
+from typing import Literal, Unpack, cast
 from uuid import UUID
 
 import keyring
 import keyring.backends.null
 import keyring.core
-from click.testing import Result
+from click.testing import CliRunner, Result
 from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -103,8 +103,10 @@ from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
+from cadrumo.entrypoints.cli.tests.cli_runner import semantic_cli_text
+from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
@@ -1233,6 +1235,11 @@ def _invoke_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     return result
 
 
+def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
+    """Invoke the runtime frontend against the sequence-owned native server."""
+    return CliRunner().invoke(cadrumo_click_command(), list(args), **kwargs)
+
+
 def _invoke_authenticated_frame(args: tuple[str, ...], *, program: CommandProgram) -> Result:
     """Supply a fresh bounded password proof without replacing authored channels."""
     if program is CommandProgram.AUTHENTICATION:
@@ -1259,7 +1266,14 @@ def _invoke_authenticated_frame(args: tuple[str, ...], *, program: CommandProgra
     if spec is not None and spec.key == "config_login":
         password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
         return invoke([*args, "--secrets-stdin"], input=json.dumps({"passphrase": password}))
-    if registration is None or registration.profile_authentication is not ProfileAuthenticationPosture.RESUME_FALLBACK:
+    posture = (
+        spec.profile_authentication
+        if program is CommandProgram.AUTHENTICATION and spec is not None
+        else None
+        if registration is None
+        else registration.profile_authentication
+    )
+    if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
         return invoke(list(args))
     password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     return invoke(["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": password}))

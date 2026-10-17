@@ -8,7 +8,12 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.transactions.models import TransactionCatalogue
-from ...tests.ledger_corpus_support import _CORPUS, _FILES, _import_corpus, _invoke
+from ...tests.ledger_corpus_support import (
+    LEDGER_CORPUS_FILES,
+    LEDGER_CORPUS_ROOT,
+    import_ledger_corpus,
+    invoke_corpus_cli,
+)
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
@@ -18,16 +23,26 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_import_full_corpus_persists_operating_scale(invoke_cli: Callable[..., Result]) -> None:
-    _import_corpus(invoke_cli=invoke_cli)
+    import_ledger_corpus(invoke_cli=invoke_cli)
     rows = _list_rows()
     assert len(rows) >= 500, f"expected operating-scale corpus, got {len(rows)}"
 
 
 def test_reimport_is_idempotent_dedups(invoke_cli: Callable[..., Result]) -> None:
-    _import_corpus(invoke_cli=invoke_cli)
+    import_ledger_corpus(invoke_cli=invoke_cli)
     first = len(_list_rows())
-    result = _invoke(
-        ["--format", "json", "app", "ledger", "import", "--file", str(_CORPUS / _FILES[0]), "--provider", "csv"],
+    result = invoke_corpus_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "import",
+            "--file",
+            str(LEDGER_CORPUS_ROOT / LEDGER_CORPUS_FILES[0]),
+            "--provider",
+            "csv",
+        ],
         invoke_cli=invoke_cli,
     )
     assert result.exit_code == 0, result.output
@@ -38,8 +53,17 @@ def test_reimport_is_idempotent_dedups(invoke_cli: Callable[..., Result]) -> Non
 
 
 def test_import_dry_run_does_not_persist(invoke_cli: Callable[..., Result]) -> None:
-    result = _invoke(
-        ["app", "ledger", "import", "--file", str(_CORPUS / _FILES[0]), "--provider", "csv", "--dry-run"],
+    result = invoke_corpus_cli(
+        [
+            "app",
+            "ledger",
+            "import",
+            "--file",
+            str(LEDGER_CORPUS_ROOT / LEDGER_CORPUS_FILES[0]),
+            "--provider",
+            "csv",
+            "--dry-run",
+        ],
         invoke_cli=invoke_cli,
     )
     assert result.exit_code == 0, result.output
@@ -47,7 +71,7 @@ def test_import_dry_run_does_not_persist(invoke_cli: Callable[..., Result]) -> N
 
 
 def test_import_preserves_foreign_currencies(invoke_cli: Callable[..., Result]) -> None:
-    _import_corpus(invoke_cli=invoke_cli)
+    import_ledger_corpus(invoke_cli=invoke_cli)
     currencies = {row.get("currency") for row in _list_rows()}
     assert {"EUR", "GBP", "USD"} <= currencies, currencies
 
@@ -60,7 +84,7 @@ def test_each_imported_file_reads_the_ledger_once(
     Import used to read the stored ledger twice per file -- once to diagnose the
     source, once more to merge it -- decrypting and validating every row again.
     """
-    _import_corpus(invoke_cli=invoke_cli)
+    import_ledger_corpus(invoke_cli=invoke_cli)
     loads: list[str] = []
     load = TransactionCatalogueRepository.load
 
@@ -69,8 +93,9 @@ def test_each_imported_file_reads_the_ledger_once(
         return load(self)
 
     monkeypatch.setattr(TransactionCatalogueRepository, "load", counting)
-    result = _invoke(
-        ["app", "ledger", "import", "--file", str(_CORPUS / _FILES[0]), "--provider", "csv"], invoke_cli=invoke_cli
+    result = invoke_corpus_cli(
+        ["app", "ledger", "import", "--file", str(LEDGER_CORPUS_ROOT / LEDGER_CORPUS_FILES[0]), "--provider", "csv"],
+        invoke_cli=invoke_cli,
     )
 
     assert result.exit_code == 0, result.output

@@ -9,8 +9,8 @@ from typing import Unpack, cast
 from click.testing import Result
 
 from cadrumo.core.config import load_settings
-from cadrumo.entrypoints.cli._profile_authentication_contract import profile_authentication_posture
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+from cadrumo.entrypoints.cli.profile_authentication_policy import profile_authentication_posture
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 

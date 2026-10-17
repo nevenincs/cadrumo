@@ -65,10 +65,10 @@ from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import TYPED_EDITABILITIES
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
-from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from cadrumo.entrypoints.tui.tests.frame import capture
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden
@@ -149,9 +149,11 @@ class SequenceScenario:
     filed: bool = False
     """Whether the sequence records the declaration as filed, so its workbench accepts no change."""
     assumes: bool = False
-    """Whether the calculation leaves assumed values for the filer to confirm."""
+    """Whether the declaration offers an editable assumed value or a confirmation list."""
     assumed_unconfirmable: bool = False
     """Whether every assumed value is one a list cannot confirm, so F8 opens the first one's panel instead."""
+    recalculation_question: bool = True
+    """Whether recalculation must first ask which unrecorded values the filer typed."""
 
 
 SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
@@ -164,7 +166,12 @@ SEQUENCE_SCENARIOS: Final[dict[str, SequenceScenario]] = {
             "verification-reports-incomplete", "303", "Modelo 303 calculated but not complete", verified=False
         ),
         SequenceScenario("modelo-130-first-quarter", "130", "Modelo 130, first quarter, verified"),
-        SequenceScenario("modelo-100-renta-2025", "100", "Modelo 100, renta 2025, verified", assumes=True),
+        SequenceScenario(
+            "modelo-100-renta-2025",
+            "100",
+            "Modelo 100, renta 2025, verified with recorded operator inputs",
+            recalculation_question=False,
+        ),
         SequenceScenario("modelo-349-first-quarter", "349", "Modelo 349, first quarter, verified"),
         SequenceScenario("modelo-390-annual-2025", "390", "Modelo 390, annual summary 2025, verified"),
         SequenceScenario(
@@ -458,6 +465,8 @@ def scenario_pages(scenario: SequenceScenario) -> tuple[str, ...]:
             return scenario.verified
         if page == F8_CONFIRM_PAGE:
             return scenario.assumed_unconfirmable and not scenario.filed
+        if page == RECALCULATE_PAGE and not scenario.recalculation_question:
+            return False
         if scenario.filed and page in _CHANGING_PAGES:
             return False
         return scenario.assumes or page not in _ASSUMED_PAGES

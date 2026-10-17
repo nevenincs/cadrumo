@@ -264,10 +264,9 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     assert "Traceback" not in text_run.stderr
     assert not text_run.stderr.lstrip().startswith("{")
 
-    # The traceback is suppressed on stderr but MUST survive in the diagnostic
-    # log, because the document above tells the operator to go read it. Without
-    # this half, the stderr assertions above could be satisfied by deleting the
-    # log call outright and the crash would become untriageable.
+    # The static crash diagnostic must survive in the configured log. Raw
+    # exception text and traceback can contain caller input and stay out of
+    # plaintext diagnostics, as at the ordinary command boundary.
     state_root = tmp_path / "state"
     # The runner pins explicit category paths, and the child inherits them; the
     # log location under test is the one derived from the root alone.
@@ -289,5 +288,6 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     diagnostic_log = state_root / storage_location(StorageCategory.LOG_FILE).relative_path()
     assert diagnostic_log.is_file(), f"no diagnostic log under {state_root}"
     logged = diagnostic_log.read_text(encoding="utf-8", errors="replace")
-    assert "Traceback" in logged, "the crash traceback must reach the diagnostic log"
-    assert "synthetic crash for the terminal funnel" in logged
+    assert "cli terminal boundary: unexpected exception type=ValueError" in logged
+    assert "Traceback" not in logged
+    assert "synthetic crash for the terminal funnel" not in logged

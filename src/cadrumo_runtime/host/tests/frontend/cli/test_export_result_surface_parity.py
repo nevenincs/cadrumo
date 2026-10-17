@@ -118,7 +118,13 @@ def _operation_result(
 
 def test_the_filing_file_result_states_what_the_command_line_prints(tmp_path: Path) -> None:
     """Revision, format, identity grade, evidence, completeness and fingerprint agree across surfaces."""
-    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
+    # Replay the May fixture at its own as-of date; wallet freshness remains
+    # enforced. This non-live tax clock does not change monotonic deadlines.
+    with (
+        frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
+        runtime_cli_profile(tmp_path=tmp_path),
+        bundled_indexed_authority().operation() as operation,
+    ):
         _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
         cli_out = tmp_path / "cli-303.txt"
         operation_out = tmp_path / "operation-303.txt"

@@ -7,8 +7,9 @@ from collections.abc import Mapping
 
 from .import_check_models import Authority, Finding, SourceModule
 from .import_dynamic_aliases import dynamic_aliases
-from .import_dynamic_targets import computed_attribute_targets, dynamic_target, metadata_target_set_targets
+from .import_dynamic_targets import dynamic_target, metadata_target_set_targets
 from .import_module_syntax import is_first_party, qualified_name
+from .import_record_provenance import RecordTargetProvenance
 from .import_static_checks import check_private
 from .import_target_evaluation import TargetEvaluationContext
 
@@ -17,7 +18,7 @@ def check_dynamic_imports(
     authority: Authority,
     modules: Mapping[str, SourceModule],
     findings: list[Finding],
-    closed_attribute_targets: frozenset[str],
+    record_provenance: RecordTargetProvenance,
 ) -> None:
     """Resolve finite dynamic imports and report unsupported targets."""
     known = frozenset((*modules, *authority.root_packages))
@@ -35,7 +36,7 @@ def check_dynamic_imports(
         context = TargetEvaluationContext(module.tree, module.name)
         for node in dynamic_calls:
             _check_dynamic_call(
-                node, module, context, authority, modules, findings, known, is_raw_import, closed_attribute_targets
+                node, module, context, authority, modules, findings, known, is_raw_import, record_provenance
             )
 
 
@@ -130,7 +131,7 @@ def _check_dynamic_call(
     findings: list[Finding],
     known: frozenset[str],
     is_raw_import: bool,
-    closed_attribute_targets: frozenset[str],
+    record_provenance: RecordTargetProvenance,
 ) -> None:
     """Check dynamic call."""
     target_node = (
@@ -152,7 +153,7 @@ def _check_dynamic_call(
         )
         return
     targets, computed_projection, exhaustive_census = _resolve_dynamic_call_targets(
-        module, target_node, node, context, authority, closed_attribute_targets
+        module, target_node, node, context, authority, record_provenance
     )
     if targets is None or not targets:
         findings.append(
@@ -214,7 +215,7 @@ def _resolve_dynamic_call_targets(
     node: ast.Call,
     context: TargetEvaluationContext,
     authority: Authority,
-    closed_attribute_targets: frozenset[str],
+    record_provenance: RecordTargetProvenance,
 ) -> tuple[frozenset[str] | None, bool, bool]:
     """Resolve dynamic call targets."""
     targets = context.values_for(target_node, node.lineno)
@@ -227,6 +228,6 @@ def _resolve_dynamic_call_targets(
         metadata_backed = targets is not None
     computed_projection = metadata_backed
     if targets is None or not targets:
-        targets = computed_attribute_targets(target_node, node.lineno, context, closed_attribute_targets)
+        targets = record_provenance.targets(module.name, target_node)
         computed_projection = targets is not None
     return targets, computed_projection, exhaustive_census

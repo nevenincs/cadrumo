@@ -747,12 +747,13 @@ def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not
         server = RetainedRuntimeTransportServer(
             endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
         )
-        client = None
+        clients: list[VerifiedConnection] = []
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
                 client = connect(endpoint)
+                clients.append(client)
                 admitted = login(client, profile, "password", PROFILE_INPUT.encode())
                 assert isinstance(admitted, ProfileStatus) and admitted.status.session_id is not None
                 session_id = admitted.status.session_id
@@ -794,7 +795,7 @@ def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not
                 assert isinstance(after_logout, AccessRefusal)
                 assert after_logout.code is AccessDenialCode.CONNECTION_MISMATCH
             finally:
-                if client is not None:
+                for client in clients:
                     client.close()
                 stop.set()
                 running.result(timeout=12)

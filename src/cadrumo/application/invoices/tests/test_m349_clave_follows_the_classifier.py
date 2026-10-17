@@ -27,13 +27,11 @@ from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ....domain.iva.classification import (
     CustomerTaxStatus,
-    InvoiceKind,
     IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
     TransactionKind,
     classify_iva,
 )
-from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

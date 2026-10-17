@@ -14,16 +14,12 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import typer
-from typer.core import TyperCommand
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.entrypoints.cli._profile_session_gate import _interactive_authentication
-from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
-from cadrumo_client.commands.secure_input import terminal_can_prompt_for_secrets
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
+
+from .fresh_process import run_fresh_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -39,10 +35,10 @@ def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> su
     # Profile-bound leaves submit to the runtime that serves the root, which
     # keychain-less too; profile-free leaves never reach it.
     with native_profile_view_server(storage_root, keychain_backend=_NO_KEYCHAIN["PYTHON_KEYRING_BACKEND"]):
-        return run_cadrumo_subprocess(
+        return run_fresh_cli(
             args,
             settings={
-                "cadrumo_local_storage_root": storage_root,
+                "cadrumo_local_storage_root": str(storage_root),
                 "cadrumo_secret_passphrase": _passphrase(),
                 "cadrumo_output_language": "en",
                 "cadrumo_llm_ollama_chat_url": _CLOSED_RUNTIME,
@@ -50,8 +46,7 @@ def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> su
             env_strip_prefixes=("AEAT_", "PYTEST_"),
             extra_env=_NO_KEYCHAIN,
             stdin_payload=stdin_payload,
-            timeout=None,
-        )
+        ).completed
 
 
 @pytest.fixture
@@ -122,19 +117,3 @@ def test_a_profile_bound_command_runs_when_the_passphrase_is_supplied(active_pro
     assert result.returncode == 0, _combined(result)
     assert "display_name\tkeychainless" in result.stdout
     assert _passphrase() not in _combined(result)
-
-
-@pytest.mark.parametrize(
-    "refusal",
-    [reason for reason in ProfileSessionRefusalReason if reason is not ProfileSessionRefusalReason.KEYRING_UNAVAILABLE],
-)
-def test_a_resumable_host_never_prompts_a_parsed_invocation(refusal: ProfileSessionRefusalReason) -> None:
-    context = typer.Context(TyperCommand("probe"))
-    assert _interactive_authentication(context, bucket_id="unused", refusal=refusal) is False
-
-
-def test_a_keychainless_refusal_without_a_console_does_not_prompt() -> None:
-    assert terminal_can_prompt_for_secrets() is False, "the test process must not own a console"
-    context = typer.Context(TyperCommand("probe"))
-    refusal = ProfileSessionRefusalReason.KEYRING_UNAVAILABLE
-    assert _interactive_authentication(context, bucket_id="unused", refusal=refusal) is False

@@ -25,22 +25,25 @@ encrypted profile and a native worker with synthetic OS/store observations:
 
 from __future__ import annotations
 
+import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
+from cadrumo.entrypoints.cli.tests.native_profile_cli_support import invoke_native_cli
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
-from cadrumo_runtime.host.tests.frontend.cli.modelo_cli import create_modelo_work_unit_via_cli
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_unbound_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -93,6 +96,11 @@ def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
         yield profile
 
 
+def _invoke(profile: NativeCliProfileFixture, args: Sequence[str]) -> Result:
+    """Supply fresh human proof for each actual native worker command."""
+    return invoke_native_cli(profile, *args, output_format=None)
+
+
 def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
     runtime_profile.register(
@@ -140,7 +148,7 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
 ) -> None:
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -152,8 +160,10 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
     assert add_payload["added"] == 1
     assert add_payload["total"] == 1
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -202,9 +212,11 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
     runtime_profile: NativeCliProfileFixture,
 ) -> None:
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
 
-    calc_result = invoke_cached_cli(
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -239,7 +251,7 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
     means this is not a silent gap, so the advisory must not fire."""
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -248,8 +260,10 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -278,7 +292,7 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
 def test_descendiente_add_rejects_a_malformed_flag(runtime_profile: NativeCliProfileFixture) -> None:
     _seed_natural_person_profile(runtime_profile)
 
-    result = invoke_cached_cli(
+    result = _invoke(runtime_profile,
         [
             "config", "profile", "descendiente", "add",
             "--descendiente", "DISCAPACIDAD=50",
@@ -291,7 +305,7 @@ def test_descendiente_add_rejects_a_malformed_flag(runtime_profile: NativeCliPro
 def test_descendiente_remove_rejects_an_out_of_range_index(runtime_profile: NativeCliProfileFixture) -> None:
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "config", "profile", "descendiente", "add",
             "--descendiente", "NACIMIENTO=2018-01-01",
@@ -299,7 +313,7 @@ def test_descendiente_remove_rejects_an_out_of_range_index(runtime_profile: Nati
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    remove_result = invoke_cached_cli(["config", "profile", "descendiente", "remove", "5"])
+    remove_result = _invoke(runtime_profile, ["config", "profile", "descendiente", "remove", "5"])
     assert remove_result.exit_code != 0, remove_result.output
 
 
@@ -316,7 +330,7 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -325,13 +339,15 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    remove_result = invoke_cached_cli(["--format", "json", "config", "profile", "descendiente", "remove", "0"])
+    remove_result = _invoke(runtime_profile, ["--format", "json", "config", "profile", "descendiente", "remove", "0"])
     assert remove_result.exit_code == 0, remove_result.output
     remove_payload = _payload(remove_result.output)
     assert remove_payload["total"] == 0
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -390,7 +406,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -399,8 +415,10 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -437,7 +455,7 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -446,8 +464,10 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -503,7 +523,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -512,8 +532,10 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -554,7 +576,7 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -564,8 +586,10 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -611,7 +635,7 @@ def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -620,8 +644,10 @@ def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -650,7 +676,7 @@ def test_an_overlapping_declaration_still_reaches_its_shared_months(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -659,8 +685,10 @@ def test_an_overlapping_declaration_still_reaches_its_shared_months(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -684,7 +712,7 @@ def test_the_flag_refuses_both_spend_shapes_for_one_child(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    result = invoke_cached_cli(
+    result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -718,7 +746,7 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -730,8 +758,10 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -767,7 +797,7 @@ def test_the_population_term_binds_the_0613_cap(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = invoke_cached_cli(
+    add_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -776,8 +806,10 @@ def test_the_population_term_binds_the_0613_cap(
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
-    calc_result = invoke_cached_cli(
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+    )
+    calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -846,7 +878,7 @@ def test_a_record_level_refusal_is_translated_in_every_catalogue(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    result = invoke_cached_cli(
+    result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -886,7 +918,7 @@ def test_a_record_level_refusal_does_not_echo_the_operators_record(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    result = invoke_cached_cli(
+    result = _invoke(runtime_profile,
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
@@ -909,14 +941,16 @@ def test_the_parser_refusal_family_still_translates(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    result = invoke_cached_cli(
+    result = invoke_unbound_cli(
         [
+            "--profile", _PROFILE_LABEL, "--profile-secrets-stdin",
             "--format", "json",
             "config", "profile", "descendiente", "add",
             "--descendiente", "NACIMIENTO=2015-01-01,DISCAPACIDAD=50",
         ],
+        input=json.dumps({"profile_passphrase": runtime_profile.passphrase}),
     )  # fmt: skip
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-    assert "DISCAPACIDAD" in result.output
+    assert "DISCAPACIDAD" in result.output, result.output

@@ -85,28 +85,36 @@ def test_ledger_ratios_unset_refuses_when_no_override_exists() -> None:
 
 
 @pytest.mark.usefixtures("authority_operation")
-def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
-    """The ratios transport payloads reuse the canonical closed sets.
-
-    ``category`` is a :class:`SpendingCategory` and ``proportionality_kind``
-    a :class:`ProportionalityKind`. Before these fields were typed from the
-    canonical enums the machine-facing payload accepted any string, so an
-    unknown category or rule kind crossed the CLI boundary intact.
-    """
+def test_ratio_keys_are_grounded_before_the_frontend_projects_bounded_worker_tokens() -> None:
+    """The worker validates meaning; frontend rendering preserves its pinned tokens."""
     from pydantic import ValidationError
 
-    from ....domain.categories.errors import CategoryValidationError
-    from .._ledger_ratios_payloads import RatiosEligibleRowPayload, RatiosRowPayload
+    from ....domain.calculations.registry.errors import RegistryValidationError
+    from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
+    from ....domain.categories.spending_category_catalogue import require_spending_category
+    from ..ledger_ratios_results import RatiosEligibleRowPayload, RatiosRowPayload
 
-    with pytest.raises(ValidationError):
-        RatiosRowPayload(category="unknown-category", ratio="0.5")
+    with pytest.raises(RegistryValidationError, match="is not declared"):
+        require_spending_category("unknown-category")
 
-    with pytest.raises(CategoryValidationError):
-        RatiosEligibleRowPayload(
-            category=SpendingCategory.from_registry("suministros_home_office_luz"),
-            proportionality_kind="bogus",
+    with pytest.raises(RegistryValidationError, match="is not declared"):
+        require_proportionality_kind("bogus")
+
+    for category in ("", "x" * 97):
+        with pytest.raises(ValidationError):
+            RatiosRowPayload(category=category, ratio="0.5")
+    for kind in ("", "x" * 97):
+        with pytest.raises(ValidationError):
+            RatiosEligibleRowPayload(category="worker-category", proportionality_kind=kind, override_present=False)
+
+    with outside_governed_fact_validation():
+        projected = RatiosEligibleRowPayload(
+            category="worker-pinned-category",
+            proportionality_kind="worker-pinned-kind",
             override_present=False,
         )
+        assert projected.model_dump(mode="json")["category"] == "worker-pinned-category"
+        assert projected.model_dump(mode="json")["proportionality_kind"] == "worker-pinned-kind"
 
     # A canonical member is accepted and still serialises to its plain string.
     row = RatiosRowPayload(category=SpendingCategory.from_registry("suministros_home_office_luz"), ratio="0.5")
@@ -128,7 +136,7 @@ def test_ratios_payload_ratio_is_bound_by_the_domain_authority() -> None:
     """
     from pydantic import ValidationError
 
-    from .._ledger_ratios_payloads import RatiosRowPayload
+    from ..ledger_ratios_results import RatiosRowPayload
 
     for bad in ("-1", "2", "1.5", "not-a-decimal"):
         with pytest.raises(ValidationError):
@@ -148,7 +156,7 @@ def test_ratios_validate_finding_requires_kind_and_detail() -> None:
     """An empty finding is indistinguishable from no finding, so it is refused."""
     from pydantic import ValidationError
 
-    from .._ledger_ratios_payloads import RatiosValidateFindingPayload
+    from ..ledger_ratios_results import RatiosValidateFindingPayload
 
     with pytest.raises(ValidationError):
         RatiosValidateFindingPayload(

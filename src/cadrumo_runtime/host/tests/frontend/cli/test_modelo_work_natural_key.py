@@ -17,10 +17,10 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import capture_m111_invoice_withholding
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
-from ._modelo_work_ux_support import _capture_m111_invoice_withholding
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -129,7 +129,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
-    _capture_m111_invoice_withholding()
+    capture_m111_invoice_withholding()
 
     status = _invoke(
         [
@@ -173,9 +173,10 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     # A granted verification has no recovery action or speculative next-step
     # notice: export requires additional material input that this verifier does
     # not own.
-    assert _envelope_status(verified.output) == "success", verified.output
+    assert _envelope_status(verified.output) == "warning", verified.output
     granted_notices = _notices(verified.output)
-    assert granted_notices == [], verified.output
+    assert [notice["code"] for notice in granted_notices] == ["config.login.session_not_persisted"], verified.output
+    assert granted_notices[0]["action"] is None
 
     out = tmp_path / "modelo-111.txt"
     exported = _invoke(
@@ -214,7 +215,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    _capture_m111_invoice_withholding()
+    capture_m111_invoice_withholding()
     calculated = _invoke(
         [
             "--format", "json",
@@ -497,7 +498,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
-    _capture_m111_invoice_withholding()
+    capture_m111_invoice_withholding()
 
     calculated = _invoke(
         [

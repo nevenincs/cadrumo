@@ -961,7 +961,7 @@ def test_inline_span_detector_catches_line_wrapped_commands() -> None:
     with_fence = (
         "Bare `aeat config login` here.\n\n"
         "```bash\naeat app modelo export --modelo 130 --output ./x.boe\n```\n\n"
-        "A single flag `aeat config auth configure --file` there.\n"
+        "A single flag `aeat config login --help` there.\n"
     )
     assert _inline_aeat_command_spans(with_fence) == []
 

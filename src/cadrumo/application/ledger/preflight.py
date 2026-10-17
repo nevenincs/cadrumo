@@ -12,7 +12,7 @@ See Also:
     :func:`~cadrumo.application.state_projection.build_operator_state_projection`
         Modelo readiness consumer that embeds blocking ledger issues in the
         operator state projection.
-    :mod:`cadrumo.entrypoints.cli._ledger_read_cli`
+    :mod:`cadrumo.entrypoints.cli.ledger_read_commands`
         CLI read surface that reports these preflight issues without mutating
         ledger state.
     :mod:`cadrumo.application.aggregation`

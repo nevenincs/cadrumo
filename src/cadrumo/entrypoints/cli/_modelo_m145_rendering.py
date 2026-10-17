@@ -25,13 +25,13 @@ from typing import TYPE_CHECKING, Literal
 
 import typer
 
-from ._modelo_payloads_m145 import (
+from .common import emit_envelope
+from .modelo_results_m145 import (
     M145CommunicationExportResultPayload,
     M145CommunicationRecordPayload,
     M145CommunicationRecordResult,
     M145CommunicationValidationResultPayload,
 )
-from .common import emit_envelope
 
 if TYPE_CHECKING:
     from ...application.modelo.m145_communication_records import (

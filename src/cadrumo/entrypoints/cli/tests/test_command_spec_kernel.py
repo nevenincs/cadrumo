@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import sys
 
 import pytest
 
@@ -16,7 +17,10 @@ from cadrumo_client.commands.shared_contracts import (
     ValueContract,
 )
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.target import resolve_target_attribute
 from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+
+from ....core.errors.hierarchy import InternalInvariantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -29,6 +33,13 @@ _STATE_FREE = ExecutionPolicySpec(
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
 _NO_SCHEMA = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 _OTHER_COMMAND = "other"
+
+
+def _resolve_kernel_family(target: DeferredTarget) -> object:
+    """Resolve these unit declarations from their already loaded fixture owner."""
+    if target.module != __name__:
+        raise InternalInvariantError("kernel fixture family belongs to a different module")
+    return resolve_target_attribute(sys.modules[__name__], target)
 
 
 def _root() -> CommandSpec:
@@ -101,7 +112,7 @@ def _leaf() -> CommandSpec:
 
 
 def test_kernel_is_immutable_and_derives_paths_from_edges() -> None:
-    graph = CommandSpecGraph((_leaf(), _root(), _group()))
+    graph = CommandSpecGraph((_leaf(), _root(), _group()), resolver=_resolve_kernel_family)
 
     assert tuple(node.path for node in graph.nodes()) == (
         ("aeat",),
@@ -139,7 +150,7 @@ def test_value_contract_refuses_competing_choice_authority(field: str) -> None:
 )
 def test_graph_rejects_missing_duplicate_and_invalid_edges(specs: tuple[CommandSpec, ...], message: str) -> None:
     with pytest.raises(ValueError, match=message):
-        CommandSpecGraph(specs)
+        CommandSpecGraph(specs, resolver=_resolve_kernel_family)
 
 
 def test_spec_rejects_unexecutable_leaf_and_duplicate_option_tokens() -> None:
@@ -175,7 +186,7 @@ def test_target_and_schema_identities_are_production_authored() -> None:
 
 
 def test_graph_indexes_derived_paths_and_unique_schema_identities() -> None:
-    graph = CommandSpecGraph((_leaf(), _root(), _group()))
+    graph = CommandSpecGraph((_leaf(), _root(), _group()), resolver=_resolve_kernel_family)
 
     assert graph.resolve_path(("aeat", "config", "list")) == _leaf()
     assert graph.by_schema_identity() == {"config.profile.list": _leaf()}
@@ -188,7 +199,7 @@ def test_graph_indexes_derived_paths_and_unique_schema_identities() -> None:
         token=_OTHER_COMMAND,
         result_schema=dataclasses.replace(_leaf().result_schema),
     )
-    duplicate_graph = CommandSpecGraph((_root(), _group(), _leaf(), duplicate_schema))
+    duplicate_graph = CommandSpecGraph((_root(), _group(), _leaf(), duplicate_schema), resolver=_resolve_kernel_family)
     with pytest.raises(ValueError, match="schema identities must be unique"):
         duplicate_graph.by_schema_identity()
 
@@ -249,25 +260,46 @@ def test_a_family_loads_only_when_its_mount_is_reached() -> None:
     graph = CommandSpecGraph(
         (_root(), _group()),
         (_family("FAMILY_LEAVES"), _family("ABSENT_FAMILY", mount_key="profile_list")),
+        resolver=_resolve_kernel_family,
     )
 
     assert graph.root() == _root()
     assert graph.children("config") == (_leaf(),)
     assert graph.resolve_path(("aeat", "config", "list")) == _leaf()
     assert graph.spec("profile_list") == _leaf()
-    with pytest.raises(AttributeError, match="ABSENT_FAMILY"):
+    with pytest.raises(InternalInvariantError, match="ABSENT_FAMILY") as refused:
         graph.by_key()
+    assert isinstance(refused.value.__cause__, AttributeError)
+
+
+def test_family_loading_uses_only_its_supplied_owner_resolver() -> None:
+    requested: list[DeferredTarget] = []
+    target = DeferredTarget("isolated.command_declarations", "FAMILY")
+
+    def resolve(declared: DeferredTarget) -> object:
+        requested.append(declared)
+        assert declared == target
+        return (_leaf(),)
+
+    graph = CommandSpecGraph((_root(), _group()), (CommandSpecFamily("config", target),), resolver=resolve)
+    assert graph.root() == _root()
+    assert requested == []
+    assert graph.children("config") == (_leaf(),)
+    assert graph.children("config") == (_leaf(),)
+    assert requested == [target]
 
 
 def test_whole_graph_queries_load_every_family_in_declaration_order() -> None:
-    graph = CommandSpecGraph((_root(), _group()), (_family("FAMILY_LEAVES"),))
+    graph = CommandSpecGraph((_root(), _group()), (_family("FAMILY_LEAVES"),), resolver=_resolve_kernel_family)
 
     assert graph.specs == (_root(), _group(), _leaf())
     assert tuple(node.path for node in graph.nodes())[-1] == ("aeat", "config", "list")
 
 
 def test_a_loaded_family_is_validated_with_the_graph_it_joins() -> None:
-    graph = CommandSpecGraph((_root(), _group()), (_family("DUPLICATE_FAMILY_LEAVES"),))
+    graph = CommandSpecGraph(
+        (_root(), _group()), (_family("DUPLICATE_FAMILY_LEAVES"),), resolver=_resolve_kernel_family
+    )
 
     with pytest.raises(ValueError, match="operator paths must be unique"):
         graph.children("config")
@@ -276,7 +308,9 @@ def test_a_loaded_family_is_validated_with_the_graph_it_joins() -> None:
 
 
 def test_a_family_mounted_under_an_undeclared_node_fails_the_full_load() -> None:
-    graph = CommandSpecGraph((_root(), _group()), (_family("FAMILY_LEAVES", mount_key="missing"),))
+    graph = CommandSpecGraph(
+        (_root(), _group()), (_family("FAMILY_LEAVES", mount_key="missing"),), resolver=_resolve_kernel_family
+    )
 
     assert graph.children("config") == ()
     with pytest.raises(ValueError, match="mount at unknown nodes"):
@@ -287,6 +321,7 @@ def test_a_node_path_comes_from_its_loaded_ancestors_alone() -> None:
     graph = CommandSpecGraph(
         (_root(), _group()),
         (_family("FAMILY_LEAVES"), _family("ABSENT_FAMILY", mount_key="profile_list")),
+        resolver=_resolve_kernel_family,
     )
 
     graph.children("config")

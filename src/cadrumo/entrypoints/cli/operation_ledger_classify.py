@@ -37,6 +37,22 @@ from .ledger_classify_correlation import (
 from .ledger_classify_inputs import classification_m210_selection, classification_wire_value
 
 
+def _validate_category_input(ctx: typer.Context, patch: ManualLedgerTransactionPatch) -> None:
+    """Explain unknown public category tokens before submitting a private edit."""
+    if patch.category_id is None or not patch.category_id.strip():
+        return
+    from ...application.reference_catalogue import read_ledger_categories
+    from ...core.i18n.render import tr
+    from .common import bad
+    from .state_projection_support import authority_operation
+
+    authority_operation(ctx)
+    categories = read_ledger_categories().category_ids
+    category = patch.category_id.strip()
+    if category not in categories:
+        raise bad(tr("cli.ledger.errors.unknown_category", category=category, example=categories[0]))
+
+
 def run_ledger_classify(
     ctx: typer.Context,
     *,
@@ -54,6 +70,7 @@ def run_ledger_classify(
     reaffirm: bool,
 ) -> LedgerClassifyOperationResult:
     """Submit one exact-profile classify and correlate its result and effect."""
+    _validate_category_input(ctx, patch)
     client = bound_profile_client(ctx)
     patch_fields = cast(tuple[LedgerClassifyPatchField, ...], tuple(sorted(patch.model_fields_set)))
     wire_patch = LedgerClassifyPatch.model_validate(

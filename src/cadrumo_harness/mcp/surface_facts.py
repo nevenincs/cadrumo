@@ -172,6 +172,7 @@ _LOCAL_WRITES: Final = (
     "auth.certificate.source.register",
     "auth.certificate.source.remove",
     "auth.certificate.source.select",
+    "auth.credential.save",
     "auth.diagnostics.phone-state-report",
     "auth.profile.passphrase-rotate",
     "auth.provider.configure",

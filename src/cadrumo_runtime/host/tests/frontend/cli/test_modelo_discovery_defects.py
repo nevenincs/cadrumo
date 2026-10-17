@@ -28,13 +28,13 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    create_calculable_modelo_work_unit as _create_111_work_unit,
+)
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m303_work_unit
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
-from ._m303_ordinary_cli_support import joint_return_options
-from ._modelo_work_ux_support import (
-    _create_calculable_work_unit as _create_111_work_unit,
-)
-from ._modelo_work_ux_support import _create_m303_work_unit
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
@@ -92,7 +92,7 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference(
     """``--casilla`` requires canonical ``casilla.id`` values."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    work_unit_id = _create_m303_work_unit()
+    work_unit_id = create_m303_work_unit()
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -116,7 +116,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
-    work_unit_id = _create_m303_work_unit()
+    work_unit_id = create_m303_work_unit()
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,

@@ -62,9 +62,8 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
-from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

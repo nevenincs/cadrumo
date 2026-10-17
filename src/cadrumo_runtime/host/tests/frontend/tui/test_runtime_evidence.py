@@ -59,7 +59,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.evidence_draft import draft_lines

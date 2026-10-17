@@ -87,19 +87,19 @@ _SITUACION_FAMILIAR_METAVAR: Final = (
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_archive_cli": "._archive_cli",
+    "_archive_cli": ".archive_commands",
     "archive_reconcile": ".archive_reconcile",
-    "_bucket_history": "._bucket_history",
-    "_capabilities_cli": "._capabilities_cli",
-    "_censo_transport": "._censo_transport",
-    "_complete_setup_cli": "._complete_setup_cli",
+    "_bucket_history": ".profile_history_commands",
+    "_capabilities_cli": ".capability_commands",
+    "_censo_transport": ".censo_commands",
+    "_complete_setup_cli": ".profile_setup_commands",
     "_descendiente": ".descendiente",
     "_google": ".google",
-    "_manager_dispatch": "._manager_dispatch",
+    "_manager_dispatch": ".profile_commands",
     "_plantilla_media": ".plantilla_media",
-    "_profile_delete": "._profile_delete",
-    "_profile_inspect": "._profile_inspect",
-    "_profile_repeatable_row": "._profile_repeatable_row",
+    "_profile_delete": ".profile_delete_commands",
+    "_profile_inspect": ".profile_inspect_commands",
+    "_profile_repeatable_row": ".profile_row_commands",
     "restore_cli": ".restore_cli",
 }
 
@@ -250,8 +250,8 @@ def _plantilla_media_leaf(
 
 
 _PAYLOADS = "cadrumo_client.commands.payloads"
-_PAYLOADS_ARCHIVE_RECONCILE = "._archive_reconcile_payloads"
-_PAYLOADS_ARCHIVE_PUSH = "._archive_push_payloads"
+_PAYLOADS_ARCHIVE_RECONCILE = ".archive_reconcile_results"
+_PAYLOADS_ARCHIVE_PUSH = ".archive_push_results"
 _CONFIG = "..config"
 #: Both wizard result schemas are defined in this module. The package
 #: namespace above it is inert and re-exports nothing, so naming the package
@@ -683,7 +683,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.censo.import_help",
         "_censo_transport",
         "censo_import",
-        f"{_CONFIG}._censo_payloads",
+        f"{_CONFIG}.censo_results",
         "CensoFileIngestResult",
         ENCRYPTED_WRITE,
         (
@@ -708,23 +708,23 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.censo.pull_help",
         "_censo_transport",
         "censo_pull",
-        f"{_CONFIG}._censo_payloads",
+        f"{_CONFIG}.censo_results",
         "CensoPullResult",
         LIVE_PROFILE_WRITE,
         (
-            _option(
-                "configure_auth",
-                ("--configure-auth",),
-                FLAG_VALUE,
-                "cli.censo_auth.configure_help",
-                default=False,
-                flag=True,
-            ),
             _option(
                 "apply",
                 ("--apply",),
                 FLAG_VALUE,
                 "cli.config.profile.censo.pull_apply_help",
+                default=False,
+                flag=True,
+            ),
+            _option(
+                "configure_auth",
+                ("--configure-auth",),
+                FLAG_VALUE,
+                "cli.censo_auth.configure_help",
                 default=False,
                 flag=True,
             ),
@@ -737,7 +737,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.censo.show_help",
         "_censo_transport",
         "censo_show",
-        f"{_CONFIG}._censo_payloads",
+        f"{_CONFIG}.censo_results",
         "CensoStoredResult",
         ENCRYPTED_READ,
         (),
@@ -749,7 +749,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.complete_setup.help",
         "_complete_setup_cli",
         "profile_complete_setup",
-        f"{_CONFIG}._complete_setup_payloads",
+        f"{_CONFIG}.profile_setup_results",
         "ProfileCompleteSetupResult",
         ENCRYPTED_WRITE,
     ),
@@ -912,7 +912,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.history_help",
         "_bucket_history",
         "profile_history",
-        ".._config_bucket_history_payloads",
+        "..profile_history_results",
         "BucketHistoryResult",
         ENCRYPTED_READ,
         (

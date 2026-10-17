@@ -10,7 +10,6 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
 from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
@@ -83,10 +82,9 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     )  # fmt: skip
     assert calculation.exit_code == 0, calculation.output
 
-    with native_profile_view_server(tmp_path / "cadrumo-storage"):
-        profile_edit = invoke_protected_profile(
-            "sa-drift", "edit", "--quiet", "--activity-start-date", "2026-01-01", json_output=True
-        )
+    profile_edit = invoke_protected_profile(
+        "sa-drift", "edit", "--quiet", "--activity-start-date", "2026-01-01", json_output=True
+    )
     assert profile_edit.exit_code == 0, profile_edit.output
 
     caplog.set_level(logging.WARNING, logger="cadrumo.application.workflow.engine")

@@ -15,8 +15,8 @@ from cadrumo.application.live.remote_state_models import (
 )
 from cadrumo.core.period import Period
 
-from .._app_live import _iva_remote_state_capture_lines, _live_iva_outcome_label
 from .._app_live_auth_preflight import _live_auth_preflight_lines
+from ..app_live_commands import _iva_remote_state_capture_lines, _live_iva_outcome_label
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

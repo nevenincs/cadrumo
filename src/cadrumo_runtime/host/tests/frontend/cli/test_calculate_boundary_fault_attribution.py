@@ -53,7 +53,6 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.cli import _modelo_cli_support
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import semantic_cli_output
@@ -71,7 +70,7 @@ pytestmark = [
 #: actor is resolved FROM the profile label, so this is the shape that makes the
 #: application refuse its own record on a command line carrying no ``--by`` at
 #: all.
-_OVERLONG_PROFILE_LABEL = "Calculate boundary probe profile " + ("x" * 80)
+_OVERLONG_PROFILE_LABEL = "x" * (BUCKET_ACTOR_LABEL_MAX_LENGTH + 1)
 
 _SHORT_PROFILE_LABEL = "Calculate boundary probe profile"
 
@@ -149,6 +148,8 @@ def _legal_entity_session(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
     invoke_cli: Callable[..., Result],
+    *,
+    profile_label: str = _SHORT_PROFILE_LABEL,
 ) -> Generator[NativeApiCliSession[None]]:
     """Enrol the legal-entity (IS) profile the Modelo 200 calculation needs, served by its worker."""
 
@@ -167,7 +168,7 @@ def _legal_entity_session(
         tmp_path,
         scope_for_destination=_scope,
         prepare_profile=prepare,
-        profile_label=_SHORT_PROFILE_LABEL,
+        profile_label=profile_label,
         invoke_cli=invoke_cli,
     ) as session:
         yield session
@@ -203,6 +204,7 @@ def _create_work_unit(session: NativeApiCliSession[None]) -> str:
     created = session.invoke_password(
         "app", "modelo", "work", "create",
         "--modelo", "200", "--year", "2024", "--period", "0A", "--revision", "2024",
+        "--by", _SHORT_PROFILE_LABEL,
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
@@ -267,25 +269,24 @@ def test_calculate_accepts_an_actor_at_the_declared_bound(
 def test_calculate_reports_an_application_built_record_as_an_internal_defect(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
     run_cadrumo_cli: Callable[..., Result],
 ) -> None:
     """A record the application built from its own state is not the operator's fault.
 
     The command line carries no ``--by``. After creating the work unit with a
-    valid short label, inject the legal-but-long default actor that an active
-    profile can supply. The bucket event's actor permits only 64 characters,
-    so the application refuses its own record with nothing wrong in the
+    valid explicit actor, use the legal-but-long label of the actual active
+    profile as the default actor. The calculation request bounds the audit actor,
+    so the application refuses its own request with nothing wrong in the
     calculation invocation.
 
     Before the fix this reported ``REFUSED_CLI_VALIDATION_BOUNDARY`` — "check the
     command's arguments" — against an argument set that is entirely correct, with
     the failing contract reaching only the error log.
     """
-    with _legal_entity_session(tmp_path, authority_operation, run_cadrumo_cli) as session:
+    with _legal_entity_session(
+        tmp_path, authority_operation, run_cadrumo_cli, profile_label=_OVERLONG_PROFILE_LABEL
+    ) as session:
         work_unit_id = _create_work_unit(session)
-        # The CLI resolves the default actor before submitting, so the long label travels to the worker.
-        monkeypatch.setattr(_modelo_cli_support, "resolve_default_actor", lambda: _OVERLONG_PROFILE_LABEL)
         result = session.invoke_password(*_calculate_args(work_unit_id))
 
     assert result.exit_code != 0, result.output
@@ -298,7 +299,7 @@ def test_calculate_reports_an_application_built_record_as_an_internal_defect(
     # The real cause reaches the operator rather than only the error log.
     context = error["context"]
     assert context is not None, error
-    assert context["failing_record"] == "BucketEvent", context
+    assert context["failing_record"] == "ModeloWorkCalculateRequest", context
     assert "String should have at most" in context["violations"], context
     assert str(BUCKET_ACTOR_LABEL_MAX_LENGTH) in context["violations"], context
 
@@ -306,7 +307,6 @@ def test_calculate_reports_an_application_built_record_as_an_internal_defect(
 def test_internal_fault_context_carries_no_taxpayer_value(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
     run_cadrumo_cli: Callable[..., Result],
 ) -> None:
     """The named fault must not become an exfiltration path for the failing value.
@@ -316,10 +316,10 @@ def test_internal_fault_context_carries_no_taxpayer_value(
     reportable; the input is not, so the projection carries the pydantic ``loc``
     and ``msg`` and never ``input``.
     """
-    with _legal_entity_session(tmp_path, authority_operation, run_cadrumo_cli) as session:
+    with _legal_entity_session(
+        tmp_path, authority_operation, run_cadrumo_cli, profile_label=_OVERLONG_PROFILE_LABEL
+    ) as session:
         work_unit_id = _create_work_unit(session)
-        # The CLI resolves the default actor before submitting, so the long label travels to the worker.
-        monkeypatch.setattr(_modelo_cli_support, "resolve_default_actor", lambda: _OVERLONG_PROFILE_LABEL)
         result = session.invoke_password(*_calculate_args(work_unit_id))
 
     assert result.exit_code != 0, result.output

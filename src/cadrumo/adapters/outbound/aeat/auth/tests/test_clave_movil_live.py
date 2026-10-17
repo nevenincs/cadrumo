@@ -22,7 +22,7 @@ from ...browser.factory import default_browser_session_factory
 from .. import session_store as session_store
 from ..clave_movil import ClaveMovilAuthProvider
 
-pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("authority_operation")]
 
 __all__ = ["live_clave_movil_profile"]
 

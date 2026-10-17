@@ -6,10 +6,10 @@ import pytest
 import typer.core
 from typer.testing import CliRunner
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import SchemaState
 from cadrumo_client.commands.stdio import disable_rich_cli_rendering
-from cadrumo_client.commands.target import resolve_deferred_target
 
 from ....core.config import override_settings
 from .._app_diagnostics_command_specs import DIAGNOSTICS_COMMAND_SPECS
@@ -26,7 +26,7 @@ def _production_cli_help_mode(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _graph() -> CommandSpecGraph:
-    return CommandSpecGraph((*ROOT_COMMAND_SPECS, *DIAGNOSTICS_COMMAND_SPECS))
+    return CommandSpecGraph((*ROOT_COMMAND_SPECS, *DIAGNOSTICS_COMMAND_SPECS), resolver=resolve_deferred_target)
 
 
 def _plain_help_text(output: str) -> str:

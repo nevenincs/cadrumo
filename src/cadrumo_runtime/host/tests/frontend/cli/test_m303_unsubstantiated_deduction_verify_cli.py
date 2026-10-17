@@ -29,9 +29,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_notices, unwrap_schema_envelope
 
-from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 from .test_m303_zero_cuota_and_investment_inputs_cli import (

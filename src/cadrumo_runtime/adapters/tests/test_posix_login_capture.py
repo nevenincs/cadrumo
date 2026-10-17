@@ -385,10 +385,10 @@ def test_absent_python_constant_only_uses_verified_generic_abis(machine: str, mo
     monkeypatch.setattr(posix_channel, "platform", SimpleNamespace(machine=lambda: machine))
     if machine == "sparc64":
         with pytest.raises(RefusalError) as refused:
-            posix_channel._linux_peer_pidfd_option()
+            posix_channel.linux_peer_pidfd_socket_option()
         assert refused.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
     else:
-        assert posix_channel._linux_peer_pidfd_option() == 77
+        assert posix_channel.linux_peer_pidfd_socket_option() == 77
 
 
 @pytest.mark.unit
@@ -397,7 +397,7 @@ def test_exposed_socket_constant_supports_other_kernel_abis(monkeypatch: pytest.
     monkeypatch.setattr(login, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(posix_channel, "socket", SimpleNamespace(SO_PEERPIDFD=86))
     monkeypatch.setattr(posix_channel, "platform", SimpleNamespace(machine=lambda: "sparc64"))
-    assert posix_channel._linux_peer_pidfd_option() == 86
+    assert posix_channel.linux_peer_pidfd_socket_option() == 86
 
 
 @pytest.mark.unit
@@ -463,7 +463,7 @@ def _native_peer_pidfd(connected: socket.socket) -> int:
     # Distinguish a missing kernel option before exercising the owning getter;
     # its other failures must remain test failures, not capability skips.
     try:
-        probe = connected.getsockopt(socket.SOL_SOCKET, posix_channel._linux_peer_pidfd_option())
+        probe = connected.getsockopt(socket.SOL_SOCKET, posix_channel.linux_peer_pidfd_socket_option())
     except OSError as error:
         if error.errno == errno.ENOPROTOOPT:
             pytest.skip("native kernel lacks SO_PEERPIDFD; kernel acceptance unavailable")

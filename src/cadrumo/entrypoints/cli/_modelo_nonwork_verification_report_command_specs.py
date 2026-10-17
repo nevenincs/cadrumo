@@ -39,10 +39,12 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "verification_report_list", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_records_commands", "verification_report_list", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "VerificationReportListResult", __package__),
+            DeferredTarget(".modelo_results", "VerificationReportListResult", __package__),
             identity="modelo.verification_report.list",
         ),
     ),
@@ -63,10 +65,12 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "verification_report_show", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_records_commands", "verification_report_show", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "VerificationReportShowResult", __package__),
+            DeferredTarget(".modelo_results", "VerificationReportShowResult", __package__),
             identity="modelo.verification_report.view",
         ),
     ),

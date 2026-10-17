@@ -17,9 +17,8 @@ from ._component_fact_projection import (
     ordered_component_rows,
     resolve_component_catalogue_entries,
 )
-from .classification import InvoiceKind
 from .errors import IvaValidationError
-from .schema import IvaCategory
+from .schema import InvoiceKind, IvaCategory
 
 if TYPE_CHECKING:
     from ..calculations.registry.governed_fact_scope import GovernedFactSource

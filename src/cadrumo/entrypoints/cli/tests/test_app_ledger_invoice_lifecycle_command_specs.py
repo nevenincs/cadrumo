@@ -142,7 +142,7 @@ _EXPECTED_PARAMETERS = {
     "app_ledger_invoice_add": (
         _option(
             "kind",
-            "cadrumo.domain.iva.classification:InvoiceKind",
+            "cadrumo.domain.iva.schema:InvoiceKind",
             None,
             "cli.app.ledger.invoice.kind_help",
             default_kind="required",
@@ -245,7 +245,7 @@ _EXPECTED_PARAMETERS = {
     "app_ledger_invoice_wizard": (
         _option(
             "kind",
-            "cadrumo.domain.iva.classification:InvoiceKind",
+            "cadrumo.domain.iva.schema:InvoiceKind",
             None,
             "cli.app.ledger.invoice.kind_help",
             default_kind="required",

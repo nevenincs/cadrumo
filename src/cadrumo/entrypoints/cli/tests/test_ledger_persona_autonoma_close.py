@@ -28,7 +28,7 @@ import pytest
 from click.testing import Result
 
 from ....tests.inventory import FIXTURES_DIR
-from ...tests.ledger_corpus_support import _match, _oracle_rules
+from ...tests.ledger_corpus_support import load_corpus_oracle_rules, match_corpus_rule
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 from .profile_world_fixtures import recorded_fx_isolated_backend
@@ -70,7 +70,7 @@ def _is_first_quarter(row: dict[str, object], exercise: int) -> bool:
 
 def test_autonoma_closes_the_first_quarter_end_to_end(tmp_path: Path) -> None:
     """The full first quarterly close as an operator would run it."""
-    rules = _oracle_rules()
+    rules = load_corpus_oracle_rules()
 
     # --- Import every bank export -----------------------------------------
     # One CSV is downloaded from each of four banks, imported in turn.
@@ -106,7 +106,7 @@ def test_autonoma_closes_the_first_quarter_end_to_end(tmp_path: Path) -> None:
         tx_id = row.get("transaction_id")
         assert isinstance(desc, str)
         assert isinstance(tx_id, str)
-        rule = _match(desc, rules)
+        rule = match_corpus_rule(desc, rules)
         if rule is None:
             continue
         if rule.get("classification") == "MIXED":

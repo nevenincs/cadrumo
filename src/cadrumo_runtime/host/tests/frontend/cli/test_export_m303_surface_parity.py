@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
@@ -85,7 +87,13 @@ def _export_through_the_operation(
 
 def test_a_modelo_303_revision_exports_identical_bytes_on_both_surfaces(tmp_path: Path) -> None:
     """Both surfaces clear the election precondition and write the same DP30300 envelope."""
-    with runtime_cli_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
+    # Replay the May fixture at its own as-of date; wallet freshness remains
+    # enforced. This non-live tax clock does not change monotonic deadlines.
+    with (
+        frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
+        runtime_cli_profile(tmp_path=tmp_path),
+        bundled_indexed_authority().operation() as operation,
+    ):
         _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
         cli_out = tmp_path / "cli-303.txt"
         operation_out = tmp_path / "operation-303.txt"

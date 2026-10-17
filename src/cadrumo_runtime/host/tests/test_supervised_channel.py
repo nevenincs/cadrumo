@@ -105,9 +105,13 @@ class _Pipes:
         self.close("supervisor_writes")
         if gone is not None:
             assert gone.wait(5)
+        # Windows holds the reader's CRT descriptor lock during os.read.
+        # Closing that descriptor first deadlocks if a failed receive left a
+        # read pending. End the producer so the reader reaches EOF, then join it.
+        self.close("announcements")
+        self._reader.shutdown(wait=True, cancel_futures=True)
         for name in tuple(self._open):
             self.close(name)
-        self._reader.shutdown(wait=False)
 
 
 @contextmanager

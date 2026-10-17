@@ -20,9 +20,9 @@ from ....application.live.iva_wallet_capture_operation import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from .. import _app_live as handler
+from .. import app_live_commands as handler
 from .. import operation_iva_wallet_capture as bridge
-from .._app_live_iva_wallet_payloads import IvaWalletPullResult
+from ..app_live_iva_wallet_results import IvaWalletPullResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
@@ -254,7 +254,7 @@ def test_native_cli_lists_and_resolves_exact_and_unique_invoice_prefixes(
             assert ambiguous.exit_code == 2
             error = require_error_document(ambiguous.output)["error"]
             context = cast(dict[str, object], error["context"])
-            assert error["code"] == "REFUSED_CLI_BOUNDARY"
+            assert error["code"] == "REFUSED_CLI_BOUNDARY", error
             assert context["refusal_code"] == INVOICE_VIEW_REFUSAL_CODE
             assert context["terminal_condition"] == "refused"
             assert context["effect"] == "none"
@@ -281,9 +281,9 @@ def test_native_invoice_reads_refuse_finite_period_grants_before_submission(
             refused = session.invoke_credential_reference(*command)
             assert refused.exit_code == 2
             error = require_error_document(refused.output)["error"]
-            assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
+            assert error["code"] == "REFUSED_RUNTIME_FRONTEND", error
             context = cast(dict[str, object], error["context"])
-            assert context == {"reason": "period_denied"}
+            assert context == {"reason": "period_denied", "request_faults": "", "sign_in": "null"}, context
 
         assert _catalogue_after_password_login(session.profile_id, authority_operation) == fixture.catalogue
 
@@ -301,7 +301,7 @@ def test_native_invoice_result_denial_preserves_read_receipt_and_catalogue(
         refused = session.invoke_credential_reference("app", "ledger", "invoice", "view", fixture.unique_invoice_id)
         assert refused.exit_code == 2
         error = require_error_document(refused.output)["error"]
-        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert error["code"] == "REFUSED_CLI_BOUNDARY", error
         context = cast(dict[str, object], error["context"])
         assert context["reason"] == "operation_denied"
         assert context["terminal_condition"] == "succeeded"
@@ -337,7 +337,7 @@ def test_native_invoice_remove_refuses_without_yes_and_preserves_updated_receipt
         )
         assert committed.exit_code == 2
         error = require_error_document(committed.output)["error"]
-        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert error["code"] == "REFUSED_CLI_BOUNDARY", error
         context = cast(dict[str, object], error["context"])
         assert context["reason"] == "operation_denied"
         assert context["terminal_condition"] == "succeeded"

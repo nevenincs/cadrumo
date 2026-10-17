@@ -34,7 +34,6 @@ from ...calculations.registry.binding_selector_utils import selector_as_dict
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
 from ...calculations.registry.tests.published_authority import published_legal_references, published_revision
-from ..classification import InvoiceKind
 from ..flow import (
     IvaFlowDirection,
     derive_flow_for_classification,
@@ -42,7 +41,7 @@ from ..flow import (
     is_devengada_flow,
     settlement_sides_for_flow,
 )
-from ..schema import IvaCategory
+from ..schema import InvoiceKind, IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

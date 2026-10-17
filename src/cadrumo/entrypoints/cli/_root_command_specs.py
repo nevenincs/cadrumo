@@ -160,10 +160,10 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ROOT_STATUS,
-        handler=LazyBinding.available(DeferredTarget("._root_cli", "root_command", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".root_commands", "root_command", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._root_payloads", "RootStatusResult", __package__),
+            target=DeferredTarget(".root_results", "RootStatusResult", __package__),
             identity="root.status",
         ),
         profile_secret=ProfileSecretSpec(
@@ -199,10 +199,10 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget("._root_cli", "app_root", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".root_commands", "app_root", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._root_payloads", "AppRootResult", __package__),
+            target=DeferredTarget(".root_results", "AppRootResult", __package__),
             identity="root.app",
         ),
     ),
@@ -248,7 +248,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".config.root_cli", "config_root", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._config_help_payloads", "ConfigRootResult", __package__),
+            target=DeferredTarget(".config_help_results", "ConfigRootResult", __package__),
             identity="root.config",
         ),
     ),

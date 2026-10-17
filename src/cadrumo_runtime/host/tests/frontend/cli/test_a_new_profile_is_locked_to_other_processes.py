@@ -55,6 +55,7 @@ def _list_in_a_fresh_process(
         return run_cadrumo_subprocess(
             ("--format", "json", *root_options, "app", "ledger", "list"),
             settings={"cadrumo_local_storage_root": storage_root, "cadrumo_output_language": "en"},
+            bootstrap_module="cadrumo_runtime.host.frontend.cli.bootstrap",
             env_strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
             extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
             stdin_payload="" if credential is None else json.dumps({"profile_passphrase": credential}),

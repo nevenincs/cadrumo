@@ -40,7 +40,7 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 from cadrumo.core.bucket_pointer import read_pointer_selection
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
+from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
@@ -324,7 +324,9 @@ def test_delete_preserves_the_authenticated_replacement_selection(
     transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
 
     assert observations == [True]
-    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == "docs-sequence-sandbox", (
+        transcript.frames[0].envelope
+    )
     assert _envelope_result(transcript.frames[0].envelope)["already_logged_out"] is False
     assert _envelope_result(transcript.result_frame.envelope)["deleted"] is True
     assert read_pointer_selection(Path(transcript.storage_root)).bucket_id == SANDBOX_REPLACEMENT_PROFILE_ID
@@ -779,7 +781,7 @@ class TestStderrErrorDocument:
         assert refusal.envelope_source == "stderr"
         error = refusal.envelope["error"]
         assert isinstance(error, dict)
-        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+        assert error["code"] == "REFUSED_CLI_BOUNDARY", error
 
         success = transcript.result_frame
         assert success.envelope_source == "stdout"

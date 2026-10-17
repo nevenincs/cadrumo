@@ -17,8 +17,7 @@ from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date_unless_blank
 from ....domain.invoices.business_premises import SituacionInmueble, require_situacion_inmueble
 from ....domain.invoices.models import InvoiceLine
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController

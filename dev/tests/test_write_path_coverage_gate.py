@@ -161,6 +161,8 @@ def _planted_tree(root: Path, *, with_writer: bool, with_namesake: bool = False)
 
 def _repository_cli_tree(root: Path, *, with_writer: bool) -> None:
     """Build a miniature packaged repository for exercising the CLI boundary."""
+    _write(root, "conftest.py")
+    (root / "dev").mkdir()
     _write(
         root,
         "pyproject.toml",

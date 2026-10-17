@@ -308,8 +308,8 @@ def verify(
     )
 
 
-def analyze_trace(directory: Path) -> None:
+def analyze_trace(directory: Path, build_root: Path) -> None:
     """Check lossless Windows kernel-file events for the scoped process tree."""
     from .windows_trace_analysis import analyze
 
-    analyze(directory)
+    analyze(directory, build_root)

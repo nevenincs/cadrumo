@@ -66,8 +66,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import Withholdin
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
 

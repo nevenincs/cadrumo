@@ -89,7 +89,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "list_modelos", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "list_modelos", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("...application.reference_catalogue_contracts", "ModeloListResult", __package__),
@@ -136,7 +136,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "describe_modelo", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "describe_modelo", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("...application.reference_catalogue_contracts", "ModeloDescribeResult", __package__),
@@ -212,7 +212,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "casillas", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "casillas", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("...application.reference_catalogue_contracts", "ModeloCasillasResult", __package__),
@@ -238,7 +238,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             *CASILLA_LOOKUP_SCOPE[1:],
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "casilla", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "casilla", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("...application.reference_catalogue_contracts", "ModeloCasillaResult", __package__),
@@ -284,10 +284,10 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "requires", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "requires", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "ModeloRequiresResult", __package__),
+            DeferredTarget(".modelo_results", "ModeloRequiresResult", __package__),
             identity="modelo.requires",
         ),
     ),

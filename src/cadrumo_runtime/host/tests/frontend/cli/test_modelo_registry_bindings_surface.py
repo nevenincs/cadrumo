@@ -181,7 +181,7 @@ def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
             "--modelo",
             "303",
             "--year",
-            "2026",
+            "2025",
         ],
     )
 
@@ -189,13 +189,37 @@ def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
     notices = _notices(result.output)
     (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
     assert notice["context"]["modelo_filter"] == "303"
-    assert notice["context"]["year_filter"] == "2026"
+    assert notice["context"]["year_filter"] == "2025"
     assert notice["context"]["period_filter"] == ""
     assert notice["context"]["missing_filters"] == "--period"
     assert {binding["argument_name"]: binding["value"] for binding in notice["action"]["argument_bindings"]} == {
         "modelo": "303",
-        "year": 2026,
+        "year": 2025,
     }
+
+
+def test_bindings_list_without_period_refuses_a_year_with_multiple_revisions() -> None:
+    """A partial-scope warning cannot authorize guessing a filing revision."""
+    result = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+        ]
+    )
+    assert result.exit_code != 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["error"]["code"] == "ERROR_CALCULATIONS_REGISTRY_AMBIGUOUS_REVISION", envelope
+    assert envelope["error"]["context"]["effect"] == "none", envelope
 
 
 def test_bindings_list_omits_scope_warning_when_year_and_period_are_supplied() -> None:

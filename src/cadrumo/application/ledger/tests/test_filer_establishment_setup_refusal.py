@@ -38,7 +38,7 @@ from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.schema import IvaTerritorialScope
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..confirm_establishment import _filer_scope
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError

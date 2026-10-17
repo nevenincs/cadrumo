@@ -60,14 +60,10 @@ from ...domain.invoices.enums import InvoiceClass, resolve_iva_rate_slot
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
-from ...domain.iva.classification import (
-    InvoiceKind,
-    domestic_categories_by_rate_kind,
-    resolve_iva_classification_inputs,
-)
+from ...domain.iva.classification import domestic_categories_by_rate_kind, resolve_iva_classification_inputs
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.lookup import unique_rate_kind_for_declared_rate
-from ...domain.iva.schema import IvaCategory, spanish_eu_member_state
+from ...domain.iva.schema import InvoiceKind, IvaCategory, spanish_eu_member_state
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from .catalogue_creation_ports import CatalogueCreationPorts
 

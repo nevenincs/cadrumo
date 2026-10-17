@@ -86,6 +86,7 @@ def _run(
         settings=settings,
         env_strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
         stdin_payload=stdin_payload,
+        bootstrap_module="cadrumo_runtime.host.frontend.cli.bootstrap",
     )
 
 

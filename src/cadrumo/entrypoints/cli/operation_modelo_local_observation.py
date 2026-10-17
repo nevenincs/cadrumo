@@ -33,7 +33,7 @@ from ._filing_chain_payloads import (
     ObservationLayersPayload,
     ObservationOverridePayload,
 )
-from ._modelo_payloads import FilingRecordLocalObservationResult
+from .modelo_results import FilingRecordLocalObservationResult
 
 
 def _observation_layers_payload(

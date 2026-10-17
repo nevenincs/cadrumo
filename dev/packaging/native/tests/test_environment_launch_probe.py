@@ -135,6 +135,17 @@ def test_a_ready_gateway_whose_worker_is_not_the_agent_image_is_found(stand_in: 
     assert "sys.frozen" in message
 
 
+def test_an_idle_ready_gateway_keeps_lazy_worker_reexecution_explicitly_pending(
+    stand_in: StandIn, tmp_path: Path
+) -> None:
+    stand_in.agent_mode("ready")
+    result = asyncio.run(_checks(stand_in, tmp_path, children=lambda _pid: []).gateway())
+    assert result.failure is None
+    assert "agent_ready" in result.detail
+    assert "re-executed" not in result.detail
+    assert result.pending and "admitted ordinary turn" in result.pending[0]
+
+
 @pytest.mark.parametrize(
     ("mode", "fragment"),
     [
@@ -341,6 +352,18 @@ def test_a_contract_the_probe_cannot_read_is_a_set_up_error(stand_in: StandIn) -
         selected["profile"] = "agent-worker"
         with pytest.raises(probe.SetupError):
             probe.read_contract(stand_in.package, elsewhere)
+
+
+def test_a_typed_helper_cannot_stand_in_for_the_literal_worker(stand_in: StandIn) -> None:
+    document = copy.deepcopy(stand_in.contract)
+    invocations = document["application_environment"]["invocations"]
+    invocations[:] = [
+        invocation
+        for invocation in invocations
+        if invocation["arguments"] != [{"literal": "-m"}, {"literal": "cadrumo_agent.worker"}]
+    ]
+    with pytest.raises(probe.SetupError, match="worker profile is not selected"):
+        probe.read_contract(stand_in.package, document)
 
 
 @pytest.mark.parametrize(

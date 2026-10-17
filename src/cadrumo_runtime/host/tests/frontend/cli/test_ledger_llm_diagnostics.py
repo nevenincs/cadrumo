@@ -7,7 +7,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-import typer
 from click.testing import Result
 from pydantic import ValidationError
 
@@ -15,15 +14,14 @@ from cadrumo.adapters.outbound.llm.models import LLMResponse
 from cadrumo.adapters.persistence.llm.usage import UsageRecorder
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-from cadrumo.core.config import override_settings
 from cadrumo.core.config_support import LLMProvider
-from cadrumo.core.i18n.render import clear_output_language_cache, tr
+from cadrumo.core.i18n.render import tr
 from cadrumo.domain.transactions.classification_origin import ClassificationOrigin
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.service import set_classification
-from cadrumo.entrypoints.cli._ledger_rule_payloads import (
+from cadrumo.entrypoints.cli.ledger_rule_results import (
     LedgerLlmDiagnosticsResult,
     LlmConfidenceProviderPayload,
     LlmUsageCostProviderPayload,
@@ -33,6 +31,8 @@ from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
 from cadrumo_runtime.commands.tests.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
 
+from .cli_runner import invoke_cached_cli
+
 # Seeded rows and stored records decode against registry facts, so the test
 # body holds the same authority lease a CLI invocation holds.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -41,7 +41,7 @@ __all__ = ["diagnostics_native_profile"]
 
 
 def _invoke(args: list[str]) -> Result:
-    return invoke_diagnostics_cli(args)
+    return invoke_diagnostics_cli(args, invoke_cli=invoke_cached_cli)
 
 
 def _registered_bucket_id(profile: NativeCliProfileFixture) -> str:
@@ -320,25 +320,6 @@ def test_llm_diagnostics_rejects_bad_date_and_out_of_range_threshold(
     )
     assert result.exit_code != 0
     assert "0..1" in result.output
-
-
-@pytest.mark.parametrize("locale", ("ca", "en", "es", "hu"))
-def test_llm_diagnostics_date_parser_uses_catalogue_leaf(locale: str) -> None:
-    """The command's existing date parser retains the localized message leaf."""
-    from cadrumo.entrypoints.cli._ledger_read_cli import _parse_iso_date
-
-    with override_settings(cadrumo_output_language=locale):
-        clear_output_language_cache()
-        expected = tr(
-            "cli.ledger.llm_diagnostics.bad_date",
-            option="--since",
-            value="not-a-date",
-        )
-        with pytest.raises(typer.BadParameter) as error:
-            _parse_iso_date("not-a-date", "--since")
-    clear_output_language_cache()
-
-    assert error.value.message == expected
 
 
 def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:

@@ -23,7 +23,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

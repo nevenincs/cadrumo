@@ -18,8 +18,8 @@ from ....application.overview.pipeline_projection import PipelineHealthSnapshot,
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
-from .. import _overview as handler
 from .. import operation_overview_pipeline as bridge
+from .. import overview_commands as handler
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

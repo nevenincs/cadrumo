@@ -69,10 +69,10 @@ def _leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         _CALCULATION_READ,
-        LazyBinding.available(DeferredTarget("._modelo_projection_cli", handler, __package__)),
+        LazyBinding.available(DeferredTarget(".modelo_projection_commands", handler, __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", schema_name, __package__),
+            DeferredTarget(".modelo_results", schema_name, __package__),
             identity=f"modelo.{token}",
         ),
     )

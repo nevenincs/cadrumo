@@ -438,11 +438,13 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
 COMMAND_CONNECTION_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (
     (("config", "login"), "human_sign_out"),
     (("config", "login"), "profile_login"),
+    (("config", "login"), "session_activity"),
     (("config", "login"), "session_lock"),
     (("config", "login"), "session_refresh"),
     (("config", "login"), "session_status"),
     (("config", "logout"), "human_sign_out"),
     (("config", "logout"), "profile_login"),
+    (("config", "logout"), "session_activity"),
     (("config", "logout"), "session_lock"),
     (("config", "logout"), "session_refresh"),
     (("config", "logout"), "session_status"),

@@ -30,10 +30,10 @@ from cadrumo.entrypoints.cli.command_operation_table import (
     OPERATIONS_WITHOUT_COMMAND,
 )
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.cli.main import _emit_command_surface_manifest
 from cadrumo.entrypoints.cli.operator_surface_reconciliation import recorded_command_operation_join
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.source_tree_support import SourceTree
+from cadrumo.tests.cli_fixture_ports import FreshCliInvocation
 from cadrumo.tests.inventory import SRC_CADRUMO, production_python_files, read_source
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 from dev.operation_contract_manifest.command_operation_derivation import (
@@ -138,11 +138,11 @@ def test_each_direction_of_the_join_says_what_the_other_says() -> None:
     assert forward == inverse
 
 
-def test_the_emitted_command_surface_manifest_carries_the_join(capsys: pytest.CaptureFixture[str]) -> None:
+def test_the_emitted_command_surface_manifest_carries_the_join(fresh_cli: FreshCliInvocation) -> None:
     """The manifest an outer root reads carries both directions of the recorded join, unchanged."""
-    _emit_command_surface_manifest()
-
-    emitted = json.loads(capsys.readouterr().out)["command_operations"]
+    completed = fresh_cli(("--cadrumo-command-surface",)).completed
+    assert completed.returncode == 0, completed.stderr
+    emitted = json.loads(completed.stdout)["command_operations"]
     assert emitted == recorded_command_operation_join().model_dump(mode="json")
     submitted = {tuple(row["cli_path"]): row["operation_ids"] for row in emitted["commands"]}
     submitters = {row["operation_id"]: row["cli_paths"] for row in emitted["operations"]}

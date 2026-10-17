@@ -516,7 +516,10 @@ def test_a_selection_with_no_declared_requirement_declines_to_be_assessed() -> N
 
     Mutation that must trip this: return ``(runtime_id, requirement or 0)``.
     """
-    selection = select_model_for_role(ModelRole.VISION_TRANSCRIPTION)
+    selection = select_model_for_role(
+        ModelRole.VISION_TRANSCRIPTION,
+        profile=_profile(kind=AcceleratorKind.NONE, total_ram=128 * GIB, free_ram=96 * GIB),
+    )
     assert selection.candidate is not None, "this host catalogues no vision candidate; the case below is vacuous"
     # Positive control: fully declared, the load is assessable.
     assert selection.assessable_load is not None

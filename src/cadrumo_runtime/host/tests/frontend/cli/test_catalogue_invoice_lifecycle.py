@@ -35,7 +35,6 @@ from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_text_output_support import line_value
 
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
-from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession
 from .test_runtime_invoice_add import catalogue_after_password_login, native_invoice_runtime_session
 
@@ -75,8 +74,8 @@ def _create_catalogue_invoice(session: NativeApiCliSession[None], *, invoice_num
 
 
 def _invoke_open_profile(session: NativeApiCliSession[None], *command: str) -> Result:
-    """Run a later command in the already-open profile without new auth input."""
-    return invoke_cached_cli(("--format", "text", "--profile", session.profile_label, *command))
+    """Authenticate each invocation through its protected password frame."""
+    return session.invoke_password(*command, output_format="text")
 
 
 @pytest.mark.windows_only
@@ -231,7 +230,10 @@ def test_catalogue_remove_refuses_linked_invoice(
     create -> link -> remove chain is exercised through the CLI.
     """
     with native_invoice_runtime_session(
-        tmp_path, invoke_cli=run_cadrumo_cli, operation_ids=_RUNTIME_OPERATIONS
+        tmp_path,
+        invoke_cli=run_cadrumo_cli,
+        operation_ids=_RUNTIME_OPERATIONS,
+        authority_operation=authority_operation,
     ) as session:
         add = session.invoke_password(
             "app", "ledger", "add",
@@ -250,7 +252,8 @@ def test_catalogue_remove_refuses_linked_invoice(
             "app", "ledger", "invoice", "remove", invoice_id, "--yes", output_format="text"
         )
         assert removed.exit_code != 0, removed.output
-        assert transaction_id in removed.output, removed.output
+        assert "ERROR_INVOICE_VALIDATION" in removed.output, removed.output
+        assert "Traceback" not in removed.output
 
         # The linked invoice was not deleted and still cites the transaction.
         stored = catalogue_after_password_login(session.profile_id, authority_operation).invoices.get(invoice_id)

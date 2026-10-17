@@ -62,7 +62,7 @@ from cadrumo.entrypoints.tests.ledger_attachment_operation_test_support import (
 from cadrumo.entrypoints.tests.ledger_lifecycle_operation_test_support import (
     prepare_ledger_lifecycle_operation_conformance_case,
 )
-from dev.operation_contract_manifest.tests.test_operation_catalogue import _registry
+from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -153,7 +153,7 @@ def _context(
 
 def test_no_request_of_the_opened_operations_carries_a_path_bytes_or_a_confirmation() -> None:
     """Every member is an identifier, typed text or a typed amount; none stands for a file or the person's consent."""
-    registry = _registry()
+    registry = production_operation_registry()
     expected: dict[str, set[str]] = {
         "ledger.archive": {"profile_id", "transaction_id", "actor", "reason"},
         "ledger.stash": {"profile_id", "transaction_id", "actor", "reason"},
@@ -174,7 +174,7 @@ def test_the_real_resolvers_grant_every_frontend_the_same_policy(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Each row mutation resolves to one policy on the three frontends, at every access it is asked for."""
-    registry = _registry()
+    registry = production_operation_registry()
     requests = _ordinary_requests(_PROFILE)
 
     assert {definition_id for definition_id, _payload in requests} == set(_OPENED)
@@ -204,7 +204,7 @@ def test_the_real_resolvers_refuse_a_row_of_another_profile_on_every_frontend(
     operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
     """The grant above is a decision: the same resolvers refuse the same requests addressed elsewhere."""
-    registry = _registry()
+    registry = production_operation_registry()
 
     for definition_id, payload in _ordinary_requests(_OTHER_PROFILE):
         request = OperationRequest[BaseModel](
@@ -264,8 +264,10 @@ def test_each_lifecycle_mutation_records_the_session_and_is_put_back_by_the_oper
     frontend: OperationFrontendProjection,
 ) -> None:
     """Stash, archive and exclude each keep the row; running what a result names returns the row to where it was."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_session_host(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_session_host(frontend),
     ) as (driver, registry, profile_id):
         case = prepare_ledger_lifecycle_operation_conformance_case("ledger.stash", profile_id, operation=operation)
         seeded = case.transaction_before
@@ -347,8 +349,10 @@ def test_a_detachment_keeps_the_stored_attachment_and_attaching_it_again_puts_th
     frontend: OperationFrontendProjection,
 ) -> None:
     """Attach and detach move one row's link to evidence already stored, and never the evidence."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_session_host(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_session_host(frontend),
     ) as (driver, registry, profile_id):
         case = prepare_ledger_attachment_operation_conformance_case("ledger.attach", profile_id, operation=operation)
         attachments = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation).attachment_store
@@ -411,8 +415,10 @@ def test_a_split_records_the_session_keeps_its_parent_stored_and_is_not_undone_b
 ) -> None:
     """The parent stays stored with what it carried, and the one operation that recombines it is the merge."""
     typed = "typed for the split"
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_session_host(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_session_host(frontend),
     ) as (driver, registry, profile_id):
         ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
         created = create_manual_transaction(

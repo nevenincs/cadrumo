@@ -23,9 +23,9 @@ from ....core.json_contract import Notice
 from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....tests.ecb_stub import ecb_csv_fetch
-from .. import _ledger_business_invoice_cli as handler
+from .. import ledger_business_invoice_commands as handler
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

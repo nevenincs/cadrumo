@@ -838,8 +838,8 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
 
     assert spec.package == "cadrumo"
     # Tax script roots and sibling consumer scripts retain separate ownership.
-    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main" in {entry.spec for entry in spec.entry_points}
     runtime = next(companion for companion in spec.companions if companion.package == "cadrumo_runtime")
+    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
     assert "cadrumo_runtime.host.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
     assert {corpus.label for corpus in spec.outside} == {"tests", "dev"}

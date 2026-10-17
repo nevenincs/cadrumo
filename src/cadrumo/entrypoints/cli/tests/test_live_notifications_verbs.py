@@ -26,10 +26,10 @@ from ....application.live.notification_document_read_operation import (
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
-from .. import _app_live_notifications_cli as handler
+from .. import app_live_notifications_commands as handler
 from .. import operation_notification_document_capture as capture_bridge
 from .. import operation_notification_document_read as bridge
-from .._app_live_notifications_payloads import (
+from ..app_live_notifications_results import (
     NotificationDocumentHistoryResult,
     NotificationDocumentPullResult,
     NotificationDocumentViewResult,
@@ -46,7 +46,7 @@ def _invoke_notifications(args: Sequence[str]) -> Result:
 def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_count() -> None:
     """Notification transport preserves the persisted snapshot's strict fields."""
 
-    from .._app_live_notifications_payloads import NotificationsCaptureResult, NotificationSnapshotListingPayload
+    from ..app_live_notifications_results import NotificationsCaptureResult, NotificationSnapshotListingPayload
 
     instant = datetime(2026, 8, 1, tzinfo=UTC)
     with pytest.raises(ValidationError):
@@ -339,7 +339,7 @@ def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
     rule about the stored record, not about this projection, and it is enforced
     on ``NotificationDocumentRecord`` rather than restated here.
     """
-    from .._app_live_notifications_payloads import NotificationDocumentPullResult, NotificationDocumentViewResult
+    from ..app_live_notifications_results import NotificationDocumentPullResult, NotificationDocumentViewResult
 
     shared: _NotificationDocumentShared = {
         "bucket_id": "00000000-0000-4000-8000-000000000000",

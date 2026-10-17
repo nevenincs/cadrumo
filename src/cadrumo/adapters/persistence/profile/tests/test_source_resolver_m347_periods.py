@@ -15,7 +15,6 @@ from cadrumo.core.aggregation import ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
 from cadrumo.domain.invoices.enums import invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -23,6 +22,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from .....domain.iva.schema import InvoiceKind
 from .published_authority_support import published_authority_operation
 from .source_resolver_test_support import (
     _BUCKET_ID,

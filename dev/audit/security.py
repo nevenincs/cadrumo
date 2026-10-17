@@ -214,6 +214,10 @@ def semgrep_command(uvx: str, source_root: Path = _PRODUCT_SOURCE_ROOT) -> list[
     """
     command = [
         uvx,
+        # Pin the scanner host independently of the application Python floor.
+        # uvx otherwise selected 3.15 before pywin32 had matching wheels.
+        "--python",
+        "3.13",
         "--from",
         _SEMGREP_SPEC,
         "semgrep",
@@ -330,9 +334,27 @@ def _semgrep_environment() -> dict[str, str]:
         path = Path(environment[category]) / member
         path.parent.mkdir(parents=True, exist_ok=True)
         environment[variable] = str(path)
-    temporary = str(prepare_temporary_directory())
+    temporary = _semgrep_temporary_path(prepare_temporary_directory())
     environment.update({"TEMP": temporary, "TMP": temporary, "TMPDIR": temporary})
     return environment
+
+
+def _semgrep_temporary_path(path: Path) -> str:
+    """Keep the configured directory while avoiding OCaml's Windows socket path limit."""
+    if sys.platform != "win32":
+        return str(path)
+    import ctypes
+    from ctypes import wintypes
+
+    short_path = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+    short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    short_path.restype = wintypes.DWORD
+    buffer = ctypes.create_unicode_buffer(32768)
+    length = short_path(str(path), buffer, len(buffer))
+    # Some volumes disable short names. Keep the actual directory in that case;
+    # a scanner unable to use it must still report unavailable, never clean.
+    shortened: object = buffer.value
+    return shortened if isinstance(shortened, str) and 0 < length < len(buffer) else str(path)
 
 
 def render_console_report(result: SecurityResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:

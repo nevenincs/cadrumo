@@ -274,9 +274,7 @@ def test_config_boundary_error_is_registered_cadrumo_error_subclass() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.windows_only
-@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
-def test_secret_taking_verb_without_interactive_stdin_refuses_instructively(tmp_path: Path) -> None:
+def test_secret_taking_verb_without_interactive_stdin_refuses_instructively() -> None:
     """A verb reading a secret with no TTY and no --secrets-stdin refuses (exit 2).
 
     Non-interactively, ``getpass`` would raise a bare EOFError that escapes to
@@ -285,39 +283,14 @@ def test_secret_taking_verb_without_interactive_stdin_refuses_instructively(tmp_
     naming the ``--secrets-stdin`` path. Real boundary, no mocks: the
     in-process runner's stdin is not a TTY.
 
-    ``config auth certificate secret set`` is the carrier: it is the surviving
-    verb that resolves its secret through the shared channel unconditionally,
-    before touching the store, so the refusal fires ahead of any mutation.
-    ``config login`` now holds the same property: it supplies an explicit
-    machine value or a verified prompt callback and never delegates CLI secret
-    discovery to the storage substrate.
+    ``config profile create`` resolves its new password through that channel
+    before publishing a profile. No runtime worker is needed to exercise this
+    input refusal, so the boundary is portable.
     """
-    # The verb is runtime-hosted, so the profile is admitted first: the profile
-    # password rides the root secret frame, which is a different channel from the
-    # verb's own ``--secrets-stdin`` that this case asks to be named. Only once
-    # admitted does the handler reach the secure-input pre-check under test.
-    _create_profile()
-    password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-
-    with native_profile_view_server(tmp_path / "cadrumo-storage", allow_unavailable_shutdown=True):
-        result = invoke_cached_cli(
-            [
-                "--profile",
-                "test-operator",
-                "--profile-secrets-stdin",
-                "config",
-                "auth",
-                "certificate",
-                "secret",
-                "set",
-                "--name",
-                "operator-cert",
-            ],
-            input=json.dumps({"profile_passphrase": password}),
-        )
+    result = invoke_cached_cli(["config", "profile", "create", "non-interactive"])
 
     assert result.exit_code == 2, result.output
-    assert "--secrets-stdin" in result.output
+    assert "--secrets-stdin" in result.output, result.output
     # The crash class is gone: no traceback, and the escaped exception is not the
     # bare EOFError getpass would have raised.
     assert "Traceback" not in result.output

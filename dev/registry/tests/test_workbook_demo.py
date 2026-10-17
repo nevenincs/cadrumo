@@ -26,7 +26,11 @@ from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expres
 from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError, apply_rounding
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormRepeatingGroupBlock
+from cadrumo.domain.calculations.registry.schema_form_layouts import (
+    FormContextFieldBlock,
+    FormPageCondition,
+    FormRepeatingGroupBlock,
+)
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
 from .. import workbook_demo
@@ -810,7 +814,7 @@ def test_122_uses_annual_frame_and_discloses_manual_result() -> None:
     assert "Ana" in text
     assert "Ejemplo" in text
     form_text = "\n".join(str(c.value) for c in plan.value_cells if c.address.tab is TabName.FORM)
-    assert "Página 1 · Regularización de deducciones · diseño de 2018" in form_text
+    assert "Regularización de deducciones · diseño de 2018 · EJEMPLO FICTICIO" in form_text, form_text
     by_id = {
         c.casilla_id: c.address.row
         for c in plan.value_cells
@@ -1051,7 +1055,12 @@ def test_current_registry_generates_form_geometry_and_xlsx(case: DemoCase) -> No
     for page in snapshot.revision.form_layouts[0].pages:
         heading = lookup_translation(page.heading_key, locale="es") or page.official_heading
         if heading is not None and heading:
-            assert any(heading in value for value in form_text)
+            applicable = not (
+                page.condition is FormPageCondition.PERIOD_RESTRICTED
+                and snapshot.filing_period is not None
+                and snapshot.filing_period.code not in page.condition_periods
+            )
+            assert any(heading in value for value in form_text) is applicable, (heading, form_text)
     workbook = load_workbook(BytesIO(materialize_export_plan(plan)), data_only=False)
     form = workbook[TabName.FORM.value]
     assert len(form.merged_cells.ranges) == len([r for r in plan.merged_ranges if r.tab == TabName.FORM])

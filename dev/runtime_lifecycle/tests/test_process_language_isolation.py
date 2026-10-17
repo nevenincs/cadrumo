@@ -19,9 +19,9 @@ import pytest
 from cadrumo.core.config import load_settings, override_settings, settings_override
 from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, OutputLanguage
 from cadrumo.core.i18n.render import normalise_supported_language, output_language
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo_client.commands.compiler import build_command_app
-from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -74,7 +74,7 @@ def test_a_language_flagged_cli_invocation_leaves_process_language_unchanged() -
     before = _language_state()
     flag_language = _flag_language(before.resolved)
 
-    app = build_command_app(RUNTIME_COMMAND_GRAPH)
+    app = build_command_app(COMMAND_GRAPH)
     baseline = invoke_typer_app(app, list(_STATUS_ARGV))
     flagged = invoke_typer_app(app, ["--language", flag_language.value, *_STATUS_ARGV])
     after = _language_state()

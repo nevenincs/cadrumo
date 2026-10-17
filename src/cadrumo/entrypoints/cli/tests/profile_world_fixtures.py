@@ -11,10 +11,10 @@ from ....tests.cli_fixture_ports import CliInvocation
 from .cli_fixture_worlds import BackendKind, CliWorldProvider
 
 
-def profile_backend_fixture(kind: BackendKind):
+def profile_backend_fixture(kind: BackendKind, *, autouse: bool = True):
     """Declare the original per-test world lifetime and automatic use."""
 
-    @pytest.fixture(name="_isolated_backend", autouse=True)
+    @pytest.fixture(name="_isolated_backend", autouse=autouse)
     def backend(tmp_path: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
         with cli_world_provider.backend(kind, tmp_path):
             yield

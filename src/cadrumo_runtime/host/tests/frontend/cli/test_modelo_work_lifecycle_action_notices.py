@@ -17,9 +17,13 @@ from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    create_m130_work_unit,
+    create_modelo_operator_profile,
+    invoke_modelo_scenario_cli,
+)
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 
-from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from .cli_runner import semantic_cli_output
 from .modelo_profile_seed import seed_profile
 
@@ -113,12 +117,12 @@ def _discarded_natural_target() -> list[str]:
 
 def test_work_list_and_status_resolve_canonical_actions_with_localized_messages() -> None:
     """The application continuation drives a live, locale-neutral action envelope."""
-    _create_profile()
-    work_unit_id = _create_m130_work_unit()
+    create_modelo_operator_profile()
+    work_unit_id = create_m130_work_unit()
 
     rendered_messages: set[str] = set()
     for locale in _LOCALES:
-        listed = _invoke(
+        listed = invoke_modelo_scenario_cli(
             [
                 "--format",
                 "json",
@@ -157,7 +161,7 @@ def test_work_list_and_status_resolve_canonical_actions_with_localized_messages(
         assert "aeat " not in str(list_notice["message"]).lower()
         rendered_messages.add(str(list_notice["message"]))
 
-        status = _invoke(
+        status = invoke_modelo_scenario_cli(
             [
                 "--format",
                 "json",
@@ -202,12 +206,12 @@ def test_work_list_and_status_resolve_canonical_actions_with_localized_messages(
 
 def test_discarded_work_status_exposes_terminal_state_without_calculate_action() -> None:
     """A discarded unit has an explicit closed continuation and real calculate refusal."""
-    _create_profile()
-    work_unit_id = _create_m130_work_unit()
+    create_modelo_operator_profile()
+    work_unit_id = create_m130_work_unit()
 
     _seed_discarded_work(work_unit_id)
 
-    status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    status = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
     notice = _notice(status.output, "modelo.work.status.action_unavailable")
     assert notice["action"] is None
@@ -218,7 +222,7 @@ def test_discarded_work_status_exposes_terminal_state_without_calculate_action()
     }
     assert "aeat " not in str(notice["message"]).lower()
 
-    calculate = _invoke(["--format", "json", "app", "modelo", "work", "calculate", work_unit_id])
+    calculate = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "calculate", work_unit_id])
     _assert_terminal_refusal(
         calculate,
         command="modelo.work.calculate",
@@ -230,19 +234,19 @@ def test_discarded_work_status_exposes_terminal_state_without_calculate_action()
 
 def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() -> None:
     """Every rejected discarded-state verb retains facts and terminal outcome on its real transport."""
-    _create_profile()
-    work_unit_id = _create_m130_work_unit()
+    create_modelo_operator_profile()
+    work_unit_id = create_m130_work_unit()
     _seed_discarded_work(work_unit_id)
 
     natural_target = _discarded_natural_target()
-    initial_status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    initial_status = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert initial_status.exit_code == 0, initial_status.output
     initial_document = json.loads(initial_status.output)
     initial_result = cast(dict[str, object], initial_document["result"])
     assert initial_result["state"] == "descartado"
 
     for locale in _LOCALES:
-        status = _invoke(
+        status = invoke_modelo_scenario_cli(
             [
                 "--format",
                 "json",
@@ -262,7 +266,7 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
         assert status_result["state"] == "descartado"
         assert _notice(status.output, "modelo.work.status.action_unavailable")["action"] is None
 
-        history = _invoke(
+        history = invoke_modelo_scenario_cli(
             [
                 "--format",
                 "json",
@@ -280,7 +284,7 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
         history_result = cast(dict[str, object], history_document["result"])
         assert history_result["work_unit_id"] == work_unit_id
 
-        calculate = _invoke(
+        calculate = invoke_modelo_scenario_cli(
             [
                 "--format",
                 "json",
@@ -304,7 +308,7 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
         assert "aeat " not in message.lower()
         assert "create" not in message.lower()
 
-    calculate_natural = _invoke(
+    calculate_natural = invoke_modelo_scenario_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", *natural_target],
     )
     _assert_terminal_refusal(
@@ -315,7 +319,7 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
         work_unit_id=work_unit_id,
     )
 
-    create_same_target = _invoke(
+    create_same_target = invoke_modelo_scenario_cli(
         ["--format", "json", "app", "modelo", "work", "create", *natural_target],
     )
     _assert_terminal_refusal(
@@ -326,7 +330,7 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
         work_unit_id=work_unit_id,
     )
 
-    imported = _invoke(
+    imported = invoke_modelo_scenario_cli(
         [
             "--format",
             "json",
@@ -351,7 +355,7 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
         work_unit_id=work_unit_id,
     )
 
-    final_status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+    final_status = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert final_status.exit_code == 0, final_status.output
     final_document = json.loads(final_status.output)
     final_result = cast(dict[str, object], final_document["result"])

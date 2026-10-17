@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import replace
 from threading import Event
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, NoReturn, cast
 
 import pytest
 from textual.screen import Screen
@@ -30,12 +30,17 @@ if TYPE_CHECKING:
     from textual.pilot import Pilot
 
     from cadrumo.application.overview.home import HomeProjectionV1
+    from cadrumo.entrypoints.tui.account import AccountPasswordFactoryV1, AccountProfileFactoryV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _screen(_context: object) -> Screen[None]:
     return Screen()
+
+
+def _unused_account_action(*_args: object) -> NoReturn:
+    raise AssertionError("an unrelated account action was opened")
 
 
 def _root(*, child_factory: Callable[[object], Screen[None]] | None = None) -> RootBindingV1:
@@ -53,13 +58,14 @@ def _root(*, child_factory: Callable[[object], Screen[None]] | None = None) -> R
             for destination in destinations
         },
     )
-    account = object.__new__(AccountFactoriesV1)
-    object.__setattr__(account, "subscribe_retirement", None)
-    object.__setattr__(account, "subscribe_notices", None)
-    object.__setattr__(account, "profile", _screen)
-    object.__setattr__(account, "password", lambda: Screen())
-    object.__setattr__(account, "access", None)
-    object.__setattr__(account, "onboarding_pending", False)
+    account = AccountFactoriesV1(
+        profile=cast("AccountProfileFactoryV1", _screen),
+        change_user=_unused_account_action,
+        password=cast("AccountPasswordFactoryV1", lambda: Screen()),
+        appearance=_unused_account_action,
+        language=_unused_account_action,
+        sign_out=_unused_account_action,
+    )
     return RootBindingV1(
         destination_catalogue=catalogue,
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
@@ -122,7 +128,8 @@ def test_pushed_retirement_severs_precomposed_root(*, profile_first: bool) -> No
         callbacks.append(receive)
         return lambda: callbacks.remove(receive)
 
-    object.__setattr__(root.account_factories, "subscribe_retirement", subscribe)
+    assert root.account_factories is not None
+    root = replace(root, account_factories=replace(root.account_factories, subscribe_retirement=subscribe))
 
     async def retire(pilot: Pilot[object]) -> None:
         await pilot.pause()

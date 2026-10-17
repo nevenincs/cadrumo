@@ -19,11 +19,19 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operator_surface.contract import get_operator_surface_contract
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
-from cadrumo.core.config import override_settings
+from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
-from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command, invoke_cached_cli
+from cadrumo.tests.cli_fixture_ports import CliInvocation
+
+from .....commands.tests.config.runtime_cli import invoke_runtime_cli
+from .....commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from .cli_runner import (
+    bind_public_cli_runner,
+    cadrumo_click_command,
+    invoke_cached_cli,
+    operator_runtime_scope,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -85,11 +93,7 @@ def _certificate_bearing_backend(backend: Path) -> Generator[Path]:
 
 @pytest.fixture(autouse=True)
 def _certificate_bearing_cli_backend(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[Path | None]:
-    """Isolate each test that does not read the shared round-trip world.
-
-    A round-trip test runs inside the module's world instead; layering a fresh
-    per-test root over it would hide the state its assertions read.
-    """
+    """Isolate live invocations; captured round-trip outputs need no extra world."""
     if "workflow_round_trip" in request.fixturenames:
         yield None
         return
@@ -99,6 +103,16 @@ def _certificate_bearing_cli_backend(request: pytest.FixtureRequest, tmp_path: P
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
+
+
+def _invoke_auth(args: list[str]):
+    """Authenticate the selected profile through the runtime-owned parser."""
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    result = invoke_runtime_cli(
+        ["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": passphrase})
+    )
+    assert passphrase not in result.output
+    return result
 
 
 def _mounted_child_names(root_name: str) -> set[str]:
@@ -129,7 +143,9 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
 
     config_children = mounted["config"]
     app_children = mounted["app"]
-    assert {"profile", "auth", "repair"}.issubset(config_children)
+    assert {"profile", "login", "logout", "repair"}.issubset(config_children)
+    assert "auth" not in config_children
+    assert invoke_runtime_cli(["config", "auth", "--help"]).exit_code == 0
     assert "init" not in config_children
     assert {"overview", "ledger", "modelo", "review"}.issubset(app_children)
 
@@ -166,6 +182,7 @@ class _WorkflowRoundTripOutcome:
     imported_payload: dict[str, object]
     overview_payload: dict[str, object]
     review_payload: dict[str, object]
+    review_text: str
 
 
 def _review_rows(outcome: _WorkflowRoundTripOutcome) -> list[Mapping[str, object]]:
@@ -221,7 +238,7 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
 
     certificate = backend / "certificate.p12"
     certificate.write_bytes(b"not-a-real-certificate")
-    configured = _invoke(
+    configured = _invoke_auth(
         ["--format", "json", "config", "auth", "configure", "--provider", "certificate", "--file", str(certificate)],
     )
     assert configured.exit_code == 0, configured.output
@@ -235,9 +252,11 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
     review = _invoke(["--format", "json", "app", "review", "queue", "--source-kind", "ledger_transaction"])
+    text_review = _invoke(["app", "review", "queue"])
     assert imported.exit_code == 0, imported.output
     assert overview.exit_code == 0, overview.output
     assert review.exit_code == 0, review.output
+    assert text_review.exit_code == 0, text_review.output
 
     return _WorkflowRoundTripOutcome(
         status_payload=_json(status),
@@ -245,24 +264,30 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
         imported_payload=_json(imported),
         overview_payload=_json(overview),
         review_payload=_json(review),
+        review_text=text_review.output,
     )
 
 
 @pytest.fixture(scope="module")
-def workflow_round_trip(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_WorkflowRoundTripOutcome]:
-    """Drive the round-trip once for the module and keep its world open.
+def workflow_round_trip(
+    tmp_path_factory: pytest.TempPathFactory, run_cadrumo_cli: CliInvocation
+) -> _WorkflowRoundTripOutcome:
+    """Drive the round-trip once and retire its world before returning its outputs.
 
-    Every consumer only reads the outcome, or reads the same world through a
-    further read-only invocation, so repeating the identical flow per test --
+    Every consumer only reads captured CLI output, so repeating the identical flow per test --
     including a credential registration with two supervised key derivations --
     re-established a state no test changes.
     """
-    with _certificate_bearing_backend(tmp_path_factory.mktemp("workflow-round-trip")) as backend:
+    with (
+        bind_public_cli_runner(run_cadrumo_cli),
+        _certificate_bearing_backend(tmp_path_factory.mktemp("workflow-round-trip")) as backend,
+    ):
         try:
-            yield _drive_workflow_round_trip(backend)
+            # Retire the joined host before closing the parent's encrypted oracle.
+            with operator_runtime_scope():
+                return _drive_workflow_round_trip(backend)
         finally:
-            # The round-trip's login is this module's; the per-test boundary
-            # reads it as inherited, so only this teardown can close it.
+            # Registration's encrypted oracle belongs to this completed scenario.
             close_active_profile_record_session()
             close_active_bucket_session()
 
@@ -293,7 +318,7 @@ def test_config_app_round_trip_certificate_configure_records_provider(
 @pytest.fixture(scope="module")
 def native_certificate_auth_reads(
     tmp_path_factory: pytest.TempPathFactory,
-) -> Iterator[tuple[dict[str, Any], dict[str, Any]]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Read configured certificate state through a protected native worker."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
@@ -302,7 +327,7 @@ def native_certificate_auth_reads(
         certificate = fixture.storage_root / "certificate.p12"
         certificate.write_bytes(b"not-a-real-certificate")
         with override_settings(cadrumo_certificate_path=certificate):
-            configured = _invoke(
+            configured = _invoke_auth(
                 [
                     "--format",
                     "json",
@@ -318,7 +343,7 @@ def native_certificate_auth_reads(
             assert configured.exit_code == 0, configured.output
 
             def invoke_read(verb: str):
-                return invoke_cached_cli(
+                return invoke_runtime_cli(
                     [
                         "--format",
                         "json",
@@ -338,7 +363,7 @@ def native_certificate_auth_reads(
             tested = invoke_read("test")
             assert status.exit_code == 0, status.output
             assert tested.exit_code == 0, tested.output
-            yield _json(status), _json(tested)
+            return _json(status), _json(tested)
 
 
 def test_config_app_round_trip_certificate_auth_status_reports_configured(
@@ -429,9 +454,8 @@ def test_config_app_round_trip_review_queue_text_omits_bucket_placeholder(
     ``<profile-id>`` placeholder (the m17 leak). The column is removed; the
     JSON ``bucket_id`` (redacted) remains for tooling.
     """
-    text_queue = _invoke(["app", "review", "queue"])
-    assert text_queue.exit_code == 0, text_queue.output
-    assert CLI_PROFILE_ID_PLACEHOLDER not in text_queue.output
-    assert CLI_BUCKET_ID_PLACEHOLDER not in text_queue.output
+    text_queue = workflow_round_trip.review_text
+    assert CLI_PROFILE_ID_PLACEHOLDER not in text_queue
+    assert CLI_BUCKET_ID_PLACEHOLDER not in text_queue
     # The row itself still surfaces (the column removal must not drop data).
-    assert "ledger_transaction" in text_queue.output
+    assert "ledger_transaction" in text_queue

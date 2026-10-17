@@ -19,8 +19,8 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
-from ..iva.classification import InvoiceKind
 from ..iva.identification import identification_state_for_printed_tax_identifier
+from ..iva.schema import InvoiceKind
 from .errors import InvoiceValidationError
 from .validators import validate_counterparty_tax_id, validate_country_code
 

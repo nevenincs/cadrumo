@@ -155,10 +155,10 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _POLICY,
-        LazyBinding.available(DeferredTarget("._app_quickfile", "quickfile", __package__)),
+        LazyBinding.available(DeferredTarget(".app_quickfile_commands", "quickfile", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._app_quickfile_payloads", "QuickfileResultPayload", __package__),
+            DeferredTarget(".app_quickfile_results", "QuickfileResultPayload", __package__),
             identity="app.quickfile",
         ),
         search_terms=(

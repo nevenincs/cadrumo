@@ -61,7 +61,7 @@ from cadrumo.core.errors.hierarchy import SiteHealthState
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.cli.config import _repair_cli
+from cadrumo.entrypoints.cli.config import repair_commands
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from cadrumo.entrypoints.diagnostics_repair_composition import build_diagnostics_repair_operations
 
@@ -327,7 +327,7 @@ def test_connectivity_prints_what_the_probe_operation_returns_for_the_same_obser
         return _OBSERVED
 
     # The browser is the one part both sides are bound to here; neither reaches the network.
-    monkeypatch.setattr(_repair_cli, "_probe_browser_connectivity", observe)
+    monkeypatch.setattr(repair_commands, "_probe_browser_connectivity", observe)
     definition = build_connectivity_probe_definition(observe)
     assert definition.definition_id == CONNECTIVITY_PROBE_OPERATION_DEFINITION_ID
 

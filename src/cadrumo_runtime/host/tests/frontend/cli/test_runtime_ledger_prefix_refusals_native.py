@@ -112,13 +112,13 @@ def _assert_prefix_refusal(
 
     context = _member(error, "context")
     if not submitted:
-        assert error["code"] == _PREFIX_REFUSAL_CODE
+        assert error["code"] == _PREFIX_REFUSAL_CODE, error
         assert "operation_id" not in context
         assert "effect" not in context
         assert "terminal_condition" not in context
         return
 
-    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["code"] == _PREFIX_REFUSAL_CODE, error
     assert context["reason"] == _PREFIX_REFUSAL_CODE
     operation_id = context.get("operation_id")
     assert isinstance(operation_id, str) and operation_id

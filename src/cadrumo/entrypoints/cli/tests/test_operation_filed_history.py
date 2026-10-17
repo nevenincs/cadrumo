@@ -26,7 +26,7 @@ from ....application.live.filed_history_operation import (
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import _app_live as handler
+from .. import app_live_commands as handler
 from .. import operation_filed_history as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

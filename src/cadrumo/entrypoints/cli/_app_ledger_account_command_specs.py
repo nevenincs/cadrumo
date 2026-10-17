@@ -52,7 +52,7 @@ def _secrets(model: str) -> MachineSecretSpec:
             MachineSecretVariantSpec(
                 "account",
                 tuple(MachineSecretFieldSpec(field) for field in _SECRET_FIELDS),
-                DeferredTarget("._ledger_account_cli", model, __package__),
+                DeferredTarget(".ledger_account_commands", model, __package__),
             ),
         ),
     )
@@ -76,10 +76,10 @@ def _leaf(
         invocation=_LEAF_INVOCATION,
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._ledger_account_cli", f"account_{verb}", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_account_commands", f"account_{verb}", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_account_payloads", result, __package__),
+            target=DeferredTarget(".ledger_account_results", result, __package__),
             identity=f"ledger.account.{verb}",
         ),
         machine_secret=machine_secret,

@@ -31,7 +31,7 @@ from cadrumo_harness.mcp.surface_facts import (
     operation_surface_facts,
 )
 
-from .test_operation_catalogue import _registry
+from .test_operation_catalogue import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -69,7 +69,7 @@ commit action, and the operation is then recorded as a read."""
 
 
 def _registrations() -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
-    return _registry().public_registrations
+    return production_operation_registry().public_registrations
 
 
 def test_every_registered_operation_has_exactly_one_record_of_its_surface_facts() -> None:

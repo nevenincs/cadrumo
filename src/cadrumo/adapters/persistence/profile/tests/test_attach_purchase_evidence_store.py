@@ -237,7 +237,8 @@ def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
     # refuse it. The two id spaces stay distinct even though both are
     # content-addressed 64-hex digests, so the refusal cannot lean on shape.
     from cadrumo.domain.invoices.models import derive_invoice_id
-    from cadrumo.domain.iva.classification import InvoiceKind
+
+    from .....domain.iva.schema import InvoiceKind
 
     invoice_id = derive_invoice_id(
         kind=InvoiceKind.RECEIVED,

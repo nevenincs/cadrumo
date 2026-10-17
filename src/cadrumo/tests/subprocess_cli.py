@@ -102,6 +102,7 @@ _CONTEXTVAR_HARNESS_SOURCE = dedent(
     from __future__ import annotations
 
     import json
+    import importlib
     import sys
 
     from cadrumo.core import config as config_module
@@ -127,9 +128,8 @@ _CONTEXTVAR_HARNESS_SOURCE = dedent(
 
         defer_logging_configuration()
         try:
-            from cadrumo.entrypoints.cli.main import main
-
-            main()
+            bootstrap = importlib.import_module(payload["bootstrap_module"])
+            bootstrap.main()
         finally:
             resume_logging_configuration()
     finally:
@@ -234,6 +234,7 @@ def run_cadrumo_subprocess(
     args: Sequence[str],
     *,
     settings: Mapping[str, object],
+    bootstrap_module: str = "cadrumo.entrypoints.cli.main",
     expected_storage_route_kind: StorageRouteKind | None = None,
     env_strip_prefixes: Sequence[str] = ("AEAT_", "PYTEST_"),
     extra_env: Mapping[str, str] | None = None,
@@ -245,7 +246,7 @@ def run_cadrumo_subprocess(
 
     The child constructs ``Settings(_env_file=None, **settings)`` and
     registers it on the ``settings_override`` ContextVar before importing
-    and calling ``cadrumo.entrypoints.cli.main`` -- the mechanism three
+    and calling the selected ``bootstrap_module`` -- the mechanism three
     independent harnesses converged on. ``settings`` takes exactly the
     keyword arguments a caller would otherwise pass to ``Settings(...)``
     directly; ``Path`` values are accepted and stringified for the JSON
@@ -259,10 +260,13 @@ def run_cadrumo_subprocess(
     ``env_strip_prefixes`` and ``extra_env`` are forwarded to
     :func:`subprocess_cli_env` unchanged; callers state their own prefix set
     explicitly (see its docstring for why there is no shared default).
+    Runtime-host tests select their production bootstrap explicitly; product-only
+    callers retain the product CLI without importing its runtime composition.
     """
     payload = json.dumps(
         {
             "settings": _json_safe(dict(settings)),
+            "bootstrap_module": bootstrap_module,
             "expected_storage_route_kind": None
             if expected_storage_route_kind is None
             else expected_storage_route_kind.name,

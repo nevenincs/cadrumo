@@ -21,14 +21,12 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.ledger.llm_classification import reject_llm_suggestion
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from cadrumo.core.json_contract import NoticeSeverity
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification
-from cadrumo.entrypoints.cli._ledger_llm_cli import split_recommendation_notice
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.cli_json_support import _json_object
+from cadrumo.tests.cli_json_support import require_json_object
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from ._ledger_llm_support import _import_one_transaction as _shared_import_one_transaction
@@ -66,11 +64,11 @@ def _import_two_transactions(ledger_llm_profile: NativeCliProfileFixture, tmp_pa
     assert imported.exit_code == 0, imported.output
     listed = _invoke(ledger_llm_profile, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    rows = _json_object(_json_result(listed))["rows"]
+    rows = require_json_object(_json_result(listed))["rows"]
     assert isinstance(rows, list)
     transaction_ids: list[str] = []
     for row in rows:
-        transaction_id = _json_object(row)["transaction_id"]
+        transaction_id = require_json_object(row)["transaction_id"]
         assert isinstance(transaction_id, str)
         transaction_ids.append(transaction_id)
     assert len(transaction_ids) == 2
@@ -104,20 +102,6 @@ def test_classify_reject_and_apply_are_mutually_exclusive(
     )
     assert result.exit_code != 0
     assert "--reject" in result.output and "--apply" in result.output
-
-
-def test_split_recommendation_notice_is_info_without_an_invented_action() -> None:
-    transaction_id = "txn-contract"
-
-    notice = split_recommendation_notice(transaction_id)
-
-    assert notice.severity is NoticeSeverity.INFO
-    assert notice.code == "ledger.classify.split_recommended"
-    assert notice.action is None
-    assert notice.context == {
-        "transaction_id": transaction_id,
-        "source": "evidence_read",
-    }
 
 
 @pytest.mark.windows_only

@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import Any, Final, cast, overload
 
 from cadrumo.core.hashing import sha256_file
-from dev.packaging.installed_wheel_binding import environment_interpreter
 from dev.product_environment import clean_product_env
 
 
@@ -327,7 +326,7 @@ async def _submit_visible_runtime_login(
     pilot: Any, passphrase: str, wait_for: Callable[[Callable[[], bool]], Awaitable[None]]
 ) -> None:
     """Submit only the selected public profile and require its exact password handoff."""
-    from textual.widgets import Input, Select
+    from textual.widgets import Button, Input, Select
 
     from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
 
@@ -337,10 +336,15 @@ async def _submit_visible_runtime_login(
     query_public_selector(pilot, "#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
     await pilot.pause()
     credential = query_public_selector(pilot, "#runtime-login-credential", Input)
+    submit = query_public_selector(pilot, "#runtime-login-submit", Button)
+    await wait_for(lambda: not credential.disabled and not submit.disabled)
     credential.value = passphrase
-    credential.focus()
+    submit.scroll_visible(immediate=True)
     await pilot.pause()
-    await pilot.press("enter")
+    await wait_for(lambda: not credential.disabled and not submit.disabled)
+    clicked = await pilot.click(submit)
+    if not clicked:
+        raise InstalledTuiChildError("installed runtime password submit control did not receive its click")
 
     def received_handoff() -> bool:
         handoff = getattr(pilot.app, "handoff", None)
@@ -400,6 +404,15 @@ async def admit_installed_session(
 
     try:
         async with asyncio.timeout_at(deadline):
+            # CPU-idle polling can finish before the launcher's finite native read.
+            await pilot.pause()
+            opening_workers = [worker for worker in pilot.app.workers if worker.group == "root-open"]
+            if opening_workers:
+                await pilot.app.workers.wait_for_complete(opening_workers)
+            await pilot.pause()
+            login_workers = [worker for worker in pilot.app.workers if worker.group == "tui-runtime-login"]
+            if login_workers:
+                await pilot.app.workers.wait_for_complete(login_workers)
             await wait_for(locate_surface)
             if surface == "#runtime-login-credential":
                 await _submit_visible_runtime_login(pilot, passphrase, wait_for)
@@ -426,6 +439,10 @@ async def leave_the_setup_walk_if_handed_off(*, pilot: Any, polls: int = 180) ->
     surface = await wait_for_any_public_selector(pilot, (SETUP_WALK_SURFACE, "#home-agenda"), polls=polls)
     if surface == SETUP_WALK_SURFACE:
         await pilot.press("escape")
+        await pilot.pause()
+        returning_workers = [worker for worker in pilot.app.workers if worker.group == "root-return-home"]
+        if returning_workers:
+            await pilot.app.workers.wait_for_complete(returning_workers)
     await wait_for_public_selector(pilot, "#home-agenda", polls=polls)
 
 
@@ -438,6 +455,7 @@ def admitted_session_autopilot(
     """Build a launcher callback that admits, then delegates real TUI work."""
 
     async def drive(pilot: Any) -> None:
+        await pilot.resize_terminal(160, 60)
         if await admit_installed_session(pilot=pilot, passphrase=passphrase, polls=polls):
             await drive_after_home(pilot)
 
@@ -511,6 +529,9 @@ async def select_public_data_table_row(*, pilot: Any, table_selector: str, row_k
             continue
         table.focus()
         table.move_cursor(row=table.get_row_index(candidate))
+        await pilot.pause()
+        if pilot.app.focused is not table:
+            raise InstalledTuiChildError(f"installed TUI table {table_selector} did not receive keyboard focus")
         await pilot.press("enter")
         return
     raise InstalledTuiChildError(
@@ -712,6 +733,10 @@ def run_installed_tui_child_process(
     site-packages.  Product environment variables are rebuilt from scratch,
     and the credential crosses the process boundary only through stdin.
     """
+    # Packaging tooling admits checkout source for standalone developer commands.
+    # Keep that parent-only dependency out of the installed child import graph.
+    from dev.packaging.installed_wheel_binding import environment_interpreter
+
     executable = environment_interpreter(python_executable)
     workspace = workspace_root.resolve(strict=True)
     receipt = receipt_path.resolve()

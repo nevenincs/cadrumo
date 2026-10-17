@@ -71,23 +71,26 @@ from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests.registered_executor_case_support import (
-    _CloseWitness,
-    _model_runtime_for,
-    _runtime,
-    _seeded_conformance_submission,
+    OperationRuntimeCloseWitness,
+    conformance_operation_runtime,
+    model_runtime_for_operation,
+    seeded_conformance_operation_submission,
 )
-from cadrumo.entrypoints.tests.test_operation_subject_binding import _REVIEW_DIGEST, _REVIEWED_DECISIONS
-from dev.operation_contract_manifest.tests.test_operation_catalogue import _registry
+from cadrumo.entrypoints.tests.test_operation_subject_binding import (
+    OPERATION_REVIEW_DIGEST,
+    REVIEWED_OPERATION_DECISIONS,
+)
+from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (
-    _ALLOWED,
-    _BINDING,
-    _CLIENT,
-    _context,
-    _grant,
-    _key,
-    _lease,
-    _profile,
+    ALLOWED_OPERATION_ACCESS,
+    TEST_CLIENT_INSTANCE_ID,
+    TEST_CLIENT_NATIVE_BINDING,
     human_lease,
+    operation_api_grant,
+    operation_api_key,
+    operation_api_lease,
+    operation_connection_context,
+    operation_profile_record,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -101,7 +104,7 @@ _AUTOMATION_FRONTENDS = frozenset(
 
 
 def _registrations() -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
-    return _registry().public_registrations
+    return production_operation_registry().public_registrations
 
 
 def _definition_ids(*, resolved: bool | None = None) -> tuple[str, ...]:
@@ -145,34 +148,34 @@ def _session_answer(
     policy's own.
     """
     disclosures = policy.disclosures
-    key_lease = _lease(None, disclosures=disclosures)
+    key_lease = operation_api_lease(None, disclosures=disclosures)
     decision = evaluate_operation_access(
-        request=request.model_copy(update={"profile_id": _BINDING.profile_id}),
+        request=request.model_copy(update={"profile_id": TEST_CLIENT_NATIVE_BINDING.profile_id}),
         policy=policy,
         registry=registry,
         session=human_lease(key_lease) if human else key_lease,
         ancestors=(),
-        grant=None if human else _grant(disclosures),
-        key=None if human else _key(disclosures),
-        profile=_profile(disclosures),
-        context=_context(),
+        grant=None if human else operation_api_grant(disclosures),
+        key=None if human else operation_api_key(disclosures),
+        profile=operation_profile_record(disclosures),
+        context=operation_connection_context(),
     )
-    return decision.code.value if isinstance(decision, AccessDenied) else _ALLOWED
+    return decision.code.value if isinstance(decision, AccessDenied) else ALLOWED_OPERATION_ACCESS
 
 
 def _widest_submission(
     definition_id: str, frontend: OperationFrontendProjection
 ) -> tuple[OperationAccessRequest, OperationAccessPolicy]:
     """A period-independent submission and the widest policy an operation could resolve for it."""
-    contract = _registry().lookup_public_contract(definition_id)
+    contract = production_operation_registry().lookup_public_contract(definition_id)
     request = OperationAccessRequest(
-        profile_id=_BINDING.profile_id,
+        profile_id=TEST_CLIENT_NATIVE_BINDING.profile_id,
         definition_id=definition_id,
         action=AccessAction.SUBMIT,
         frontend=frontend,
         periods=frozenset(),
         period_independent=True,
-        destination_id=_CLIENT,
+        destination_id=TEST_CLIENT_INSTANCE_ID,
     )
     policy = OperationAccessPolicy(
         definition_id=definition_id,
@@ -197,16 +200,16 @@ def test_every_registered_definition_is_submittable_from_every_frontend_by_eithe
     refused: dict[str, str] = {}
     persons_acts: set[str] = set()
     for definition_id in _definition_ids():
-        contract = _registry().lookup_public_contract(definition_id)
+        contract = production_operation_registry().lookup_public_contract(definition_id)
         persons = operation_is_persons_act(definition_id, ephemeral_secret_required=contract.ephemeral_secret_required)
         for frontend in _FRONTENDS:
             request, policy = _widest_submission(definition_id, frontend)
             for human in (True, False):
-                answer = _session_answer(request, policy, human=human, registry=_registry())
+                answer = _session_answer(request, policy, human=human, registry=production_operation_registry())
                 if persons and frontend in _AUTOMATION_FRONTENDS and answer == _PERSON_ACT_REQUIRED:
                     persons_acts.add(definition_id)
                     continue
-                if answer != _ALLOWED:
+                if answer != ALLOWED_OPERATION_ACCESS:
                     refused[f"{definition_id} on {frontend.value}, {'human' if human else 'key'} session"] = answer
     assert not refused, f"submissions the access policy refuses for a frontend: {refused}"
     # The exception is exercised, so a person's act left open to the automation would show here.
@@ -226,15 +229,15 @@ def test_every_persons_act_is_refused_on_each_automation_frontend_and_admitted_o
     matrix: dict[tuple[str, str, bool], str] = {}
     expected: dict[tuple[str, str, bool], str] = {}
     for definition_id in _definition_ids():
-        contract = _registry().lookup_public_contract(definition_id)
+        contract = production_operation_registry().lookup_public_contract(definition_id)
         if not operation_is_persons_act(definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
             continue
         for frontend in _FRONTENDS:
             request, policy = _widest_submission(definition_id, frontend)
             for human in (True, False):
                 cell = (definition_id, frontend.value, human)
-                matrix[cell] = _session_answer(request, policy, human=human, registry=_registry())
-                expected[cell] = _PERSON_ACT_REQUIRED if frontend in _AUTOMATION_FRONTENDS else _ALLOWED
+                matrix[cell] = _session_answer(request, policy, human=human, registry=production_operation_registry())
+                expected[cell] = _PERSON_ACT_REQUIRED if frontend in _AUTOMATION_FRONTENDS else ALLOWED_OPERATION_ACCESS
     assert matrix
     assert matrix == expected, {cell: answer for cell, answer in matrix.items() if answer != expected[cell]}
 
@@ -374,7 +377,7 @@ def _decoded_request(definition_id: str, sample: str) -> OperationRequest[BaseMo
         return OperationRequest(
             definition_id=definition_id,
             subject_ref=profile_operation_subject(str(_PROBE_PROFILE)),
-            payload=_registry().decode_request_payload(definition_id, sample),
+            payload=production_operation_registry().decode_request_payload(definition_id, sample),
         )
     except (CadrumoError, ValueError, LookupError):
         return None
@@ -389,7 +392,7 @@ def _probe_requests(definition_id: str) -> tuple[OperationRequest[BaseModel], ..
     operation would accept. A model whose rules need operation-specific
     knowledge accepts none, and that operation is then not proven here.
     """
-    schema = _registry().describe_public_definition(definition_id).request_json_schema
+    schema = production_operation_registry().describe_public_definition(definition_id).request_json_schema
     declared = schema.get("$defs", {})
     definitions: Mapping[str, Any] = declared if isinstance(declared, dict) else {}
     texts = (_sample_text(schema, definitions, choice) for choice in _SAMPLE_CHOICES)
@@ -436,7 +439,7 @@ def _probe_contexts(
 def _resolution(request: OperationRequest[BaseModel], context: OperationAccessContext) -> str:
     """Ask the registered resolver and name what it answered."""
     try:
-        resolve_operation_access(registry=_registry(), request=request, context=context)
+        resolve_operation_access(registry=production_operation_registry(), request=request, context=context)
     except ProfileAccessRefusedError as refused:
         return f"refused:{refused.reason.value}"
     except (CadrumoError, ValueError, LookupError) as error:
@@ -596,7 +599,9 @@ def _sample_request(definition_id: str, document: Mapping[str, Any]) -> Operatio
     return OperationRequest(
         definition_id=definition_id,
         subject_ref=subject_ref,
-        payload=_registry().decode_request_payload(definition_id, json.dumps(document, sort_keys=True)),
+        payload=production_operation_registry().decode_request_payload(
+            definition_id, json.dumps(document, sort_keys=True)
+        ),
     )
 
 
@@ -623,7 +628,7 @@ _REFUSED_AS_PERSONS_ACT = f"refused:{_PERSON_ACT_REQUIRED}"
 
 def _is_persons_act(request: OperationRequest[BaseModel]) -> bool:
     """Tell whether a request is the person's own act, as the person-acts module and the consent rule name it."""
-    contract = _registry().lookup_public_contract(request.definition_id)
+    contract = production_operation_registry().lookup_public_contract(request.definition_id)
     if operation_is_persons_act(request.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
         return True
     # The acknowledgement of an off-host read is the person's consent to send the document off this machine.
@@ -685,7 +690,7 @@ def test_every_schema_built_request_is_answered_alike_on_every_frontend() -> Non
     differing: dict[str, object] = {}
     admitted = 0
     for definition_id in _definition_ids(resolved=True):
-        registration = _registry().lookup_public_registration(definition_id)
+        registration = production_operation_registry().lookup_public_registration(definition_id)
         for index, request in enumerate(_probe_requests(definition_id)):
             by_frontend = {frontend: _answers_on(registration, request, frontend) for frontend in _FRONTENDS}
             admitted += _RESOLVED in by_frontend[_CLI].values()
@@ -699,7 +704,7 @@ def test_every_schema_built_request_is_answered_alike_on_every_frontend() -> Non
 
 def test_every_admission_a_schema_built_request_reports_is_refused_for_another_profile() -> None:
     """The admissions above are decisions: the same resolvers refuse the same requests for a foreign profile."""
-    registry = _registry()
+    registry = production_operation_registry()
     foreign_profile = UUID("5aa00000-0000-4000-8000-0000000000cc")
     admitted = 0
     unrefused: list[tuple[str, str, str]] = []
@@ -725,7 +730,7 @@ def test_every_written_out_request_is_answered_alike_on_every_frontend(operation
     asked = 0
     for table in (_STATED_FOR_THE_PERSON, _ORDINARY_REQUESTS):
         for definition_id, documents in table.items():
-            registration = _registry().lookup_public_registration(definition_id)
+            registration = production_operation_registry().lookup_public_registration(definition_id)
             for document in documents:
                 request = _sample_request(definition_id, document)
                 asked += 1
@@ -801,7 +806,7 @@ def _held_context(
     """A fresh access under the host's held authority, as a connected client of this frontend asks it."""
     return OperationAccessContext(
         profile_id=profile_id,
-        destination_id=_CLIENT,
+        destination_id=TEST_CLIENT_INSTANCE_ID,
         action=action,
         frontend=frontend,
         contract=registry.lookup_public_contract(definition_id),
@@ -856,13 +861,15 @@ def _submission_resolves_somewhere(answers: _Answers) -> bool:
     return any(decision.resolution == _RESOLVED for decision in answers[AccessAction.SUBMIT].values())
 
 
-@pytest.mark.parametrize("definition_id", sorted(set(_definition_ids()) - _REVIEWED_DECISIONS))
+@pytest.mark.parametrize("definition_id", sorted(set(_definition_ids()) - REVIEWED_OPERATION_DECISIONS))
 def test_the_real_resolver_and_policy_answer_every_frontend_alike_for_a_request_the_operation_admits(
     tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Admitted with the same policy or refused with the same code, for a human session and for a key session."""
     probed = [
-        _answers_at_every_judged_access(_registry(), request, profile_id=_PROBE_PROFILE, operation=operation)
+        _answers_at_every_judged_access(
+            production_operation_registry(), request, profile_id=_PROBE_PROFILE, operation=operation
+        )
         for request in _probe_requests(definition_id)
     ]
     for index, answers in enumerate(probed):
@@ -875,10 +882,14 @@ def test_the_real_resolver_and_policy_answer_every_frontend_alike_for_a_request_
     # No schema-built request is admitted, so the comparison above rests on refusals alone. The
     # request the operation's own scenario seeds into a real profile is one its resolver admits.
     with (
-        _model_runtime_for(definition_id),
-        _runtime(tmp_path / definition_id, cleanup=_CloseWitness()) as (_driver, registry, profile_id),
+        model_runtime_for_operation(definition_id),
+        conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
+            _driver,
+            registry,
+            profile_id,
+        ),
     ):
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             registry.lookup(definition_id), profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         request = OperationRequest[BaseModel](
@@ -897,15 +908,15 @@ def test_the_real_resolver_and_policy_answer_every_frontend_alike_for_a_request_
     assert not _unlike(answers), f"{definition_id} answers one frontend differently from another: {_unlike(answers)}"
 
 
-@pytest.mark.parametrize("definition_id", sorted(_REVIEWED_DECISIONS))
+@pytest.mark.parametrize("definition_id", sorted(REVIEWED_OPERATION_DECISIONS))
 def test_a_reviewed_decision_is_answered_alike_on_every_frontend(
     definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Its resolver needs a request that names a review, which the shared scenario cannot; this one does."""
-    registry = _registry()
+    registry = production_operation_registry()
     definition = registry.lookup(definition_id)
     payload = definition.request_type.model_validate(
-        {"profile_id": _PROBE_PROFILE, "request_id": UUID(int=1), "review_digest": _REVIEW_DIGEST}, strict=True
+        {"profile_id": _PROBE_PROFILE, "request_id": UUID(int=1), "review_digest": OPERATION_REVIEW_DIGEST}, strict=True
     )
     subject_ref = expected_operation_subject(definition.subject_reference, profile_id=_PROBE_PROFILE, payload=payload)
     assert subject_ref is not None
@@ -918,4 +929,4 @@ def test_a_reviewed_decision_is_answered_alike_on_every_frontend(
 
 def test_the_definitions_judged_apart_are_registered_and_have_a_resolver() -> None:
     """The named set holds only live, resolvable definitions, so no operation leaves the comparison unnoticed."""
-    assert set(_definition_ids(resolved=True)) >= _REVIEWED_DECISIONS
+    assert set(_definition_ids(resolved=True)) >= REVIEWED_OPERATION_DECISIONS

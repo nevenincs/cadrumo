@@ -98,7 +98,6 @@ from pydantic import BaseModel, Field
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.decimal.constants import HUNDRED
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.establishment import (
     country_code_for_printed_country_name,
     territorial_scope_for_country,
@@ -108,7 +107,7 @@ from ...domain.iva.identification import identification_state_for_printed_tax_id
 from ...domain.iva.legend_derivation import match_regime_legend
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
 from ...domain.iva.regime_legend import RegimeLegend
-from ...domain.iva.schema import EUMemberState, spanish_eu_member_state
+from ...domain.iva.schema import EUMemberState, IvaTerritorialScope, spanish_eu_member_state
 
 # `names_spain` is the sibling module's authority on what positively names
 # Spain, and is imported rather than restated: a second copy of that test is
@@ -123,7 +122,7 @@ if TYPE_CHECKING:
     from datetime import date
 
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.iva.classification import InvoiceKind
+    from ...domain.iva.schema import InvoiceKind
     from .invoice_draft_records import InvoiceDraft
 
 __all__ = [

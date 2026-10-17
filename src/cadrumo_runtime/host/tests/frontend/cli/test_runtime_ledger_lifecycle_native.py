@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction
-from cadrumo.entrypoints.cli._ledger_payloads import (
+from cadrumo.entrypoints.cli.ledger_results import (
     LedgerAddResult,
     LedgerArchiveResult,
     LedgerExcludeResult,
@@ -133,16 +133,6 @@ def _added_events(
     return tuple(event for event_id, event in after.events.items() if event_id not in before.events)
 
 
-def _assert_profile_activation(event: BucketEvent, *, bucket_id: str) -> None:
-    assert event.bucket_id == bucket_id
-    assert event.event_type is BucketEventType.PROFILE_ACTIVATED
-    assert event.object_type is BucketEventObjectType.PROFILE
-    assert event.object_id == bucket_id
-    assert event.actor == "profile-login"
-    assert event.payload_version == 1
-    assert dict(event.payload) == {"active_profile": bucket_id}
-
-
 def _assert_lifecycle_event(
     before: BucketEventHistoryCatalogue,
     after: BucketEventHistoryCatalogue,
@@ -154,12 +144,9 @@ def _assert_lifecycle_event(
     payload: dict[str, str],
 ) -> str:
     added = _added_events(before, after)
-    activations = tuple(event for event in added if event.event_type is BucketEventType.PROFILE_ACTIVATED)
     mutations = tuple(event for event in added if event.event_type is event_type)
-    assert len(added) == 2
-    assert len(activations) == 1
+    assert len(added) == 1
     assert len(mutations) == 1
-    _assert_profile_activation(activations[0], bucket_id=bucket_id)
     event = mutations[0]
     assert event.bucket_id == bucket_id
     assert event.event_type is event_type
@@ -177,11 +164,7 @@ def _assert_no_lifecycle_write(
     *,
     bucket_id: str,
 ) -> None:
-    added = _added_events(before, after)
-    assert all(event.event_type is BucketEventType.PROFILE_ACTIVATED for event in added)
-    assert len(added) <= 1
-    if added:
-        _assert_profile_activation(added[0], bucket_id=bucket_id)
+    assert not _added_events(before, after)
 
 
 def test_native_lifecycle_commands_preserve_full_results_history_and_blocker_refusal(

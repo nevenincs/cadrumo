@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from typer.main import get_command
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.shared_contracts import (
@@ -319,7 +320,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
 
 
 def test_live_specs_are_the_exact_complete_current_surface() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS), resolver=resolve_deferred_target)
     live_keys = {spec.key for spec in LIVE_COMMAND_SPECS}
     actual = {" ".join(node.path[1:]) for node in graph.nodes() if node.spec.key in live_keys}
     assert len(LIVE_COMMAND_SPECS) == 45
@@ -493,7 +494,7 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         is not notifications["app_live_notifications_document_view"].result_schema
     )
 
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS), resolver=resolve_deferred_target)
     for path, spec in (
         (("aeat", "app", "live"), foundation["app_live"]),
         (("aeat", "app", "live", "borrador", "100", "latest"), borrador["app_live_borrador_100_latest"]),
@@ -542,7 +543,7 @@ def test_live_specs_own_policy_schema_and_localised_parameter_contracts() -> Non
 
 
 def test_every_live_subtree_compiles_from_specs_without_legacy_structure() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS), resolver=resolve_deferred_target)
     for spec in LIVE_COMMAND_SPECS:
         app = build_command_subtree(graph, spec.key)
         assert get_command(app) is not None

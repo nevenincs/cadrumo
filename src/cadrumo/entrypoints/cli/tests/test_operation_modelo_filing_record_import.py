@@ -44,7 +44,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.work_unit import derive_work_unit_id
 from .. import operation_modelo_filing_record_import as bridge
-from .._modelo_payloads import FilingRecordImportResult
+from ..modelo_results import FilingRecordImportResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -22,7 +22,7 @@ from ....core.operations import (
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt

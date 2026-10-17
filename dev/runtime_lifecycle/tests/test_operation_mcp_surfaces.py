@@ -59,7 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _MCP = OperationFrontendProjection.EXTERNAL_CLIENT
 _FULL = McpSurfaceName.FULL
 _READ_ONLY_LOCAL = McpSurfaceName.READ_ONLY_LOCAL
-_ALLOWED = "allowed"
+ALLOWED_OPERATION_ACCESS = "allowed"
 _SCOPE_DENIED = AccessDenialCode.OPERATION_DENIED.value
 _COMMITTING = frozenset(AccessAction)
 _READING = _COMMITTING - {AccessAction.COMMIT}
@@ -68,12 +68,12 @@ _NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
 _BOOT = UUID("5bb00000-0000-4000-8000-000000000001")
 _CONNECTION = UUID("5bb00000-0000-4000-8000-000000000002")
 _PARENT_CONNECTION = UUID("5bb00000-0000-4000-8000-000000000003")
-_CLIENT = UUID("5bb00000-0000-4000-8000-000000000004")
+TEST_CLIENT_INSTANCE_ID = UUID("5bb00000-0000-4000-8000-000000000004")
 _SESSION = UUID("5bb00000-0000-4000-8000-000000000005")
 _PARENT_SESSION = UUID("5bb00000-0000-4000-8000-000000000006")
 _GRANT = UUID("5bb00000-0000-4000-8000-000000000007")
 _KEY = UUID("5bb00000-0000-4000-8000-000000000008")
-_BINDING = ProfileAccessBinding(
+TEST_CLIENT_NATIVE_BINDING = ProfileAccessBinding(
     profile_id=UUID("5bb00000-0000-4000-8000-000000000009"),
     installation_id=UUID("5bb00000-0000-4000-8000-00000000000a"),
     os_owner_id="synthetic-owner",
@@ -83,17 +83,17 @@ _BINDING = ProfileAccessBinding(
 
 
 @cache
-def _registry() -> OperationRegistry:
+def mcp_operation_registry() -> OperationRegistry:
     return build_production_operation_registry()
 
 
 @cache
 def _definition_ids() -> tuple[str, ...]:
-    return tuple(sorted(item.contract.definition_id for item in _registry().public_registrations))
+    return tuple(sorted(item.contract.definition_id for item in mcp_operation_registry().public_registrations))
 
 
 def _is_persons_act(definition_id: str) -> bool:
-    contract = _registry().lookup_public_contract(definition_id)
+    contract = mcp_operation_registry().lookup_public_contract(definition_id)
     return operation_is_persons_act(definition_id, ephemeral_secret_required=contract.ephemeral_secret_required)
 
 
@@ -120,11 +120,11 @@ def _whole_scope(disclosures: frozenset[DisclosurePermission] = frozenset()) -> 
 
 
 @cache
-def _grant(disclosures: frozenset[DisclosurePermission] = frozenset()) -> AutomationGrant:
+def operation_api_grant(disclosures: frozenset[DisclosurePermission] = frozenset()) -> AutomationGrant:
     return AutomationGrant(
         grant_id=_GRANT,
-        binding=_BINDING,
-        client_id=_CLIENT,
+        binding=TEST_CLIENT_NATIVE_BINDING,
+        client_id=TEST_CLIENT_INSTANCE_ID,
         generation=1,
         profile_lock_generation=0,
         state=AuthorityState.ACTIVE,
@@ -137,12 +137,12 @@ def _grant(disclosures: frozenset[DisclosurePermission] = frozenset()) -> Automa
 
 
 @cache
-def _key(disclosures: frozenset[DisclosurePermission] = frozenset()) -> ApiKeyRecord:
-    grant = _grant(disclosures)
+def operation_api_key(disclosures: frozenset[DisclosurePermission] = frozenset()) -> ApiKeyRecord:
+    grant = operation_api_grant(disclosures)
     return ApiKeyRecord(
         key_id=_KEY,
         grant_id=grant.grant_id,
-        binding=_BINDING,
+        binding=TEST_CLIENT_NATIVE_BINDING,
         generation=1,
         state=AuthorityState.ACTIVE,
         valid_from=grant.valid_from,
@@ -150,7 +150,7 @@ def _key(disclosures: frozenset[DisclosurePermission] = frozenset()) -> ApiKeyRe
     )
 
 
-def _lease(
+def operation_api_lease(
     surface: McpSurfaceName | None,
     *,
     session_id: UUID = _SESSION,
@@ -172,11 +172,11 @@ def _lease(
         scope = intersect_scopes((scope, ceiling))
     return AccessSession(
         session_id=session_id,
-        binding=_BINDING,
+        binding=TEST_CLIENT_NATIVE_BINDING,
         profile_lock_generation=0,
         runtime_boot_id=_BOOT,
         connection_id=connection_id,
-        client_id=_CLIENT,
+        client_id=TEST_CLIENT_INSTANCE_ID,
         kind=SessionKind.API_KEY,
         state=SessionState.ACTIVE,
         scope=scope,
@@ -192,9 +192,9 @@ def _lease(
 
 
 @cache
-def _profile(disclosures: frozenset[DisclosurePermission] = frozenset()) -> ProfileAccessState:
+def operation_profile_record(disclosures: frozenset[DisclosurePermission] = frozenset()) -> ProfileAccessState:
     return ProfileAccessState(
-        binding=_BINDING,
+        binding=TEST_CLIENT_NATIVE_BINDING,
         lock_generation=0,
         globally_locked=False,
         automation_enabled=True,
@@ -205,18 +205,18 @@ def _profile(disclosures: frozenset[DisclosurePermission] = frozenset()) -> Prof
 
 
 @cache
-def _context() -> AccessEvaluationContext:
+def operation_connection_context() -> AccessEvaluationContext:
     return AccessEvaluationContext(
         now=_NOW,
         monotonic_now=100.0,
         clock_rollback_detected=False,
         runtime_boot_id=_BOOT,
         connection_id=_CONNECTION,
-        authenticated_client_id=_CLIENT,
+        authenticated_client_id=TEST_CLIENT_INSTANCE_ID,
         login_contexts=(
             OsLoginContext(
                 login_id="login-a",
-                os_owner_id=_BINDING.os_owner_id,
+                os_owner_id=TEST_CLIENT_NATIVE_BINDING.os_owner_id,
                 active=True,
                 lock_state=OsLockState.UNLOCKED,
                 unattended=LoginEligibility.ELIGIBLE,
@@ -243,21 +243,21 @@ def _answer(
     ``delegated`` evaluates an admitted child that inherits its parent's generic
     operation/effect ceiling, narrowed by ``parent_surface``.
     """
-    contract = _registry().lookup_public_contract(definition_id)
-    session = _lease(surface, parent_session_id=_PARENT_SESSION if delegated else None)
+    contract = mcp_operation_registry().lookup_public_contract(definition_id)
+    session = operation_api_lease(surface, parent_session_id=_PARENT_SESSION if delegated else None)
     ancestors: tuple[AccessSession, ...] = ()
     if delegated:
-        ancestors = (_lease(parent_surface, session_id=_PARENT_SESSION, connection_id=_PARENT_CONNECTION),)
+        ancestors = (operation_api_lease(parent_surface, session_id=_PARENT_SESSION, connection_id=_PARENT_CONNECTION),)
         session = session.model_copy(update={"scope": intersect_scopes((session.scope, ancestors[0].scope))})
     return _evaluate(
         OperationAccessRequest(
-            profile_id=_BINDING.profile_id,
+            profile_id=TEST_CLIENT_NATIVE_BINDING.profile_id,
             definition_id=definition_id,
             action=action,
             frontend=frontend,
             periods=frozenset(),
             period_independent=True,
-            destination_id=_CLIENT,
+            destination_id=TEST_CLIENT_INSTANCE_ID,
         ),
         OperationAccessPolicy(
             definition_id=definition_id,
@@ -273,7 +273,7 @@ def _answer(
         ),
         session=session,
         ancestors=ancestors,
-        registry=_registry(),
+        registry=mcp_operation_registry(),
     )
 
 
@@ -293,12 +293,12 @@ def _evaluate(
         registry=registry,
         session=session,
         ancestors=ancestors,
-        grant=_grant(disclosures),
-        key=_key(disclosures),
-        profile=_profile(disclosures),
-        context=_context(),
+        grant=operation_api_grant(disclosures),
+        key=operation_api_key(disclosures),
+        profile=operation_profile_record(disclosures),
+        context=operation_connection_context(),
     )
-    return decision.code.value if isinstance(decision, AccessDenied) else _ALLOWED
+    return decision.code.value if isinstance(decision, AccessDenied) else ALLOWED_OPERATION_ACCESS
 
 
 def human_lease(scope_of: AccessSession) -> AccessSession:
@@ -307,7 +307,7 @@ def human_lease(scope_of: AccessSession) -> AccessSession:
         {
             **dict(scope_of),
             "kind": SessionKind.HUMAN,
-            "originating_login_id": _context().login_contexts[0].login_id,
+            "originating_login_id": operation_connection_context().login_contexts[0].login_id,
             "grant_id": None,
             "grant_generation": None,
             "key_id": None,
@@ -335,24 +335,24 @@ def answer_for_resolved_access(
     """
     request = resolved.request.model_copy(
         update={
-            "profile_id": _BINDING.profile_id,
+            "profile_id": TEST_CLIENT_NATIVE_BINDING.profile_id,
             "frontend": OperationFrontendProjection.CLI if human else resolved.request.frontend,
         }
     )
     disclosures = resolved.policy.disclosures
-    key_session = _lease(surface, disclosures=disclosures)
+    key_session = operation_api_lease(surface, disclosures=disclosures)
     decision = evaluate_operation_access(
         request=request,
         policy=resolved.policy,
         registry=registry,
         session=human_lease(key_session) if human else key_session,
         ancestors=(),
-        grant=None if human else _grant(disclosures),
-        key=None if human else _key(disclosures),
-        profile=_profile(disclosures),
-        context=_context(),
+        grant=None if human else operation_api_grant(disclosures),
+        key=None if human else operation_api_key(disclosures),
+        profile=operation_profile_record(disclosures),
+        context=operation_connection_context(),
     )
-    return decision.code.value if isinstance(decision, AccessDenied) else _ALLOWED
+    return decision.code.value if isinstance(decision, AccessDenied) else ALLOWED_OPERATION_ACCESS
 
 
 def _answers(definition_id: str, surface: McpSurfaceName | None) -> set[str]:
@@ -384,7 +384,7 @@ def test_without_a_surface_the_session_is_admitted_to_every_registered_operation
     refused: dict[str, set[str]] = {}
     for definition_id in _agent_operation_ids():
         answers = _answers(definition_id, None)
-        if answers != {_ALLOWED}:
+        if answers != {ALLOWED_OPERATION_ACCESS}:
             refused[definition_id] = answers
     assert not refused, f"operations the baseline session is refused with no surface named: {refused}"
 
@@ -403,8 +403,8 @@ def test_the_full_surface_answers_every_access_as_no_surface_does() -> None:
                     differing[f"{definition_id} {action.value}"] = (unnamed, named)
     assert not differing, f"accesses the full surface answers differently from no surface: {differing}"
     # Two refusals of everything would also agree, so the comparison must cover admissions and refusals.
-    assert _ALLOWED in seen
-    assert seen - {_ALLOWED}
+    assert ALLOWED_OPERATION_ACCESS in seen
+    assert seen - {ALLOWED_OPERATION_ACCESS}
 
 
 def test_the_read_only_local_surface_refuses_every_operation_that_changes_records_or_reaches_the_network() -> None:
@@ -418,7 +418,7 @@ def test_the_read_only_local_surface_refuses_every_operation_that_changes_record
             admitted[definition_id] = answers
     assert not admitted, f"writes or network reaches the read-only local surface does not refuse: {admitted}"
     # Without the surface each is admitted, so it is the surface that refuses them.
-    assert all(_answers(definition_id, None) == {_ALLOWED} for definition_id in barred)
+    assert all(_answers(definition_id, None) == {ALLOWED_OPERATION_ACCESS} for definition_id in barred)
 
 
 def test_the_read_only_local_surface_refuses_every_operation_outside_its_list() -> None:
@@ -440,9 +440,9 @@ def test_the_read_only_local_surface_admits_every_operation_on_its_list() -> Non
     assert not unregistered, f"read-only local operations that are not registered: {unregistered}"
     refused: dict[str, str] = {}
     for definition_id in sorted(operations):
-        assert _answer(definition_id, None) == _ALLOWED, definition_id
+        assert _answer(definition_id, None) == ALLOWED_OPERATION_ACCESS, definition_id
         answer = _answer(definition_id, _READ_ONLY_LOCAL)
-        if answer != _ALLOWED:
+        if answer != ALLOWED_OPERATION_ACCESS:
             refused[definition_id] = answer
     assert not refused, f"listed operations the read-only local surface refuses: {refused}"
 
@@ -476,7 +476,7 @@ def test_every_surface_advertises_only_tools_the_catalogue_names() -> None:
 
 
 def _declares_a_review(definition_id: str) -> bool:
-    contract = _registry().lookup_public_contract(definition_id)
+    contract = mcp_operation_registry().lookup_public_contract(definition_id)
     return bool(contract.interaction_kinds) or contract.review_projection_schema is not None
 
 
@@ -493,8 +493,10 @@ def test_a_read_only_surface_refuses_the_commit_section_and_a_submission_that_co
     """A listed operation is still refused where its own policy says the access could commit."""
     commit = AccessAction.COMMIT
     for definition_id in sorted(_read_only_local_operations()):
-        assert _answer(definition_id, None, action=commit, resolved=_COMMITTING) == _ALLOWED, definition_id
-        assert _answer(definition_id, None, resolved=_COMMITTING) == _ALLOWED, definition_id
+        assert _answer(definition_id, None, action=commit, resolved=_COMMITTING) == ALLOWED_OPERATION_ACCESS, (
+            definition_id
+        )
+        assert _answer(definition_id, None, resolved=_COMMITTING) == ALLOWED_OPERATION_ACCESS, definition_id
         opened = _answer(definition_id, _READ_ONLY_LOCAL, action=commit, resolved=_COMMITTING)
         assert opened == _SCOPE_DENIED, definition_id
         submitted = _answer(definition_id, _READ_ONLY_LOCAL, resolved=_COMMITTING)
@@ -508,7 +510,9 @@ def test_the_persons_acts_are_refused_to_mcp_on_every_surface_and_admitted_to_th
     for definition_id in persons:
         for surface in (None, _FULL, _READ_ONLY_LOCAL):
             assert _answers(definition_id, surface) == {AccessDenialCode.PERSON_ACT_REQUIRED.value}, definition_id
-        assert _answer(definition_id, None, frontend=OperationFrontendProjection.CLI) == _ALLOWED, definition_id
+        assert _answer(definition_id, None, frontend=OperationFrontendProjection.CLI) == ALLOWED_OPERATION_ACCESS, (
+            definition_id
+        )
 
 
 def test_a_lease_that_names_no_surface_is_held_to_the_surface_its_parent_named() -> None:
@@ -516,12 +520,12 @@ def test_a_lease_that_names_no_surface_is_held_to_the_surface_its_parent_named()
     assert barred
     for definition_id in barred:
         free = _answer(definition_id, None, delegated=True, resolved=_COMMITTING)
-        assert free == _ALLOWED, definition_id
+        assert free == ALLOWED_OPERATION_ACCESS, definition_id
         held = _answer(definition_id, None, delegated=True, parent_surface=_READ_ONLY_LOCAL, resolved=_COMMITTING)
         assert held == _SCOPE_DENIED, definition_id
     for definition_id in sorted(_read_only_local_operations()):
         kept = _answer(definition_id, None, delegated=True, parent_surface=_READ_ONLY_LOCAL)
-        assert kept == _ALLOWED, definition_id
+        assert kept == ALLOWED_OPERATION_ACCESS, definition_id
 
 
 def test_each_frontend_obeys_the_same_generic_operation_and_effect_ceiling() -> None:
@@ -530,11 +534,17 @@ def test_each_frontend_obeys_the_same_generic_operation_and_effect_ceiling() -> 
     for definition_id in sorted(_read_only_local_operations()):
         for frontend in sorted(OperationFrontendProjection):
             judged += 1
-            assert _answer(definition_id, None, frontend=frontend) == _ALLOWED, definition_id
-            assert _answer(definition_id, _FULL, frontend=frontend) == _ALLOWED, definition_id
-            assert _answer(definition_id, _READ_ONLY_LOCAL, frontend=frontend) == _ALLOWED, definition_id
-            assert _answer(definition_id, None, frontend=frontend, resolved=_COMMITTING) == _ALLOWED, definition_id
-            assert _answer(definition_id, _FULL, frontend=frontend, resolved=_COMMITTING) == _ALLOWED, definition_id
+            assert _answer(definition_id, None, frontend=frontend) == ALLOWED_OPERATION_ACCESS, definition_id
+            assert _answer(definition_id, _FULL, frontend=frontend) == ALLOWED_OPERATION_ACCESS, definition_id
+            assert _answer(definition_id, _READ_ONLY_LOCAL, frontend=frontend) == ALLOWED_OPERATION_ACCESS, (
+                definition_id
+            )
+            assert _answer(definition_id, None, frontend=frontend, resolved=_COMMITTING) == ALLOWED_OPERATION_ACCESS, (
+                definition_id
+            )
+            assert _answer(definition_id, _FULL, frontend=frontend, resolved=_COMMITTING) == ALLOWED_OPERATION_ACCESS, (
+                definition_id
+            )
             assert _answer(definition_id, _READ_ONLY_LOCAL, frontend=frontend, resolved=_COMMITTING) == _SCOPE_DENIED, (
                 definition_id
             )

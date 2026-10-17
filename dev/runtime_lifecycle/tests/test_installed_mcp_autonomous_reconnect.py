@@ -46,6 +46,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessStatus
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
+from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
@@ -60,7 +61,9 @@ from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.frontend.cli import native_api_cli_support
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
@@ -295,24 +298,25 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     # This is an explicit human denial after the passwordless
                     # reconnect, through the established CLI authority owner.
                     delete_profile_session(storage_root=tmp_path / "cadrumo-storage", profile_id=profile.profile_id)
-                    denied_output = await asyncio.to_thread(
-                        invoke_typer_app,
-                        build_command_app(RUNTIME_COMMAND_GRAPH),
-                        (
-                            "--format",
-                            "json",
-                            "--profile",
-                            str(profile.profile_id),
-                            "--profile-secrets-stdin",
-                            "config",
-                            "profile",
-                            "automation",
-                            "deny",
-                            "key",
-                            str(source_metadata.key_id),
-                        ),
-                        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-                    )
+                    with override_settings(cadrumo_cli_reveal_identifiers=True):
+                        denied_output = await asyncio.to_thread(
+                            invoke_typer_app,
+                            build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
+                            (
+                                "--format",
+                                "json",
+                                "--profile",
+                                str(profile.profile_id),
+                                "--profile-secrets-stdin",
+                                "config",
+                                "profile",
+                                "automation",
+                                "deny",
+                                "key",
+                                str(source_metadata.key_id),
+                            ),
+                            input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+                        )
                     assert denied_output.exit_code == 0, denied_output.output
                     assert PROFILE_INPUT not in denied_output.output
                     denied_document = _object(json.loads(denied_output.stdout))
@@ -323,22 +327,23 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     assert denied_result["target_id"] == str(source_metadata.key_id)
                     assert _object(denied_result["receipt"])["access_denied"] is True
 
-                    inventory_output = await asyncio.to_thread(
-                        invoke_typer_app,
-                        build_command_app(RUNTIME_COMMAND_GRAPH),
-                        (
-                            "--format",
-                            "json",
-                            "--profile",
-                            str(profile.profile_id),
-                            "--profile-secrets-stdin",
-                            "config",
-                            "profile",
-                            "automation",
-                            "list",
-                        ),
-                        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-                    )
+                    with override_settings(cadrumo_cli_reveal_identifiers=True):
+                        inventory_output = await asyncio.to_thread(
+                            invoke_typer_app,
+                            build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
+                            (
+                                "--format",
+                                "json",
+                                "--profile",
+                                str(profile.profile_id),
+                                "--profile-secrets-stdin",
+                                "config",
+                                "profile",
+                                "automation",
+                                "list",
+                            ),
+                            input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+                        )
                     assert inventory_output.exit_code == 0, inventory_output.output
                     assert PROFILE_INPUT not in inventory_output.output
                     inventory_document = _object(json.loads(inventory_output.stdout))
@@ -349,16 +354,21 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     ]
                     assert len(selected) == 1 and selected[0]["state"] == "revoked"
 
-                    # Which operations exist is public and still answered, under no session.
-                    public = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert public.is_error is False
-                    assert _object(public.structured_content)["session"] == "none"
-                    assert str(reference) not in repr(public.structured_content)
+                    search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert search.is_error is True
+                    search_refusal = _object(search.structured_content)
+                    assert set(search_refusal) <= {"outcome", "code", "remedy", "notice"}
+                    assert search_refusal["outcome"] == "refused"
+                    assert search_refusal["code"] in _LIVE_RETIREMENT_CODES
+                    assert search_refusal["remedy"] == SIGN_IN_REMEDY
+                    assert str(reference) not in repr(search_refusal)
                     cached_result = await client.call_tool("result", result_args)
                     assert cached_result.is_error is True
                     cached_refusal = _object(cached_result.structured_content)
+                    assert set(cached_refusal) <= {"outcome", "code", "remedy", "notice"}
                     assert cached_refusal["outcome"] == "refused"
                     assert cached_refusal["code"] in _LIVE_RETIREMENT_CODES
+                    assert cached_refusal["remedy"] == SIGN_IN_REMEDY
                     assert str(reference) not in repr(cached_refusal)
 
             with (tmp_path / "installed-reconnect-revoked.stderr").open("w", encoding="utf-8") as error_log:
@@ -374,15 +384,23 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     assert revoked["profile_id"] == str(profile.profile_id)
                     assert revoked["authenticated"] is False
                     assert revoked["denial"] in _REVOKED_KEY_CODES
-                    public = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert public.is_error is False
-                    assert _object(public.structured_content)["session"] == "none"
+                    search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert search.is_error is True
+                    search_refusal = _object(search.structured_content)
+                    assert search_refusal == {
+                        "outcome": "refused",
+                        "code": revoked["denial"],
+                        "remedy": SIGN_IN_REMEDY,
+                    }
+                    assert str(reference) not in repr(search.structured_content)
                     denied = await client.call_tool("observe", {"observation": {}})
                     assert denied.is_error is True
                     assert _object(denied.structured_content) == {
                         "outcome": "refused",
                         "code": revoked["denial"],
+                        "remedy": SIGN_IN_REMEDY,
                     }
+                    assert str(reference) not in repr(denied.structured_content)
         except BaseException as error:
             primary = error
             raise

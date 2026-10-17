@@ -29,7 +29,7 @@ from ....application.ledger.import_operation import (
 )
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect
-from .. import _ledger_import_cli
+from .. import ledger_import_commands
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -60,12 +60,12 @@ def _submission_refused_with(
             effect=OperationEffect.NONE,
         )
 
-    monkeypatch.setattr(_ledger_import_cli, "import_ledger_sources_for_cli", submit)
+    monkeypatch.setattr(ledger_import_commands, "import_ledger_sources_for_cli", submit)
     return submitted
 
 
 def _import(named: Path) -> None:
-    _ledger_import_cli.ledger_import(cast(typer.Context, object()), named, LedgerProviderID.AUTO)
+    ledger_import_commands.ledger_import(cast(typer.Context, object()), named, LedgerProviderID.AUTO)
 
 
 def test_a_directory_is_submitted_as_typed_and_an_empty_one_is_refused_by_its_typed_path(

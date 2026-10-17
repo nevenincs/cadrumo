@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
-from .._modelo_payloads import WorkDeadlinePosturePayload
+from ..modelo_results import WorkDeadlinePosturePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

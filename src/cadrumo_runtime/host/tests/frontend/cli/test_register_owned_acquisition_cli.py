@@ -42,11 +42,11 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo.tests.storage_scope import storage_overrides
 
-from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 
@@ -411,6 +411,7 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
             ],
         )
         assert refused_quarter.exit_code == 0, refused_quarter.output
+        work_unit_id = json.loads(refused_quarter.output)["result"]["work_unit_id"]
         refused_quarter = invoke_cached_cli(
             [
                 *("--format", "json", "app", "modelo", "work", "calculate"),
@@ -420,7 +421,15 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
             ],
         )
 
-    assert refused_quarter.exit_code != 0, refused_quarter.output
-    assert "competing transaction-ledger depreciation treatment" in refused_quarter.output
-    assert _ASSET_ID in refused_quarter.output
-    assert "mobiliario_amortizable" in refused_quarter.output
+        assert refused_quarter.exit_code != 0, refused_quarter.output
+        status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
+        assert status.exit_code == 0, status.output
+        persisted = json.loads(status.output)["result"]
+
+    error = json.loads(refused_quarter.output)["error"]
+    assert error["code"] == "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT", refused_quarter.output
+    assert error["context"]["terminal_condition"] == "refused"
+    assert error["context"]["effect"] == "unknown"
+    assert error["context"]["operation_id"]
+    assert persisted["current_calculation_revision_id"] is None
+    assert persisted["filed_calculation_revision_id"] is None

@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ..operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from .batch_ingest import (

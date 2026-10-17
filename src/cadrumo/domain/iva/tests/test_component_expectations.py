@@ -41,7 +41,6 @@ from ....core.resources.bundled_data import bundled_path
 from ....core.toml import load_toml
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from ..classification import InvoiceKind
 from ..components import (
     IvaCategoryComponents,
     IvaComponentPresence,
@@ -57,7 +56,7 @@ from ..components import (
     registry_component_catalogue,
     registry_component_vocabulary,
 )
-from ..schema import IvaCategory
+from ..schema import InvoiceKind, IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

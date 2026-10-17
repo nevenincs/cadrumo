@@ -35,11 +35,12 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.service import verify_link_consistency
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
+
+from .....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

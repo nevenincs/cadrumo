@@ -9,7 +9,7 @@ from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
-from dev.first_party_source import DEVELOPMENT_TOOLING, is_test_source
+from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_SOURCE_ROOTS, is_test_source
 from dev.quality.source_import_analysis import (
     is_shipped_module,
     module_name_for,
@@ -180,14 +180,18 @@ class ShippedTreeSpec:
 def _sibling_console_packages(
     src_root: Path, scripts: dict[str, str], *, audited_package: str
 ) -> tuple[CompanionPackage, ...]:
-    """Group the console scripts that start in a package other than the audited one.
+    """Load the application cohort and group its declared console entrypoints.
 
-    Read from the declared scripts rather than from workspace membership, so a
-    sibling distribution folded into this one keeps contributing its roots. A
+    A shared package without a console script still supplies real import edges;
+    loading it does not make any of its modules an execution root. A
     script whose package is not present under ``src/`` is skipped: it cannot be
     walked, and guessing would silently shrink the reachable set.
     """
     grouped: dict[str, list[EntryPoint]] = {}
+    for source_root in PRODUCT_SOURCE_ROOTS:
+        package = Path(source_root).name
+        if package != audited_package and (src_root / package).is_dir():
+            grouped[package] = []
     for spec in scripts.values():
         entry = EntryPoint.parse(spec)
         package = entry.module.split(".")[0]

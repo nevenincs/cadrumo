@@ -16,8 +16,7 @@ import pytest
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ...exchange_rate_provider import exchange_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice
 

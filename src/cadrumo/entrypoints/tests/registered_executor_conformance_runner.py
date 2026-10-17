@@ -51,10 +51,10 @@ from .prorrata_bienes_operation_test_support import (
 )
 from .prorrata_operation_test_support import read_prorrata_operation_conformance_register
 from .registered_executor_case_support import (
-    _CloseWitness,
-    _model_runtime_for,
-    _runtime,
-    _seeded_conformance_submission,
+    OperationRuntimeCloseWitness,
+    conformance_operation_runtime,
+    model_runtime_for_operation,
+    seeded_conformance_operation_submission,
 )
 from .registered_executor_outcome_assertions import _assert_registered_executor_conformance_outcome
 
@@ -68,18 +68,18 @@ def _run_registered_executor_conformance_case(
 ) -> None:
     """Exercise the actual admitted operation, settlement, review and cleanup owners."""
     definition_id = case.definition_id
-    cleanup = _CloseWitness()
+    cleanup = OperationRuntimeCloseWitness()
     with (
         (
             closed_model_runtime()
             if family is not None and family.closes_model_runtime
-            else _model_runtime_for(definition_id)
+            else model_runtime_for_operation(definition_id)
         ),
-        _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
+        conformance_operation_runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation, family=family
         )
         family_preparation = submission.family_preparation

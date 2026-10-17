@@ -1,21 +1,4 @@
 cli:
-  censo_auth:
-    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra; a korábban mentett mezők
-      megmaradnak.'
-    configure_help: Állítsa be vagy szerkessze a mentett AEAT-hitelesítést a népszámlálási adatok lekérése
-      előtt (interaktív terminál).
-    offer: Beállítja az AEAT-hitelesítést a szinkronizálás előtt?
-    method: Hitelesítési mód
-    route: Cl@ve Móvil útvonal
-    certificate: Tanúsítványfájl útvonala (üresen a mentett érték marad)
-    field: '{field} (üresen a mentett érték marad)'
-    still_missing: '{field} még hiányzik.'
-    password: Jelszó (üresen a mentett érték marad)
-    saved: Hitelesítési beállítások mentve.
-    required: 'Az AEAT-szinkronizálás feltételei: {requirements}. A hitelesítés itt állítható be vagy szerkeszthető:
-      {command}.'
-    console_required: 'A hitelesítés szerkesztéséhez interaktív terminál szükséges: {command}. Feltételek:
-      {requirements}.'
   app:
     ledger:
       account:
@@ -1490,6 +1473,9 @@ cli:
           kizárólag a neki megadott értékekből számol. A teljes képernyős felületen
           (aeat app tui) korábban megadott értékek nem maradnak meg, hacsak itt újra
           meg nem adod őket; a teljes képernyős felület megőrzi őket.
+        calculate_reused_sealed: 'Ezek az adatok a(z) %{revision_id} számításnak felelnek
+          meg (állapot: %{state}). Nem készült új piszkozat. Válaszd ki ezt a mentett
+          számítást a verzióazonosítójával, vagy módosítsd az adatokat.'
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
           %{state}). Megőrzött és később folytatható.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
@@ -1920,6 +1906,23 @@ cli:
       app_help: 'Futtasd a teljes helyi nyomtatvány-benyújtási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
+  censo_auth:
+    certificate: Tanúsítványfájl útvonala (üresen a mentett érték marad)
+    configure_help: Állítsa be vagy szerkessze a mentett AEAT-hitelesítést a népszámlálási
+      adatok lekérése előtt (interaktív terminál).
+    console_required: 'A hitelesítés szerkesztéséhez interaktív terminál szükséges:
+      {command}. Feltételek: {requirements}.'
+    field: '{field} (üresen a mentett érték marad)'
+    field_failed: '{field} nem menthető. Ellenőrizze a formátumát, és próbálja újra;
+      a korábban mentett mezők megmaradnak.'
+    method: Hitelesítési mód
+    offer: Beállítja az AEAT-hitelesítést a szinkronizálás előtt?
+    password: Jelszó (üresen a mentett érték marad)
+    required: 'Az AEAT-szinkronizálás feltételei: {requirements}. A hitelesítés itt
+      állítható be vagy szerkeszthető: {command}.'
+    route: Cl@ve Móvil útvonal
+    saved: Hitelesítési beállítások mentve.
+    still_missing: '{field} még hiányzik.'
   common:
     errors:
       invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}.
@@ -1935,6 +1938,8 @@ cli:
         (negyedévek), 0A (éves), 01-12 (hónapok), és add meg az évet a --year kapcsolóval
         (pl. --period 1T --year 2024).'
   config:
+    activity:
+      help: Tevékenység rögzítése a bejelentkezett profilhoz jelszókérés nélkül.
     app_help: A helyi profil, a hitelesítő adatok, a tárolás és a Google-kapcsolat
       beállítása és javítása.
     auth:
@@ -2774,8 +2779,6 @@ cli:
         profil beállítása befejezetlen marad; az `aeat config profile complete-setup`
         megmutatja, mely adatok hiányoznak még. Önmagában is elég; kombináld az --accept-defaults
         kapcsolóval, hogy a többi értéket a leíró alapértékeivel töltsd ki.
-    activity:
-      help: "Tevékenység rögzítése a bejelentkezett profilhoz jelszókérés nélkül."
     sign_in_status:
       help: Ellenőrizd a bejelentkezésed állapotát anélkül, hogy folytatnád vagy meghosszabbítanád.
     status:
@@ -3003,8 +3006,7 @@ cli:
         invalid_date: A(z) {option} dátumot vár ÉÉÉÉ-HH-NN formában.
         nothing_to_update: 'Nincs mit módosítani a(z) {account} számlán: adj meg egy
           adatot, vagy küldj számlaadatokat a titkos csatornán.'
-      none: 'Még nincs saját számla. Adj hozzá egyet ezzel: aeat app ledger account
-        add'
+      none: Még nincs saját számla.
       prompts:
         bank_address: 'Bank címe: '
         bank_city: 'Bank városa: '

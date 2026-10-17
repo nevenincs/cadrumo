@@ -35,8 +35,8 @@ from ....domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from .. import operation_modelo_verification_report_read as bridge
-from .._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
 from .._modelo_rendering import verification_report_lines, verification_report_payload
+from ..modelo_results import VerificationReportListResult, VerificationReportShowResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

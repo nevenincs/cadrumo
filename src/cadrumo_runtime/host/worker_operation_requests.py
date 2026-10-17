@@ -477,7 +477,12 @@ async def _read_reply(operations: ProfileWorkerOperationHost, request: _ReadRequ
                 release=release,
             )
         return
-    async with operations.project(request.session_id, request.projection, frontend=request.frontend) as (
+    async with operations.project(
+        request.session_id,
+        request.projection,
+        frontend=request.frontend,
+        page=request.page if isinstance(request, ProfileWorkerProjectPageRequest) else None,
+    ) as (
         document,
         release,
     ):

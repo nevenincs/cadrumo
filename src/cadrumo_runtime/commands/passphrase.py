@@ -13,11 +13,11 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from ..host.frontend.cli.profile_client import open_cli_profile_client
 from cadrumo_client.commands.secure_input import MachineSecretPayload
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.profile_password_rotation import run_profile_password_rotation
 
+from ..host.frontend.cli.profile_client import open_cli_profile_client
 from .presentation import activate_subcommand_output_language as _activate_subcommand_output_language
 from .presentation import emit_envelope, notice_lines
 

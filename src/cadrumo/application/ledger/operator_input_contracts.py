@@ -24,7 +24,7 @@ class OperatorInputContract:
 INVOICE_KIND_INPUT: Final = OperatorInputContract(
     name="kind",
     tokens=("--kind",),
-    value_module="cadrumo.domain.iva.classification",
+    value_module="cadrumo.domain.iva.schema",
     value_name="InvoiceKind",
     required=True,
 )

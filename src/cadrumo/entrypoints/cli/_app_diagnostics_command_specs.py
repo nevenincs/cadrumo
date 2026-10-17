@@ -22,7 +22,7 @@ from cadrumo_client.contracts.command_ports import (
 )
 
 _READ = ExecutionPolicySpec(frozenset({"local-storage"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
-_PAYLOADS = "._diagnostics_payloads"
+_PAYLOADS = ".diagnostics_results"
 
 
 def _option(
@@ -106,7 +106,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         (),
         _READ,
-        LazyBinding.available(DeferredTarget("._app_diagnostics", "diagnostics_root", __package__)),
+        LazyBinding.available(DeferredTarget(".app_diagnostics_commands", "diagnostics_root", __package__)),
         ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     _leaf(
@@ -114,7 +114,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "run-health",
         "cli.diagnostics.run_health.help",
-        "._app_diagnostics",
+        ".app_diagnostics_commands",
         "diagnostics_run_health",
         "RunHealthResult",
         _READ,
@@ -125,7 +125,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "runs",
         "cli.diagnostics.runs.help",
-        "._app_diagnostics",
+        ".app_diagnostics_commands",
         "diagnostics_runs",
         "RunsListResult",
         _READ,
@@ -136,7 +136,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "latency",
         "cli.diagnostics.latency.help",
-        "._app_diagnostics",
+        ".app_diagnostics_commands",
         "diagnostics_latency",
         "LatencyResult",
         _READ,
@@ -147,7 +147,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "errors",
         "cli.diagnostics.errors.help",
-        "._app_diagnostics",
+        ".app_diagnostics_commands",
         "diagnostics_errors",
         "ErrorsBreakdownResult",
         _READ,
@@ -158,7 +158,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "llm-usage",
         "cli.diagnostics.llm_usage.help",
-        "._app_diagnostics",
+        ".app_diagnostics_commands",
         "diagnostics_llm_usage",
         "LlmUsageResult",
         _READ,

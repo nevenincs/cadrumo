@@ -113,7 +113,7 @@ async def test_stored_notifications_remain_readable_without_aeat_credentials(
     readiness_unavailable: bool,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ...profile.tests.test_aeat_auth_setup import _Door
+    from ...profile.tests.test_aeat_auth_setup import AeatAuthSetupDoor
 
     requests: list[AeatSyncOperationRequestV1] = []
 
@@ -121,7 +121,7 @@ async def test_stored_notifications_remain_readable_without_aeat_credentials(
         requests.append(request)
         return _started_operation_controller()
 
-    door = _Door()
+    door = AeatAuthSetupDoor()
     door.fail_read = readiness_unavailable
     controller = _controller(
         operation_handoff=handoff,
@@ -151,7 +151,7 @@ async def test_stored_notifications_remain_readable_without_aeat_credentials(
 @pytest.mark.asyncio
 async def test_sync_screen_exposes_same_auth_editor_and_reloads_saved_readiness() -> None:
     from ...profile.aeat_auth_setup import AeatAuthSetupScreen
-    from ...profile.tests.test_aeat_auth_setup import _Door
+    from ...profile.tests.test_aeat_auth_setup import AeatAuthSetupDoor
 
     requests: list[AeatSyncOperationRequestV1] = []
 
@@ -159,7 +159,7 @@ async def test_sync_screen_exposes_same_auth_editor_and_reloads_saved_readiness(
         requests.append(request)
         raise AssertionError("editing authentication never starts a remote read")
 
-    door = _Door()
+    door = AeatAuthSetupDoor()
     controller = _controller(operation_handoff=handoff)
     controller.aeat_auth_setup = door
     screen = AeatSyncOverviewScreen(controller)
@@ -1684,7 +1684,7 @@ async def test_distinct_comparisons_at_same_address_have_unique_rows_and_histori
         reconciliation_projection as persisted_projection,
     )
     from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
-    from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+    from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
     first = _record().model_copy(
         update={

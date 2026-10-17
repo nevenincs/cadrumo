@@ -40,7 +40,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.time.clock import now
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..ledger_action_composition import compose_ledger_action_ports
 from .conformance_family_contract import (

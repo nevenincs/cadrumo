@@ -47,6 +47,8 @@ class FreshCliInvocation(Protocol):
         watched_modules: Sequence[str] = (),
         import_report: Path | None = None,
         site_dir: Path | None = None,
+        settings: Mapping[str, object] | None = None,
+        stdin_payload: str | None = None,
     ) -> FreshCliResult:
         """Use exact env when supplied, otherwise filter the inherited environment."""
         ...

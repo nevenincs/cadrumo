@@ -26,9 +26,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
-from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 

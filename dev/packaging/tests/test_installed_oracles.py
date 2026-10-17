@@ -35,7 +35,9 @@ from dev.source_tree import repository_files, snapshot
 
 from .._distribution_names import normalise_distribution_name
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
+from ..google_oauth import build_client_json, stage_build_client
 from ..hashing import sha256_path
+from ..installed_runtime import run_installed_tax_oracle_with_runtime
 from ..installed_tax_oracle import (
     InstalledTaxOracleError,
     isolated_product_environment,
@@ -464,7 +466,7 @@ def _legacy_cohort_fallbacks(source: str) -> tuple[str, ...]:
 
 
 def test_installed_oracle_has_no_prebuilt_or_manual_cohort_fallback() -> None:
-    """A pre-existing var cohort cannot bypass the canonical clean cohort builder."""
+    """A pre-existing cohort cannot bypass the canonical clean cohort builder."""
     assert _legacy_cohort_fallbacks('root = "var/packaging-smoke-cohort"')
     assert _legacy_cohort_fallbacks(inspect.getsource(installed_cohort)) == ()
 
@@ -478,18 +480,19 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     work_dir = tmp_path_factory.mktemp("installed-oracle-cohort")
     clean_repo = work_dir / "clean-repository"
     # An isolated copy of the enumerated tree, not the live one: this fixture
-    # needs a private `var/` to build the cohort into, isolated from whatever
-    # a concurrent agent is doing to the real repository's own `var/`.
+    # needs a private `build/` to build the cohort into, isolated from the
+    # shared checkout's canonical build outputs.
     snapshot(_REPO_ROOT, repository_files(_REPO_ROOT), clean_repo)
     _stage_authority_candidate(clean_repo)
-    # Under the snapshot's OWN var/, not beside it. `build_python_cohort` refuses
-    # an output that is not below `<repo_root>/var`, and repo_root here is the
+    stage_build_client(clean_repo, build_client_json(_REPO_ROOT))
+    # Under the snapshot's OWN build/, not beside it. `build_python_cohort` refuses
+    # an output that is not below `<repo_root>/build`, and repo_root here is the
     # snapshot -- so a sibling of it can never satisfy it and this fixture
     # raised SystemExit on every platform. The SystemExit then escaped a
     # module-scoped fixture, which left pytest's finalizer bookkeeping
     # inconsistent and reported the module's other tests as bare internal
     # AssertionErrors naming nothing.
-    cohort_dir = clean_repo / "var" / "python-cohort"
+    cohort_dir = clean_repo / "build" / "python-cohort"
     supplied = build_python_cohort(clean_repo, cohort_dir)
     source_digest = supplied.source_digest
     root_wheel = supplied.root_wheel
@@ -750,7 +753,7 @@ def test_installed_cli_refuses_an_unusable_authority_before_durable_work(
     installation = _fresh_installation(installed_cohort, tmp_path / damage)
     assert sha256_path(installation.authority_descriptor) == installation.authority_descriptor_sha256
     assert sha256_path(installation.authority_database) == installation.authority_database_sha256
-    baseline_cli = run_installed_tax_oracle(
+    baseline_cli = run_installed_tax_oracle_with_runtime(
         installation.cli,
         storage_root=installation.root / "cli-baseline-state",
         work_dir=installation.root / "cli-baseline",
@@ -840,7 +843,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     )
 
     execution_root = cohort.work_dir / "source-isolation-outside-checkout"
-    cli_before = run_installed_tax_oracle(
+    cli_before = run_installed_tax_oracle_with_runtime(
         cohort.cli,
         storage_root=cohort.work_dir / "source-isolation-cli-before-state",
         work_dir=execution_root / "cli-before",
@@ -866,7 +869,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
         assert sha256_path(installed_descriptor) == installed_descriptor_digest
         assert sha256_path(installed_database) == installed_database_digest
 
-        cli_after = run_installed_tax_oracle(
+        cli_after = run_installed_tax_oracle_with_runtime(
             cohort.cli,
             storage_root=cohort.work_dir / "source-isolation-cli-after-state",
             work_dir=execution_root / "cli-after",
@@ -1117,6 +1120,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from cadrumo_client.transport.framing import VerifiedConnection
     from cadrumo_client.transport.installation import installation
     from cadrumo_client.transport.windows import WindowsEndpoint
+    from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
     from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     mcp_executable = Path(sysconfig.get_path("scripts")) / "cadrumo-mcp.exe"
@@ -1205,4 +1209,5 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
             "session": "none",
             "surface": "full",
             "denial": expected_refusal,
+            "remedy": SIGN_IN_REMEDY,
         }

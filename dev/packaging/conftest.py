@@ -27,7 +27,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from .build_scratch_reclaim import sweep_var_scratch
+from .build_scratch_reclaim import sweep_build_scratch, sweep_var_scratch
 
 _RELEASE_PROOF_FILE = "dev/packaging/tests/test_release_cohort_integration.py"
 _RELEASE_PROOF_NODEID = f"{_RELEASE_PROOF_FILE}::test_real_clean_source_build_is_complete_and_reproducible"
@@ -55,4 +55,5 @@ def pytest_sessionstart(session: pytest.Session) -> None:
     """
     del session
     with contextlib.suppress(OSError):
+        sweep_build_scratch(REPO_ROOT / "build")
         sweep_var_scratch(REPO_ROOT / "var")

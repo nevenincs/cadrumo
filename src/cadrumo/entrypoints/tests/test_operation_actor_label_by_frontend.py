@@ -35,6 +35,7 @@ from ...application.invoices.catalogue_update_operation import InvoiceUpdateResu
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
 from ...application.ledger.link_operation import LedgerLinkOperationResult, LedgerLinkRequest
 from ...application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest, LedgerOperatorIvaResult
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import (
     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
     ModeloReconciliationImportRequest,
@@ -43,7 +44,6 @@ from ...application.modelo.reconciliation_pull_operation import (
     MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
     ModeloReconciliationPullRequest,
 )
-from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
 from ...application.operations.registry import OperationFrontendProjection
@@ -101,10 +101,10 @@ def test_operator_iva_derivation_records_the_session_label_for_an_automation(
     """The audit events of the derivation carry the label the executor derived, not the typed one."""
     definition_id = "ledger.classify.iva-derive"
     with (
-        conformance._model_runtime_for(definition_id),
-        conformance._runtime(
+        conformance.model_runtime_for_operation(definition_id),
+        conformance.conformance_operation_runtime(
             tmp_path / "runtime",
-            cleanup=conformance._CloseWitness(),
+            cleanup=conformance.OperationRuntimeCloseWitness(),
             execution_caller_reader=_session_host(definition_id, frontend),
         ) as (driver, registry, profile_id),
     ):
@@ -141,9 +141,9 @@ def test_ledger_link_records_the_session_label_for_an_automation(
 ) -> None:
     """The link's result and its audit event name the derived label, not the typed one."""
     definition_id = "ledger.link"
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
@@ -180,9 +180,9 @@ def test_counterparty_confirmation_records_the_session_label_for_an_automation(
 ) -> None:
     """The stored assertion names the label the executor derived, not the typed one."""
     definition_id = "ledger.counterparty"
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         request = LedgerCounterpartyRequest(
@@ -228,9 +228,9 @@ def test_inventory_closing_authority_records_the_session_label_for_an_automation
 ) -> None:
     """The stored decision, and so its fingerprint, carry the derived label."""
     definition_id = INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, _registry, profile_id):
         case = prepare_inventory_operation_conformance_case(
@@ -268,9 +268,9 @@ def test_reconciliation_import_records_the_session_label_for_an_automation(
 ) -> None:
     """The stored reconciliation record names the label the executor derived."""
     definition_id = MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, _registry, profile_id):
         with override_settings(cadrumo_active_profile=str(profile_id)):
@@ -308,9 +308,9 @@ def test_reconciliation_pull_records_the_session_label_for_an_automation(
 ) -> None:
     """The stored reconciliation record of a captured receipt names the derived label."""
     definition_id = MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, _registry, profile_id):
         with override_settings(cadrumo_active_profile=str(profile_id)):
@@ -366,13 +366,13 @@ def test_invoice_add_records_the_session_label_for_an_automation(
 ) -> None:
     """The creation event of an added invoice names the derived label; a person's frontend keeps its own."""
     definition_id = "ledger.invoice.add"
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        submission = conformance._seeded_conformance_submission(
+        submission = conformance.seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 
@@ -402,13 +402,13 @@ def test_invoice_update_records_the_session_label_for_an_automation(
 ) -> None:
     """The correction event of an updated invoice names the derived label; a person's frontend keeps its own."""
     definition_id = "ledger.invoice.update"
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        submission = conformance._seeded_conformance_submission(
+        submission = conformance.seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 
@@ -449,9 +449,9 @@ def test_inventory_writes_without_a_typed_label_record_the_session_for_an_automa
     recorded: str,
 ) -> None:
     """These requests carry no label, so the person's frontends keep the fixed runtime label."""
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, _registry, profile_id):
         case = prepare_inventory_operation_conformance_case(

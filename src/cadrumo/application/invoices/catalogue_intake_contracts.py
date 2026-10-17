@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .catalogue_intake_refusal import (
     InvoiceWizardValidationRefusalProjection,
 )

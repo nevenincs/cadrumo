@@ -339,7 +339,7 @@ def assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> Non
     missing_core = sorted(surfaces.project_names - core_requires)
     if missing_core:
         raise SystemExit(f"wheel metadata is missing project dependencies: {missing_core!r}")
-    leaked_optional_core = sorted(surfaces.external_optional_names & core_requires)
+    leaked_optional_core = sorted((surfaces.external_optional_names - surfaces.project_names) & core_requires)
     if leaked_optional_core:
         raise SystemExit(f"optional dependencies leaked into core wheel metadata: {leaked_optional_core!r}")
     missing_optional = sorted(surfaces.external_optional_names - optional_requires)

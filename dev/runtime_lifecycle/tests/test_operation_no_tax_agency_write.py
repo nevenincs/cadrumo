@@ -19,7 +19,11 @@ import pytest
 from cadrumo.domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
 from cadrumo_harness.mcp.surface_facts import operation_surface_facts
-from dev.operation_contract_manifest.tests.test_operation_catalogue import _production_sources, _registry, _tree
+from dev.operation_contract_manifest.tests.test_operation_catalogue import (
+    production_operation_registry,
+    production_operation_source_tree,
+    production_operation_sources,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -66,7 +70,11 @@ def _live_write_values(tree: ast.AST) -> Iterable[ast.expr]:
 
 def test_no_command_policy_in_the_source_tree_declares_a_live_write() -> None:
     """The one declaration a command has for a submission is never set anywhere."""
-    declared = [(path, value) for path in _production_sources() for value in _live_write_values(_tree().parsed(path))]
+    declared = [
+        (path, value)
+        for path in production_operation_sources()
+        for value in _live_write_values(production_operation_source_tree().parsed(path))
+    ]
     # The scan must reach the declarations it judges, or it would pass on nothing.
     assert declared
     offenders = sorted((path, value.lineno) for path, value in declared if not _declares_no_live_write(value))
@@ -112,7 +120,7 @@ def test_every_operation_permits_only_local_extents_of_commit() -> None:
     """No definition declares an effect other than how much of its own local work committed."""
     foreign = {
         item.contract.definition_id: sorted(effect.value for effect in item.contract.permitted_effects)
-        for item in _registry().public_registrations
+        for item in production_operation_registry().public_registrations
         if not {effect.value for effect in item.contract.permitted_effects} <= _LOCAL_COMMIT_EXTENTS
     }
     assert not foreign, f"definitions that declare an effect outside the local commit extents: {foreign}"
@@ -121,7 +129,7 @@ def test_every_operation_permits_only_local_extents_of_commit() -> None:
 def test_no_operation_that_reaches_the_network_is_named_for_a_tax_agency_write() -> None:
     """An operation that can contact a host never carries a submission verb in its id or phases."""
     collisions: dict[str, list[str]] = {}
-    for definition in _registry().definitions:
+    for definition in production_operation_registry().definitions:
         verbs = _write_verbs((definition.definition_id, *definition.phase_codes))
         if verbs and operation_surface_facts(definition.definition_id).reaches_network:
             collisions[definition.definition_id] = sorted(verbs)

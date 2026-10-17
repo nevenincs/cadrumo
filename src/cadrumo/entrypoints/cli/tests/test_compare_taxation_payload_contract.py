@@ -23,7 +23,7 @@ from pydantic import ValidationError
 
 from ....application.modelo.taxation_comparison import TaxationComparisonResult, TaxationRecommendation
 from ....core.modelo import Modelo
-from .._payloads_modelo_reconcile import WorkCompareTaxationResult
+from ..modelo_reconcile_results import WorkCompareTaxationResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

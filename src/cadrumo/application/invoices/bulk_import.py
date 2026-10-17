@@ -59,7 +59,7 @@ from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
 from ._bulk_import_columns import (
     BulkImportColumnResolution,

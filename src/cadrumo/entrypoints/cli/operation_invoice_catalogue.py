@@ -47,7 +47,7 @@ from ...application.invoices.catalogue_update_operation import (
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 
 _REFUSAL_LOCALE_KEYS = {
     InvoiceLookupRefusalReason.REQUIRED: "application.invoices.lifecycle.errors.invoice_id_required",

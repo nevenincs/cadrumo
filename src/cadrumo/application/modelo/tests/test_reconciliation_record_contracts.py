@@ -32,10 +32,10 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import derive_work_unit_id
+from ..reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..reconciliation_records import (
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,

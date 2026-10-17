@@ -31,9 +31,9 @@ from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....core.register_scoping_signal import RegisterScopingSignal
-from .. import _app_live as handler
+from .. import app_live_commands as handler
 from .. import operation_filed_read as bridge
-from .._app_live_filed_payloads import FiledDiscoverResult, FiledListResult
+from ..app_live_filed_results import FiledDiscoverResult, FiledListResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

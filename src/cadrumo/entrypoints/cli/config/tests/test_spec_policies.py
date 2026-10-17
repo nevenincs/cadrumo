@@ -48,7 +48,6 @@ def test_config_spec_policy_module_imports_no_cli_framework() -> None:
         "ENCRYPTED_WRITE",
         "ENCRYPTED_DESTRUCTIVE",
         "GOOGLE_WRITE",
-        "GOOGLE_DESTRUCTIVE",
         "LIVE_PROFILE_WRITE",
     ],
 )

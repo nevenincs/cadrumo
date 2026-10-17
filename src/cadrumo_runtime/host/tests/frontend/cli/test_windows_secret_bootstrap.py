@@ -9,7 +9,8 @@ from types import SimpleNamespace
 import pytest
 
 from cadrumo_client.commands import windows_secret_channels
-from cadrumo_runtime.host.frontend.cli import bootstrap, windows_secret_bootstrap
+
+from ....frontend.cli import bootstrap, windows_secret_bootstrap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

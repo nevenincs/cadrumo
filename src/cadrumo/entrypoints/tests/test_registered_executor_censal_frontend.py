@@ -26,7 +26,7 @@ from ...application.user_profile.profile_record_repository import ProfileRecordR
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .censal_review_test_support import review_censal_with_services
-from .registered_executor_case_support import _CloseWitness, _runtime
+from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -39,8 +39,12 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
 ) -> None:
     """The public frontend driver answers the encrypted exact proposal once."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    cleanup = _CloseWitness()
-    with _runtime(tmp_path / f"frontend-{apply}", cleanup=cleanup) as (_driver, _registry, profile_id):
+    cleanup = OperationRuntimeCloseWitness()
+    with conformance_operation_runtime(tmp_path / f"frontend-{apply}", cleanup=cleanup) as (
+        _driver,
+        _registry,
+        profile_id,
+    ):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -78,8 +82,12 @@ def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     """An accepted response followed by a failed continuation stays a failure."""
-    cleanup = _CloseWitness()
-    with _runtime(tmp_path / "frontend-failed", cleanup=cleanup) as (driver, _registry, _profile_id):
+    cleanup = OperationRuntimeCloseWitness()
+    with conformance_operation_runtime(tmp_path / "frontend-failed", cleanup=cleanup) as (
+        driver,
+        _registry,
+        _profile_id,
+    ):
         delegate = driver.services.observation
 
         class _FailedTerminalObservation(OperationObservationService):

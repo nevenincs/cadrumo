@@ -282,7 +282,7 @@ from .prorrata_bienes_operation_test_support import (
 from .prorrata_operation_test_support import read_prorrata_operation_conformance_register
 from .recipient_operation_test_support import assert_recipient_operation_conformance_result
 from .registered_executor_case_support import (
-    _CloseWitness,
+    OperationRuntimeCloseWitness,
     _ExecutionDriver,
     _judge_family_outcome,
     _resolve_result_projection,
@@ -309,7 +309,7 @@ def _assert_registered_executor_conformance_outcome(
     bienes_before: Any,
     bulk_classify_before: Any,
     case: RegisteredExecutorConformanceCase,
-    cleanup: _CloseWitness,
+    cleanup: OperationRuntimeCloseWitness,
     certificate_state_before: Any,
     definition_id: str,
     definition: OperationDefinition,
@@ -358,7 +358,11 @@ def _assert_registered_executor_conformance_outcome(
     assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
     assert observed.projection.terminal_condition is case.expected_terminal, case.definition_id
     assert observed.projection.effect is case.expected_effect, case.definition_id
-    assert observed.projection.refusal_ref == case.expected_refusal_ref, case.definition_id
+    assert observed.projection.refusal_ref == case.expected_refusal_ref, (
+        case.definition_id,
+        case.expected_refusal_ref,
+        observed.projection.refusal_ref,
+    )
     _judge_family_outcome(
         family_preparation,
         driver=driver,

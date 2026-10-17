@@ -11,13 +11,21 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.invoices.catalogue_add_contracts import INVOICE_ADD_OPERATION_DEFINITION_ID, InvoiceAddRequest
-from cadrumo.application.invoices.catalogue_add_operation import build_invoice_add_definition, build_invoice_add_registration
+from cadrumo.application.invoices.catalogue_add_operation import (
+    build_invoice_add_definition,
+    build_invoice_add_registration,
+)
 from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1, OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.core.operations import profile_operation_subject
-from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import InvoiceKind
+
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.operation_access import OperationAcknowledged, OperationControl, OperationSubmit, OperationSubmitted
 from ..frontend_client import FrontendClient

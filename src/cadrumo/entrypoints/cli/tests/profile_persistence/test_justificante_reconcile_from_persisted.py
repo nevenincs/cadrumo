@@ -20,11 +20,6 @@ from cadrumo.application.modelo.reconciliation import (
     ReconciliationEvidenceInvalidError,
     prepare_modelo_reconcile_bytes,
 )
-from cadrumo.application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
-    list_modelo_reconciliations,
-)
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -34,6 +29,9 @@ from cadrumo.entrypoints.cli.tests.profile_persistence._justificante_reconcile_s
     _persist_capture,
     _seed_work_unit,
 )
+
+from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from .....application.modelo.reconciliation_records import ModeloReconciliationVerdict, list_modelo_reconciliations
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 

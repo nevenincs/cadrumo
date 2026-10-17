@@ -547,6 +547,23 @@ fn stop_if_idle_leaves_a_busy_runtime_serving() {
 }
 
 #[test]
+fn a_runtime_exit_is_an_event_even_when_no_timer_would_wake_the_supervisor() {
+    let mut case = Case::default();
+    let hour = Duration::from_secs(3600);
+    case.config.poll_interval = hour;
+    case.config.heartbeat_interval = hour;
+    case.config.heartbeat_staleness = 2 * hour;
+    case.config.accept_tick_ceiling = 2 * hour;
+    let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
+    let started = Instant::now();
+    let (seen, outcome) = case.run(&root, stop_on_ready(2));
+    assert_eq!(outcome, SETTLED);
+    assert_eq!(exits(&seen)[0], RuntimeExit::Crash(0xC000_0005));
+    assert_eq!(root.launches(), 2);
+    assert!(started.elapsed() < Duration::from_secs(60));
+}
+
+#[test]
 fn a_crash_restarts_with_backoff_and_leaves_effects_unknown() {
     let root = Root::new(&["exit code=3221225477 after_ready", "serve"]);
     let (seen, outcome) = Case::default().run(&root, stop_on_ready(2));

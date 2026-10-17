@@ -57,7 +57,7 @@ FIRST_LINE_SECONDS: Final = 180.0
 """How long a started program may take to write its first protocol line."""
 STOP_SECONDS: Final = 20.0
 WORKER_WAIT_SECONDS: Final = 15.0
-"""How long a ready gateway may take to show its worker running."""
+"""How long to observe an optional worker after gateway readiness."""
 """How long a program may take to end after its standard input closes, before it is killed."""
 _STANDARD_ERROR_BYTES: Final = 8192
 _UNPROVEN: Final = "hosted_lane_unproven"
@@ -202,7 +202,13 @@ def read_contract(package: Path, document: Mapping[str, Any]) -> Contract:
             f"{selected}"
         )
     gateway_name, worker_name = next(iter(gateways)), next(iter(workers))
-    worker_arguments = [literals for chosen, literals in invocations if chosen == worker_name]
+    # A scoped helper may share this environment profile while requiring an
+    # admitted token. Only the literal worker invocation can run the port probe.
+    worker_arguments = [
+        literals
+        for chosen, literals in invocations
+        if chosen == worker_name and all(arg is not None for arg in literals)
+    ]
     if len(worker_arguments) != 1 or any(argument is None for argument in worker_arguments[0]):
         raise SetupError(
             "the worker profile is not selected by one invocation of literal arguments the probe can spell"
@@ -565,8 +571,16 @@ class Probe:
             status = await running.end(10.0) if line is None or line == b"" else None
             verdict = classify_gateway(line, status, running.standard_error())
             if verdict == "ready":
-                await self._worker_reexecuted(running.pid)
-                return Result("hosted gateway", "agent_ready; its worker re-executed the agent image")
+                if await self._worker_reexecuted(running.pid):
+                    return Result("hosted gateway", "agent_ready; its worker re-executed the agent image")
+                return Result(
+                    "hosted gateway",
+                    "agent_ready; the idle gateway has not spawned its lazy worker",
+                    pending=(
+                        "gateway worker re-execution needs an admitted ordinary turn; idle readiness alone "
+                        "does not exercise it",
+                    ),
+                )
         finally:
             await running.end()
         return Result(
@@ -578,21 +592,25 @@ class Probe:
             ),
         )
 
-    async def _worker_reexecuted(self, pid: int) -> None:
-        """Wait for a ready gateway's worker to appear as the agent image run with the worker invocation."""
+    async def _worker_reexecuted(self, pid: int) -> bool:
+        """Verify an observed worker; report an idle lazy gateway without claiming re-execution."""
         clock = asyncio.get_running_loop().time
         deadline = clock() + self.worker_wait
+        mismatch: ProbeFailedError | None = None
         while True:
+            children = self.launcher.children(pid)
             try:
-                check_worker_reexecution(
-                    self.launcher.children(pid), self.contract.image_path, self.contract.worker_arguments
-                )
-            except ProbeFailedError:
+                check_worker_reexecution(children, self.contract.image_path, self.contract.worker_arguments)
+            except ProbeFailedError as failure:
+                if children:
+                    mismatch = failure
                 if clock() > deadline:
-                    raise
+                    if mismatch is not None:
+                        raise mismatch from None
+                    return False
                 await asyncio.sleep(0.5)
             else:
-                return
+                return True
 
     async def worker(self) -> Result:
         """The worker invocation starts under the image with the gateway's settings and reports the port it bound."""

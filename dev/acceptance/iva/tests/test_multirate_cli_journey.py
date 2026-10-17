@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from dev.acceptance.installed_cli import build_installed_cli_environment
+from dev.packaging.installed_runtime import installed_cli_runtime
+
 from ..multirate_cli_journey import run_iva_multirate_cli_journey
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -24,6 +27,11 @@ def test_installed_multirate_cli_journey(tmp_path: Path, installed_wheel_aeat: P
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
         year=2025,
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
     )
 
     assert receipt.acceptance_ids == ("IVA-CLI-MULTIRATE-2025-1T",)

@@ -76,13 +76,13 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
-from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_runtime.host.tests.frontend.cli._modelo_work_ux_support import (
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     m111_withholding_aggregate_arguments,
     m111_withholding_invoice_arguments,
     operator_profile_facts,
 )
+from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [

@@ -17,8 +17,8 @@ from ...core.external_constants import OutputLanguage
 from ...core.time.utc import parse_iso_datetime
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
-from ._modelo_payloads import M303Exonerado390AttestationResult
 from .common import activate_subcommand_output_language, emit_envelope
+from .modelo_results import M303Exonerado390AttestationResult
 from .operation_modelo_attestation import run_modelo_m303_attestation
 
 

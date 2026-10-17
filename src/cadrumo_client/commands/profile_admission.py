@@ -17,7 +17,7 @@ from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
@@ -31,6 +31,11 @@ from cadrumo_client.commands.secure_input import (
     prompt_secret_no_echo,
     read_profile_secret_payload,
     terminal_can_prompt_for_secrets,
+)
+from cadrumo_client.commands.sign_in_refusal_projection import (
+    raise_connection_refusal,
+    session_refusal_context,
+    session_refusal_translation_key,
 )
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -140,8 +145,8 @@ def _authenticate(
             ) from None
         raise attach_cli_policy_verdict(
             CliRefusedBoundaryError(
-                translated_message=_session_refusal_translation_key(refusal, error.binding),
-                context=_session_refusal_context(refusal, error.binding),
+                translated_message=session_refusal_translation_key(refusal, error.binding),
+                context=session_refusal_context(refusal, error.binding),
             ),
             verdict=profile_session_failure_verdict(refusal, profile_name=profile_label or str(client.profile_id)),
         ) from None
@@ -187,7 +192,7 @@ def activate_profile(
         bind_profile_client(ctx, client, profile_id=UUID(bucket_id))
     except FrontendRefusedError as error:
         client.close()
-        _raise_connection_refusal(error)
+        raise_connection_refusal(error)
     except BaseException:
         client.close()
         raise
@@ -246,53 +251,6 @@ def _open_profile_credential_client(
 def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:
     """Bind one proven profile target as the invocation's storage route."""
     ctx.with_resource(override_settings(cadrumo_active_profile=bucket_id))
-
-
-def _session_refusal_translation_key(
-    refusal: ProfileSessionRefusalReason,
-    binding: ReceiptBindingRefusal | None = None,
-) -> str:
-    if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
-        return "cli.config.errors.profile_session_login_mismatch"
-    if binding is ReceiptBindingRefusal.GENERATION_CHANGED:
-        return "cli.config.errors.profile_session_signed_out"
-    if binding is not None:
-        return "cli.config.errors.profile_session_unreadable"
-    if refusal is ProfileSessionRefusalReason.CUSTODY_CHANGED:
-        return "cli.config.errors.profile_session_custody_changed"
-    if refusal is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
-        return "cli.config.errors.profile_session_outdated"
-    if refusal in {ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED}:
-        return "cli.config.errors.profile_session_unreadable"
-    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-        return "errors.auth.auth_storage_keyring_unavailable"
-    if refusal in {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}:
-        return "cli.config.errors.profile_session_absent"
-    return "cli.config.errors.profile_session_expired"
-
-
-def _session_refusal_context(
-    refusal: ProfileSessionRefusalReason,
-    binding: ReceiptBindingRefusal | None = None,
-) -> dict[str, object]:
-    context: dict[str, object] = {"reason": (binding or refusal).value, "sign_in_reason": refusal.value}
-    if binding is not None:
-        context["sign_in_binding"] = binding.value
-    return context
-
-
-def _raise_connection_refusal(error: FrontendRefusedError) -> None:
-    from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-
-    sign_in = error.sign_in
-    key: str | None = None
-    if sign_in is not None and sign_in.reason == "throttled":
-        key = "errors.refused.refused_profile_login_throttled"
-    elif sign_in is not None and isinstance(sign_in.reason, ProfileSessionRefusalReason):
-        key = _session_refusal_translation_key(sign_in.reason, sign_in.binding)
-    elif error.reason == AccessDenialCode.PROFILE_LOCKED.value:
-        key = "errors.refused.profile_locked"
-    raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=key) from None
 
 
 __all__ = [

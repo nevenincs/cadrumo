@@ -42,11 +42,6 @@ from cadrumo.core.async_cleanup import AsyncCloseable, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo_runtime.host.frontend.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
-from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo_runtime.host.frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
-from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
-from cadrumo_runtime.host.frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.contracts.access_management import AccessManagementRequest
 from cadrumo_client.contracts.contracts import ByteChannel
@@ -62,11 +57,17 @@ from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeF
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands import runtime_automation_request
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
     observe_native_runtime_failures,
     runtime_failure_observation,
 )
+from cadrumo_runtime.host.frontend.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
+from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
+from cadrumo_runtime.host.frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
+from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo_runtime.host.frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
 
@@ -314,7 +315,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
 
                 def human_cli(*leaf: str) -> dict[str, Any]:
                     result = invoke_typer_app(
-                        build_command_app(RUNTIME_COMMAND_GRAPH),
+                        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
                         (
                             "--format",
                             "json",
@@ -433,7 +434,7 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
                 cadrumo_cli_reveal_identifiers=True,
             ):
                 return invoke_typer_app(
-                    build_command_app(RUNTIME_COMMAND_GRAPH),
+                    build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
                     (
                         "--format",
                         "json",
@@ -453,7 +454,7 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
 
         def human_cli(*leaf: str) -> dict[str, Any]:
             result = invoke_typer_app(
-                build_command_app(RUNTIME_COMMAND_GRAPH),
+                build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
                 (
                     "--format",
                     "json",

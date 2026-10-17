@@ -11,7 +11,7 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..account import AccountSessionExpiredError
 from .controller import LedgerWorkspaceScreen
 from .evidence_draft import draft_lines

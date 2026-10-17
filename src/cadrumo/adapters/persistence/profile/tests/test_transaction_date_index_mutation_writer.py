@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import delete
 
+from .....core.time.clock import now
 from .....domain.transactions.models import TransactionCatalogue
 from ...storage.errors import SecureObjectRevisionConflictError
 from ...storage.sql.orm import TransactionDateIndexRow
@@ -30,6 +31,27 @@ def _catalogue() -> TransactionCatalogue:
         description="synthetic routing fixture",
     )
     return TransactionCatalogue.from_transactions((row,))
+
+
+@pytest.mark.parametrize("index_present", (True, False))
+def test_non_routing_edit_preserves_index_state_and_reads_the_updated_row(tmp_path: Path, index_present: bool) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository)
+        catalogue = _catalogue()
+        repository.save(catalogue)
+        current = next(iter(catalogue.values()))
+        if not index_present:
+            with profile.repository.guarded_session_scope() as session:
+                session.execute(delete(TransactionDateIndexRow).where(TransactionDateIndexRow.bucket_id == _BUCKET))
+        replacement = current.model_copy(update={"group_label": "Reviewed", "modified_at": now()})
+
+        repository.replace_if_current_with_secure_object_writes(
+            current=current, replacement=replacement, extra_writes=()
+        )
+
+        partition = repository.partition_by_date_range(date(2026, 1, 1), date(2026, 3, 31))
+        assert partition.index_complete is index_present
+        assert partition.in_window.transactions[current.transaction_id] == replacement
 
 
 def test_lazy_index_rebuild_is_admitted_once_and_unchanged_sync_is_a_noop(tmp_path: Path) -> None:

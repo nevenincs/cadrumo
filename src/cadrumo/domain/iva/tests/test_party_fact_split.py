@@ -31,17 +31,10 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
-from ..classification import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
-    PartyFact,
-    TransactionKind,
-)
+from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, PartyFact, TransactionKind
 from ..errors import IvaValidationError
 from ..identification import identification_state_for_printed_tax_identifier
-from ..schema import EUMemberState, IvaCategory, IvaRateKind
+from ..schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

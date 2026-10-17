@@ -99,8 +99,8 @@ _FRONTENDS = pytest.mark.parametrize(
 def _runtime(tmp_path: Path) -> Generator[_Runtime]:
     """One stored profile and its real runtime; the host starts as the command line's."""
     host = SwitchableSessionHost(_CLI)
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=host
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness(), execution_caller_reader=host
     ) as (driver, registry, profile_id):
         yield driver, registry, profile_id, host
 

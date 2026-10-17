@@ -16,8 +16,13 @@ from __future__ import annotations
 from typing import Final
 
 import pytest
+from typer import Typer
 from typer.testing import CliRunner
 
+from cadrumo.entrypoints.cli._terminal_errors import run_standalone_with_error_contract
+from cadrumo.entrypoints.cli.command_lifecycle import dispatch_cli_behavior
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
+from cadrumo.entrypoints.cli.errors import decorate_typer_app
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import (
@@ -103,13 +108,22 @@ def _graph() -> CommandSpecGraph:
             _leaf("live-submit", "record_live_submit", _LIVE_WRITE),
             _leaf("local-read", "record_local_read", _STATE_FREE),
         ),
+        resolver=resolve_deferred_target,
     )
+
+
+def _command_app() -> Typer:
+    app = build_command_app(
+        _graph(), dispatcher=dispatch_cli_behavior, standalone_error_runner=run_standalone_with_error_contract
+    )
+    decorate_typer_app(app)
+    return app
 
 
 def test_a_declared_live_write_command_is_refused_and_its_handler_never_runs() -> None:
     _RAN.clear()
 
-    result = CliRunner().invoke(build_command_app(_graph()), ["live-submit"])
+    result = CliRunner().invoke(_command_app(), ["live-submit"])
 
     refusal = LiveSubmitForbiddenError()
     code = get_registered_error_code(refusal)
@@ -122,7 +136,7 @@ def test_a_declared_live_write_command_is_refused_and_its_handler_never_runs() -
 def test_a_sibling_without_live_write_still_runs() -> None:
     _RAN.clear()
 
-    result = CliRunner().invoke(build_command_app(_graph()), ["local-read"])
+    result = CliRunner().invoke(_command_app(), ["local-read"])
 
     assert result.exit_code == 0, result.output
     assert _RAN == ["local-read"]

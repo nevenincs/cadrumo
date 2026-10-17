@@ -12,6 +12,7 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
@@ -28,15 +29,16 @@ from cadrumo_client.commands.secure_input import (
     ProfileSecretChannel,
     select_profile_secret_channel,
 )
+from cadrumo_client.commands.shared_contracts import DeferredTarget
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 
-from .._profile_authentication_contract import (
+from ..command_schema import command_registration_metadata, command_registration_projection
+from ..command_specs import COMMAND_GRAPH
+from ..profile_authentication_policy import (
     profile_authentication_posture,
     resolve_profile_secret_model,
     root_profile_secret_model,
 )
-from ..command_schema import command_registration_metadata, command_registration_projection
-from ..command_specs import COMMAND_GRAPH
 from .cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -128,11 +130,33 @@ def test_profile_payload_is_strict_frozen_secretstr_and_value_free_in_repr() -> 
 def test_graph_profile_payload_model_is_exact_runtime_authority() -> None:
     root = COMMAND_GRAPH.by_key()["root"]
     assert root.profile_secret is not None
-    assert resolve_profile_secret_model(root.profile_secret) is ProfileAuthenticationSecrets
+    assert (
+        resolve_profile_secret_model(root.profile_secret, resolver=COMMAND_GRAPH.resolver)
+        is ProfileAuthenticationSecrets
+    )
     assert root_profile_secret_model() is ProfileAuthenticationSecrets
     planted = replace(root.profile_secret, fields=(MachineSecretFieldSpec("planted_passphrase"),))
     with pytest.raises(ValueError, match="exactly match"):
-        resolve_profile_secret_model(planted)
+        resolve_profile_secret_model(planted, resolver=COMMAND_GRAPH.resolver)
+
+
+def test_root_profile_model_uses_the_supplied_graph_owner() -> None:
+    root = COMMAND_GRAPH.root()
+    assert root.profile_secret is not None
+    target = DeferredTarget("declared.graph.owner", "ProfileAuthenticationSecrets")
+    requested: list[DeferredTarget] = []
+
+    def resolve_owned_target(value: DeferredTarget) -> object:
+        requested.append(value)
+        assert value == target
+        return ProfileAuthenticationSecrets
+
+    graph = CommandSpecGraph(
+        (replace(root, profile_secret=replace(root.profile_secret, model=target)),), resolver=resolve_owned_target
+    )
+
+    assert root_profile_secret_model(graph=graph) is ProfileAuthenticationSecrets
+    assert requested == [target]
 
 
 def test_profile_selection_is_distinct_and_conflict_refuses_without_reading() -> None:

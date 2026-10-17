@@ -78,13 +78,6 @@ GOOGLE_WRITE = _policy(
     "external-io",
     write_route=CommandWriteRoute.PROFILE_BOUND,
 )
-GOOGLE_DESTRUCTIVE = _policy(
-    frozenset({"google", "encrypted-facts", "profile-custody"}),
-    frozenset({"google", "local-state"}),
-    "external-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
-    destructive=True,
-)
 CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
 # Reads a network endpoint and changes nothing, locally or at the endpoint.
 NETWORK_READ = _policy(frozenset({"network"}), frozenset({"none"}), "external-io")
@@ -104,17 +97,9 @@ LIVE_PROFILE_WRITE = _policy(
     write_route=CommandWriteRoute.PROFILE_BOUND,
 )
 BROWSER_CONNECTIVITY = _policy(frozenset({"aeat", "browser"}), frozenset({"browser"}), "interactive")
-# Opens an AEAT session for the active profile through the Sede browser client.
-AEAT_SESSION_WRITE = _policy(
-    frozenset({"aeat", "encrypted-facts", "profile-custody"}),
-    frozenset({"local-state"}),
-    "local-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
-)
 
 
 __all__ = [
-    "AEAT_SESSION_WRITE",
     "BOOTSTRAP_DESTRUCTIVE",
     "BOOTSTRAP_WRITE",
     "BROWSER_CONNECTIVITY",
@@ -122,7 +107,6 @@ __all__ = [
     "ENCRYPTED_DESTRUCTIVE",
     "ENCRYPTED_READ",
     "ENCRYPTED_WRITE",
-    "GOOGLE_DESTRUCTIVE",
     "GOOGLE_READ",
     "GOOGLE_WRITE",
     "LIVE_PROFILE_WRITE",

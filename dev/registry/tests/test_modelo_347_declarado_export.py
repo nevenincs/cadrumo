@@ -35,7 +35,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 

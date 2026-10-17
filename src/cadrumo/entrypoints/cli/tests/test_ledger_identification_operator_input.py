@@ -25,8 +25,8 @@ import pytest
 from click.testing import Result
 
 from ...tests.ledger_corpus_support import (
-    _import_bbva,
-    _invoke,
+    import_bbva_corpus_account,
+    invoke_corpus_cli,
     load_active_catalogue,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _intracom_row(invoke_cli: Callable[..., Result]) -> dict[str, object]:
     # The intra-community client row lives in the BBVA business account alone.
-    _import_bbva(invoke_cli=invoke_cli)
+    import_bbva_corpus_account(invoke_cli=invoke_cli)
     rows = [row for row in _list_rows() if "cliente DE GmbH intracom" in row["description"]]
     assert rows, "corpus must contain a DE intracommunity client invoice"
     raw_row = rows[0]
@@ -67,7 +67,7 @@ def _period_of(row: dict[str, object]) -> tuple[str, int]:
 
 
 def _classify(transaction_id: str, *extra: str, invoke_cli: Callable[..., Result]):
-    return _invoke(
+    return invoke_corpus_cli(
         [
             "app",
             "ledger",
@@ -143,7 +143,7 @@ def test_withholding_the_identification_is_reported_as_the_missing_fact(invoke_c
     assert classified.exit_code == 0, classified.output
 
     period, year = _period_of(row)
-    report = _invoke(
+    report = invoke_corpus_cli(
         ["--format", "json", "app", "ledger", "preflight", "--period", period, "--year", str(year)],
         invoke_cli=invoke_cli,
     )

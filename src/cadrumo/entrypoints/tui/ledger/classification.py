@@ -22,7 +22,7 @@ from ....domain.transactions.model_validation import validate_business_pct_coupl
 from ..components.language import localized
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController
-from .models import LedgerFlowState
+from .models import LedgerClassificationPatchV1, LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 
 _CHOICES = (
@@ -83,7 +83,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         """Retain an injected command-capable workspace controller."""
         super().__init__(controller, id="ledger-classification-screen")
         self.selected_classification: BusinessClassification | None = None
-        self._pending_patch: ManualLedgerTransactionPatch | None = None
+        self._pending_patch: LedgerClassificationPatchV1 | None = None
 
     FLOW_NAME = "classification"
 
@@ -224,8 +224,8 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         value = self._field_value(field_name).strip()
         return value or None
 
-    def _build_patch(self) -> ManualLedgerTransactionPatch:
-        """Build the shared typed patch, leaving every blank input unset."""
+    def _build_patch(self) -> LedgerClassificationPatchV1:
+        """Build the injected command's patch, leaving every blank input unset."""
         selected = self.selected_classification
         if selected is None:  # pragma: no cover - guarded by the button handler
             raise InternalInvariantError("classification selection is required before reading the form")
@@ -233,10 +233,11 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         values: dict[str, object] = {"business_classification": selected}
         values.update(self._decimal_patch_values(selected))
         values.update(self._optional_patch_values())
-        patch = ManualLedgerTransactionPatch.model_validate(values)
-        # The shared patch resolves deduction membership; the screen never
-        # imports calculation registry internals or manufactures tax arithmetic.
-        self._validate_canonical_patch(patch)
+        patch = self.controller.build_classification_patch(values)
+        # Direct application doors receive projected domain tokens. Installed
+        # command doors keep bounded text until the worker's pinned validation.
+        if isinstance(patch, ManualLedgerTransactionPatch):
+            self._validate_canonical_patch(patch)
         return patch
 
     def _decimal_patch_values(self, selected: BusinessClassification) -> dict[str, Decimal]:

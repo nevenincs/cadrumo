@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import BucketTransactionRef, Transaction
-from cadrumo.entrypoints.cli._ledger_payloads import LedgerAttachResult, LedgerDetachResult
+from cadrumo.entrypoints.cli.ledger_results import LedgerAttachResult, LedgerDetachResult
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
@@ -149,22 +149,13 @@ def _new_event(
     bucket_id: str,
     mutation_type: BucketEventType,
 ) -> BucketEvent:
-    """Separate one ledger mutation from the known profile-login activation."""
+    """Require exactly one ledger mutation; authentication adds no tax event."""
     assert all(history_after.events.get(key) == event for key, event in history_before.events.items())
     added = tuple(event for key, event in history_after.events.items() if key not in history_before.events)
     mutations = tuple(event for event in added if event.event_type is mutation_type)
-    activations = tuple(event for event in added if event.event_type is BucketEventType.PROFILE_ACTIVATED)
-    assert len(added) == 2
+    assert len(added) == 1
     assert len(mutations) == 1
-    assert len(activations) == 1
-    activation = activations[0]
-    assert activation.bucket_id == bucket_id
-    assert activation.event_type is BucketEventType.PROFILE_ACTIVATED
-    assert activation.object_type is BucketEventObjectType.PROFILE
-    assert activation.object_id == bucket_id
-    assert activation.actor == "profile-login"
-    assert activation.payload_version == 1
-    assert dict(activation.payload) == {"active_profile": bucket_id}
+    assert mutations[0].bucket_id == bucket_id
     return mutations[0]
 
 
@@ -352,7 +343,7 @@ def test_native_attach_detach_preserve_full_results_history_and_historical_manif
             linked=True,
             amount=Decimal("123.45"),
         )
-        assert len(history_after_attach.events) == len(history_before_attach.events) + 2
+        assert len(history_after_attach.events) == len(history_before_attach.events) + 1
         linked_manifest = ports.attachment_store.load_manifest(attachment.attachment_id)
         assert linked_manifest.linked_transaction_ids == (transaction_id,)
         assert ports.attachment_store.read_bytes(attachment.attachment_id) == _PDF_BYTES
@@ -406,7 +397,7 @@ def test_native_attach_detach_preserve_full_results_history_and_historical_manif
             linked=False,
             amount=Decimal("123.45"),
         )
-        assert len(history_after_detach.events) == len(history_after_attach.events) + 2
+        assert len(history_after_detach.events) == len(history_after_attach.events) + 1
         assert history_after_detach.events[attach_event_id] == attach_event
         detached_manifest = ports.attachment_store.load_manifest(attachment.attachment_id)
         assert detached_manifest == linked_manifest

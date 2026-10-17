@@ -22,7 +22,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.period import Period
 from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .._modelo_bindings_invoice_iva import (

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dev.audit.unreachable_code import run_unreachable_code_scan
 from dev.audit.unreachable_models import Confidence, UnreachableCodeOutcome
+from dev.audit.unreachable_tree import ShippedTreeSpec
 from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
 
 from .source_import_analysis import module_name_for, resolve_relative_import
@@ -80,17 +81,22 @@ def _audit_key(path: Path, root: Path) -> str:
 def find_unconsumed(
     root: Path,
     unused: set[tuple[str, str]],
+    *,
+    consumer_roots: tuple[Path, ...] = (),
 ) -> tuple[UnconsumedExport, ...]:
     """Join live exports, production imports, and exact-unused audit findings."""
     trees: dict[Path, ast.Module] = {}
     unread: list[str] = []
-    for path in sorted(root.rglob("*.py")):
-        if not is_production_source(path, root=root):
-            continue
-        try:
-            trees[path] = ast.parse(path.read_bytes(), filename=str(path))
-        except (OSError, SyntaxError, UnicodeDecodeError) as error:
-            unread.append(f"{path.relative_to(root).as_posix()}: {type(error).__name__}: {error}")
+    for source_root in (root, *consumer_roots):
+        if not source_root.is_dir():
+            raise RuntimeError(f"unconsumed-export consumer root is unavailable: {source_root}")
+        for path in sorted(source_root.rglob("*.py")):
+            if not is_production_source(path, root=source_root):
+                continue
+            try:
+                trees[path] = ast.parse(path.read_bytes(), filename=str(path))
+            except (OSError, SyntaxError, UnicodeDecodeError) as error:
+                unread.append(f"{path}: {type(error).__name__}: {error}")
     if unread:
         raise RuntimeError(f"unconsumed-export scan unreadable for {len(unread)} file(s): {unread}")
 
@@ -101,6 +107,7 @@ def find_unconsumed(
         sorted(
             UnconsumedExport(path.relative_to(root).as_posix(), name)
             for path, tree in trees.items()
+            if path.is_relative_to(root)
             for name in _declared_exports(tree)
             if (module_name_for(path, src_root=root.parent), name) not in consumed
             and (_audit_key(path, root), name) in unused
@@ -118,7 +125,11 @@ def run_gate(root: Path = _PACKAGE_ROOT) -> UnconsumedExportVerdict:
         for finding in result.symbols
         if finding.confidence is Confidence.EXACT
     }
-    return UnconsumedExportVerdict(find_unconsumed(root, unused))
+    spec = ShippedTreeSpec.from_repository(REPO_ROOT)
+    consumers = tuple(companion.src_root / companion.package for companion in spec.companions)
+    return UnconsumedExportVerdict(
+        find_unconsumed(root, unused, consumer_roots=consumers if root == _PACKAGE_ROOT else ())
+    )
 
 
 def main() -> int:

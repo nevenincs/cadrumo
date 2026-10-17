@@ -958,6 +958,11 @@ def _dynamic_family_registrations(
             values=tuple(home_reason_codes),
         ),
         FStringKeyRegistration(
+            description="tui.home.empty.* (the home screen's three retained list zones)",
+            key_factory=lambda v: f"tui.home.empty.{v}",
+            values=("actions", "declarations", "agenda"),
+        ),
+        FStringKeyRegistration(
             description="wizard.errors.* (WIZARD_VALIDATION_REASON_CODES)",
             key_factory=lambda v: f"wizard.errors.{v}",
             values=tuple(wizard_reason_codes),

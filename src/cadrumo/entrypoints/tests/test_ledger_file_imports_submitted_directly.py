@@ -35,7 +35,7 @@ from ...application.operations.registry import OperationRegistry
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import registered_executor_case_support as conformance
 
@@ -115,7 +115,9 @@ def test_a_directory_submitted_directly_imports_the_rows_its_listed_files_import
     folder = _statement_folder(tmp_path)
     listed = plan_ledger_import_sources(folder)
     assert [path.name for path in listed] == ["a_not_a_statement.csv", "b_statement.csv", "c_later.csv"]
-    with conformance._runtime(tmp_path / "runtime", cleanup=conformance._CloseWitness()) as (
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+    ) as (
         driver,
         registry,
         profile_id,
@@ -161,7 +163,9 @@ def test_a_directory_with_nothing_to_import_and_an_over_long_plan_are_refused_by
     crowded.mkdir()
     for index in range(MAX_LEDGER_IMPORT_FILES + 1):
         (crowded / f"statement-{index:03d}.csv").write_text(_STATEMENT, encoding="utf-8")
-    with conformance._runtime(tmp_path / "runtime", cleanup=conformance._CloseWitness()) as (
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+    ) as (
         driver,
         registry,
         profile_id,
@@ -193,8 +197,10 @@ def test_an_invoice_book_submitted_with_no_digest_is_imported_and_its_digest_ret
     book = tmp_path / "invoice-book.csv"
     book.write_bytes(_INVOICE_BOOK)
     with (
-        conformance._model_runtime_for(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
-        conformance._runtime(tmp_path / "runtime", cleanup=conformance._CloseWitness()) as (
+        conformance.model_runtime_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
+        conformance.conformance_operation_runtime(
+            tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+        ) as (
             driver,
             registry,
             profile_id,
@@ -231,8 +237,10 @@ def test_an_invoice_book_is_held_to_the_digest_a_caller_supplies(
     book.write_bytes(_INVOICE_BOOK)
     matches = supplied == "the-files-own"
     with (
-        conformance._model_runtime_for(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
-        conformance._runtime(tmp_path / "runtime", cleanup=conformance._CloseWitness()) as (
+        conformance.model_runtime_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
+        conformance.conformance_operation_runtime(
+            tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
+        ) as (
             driver,
             registry,
             profile_id,

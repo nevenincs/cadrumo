@@ -30,6 +30,7 @@ from ...user_profile.access_contracts import (
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import reconciliation_list_operation as operation_module
+from ..reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..reconciliation_list_operation import (
     MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH,
     MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
@@ -44,7 +45,6 @@ from ..reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationVerdict,
 )

@@ -12,7 +12,7 @@ from click.testing import Result
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
-from cadrumo.entrypoints.cli._modelo_payloads import WorkPreviewMaritimeExemptionResult
+from cadrumo.entrypoints.cli.modelo_results import WorkPreviewMaritimeExemptionResult
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
@@ -97,7 +97,9 @@ def test_native_preview_preserves_complete_grounding_warning_and_text(tmp_path: 
             "ley-19-1994:art-75",
         }
         assert all(row.source_refs for row in payload.observations)
-        assert payload.casilla_values["0525"] == payload.observations[-1].value
+        # Plain maritime exemptions do not carry the rate-setting treatment of
+        # printed box 0525. The preview keeps their governed semantic identity.
+        assert payload.casilla_values == {"trabajo-mar-renta-exenta": payload.observations[-1].value}
 
         text_result = _invoke(
             profile,
@@ -110,8 +112,8 @@ def test_native_preview_preserves_complete_grounding_warning_and_text(tmp_path: 
             text=True,
         )
         assert text_result.exit_code == 0, text_result.output
-        assert "operation\tmodelo.work.preview_maritime_exemption" in text_result.output
-        assert "observation\tcasilla=0525" in text_result.output
+        assert "operation\tmodelo.work.preview_maritime_exemption" in text_result.output, text_result.output
+        assert "observation\tcasilla=trabajo-mar-renta-exenta" in text_result.output
         assert "retmar_warning\t" in text_result.output
 
 

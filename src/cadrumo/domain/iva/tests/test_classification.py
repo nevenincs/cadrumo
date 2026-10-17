@@ -14,16 +14,12 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope, TransactionKind
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
-from ..classification import (
-    InvoiceKind,
-    IvaInvoiceClassificationCriteria,
-)
+from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
 from ..errors import IvaValidationError
-from ..schema import IvaCategory
+from ..schema import InvoiceKind, IvaCategory, IvaTerritorialScope
 from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

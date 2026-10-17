@@ -45,6 +45,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo_client.transport import credentials
+from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
@@ -156,12 +157,14 @@ async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_re
                     "session": "none",
                     "surface": "full",
                     "denial": "authentication_required",
+                    "remedy": SIGN_IN_REMEDY,
                 }
                 private_before_auth = await sdk.call_tool("observe", {"observation": {}})
                 assert private_before_auth.is_error is True
                 assert _structured(private_before_auth) == {
                     "outcome": "refused",
                     "code": "authentication_required",
+                    "remedy": SIGN_IN_REMEDY,
                 }
 
                 # What serve does with the launch configuration's reference.

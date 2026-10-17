@@ -40,14 +40,14 @@ from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import (
     require_error_document,
     unwrap_envelope_notices,
     unwrap_schema_envelope,
 )
 
-from ._m303_ordinary_cli_support import joint_return_options
-from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 

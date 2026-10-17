@@ -20,7 +20,7 @@ def test_wallet_amount_refuses_non_canonical_forms() -> None:
     """
     import typer as _typer
 
-    from cadrumo.entrypoints.cli._modelo_iva_wallet_cli import _wallet_amount
+    from ..modelo_iva_wallet_commands import _wallet_amount
 
     for raw in ("1.000", "1e3", "1E3", "+1200", "1_000", ".5", "1.", "NaN", "-NaN", "Infinity", "-Infinity"):
         assert isinstance(Decimal(raw), Decimal), raw
@@ -45,6 +45,6 @@ def test_wallet_amount_refuses_non_canonical_forms() -> None:
     ],
 )
 def test_wallet_amount_accepts_canonical_forms(raw: str, expected: Decimal) -> None:
-    from cadrumo.entrypoints.cli._modelo_iva_wallet_cli import _wallet_amount
+    from ..modelo_iva_wallet_commands import _wallet_amount
 
     assert _wallet_amount(raw) == expected

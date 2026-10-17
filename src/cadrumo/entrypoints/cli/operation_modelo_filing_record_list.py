@@ -24,7 +24,7 @@ from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
 from ._filing_chain_payloads import AeatRegisterRefPayload
-from ._modelo_payloads import ExternalEvidencePayload, ModeloRecordPayload
+from .modelo_results import ExternalEvidencePayload, ModeloRecordPayload
 
 
 def _filing_list_modelo_filter(bucket_id: str | None, profile_id: str, modelo: str | ModeloCode | None) -> str | None:

@@ -26,8 +26,8 @@ from typing import override
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.iva.classification import IvaTerritorialScope, resolve_iva_classification_catalogue
-from ....domain.iva.schema import EUMemberState
+from ....domain.iva.classification import resolve_iva_classification_catalogue
+from ....domain.iva.schema import EUMemberState, IvaTerritorialScope
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     CounterpartyEstablishmentConflictError,

@@ -172,6 +172,10 @@ async def _tool_reply(arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _command_line(args: list[str]) -> Any:
+    if args[:2] == ["config", "auth"]:
+        from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
+
+        return invoke_runtime_cli(["--format", "json", *args])
     return invoke_cached_cli(["--format", "json", *args])
 
 

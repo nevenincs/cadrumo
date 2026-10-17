@@ -23,7 +23,7 @@ from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType, Buc
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.classification_rule import LedgerClassificationRule
 from cadrumo.domain.transactions.enums import BusinessClassification
-from cadrumo.entrypoints.cli._ledger_rule_payloads import (
+from cadrumo.entrypoints.cli.ledger_rule_results import (
     RuleAddResult,
     RuleApplyAppliedPayload,
     RuleApplyMatchPayload,
@@ -242,7 +242,7 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
         assert transaction_after_preview == transaction_before_preview
         history_after_preview = ports.bucket_event_repository.load()
         dry_run_additions = _added_events(history_before_preview.events, history_after_preview.events)
-        assert all(event.event_type is BucketEventType.PROFILE_ACTIVATED for event in dry_run_additions)
+        assert not dry_run_additions
         assert rule_repository.list_rules() == rules_after_add
 
         apply_result_raw = _invoke(profile, "app", "ledger", "rule", "apply", "--actor", _ACTOR)
@@ -282,7 +282,8 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
         classification_events = tuple(
             event for event in live_additions if event.event_type is BucketEventType.LEDGER_TRANSACTION_CLASSIFIED
         )
-        assert len(activation_events) == 1
+        assert not activation_events
+        assert len(live_additions) == 1
         assert len(classification_events) == 1
         event = classification_events[0]
         assert (

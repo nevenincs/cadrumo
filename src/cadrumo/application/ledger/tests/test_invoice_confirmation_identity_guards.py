@@ -37,7 +37,7 @@ from ....domain.calculations.registry.iva_regime_vocabulary import require_iva_r
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

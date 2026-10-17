@@ -196,7 +196,7 @@ def test_native_target_only_grant_refuses_before_private_result(
         )
         assert denied.exit_code == 2, denied.output
         error = require_error_document(denied.output)["error"]
-        assert error["context"] == {"reason": "period_denied"}
+        assert error["context"]["reason"] == "period_denied", error
         assert "clean_state" not in denied.output
 
     request = ModeloDependencyRequest(

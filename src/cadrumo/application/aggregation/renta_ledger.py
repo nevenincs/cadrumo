@@ -56,7 +56,7 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
 )
 from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityContext,

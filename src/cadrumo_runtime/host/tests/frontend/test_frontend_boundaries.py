@@ -21,6 +21,7 @@ _FORBIDDEN = (
 
 def _host_references(source: str, package: str) -> frozenset[str]:
     tree = ast.parse(source)
+    parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
     references: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -29,6 +30,10 @@ def _host_references(source: str, package: str) -> frozenset[str]:
             reference = "." * node.level + (node.module or "")
             references.add(resolve_name(reference, package) if node.level else reference)
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            parent = parents.get(node)
+            if isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Div):
+                # A source path inspected by a structural test is not an import.
+                continue
             # Deferred import targets must obey the same rule as static imports.
             references.add(node.value)
     return frozenset(
@@ -58,6 +63,7 @@ def test_tax_interfaces_and_their_unit_tests_have_no_host_composition_dependency
         "from cadrumo_client.transport.installed_client import open_installed_client",
         "from cadrumo_client.commands.profile_admission import activate_profile",
         'target = DeferredTarget("cadrumo_runtime.host.frontend.tui.launcher", "main")',
+        '__import__("cadrumo_runtime")',
     ),
 )
 def test_boundary_check_rejects_representative_host_leaks(source: str) -> None:
@@ -66,6 +72,11 @@ def test_boundary_check_rejects_representative_host_leaks(source: str) -> None:
 
 def test_boundary_check_accepts_public_ports_and_transport_contracts() -> None:
     source = "from cadrumo_client.contracts.contracts import RefusalError"
+    assert not _host_references(source, "cadrumo.entrypoints.cli")
+
+
+def test_boundary_check_accepts_source_paths_without_importing_the_host() -> None:
+    source = 'path = Path("src") / "cadrumo_runtime" / "host" / "frontend"'
     assert not _host_references(source, "cadrumo.entrypoints.cli")
 
 

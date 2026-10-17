@@ -5,12 +5,14 @@ from __future__ import annotations
 import argparse
 import sys
 import tarfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
+from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
-from dev.first_party_source import is_test_source
 
+from .authority_staging import selected_published_authority
 from .dependency_contract import validate_frozen_exports
+from .google_oauth import GOOGLE_OAUTH_RESOURCE
 from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
@@ -29,16 +31,26 @@ from .python_cohort import (
     install_targets,
     load_python_cohort,
 )
-from .source_data_contract import _configured_corpus_binary_suffixes, _is_corpus_source_binary, source_data_paths
+from .source_data_contract import (
+    _configured_corpus_binary_suffixes,
+    _is_configured_exclusion,
+    source_data_paths,
+)
 
 
 def _assert_sdist_contains_data(repo_root: Path, sdist: Path) -> None:
     """Verify every repository-visible shipped-data file appears in the source distribution."""
-    expected = source_data_paths(repo_root)
+    configuration = load_toml(repo_root / "pyproject.toml")
+    exclusions = tuple(configuration["tool"]["hatch"]["build"]["targets"]["sdist"]["exclude"])
+    expected = {path for path in source_data_paths(repo_root) if not _is_configured_exclusion(path, exclusions)}
+    descriptor, database = selected_published_authority(repo_root)
+    expected.update(f"src/cadrumo/_data/registry/authority/{path.name}" for path in (descriptor, database))
+    expected.add(GOOGLE_OAUTH_RESOURCE)
     _assert_sdist_contains_expected_data(
         sdist,
         expected,
         corpus_binary_suffixes=_configured_corpus_binary_suffixes(repo_root),
+        excluded_patterns=exclusions,
     )
 
 
@@ -47,6 +59,7 @@ def _assert_sdist_contains_expected_data(
     expected: set[str],
     *,
     corpus_binary_suffixes: tuple[str, ...],
+    excluded_patterns: tuple[str, ...] = (),
 ) -> None:
     """Verify expected runtime data is present and companion-owned bytes are absent.
 
@@ -62,6 +75,15 @@ def _assert_sdist_contains_expected_data(
     missing = sorted(path for path in expected if not any(name.endswith(f"/{path}") for name in names))
     if missing:
         raise SystemExit(f"sdist is missing {len(missing)} source shipped-data files; first ten: {missing[:10]!r}")
+    excluded = sorted(
+        name
+        for name in names
+        if _is_configured_exclusion(
+            PurePosixPath(name).relative_to(PurePosixPath(name).parts[0]).as_posix(), excluded_patterns
+        )
+    )
+    if excluded:
+        raise SystemExit(f"sdist leaked configured exclusions: {excluded[:10]!r}")
     leaked = sorted(
         name for name in names if "/src/cadrumo/_data/corpus/" in name and name.lower().endswith(corpus_binary_suffixes)
     )
@@ -106,18 +128,8 @@ def main(argv: list[str] | None = None) -> int:
 
     cohort = load_python_cohort(args.cohort_dir)
     print("using supplied immutable sdist cohort", flush=True)
-    corpus_binary_suffixes = _configured_corpus_binary_suffixes(repo_root)
-    expected_data_paths = {
-        path
-        for path in source_data_paths(repo_root)
-        if not _is_corpus_source_binary(path, corpus_binary_suffixes) and not is_test_source(path)
-    }
     sdist = cohort.root_sdist
-    _assert_sdist_contains_expected_data(
-        sdist,
-        expected_data_paths,
-        corpus_binary_suffixes=corpus_binary_suffixes,
-    )
+    _assert_sdist_contains_data(repo_root, sdist)
 
     print("creating stdlib venv and installing sdist plus exact companions", flush=True)
     venv_path = create_pip_venv(work_dir, args.python)

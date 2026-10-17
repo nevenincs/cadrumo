@@ -4,14 +4,23 @@ from __future__ import annotations
 
 import json
 import sys
+from dataclasses import replace
 
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
-from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.graph import CommandSpecGraph
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
 
 from ....core.config import override_settings
-from ..command_schema import command_registration_metadata, command_schema_refs
+from ..command_schema import command_registration_metadata, command_registration_projection, command_schema_refs
 from ..command_specs import COMMAND_GRAPH
 from ..verb_input_schema import build_verb_input_schemas, is_exposable_command
 
@@ -128,3 +137,32 @@ def test_every_projected_target_matches_its_authored_spec() -> None:
         assert row.schema_owner == spec.result_schema.target.identity
         assert row.schema_name == spec.result_schema.target.qualname
         assert row.handler_owner == spec.handler.target.identity
+
+
+def test_parameter_choice_projection_uses_the_supplied_graph_owner() -> None:
+    class OwnerChoices:
+        choices = ("first-owner-choice", "second-owner-choice")
+
+    target = DeferredTarget("declared.graph.owner", "OwnerChoices")
+    requested: list[DeferredTarget] = []
+
+    def resolve_owned_target(value: DeferredTarget) -> object:
+        requested.append(value)
+        assert value == target
+        return OwnerChoices
+
+    root = replace(COMMAND_GRAPH.root(), result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED))
+    leaf = replace(
+        COMMAND_GRAPH.by_schema_identity()["config.profile.create"],
+        parent_key=root.key,
+        parameters=(ArgumentSpec("selection", ValueContract(target), ParameterDefault.required(), help_key=None),),
+        machine_secret=None,
+    )
+    graph = CommandSpecGraph((root, leaf), resolver=resolve_owned_target)
+    projection = command_registration_projection(graph)
+    row = next(row for row in projection.commands if row.command == "config.profile.create")
+
+    parameters = row.parameters_by_language[0][1]
+    assert parameters is not None
+    assert parameters[0].choices == OwnerChoices.choices
+    assert requested == [target]

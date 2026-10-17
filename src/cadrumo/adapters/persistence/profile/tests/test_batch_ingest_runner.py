@@ -50,10 +50,10 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....domain.iva.schema import InvoiceKind
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

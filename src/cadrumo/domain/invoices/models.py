@@ -42,10 +42,10 @@ from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from ..calculations.registry.schema_base import DateAxis
 from ..identifiers import canonical_decimal_string
-from ..iva.classification import InvoiceKind, TransactionKind, resolve_transaction_kind_catalogue
+from ..iva.classification import TransactionKind, resolve_transaction_kind_catalogue
 from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
-from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, spanish_eu_member_state
+from ..iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields

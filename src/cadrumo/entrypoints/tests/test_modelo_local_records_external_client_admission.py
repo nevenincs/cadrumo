@@ -218,8 +218,10 @@ def test_a_recorded_figure_carries_the_session_label_for_an_automation_and_never
     recorded: str,
 ) -> None:
     """The result, the stored override and its audit event name who recorded it, and state what it is not."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_SessionHost(frontend),
     ) as (driver, registry, profile_id):
         modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
 
@@ -252,8 +254,10 @@ def test_a_figure_leaves_official_evidence_stored_and_says_what_it_replaced(
     recorded: str,
 ) -> None:
     """Nothing of the official layer is lost, so the result states it for the caller to tell the person."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_SessionHost(frontend),
     ) as (driver, registry, profile_id):
         modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
         _store_observation(profile_id, "250.00", source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE)
@@ -283,8 +287,10 @@ def test_a_figure_recorded_over_a_local_filings_observation_replaces_it_and_says
     recorded: str,
 ) -> None:
     """That observation shares the layer the figure is written to, so the result names what was replaced."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_SessionHost(frontend),
     ) as (driver, registry, profile_id):
         modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
         _store_observation(profile_id, "300.00", source_kind=ObservationSourceKind.APP_FILING)
@@ -313,8 +319,10 @@ def test_an_operator_figure_is_replaced_and_then_cleared_alike_on_every_frontend
     recorded: str,
 ) -> None:
     """A later figure keeps the values of the one it replaces, and clearing removes the figure."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_SessionHost(frontend),
     ) as (driver, registry, profile_id):
         modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
         _run(driver, _OBSERVATION, profile_id, _observation_request(profile_id, value="125.00"))
@@ -379,8 +387,10 @@ def test_a_draft_is_a_created_record_whose_event_carries_the_session_label_for_a
     recorded: str,
 ) -> None:
     """The draft is delivered to no one and completed by no one, and its creation names who drafted it."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_SessionHost(frontend),
     ) as (driver, registry, profile_id):
         submitted, observed = _run(driver, _M145_CREATE, profile_id, _draft_request(profile_id, _WORKER))
 
@@ -404,8 +414,10 @@ def test_a_draft_that_fills_the_signed_blocks_is_stored_on_every_frontend(
     recorded: str,
 ) -> None:
     """The signature block of the worker and the acknowledgement of the payer are fields of the draft like any other."""
-    with conformance._runtime(
-        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=_SessionHost(frontend)
+    with conformance.conformance_operation_runtime(
+        tmp_path / "runtime",
+        cleanup=conformance.OperationRuntimeCloseWitness(),
+        execution_caller_reader=_SessionHost(frontend),
     ) as (driver, registry, profile_id):
         values = {**_WORKER, "comunicacion.firma-lugar": "1", "acuse-recibo.tipo-firma": "1"}
         revision = operation.snapshot("145", filing_year=_M145_YEAR, period=_M145_PERIOD.value).revision
@@ -434,9 +446,9 @@ def test_an_automations_validation_reads_the_draft_and_writes_nothing(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     """Validation settles with no effect and appends no event, on a draft the automation created."""
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_SessionHost(_EXTERNAL_CLIENT),
     ) as (driver, registry, profile_id):
         submitted, observed = _run(driver, _M145_CREATE, profile_id, _draft_request(profile_id, _WORKER))

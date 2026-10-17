@@ -370,9 +370,6 @@ def _index() -> Mapping[str, OperationAccessFacts]:
 
 _BY_DEFINITION_ID: Final = _index()
 
-OPERATION_ACCESS_FACTS: Final[tuple[OperationAccessFacts, ...]] = tuple(_BY_DEFINITION_ID.values())
-"""The recorded facts of every operation, sorted by definition id."""
-
 
 def operation_access_facts(definition_id: str) -> OperationAccessFacts:
     """Return the recorded facts of one operation, or fail closed."""
@@ -382,4 +379,4 @@ def operation_access_facts(definition_id: str) -> OperationAccessFacts:
         raise KeyError(f"operation has no recorded access facts: {definition_id!r}") from None
 
 
-__all__ = ["OPERATION_ACCESS_FACTS", "OperationAccessFacts", "operation_access_facts"]
+__all__ = ["OperationAccessFacts", "operation_access_facts"]

@@ -1,15 +1,15 @@
-"""``aeat app modelo work create`` decrypts the profile once for the whole command.
+"""The registered work-create executor decrypts its profile exactly once.
 
-The command runs the foral and applicability guards, the baseline and full
-readiness gates, the work-unit writer (which replays both gates) and, for
-Modelo 100, the filing-obligation advisory. Each of those used to decrypt the
-profile capsule on its own; the command now loads it once and hands it down.
-The count is taken on the real encrypted repository behind the real CLI.
+The CLI harness separately composes presentation language and authentication.
+Those reads do not share the executor's invocation scope. Count all actual
+repository reads inside the complete registered executor, including its guards,
+readiness, writer and filing-obligation advisory, without replacing any read.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextvars import ContextVar
 from pathlib import Path
 from uuid import UUID
 
@@ -17,6 +17,10 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.modelo.work_create_operation import ModeloWorkCreateExecutor, ModeloWorkCreateRequest
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from cadrumo.domain.user_profile.values import (
@@ -25,8 +29,8 @@ from cadrumo.domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
+from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 
-from .modelo_cli import create_modelo_work_unit_via_cli
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -69,19 +73,36 @@ def runtime_profile(tmp_path: Path, authority_operation: object) -> Iterator[Tes
 
 @pytest.fixture
 def profile_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Record every profile decrypt in the process, still performing it."""
+    """Observe every real decrypt while the registered executor owns execution."""
     loads: list[str] = []
+    inside_executor: ContextVar[bool] = ContextVar("count_work_create_profile_reads", default=False)
     real_load = ProfileRecordRepository.load
+    real_execute = ModeloWorkCreateExecutor.execute
+
+    async def counted_execute(
+        self: ModeloWorkCreateExecutor,
+        request: OperationRequest[ModeloWorkCreateRequest],
+        context: OperationExecutorContext,
+    ) -> str | OperationRefusalEvidence:
+        token = inside_executor.set(True)
+        try:
+            return await real_execute(self, request, context)
+        finally:
+            inside_executor.reset(token)
 
     def counting_load(self: ProfileRecordRepository, profile_id: str | UUID) -> UserProfileRecord:
-        loads.append(str(profile_id))
+        if inside_executor.get():
+            loads.append(str(profile_id))
         return real_load(self, profile_id)
 
+    monkeypatch.setattr(ModeloWorkCreateExecutor, "execute", counted_execute)
     monkeypatch.setattr(ProfileRecordRepository, "load", counting_load)
     return loads
 
 
-def test_work_create_decrypts_the_profile_once(runtime_profile: TestRuntimeProfile, profile_loads: list[str]) -> None:
+def test_registered_work_create_decrypts_the_profile_once(
+    runtime_profile: TestRuntimeProfile, profile_loads: list[str]
+) -> None:
     create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
 
     assert profile_loads == [runtime_profile.bucket_id]

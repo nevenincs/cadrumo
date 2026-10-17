@@ -2,7 +2,7 @@
 
 The inventory is derived, never hand-listed: a class is in it because it
 subclasses a Textual ``App`` or ``Screen``, transitively, somewhere under
-``src/cadrumo/entrypoints/tui``. Nothing here counts interfaces, and no
+the application and runtime TUI packages. Nothing here counts interfaces, and no
 constant records how many there are -- a tally would encode this moment and
 then stop detecting anything.
 
@@ -26,6 +26,7 @@ from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
 
 TUI_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui"
+RUNTIME_TUI_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo_runtime" / "host" / "frontend" / "tui"
 
 _TEXTUAL_APP_ROOT: Final[str] = "textual.app.App"
 _TEXTUAL_SCREEN_ROOTS: Final[frozenset[str]] = frozenset({"textual.screen.Screen", "textual.screen.ModalScreen"})
@@ -215,15 +216,17 @@ def _module_name(path: Path) -> str:
     return ".".join(relative.parts)
 
 
-def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
-    """Return every ``App`` or ``Screen`` subclass declared under ``root``.
+def scan(root: Path | None = None) -> tuple[Interface, ...]:
+    """Read both owning TUI packages, or one explicitly supplied source root.
 
     Resolution is transitive and order-independent: a class extending a local
     base that itself extends ``App`` is reached by repeating the sweep until
     it stops growing, so declaration order across files never decides whether
     an interface is found.
     """
-    declared = _source_declarations(root)
+    declared: dict[str, _Declaration] = {}
+    for source_root in (root,) if root is not None else (TUI_ROOT, RUNTIME_TUI_ROOT):
+        declared.update(_source_declarations(source_root))
 
     apps, screens, children = _interface_lineage(declared)
 

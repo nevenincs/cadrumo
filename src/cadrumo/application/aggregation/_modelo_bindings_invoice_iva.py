@@ -22,7 +22,6 @@ from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObserva
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.components import registry_category_projection
 from ...domain.iva.flow import (
     derive_flow_for_classification,
@@ -31,7 +30,7 @@ from ...domain.iva.flow import (
 )
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_rate
-from ...domain.iva.schema import IvaCategory, IvaLedgerObservationRole
+from ...domain.iva.schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .errors import AggregationValidationError

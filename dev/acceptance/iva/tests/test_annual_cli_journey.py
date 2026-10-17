@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from dev.acceptance.installed_cli import build_installed_cli_environment
+from dev.packaging.installed_runtime import installed_cli_runtime
+
 from ..annual_cli_journey import (
     run_iva_annual_foundation_cli_journey,
     run_iva_annual_m390_cli_journey,
@@ -33,6 +36,11 @@ def test_installed_cli_first_quarter_local_filing_establishes_annual_foundation(
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
         year=year,
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
     )
 
     assert receipt.acceptance_ids == (f"IVA-01-ANNUAL-FOUNDATION-{year}-1T",)
@@ -80,6 +88,11 @@ def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
         year=year,
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
     )
 
     assert receipt.acceptance_ids == (f"IVA-01-ANNUAL-M390-{year}-0A",)

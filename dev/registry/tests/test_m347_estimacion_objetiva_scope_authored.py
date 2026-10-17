@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.m347_operation_scope import resolve_m347_estimacion_objetiva_scope
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
-from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import InvoiceKind
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.loader import load_shared_catalogues

@@ -26,11 +26,11 @@ from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.iva.schema import InvoiceKind
 from .ledger_action_create_support import ledger_ports_for_test
 
 BUCKET_ID = "43434343-4343-4343-8343-434343434343"

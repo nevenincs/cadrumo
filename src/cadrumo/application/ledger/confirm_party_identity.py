@@ -33,7 +33,7 @@ value a confirm is about to persist.
 from __future__ import annotations
 
 from ...core.identity.tax_id import same_tax_identifier
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 

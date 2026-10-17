@@ -74,9 +74,9 @@ def test_evidence_update_records_who_acted_and_returns_the_stored_record_whole_o
 ) -> None:
     """The replacement event names the derived label; the result and the stored record keep the typed path."""
     definition_id = "ledger.evidence.update"
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         source_directory = tmp_path / "typed-by-the-person"
@@ -133,9 +133,9 @@ def test_a_typed_invoice_entry_records_who_made_it(
 ) -> None:
     """The creation event of an invoice entered through the wizard names the derived label."""
     definition_id = "ledger.invoice.wizard"
-    with conformance._runtime(
+    with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
-        cleanup=conformance._CloseWitness(),
+        cleanup=conformance.OperationRuntimeCloseWitness(),
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
@@ -172,10 +172,10 @@ def test_an_extraction_seals_the_full_draft_whichever_frontend_submits_it(
     """The same stored document is read on this machine, and the whole reading is sealed for every caller."""
     definition_id = "ledger.evidence.extract"
     with (
-        conformance._model_runtime_for(definition_id),
-        conformance._runtime(
+        conformance.model_runtime_for_operation(definition_id),
+        conformance.conformance_operation_runtime(
             tmp_path / "runtime",
-            cleanup=conformance._CloseWitness(),
+            cleanup=conformance.OperationRuntimeCloseWitness(),
             execution_caller_reader=_session_host(definition_id, frontend),
         ) as (driver, registry, profile_id),
     ):

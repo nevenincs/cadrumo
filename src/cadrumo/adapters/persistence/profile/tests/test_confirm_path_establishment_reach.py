@@ -47,8 +47,8 @@ import pytest
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.establishment_ladder import EstablishmentRung
 from cadrumo.core.config import Settings
-from cadrumo.domain.iva.classification import InvoiceKind, IvaTerritorialScope
 
+from .....domain.iva.schema import InvoiceKind, IvaTerritorialScope
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,

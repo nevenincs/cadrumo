@@ -34,8 +34,8 @@ from ._spec_policies import (
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
     "_google": ".google",
-    "_google_folder": "._google_folder",
-    "_google_folder_payloads": "._google_folder_payloads",
+    "_google_folder": ".google_folder_commands",
+    "_google_folder_payloads": ".google_folder_results",
     "_google_payloads": "cadrumo_client.commands.google_payloads",
 }
 

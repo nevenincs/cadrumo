@@ -34,7 +34,7 @@ from cadrumo_client.commands.suggestions import (
     LazySubcommand,
     StandaloneErrorRunner,
 )
-from cadrumo_client.commands.target import resolve_deferred_target
+from cadrumo_client.commands.target import TargetResolver
 from cadrumo_client.contracts.command_ports import Capability
 
 
@@ -86,7 +86,9 @@ def _group_class(
     )
 
 
-def _parameter_default(default: ParameterDefault) -> tuple[object, Callable[[], object] | None]:
+def _parameter_default(
+    default: ParameterDefault, resolver: TargetResolver
+) -> tuple[object, Callable[[], object] | None]:
     if default.kind is DefaultKind.REQUIRED:
         return ..., None
     if default.kind is DefaultKind.LITERAL:
@@ -99,7 +101,7 @@ def _parameter_default(default: ParameterDefault) -> tuple[object, Callable[[], 
     def deferred_factory() -> object:
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-        factory = resolve_deferred_target(factory_target)
+        factory = resolver(factory_target)
         if not callable(factory):
             raise TypeError(f"parameter default target is not callable: {factory_target.identity!r}")
         # A default factory runs while Click parses, before the command body
@@ -114,8 +116,8 @@ def _parameter_default(default: ParameterDefault) -> tuple[object, Callable[[], 
     return ..., deferred_factory
 
 
-def _annotation(target: DeferredTarget) -> object:
-    annotation = resolve_deferred_target(target)
+def _annotation(target: DeferredTarget, resolver: TargetResolver) -> object:
+    annotation = resolver(target)
     if not isinstance(annotation, type) and not callable(annotation):
         raise TypeError(f"parameter annotation target is not a type: {target.identity!r}")
     return annotation
@@ -157,18 +159,19 @@ def _shared_parameter_kwargs(
 
 def _parameter_value_projection(
     spec: ArgumentSpec | OptionSpec,
+    resolver: TargetResolver,
 ) -> tuple[object, object | None, object | None, str | None]:
     """Resolve annotation, parser, Click type, and choice metavar from a spec."""
-    annotation = _annotation(spec.value.annotation)
+    annotation = _annotation(spec.value.annotation, resolver)
     if isinstance(spec, OptionSpec) and spec.multiple:
         annotation = GenericAlias(list, (annotation,))
-    parser = None if spec.value.parser is None else resolve_deferred_target(spec.value.parser)
+    parser = None if spec.value.parser is None else resolver(spec.value.parser)
     click_type = (
         TyperChoice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
         if spec.value.choices
         else None
         if spec.value.click_type is None
-        else resolve_deferred_target(spec.value.click_type)
+        else resolver(spec.value.click_type)
     )
     click_type = _materialize_projected_click_type(click_type, annotation)
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
@@ -213,10 +216,11 @@ def _option_parameter(
     parser: object | None,
     click_type: object | None,
     choice_metavar: str | None,
+    resolver: TargetResolver,
 ) -> inspect.Parameter:
     """Materialize one named option from its production spec."""
-    callback = None if spec.value.callback is None else resolve_deferred_target(spec.value.callback)
-    completion = None if spec.value.completion is None else resolve_deferred_target(spec.value.completion)
+    callback = None if spec.value.callback is None else resolver(spec.value.callback)
+    completion = None if spec.value.completion is None else resolver(spec.value.completion)
     option_factory = cast(Any, typer.Option)
     option_kwargs = _shared_parameter_kwargs(
         spec,
@@ -256,10 +260,10 @@ def _option_parameter(
     )
 
 
-def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
+def _parameter(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver) -> inspect.Parameter:
     """Materialize one spec-owned argument or option parameter."""
-    default, default_factory = _parameter_default(spec.default)
-    annotation, parser, click_type, choice_metavar = _parameter_value_projection(spec)
+    default, default_factory = _parameter_default(spec.default, resolver)
+    annotation, parser, click_type, choice_metavar = _parameter_value_projection(spec, resolver)
     if isinstance(spec, ArgumentSpec):
         return _argument_parameter(
             spec,
@@ -278,17 +282,20 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
         parser=parser,
         click_type=click_type,
         choice_metavar=choice_metavar,
+        resolver=resolver,
     )
 
 
-def compile_parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
+def compile_parameter(spec: ArgumentSpec | OptionSpec, *, resolver: TargetResolver) -> inspect.Parameter:
     """Materialize one public command-graph parameter through the Typer adapter."""
-    return _parameter(spec)
+    return _parameter(spec, resolver)
 
 
-def _invoke_deferred_target(target_ref: DeferredTarget, arguments: Mapping[str, object]) -> object:
+def _invoke_deferred_target(
+    target_ref: DeferredTarget, arguments: Mapping[str, object], resolver: TargetResolver
+) -> object:
     """Resolve and invoke one declared command behavior target."""
-    target = resolve_deferred_target(target_ref)
+    target = resolver(target_ref)
     if not callable(target):
         raise TypeError(f"command target is not callable: {target_ref.identity!r}")
     invoke: Callable[..., object] = target
@@ -367,14 +374,14 @@ def _invoke_bound_behavior(
     refuse_declared_live_write(spec.policy)
 
     def behavior() -> object:
-        return _invoke_deferred_target(target_ref, bound.arguments)
+        return _invoke_deferred_target(target_ref, bound.arguments, graph.resolver)
 
     if dispatcher is None:
         return behavior()
     return dispatcher(graph, spec, bound, behavior)
 
 
-def _wrapper_parameters(spec: CommandSpec) -> list[inspect.Parameter]:
+def _wrapper_parameters(spec: CommandSpec, resolver: TargetResolver) -> list[inspect.Parameter]:
     """Build the legal Python signature projected from one command spec."""
     parameters: list[inspect.Parameter] = []
     context_parameter = spec.invocation.context_parameter
@@ -397,7 +404,7 @@ def _wrapper_parameters(spec: CommandSpec) -> list[inspect.Parameter]:
     # rediscover the rule. The sort is stable, so arguments keep the relative
     # order the spec declares them in -- the part an operator actually observes
     # as positional order.
-    built = [_parameter(parameter) for parameter in spec.parameters]
+    built = [_parameter(parameter, resolver) for parameter in spec.parameters]
     parameters.extend(
         sorted(
             built,
@@ -423,7 +430,7 @@ def _behavior_wrapper(
         bound = signature.bind(*args, **kwargs)
         return _invoke_bound_behavior(graph, spec, target_ref, bound, dispatcher)
 
-    parameters = _wrapper_parameters(spec)
+    parameters = _wrapper_parameters(spec, graph.resolver)
     invoke.__name__ = f"invoke_{spec.key}"
     invoke.__qualname__ = invoke.__name__
     signature = inspect.Signature(parameters)
@@ -542,7 +549,6 @@ __all__ = [
     "build_command_app",
     "compile_parameter",
     "refuse_declared_live_write",
-    "resolve_deferred_target",
     "runs_in_governed_fact_scope",
 ]
 

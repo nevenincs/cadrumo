@@ -12,13 +12,13 @@ from cadrumo_client.commands.registered_operation_errors import invalid_completi
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...application.modelo.reconciliation import ModeloReconciliationReport
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ...application.modelo.reconciliation_pull_operation import (
     MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
     ModeloReconciliationPullRequest,
     reconciliation_pull_source_ref,
 )
-from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...core.config import load_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .operation_filed_single import read_filed_single_capture_for_cli

@@ -29,7 +29,8 @@ def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
 
     from cadrumo.application.aggregation.counterpart import CounterpartObservation
     from cadrumo.core.aggregation import BindingSourceKind
-    from cadrumo.entrypoints.cli._modelo_aggregate_cli import _parse_typed_cli_observations
+
+    from ..modelo_aggregate_commands import _parse_typed_cli_observations
 
     result = _parse_typed_cli_observations(
         [_VALID_COUNTERPART], model=CounterpartObservation, flag="--counterpart-observation"
@@ -52,7 +53,8 @@ def test_parse_typed_cli_observations_rejects_invalid_json_syntax() -> None:
     import typer
 
     from cadrumo.application.aggregation.counterpart import CounterpartObservation
-    from cadrumo.entrypoints.cli._modelo_aggregate_cli import _parse_typed_cli_observations
+
+    from ..modelo_aggregate_commands import _parse_typed_cli_observations
 
     with pytest.raises(typer.BadParameter):
         _parse_typed_cli_observations(["{not: json}"], model=CounterpartObservation, flag="--counterpart-observation")
@@ -63,7 +65,8 @@ def test_parse_typed_cli_observations_rejects_non_object_json() -> None:
     import typer
 
     from cadrumo.application.aggregation.counterpart import CounterpartObservation
-    from cadrumo.entrypoints.cli._modelo_aggregate_cli import _parse_typed_cli_observations
+
+    from ..modelo_aggregate_commands import _parse_typed_cli_observations
 
     with pytest.raises(typer.BadParameter):
         _parse_typed_cli_observations(
@@ -82,7 +85,8 @@ def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
     import typer
 
     from cadrumo.application.aggregation.counterpart import CounterpartObservation
-    from cadrumo.entrypoints.cli._modelo_aggregate_cli import _parse_typed_cli_observations
+
+    from ..modelo_aggregate_commands import _parse_typed_cli_observations
 
     with pytest.raises(typer.BadParameter, match="counterparty_country: Field required"):
         _parse_typed_cli_observations(

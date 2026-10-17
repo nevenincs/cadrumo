@@ -18,9 +18,9 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 
+from .....domain.iva.schema import InvoiceKind
 from .source_resolver_test_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,

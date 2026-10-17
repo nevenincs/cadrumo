@@ -226,7 +226,7 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
 
     cases = (
         ("wrong-period", Period.from_year_and_code(2025, "2T"), True, True, "period_denied"),
-        ("no-commit", Period.from_year_and_code(2025, "1T"), False, True, "REFUSED_PROFILE_ACCESS"),
+        ("no-commit", Period.from_year_and_code(2025, "1T"), False, True, "operation_denied"),
     )
     for label, period, commit, result, reason in cases:
         with native_api_cli_session(
@@ -240,10 +240,13 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
             refused = session.invoke_credential_reference("app", "modelo", "work", "create", *_m130("--name", "Denied"))
             assert refused.exit_code == 2, refused.output
             error = require_error_document(refused.output)["error"]
-            assert error["context"]["reason"] == reason
+            assert error["context"]["reason"] == reason, error
             if label == "no-commit":
-                assert error["context"]["terminal_condition"] == "refused"
-                assert error["context"]["effect"] == "none"
+                # Missing COMMIT refuses admission before an operation exists.
+                assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
+                assert "operation_id" not in error["context"]
+                assert "effect" not in error["context"]
+                assert "terminal_condition" not in error["context"]
             assert "name_applied" not in refused.output
             observed = session.invoke_password("app", "modelo", "work", "list")
             assert observed.exit_code == 0, observed.output
@@ -261,7 +264,7 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
         denied = session.invoke_credential_reference("app", "modelo", "work", "create", *_m130("--name", "Committed"))
         assert denied.exit_code == 2, denied.output
         error = require_error_document(denied.output)["error"]
-        assert error["context"]["reason"] == "operation_denied"
+        assert error["context"]["reason"] == "operation_denied", error
         assert error["context"]["terminal_condition"] == "succeeded"
         assert error["context"]["effect"] == "updated"
         assert "name_applied" not in denied.output
@@ -296,7 +299,7 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
         denied = session.invoke_credential_reference("app", "modelo", "work", "create", *_m130("--name", "Committed"))
         assert denied.exit_code == 2, denied.output
         error = require_error_document(denied.output)["error"]
-        assert error["context"]["reason"] == "disclosure_denied"
+        assert error["context"]["reason"] == "disclosure_denied", error
         assert error["context"]["terminal_condition"] == "succeeded"
         assert error["context"]["effect"] == "updated"
         assert "name_applied" not in denied.output

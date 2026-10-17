@@ -16,7 +16,7 @@ from ..graph import CommandSpecGraph
 from ..parameters import ArgumentSpec, OptionSpec
 from ..shared_contracts import DefaultKind, DeferredTarget
 from ..spec import CommandSpec
-from ..target import resolve_deferred_target
+from ..target import TargetResolver
 
 PROBE_PROFILE_LABEL: Final = "Governed fact declaration probe"
 
@@ -40,10 +40,12 @@ def command_path(graph: CommandSpecGraph, spec: CommandSpec) -> tuple[str, ...]:
     return tuple(reversed(tokens))
 
 
-def _synthetic_value(spec: CommandSpec, parameter: ArgumentSpec | OptionSpec, workdir: Path) -> str:
+def _synthetic_value(
+    spec: CommandSpec, parameter: ArgumentSpec | OptionSpec, workdir: Path, resolver: TargetResolver
+) -> str:
     if parameter.value.choices:
         return parameter.value.choices[0]
-    annotation = resolve_deferred_target(parameter.value.annotation)
+    annotation = resolver(parameter.value.annotation)
     if isinstance(annotation, type) and issubclass(annotation, Enum):
         member = next(iter(annotation))
         return str(member.value)
@@ -84,7 +86,7 @@ def synthetic_argv(
         wanted = parameter.name in also or parameter.name in supplied
         if parameter.default.kind is not DefaultKind.REQUIRED and not wanted:
             continue
-        value = supplied.get(parameter.name) or _synthetic_value(spec, parameter, workdir)
+        value = supplied.get(parameter.name) or _synthetic_value(spec, parameter, workdir, graph.resolver)
         if isinstance(parameter, OptionSpec):
             named.extend((parameter.declarations[0], value))
         else:
@@ -100,9 +102,9 @@ def free_monitoring_tool() -> int:
     raise AssertionError("no free sys.monitoring tool id for a command probe")
 
 
-def handler_code(target: DeferredTarget) -> CodeType:
+def handler_code(target: DeferredTarget, *, resolver: TargetResolver) -> CodeType:
     """Return the code object of a command's declared behavior target."""
-    behavior = resolve_deferred_target(target)
+    behavior = resolver(target)
     if callable(behavior):
         behavior = inspect.unwrap(behavior)
     code = getattr(behavior, "__code__", None)

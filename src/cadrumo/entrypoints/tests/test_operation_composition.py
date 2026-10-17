@@ -81,9 +81,9 @@ def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path:
         expected_registry = build_production_operation_registry()
         registry = dependencies.observation.registry
 
-        assert tuple(item.definition_id for item in registry.definitions) == tuple(
-            item.definition_id for item in expected_registry.definitions
-        )
+        assert tuple(
+            registry.lookup(item.definition_id).definition_id for item in expected_registry.definitions
+        ) == tuple(item.definition_id for item in expected_registry.definitions)
         assert registry.public_contract_set == expected_registry.public_contract_set
         assert dependencies.public_contracts is registry.public_contract_set
         assert len(registry.public_contract_set.contract_set_digest) == 64
@@ -248,6 +248,7 @@ def test_production_composition_imports_only_public_operation_defining_modules()
     assert {node.module for node in operation_imports} == {
         "application.operations.authorization",
         "application.operations.composition",
+        "application.operations.contract_manifest",
         "application.operations.execution_actor",
         "application.operations.operation_definition",
         "application.operations.registry",

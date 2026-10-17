@@ -353,3 +353,46 @@ def test_the_reading_names_the_requests_each_handler_reaches(tmp_path: Path) -> 
         ("quiet",): set(),
         ("unavailable",): set(),
     }
+
+
+def test_a_host_bound_callable_field_reaches_only_its_actual_injected_effect(tmp_path: Path) -> None:
+    files = {
+        "pkg/__init__.py": "",
+        "pkg/runtime/__init__.py": "",
+        "pkg/runtime/records.py": _FIXTURE_RECORDS,
+        "pkg/cli/__init__.py": "",
+        "pkg/cli/effects.py": (
+            "from ..runtime.records import ProfileDelete\ndef destroy():\n    return ProfileDelete()\n"
+        ),
+        "pkg/cli/commands.py": (
+            "from collections.abc import Callable\n"
+            "class Services:\n    destroy: Callable[[], object]\n    unrelated: Callable[[], object]\n"
+            "def services() -> Services:\n    raise RuntimeError('host must bind services')\n"
+            "def destroy():\n    return services().destroy()\n"
+            "def unrelated():\n    return services().unrelated()\n"
+        ),
+    }
+    for relative, source in files.items():
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(source, encoding="utf-8")
+    handlers: dict[CliPath, Symbol | None] = {
+        ("destroy",): ("pkg/cli/commands.py", "destroy"),
+        ("unrelated",): ("pkg/cli/commands.py", "unrelated"),
+    }
+    for bound in (False, True):
+        flow = SubmissionFlow(
+            SourceTree(tmp_path, packages=frozenset({"pkg"})),
+            scanned=("pkg/cli/", "pkg/runtime/"),
+            submission=("pkg/runtime/records.py", "Submit"),
+            callable_members={(("pkg/cli/commands.py", "Services"), "destroy"): ("pkg/cli/effects.py", "destroy")}
+            if bound
+            else {},
+        )
+        sent = derive_command_connection_requests(
+            handlers=handlers, flow=flow, request_actions=_FIXTURE_ACTIONS, request_package="pkg/runtime/"
+        )
+        assert sent == {
+            ("destroy",): frozenset({"profile_delete"}) if bound else frozenset(),
+            ("unrelated",): frozenset(),
+        }

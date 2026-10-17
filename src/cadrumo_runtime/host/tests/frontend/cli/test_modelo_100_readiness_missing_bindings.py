@@ -11,7 +11,10 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+    RuntimeFailureObservation,
+    native_cli_profile_scope,
+)
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -37,10 +40,13 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
     previous-filing inputs remain actionable blockers.
     """
 
+    failures: list[RuntimeFailureObservation] = []
     with native_cli_profile_scope(tmp_path) as profile:
+        profile.failure_observer = failures.append
         profile.register(
             label="native-m100-readiness",
             facts={
+                "preferences.output_language": "en",
                 "taxpayer_type.entity_type": "natural_person",
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Operator",
@@ -66,7 +72,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
             assert profile.label is not None
             close_active_bucket_session()
             return invoke_cached_cli(
-                ("--profile", profile.label, "--profile-secrets-stdin", *args),
+                ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
                 input=json.dumps({"profile_passphrase": profile.passphrase}),
             )
 
@@ -93,7 +99,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
             "--missing",
         ],
     )  # fmt: skip
-        assert missing.exit_code == 0, missing.output
+        assert missing.exit_code == 0, (missing.output, tuple(failures))
         bindings_payload = _payload(missing.output)
         text_readiness = invoke(
             [
@@ -146,7 +152,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
     assert "ledger_ready_scope\ttransaction_preflight_only" in text_readiness.output
     assert "export_ready\tTrue" in text_readiness.output
     assert "export_refusal\t\n" in text_readiness.output
-    assert "readiness_note\tYour records passed this period's checks" in text_readiness.output
+    assert "readiness_note\tYour records passed this period's checks" in text_readiness.output, text_readiness.output
     assert "missing_bindings_command" not in text_readiness.output
     assert "finish_line" not in text_readiness.output
     assert all("operator_action" not in row for row in readiness_missing.values())

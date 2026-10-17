@@ -33,12 +33,12 @@ from __future__ import annotations
 import asyncio
 import contextvars
 import json
-import re
 import socket
 import threading
 from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
+from importlib.resources import files
 from pathlib import Path
 from typing import Any, override
 
@@ -87,7 +87,6 @@ _HEADROOM_CONDITIONS = {
 
 _SUPPLIER_NAME = "Estacion de Servicio Albufera SL"
 _SUPPLIER_TAX_ID = "B92000082"
-_DIRECTION_BLOCKER_ID = re.compile(r"([0-9a-f]+) \(unresolved_direction\)")
 
 # The labels read every required field here except the issuer's letterhead name,
 # which no label assigns, so the text model is asked for exactly that one field.
@@ -100,6 +99,7 @@ _PARTIALLY_LABELLED_LINES = (
     "Base imponible 60,00",
     "IVA 21% 12,60",
     "Total (IVA incluido) 72,60 EUR",
+    "Moneda: EUR",
 )
 
 # Nothing here is a label the rules read, so there is no reading to stand on.
@@ -164,7 +164,6 @@ def test_the_refused_model_is_one_the_admission_check_assesses() -> None:
 def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_touches_the_runtime(
     tmp_path: Path,
 ) -> None:
-    evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
 
     with (
         _recording_runtime() as (chat_url, arrivals),
@@ -174,6 +173,7 @@ def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_tou
             cadrumo_llm_contention_safety_margin_bytes=_UNSATISFIABLE_MARGIN_BYTES,
         ),
     ):
+        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -194,6 +194,47 @@ def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_tou
     assert notice["context"]["failed_condition_id"] in _HEADROOM_CONDITIONS
 
 
+def _store_reading_for_review(evidence_id: str) -> None:
+    """Seed review through the real reader and encrypted draft writer.
+
+    Standalone CLI extract is read-only. Setup stores an actual reading, as
+    the draft-review suites do, so the confirm case can inspect its findings.
+    """
+    from cadrumo.application.ledger.extraction_draft_store import write_extraction_draft
+    from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+    from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+    from cadrumo.core.bucket_pointer import require_active_bucket_id
+    from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.iva.regime_legend import resolve_regime_legends
+    from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+    from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
+
+    bucket_id = require_active_bucket_id()
+    settings = load_settings()
+    with bundled_indexed_authority().operation() as operation:
+        draft = extract_invoice_draft_from_evidence(
+            bucket_id=bucket_id,
+            evidence_id=evidence_id,
+            settings=settings,
+            ports=invoice_draft_extraction_ports(
+                evidence_ports=build_ledger_evidence_ports(bucket_id=bucket_id), operation=operation
+            ),
+            operation=operation,
+            legends=resolve_regime_legends(
+                operation=operation, effective_date=default_invoice_extraction_period().end_date
+            ),
+        )
+        write_extraction_draft(
+            bucket_id=bucket_id,
+            evidence_reference=evidence_id,
+            draft=draft,
+            extractor="extract_invoice_draft_from_evidence",
+            settings=settings,
+            read_transports=(LOCAL_TRANSPORT_LABEL,),
+        )
+
+
 def _confirm_supplying_the_unassigned_identifier(evidence_id: str) -> Result:
     """Confirm, answering the one blocker a ticket with no party labels raises.
 
@@ -202,8 +243,13 @@ def _confirm_supplying_the_unassigned_identifier(evidence_id: str) -> Result:
     rather than widened away; the label-reading notice under test is unrelated
     to that blocker and is emitted on the confirmation that succeeds.
     """
+    extracted_code, extracted = _extract(evidence_id)
+    assert extracted_code == 0, extracted
+    reviewed = extracted["result"]
     args = [
         "--format", "json", "app", "ledger", "evidence", "confirm",
+        "--expected-source-sha256", reviewed["source_sha256"],
+        "--expected-draft-review-sha256", reviewed["draft_review_sha256"],
         "--country-code", "ES",
         "--evidence-id", evidence_id,
         "--kind", "received",
@@ -212,15 +258,18 @@ def _confirm_supplying_the_unassigned_identifier(evidence_id: str) -> Result:
     confirmed = _invoke(args)
     if confirmed.exit_code == 0:
         return confirmed
-    context = json.loads(confirmed.output)["error"].get("context") or {}
-    blocker = _DIRECTION_BLOCKER_ID.search(str(context.get("unresolved_blockers", "")))
-    assert blocker, confirmed.output
-    return _invoke([*args, "--resolve", f"{blocker.group(1)}=supply:{_SUPPLIER_TAX_ID}"])
+    error = json.loads(confirmed.output)["error"]
+    assert error["code"] == "REFUSED_LEDGER_CONFIRMATION_BLOCKED", confirmed.output
+    review = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", evidence_id])
+    assert review.exit_code == 0, review.output
+    blockers = json.loads(review.output)["result"]["blockers"]
+    direction = [blocker for blocker in blockers if blocker["reason"] == "unresolved_direction"]
+    assert len(direction) == 1, review.output
+    return _invoke([*args, "--resolve", f"{direction[0]['blocker_id']}=supply:{_SUPPLIER_TAX_ID}"])
 
 
 def test_confirm_reports_the_headroom_refused_fill_on_the_draft_it_re_reads(tmp_path: Path) -> None:
     """Confirm reads the document again, so the operator minting from it is told the same thing."""
-    evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
 
     with (
         _recording_runtime() as (chat_url, arrivals),
@@ -230,6 +279,8 @@ def test_confirm_reports_the_headroom_refused_fill_on_the_draft_it_re_reads(tmp_
             cadrumo_llm_contention_safety_margin_bytes=_UNSATISFIABLE_MARGIN_BYTES,
         ),
     ):
+        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        _store_reading_for_review(evidence_id)
         confirmed = _confirm_supplying_the_unassigned_identifier(evidence_id)
 
     assert confirmed.exit_code == 0, confirmed.output
@@ -242,12 +293,12 @@ def test_confirm_reports_the_headroom_refused_fill_on_the_draft_it_re_reads(tmp_
 
 def test_a_fill_the_runtime_answers_is_merged_without_a_label_reading_notice(tmp_path: Path) -> None:
     """The positive control for the detector above: the same recorder sees an admitted fill arrive."""
-    evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
 
     with (
         _recording_runtime() as (chat_url, arrivals),
         override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
     ):
+        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -258,12 +309,12 @@ def test_a_fill_the_runtime_answers_is_merged_without_a_label_reading_notice(tmp
 
 
 def test_an_unreachable_runtime_leaves_the_label_reading_standing_with_a_warning(tmp_path: Path) -> None:
-    evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
 
     with (
         _unreachable_runtime_url() as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL),
     ):
+        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -279,7 +330,6 @@ def test_an_unreachable_runtime_leaves_the_label_reading_standing_with_a_warning
 
 def test_a_headroom_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
     """With no label reading to stand on, the model read is required and its refusal is the command's."""
-    evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
 
     with (
         _recording_runtime() as (chat_url, arrivals),
@@ -289,6 +339,7 @@ def test_a_headroom_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> No
             cadrumo_llm_contention_safety_margin_bytes=_UNSATISFIABLE_MARGIN_BYTES,
         ),
     ):
+        evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code != 0, envelope
@@ -305,7 +356,7 @@ _HOLDING_PROMPT = "cadrumo-test: hold the on-host inference slot"
 #: waits on the other. Generous, because a miss is a hang rather than a pass.
 _HOLD_WAIT_S = 60.0
 
-_CORPUS = Path(__file__).parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
+_CORPUS = files("cadrumo.application.ledger.tests") / "_evidence_corpus"
 
 #: A structured record read by a parser: a batch item that never asks for a
 #: fill, so it cannot be degraded by the occupied slot.
@@ -413,9 +464,9 @@ def _runtime_with_the_slot(tmp_path: Path, *, held: bool) -> Generator[list[str]
 def test_a_busy_refused_fill_leaves_the_label_reading_standing_and_never_touches_the_runtime(
     tmp_path: Path,
 ) -> None:
-    evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
 
     with _runtime_with_the_slot(tmp_path, held=True) as arrivals:
+        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -437,9 +488,9 @@ def test_a_busy_refused_fill_leaves_the_label_reading_standing_and_never_touches
 
 def test_the_same_runtime_sees_the_fill_arrive_when_the_slot_is_free(tmp_path: Path) -> None:
     """The positive control for the case above: with the slot free the recorder sees the fill."""
-    evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
 
     with _runtime_with_the_slot(tmp_path, held=False) as arrivals:
+        evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
@@ -450,9 +501,9 @@ def test_the_same_runtime_sees_the_fill_arrive_when_the_slot_is_free(tmp_path: P
 
 def test_a_busy_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
     """With no label reading to stand on, the occupancy refusal is the command's own refusal."""
-    evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
 
     with _runtime_with_the_slot(tmp_path, held=True) as arrivals:
+        evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code != 0, envelope
@@ -460,8 +511,8 @@ def test_a_busy_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
     assert envelope["error"]["code"] == "REFUSED_LLM_BUSY"
 
 
-def _batch(folder: Path) -> tuple[int, dict[str, Any]]:
-    ran = _invoke(["--format", "json", "app", "ledger", "evidence", "batch", str(folder), "--kind", "received"])
+def _batch(folder: Path, *, kind: str = "received") -> tuple[int, dict[str, Any]]:
+    ran = _invoke(["--format", "json", "app", "ledger", "evidence", "batch", str(folder), "--kind", kind])
     return ran.exit_code, json.loads(ran.output)
 
 
@@ -507,8 +558,28 @@ def test_a_batch_item_degraded_by_a_busy_fill_is_stored_and_reported_with_its_re
     assert exit_code == 0, second
     assert arrivals == [], "a re-run over ingested documents must not read them again"
     rerun = _rows_by_source(second)
-    assert rerun["ticket.pdf"]["status"] == "no_op"
+    assert rerun["ticket.pdf"]["status"] == "no_op", second
     assert rerun["ticket.pdf"]["label_reading_fallback"] == ticket["label_reading_fallback"]
-    assert rerun[_STRUCTURED]["status"] == "no_op"
+    assert rerun[_STRUCTURED]["status"] == "no_op", second
     assert rerun[_STRUCTURED]["label_reading_fallback"] is None
     assert _BATCH_LABEL_READING_DEGRADED in {notice["code"] for notice in second["notices"]}
+
+
+def test_a_stored_received_draft_does_not_complete_an_issued_batch_without_a_reader(tmp_path: Path) -> None:
+    """Same bytes in the other direction require their own reading and custody."""
+    folder = tmp_path / "direction-control"
+    folder.mkdir()
+    (folder / "ticket.pdf").write_bytes(text_pdf_bytes(_PARTIALLY_LABELLED_LINES))
+    with _runtime_with_the_slot(tmp_path, held=True) as arrivals:
+        code, received = _batch(folder)
+    assert code == 0, received
+    assert arrivals == []
+    assert received["result"]["items"][0]["label_reading_fallback"]["cause"] == "inference_slot_busy"
+
+    # The configured loopback reader has now closed. The received draft is
+    # reusable, but cannot satisfy the distinct issued identity.
+    code, issued = _batch(folder, kind="issued")
+    assert code == 0, issued
+    assert issued["result"]["items"][0]["status"] == "paused", issued
+    assert issued["result"]["items"][0]["label_reading_fallback"] is None
+    assert issued["result"]["summary"]["no_op"] == 0

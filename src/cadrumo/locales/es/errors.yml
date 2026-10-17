@@ -373,6 +373,9 @@ errors:
       Modelo 145 coincide con el id solicitado.
     m145_communication_service: Falló una operación del servicio local de comunicación
       del Modelo 145.
+    modelo_calculation_revision_pointer_not_found: No hay ninguna revisión de cálculo
+      disponible para la declaración %{work_unit_id} (Modelo %{modelo}) en el estado
+      solicitado.
     modelo_calculation_revision_selector: La selección de revisión de cálculo falló.
     modelo_calculation_revision_selector_not_found: Ninguna revisión de cálculo coincide
       con el selector indicado.

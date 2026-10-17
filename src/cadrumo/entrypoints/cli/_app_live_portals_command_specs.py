@@ -68,7 +68,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_METADATA_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_portals_commands", "portals_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsListResult", __package__),
@@ -93,7 +93,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_METADATA_POLICY,
-        handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_show", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_portals_commands", "portals_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsViewResult", __package__),

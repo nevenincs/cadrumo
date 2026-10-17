@@ -107,10 +107,10 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             M145_ACTOR_PARAMETER,
         ),
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m145_cli", "m145_create", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m145_commands", "m145_create", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m145", "M145CommunicationRecordResult", __package__),
+            DeferredTarget(".modelo_results_m145", "M145CommunicationRecordResult", __package__),
             identity="modelo.m145.create",
         ),
     ),
@@ -124,10 +124,10 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(M145_COMMUNICATION_RECORD_ID_PARAMETER,),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m145_cli", "m145_validate", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m145_commands", "m145_validate", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m145", "M145CommunicationValidationResultPayload", __package__),
+            DeferredTarget(".modelo_results_m145", "M145CommunicationValidationResultPayload", __package__),
             identity="modelo.m145.validate",
         ),
     ),
@@ -141,10 +141,10 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=M145_RECORD_ACTION_PARAMETERS,
         policy=_MODEL_HANDOFF,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m145_cli", "m145_export", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m145_commands", "m145_export", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m145", "M145CommunicationExportResultPayload", __package__),
+            DeferredTarget(".modelo_results_m145", "M145CommunicationExportResultPayload", __package__),
             identity="modelo.m145.export",
         ),
     ),
@@ -158,10 +158,12 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=M145_RECORD_ACTION_PARAMETERS,
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m145_cli", "m145_mark_delivered_to_payer", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_m145_commands", "m145_mark_delivered_to_payer", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m145", "M145CommunicationRecordResult", __package__),
+            DeferredTarget(".modelo_results_m145", "M145CommunicationRecordResult", __package__),
             identity="modelo.m145.mark_delivered_to_payer",
         ),
     ),
@@ -175,10 +177,12 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=M145_RECORD_ACTION_PARAMETERS,
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m145_cli", "m145_mark_locally_completed", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".modelo_m145_commands", "m145_mark_locally_completed", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads_m145", "M145CommunicationRecordResult", __package__),
+            DeferredTarget(".modelo_results_m145", "M145CommunicationRecordResult", __package__),
             identity="modelo.m145.mark_locally_completed",
         ),
     ),

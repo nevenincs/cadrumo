@@ -44,7 +44,6 @@ from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULA
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.work_plazo import ModeloWorkDeadlinePosture
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -57,18 +56,15 @@ from cadrumo.core.period import Period, PeriodKind, registry_period_kind
 from cadrumo.core.time.clock import today_madrid
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import (
-    published_legal_reference,
     published_selected_revision_id,
     published_supported_filing_years,
 )
 from cadrumo.domain.deadlines.engine import DeadlineEngine
-from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.deadlines.plazo import resolve_filing_window
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.cli._modelo_rendering import _work_unit_deadline_output_from_posture
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _result
 
@@ -311,38 +307,6 @@ def _in_time_case(observed_on: date) -> tuple[int, str, date]:
 def _revision_id(filing_year: int, period_token: str) -> str:
     """Return the canonical law-selected M130 revision for one test coordinate."""
     return published_selected_revision_id("130", filing_year=filing_year, period=period_token)
-
-
-def test_overdue_posture_fallback_emits_null_preview_without_rate_wording(
-    *,
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """The real renderer emits a null preview and no displayed-rate warning."""
-    deadline, notices = _work_unit_deadline_output_from_posture(
-        ModeloWorkDeadlinePosture(
-            closes_on=date(2026, 1, 30),
-            nominal_closes_on=date(2026, 1, 30),
-            holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
-            days_overdue=1,
-        ),
-    )
-
-    assert deadline is not None
-    assert deadline.days_overdue == 1
-    assert deadline.conditional_recargo_preview is None
-    assert deadline.model_dump(mode="json")["conditional_recargo_preview"] is None
-    assert len(notices) == 1
-    context = notices[0].context
-    assert context is not None
-    assert context["legal_refs"] == _RECARGO_LEGAL_REF
-    assert context["article_27_assessment_status"] == "unassessed"
-    message = notices[0].message.lower()
-    assert "displayed rate" not in message
-    assert "previsualización no evaluada" not in message
-
-    legal_entry = published_legal_reference(_RECARGO_LEGAL_REF)
-    assert legal_entry.corpus_ref
-    assert legal_entry.required_text
 
 
 def test_calculate_overdue_period_surfaces_unassessed_preview_with_legal_context(

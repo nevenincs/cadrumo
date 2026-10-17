@@ -41,10 +41,10 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference, published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
 from .cli_runner import invoke_cached_cli
-from .modelo_cli import create_modelo_work_unit_via_cli
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -72,7 +72,7 @@ def emit_root_help_and_exit(ctx: typer.Context) -> None:
     only on a help surface, not on every dispatch.
     """
     from ...application.operator_surface.help import build_help_document, render_help_text
-    from ._root_payloads import RootStatusResult
+    from .root_results import RootStatusResult
 
     document = build_help_document("root")
     typed_help = _strict_round_trip(RootStatusResult, document)
@@ -158,7 +158,7 @@ def emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     from ...application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines
-    from ._root_payloads import RootStatusResult
+    from .root_results import RootStatusResult
 
     active = resolve_active_bucket_id()
     landing = build_root_landing_report(

@@ -57,6 +57,7 @@ from cadrumo.core.request_faults import registered_error_fault, request_faults
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.operation_access import OperationManagementRequest, operation_management_action
+from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 
 if TYPE_CHECKING:
     from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
@@ -379,7 +380,7 @@ class ProfileWorkerOperationHost:
             services.release_ephemeral_result(operation_id)
 
     def forget_settled_ephemeral(self) -> None:
-        """Forget every settled ephemeral result: the worker outlives its last session, its reads do not."""
+        """Forget pending private projections: the worker outlives its last session, its reads do not."""
         services = self._services
         if services is not None:
             services.forget_settled_ephemeral()
@@ -710,6 +711,7 @@ class ProfileWorkerOperationHost:
         request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
         *,
         frontend: OperationFrontendProjection,
+        page: ProjectionPageRequest | None = None,
     ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
         """Serialize only the canonical registered public projection under consent."""
         is_result = isinstance(request, OperationResultProjectionRequestV1)
@@ -719,7 +721,13 @@ class ProfileWorkerOperationHost:
             services = self._composed()
             if isinstance(request, OperationResultProjectionRequestV1):
                 result = await await_cancellation_complete(
-                    services.result.resolve(request, BaseModel), task_name="profile-operation-result"
+                    services.result.resolve(
+                        request,
+                        BaseModel,
+                        snapshot_scope=(session_id, frontend) if page is not None else None,
+                        continue_snapshot=page is not None and page.offset > 0,
+                    ),
+                    task_name="profile-operation-result",
                 )
             else:
                 result = await await_cancellation_complete(

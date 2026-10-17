@@ -1,21 +1,4 @@
 cli:
-  censo_auth:
-    field_failed: No se pudo guardar {field}. Revisa su formato y reintenta; los campos guardados antes se
-      conservan.
-    configure_help: Configura o edita la autenticación AEAT guardada antes de consultar el censo (terminal
-      interactivo).
-    offer: ¿Configurar la autenticación AEAT antes de sincronizar?
-    method: Método de autenticación
-    route: Vía de Cl@ve Móvil
-    certificate: Ruta del certificado (en blanco conserva el valor guardado)
-    field: '{field} (en blanco conserva el valor guardado)'
-    still_missing: Sigue faltando {field}.
-    password: Contraseña (en blanco conserva el valor guardado)
-    saved: Autenticación guardada.
-    required: 'La sincronización AEAT requiere: {requirements}. Configura o edita la autenticación aquí:
-      {command}.'
-    console_required: 'Para editar la autenticación necesitas un terminal interactivo: {command}. Requisitos:
-      {requirements}.'
   app:
     ledger:
       account:
@@ -1515,6 +1498,9 @@ cli:
           valores introducidos antes en la interfaz de pantalla completa (aeat app
           tui) no se conservan salvo que se vuelvan a indicar aquí; la interfaz de
           pantalla completa sí los conserva.
+        calculate_reused_sealed: 'Estos datos coinciden con el cálculo %{revision_id}
+          (estado: %{state}). No se ha creado un borrador nuevo. Selecciona este cálculo
+          guardado por su identificador de revisión o cambia los datos.'
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
@@ -1940,6 +1926,23 @@ cli:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> comprobar -> exportar. Solo construye
         y exporta; nunca presenta ante la AEAT'
+  censo_auth:
+    certificate: Ruta del certificado (en blanco conserva el valor guardado)
+    configure_help: Configura o edita la autenticación AEAT guardada antes de consultar
+      el censo (terminal interactivo).
+    console_required: 'Para editar la autenticación necesitas un terminal interactivo:
+      {command}. Requisitos: {requirements}.'
+    field: '{field} (en blanco conserva el valor guardado)'
+    field_failed: No se pudo guardar {field}. Revisa su formato y reintenta; los campos
+      guardados antes se conservan.
+    method: Método de autenticación
+    offer: ¿Configurar la autenticación AEAT antes de sincronizar?
+    password: Contraseña (en blanco conserva el valor guardado)
+    required: 'La sincronización AEAT requiere: {requirements}. Configura o edita
+      la autenticación aquí: {command}.'
+    route: Vía de Cl@ve Móvil
+    saved: Autenticación guardada.
+    still_missing: Sigue faltando {field}.
   common:
     errors:
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
@@ -1955,6 +1958,8 @@ cli:
         (trimestres), 0A (anual), 01-12 (meses), e indica el año con --year (p. ej.
         --period 1T --year 2024).'
   config:
+    activity:
+      help: Registrar actividad del perfil conectado sin solicitar una contraseña.
     app_help: Configurar y reparar el perfil local, las credenciales, el almacenamiento
       y el enlace con Google.
     auth:
@@ -2807,8 +2812,6 @@ cli:
         config profile complete-setup` indica los datos que aún le faltan. Suficiente
         por sí solo; combínalo con --accept-defaults para rellenar el resto con los
         valores por defecto.
-    activity:
-      help: "Registrar actividad del perfil conectado sin solicitar una contraseña."
     sign_in_status:
       help: Comprueba si has iniciado sesión sin reanudarla ni prolongarla.
     status:
@@ -3051,7 +3054,7 @@ cli:
         invalid_date: '{option} necesita una fecha con formato AAAA-MM-DD.'
         nothing_to_update: 'Nada que cambiar en {account}: indica un dato o envía
           campos de la cuenta por el canal secreto.'
-      none: 'Aún no hay cuentas propias. Añade una con: aeat app ledger account add'
+      none: Aún no hay cuentas propias.
       prompts:
         bank_address: 'Dirección del banco: '
         bank_city: 'Ciudad del banco: '

@@ -22,8 +22,8 @@ from typing import Final
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.spec import CommandSpec
-from cadrumo_client.commands.target import resolve_deferred_target
 
 from ..command_specs import COMMAND_GRAPH
 

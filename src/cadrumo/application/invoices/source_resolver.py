@@ -66,10 +66,9 @@ from ...domain.invoices.business_premises import SITUACIONES_CON_REFERENCIA_CATA
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
 from ..aggregation.source_mesh import (
     CalculationSourceContext,

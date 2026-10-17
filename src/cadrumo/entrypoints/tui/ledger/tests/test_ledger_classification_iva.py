@@ -11,7 +11,7 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.ledger import models as ledger_models
-from .....application.ledger.models import ManualLedgerTransactionResult
+from .....application.ledger.models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.iva_deduction_fact import IvaDeductionFactKind
@@ -100,6 +100,7 @@ async def test_iva_and_allocation_fields_reach_the_shared_submitter_as_typed_val
     assert screen.flow_state is LedgerFlowState.SUCCEEDED
     assert len(door.calls) == 1
     patch = door.calls[0].patch
+    assert isinstance(patch, ManualLedgerTransactionPatch)
     assert patch.model_fields_set == {
         "business_classification",
         "taxable_base",
@@ -151,6 +152,7 @@ async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
 
     assert screen.flow_state is LedgerFlowState.SUCCEEDED
     patch = door.calls[0].patch
+    assert isinstance(patch, ManualLedgerTransactionPatch)
     assert patch.model_fields_set == {"business_classification"}
     assert patch.taxable_base is None
     assert patch.iva_rate is None

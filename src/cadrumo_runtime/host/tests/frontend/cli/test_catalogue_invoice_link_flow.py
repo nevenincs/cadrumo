@@ -44,11 +44,9 @@ from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.tests.cli_text_output_support import line_value
 
-from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession
 from .test_runtime_invoice_add import (
     catalogue_after_password_login,
@@ -68,8 +66,8 @@ _RECEIVED_COUNTERPARTY_CIF = "A58818501"
 
 
 def _invoke_open_profile(session: NativeApiCliSession[None], *command: str) -> Result:
-    """Run a later command in the already-open profile without new auth input."""
-    return invoke_cached_cli(("--format", "text", "--profile", session.profile_label, *command))
+    """Authenticate each invocation through its protected password frame."""
+    return session.invoke_password(*command, output_format="text")
 
 
 def _add_outgoing_transaction(session: NativeApiCliSession[None]) -> str:

@@ -9,12 +9,12 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import require_schema_envelope
 
 from ._iva_wallet_inspector_support import (
     _seed_full_autonomo_profile_for_guidance,
 )
-from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 

@@ -39,7 +39,7 @@ def test_real_scan_over_a_small_real_tree_returns_a_typed_outcome() -> None:
     _require_uvx()
     result = run_security_scan(_REPO_ROOT, source_root=Path("dev/audit"))
 
-    assert result.outcome in {SecurityOutcome.OBSERVED_ZERO, SecurityOutcome.FINDINGS}
+    assert result.outcome in {SecurityOutcome.OBSERVED_ZERO, SecurityOutcome.FINDINGS}, result.headline()
     assert result.files_scanned > 0, "a non-unavailable verdict must prove files were scanned"
     assert result.headline()
 

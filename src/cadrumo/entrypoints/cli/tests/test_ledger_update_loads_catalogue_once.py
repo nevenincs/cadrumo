@@ -8,6 +8,7 @@ count is taken on the real encrypted repository behind the real CLI.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from traceback import extract_stack
 
 import pytest
 from click.testing import Result
@@ -62,7 +63,8 @@ def catalogue_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     real_load = TransactionCatalogueRepository.load
 
     def counting_load(self: TransactionCatalogueRepository) -> TransactionCatalogue:
-        loads.append(self.bucket_id)
+        origin = " > ".join(frame.name for frame in extract_stack(limit=10)[:-1])
+        loads.append(f"{self.bucket_id}: {origin}")
         return real_load(self)
 
     monkeypatch.setattr(TransactionCatalogueRepository, "load", counting_load)

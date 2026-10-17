@@ -16,6 +16,7 @@ from cadrumo_client.commands.registered_operation_contracts import RegisteredOpe
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ....application.modelo.reconciliation import ModeloReconciliationReport
+from ....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ....application.modelo.reconciliation_import_operation import (
     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
     ModeloReconciliationImportAdvisoryProjection,
@@ -26,7 +27,6 @@ from ....application.modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

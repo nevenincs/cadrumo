@@ -18,7 +18,7 @@ from ....application.overview.read_request import OverviewReadKind, OverviewRead
 from ....application.overview.read_result import OverviewReadProjection
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
-from .. import _overview
+from .. import overview_commands
 from ..operation_overview import OverviewReadCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -60,7 +60,7 @@ def completed() -> OverviewReadCompletion:
 
 
 def test_overview_returns_successful_rendered_output(completed: OverviewReadCompletion) -> None:
-    assert _overview._emit_read(completed, lambda: "rendered overview") == "rendered overview"
+    assert overview_commands._emit_read(completed, lambda: "rendered overview") == "rendered overview"
 
 
 @pytest.mark.parametrize("error_type", [ValueError, RuntimeError])
@@ -74,7 +74,7 @@ def test_overview_render_failure_keeps_receipt_and_hides_private_exception(
         raise error_type(private_detail)
 
     with pytest.raises(CliRefusedBoundaryError) as refusal:
-        _overview._emit_read(completed, fail)
+        overview_commands._emit_read(completed, fail)
 
     assert refusal.value.context == {
         "operation_id": _OPERATION_ID,
@@ -95,6 +95,6 @@ def test_overview_preserves_explicit_cli_refusal_and_exit(
         raise error
 
     with pytest.raises(type(error)) as refusal:
-        _overview._emit_read(completed, fail)
+        overview_commands._emit_read(completed, fail)
 
     assert refusal.value is error

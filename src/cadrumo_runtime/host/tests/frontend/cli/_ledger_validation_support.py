@@ -15,7 +15,7 @@ from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_P
 from cadrumo.core.config import override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.tests.cli_json_support import _json_object
+from cadrumo.tests.cli_json_support import require_json_object
 
 from ._ledger_llm_support import _import_one_transaction
 from .cli_runner import invoke_cached_cli
@@ -170,7 +170,7 @@ def _add_eligible_mixed_expense() -> str:
     )
     assert result.exit_code == 0, result.output
     payload = STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
-    transaction_id = _json_object(payload["result"])["transaction_id"]
+    transaction_id = require_json_object(payload["result"])["transaction_id"]
     assert isinstance(transaction_id, str)
     return transaction_id
 

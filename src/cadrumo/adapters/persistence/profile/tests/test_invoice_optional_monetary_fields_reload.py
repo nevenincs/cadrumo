@@ -38,7 +38,7 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import InvoiceKind
 from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -14,23 +15,28 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.modelo.work_lifecycle import discard_work_unit, get_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.operator_surface.verb_input_contracts import cli_argv_for
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    m111_withholding_aggregate_arguments,
+    m111_withholding_invoice_arguments,
+)
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.inventory import REPO_ROOT
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo.tests.storage_scope import relocated_storage_path
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
+from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
 
-from ._modelo_work_ux_support import m111_withholding_aggregate_arguments, m111_withholding_invoice_arguments
-
-# Each journey crosses from in-process registration into a fresh installed
-# console process.  That second process can resume the profile only through a
-# persisted OS-keychain acceleration receipt.
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.os_keychain]
+# Each installed console receives its own bounded password proof. Registration
+# does not grant a later process authority through a saved sign-in.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.os_keychain, pytest.mark.windows_only]
 
 _LOCALES = ("en", "es", "ca", "hu")
 _CONSOLE = REPO_ROOT / ".venv" / "Scripts" / "aeat.exe"
@@ -38,8 +44,9 @@ _CONSOLE = REPO_ROOT / ".venv" / "Scripts" / "aeat.exe"
 
 def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
     """Build one subprocess-only encrypted profile environment."""
-    storage_root = tmp_path / "storage"
-    secret_store_dir = tmp_path / "secret-store"
+    storage_root = tmp_path / "cadrumo-storage"
+    secret_store_dir = relocated_storage_path(tmp_path, StorageCategory.SECRETS)
+    secret_store_dir.mkdir(parents=True, exist_ok=True)
     environment = subprocess_cli_env(
         strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
         extra={
@@ -52,14 +59,28 @@ def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
     return environment, storage_root, secret_store_dir
 
 
+@pytest.fixture(autouse=True)
+def _installed_console_runtime(tmp_path: Path) -> Iterator[None]:
+    """Supply the runtime that installed console processes connect to."""
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+        override_settings(cadrumo_output_language="en"),
+        native_cli_profile_server(storage_root),
+    ):
+        yield
+
+
 def _run_console(environment: dict[str, str], arguments: list[str]) -> subprocess.CompletedProcess[str]:
     """Run the installed console executable, never the in-process Click app."""
     assert _CONSOLE.is_file(), f"installed console is absent: {_CONSOLE}"
     return as_text_completed_process(
         run_audited_process(
-            [_CONSOLE, "--format", "json", *arguments],
+            [_CONSOLE, "--format", "json", "--profile-secrets-stdin", *arguments],
             cwd=_CONSOLE.parents[2],
             env=environment,
+            input=json.dumps(
+                {"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
+            ),
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -96,7 +117,7 @@ def _run_success(
     environment: dict[str, str],
     arguments: list[str],
     *,
-    permitted_statuses: frozenset[str] = frozenset({"success"}),
+    permitted_statuses: frozenset[str] = frozenset({"success", "warning"}),
 ) -> dict[str, Any]:
     run = _run_console(environment, arguments)
     assert run.returncode == 0, f"argv={arguments!r}\nstdout={run.stdout}\nstderr={run.stderr}"
@@ -143,7 +164,7 @@ def _dispatch_action(
     assert isinstance(cli_path, list)
 
     schema = build_verb_input_schemas((command_key,))[command_key]
-    assert list(schema.cli_path) == cli_path
+    assert ["aeat", *schema.cli_path] == cli_path
 
     values: dict[str, object] = {}
     bindings = action.get("argument_bindings")
@@ -156,7 +177,7 @@ def _dispatch_action(
         assert name not in values
         values[name] = binding["value"]
     argv = cli_argv_for(schema, values)
-    assert argv[: 2 + len(schema.cli_path)] == ["--format", "json", *cli_path]
+    assert argv[: 2 + len(schema.cli_path)] == ["--format", "json", *cli_path[1:]]
     return _run_console(environment, argv[2:]), argv
 
 
@@ -173,6 +194,7 @@ def _create_natural_profile(environment: dict[str, str]) -> None:
             "identity.surnames": "Prueba",
             "activities.description": "actividad",
             "withholding.has_employees": "true",
+            "withholding.colegio_concertado": "false",
         },
     )
 
@@ -257,6 +279,7 @@ def _create_work_unit(
             "--revision",
             revision,
         ],
+        permitted_statuses=frozenset({"success", "warning"}),
     )
     work_unit_id = _result(document).get("work_unit_id")
     assert isinstance(work_unit_id, str)
@@ -342,8 +365,8 @@ def _seed_discarded_work(*, storage_root: Path, secret_store_dir: Path, work_uni
 
 def _assert_action_id(action: dict[str, Any], action_id: str) -> None:
     reference = action.get("action")
-    assert isinstance(reference, dict)
-    assert reference.get("action_id") == action_id
+    assert isinstance(reference, dict), action
+    assert reference.get("action_id") == action_id, action
     assert action.get("conditionality") == "immediate"
     assert action.get("no_recovery_outcome") is None
 
@@ -392,6 +415,7 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
 
     before_verify = _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
     structural_digests: dict[str, str] = {}
+    operation_ids: set[str] = set()
     verify_action: dict[str, Any] | None = None
     for locale in _LOCALES:
         draft_run = _run_console(environment, ["--language", locale, *original])
@@ -402,6 +426,12 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
         error = draft_document.get("error")
         assert isinstance(error, dict)
         structural_error = {key: value for key, value in error.items() if key != "message"}
+        context = dict(structural_error["context"])
+        operation_id = context.pop("operation_id")
+        assert isinstance(operation_id, str) and operation_id not in operation_ids
+        operation_ids.add(operation_id)
+        assert context["effect"] == "none"
+        structural_error["context"] = context
         structural_digests[locale] = json.dumps(structural_error, sort_keys=True, ensure_ascii=False)
         if verify_action is None:
             verify_action = current_action
@@ -474,6 +504,7 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
     _seed_discarded_work(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
     before = _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
     structural_digests: dict[tuple[str, str], str] = {}
+    operation_ids: set[str] = set()
 
     for verb in ("calculate", "verify", "file"):
         for locale in _LOCALES:
@@ -495,6 +526,13 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
             # The rendered message is locale-specific; every other refusal field,
             # including terminal action and evidence structure, must be invariant.
             structural_error = {key: value for key, value in error.items() if key != "message"}
+            context = dict(structural_error["context"])
+            operation_id = context.pop("operation_id")
+            assert isinstance(operation_id, str) and operation_id not in operation_ids
+            operation_ids.add(operation_id)
+            assert context["effect"] == "none"
+            assert context["terminal_condition"] == ("failed" if error["category"] == "ERROR" else "refused"), error
+            structural_error["context"] = context
             structural_digests[(verb, locale)] = json.dumps(structural_error, sort_keys=True, ensure_ascii=False)
 
             retry = _run_console(environment, original)

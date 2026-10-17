@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.overview.data_prep import DataPrepStepId, DataPrepStepState
-from cadrumo.entrypoints.cli._overview_payloads import OverviewPrepareStepPayload
+from cadrumo.entrypoints.cli.overview_results import OverviewPrepareStepPayload
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture

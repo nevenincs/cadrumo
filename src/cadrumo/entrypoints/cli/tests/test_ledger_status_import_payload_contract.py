@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._ledger_payloads import (
+from ..ledger_results import (
     LedgerImportDiagnosticPayload,
     LedgerImportPayload,
     LedgerImportSourcePayload,

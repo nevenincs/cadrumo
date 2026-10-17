@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import sys
+from importlib.resources import files
 from pathlib import Path
 from typing import cast
 
@@ -36,7 +36,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_CORPUS = Path(__file__).parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
+_CORPUS = files("cadrumo.application.ledger.tests") / "_evidence_corpus"
 _STRUCTURED_INVOICE = "facturae_32_series_and_parties_invoice.xml"
 _PROFILE_OPERATIONS = frozenset({LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID})
 
@@ -86,7 +86,7 @@ def test_native_evidence_ingestion_uses_exact_profile_and_preserves_batch_and_re
     invoice_directory = caller / "invoices"
     invoice_directory.mkdir(parents=True)
     invoice_path = invoice_directory / _STRUCTURED_INVOICE
-    shutil.copyfile(_CORPUS / _STRUCTURED_INVOICE, invoice_path)
+    invoice_path.write_bytes((_CORPUS / _STRUCTURED_INVOICE).read_bytes())
     invoice_bytes = invoice_path.read_bytes()
     invoice_digest = hashlib.sha256(invoice_bytes).hexdigest()
     monkeypatch.chdir(caller)

@@ -55,7 +55,7 @@ from ...domain.calculations.registry.tests.cross_period_seeding import resolved_
 from ...domain.deadlines.models import ObligationStatus
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import ExternalEvidenceKind
 from ...domain.modelos.verification_report import VerificationCompletenessStatus

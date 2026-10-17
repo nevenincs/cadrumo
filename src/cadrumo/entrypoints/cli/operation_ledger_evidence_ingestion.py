@@ -19,7 +19,7 @@ from ...application.ledger.evidence_ingestion_contracts import (
     LedgerEvidenceBatchRequest,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ._ledger_support import ledger_validation_bad
 
 

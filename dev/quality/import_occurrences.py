@@ -12,7 +12,7 @@ from dev._paths import UTF_8
 
 from .import_check_models import Authority, ImportOccurrence, SourceModule
 from .import_dynamic_aliases import dynamic_aliases
-from .import_dynamic_targets import computed_attribute_targets, dynamic_target, metadata_target_set_targets
+from .import_dynamic_targets import dynamic_target, metadata_target_set_targets
 from .import_module_syntax import (
     is_first_party,
     is_package,
@@ -21,13 +21,14 @@ from .import_module_syntax import (
     qualified_name,
     resolve_from,
 )
+from .import_record_provenance import RecordTargetProvenance
 from .import_target_evaluation import TargetEvaluationContext
 
 
 def collect_import_occurrences(
     authority: Authority,
     modules: Mapping[str, SourceModule],
-    closed_attribute_targets: frozenset[str],
+    record_provenance: RecordTargetProvenance,
 ) -> tuple[ImportOccurrence, ...]:
     """Collect direct, occurrence-level violations from the declared authority."""
     known = frozenset((*modules, *authority.root_packages))
@@ -38,7 +39,7 @@ def collect_import_occurrences(
             module=module,
             modules=modules,
             known=known,
-            closed_attribute_targets=closed_attribute_targets,
+            record_provenance=record_provenance,
             occurrences=occurrences,
         )
         visitor.visit(module.tree)
@@ -55,7 +56,7 @@ class _OccurrenceVisitor(ast.NodeVisitor):
         module: SourceModule,
         modules: Mapping[str, SourceModule],
         known: frozenset[str],
-        closed_attribute_targets: frozenset[str],
+        record_provenance: RecordTargetProvenance,
         occurrences: list[ImportOccurrence],
     ) -> None:
         """Index lexical parents and assignments for conservative target evaluation."""
@@ -63,7 +64,7 @@ class _OccurrenceVisitor(ast.NodeVisitor):
         self.module = module
         self.modules = modules
         self.known = known
-        self.closed_attribute_targets = closed_attribute_targets
+        self.record_provenance = record_provenance
         self.occurrences = occurrences
         self.context: TargetEvaluationContext | None = None
         self.import_module_names, self.importlib_names, self.raw_import_names = dynamic_aliases(module)
@@ -257,12 +258,7 @@ def _occurrence_dynamic_targets(
             self.authority.repository,
         )
     if targets is None or not targets:
-        targets = computed_attribute_targets(
-            target_node,
-            node.lineno,
-            context,
-            self.closed_attribute_targets,
-        )
+        targets = self.record_provenance.targets(self.module.name, target_node)
     return targets, exhaustive_census
 
 

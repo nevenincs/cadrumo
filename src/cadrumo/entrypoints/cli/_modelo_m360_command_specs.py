@@ -50,10 +50,10 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._modelo_m360_cli", f"m360_{verb}", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_m360_commands", f"m360_{verb}", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._modelo_m360_payloads", result, __package__),
+            target=DeferredTarget(".modelo_m360_results", result, __package__),
             identity=f"modelo.m360.{verb}",
         ),
         machine_secret=machine_secret,
@@ -84,7 +84,7 @@ MODELO_M360_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 MachineSecretVariantSpec(
                     "solicitud",
                     (MachineSecretFieldSpec("solicitud"),),
-                    DeferredTarget("._modelo_m360_cli", "Modelo360SolicitudSecrets", __package__),
+                    DeferredTarget(".modelo_m360_commands", "Modelo360SolicitudSecrets", __package__),
                 ),
             ),
         ),

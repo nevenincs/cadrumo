@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from threading import Event
+from threading import Event, get_ident
 from uuid import UUID, uuid4
 
 import pytest
@@ -115,6 +115,7 @@ class ServiceRecordRuntime:
     human: VerifiedConnection
     person_session_id: UUID
     verifier: ControlledServiceVerifier
+    profiles: RuntimeProfileConnections
     clients: list[VerifiedConnection] = field(default_factory=list)
 
     def connect_service(self, *, profile_id: UUID | None = None) -> InstalledServiceClient:
@@ -221,6 +222,7 @@ def service_record_runtime(
                 human,
                 admitted.status.session_id,
                 verifier,
+                profiles,
             )
             yield fixture
         finally:
@@ -335,3 +337,55 @@ def test_service_records_refuse_wrong_profile_capability_and_retired_person(tmp_
         assert runtime.person_session_id in locked.session_ids
         retired = read(profile_id=runtime.profile_id, capability=RECORD_CAPABILITY)
         assert retired.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
+
+
+def test_service_refresh_tolerates_lease_retirement_before_profile_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        lease = service.claim()
+        assert lease is not None
+        assert service.connected is not None
+
+        service_connection_id = service.connected.connection_id
+        retained = runtime.profiles._services[service_connection_id]
+        host = runtime.profiles._profiles[runtime.profile_id]
+        profile_guard = host.guard
+
+        class RetireBeforeRequestGuard:
+            target_thread: int | None = None
+
+            def __enter__(self):
+                profile_guard.acquire()
+                try:
+                    if self.target_thread == get_ident():
+                        with runtime.profiles._guard:
+                            assert retained.lease == lease
+                            retained.lease = None
+                        self.target_thread = None
+                    return self
+                except BaseException:
+                    profile_guard.release()
+                    raise
+
+            def __exit__(self, *_exc_info: object) -> None:
+                profile_guard.release()
+
+        request_guard = RetireBeforeRequestGuard()
+        original_recheck = runtime.verifier.recheck_service
+
+        def arm_request_guard(context: ConnectionContext, channel: ByteChannel, peer: VerifiedServicePeer) -> bool:
+            proven = original_recheck(context, channel, peer)
+            if context.connection_id == service_connection_id:
+                request_guard.target_thread = get_ident()
+            return proven
+
+        with monkeypatch.context() as patch:
+            patch.setattr(host, "guard", request_guard)
+            patch.setattr(runtime.verifier, "recheck_service", arm_request_guard)
+            assert service.claim() is None
+
+        assert service.connected is not None and service.connected.lease is None
+        assert retained.lease is None

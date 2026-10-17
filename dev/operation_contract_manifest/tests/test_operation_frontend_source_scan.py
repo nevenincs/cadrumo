@@ -21,7 +21,10 @@ from dataclasses import dataclass
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from dev.operation_contract_manifest.tests.test_operation_catalogue import _production_sources, _tree
+from dev.operation_contract_manifest.tests.test_operation_catalogue import (
+    production_operation_source_tree,
+    production_operation_sources,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -148,6 +151,10 @@ _OWN_CLIENT_PACKAGES: Mapping[str, tuple[str, str]] = {
         OperationFrontendProjection.TUI.name,
         "the terminal interface checks that the runtime client it was handed is its own",
     ),
+    "src/cadrumo_runtime/host/frontend/tui/": (
+        OperationFrontendProjection.TUI.name,
+        "the runtime terminal frontend checks its own client and session binding before disclosure or use",
+    ),
 }
 """A frontend's own package may compare a client's frontend with itself, and with no other."""
 
@@ -261,7 +268,7 @@ def _call_sites(path: str, module: ast.Module, predicates: Mapping[str, frozense
 
 
 def _scanned_sources() -> tuple[str, ...]:
-    return tuple(path for path in _production_sources() if path.startswith(_SCANNED_TIERS))
+    return tuple(path for path in production_operation_sources() if path.startswith(_SCANNED_TIERS))
 
 
 def _sites() -> list[_Site]:
@@ -274,7 +281,7 @@ def _sites() -> list[_Site]:
     own: dict[str, dict[str, frozenset[str]]] = {}
     shared: dict[str, frozenset[str]] = {}
     for path in _scanned_sources():
-        module = _tree().parsed(path)
+        module = production_operation_source_tree().parsed(path)
         comparisons[path] = _comparison_sites(path, module)
         own[path] = _predicates(module, comparisons[path])
         for name, members in own[path].items():
@@ -282,7 +289,7 @@ def _sites() -> list[_Site]:
                 shared[name] = shared.get(name, frozenset()) | members
     sites = [site for found in comparisons.values() for site in found]
     for path in _scanned_sources():
-        sites.extend(_call_sites(path, _tree().parsed(path), {**shared, **own[path]}))
+        sites.extend(_call_sites(path, production_operation_source_tree().parsed(path), {**shared, **own[path]}))
     return sites
 
 

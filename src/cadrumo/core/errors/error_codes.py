@@ -43,7 +43,10 @@ if TYPE_CHECKING:
 # refusal names the missing flags inside its own message body
 # (`missing_flags`, also internal once interpolated) instead of leaking
 # a raw `('tax-id', 'activity')` tuple as a stray context line.
-_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset({"prompt_key", "question_id", "flow_id", "missing", "missing_flags"})
+# Policy verdicts are projected through the typed action channel, not as object-valued context.
+_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
+    {"prompt_key", "question_id", "flow_id", "missing", "missing_flags", "terminal_precondition_verdict"}
+)
 
 ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = ("area", "entry_count", "reason")
 """Finite vocabulary translated for human-facing error context labels.
@@ -375,6 +378,11 @@ def build_error_envelope(
     complete_error_envelope_model()
     code = get_registered_error_code(error)
     merged_context = _merge_error_context(error, context)
+    if code.category is ErrorCategory.INTERNAL:
+        diagnostic_context = _internal_root_cause_context(error)
+        if diagnostic_context:
+            merged_context = {**diagnostic_context, **(merged_context or {})}
+            trace_id = trace_id or diagnostic_context.get("trace_id")
     return ErrorEnvelope(
         code=code.code,
         category=code.category.value,
@@ -385,6 +393,21 @@ def build_error_envelope(
         context=scrub_error_context(merged_context),
         trace_id=trace_id,
     )
+
+
+def _internal_root_cause_context(error: BaseException) -> dict[str, str]:
+    """Name an internal failure's root cause, never its message, for the operator.
+
+    An internal failure's public message is deliberately generic, so without
+    this the operator learns nothing about where or why it happened. The
+    summary shares its correlation id with the boundary's log record.
+    """
+    try:
+        from .failure_report import root_cause_context
+
+        return root_cause_context(error)
+    except Exception:
+        return {}
 
 
 def render_error_text(
@@ -398,7 +421,10 @@ def render_error_text(
     message = resolve_error_message(error, code)
     first_line = f"{prefix} {message}"
     lines = [first_line]
-    scrubbed_context = scrub_error_context(_merge_error_context(error, context))
+    merged_context = _merge_error_context(error, context)
+    if code.category is ErrorCategory.INTERNAL:
+        merged_context = {**_internal_root_cause_context(error), **(merged_context or {})}
+    scrubbed_context = scrub_error_context(merged_context)
     if scrubbed_context is not None and scrubbed_context:
         for key, value in scrubbed_context.items():
             lines.append(f"  {_text_context_label(key)}: {_text_context_value(key, value)}")

@@ -68,12 +68,12 @@ from .conformance_family_contract import ConformanceFamily
 from .conformance_maritime_preview_support import MARITIME_QUICKFILE_MATERIAL_CONFORMANCE_FAMILY
 from .conformance_review_package_exchange_support import _profile_recipient_keypair
 from .registered_executor_case_support import (
-    _CloseWitness,
+    OperationRuntimeCloseWitness,
     _ExecutionDriver,
-    _model_runtime_for,
     _resolve_result_projection,
-    _runtime,
-    _seeded_conformance_submission,
+    conformance_operation_runtime,
+    model_runtime_for_operation,
+    seeded_conformance_operation_submission,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -182,7 +182,11 @@ def test_the_real_resolvers_give_every_frontend_the_same_access_to_each_preparat
     tmp_path: Path, operation: PinnedAuthorityOperation, action: AccessAction
 ) -> None:
     """A request resolves for external client and the terminal interface exactly as it resolves for the command line."""
-    with _runtime(tmp_path / "admission", cleanup=_CloseWitness()) as (_driver, registry, profile_id):
+    with conformance_operation_runtime(tmp_path / "admission", cleanup=OperationRuntimeCloseWitness()) as (
+        _driver,
+        registry,
+        profile_id,
+    ):
         unit, revision_id = _seeded_unit(profile_id, operation=operation)
 
         for request in _preparation_requests(unit, revision_id, profile_id):
@@ -230,7 +234,9 @@ def test_verification_stores_the_session_label_for_an_automation_and_the_supplie
     recorded_actor: str,
 ) -> None:
     """The real executor never stores what an external client caller typed as the actor of its report."""
-    with _runtime(tmp_path / "actor", cleanup=_CloseWitness(), execution_caller_reader=_session_host(frontend)) as (
+    with conformance_operation_runtime(
+        tmp_path / "actor", cleanup=OperationRuntimeCloseWitness(), execution_caller_reader=_session_host(frontend)
+    ) as (
         driver,
         registry,
         profile_id,
@@ -289,8 +295,10 @@ def test_creation_calculation_and_rename_record_the_session_label_for_an_automat
     recorded_actor: str,
 ) -> None:
     """Every event the three real executors append names the label of the session that admitted them."""
-    with _runtime(
-        tmp_path / "preparation", cleanup=_CloseWitness(), execution_caller_reader=_work_session_host(frontend)
+    with conformance_operation_runtime(
+        tmp_path / "preparation",
+        cleanup=OperationRuntimeCloseWitness(),
+        execution_caller_reader=_work_session_host(frontend),
     ) as (driver, _registry_in_use, profile_id):
         unit, _revision_id = _seeded_unit(profile_id, operation=operation)
         other_period = Period.from_year_and_code(unit.period.filing_year, "2T")
@@ -400,14 +408,14 @@ def test_a_modelo_write_stores_the_session_label_for_an_automation_and_the_suppl
 ) -> None:
     """Every event the real executor appends names the label of the session that admitted it."""
     with (
-        _model_runtime_for(definition_id),
-        _runtime(
+        model_runtime_for_operation(definition_id),
+        conformance_operation_runtime(
             tmp_path / definition_id,
-            cleanup=_CloseWitness(),
+            cleanup=OperationRuntimeCloseWitness(),
             execution_caller_reader=_host_for(definition_id, frontend),
         ) as (driver, registry, profile_id),
     ):
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             registry.lookup(definition_id), profile_id=profile_id, tmp_path=tmp_path, operation=operation, family=family
         )
         payload = _typing(submission.payload, label_path, _SUPPLIED_ACTOR)
@@ -447,10 +455,12 @@ def test_the_modelo_390_attestation_is_captured_under_the_session_label_for_an_a
 ) -> None:
     """The attestation is an attachment, and its stored manifest names who captured it."""
     definition_id = "modelo.work.m303_attestation"
-    with _runtime(
-        tmp_path / "attestation", cleanup=_CloseWitness(), execution_caller_reader=_host_for(definition_id, frontend)
+    with conformance_operation_runtime(
+        tmp_path / "attestation",
+        cleanup=OperationRuntimeCloseWitness(),
+        execution_caller_reader=_host_for(definition_id, frontend),
     ) as (driver, registry, profile_id):
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             registry.lookup(definition_id), profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         payload = _typing(submission.payload, ("actor",), _SUPPLIED_ACTOR)
@@ -477,10 +487,12 @@ def test_review_feedback_names_the_session_label_as_its_submitter_for_an_automat
 ) -> None:
     """The submitter is read from the feedback inside the envelope the real executor wrote."""
     definition_id = "modelo.review_package.encrypt_feedback"
-    with _runtime(
-        tmp_path / "feedback", cleanup=_CloseWitness(), execution_caller_reader=_host_for(definition_id, frontend)
+    with conformance_operation_runtime(
+        tmp_path / "feedback",
+        cleanup=OperationRuntimeCloseWitness(),
+        execution_caller_reader=_host_for(definition_id, frontend),
     ) as (driver, registry, profile_id):
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             registry.lookup(definition_id), profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         payload = _typing(submission.payload, ("submitted_by",), _SUPPLIED_ACTOR)

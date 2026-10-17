@@ -26,7 +26,7 @@ from pydantic import ValidationError
 
 from ....core.json_contract import SchemaEnvelope
 from ....core.register_scoping_signal import RegisterScopingSignal
-from .._app_live_filed_payloads import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
+from ..app_live_filed_results import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
 from ..command_schema import command_schema_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

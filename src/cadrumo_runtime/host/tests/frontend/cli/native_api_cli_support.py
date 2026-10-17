@@ -8,7 +8,7 @@ import os
 import sys
 from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from importlib.metadata import version
 from pathlib import Path
@@ -17,7 +17,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from click.testing import Result
-from pydantic import SecretBytes
+from pydantic import SecretBytes, SecretStr
 
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_retirement import retire_profile_automation
@@ -57,6 +57,9 @@ from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
     observe_native_runtime_failures,
 )
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+
+from .cli_runner import bind_profile_cli, operator_runtime_scope
+from .runtime_profile_backend import live_session_operator
 
 
 @dataclass(frozen=True, slots=True)
@@ -282,7 +285,18 @@ def native_api_cli_session[Prepared](
                 secrets_store=subject.client_native,
             )
             profile_id = subject.store.binding.profile_id
-            prepared = prepare_profile(profile_id, root)
+            # Setup may invoke human commands through the automatic fixture
+            # joiner. Retire that transport before serving this API grant, and
+            # before a later invocation prepares a different storage root.
+            with ExitStack() as preparation:
+                preparation.enter_context(operator_runtime_scope())
+                operator = live_session_operator(preparation, str(profile_id), os_owner_id=os_owner)
+                assert operator is not None
+                preparation.enter_context(bind_profile_cli(operator))
+                preparation.enter_context(
+                    override_settings(cadrumo_dev_test_database_password=SecretStr(PROFILE_INPUT))
+                )
+                prepared = prepare_profile(profile_id, root)
             scope = scope_for_destination(requester.client_id)
             owner_facts = subject.owner.current
             assert owner_facts.session is not None

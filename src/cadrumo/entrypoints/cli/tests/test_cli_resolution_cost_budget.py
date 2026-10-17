@@ -74,7 +74,7 @@ _PROBE = textwrap.dedent(
     import sys
     from pathlib import Path
 
-    from cadrumo.entrypoints.tests.cli_performance import measure_resolution_costs
+    from .cli_performance import measure_resolution_costs
 
     request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     records = measure_resolution_costs(request["paths"], record_names_for=request["record_names_for"])

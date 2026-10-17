@@ -82,6 +82,8 @@ from ...application.user_profile.censal_operation import (
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository
 from ...application.user_profile.login_session import authenticate_profile_for_invocation
 from ...application.user_profile.registration import register_profile_with_credentials
+from ...core.auth_provider import AuthProviderKind
+from ...core.config import override_settings
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.operations import OperationLifecycle, profile_operation_subject
 from ...core.time.clock import now
@@ -130,7 +132,7 @@ from .registered_executor_seeding_support import _ledger_lifecycle_case, _prorra
 
 
 @dataclass(slots=True)
-class _CloseWitness:
+class OperationRuntimeCloseWitness:
     """Observe cleanup owned by the actual CENSO executor."""
 
     closed: bool = False
@@ -345,7 +347,7 @@ _MODEL_RUNTIME_CLOSED_DEFINITIONS = frozenset(
 
 
 @contextmanager
-def _model_runtime_for(definition_id: str) -> Generator[None]:
+def model_runtime_for_operation(definition_id: str) -> Generator[None]:
     """Close the local model runtime, and enter the family's own environment, for an operation that needs either."""
     family = conformance_family_for(definition_id)
     with ExitStack() as host:
@@ -436,17 +438,22 @@ def _observation() -> CensalObservation:
 
 
 @contextmanager
-def _runtime(
+def conformance_operation_runtime(
     tmp_path: Path,
     *,
-    cleanup: _CloseWitness,
+    cleanup: OperationRuntimeCloseWitness,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     execution_timeout: timedelta = timedelta(hours=1),
     amendment_action_ports_factory: AmendmentActionPortsFactory | None = None,
     clock: Callable[[], datetime] = now,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> Generator[tuple[_ExecutionDriver, OperationRegistry, UUID]]:
-    """Fresh production profile, inventory, journal, lease, and operand custody per case."""
+    """Give each case fresh profile, journal, lease, and operand custody.
+
+    Real AEAT capture executors must stop at missing-provider prerequisites,
+    independently of the developer's dotenv credentials. Cases that exercise
+    acquisition explicitly inject their local acquisition ports below.
+    """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
     async def acquire_censo() -> CensalOperationAcquisition:
@@ -465,7 +472,10 @@ def _runtime(
             provider_preflight=lambda _profile_id, _operation: None,
         )
 
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+    with (
+        override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None),
+        isolated_profile_storage_root(tmp_path=tmp_path) as root,
+    ):
         enrolled = register_profile_with_credentials(
             label="S45 registered executor subject",
             passphrase=_CREDENTIAL_INPUT,
@@ -598,7 +608,7 @@ def _declared_subject(
     return _stored_work_unit_id(definition.subject_reference, payload, operation=operation)
 
 
-def _seeded_conformance_submission(
+def seeded_conformance_operation_submission(
     definition: OperationDefinition,
     *,
     profile_id: UUID,

@@ -5,15 +5,20 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import sys
 import textwrap
+from collections.abc import Generator
+from contextlib import ExitStack
+from contextvars import ContextVar
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.tests.installed_process_ports import InstalledProcessWorld
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo.tests.subprocess_cli import run_subprocess_cli_harness
-
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....tests.os_keychain_hook import require_os_credential_store
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -24,11 +29,9 @@ import os
 import sys
 
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
-os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
-os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
-sys.argv = ["aeat", *sys.argv[3:]]
+sys.argv = ["aeat", *sys.argv[2:]]
 
-from cadrumo.entrypoints.cli.main import main
+from cadrumo_runtime.host.frontend.cli.bootstrap import main
 
 try:
     main()
@@ -44,44 +47,116 @@ import os
 import sys
 
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
-os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
-os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
 
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session, session_serves_bucket
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 bucket_id = resolve_active_bucket_id()
 assert bucket_id is not None
-with open_test_profile_session(bucket_id):
+with composed_profile_persistence_ports(), bundled_indexed_authority().operation() as operation:
+    authenticate_profile_for_invocation(
+        name="operator",
+        passphrase_callback=lambda: "s423-selected-language-secret",
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    assert session_serves_bucket(current_active_bucket_session(), bucket_id)
     catalogue = VerificationReportCatalogueRepository(bucket_id=bucket_id).load()
-report = catalogue.get(sys.argv[3])
+report = catalogue.get(sys.argv[2])
 assert report is not None
 print(json.dumps({"report": report.model_dump(mode="json"), "report_count": len(catalogue)}, sort_keys=True))
 """
 
 
 _OPERATOR_CREDENTIAL_INPUT = "s423-selected-language-secret"
+_RUNTIME_SCOPE: ContextVar[tuple[ExitStack, set[Path]] | None] = ContextVar("selected-language-runtime", default=None)
+
+
+@pytest.fixture(autouse=True)
+def _owned_runtime_lifetime(*, installed_process_world: InstalledProcessWorld) -> Generator[None]:
+    """Own only the native runtimes required by this test's private commands."""
+    with ExitStack() as stack:
+        roots: set[Path] = set()
+        token = _RUNTIME_SCOPE.set((stack, roots))
+        try:
+            yield
+        finally:
+            try:
+                for root in roots:
+                    logout = _run_cli(
+                        root, ["--format", "json", "config", "logout"], installed_process_world=installed_process_world
+                    )
+                    assert logout.returncode == 0, _combined_output(logout)
+            finally:
+                _RUNTIME_SCOPE.reset(token)
+
+
+def _serve_profile_root(storage_root: Path, *, installed_process_world: InstalledProcessWorld) -> None:
+    scope = _RUNTIME_SCOPE.get()
+    assert scope is not None
+    stack, roots = scope
+    if storage_root in roots:
+        return
+    scripts = Path(sys.prefix) / ("Scripts" if sys.platform == "win32" else "bin")
+    executable = scripts / ("aeat.exe" if sys.platform == "win32" else "aeat")
+    storage_root.mkdir(parents=True, exist_ok=True)
+    stack.enter_context(
+        installed_process_world.runtime(
+            executable,
+            installed_process_world.environment(
+                storage_root=storage_root, authority_root=bundled_authority_descriptor_path().parent
+            ),
+            storage_root.parent / "caller-owned-runtime.log",
+        )
+    )
+    roots.add(storage_root)
 
 
 def _run_cli(
-    storage_root: Path, args: list[str], *, stdin_payload: str | None = None
+    storage_root: Path,
+    args: list[str],
+    *,
+    stdin_payload: str | None = None,
+    installed_process_world: InstalledProcessWorld,
 ) -> subprocess.CompletedProcess[str]:
     # `config profile create` mints a custody envelope, so it needs the operator
     # passphrase, and a subprocess is not a terminal -- the bounded strict-JSON
     # channel on stdin is the only one it accepts. Supplied here rather than at
     # each call site so a new create invocation cannot forget it.
-    if "profile" in args and "create" in args and "--secrets-stdin" not in args:
+    creates_profile = "profile" in args and "create" in args
+    if creates_profile:
+        _serve_profile_root(storage_root, installed_process_world=installed_process_world)
+    if creates_profile and "--secrets-stdin" not in args:
         args = [*args, "--secrets-stdin"]
         stdin_payload = stdin_payload or _CREATE_SECRETS
-    return run_subprocess_cli_harness(
+    completed = run_subprocess_cli_harness(
         textwrap.dedent(_CLI_HARNESS),
-        [str(storage_root), str(storage_root / "fallback-store"), *args],
+        [str(storage_root), *args],
         env_strip_prefixes=("AEAT_",),
         cwd=Path.cwd(),
         stdin_payload=stdin_payload,
         timeout=None,
     )
+    if creates_profile and completed.returncode == 0:
+        login = _run_cli(
+            storage_root,
+            ["--format", "json", "config", "login", "operator", "--secrets-stdin"],
+            stdin_payload=json.dumps({"passphrase": _OPERATOR_CREDENTIAL_INPUT}),
+            installed_process_world=installed_process_world,
+        )
+        assert login.returncode == 0, _combined_output(login)
+        document = json.loads(login.stdout)
+        assert document["result"]["session_persisted"] is True
+        setup = _run_cli(
+            storage_root,
+            ["--format", "json", "config", "profile", "complete-setup"],
+            installed_process_world=installed_process_world,
+        )
+        assert setup.returncode == 0, _combined_output(setup)
+    return completed
 
 
 #: `config profile create` mints a custody envelope, so it needs the operator
@@ -99,7 +174,7 @@ def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
 def _persisted_report(storage_root: Path, verification_report_id: str) -> dict[str, object]:
     result = run_subprocess_cli_harness(
         textwrap.dedent(_PERSISTED_REPORT_HARNESS),
-        [str(storage_root), str(storage_root / "fallback-store"), verification_report_id],
+        [str(storage_root), verification_report_id],
         env_strip_prefixes=("AEAT_",),
         cwd=Path.cwd(),
         timeout=None,
@@ -116,6 +191,7 @@ def _create_modelo_revision(
     year: str,
     period: str,
     activity_start_date: str,
+    installed_process_world: InstalledProcessWorld,
 ) -> str:
     profile = _run_cli(
         storage_root,
@@ -138,11 +214,24 @@ def _create_modelo_revision(
             "Locale",
             "--activity",
             "design",
+            "--tax-residence-jurisdiction-scope",
+            "common_regime",
+            "--iva-regime",
+            "GENERAL",
+            "--iva-m303-regime-composition",
+            "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
             "--irpf-income-categories",
             "actividad_economica",
+            "--irpf-estimation-regime",
+            "directa_simplificada",
             "--activity-start-date",
             activity_start_date,
         ],
+        installed_process_world=installed_process_world,
     )
     assert profile.returncode == 0, _combined_output(profile)
     created = _run_cli(
@@ -161,6 +250,7 @@ def _create_modelo_revision(
             "--period",
             period,
         ],
+        installed_process_world=installed_process_world,
     )
     assert created.returncode == 0, _combined_output(created)
     calculated = _run_cli(
@@ -179,6 +269,7 @@ def _create_modelo_revision(
             "--period",
             period,
         ],
+        installed_process_world=installed_process_world,
     )
     calculation_output = _combined_output(calculated)
     assert calculated.returncode == 0, calculation_output
@@ -197,14 +288,24 @@ def _create_modelo_revision(
     ],
 )
 def test_selected_languages_render_parser_refusals_without_keychain(
-    tmp_path: Path, language: str, missing_option: str, invalid_value: str
+    tmp_path: Path,
+    language: str,
+    missing_option: str,
+    invalid_value: str,
+    *,
+    installed_process_world: InstalledProcessWorld,
 ) -> None:
     storage_root = tmp_path / language
     root = ["--language", language]
-    missing = _run_cli(storage_root, [*root, "app", "modelo", "work", "create", "--year", "2026", "--period", "1T"])
+    missing = _run_cli(
+        storage_root,
+        [*root, "app", "modelo", "work", "create", "--year", "2026", "--period", "1T"],
+        installed_process_world=installed_process_world,
+    )
     invalid = _run_cli(
         storage_root,
         [*root, "app", "modelo", "work", "create", "--modelo", "130", "--year", "abc", "--period", "1T"],
+        installed_process_world=installed_process_world,
     )
     assert missing.returncode != 0 and missing_option in _combined_output(missing)
     assert invalid.returncode != 0 and invalid_value in _combined_output(invalid)
@@ -228,8 +329,8 @@ def test_selected_languages_render_parser_refusals_without_keychain(
             "Valor no vàlid per a '--year': 'abc' no és un enter vàlid.",
             "Esborrany",
             ("resta(", "màxim(", "percentatge(", "condicional(", "mínim("),
-            "dependència entre períodes exclosa perquè no hi ha obligació prèvia",
-            "ja està verificada",
+            "El model 100 de 2025, període 0A, no es fa servir aquí",
+            "ja està comprovat",
         ),
         (
             "hu",
@@ -237,7 +338,7 @@ def test_selected_languages_render_parser_refusals_without_keychain(
             "Érvénytelen érték ehhez: '--year': 'abc' nem érvényes egész szám.",
             "Piszkozat",
             ("kivonás(", "maximum(", "százalék(", "feltételes(", "minimum("),
-            "az időszakok közötti függőség korábbi kötelezettség hiányában kizárva",
+            "A Modelo 100 (2025, 0A időszak) itt nincs felhasználva",
             "már ellenőrzött",
         ),
     ],
@@ -251,6 +352,8 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     formula_labels: tuple[str, ...],
     advisory_prefix: str,
     already_verified_phrase: str,
+    *,
+    installed_process_world: InstalledProcessWorld,
 ) -> None:
     """Exercise the real entrypoint and persisted M130 work for each selected locale."""
     storage_root = tmp_path / language
@@ -260,6 +363,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     missing = _run_cli(
         storage_root,
         [*root, "app", "modelo", "work", "create", "--year", "2026", "--period", "1T"],
+        installed_process_world=installed_process_world,
     )
     missing_output = _combined_output(missing)
     assert missing.returncode != 0, missing_output
@@ -282,6 +386,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
             "--period",
             "1T",
         ],
+        installed_process_world=installed_process_world,
     )
     invalid_output = _combined_output(invalid)
     assert invalid.returncode != 0, invalid_output
@@ -312,11 +417,24 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
             "Locale",
             "--activity",
             "design",
+            "--tax-residence-jurisdiction-scope",
+            "common_regime",
+            "--iva-regime",
+            "GENERAL",
+            "--iva-m303-regime-composition",
+            "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
             "--irpf-income-categories",
             "actividad_economica",
+            "--irpf-estimation-regime",
+            "directa_simplificada",
             "--activity-start-date",
             "2026-01-01",
         ],
+        installed_process_world=installed_process_world,
     )
     assert profile.returncode == 0, _combined_output(profile)
 
@@ -335,6 +453,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
             "--period",
             "1T",
         ],
+        installed_process_world=installed_process_world,
     )
     assert created.returncode == 0, _combined_output(created)
 
@@ -353,6 +472,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
             "--period",
             "1T",
         ],
+        installed_process_world=installed_process_world,
     )
     calculation_output = _combined_output(calculated)
     assert calculated.returncode == 0, calculation_output
@@ -369,10 +489,11 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     verification = _run_cli(
         storage_root,
         [*root, "app", "modelo", "work", "verify", revision_match.group(1)],
+        installed_process_world=installed_process_world,
     )
     verification_output = _combined_output(verification)
     assert verification.returncode == 0, verification_output
-    assert advisory_prefix in verification_output
+    assert advisory_prefix in verification_output, verification_output
     assert "cross-period dependency scoped out" not in verification_output
     assert "Confirm the recorded activity-start date" not in verification_output
 
@@ -383,16 +504,19 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     already_verified = _run_cli(
         storage_root,
         [*root, "app", "modelo", "work", "verify", revision_match.group(1)],
+        installed_process_world=installed_process_world,
     )
     already_verified_output = _combined_output(already_verified)
     assert already_verified.returncode == 0, already_verified_output
-    assert already_verified_phrase in already_verified_output
+    assert already_verified_phrase in already_verified_output, already_verified_output
     assert "state\tverificado_completo" not in already_verified_output
     assert "verification requires borrador" not in already_verified_output
 
 
 @pytest.mark.os_keychain
-def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_projection(tmp_path: Path) -> None:
+def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_projection(
+    tmp_path: Path, *, installed_process_world: InstalledProcessWorld
+) -> None:
     """One revision and actor retain their report identity across selected languages."""
     # Every later invocation resumes the profile session from the OS credential
     # store; refuse before paying for profile creation on a host that has none.
@@ -405,11 +529,13 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
         year="2026",
         period="1T",
         activity_start_date="2026-01-01",
+        installed_process_world=installed_process_world,
     )
 
     catalan = _run_cli(
         storage_root,
         ["--language", "ca", "app", "modelo", "work", "verify", revision_id],
+        installed_process_world=installed_process_world,
     )
     catalan_output = _combined_output(catalan)
     assert catalan.returncode == 0, catalan_output
@@ -427,11 +553,12 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
             "view",
             catalan_id.group(1),
         ],
+        installed_process_world=installed_process_world,
     )
     hungarian_output = _combined_output(hungarian)
     assert hungarian.returncode == 0, hungarian_output
-    assert "dependència entre períodes exclosa" in catalan_output
-    assert "az időszakok közötti függőség" in hungarian_output
+    assert "El model 100 de 2025, període 0A, no es fa servir aquí" in catalan_output, catalan_output
+    assert "A Modelo 100 (2025, 0A időszak) itt nincs felhasználva" in hungarian_output, hungarian_output
     assert "cross-period dependency scoped out" not in catalan_output
     assert "cross-period dependency scoped out" not in hungarian_output
 
@@ -454,23 +581,31 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
         assert len(finding_values) == len(raw_finding)
         typed_findings.append(finding_values)
 
-    finding: dict[str, object] | None = None
-    for candidate in typed_findings:
-        candidate_message = candidate.get("message")
-        if isinstance(candidate_message, str) and candidate_message.startswith(
-            "cross-period dependency scoped out as no-prior-obligation",
-        ):
-            finding = candidate
-            break
-    assert finding is not None
-    message = finding["message"]
-    assert isinstance(message, str)
-    assert "modelo=100 year=2025 period=0A origin=previous_filing_binding" in message
+    # The stored report carries language-neutral message identity and typed facts;
+    # selected-language prose is rendered only when the report is viewed.
+    findings = [
+        candidate
+        for candidate in typed_findings
+        if candidate.get("message_locale_key")
+        == "application.modelo.findings.cross_period_operator_declared_suppression"
+    ]
+    assert len(findings) == 1, typed_findings
+    finding = findings[0]
+    assert finding["message_facts"] == {
+        "source_modelo": "100",
+        "source_filing_year": 2025,
+        "source_period": "0A",
+        "origin_code": "previous_filing_binding",
+        "activity_start_date": "2026-01-01",
+    }
+    assert "message" not in finding
     assert "next_action" not in finding
 
 
 @pytest.mark.os_keychain
-def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tmp_path: Path) -> None:
+def test_cross_locale_non_granted_verify_reuses_one_report_for_one_draft(
+    tmp_path: Path, *, installed_process_world: InstalledProcessWorld
+) -> None:
     """A non-granted draft can be verified in both languages without history drift."""
     # Every later invocation resumes the profile session from the OS credential
     # store; refuse before paying for profile creation on a host that has none.
@@ -479,19 +614,22 @@ def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tm
     revision_id = _create_modelo_revision(
         storage_root,
         "ca",
-        modelo="390",
-        year="2025",
-        period="0A",
-        activity_start_date="2025-01-01",
+        modelo="130",
+        year="2026",
+        period="1T",
+        activity_start_date="2020-01-01",
+        installed_process_world=installed_process_world,
     )
 
     catalan = _run_cli(
         storage_root,
         ["--language", "ca", "app", "modelo", "work", "verify", revision_id],
+        installed_process_world=installed_process_world,
     )
     hungarian = _run_cli(
         storage_root,
         ["--language", "hu", "app", "modelo", "work", "verify", revision_id],
+        installed_process_world=installed_process_world,
     )
     catalan_output = _combined_output(catalan)
     hungarian_output = _combined_output(hungarian)
@@ -499,10 +637,10 @@ def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tm
     assert hungarian.returncode == 1, hungarian_output
     assert "granted_verificado_completo\tfalse" in catalan_output
     assert "granted_verificado_completo\tfalse" in hungarian_output
-    assert "la dependència entre períodes no està neta" in catalan_output
-    assert "Captureu o importeu evidència de l’AEAT" in catalan_output
-    assert "az időszakok közötti függőség nem tiszta" in hungarian_output
-    assert "Rögzítse vagy importálja a forrásfüggőség AEAT-bizonyítékát" in hungarian_output
+    assert "Aquesta declaració fa servir dades del model 100 de 2025, període 0A" in catalan_output, catalan_output
+    assert "Resol-les allà primer." in catalan_output, catalan_output
+    assert "Ez a bevallás a Modelo 100 (2025, 0A időszak) adatait használja" in hungarian_output, hungarian_output
+    assert "Előbb ott oldd meg őket." in hungarian_output, hungarian_output
     assert "cross-period dependency is not clean" not in catalan_output
     assert "cross-period dependency is not clean" not in hungarian_output
     assert "Capture/import AEAT evidence" not in catalan_output

@@ -29,10 +29,10 @@ from ....application.live.expedientes_read_operation import (
     ExpedientesSnapshotSummaryPublicV1,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import _app_live_expedientes_cli as handler
+from .. import app_live_expedientes_commands as handler
 from .. import operation_expedientes_read as bridge
 from .. import operation_profile_operation as profile_operation
-from .._app_live_expedientes_payloads import (
+from ..app_live_expedientes_results import (
     ExpedientesLatestResult,
     ExpedientesListResult,
     ExpedientesViewResult,

@@ -173,7 +173,7 @@ def _emit_llm_single_classify(
     ctx: typer.Context, result: LedgerClassifyOperationResult, *, extra_lines: tuple[str, ...] = ()
 ) -> None:
     """Render the worker's admitted single-transaction classify quintet."""
-    from ._ledger_payloads import LedgerClassifySingleResult, TransactionPayload
+    from .ledger_results import LedgerClassifySingleResult, TransactionPayload
 
     transaction, review_status = result.transaction, result.review_status
     if transaction is None or review_status is None or result.outcome != "classified":
@@ -201,7 +201,7 @@ def _emit_llm_single_classify(
 def _render_autosplit_preview(ctx: typer.Context, review: LedgerLlmReviewProjection) -> None:
     """Render the same split or lone-child preview from admitted wire facts."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
-    from ._ledger_payloads import LedgerSplitResult
+    from .ledger_results import LedgerSplitResult
 
     suggestion = review.suggestion
     child = next(iter(suggestion.children), None)
@@ -258,7 +258,7 @@ def _render_settled(ctx: typer.Context, result: LedgerLlmOperationResult, *, sat
     if result.outcome == "rejected":
         emit_llm_rejection(ctx, result)
     elif result.outcome == "split":
-        from ._ledger_payloads import LedgerSplitResult
+        from .ledger_results import LedgerSplitResult
 
         payload = LedgerSplitResult.model_validate(
             {
@@ -335,7 +335,7 @@ def split_recommendation_notice(transaction_id: str) -> Notice:
 
 def _autosplit_child_payloads(suggestion: LedgerLlmSuggestionProjection) -> list[object]:
     """Project a split suggestion's children to the shared proposal payload."""
-    from ._ledger_payloads import LedgerSplitChildProposalPayload
+    from .ledger_results import LedgerSplitChildProposalPayload
 
     return [
         LedgerSplitChildProposalPayload.model_validate(
@@ -696,7 +696,7 @@ def _emit_operator_iva_result(
     derivation: LedgerOperatorIvaResult,
 ) -> None:
     """Emit the canonical single-result envelope for operator IVA derivation."""
-    from ._ledger_payloads import LedgerClassifySingleResult
+    from .ledger_results import LedgerClassifySingleResult
 
     result = derivation.classification
     if result is None or result.transaction is None or result.review_status is None:

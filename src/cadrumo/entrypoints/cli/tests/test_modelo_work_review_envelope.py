@@ -18,10 +18,10 @@ from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
 )
 
-from .._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from .._modelo_rendering import verification_report_notices
 from .._modelo_work_review_cli import _review_lines
 from ..command_schema import command_schema_types
+from ..modelo_results import WorkReviewPayload, WorkReviewResult
 from .review_envelope_support import RAW_ROW_IDENTITY, ROW_FINGERPRINT, persist_blocked_review
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -40,8 +40,8 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ._modelo_cli_support import validate_trusted_public_key
-from ._modelo_payloads import WorkReportResult, WorkReportVerifyResult
 from .common import activate_subcommand_output_language, emit_envelope
+from .modelo_results import WorkReportResult, WorkReportVerifyResult
 
 __all__ = ["work_report", "work_report_verify"]
 

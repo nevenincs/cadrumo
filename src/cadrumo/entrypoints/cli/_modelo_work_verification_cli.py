@@ -35,15 +35,6 @@ from ._modelo_cli_support import (
     parse_revision_selector,
     resolve_default_actor,
 )
-from ._modelo_payloads import (
-    CrossPeriodCleanStatePayload,
-    CrossPeriodDependencyEvidencePayload,
-    CrossPeriodDependencyInventoryItemPayload,
-    CrossPeriodDependencyRequirementPayload,
-    WorkDependenciesResult,
-    WorkFileResult,
-    WorkVerifyResult,
-)
 from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
@@ -54,6 +45,15 @@ from ._modelo_rendering import (
     verification_report_payload,
 )
 from .common import activate_subcommand_output_language, emit_envelope
+from .modelo_results import (
+    CrossPeriodCleanStatePayload,
+    CrossPeriodDependencyEvidencePayload,
+    CrossPeriodDependencyInventoryItemPayload,
+    CrossPeriodDependencyRequirementPayload,
+    WorkDependenciesResult,
+    WorkFileResult,
+    WorkVerifyResult,
+)
 from .operation_modelo_dependencies import read_modelo_dependencies
 from .operation_modelo_verification import (
     run_modelo_work_filing,

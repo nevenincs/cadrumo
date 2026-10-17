@@ -18,7 +18,7 @@ from .....application.user_profile.profile_operation_contracts import (
 )
 from .....core.operations import OperationEffect, OperationTerminalCondition
 from .._profile_mutation import execute_profile_mutation
-from .._profile_repeatable_row import _parse_row_key, _parse_values
+from ..profile_row_commands import _parse_row_key, _parse_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

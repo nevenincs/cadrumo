@@ -12,11 +12,11 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.cli.tests.native_profile_cli_support import invoke_native_cli, reauthenticate_native_profile
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from ._iva_wallet_inspector_support import _NIF, _state
-from .native_profile_cli_support import invoke_native_cli, reauthenticate_native_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

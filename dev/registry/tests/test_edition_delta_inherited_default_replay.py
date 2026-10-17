@@ -16,6 +16,47 @@ from ..edition_delta_types import EditionPlan, LiftCounts, PredecessorBasis
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def test_an_exact_authored_claim_does_not_generate_a_second_lineage_selector() -> None:
+    """A grounded override already selects the row even if its lineage moved."""
+    lineage = "grounded-lineage"
+    target: dict[str, object] = {
+        "id": "170",
+        "continuidad_id": lineage,
+        "continuidad_origin": "grounded",
+        "continuidad_evidence": "existing validated evidence",
+    }
+    source = _EditionSource(
+        revision_id="2025",
+        manifest_text="",
+        manifest={
+            "casilla_overrides": [{"selector": {"revision": "2024", "id": "170"}, "fields": target}],
+        },
+        table={},
+        fragments=(),
+        rows=(),
+        origins=(),
+        declarations={},
+        retired=frozenset(),
+        family_defaults={},
+    )
+
+    appended, replacements = preserve_inherited_rows(
+        revision_id="2025",
+        predecessor="2024",
+        inherited=(
+            _Placed({"id": "170", "continuidad_id": "previous-lineage"}, "2024"),
+            _Placed({"id": "175", "continuidad_id": lineage}, "2024"),
+        ),
+        full_rows=(target,),
+        source=source,
+        defaults=_Defaults(source_refs=None, orden=()),
+        current_output=(_Placed(dict(target), "2025"),),
+    )
+
+    assert appended == ()
+    assert replacements == ()
+
+
 def test_authored_override_composes_default_preservation_for_unstated_inherited_row() -> None:
     inherited = _Placed({"id": "170", "required": False}, "2024")
     existing_override = {

@@ -56,6 +56,7 @@ from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 pytestmark = [
@@ -223,7 +224,7 @@ async def test_native_mcp_automation_revocation_fences_live_execution_and_result
                 delete_profile_session(storage_root=tmp_path / "cadrumo-storage", profile_id=enrolled.profile_id)
                 denied_output = await asyncio.to_thread(
                     invoke_typer_app,
-                    build_command_app(RUNTIME_COMMAND_GRAPH),
+                    build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
                     (
                         "--format",
                         "json",
@@ -249,15 +250,13 @@ async def test_native_mcp_automation_revocation_fences_live_execution_and_result
                 assert receipt_document["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
                 assert receipt_document["access_denied"] is True
 
-                # Which operations exist is no profile's data. It is still answered, from the public
-                # contracts and not from the revoked session's scope, and the answer says no session holds.
+                # Discovery also requires admission; a revoked grant exposes no operation contracts.
                 for tool, arguments in (
                     ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID}),
                     ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
                 ):
                     discovered = await sdk.call_tool(tool, arguments)
-                    assert discovered.is_error is False, _structured(discovered)
-                    assert _structured(discovered)["session"] == "none", tool
+                    _assert_access_fenced(discovered)
                 _assert_access_fenced(await sdk.call_tool("execute", execute_args))
                 _assert_access_fenced(
                     await sdk.call_tool("observe", {"observation": observation.model_dump(mode="json")})

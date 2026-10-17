@@ -24,6 +24,7 @@ from ....application.ledger.workspace import LedgerWorkspaceProjectionV1
 from ....application.operator_actions.models import ActionReference
 from .action_guards import require_canonical_ledger_actions
 from .models import (
+    LedgerClassificationPatchBuilderV1,
     LedgerClassificationSubmitterV1,
     LedgerEvidenceDoorV1,
     LedgerExclusionSubmitterV1,
@@ -61,6 +62,8 @@ class LedgerWorkspaceInjection:
     review_action: ActionReference
     classify_action: ActionReference | None = None
     classification_submitter: LedgerClassificationSubmitterV1 | None = None
+    classification_patch_builder: LedgerClassificationPatchBuilderV1 | None = None
+    """Pure bounded request construction; absent retains the direct application's typed patch."""
     import_door: LedgerImportDoorV1 | None = None
     evidence_action: ActionReference | None = None
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None

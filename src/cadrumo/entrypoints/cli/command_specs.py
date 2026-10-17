@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecFamily, CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import DeferredTarget
 
@@ -31,6 +32,7 @@ COMMAND_GRAPH = CommandSpecGraph(
         _family("app", "._app_quickfile_command_specs", "QUICKFILE_COMMAND_SPECS"),
         _family("app", "._review_command_specs", "REVIEW_COMMAND_SPECS"),
     ),
+    resolver=resolve_deferred_target,
 )
 
 __all__ = ["COMMAND_GRAPH"]

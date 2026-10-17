@@ -50,7 +50,6 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
-from ._modelo_payloads import WorkResumeResult
 from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
 from .modelo_aux_payloads import (
     WorkflowRunPayload,
@@ -59,6 +58,7 @@ from .modelo_aux_payloads import (
     WorkRunResult,
     WorkRunsResult,
 )
+from .modelo_results import WorkResumeResult
 from .operation_workflow_resume import read_workflow_resume_context
 from .operation_workflow_runs import read_workflow_run, read_workflow_runs
 

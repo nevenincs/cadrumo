@@ -482,9 +482,9 @@ def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:
     thing that would go missing if someone deleted the call, leaving every test
     above passing over a builder nothing invokes.
     """
-    from .. import _ledger_evidence_cli
+    from .. import ledger_evidence_commands
 
-    source = Path(_ledger_evidence_cli.__file__).read_text(encoding="utf-8")
+    source = Path(ledger_evidence_commands.__file__).read_text(encoding="utf-8")
     extract_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(projection.draft)))")
     confirm_calls = source.count("notices.extend(field_degradation_notices(_domain_provenance(result.draft)))")
 

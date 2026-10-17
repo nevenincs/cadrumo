@@ -37,9 +37,9 @@ from ....core.aggregation import BindingSourceKind
 from ....core.hashing import content_hash_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from .. import _modelo_aggregate_cli as aggregate_cli
+from .. import modelo_aggregate_commands as aggregate_cli
 from .. import operation_modelo_invoice_withholding as bridge
-from .._modelo_payloads import ModeloAggregateResult
+from ..modelo_results import ModeloAggregateResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -80,7 +80,7 @@ def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
     )
     assert result.exit_code != 0
     flat = " ".join(result.output.split())
-    assert "Unrecognised --category-id 'ventas_actividad'" in flat
+    assert "Unrecognised --category-id 'ventas_actividad'" in flat, result.output
     assert any(category.value in flat for category in _category_tokens())
 
 
@@ -201,5 +201,5 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
     )
     assert result.exit_code != 0
     valid_ids = {category.value for category in _category_tokens()}
-    assert "Unrecognised --category-id 'office:material_oficina'" in result.output
+    assert "Unrecognised --category-id 'office:material_oficina'" in result.output, result.output
     assert any(category_id in result.output for category_id in valid_ids)

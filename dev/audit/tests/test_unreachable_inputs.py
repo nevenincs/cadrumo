@@ -90,3 +90,32 @@ def test_a_same_named_function_in_another_module_is_not_a_console_entrypoint(tmp
 
     assert result.outcome is UnreachableCodeOutcome.FINDINGS
     assert {(finding.module, finding.name) for finding in result.symbols} == {("pkg.work", "main")}
+
+
+def test_a_cohort_without_a_console_script_supplies_edges_without_becoming_a_root(tmp_path: Path) -> None:
+    sources = {
+        "src/cadrumo/__init__.py": "",
+        "src/cadrumo/cli.py": "from cadrumo_client.bridge import run\ndef main(): run()\n",
+        "src/cadrumo/facts.py": "def active(): pass\ndef orphan(): pass\n",
+        "src/cadrumo_client/__init__.py": "",
+        "src/cadrumo_client/bridge.py": "from cadrumo.facts import active\ndef run(): active()\n",
+        "conftest.py": "",
+        "pyproject.toml": (
+            '[project]\nname = "example"\n[project.scripts]\nexample = "cadrumo.cli:main"\n'
+            "[tool.hatch.build.targets.wheel]\nexclude = []\n"
+        ),
+    }
+    for relative, source in sources.items():
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(source, encoding="utf-8")
+    (tmp_path / "dev").mkdir()
+
+    spec = ShippedTreeSpec.from_repository(tmp_path)
+    client = next(companion for companion in spec.companions if companion.package == "cadrumo_client")
+    assert client.entry_points == ()
+    result = scan_unreachable_code(spec)
+
+    assert result.outcome is UnreachableCodeOutcome.FINDINGS
+    assert result.roots == ("cadrumo.cli:main",)
+    assert {(finding.module, finding.name) for finding in result.symbols} == {("cadrumo.facts", "orphan")}

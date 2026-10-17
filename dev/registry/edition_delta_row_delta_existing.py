@@ -258,7 +258,7 @@ def preserve_inherited_rows(
                 f"{context}: inherited casilla {row_id!r} references do not resolve in the planned successor"
             )
         target_payload = _edition_delta_source._as_row(without_lineage_claims(target))
-        if effective == target_payload:
+        if effective in (target, target_payload):
             continue
         selector = {"revision": predecessor, "id": selector_id}
         existing = [operation for operation in authored_overrides if operation.get("selector") == selector]

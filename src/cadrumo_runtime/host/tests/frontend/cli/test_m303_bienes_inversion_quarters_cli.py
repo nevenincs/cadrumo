@@ -30,10 +30,13 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import (
+    admit_ordinary_m303_secure_evidence,
+    joint_return_options,
+)
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
-from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence, joint_return_options
-from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 

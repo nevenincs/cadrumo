@@ -28,7 +28,7 @@ from ._filing_chain_payloads import (
     ObservationLayersPayload,
     ObservationOverridePayload,
 )
-from ._modelo_payloads import ModeloRecordPayload
+from .modelo_results import ModeloRecordPayload
 
 
 def _layer_payload(layer: ModeloFilingObservationLayerProjection | None) -> ObservationLayerPayload | None:

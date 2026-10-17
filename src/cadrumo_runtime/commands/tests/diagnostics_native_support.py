@@ -11,6 +11,8 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.core.config import override_settings
+from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from .config.runtime_cli import invoke_runtime_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -34,25 +36,24 @@ def diagnostics_native_profile(
             _ACTIVE_PROFILE.reset(token)
 
 
-def invoke_diagnostics_cli(args: list[str], *, profile: NativeCliProfileFixture | None = None) -> Result:
-    """Run through ``profile``, else the active test profile, via root admission and the native worker."""
+def invoke_diagnostics_cli(
+    args: list[str],
+    *,
+    profile: NativeCliProfileFixture | None = None,
+    invoke_cli: CliInvocation = invoke_runtime_cli,
+) -> Result:
+    """Run the supplied command graph through exact-profile native admission."""
     profile = profile or _ACTIVE_PROFILE.get()
     if profile is None:
-        return invoke_runtime_cli(args)
+        return invoke_cli(args)
     if profile.label is None:
         raise AssertionError("native diagnostics profile was not registered")
     close_active_bucket_session()
-    result = invoke_runtime_cli(
-        (
-            "--language",
-            "en",
-            "--profile",
-            profile.label,
-            "--profile-secrets-stdin",
-            *args,
-        ),
-        input=json.dumps({"profile_passphrase": profile.passphrase}),
-    )
+    with override_settings(cadrumo_output_language="en"):
+        result = invoke_cli(
+            ("--profile", profile.label, "--profile-secrets-stdin", *args),
+            input=json.dumps({"profile_passphrase": profile.passphrase}),
+        )
     if profile.passphrase in result.output:
         pytest.fail("profile passphrase appeared in app diagnostics CLI output", pytrace=False)
     return result

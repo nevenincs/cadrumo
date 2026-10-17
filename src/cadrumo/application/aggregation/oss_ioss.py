@@ -56,15 +56,10 @@ from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.iva.classification import (
-    InvoiceKind,
-    TransactionKind,
-    require_transaction_kind,
-    resolve_transaction_kind_catalogue,
-)
+from ...domain.iva.classification import TransactionKind, require_transaction_kind, resolve_transaction_kind_catalogue
 from ...domain.iva.lookup import lookup_rate
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
-from ...domain.iva.schema import EUMemberState, IvaRateKind
+from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ..invoices.catalogue_reads_ports import (
     BucketBoundCatalogueReader,
     InvoiceCatalogueReadPersistenceError,

@@ -97,7 +97,6 @@ from cadrumo.domain.deadlines.models import (
 )
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 from cadrumo.domain.iva_compensation.reconciliation import (
@@ -127,6 +126,7 @@ from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from ....domain.iva.schema import InvoiceKind
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

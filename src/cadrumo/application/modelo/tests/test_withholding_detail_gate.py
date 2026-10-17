@@ -31,8 +31,7 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import IvaCategory
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

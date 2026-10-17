@@ -20,7 +20,7 @@ keeps the imported casilla values on the same registry-grounded
 calculation revisions.
 
 See Also:
-    :func:`~cadrumo.entrypoints.cli._modelo_records_cli.filing_record_import`:
+    :func:`~cadrumo.entrypoints.cli.modelo_records_commands.filing_record_import`:
         CLI surface that parses ``filing-record import`` options and calls this
         service.
     :func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision`:

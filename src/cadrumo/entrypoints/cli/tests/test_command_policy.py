@@ -9,6 +9,7 @@ from typing import cast
 
 import pytest
 
+import cadrumo_client.commands.suggestions as _suggestions
 from cadrumo_client.commands.compiler import refuse_declared_live_write
 from cadrumo_client.commands.spec import ExecutionPolicySpec
 from cadrumo_client.contracts.command_ports import (
@@ -31,13 +32,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_callback_policy_attachment_authority_is_physically_absent() -> None:
     cli_root = Path(__file__).parents[1]
     policy_source = (cli_root / "_command_policy.py").read_text(encoding="utf-8")
-    # `command_suggestions.py`, not `_command_suggestions.py`: the private-to-public
-    # promotion renamed it and this reference was not followed, so the gate raised
-    # FileNotFoundError instead of checking that no callback attaches a policy.
-    suggestions_source = (cli_root / "command_suggestions.py").read_text(encoding="utf-8")
+    assert _suggestions.__file__ is not None
+    suggestions_path = Path(_suggestions.__file__)
+    suggestions_source = suggestions_path.read_text(encoding="utf-8")
     forbidden = {"command_execution_policy", "execution_policy_for"}
     violations: list[str] = []
-    for path in sorted(cli_root.rglob("*.py")):
+    paths = {*cli_root.rglob("*.py"), *suggestions_path.parent.rglob("*.py")}
+    for path in sorted(paths):
         if "tests" in path.parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

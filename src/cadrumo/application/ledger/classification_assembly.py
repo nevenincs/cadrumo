@@ -97,10 +97,8 @@ from ...domain.calculations.registry.iva_category_catalogue import (
 )
 from ...domain.iva.classification import (
     CustomerTaxStatus,
-    InvoiceKind,
     IvaClassificationRule,
     IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
     PartyFact,
     TransactionKind,
     classify_iva,
@@ -117,7 +115,7 @@ from ...domain.iva.establishment import (
     territorial_scope_for_spanish_postal_code,
 )
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
-from ...domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ...domain.iva.supply_nature import SupplyNature
 from . import classification_assembly_rules as _rules
 

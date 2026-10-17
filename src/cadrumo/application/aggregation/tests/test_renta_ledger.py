@@ -32,7 +32,7 @@ from ....domain.categories.proportionality import (
 from ....domain.contribuyente.ccaa import CCAA
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue

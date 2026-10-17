@@ -251,6 +251,7 @@ class SubmissionFlow:
         submission: Symbol,
         identity_argument: str = "definition_id",
         payload_argument: str = "payload_json",
+        callable_members: Mapping[tuple[Symbol, str], Symbol] | None = None,
     ) -> None:
         """Bind the reading to its source tree and to the record every submission constructs.
 
@@ -262,8 +263,10 @@ class SubmissionFlow:
             submission: The class whose construction is a submission.
             identity_argument: The keyword that names the operation.
             payload_argument: The keyword that carries the encoded payload.
+            callable_members: Source-bound callable fields supplied by the owning host.
         """
         self._tree = tree
+        self._callable_members = dict(callable_members or {})
         self._scanned = scanned
         self._submission = submission
         self._identity_argument = identity_argument
@@ -648,6 +651,16 @@ class SubmissionFlow:
         receiver = node.value
         if isinstance(receiver, ast.Attribute):
             return self._resolve_member_method(scope, receiver, node.attr)
+        if isinstance(receiver, ast.Call):
+            classes = self._classes_of_expression(scope, receiver)
+            targets = tuple(
+                self._callable_members[(cls, node.attr)]
+                for cls in sorted(classes)
+                if (cls, node.attr) in self._callable_members
+            )
+            if targets:
+                return _Resolution(targets=targets)
+            return _UNTRACED
         if not isinstance(receiver, ast.Name):
             return _UNTRACED
         if receiver.id in _RECEIVER_NAMES and scope.owner is not None:

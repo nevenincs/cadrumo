@@ -27,7 +27,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_consent_cli", "consent_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_consent_commands", "consent_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceConsentListResult", __package__),
@@ -111,7 +111,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_review_cli", "review_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_review_commands", "review_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewListResult", __package__),
@@ -139,7 +139,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_review_cli", "review_view", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_review_commands", "review_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewViewResult", __package__),

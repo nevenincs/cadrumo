@@ -18,7 +18,7 @@ See Also:
     :mod:`cadrumo.domain.calculations.registry.censo_modelos`
         Registry-owned Modelo 036 active-foundation and Modelo 037 historical
         routing.
-    :mod:`cadrumo.entrypoints.cli._modelo_m036_cli`
+    :mod:`cadrumo.entrypoints.cli.modelo_m036_commands`
         Thin Typer boundary that turns CLI verbs into these application commands.
     :class:`cadrumo.domain.buckets.event.BucketEventType`
         Declares the ``CENSO_DECLARATION_ALTA``,

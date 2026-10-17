@@ -68,7 +68,7 @@ def dispatch_cli_behavior(
     if needs_preflight:
         from cadrumo.application.cli_provisioning import provision_cli_storage
 
-        from ._profile_authentication_contract import command_needs_state_tree
+        from .profile_authentication_policy import command_needs_state_tree
 
         provision_cli_storage(writes_state=command_needs_state_tree(graph.node(spec.key)))
     try:

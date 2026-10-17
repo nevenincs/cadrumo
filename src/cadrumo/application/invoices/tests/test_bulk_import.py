@@ -31,7 +31,7 @@ from pydantic import ValidationError
 
 from ....core.hashing import sha256_hex
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.raw_transaction import SourceFormat
 from ....tests.xls_fixtures import XlsFormula, xls_workbook_bytes
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source

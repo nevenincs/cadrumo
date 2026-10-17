@@ -23,8 +23,7 @@ from ...domain.invoices.business_premises import (
 from ...domain.invoices.enums import IvaRate
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import InvoiceLine
-from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.schema import IvaRateKind
+from ...domain.iva.schema import InvoiceKind, IvaRateKind
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.public_scalar import PublicDecimal
 from .catalogue_read_projection import CatalogueInvoiceSnapshot

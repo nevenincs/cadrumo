@@ -49,3 +49,21 @@ def test_a_same_named_module_in_another_package_does_not_consume_the_export(tmp_
     assert [(finding.path, finding.name) for finding in find_unconsumed(root, _unused(root, "lonely", "widget"))] == [
         ("lonely.py", "widget"),
     ]
+
+
+def test_a_companion_production_import_counts_but_its_test_import_does_not(tmp_path: Path) -> None:
+    root = _tree(tmp_path, lonely=_EXPORTED)
+    companion = tmp_path / "client"
+    companion.mkdir()
+    (companion / "test_user.py").write_text("from pkg.lonely import widget\n", encoding="utf-8")
+    unused = _unused(root, "lonely", "widget")
+    assert len(find_unconsumed(root, unused, consumer_roots=(companion,))) == 1
+
+    (companion / "user.py").write_text("from pkg.lonely import widget\n", encoding="utf-8")
+    assert find_unconsumed(root, unused, consumer_roots=(companion,)) == ()
+
+
+def test_an_unavailable_companion_refuses_to_claim_zero(tmp_path: Path) -> None:
+    root = _tree(tmp_path, lonely=_EXPORTED)
+    with pytest.raises(RuntimeError, match="consumer root is unavailable"):
+        find_unconsumed(root, _unused(root, "lonely", "widget"), consumer_roots=(tmp_path / "missing",))

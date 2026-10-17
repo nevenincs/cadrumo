@@ -366,7 +366,7 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
         "action": {
             "action_id": "operator.modelo.work.calculate",
             "target_command_key": "modelo.work.calculate",
-            "cli_path": ["app", "modelo", "work", "calculate"],
+            "cli_path": ["aeat", "app", "modelo", "work", "calculate"],
         },
         "argument_bindings": [
             {

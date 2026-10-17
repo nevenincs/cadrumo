@@ -35,8 +35,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...iva.classification import InvoiceKind
-from ...iva.schema import EUMemberState, IvaCategory
+from ...iva.schema import EUMemberState, InvoiceKind, IvaCategory
 from ..enums import IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 

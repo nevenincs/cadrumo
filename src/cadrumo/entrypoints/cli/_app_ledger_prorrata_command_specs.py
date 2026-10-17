@@ -24,8 +24,8 @@ from ._app_ledger_command_spec_policies import (
 )
 
 _PRORRATA_REGISTER_MODULE: Final[str] = "...core.prorrata_register"
-_PRORRATA_CLI_MODULE: Final[str] = "._prorrata_register_cli"
-_PRORRATA_PAYLOAD_MODULE: Final[str] = "._prorrata_register_payloads"
+_PRORRATA_CLI_MODULE: Final[str] = ".prorrata_register_commands"
+_PRORRATA_PAYLOAD_MODULE: Final[str] = ".prorrata_register_results"
 
 _PROVENANCE_VALUE: Final[ValueContract] = ValueContract(
     DeferredTarget(_PRORRATA_REGISTER_MODULE, "ProrrataProvisionalProvenance", __package__)

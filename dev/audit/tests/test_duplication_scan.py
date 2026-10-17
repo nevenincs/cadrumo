@@ -43,13 +43,14 @@ def _require_npx() -> None:
 def test_real_clean_subtree_scan_observes_zero() -> None:
     """A real zero-clone jscpd run over a real clone-free tree is observed_zero.
 
-    ``dev/audit`` is genuinely clone-free, so this is the only honest route to
-    the green state: a real subprocess that really looked at real files.
+    The security runner is a real, clone-free source file. The complete audit
+    subtree also contains shared scanner idioms, so it cannot witness zero.
+    This still requires a real subprocess to inspect nonempty source.
     """
     _require_npx()
-    result = run_duplication_scan(REPO_ROOT, source_root=Path("dev/audit"))
+    result = run_duplication_scan(REPO_ROOT, source_root=Path("dev/audit/security.py"))
 
-    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO
+    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO, result.headline()
     assert result.is_green is True
     assert result.clone_count == 0
     assert result.files_analyzed > 0, "a green verdict must prove files were analysed"

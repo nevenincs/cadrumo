@@ -42,23 +42,24 @@ def _stable_source_snapshot(repo_root: Path, destination: Path) -> Path:
     # authority-less cohort. Staged once here, both builds read identical
     # bytes, which is what this proof requires of every input.
     stage_published_authority(repo_root, destination)
-    (destination / "var").mkdir(exist_ok=True)
+    (destination / "build").mkdir(exist_ok=True)
     return destination
 
 
 def test_real_clean_source_build_is_complete_and_reproducible() -> None:
     """Build the real 12-member cohort twice from the same content and compare every digest."""
     repo_root = REPO_ROOT
-    var = (repo_root / "var").resolve(strict=True)
+    build = (repo_root / "build").resolve()
+    build.mkdir(parents=True, exist_ok=True)
     # Named through the scratch registry rather than spelled here, so the
     # collection-time reclaim and this mint site cannot disagree about the
     # family, and so the name carries this process as its owner.
-    snapshot_root = var / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
+    snapshot_root = build / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
     try:
         source = _stable_source_snapshot(repo_root, snapshot_root)
         outputs = (
-            source / "var" / "first",
-            source / "var" / "second",
+            source / "build" / "first",
+            source / "build" / "second",
         )
         # Each build enumerates and snapshots the same fixed source on its own.
         # Their outputs and clean child processes are independent, so running
@@ -104,5 +105,5 @@ def test_real_clean_source_build_is_complete_and_reproducible() -> None:
         # reported success while leaving the copy on disk. The shared reclaim
         # clears the attribute and retries.
         resolved = snapshot_root.resolve()
-        if resolved.parent == var and matching_family(resolved.name) is not None and resolved.exists():
+        if resolved.parent == build and matching_family(resolved.name) is not None and resolved.exists():
             remove_tree(resolved)

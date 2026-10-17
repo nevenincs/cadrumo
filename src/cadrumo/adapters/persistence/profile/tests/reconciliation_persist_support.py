@@ -9,8 +9,8 @@ from .....application.modelo.reconciliation import (
     prepare_parsed_declaracion,
     prepare_parsed_justificante,
 )
+from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_parsing import ReconciliationDeclaracionObservation
-from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.justificante.schema import Justificante
 from .....domain.modelos.work_unit import WorkUnit

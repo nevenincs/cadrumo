@@ -15,7 +15,7 @@ from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access

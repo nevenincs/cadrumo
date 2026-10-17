@@ -209,11 +209,15 @@ def test_canonical_population_ownership_is_exhaustive_and_unique() -> None:
 
 
 def test_native_package_assertions_have_exactly_one_live_owner() -> None:
-    """Only the five stage-process assertions belong to the opt-in CTest lane."""
+    """Stage-process assertions each belong to the opt-in CTest lane."""
     rows = _canonical_population_rows()
     native_rows = {node_id: owners for node_id, markers, owners in rows if "native_package" in markers}
 
     assert set(native_rows) == {
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_runtime_and_service_share_the_admitted_boot",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_service_exposes_the_provider_catalog",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_administration_reuses_the_live_service",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_cli_reads_the_same_profile_after_shared_setup",
         "dev/runtime_lifecycle/tests/test_clients.py::test_packaged_client_authentication_and_profile_scope",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_login_logout_profile_switch_and_stale_receipt",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_exact_runtime_crash_manager_recovery_and_operation_state",

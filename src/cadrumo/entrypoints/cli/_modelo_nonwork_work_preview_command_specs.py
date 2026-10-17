@@ -73,11 +73,11 @@ MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CALCULATION_READ,
         handler=LazyBinding.available(
-            DeferredTarget("._modelo_maritime_cli", "work_preview_maritime_exemption", __package__)
+            DeferredTarget(".modelo_maritime_commands", "work_preview_maritime_exemption", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "WorkPreviewMaritimeExemptionResult", __package__),
+            DeferredTarget(".modelo_results", "WorkPreviewMaritimeExemptionResult", __package__),
             identity="modelo.work.preview_maritime_exemption",
         ),
     ),

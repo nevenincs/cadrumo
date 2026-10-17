@@ -48,7 +48,7 @@ def _bulk_classification_output(
     result: BulkClassifyResult,
 ) -> tuple[OutputSchema, list[str], list[Notice]]:
     """Build the canonical bulk payload, text lines, and all-failed warning."""
-    from ._ledger_payloads import LedgerClassifyBulkResult
+    from .ledger_results import LedgerClassifyBulkResult
 
     lines = [
         tr(

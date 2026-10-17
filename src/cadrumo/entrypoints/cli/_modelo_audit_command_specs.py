@@ -77,10 +77,10 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._modelo_audit_cli", handler, __package__)),
+        handler=LazyBinding.available(DeferredTarget(".modelo_audit_commands", handler, __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._modelo_payloads", schema_name, __package__),
+            target=DeferredTarget(".modelo_results", schema_name, __package__),
             identity=identity,
         ),
     )

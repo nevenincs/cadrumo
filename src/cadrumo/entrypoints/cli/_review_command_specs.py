@@ -26,7 +26,7 @@ _FLOAT = ValueContract(DeferredTarget("builtins", "float"))
 _LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _STATE = ValueContract(
     DeferredTarget("...application.review.enums", "ReviewState", __package__),
-    parser=DeferredTarget("._review", "parse_review_state", __package__),
+    parser=DeferredTarget(".review_commands", "parse_review_state", __package__),
 )
 
 
@@ -95,10 +95,10 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _READ,
-        LazyBinding.available(DeferredTarget("._review", "review_queue", __package__)),
+        LazyBinding.available(DeferredTarget(".review_commands", "review_queue", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._review_payloads", "ReviewQueueResult", __package__),
+            DeferredTarget(".review_results", "ReviewQueueResult", __package__),
             identity="app.review.queue",
         ),
     ),
@@ -121,10 +121,10 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _READ,
-        LazyBinding.available(DeferredTarget("._review", "review_view", __package__)),
+        LazyBinding.available(DeferredTarget(".review_commands", "review_view", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._review_payloads", "ReviewViewResult", __package__),
+            DeferredTarget(".review_results", "ReviewViewResult", __package__),
             identity="app.review.view",
         ),
     ),

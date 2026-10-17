@@ -55,18 +55,11 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
 
-from ..classification import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
-    PartyFact,
-    TransactionKind,
-)
+from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, PartyFact, TransactionKind
 from ..components import category_cuota_is_zero_by_law
 from ..establishment import country_code_for_printed_tax_identifier
 from ..identification import identification_state_for_printed_tax_identifier
-from ..schema import EUMemberState, IvaCategory
+from ..schema import EUMemberState, InvoiceKind, IvaCategory, IvaTerritorialScope
 from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

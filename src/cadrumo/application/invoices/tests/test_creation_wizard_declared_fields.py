@@ -9,7 +9,7 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..creation_wizard import create_invoice_via_wizard
 from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 

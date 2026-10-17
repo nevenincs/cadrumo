@@ -42,10 +42,10 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices import enums as invoice_enums
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role, resolve_iva_rate_slot
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva.classification import InvoiceKind, TransactionKind
+from ....domain.iva.classification import TransactionKind
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
-from ....domain.iva.schema import EUMemberState, IvaRateKind
+from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ....tests.inventory import REPO_ROOT
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts

@@ -47,15 +47,15 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 )
 from cadrumo.domain.invoices.service import link_transaction
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import OrdinaryM303SecureEvidence, joint_return_options
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
-from ._m303_ordinary_cli_support import OrdinaryM303SecureEvidence, joint_return_options
-from ._modelo_work_ux_support import operator_profile_facts
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from .test_runtime_invoice_add import password_profile_session
 

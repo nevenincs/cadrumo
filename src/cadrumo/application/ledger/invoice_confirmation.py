@@ -73,8 +73,7 @@ from ...domain.calculations.registry.invoice_legal_classification import resolve
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 from ..invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ..invoices.catalogue_creation_ports import CatalogueCreationPorts

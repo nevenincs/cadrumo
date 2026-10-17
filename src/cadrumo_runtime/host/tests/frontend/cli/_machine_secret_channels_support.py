@@ -580,7 +580,9 @@ def _assert_refused(
     _assert_no_secrets(combined, extra_secrets)
     _assert_secret_free_logs(root, secrets)
     if before is not None:
-        assert _storage_snapshot(root) == before
+        after = _storage_snapshot(root)
+        changed_paths = sorted(path for path in before.keys() | after.keys() if before.get(path) != after.get(path))
+        assert after == before, f"durable storage changed: {changed_paths}"
     return combined
 
 

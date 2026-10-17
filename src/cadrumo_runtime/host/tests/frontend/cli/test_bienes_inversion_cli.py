@@ -10,7 +10,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.entrypoints.cli._bienes_inversion_payloads import (
+from cadrumo.entrypoints.cli.bienes_inversion_results import (
     BienesInversionDeclareResult,
     BienesInversionListResult,
     BienInversionDisposalPayload,

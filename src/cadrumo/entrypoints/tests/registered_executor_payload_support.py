@@ -80,7 +80,7 @@ from ...application.modelo.invoice_withholding_capture_contracts import (
 )
 from ...application.modelo.local_observation_contracts import ModeloLocalObservationCasillaValue
 from ...application.modelo.m360_solicitud_operation import Modelo360RepresentanteAccountInput
-from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.public_period import PublicPeriod
@@ -112,7 +112,7 @@ from ...domain.calculations.registry.tests.cross_period_seeding import resolved_
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind

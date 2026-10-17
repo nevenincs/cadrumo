@@ -28,7 +28,7 @@ from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from .cli_runner import invoke_cached_cli
+from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -433,9 +433,6 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["config", "--help"],
         ["config", "profile", "create", "--help"],
         ["config", "profile", "status", "--help"],
-        ["config", "auth", "--help"],
-        ["config", "auth", "providers", "--help"],
-        ["config", "auth", "configure", "--help"],
         ["config", "profile", "--help"],
         ["config", "profile", "edit", "--help"],
         ["config", "profile", "view", "--help"],
@@ -498,44 +495,6 @@ def test_review_filter_help_lists_supported_filter_keys() -> None:
         assert token in ledger.output
     for token in ("--kind", "--source-kind", "--state", "--modelo"):
         assert token in review.output
-
-
-def test_config_auth_accepts_supported_provider_and_rejects_others(
-    encrypted_user_cli: Path,
-) -> None:
-    register_cli_profile(
-        label="operator",
-        facts={
-            "identity.tax_id": "00000000T",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Operator",
-            "identity.surnames": "Workflow",
-            "activities.description": "Servicios",
-        },
-        log_in=False,
-    )
-
-    configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
-    unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
-    unsupported = _invoke(["config", "auth", "configure", "--provider", "unknown_provider"])
-    unsupported_test = _invoke(["config", "auth", "test", "--provider", "unknown_provider"])
-    unsupported_login = _invoke(["config", "auth", "login", "--provider", "unknown_provider"])
-    unsupported_reset = _invoke(
-        ["--format", "json", "config", "auth", "reset", "--provider", "unknown_provider", "--yes"],
-    )
-
-    assert configure.exit_code == 0, configure.output
-    assert "clave_movil" in configure.output
-    assert unsupported_spelling.exit_code != 0
-    assert "clave-movil" in unsupported_spelling.output
-    assert unsupported.exit_code != 0
-    assert "unknown_provider" in unsupported.output
-    assert unsupported_test.exit_code != 0
-    assert "unknown_provider" in unsupported_test.output
-    assert unsupported_login.exit_code != 0
-    assert "unknown_provider" in unsupported_login.output
-    assert unsupported_reset.exit_code != 0
-    assert "unknown_provider" in unsupported_reset.output
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:

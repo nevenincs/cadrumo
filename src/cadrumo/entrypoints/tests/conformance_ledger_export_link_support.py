@@ -32,7 +32,7 @@ from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,

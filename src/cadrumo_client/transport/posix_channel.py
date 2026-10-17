@@ -23,7 +23,8 @@ def _linux_peer_credentials(sock: socket.socket) -> tuple[int, int, int]:
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-def _linux_peer_pidfd_option() -> int:
+def linux_peer_pidfd_socket_option() -> int:
+    """Return the kernel peer-pidfd socket option for a supported Linux ABI."""
     if sys.platform != "linux":
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     exposed = getattr(socket, "SO_PEERPIDFD", None)
@@ -37,7 +38,7 @@ def _linux_peer_pidfd_option() -> int:
 
 
 def _linux_peer_pidfd(sock: socket.socket) -> int:
-    option = _linux_peer_pidfd_option()
+    option = linux_peer_pidfd_socket_option()
     try:
         descriptor = sock.getsockopt(socket.SOL_SOCKET, option)
     except OSError:

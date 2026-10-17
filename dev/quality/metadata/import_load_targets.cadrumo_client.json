@@ -67,6 +67,7 @@
         "cadrumo_client.commands.secret_parameters",
         "cadrumo_client.commands.secure_input",
         "cadrumo_client.commands.shared_contracts",
+        "cadrumo_client.commands.sign_in_refusal_projection",
         "cadrumo_client.commands.spec",
         "cadrumo_client.commands.spec_schema",
         "cadrumo_client.commands.stdio",

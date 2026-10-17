@@ -33,7 +33,7 @@ _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _TYPED_ACTOR = "typed by the caller"
 _AUTOMATION_LABELS = {
     OperationFrontendProjection.EXTERNAL_CLIENT: f"automation:external-client.attended.{_SESSION_CLIENT}",
-    OperationFrontendProjection.INSTALLED_SERVICE: f"automation:automation-host.attended.{_SESSION_CLIENT}",
+    OperationFrontendProjection.INSTALLED_SERVICE: f"automation:installed-service.attended.{_SESSION_CLIENT}",
 }
 """The label each automation's frontend records, written out rather than derived."""
 _FRONTENDS = pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
@@ -74,15 +74,15 @@ def test_a_ledger_write_records_the_session_label_for_an_automation_and_the_pers
     frontend: OperationFrontendProjection,
 ) -> None:
     with (
-        conformance._model_runtime_for(definition_id),
-        conformance._runtime(
+        conformance.model_runtime_for_operation(definition_id),
+        conformance.conformance_operation_runtime(
             tmp_path / definition_id,
-            cleanup=conformance._CloseWitness(),
+            cleanup=conformance.OperationRuntimeCloseWitness(),
             execution_caller_reader=_session_host(definition_id, frontend),
         ) as (driver, registry, profile_id),
     ):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        submission = conformance._seeded_conformance_submission(
+        submission = conformance.seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         payload = submission.payload

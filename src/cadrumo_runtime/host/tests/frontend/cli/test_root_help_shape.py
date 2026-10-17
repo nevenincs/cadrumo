@@ -37,6 +37,7 @@ from cadrumo.core.paths import effective_storage_root
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
+from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 
 from ._isolated_profile_storage_fixtures import _isolated_state
 from .cli_runner import invoke_cached_cli
@@ -124,12 +125,12 @@ def _run_text_process(command: list[str | Path], *, env: dict[str, str]) -> subp
     )
 
 
-def _command_path_for_help_probe(command: str) -> list[str] | None:
+def _command_path_for_help_probe(command: str) -> tuple[str, list[str]] | None:
     if " -> " in command or "rejected" in command:
         return None
     tokens = command.split()
-    assert tokens[0] == PRODUCT_IDENTITY.cli_executable
-    return [token for token in tokens[1:] if token.upper() != token]
+    assert tokens[0] in {PRODUCT_IDENTITY.cli_executable, "cadrumo-runtime"}
+    return tokens[0], [token for token in tokens[1:] if token.upper() != token]
 
 
 def test_root_help_uses_curated_two_root_shape() -> None:
@@ -226,10 +227,15 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
         document = build_help_document(surface)
         for section in document.sections:
             for entry in section.entries:
-                command_path = _command_path_for_help_probe(entry.command)
-                if command_path is None:
+                probe = _command_path_for_help_probe(entry.command)
+                if probe is None:
                     continue
-                result = _invoke([*command_path, "--help"])
+                program, command_path = probe
+                result = (
+                    invoke_runtime_cli(["--language", "en", *command_path, "--help"])
+                    if program == "cadrumo-runtime"
+                    else _invoke([*command_path, "--help"])
+                )
                 assert result.exit_code == 0, f"{entry.command}\n{result.output}"
                 assert "No such command" not in result.output
 
@@ -264,7 +270,7 @@ def test_bare_invocation_preserves_selected_profile_with_missing_manifest() -> N
 # cited command exists; it is blind to a family the help simply OMITS. Each
 # prefix is a live family: certificate credential custody and Modelo audit.
 _REQUIRED_HELP_FAMILIES: dict[str, str] = {
-    "certificate custody": "aeat config auth certificate",
+    "certificate custody": "cadrumo-runtime config auth certificate",
     "modelo audit": "aeat app modelo audit",
 }
 
@@ -331,7 +337,7 @@ def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -
     help_result = _run_text_process([cli_executable, "--language", "en", "--help"], env=env)
 
     assert version.returncode == 0, version.stderr
-    assert version.stdout == f"{PRODUCT_IDENTITY.display_name} {PACKAGE_VERSION}\n"
+    assert version.stdout.splitlines() == [f"{PRODUCT_IDENTITY.display_name} {PACKAGE_VERSION}"]
     assert help_result.returncode == 0, help_result.stderr
     assert help_result.stdout.startswith(f"{PRODUCT_IDENTITY.display_name} -")
     assert f"{PRODUCT_IDENTITY.cli_executable} config" in help_result.stdout

@@ -26,7 +26,7 @@ from pydantic import ValidationError
 from ....application.calculations.observations_repository import ObservationSourceKind
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....core.modelo import Modelo
-from .._app_live_justificante_payloads import (
+from ..app_live_justificante_results import (
     JustificanteCaptureResult,
     JustificanteSnapshotSummaryPayload,
     JustificanteViewResult,

@@ -24,9 +24,9 @@ from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope
+from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
 
-from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 
@@ -170,4 +170,8 @@ def test_m303_simplified_and_mixed_scope_refuse_the_ordinary_cli_path(
     result = _calculate(_m303_work_id())
 
     assert result.exit_code != 0, result.output
-    assert "unsupported" in result.output.lower(), result.output
+    error = require_error_document(result.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_M303_FILING_EVIDENCE", result.output
+    assert error["context"]["effect"] == "none"
+    assert error["context"]["terminal_condition"] == "refused"
+    assert error["context"]["operation_id"]

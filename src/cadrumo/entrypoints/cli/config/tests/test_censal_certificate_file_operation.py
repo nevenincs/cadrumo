@@ -46,7 +46,6 @@ from cadrumo.domain.censo.certificado import (
     CertificadoSituacionCensal,
 )
 from cadrumo.domain.user_profile.values import UserProfileRecord
-from cadrumo.entrypoints.cli.config._censo_payloads import CensoFactPayload, CensoFileIngestResult
 from cadrumo.tests.command_line_rendering import (
     Printed,
     as_the_command_line_renders,
@@ -54,6 +53,8 @@ from cadrumo.tests.command_line_rendering import (
     json_document,
     redacted_as_printed,
 )
+
+from ..censo_results import CensoFactPayload, CensoFileIngestResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

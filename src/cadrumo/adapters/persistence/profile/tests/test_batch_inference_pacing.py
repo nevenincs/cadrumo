@@ -32,8 +32,8 @@ from .....application.provisioning import (
 from .....core.config import load_settings, override_settings
 from .....core.hardware import AcceleratorKind
 from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .....domain.iva.classification import InvoiceKind
 from .....domain.iva.regime_legend import resolve_regime_legends
+from .....domain.iva.schema import InvoiceKind
 from .....tests.loopback_llm import SilentLoopbackHandler, serving_loopback
 from ...storage.attachment import AttachmentStore
 from ...storage.tests.secure_sql import TestRuntimeProfile

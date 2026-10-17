@@ -37,11 +37,11 @@ from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicabi
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import (
     registry_component_catalogue,
 )
 from ....domain.iva.flow import derive_flow_for_classification, is_deducible_flow
+from ....domain.iva.schema import InvoiceKind
 from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger import resolve_iva_ledger_binding_values
 

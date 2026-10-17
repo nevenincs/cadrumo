@@ -8,7 +8,6 @@ from uuid import UUID
 import typer
 
 from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod
-from cadrumo_client.commands.profile_binding import bound_profile_client
 from cadrumo_client.commands.secure_input import ProfileSecretSelection
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -40,6 +39,8 @@ def require_bound_profile_connection(
     credential_reference: UUID | None,
 ) -> None:
     """Consume an injected service; the product never opens its managing host."""
+    from cadrumo_client.commands.profile_binding import bound_profile_client
+
     client = bound_profile_client(ctx)
     if target_bucket_id is not None and str(client.profile_id) != target_bucket_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)

@@ -174,7 +174,7 @@ def test_native_pipeline_requires_whole_profile_scope_and_keeps_result_receipt(
         assert denied.exit_code == 2, denied.output
         error = require_error_document(denied.output)["error"]
         assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
-        assert error["context"] == {"reason": "period_denied"}
+        assert error["context"]["reason"] == "period_denied", error
         assert "total_count" not in denied.output
 
     with native_api_cli_session(

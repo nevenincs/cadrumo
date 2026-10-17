@@ -25,6 +25,7 @@ from cadrumo_client.commands.shared_contracts import (
 )
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+from cadrumo_runtime.commands.command_targets import resolve_deferred_target
 
 from .access_management_specs import RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS
 from .auth_specs import AUTH_COMMAND_SPECS
@@ -219,7 +220,8 @@ RUNTIME_COMMAND_GRAPH = CommandSpecGraph(
         *RUNTIME_GOOGLE_AUTH_COMMAND_SPECS,
         *RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS,
         *RUNTIME_RECOVERY_COMMAND_SPECS,
-    )
+    ),
+    resolver=resolve_deferred_target,
 )
 
 __all__ = ["RUNTIME_COMMAND_GRAPH"]

@@ -18,9 +18,9 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
-from cadrumo_runtime.commands.tests.diagnostics_native_support import diagnostics_native_profile
+from cadrumo_runtime.commands.tests.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
-from cadrumo_runtime.host.tests.frontend.cli.profile_password_cli import invoke_with_profile_password
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_unbound_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -36,7 +36,7 @@ _BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 def _invoke(args: list[str], profile: NativeCliProfileFixture) -> Result:
     if profile.label is None:
         raise AssertionError("native diagnostics profile was not registered")
-    return invoke_with_profile_password(args, label=profile.label)
+    return invoke_diagnostics_cli(args, profile=profile, invoke_cli=invoke_unbound_cli)
 
 
 def _seed_runs() -> None:
@@ -168,7 +168,7 @@ def test_runs_rejects_malformed_date(diagnostics_native_profile: NativeCliProfil
         diagnostics_native_profile,
     )
     assert result.exit_code != 0
-    assert "ISO date" in result.output
+    assert "ISO date" in result.output, result.output
 
 
 def test_runs_rejects_nonpositive_limit(diagnostics_native_profile: NativeCliProfileFixture) -> None:

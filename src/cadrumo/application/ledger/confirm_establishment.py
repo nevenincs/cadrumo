@@ -71,10 +71,9 @@ from ...core.confirmation_gate import ConfirmationBlockReason
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
-from ...domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ...domain.iva.establishment import record_country_code_status
 from ...domain.iva.regime_legend import RegimeLegend
-from ...domain.iva.schema import IvaCategory, IvaRateKind
+from ...domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ...domain.iva.supply_nature import (
     SupplyNature,
     SupplyNatureDerivationOutcome,

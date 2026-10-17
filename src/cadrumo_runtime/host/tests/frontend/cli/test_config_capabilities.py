@@ -131,12 +131,11 @@ def test_set_disables_a_capability_and_show_reflects_it() -> None:
 @pytest.mark.parametrize(
     "argv",
     [
-        ["app", "modelo", "spreadsheet", "push", "--modelo", "303", "--period", "1T", "--year", "2025"],
         ["app", "modelo", "spreadsheet", "publish", "--calculation-revision-id", "0" * 64, "--accept-readable-export"],
         ["config", "profile", "archive", "push"],
         ["config", "google", "probe", "--no-read-only"],
     ],
-    ids=["spreadsheet-push", "spreadsheet-publish", "archive-push", "probe-write"],
+    ids=["spreadsheet-publish", "archive-push", "probe-write"],
 )
 def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[str]) -> None:
     """Every Google-write CLI leaf is gated on google_export, not just `export`.
@@ -151,6 +150,24 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
     assert result.exit_code != 0, result.output
     combined = result.output + str(result.exception or "")
     assert "Google export is disabled" in combined, combined
+
+
+def test_legacy_template_push_is_unavailable_even_with_google_export_enabled() -> None:
+    """Template push cannot bypass the saved-revision publication review.
+
+    The accepted outbound-review decision retires template creation as a
+    publication route. Its historical registration has no access resolver;
+    enabling the capability must never make that route executable.
+    """
+    assert _show()["google_export"]["enabled"] is True
+    argv = ["app", "modelo", "spreadsheet", "push", "--modelo", "303", "--period", "1T", "--year", "2025"]
+    for disabled in (False, True):
+        if disabled:
+            off = _invoke(["config", "profile", "capabilities", "set", "google_export", "off"])
+            assert off.exit_code == 0, off.output
+        result = _invoke_as_operator(argv)
+        assert result.exit_code != 0, result.output
+        assert "operation_unavailable" in result.output, result.output
 
 
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:

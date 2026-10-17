@@ -32,9 +32,10 @@ from ...core.operations import OperationEffect
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.modelo_localization import require_modelo_localization
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ._modelo_payloads import CalculationRevisionPayload
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ._modelo_rendering import casilla_inline_trace, casilla_trace_verbose_line
 from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, SourceProvenancePayload
+from .modelo_results import CalculationRevisionPayload
 from .modelo_revision_rendering import calculation_revision_state_label
 
 #: How long the command waits for one calculation to settle in the profile
@@ -132,7 +133,10 @@ def run_modelo_work_calculation(
         not isinstance(result, ModeloWorkCalculatePublicResultV2)
         or result.unit.bucket_id != str(client.profile_id)
         or result.work_unit_id != request.work_unit_id
-        or result.unit.current_calculation_revision_id != result.calculation_revision_id
+        or (
+            (result.revision_published or result.calculation.state is CalculationRevisionState.BORRADOR)
+            and result.unit.current_calculation_revision_id != result.calculation_revision_id
+        )
         or (result.revision_published and completed.effect is not OperationEffect.UPDATED)
         or completed.effect is OperationEffect.PARTIAL
     ):

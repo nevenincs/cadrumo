@@ -46,7 +46,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

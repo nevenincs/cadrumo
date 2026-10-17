@@ -30,6 +30,7 @@ from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS
 from dev._paths import REPO_ROOT
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 from dev.deploy.docs_delivery_contracts import DELIVERY_CREDENTIAL_ENV
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
 from dev.packaging.native.application_environment import ApplicationEnvironment, load
 
 from ..env_reference import render_environment_reference, render_installed_package, target_path
@@ -45,6 +46,7 @@ _KEY_RE = re.compile(r"^#?\s*([A-Z][A-Z0-9_]+)=", re.MULTILINE)
 _DEVELOPMENT_TOOLING_KEYS = frozenset(
     {
         DEV_CACHE_ROOT_ENV,
+        GOOGLE_OAUTH_ENV,
         *DELIVERY_CREDENTIAL_ENV,
         *(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()),
         "CADRUMO_NATIVE_BUILD_ROOT",

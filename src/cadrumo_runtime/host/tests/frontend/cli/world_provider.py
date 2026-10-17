@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -10,7 +10,12 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
-from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import ApiProbeSession, BackendKind, HumanProbeSession
+from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import (
+    ApiProbeSession,
+    BackendKind,
+    HumanProbeSession,
+    RegisteredCliProfile,
+)
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from ._cli_surface_support import _active_bucket_id, create_cli_surface_profile, isolated_cli_surface_backend
@@ -24,6 +29,30 @@ from .runtime_profile_backend import (
 
 class RuntimeCliWorldProvider:
     """Supply existing custody-backed worlds without changing their implementation."""
+
+    @contextmanager
+    def native_profile(self, tmp_path: Path) -> Generator[RegisteredCliProfile]:
+        """Retain the native runtime fixture until its tax assertions finish."""
+        from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+
+        with native_cli_profile_scope(tmp_path) as profile:
+            yield profile
+
+    @contextmanager
+    def profile_server(self, storage_root: Path) -> Generator[None]:
+        """Retain the existing native profile server for caller-owned storage."""
+        from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+
+        with native_cli_profile_server(storage_root):
+            yield
+
+    def seeded_profile(
+        self, *, label: str, facts: Mapping[str, str] | None = None, complete: bool = True
+    ) -> HumanProbeSession:
+        """Use the existing per-test seeder while its retained host scope is active."""
+        from .modelo_profile_seed import seed_test_profile
+
+        return seed_test_profile(label=label, facts=facts, complete=complete)
 
     @contextmanager
     def human_probe(

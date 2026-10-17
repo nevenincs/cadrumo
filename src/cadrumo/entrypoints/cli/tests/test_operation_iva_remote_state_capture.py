@@ -27,9 +27,9 @@ from ....application.live.remote_state_models import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from .. import _app_live as handler
+from .. import app_live_commands as handler
 from .. import operation_iva_remote_state_capture as bridge
-from .._app_live_iva_wallet_payloads import IvaWalletPullEvidenceResult
+from ..app_live_iva_wallet_results import IvaWalletPullEvidenceResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

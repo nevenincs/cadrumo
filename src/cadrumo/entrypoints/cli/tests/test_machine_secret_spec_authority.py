@@ -6,6 +6,7 @@ from dataclasses import asdict, replace
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
@@ -14,7 +15,6 @@ from cadrumo_client.commands.secret_contracts import (
 )
 from cadrumo_client.commands.secure_input import MachineSecretPayload
 from cadrumo_client.commands.shared_contracts import DeferredTarget
-from cadrumo_client.commands.target import resolve_deferred_target
 
 from ..command_schema import command_registration_metadata
 from ..command_specs import COMMAND_GRAPH

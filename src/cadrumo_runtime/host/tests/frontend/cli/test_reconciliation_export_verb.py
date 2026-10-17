@@ -12,7 +12,7 @@ from click.testing import Result
 from cadrumo.adapters.inbound.justificante.parser import parse_justificante
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.application.modelo.reconciliation import prepare_parsed_justificante
-from cadrumo.application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+from cadrumo.application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.cli.tests.modelo_review_package_support import seed_exportable_modelo_revision
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope

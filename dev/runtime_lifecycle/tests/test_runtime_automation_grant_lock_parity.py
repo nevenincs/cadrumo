@@ -69,16 +69,8 @@ from cadrumo.core.json_contract import SchemaEnvelope
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
-from cadrumo_runtime.host.frontend.tui import installed_session
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
-from cadrumo_runtime.host.frontend.tui.launcher import main
-from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo_runtime.host.frontend.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
-from cadrumo_runtime.host.frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
-from cadrumo_runtime.host.frontend.tui.secret.runtime_login import RuntimeLoginScreen
-from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_client.commands.access_management_payloads import ConfigProfileAutomationInspectResult
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.registered_operation import run_registered_operation
@@ -97,6 +89,15 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
+from cadrumo_runtime.host.frontend.tui import installed_session
+from cadrumo_runtime.host.frontend.tui.launcher import main
+from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
+from cadrumo_runtime.host.frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo_runtime.host.frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
+from cadrumo_runtime.host.frontend.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -142,7 +143,7 @@ def _grant_scope() -> AccessScope:
 
 def _cli_inspect(profile_id: UUID, request_id: UUID) -> ConfigProfileAutomationInspectResult:
     result: Result = invoke_typer_app(
-        build_command_app(RUNTIME_COMMAND_GRAPH),
+        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
         (
             "--format",
             "json",

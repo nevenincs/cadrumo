@@ -13,11 +13,21 @@ from cadrumo.adapters.persistence.profile.tests.published_authority_support impo
 from cadrumo.core.config import reset_settings_cache
 from cadrumo.core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from cadrumo.core.i18n.render import clear_output_language_cache
-from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
+from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
+from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs, CliInvocation
 from cadrumo.tests.env import temporary_env
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .cli_runner import bind_public_cli_runner, invoke_cached_cli, operator_runtime_scope
+
+
+@pytest.fixture(autouse=True)
+def _injected_tax_cli_ports(
+    cli_runtime_lifetime: None, cli_world_provider: CliWorldProvider, invoke_cli: CliInvocation
+) -> Iterator[None]:
+    """Compose product-owned scenario helpers at the host's fixture lifetime seam."""
+    with bind_cli_fixture_ports(cli_world_provider, invoke_cli):
+        yield
 
 
 @pytest.hookimpl(wrapper=True)
@@ -36,9 +46,9 @@ def pytest_runtest_call(item: pytest.Item) -> object:
         return (yield)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def _bind_public_aeat_runner(run_cadrumo_cli: Callable[..., Result]) -> Iterator[None]:
-    """Inject the repository-root public AEAT runner into runtime test support."""
+    """Bind the session runner before module-scoped profiles invoke the CLI."""
     with bind_public_cli_runner(run_cadrumo_cli):
         yield
 

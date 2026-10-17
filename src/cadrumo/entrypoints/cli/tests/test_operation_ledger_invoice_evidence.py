@@ -28,7 +28,7 @@ from ....application.ledger.invoice_evidence_extract_operation import (
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceConfirmationProjectionV1
 from ....application.operations.models import OperationId
 from ....core.operations import OperationEffect, profile_operation_subject
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from .. import operation_ledger_invoice_evidence as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

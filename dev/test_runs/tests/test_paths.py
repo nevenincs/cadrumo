@@ -25,7 +25,9 @@ from ..paths import (
     run_log_roots,
     scratch_base,
     scratch_environment,
-    test_log_root,
+)
+from ..paths import (
+    test_log_root as configured_test_log_root,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -50,7 +52,7 @@ def test_every_base_a_run_can_land_under_is_enumerated() -> None:
     """
     bases = run_log_bases()
 
-    assert test_log_root() in bases, "configured run families would be left unreaped"
+    assert configured_test_log_root() in bases, "configured run families would be left unreaped"
     assert REPO_ROOT in bases, "legacy repository run families would be left unreaped"
     assert Path(tempfile.gettempdir()) in bases, "pytest controller runs would be left unreaped"
     conftest = (REPO_ROOT / "conftest.py").read_text(encoding="utf-8")

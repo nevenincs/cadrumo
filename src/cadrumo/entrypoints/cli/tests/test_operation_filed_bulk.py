@@ -31,10 +31,10 @@ from ....application.modelo.filing_chain_reconciliation import FilingReconciliat
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from .. import _app_live as handler
+from .. import app_live_commands as handler
 from .. import operation_filed_bulk as bridge
 from .. import operation_profile_operation as profile_operation
-from .._app_live_filed_payloads import FiledCaptureResult
+from ..app_live_filed_results import FiledCaptureResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

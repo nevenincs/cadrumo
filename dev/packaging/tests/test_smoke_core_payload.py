@@ -201,7 +201,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
 def _seed_shipped_data_repository(origin: Path) -> set[str]:
     """Plant a minimal shipped-data tree with one ignore rule, no version control."""
     (origin / ".gitignore").write_text(
-        "__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n",
+        f"__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n/{GOOGLE_OAUTH_RESOURCE}\n",
         encoding="utf-8",
     )
     source_paths = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *_MANUAL_PDF_PRESENCE_FLOOR}
@@ -352,6 +352,26 @@ def _write_corpus_sdist(path: Path, corpus_members: set[str]) -> Path:
             info.size = 1
             archive.addfile(info, io.BytesIO(b"x"))
     return path
+
+
+def test_sdist_refuses_declared_authoring_input_exclusions(tmp_path: Path) -> None:
+    archive_path = tmp_path / "authoring-leak.tar.gz"
+    member = "src/cadrumo/_data/registry/aeat/modelos/303/revision.toml"
+    with tarfile.open(archive_path, "w:gz") as archive:
+        info = tarfile.TarInfo(f"cadrumo-0.0.0/{member}")
+        info.size = 1
+        archive.addfile(info, io.BytesIO(b"x"))
+    with pytest.raises(SystemExit, match="sdist leaked configured exclusions"):
+        _assert_sdist_contains_expected_data(
+            archive_path,
+            set(),
+            corpus_binary_suffixes=(".pdf",),
+            excluded_patterns=("src/cadrumo/_data/registry/aeat/**",),
+        )
+    with pytest.raises(SystemExit, match="sdist is missing"):
+        _assert_sdist_contains_expected_data(
+            archive_path, {"src/cadrumo/_data/required.json"}, corpus_binary_suffixes=(".pdf",)
+        )
 
 
 def test_sdist_leak_check_screens_the_configured_suffixes_and_only_those(tmp_path: Path) -> None:

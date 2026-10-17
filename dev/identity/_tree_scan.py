@@ -152,6 +152,15 @@ SCANNED_SUFFIXES: frozenset[str] = DATA_SUFFIXES | NARRATIVE_SUFFIXES
 #: covers nothing is a claim about the tree that stopped being true, and it must
 #: be deleted rather than left standing as a widening nobody re-reads.
 EXCLUDED_PATH_FRAGMENTS: dict[str, str] = {
+    "/_data/registry/aeat/facts/0147-aeat-eedd-development-mock-software-identity.toml": (
+        "published AEAT development-software identity required by official EEDD mock filing, not a taxpayer identity"
+    ),
+    "/dev/agent_eval/live/scenarios/modelo_130_dr130.toml": (
+        "live evaluation fixture uses the canonical synthetic taxpayer identity, not a private operator profile"
+    ),
+    "/dev/agent_eval/live/scenarios/modelo_303_quarter.toml": (
+        "live evaluation fixture uses the canonical synthetic taxpayer identity, not a private operator profile"
+    ),
     "/tests/": (
         "the project uses structurally valid synthetic identities in fixtures as established "
         "practice; the convention is undeclared, which is what keeps this corpus ungateable"
@@ -216,6 +225,7 @@ UNENUMERATED_PATH_FRAGMENTS: dict[str, str] = {
 #: gate. The cost is real and is stated rather than glossed: an identity dropped
 #: into a scratch or runtime-state directory is NOT covered by this canary.
 UNENUMERATED_ROOT_PREFIXES: dict[str, str] = {
+    "build": "generated native and distribution staging trees, rebuilt from the repository's visible sources",
     "tmp": "operator and agent scratch trees, transient working directories rather than repository content",
     ".tmp": "the dot-prefixed spelling of the same scratch convention",
     "scratch": "explicitly named scratch working directory",

@@ -21,6 +21,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ...application.modelo.reconciliation_list_operation import ModeloReconciliationListEntryProjection
 from ...application.modelo.reconciliation_pull_operation import (
@@ -28,7 +29,6 @@ from ...application.modelo.reconciliation_pull_operation import (
     ModeloReconciliationPullRequest,
 )
 from ...application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
@@ -95,7 +95,9 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
 
     monkeypatch.setattr(ModeloReconciliationPersistence, "persist_with_event", guarded_persist)
 
-    with conformance._runtime(tmp_path / "modelo-reconciliation-pull", cleanup=conformance._CloseWitness()) as (
+    with conformance.conformance_operation_runtime(
+        tmp_path / "modelo-reconciliation-pull", cleanup=conformance.OperationRuntimeCloseWitness()
+    ) as (
         driver,
         registry,
         profile_id,

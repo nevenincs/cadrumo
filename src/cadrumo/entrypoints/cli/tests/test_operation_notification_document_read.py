@@ -27,9 +27,9 @@ from ....application.live.notification_document_read_operation import (
 )
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import _app_live_notifications_cli as handler
+from .. import app_live_notifications_commands as handler
 from .. import operation_notification_document_read as bridge
-from .._app_live_notifications_payloads import (
+from ..app_live_notifications_results import (
     NotificationDocumentHistoryResult,
     NotificationDocumentViewResult,
     SancionReadingPayload,

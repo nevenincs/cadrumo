@@ -90,8 +90,7 @@ from typing import TYPE_CHECKING, Self, override
 
 from ...core.registry_token import StrictRegistryToken
 from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from .classification import InvoiceKind
-from .schema import IvaCategory
+from .schema import InvoiceKind, IvaCategory
 
 if TYPE_CHECKING:
     from ..calculations.registry.iva_flow_catalogue import IvaFlowDirectionCatalogue

@@ -192,8 +192,8 @@ def test_native_work_list_and_select_preserve_default_and_discarded_order(
         foreign = _invoke_work(fixture, "list", "--bucket-id", str(uuid4()))
         assert foreign.exit_code == 2, foreign.output
         error = require_error_document(foreign.output)["error"]
-        assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
-        assert error["context"] == {"reason": "profile_mismatch"}
+        assert error["code"] == "REFUSED_RUNTIME_FRONTEND", error
+        assert error["context"] == {"reason": "profile_mismatch", "request_faults": "", "sign_in": "null"}, error
 
 
 def test_native_api_work_list_requires_unbounded_period_scope(tmp_path: Path, run_cadrumo_cli) -> None:
@@ -209,8 +209,8 @@ def test_native_api_work_list_requires_unbounded_period_scope(tmp_path: Path, ru
         refused = finite.invoke_credential_reference("app", "modelo", "work", "list")
         assert refused.exit_code == 2, refused.output
         error = require_error_document(refused.output)["error"]
-        assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
-        assert error["context"] == {"reason": "period_denied"}
+        assert error["code"] == "REFUSED_RUNTIME_FRONTEND", error
+        assert error["context"]["reason"] == "period_denied", error
         assert "work_unit_count" not in refused.output
 
     with native_api_cli_session(

@@ -18,7 +18,6 @@ from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from cadrumo_client.commands.secure_input import MachineSecretSelection, ProfileSecretSelection
-    from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
     from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.user_profile.session_admission import ProfileCredentialRequestV1
@@ -77,36 +76,6 @@ def session_refusal_translation_key(
         if refusal in _LOGGED_OUT_REFUSALS
         else "cli.config.errors.profile_session_expired"
     )
-
-
-def session_refusal_context(
-    refusal: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None = None
-) -> dict[str, object]:
-    """Return the refusal's public facts, naming the binding when there is one."""
-    context: dict[str, object] = {"reason": (binding or refusal).value, "sign_in_reason": refusal.value}
-    if binding is not None:
-        context["sign_in_binding"] = binding.value
-    return context
-
-
-def raise_connection_refusal(error: FrontendRefusedError) -> Never:
-    """Carry a connection sign-in refusal to the operator without collapsing it.
-
-    The service code and context cross unchanged, so a reader of the
-    envelope sees the same facts; the message names the typed reason, and a
-    throttle names the seconds left.
-    """
-    from ...application.user_profile.access_contracts import AccessDenialCode
-
-    sign_in = error.sign_in
-    key: str | None = None
-    if sign_in is not None and sign_in.reason == "throttled":
-        key = "errors.refused.refused_profile_login_throttled"
-    elif sign_in is not None and isinstance(sign_in.reason, ProfileSessionRefusalReason):
-        key = session_refusal_translation_key(sign_in.reason, sign_in.binding)
-    elif error.reason == AccessDenialCode.PROFILE_LOCKED.value:
-        key = "errors.refused.profile_locked"
-    raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=key) from None
 
 
 def _common() -> Any:
@@ -448,8 +417,6 @@ __all__ = [
     "activate_profile_session",
     "bind_profile_target",
     "normalize_ambient_profile",
-    "raise_connection_refusal",
-    "session_refusal_context",
     "session_refusal_translation_key",
 ]
 

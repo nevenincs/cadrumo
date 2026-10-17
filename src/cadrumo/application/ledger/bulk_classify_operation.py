@@ -11,7 +11,9 @@ from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 
+from ...core.config import override_settings
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
@@ -77,6 +79,7 @@ class LedgerBulkClassifyRequest(BaseModel):
     profile_id: UUID
     csv_text: Annotated[str, Field(max_length=SUBMISSION_PAYLOAD_MAX_BYTES, repr=False)]
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerBulkClassifyProjection(BaseModel):
@@ -156,15 +159,22 @@ class LedgerBulkClassifyExecutor:
             ports,
             transaction_repository=RevisionGuardedTrackedLedgerTransactionRepository(repository, tracker),
         )
-        try:
-            result = await run_with_ledger_commit_fence(
-                lambda: bulk_classify_from_csv(
+
+        def classify() -> BulkClassifyResult:
+            # Row refusal reasons cross the worker boundary already rendered.
+            # Use this invocation's locale rather than the worker's startup locale.
+            with override_settings(cadrumo_output_language=payload.output_language.value):
+                return bulk_classify_from_csv(
                     bucket_id=bucket_id,
                     csv_text=payload.csv_text,
                     actor=actor,
                     source_command=_CLI_SOURCE_COMMAND,
                     ports=tracked_ports,
-                ),
+                )
+
+        try:
+            result = await run_with_ledger_commit_fence(
+                classify,
                 tracker=tracker,
                 context=context,
                 task_name=LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,

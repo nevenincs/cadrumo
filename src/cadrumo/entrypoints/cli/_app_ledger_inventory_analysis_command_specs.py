@@ -151,7 +151,9 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("._ledger_inventory_cli", "inventory_movement_add", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_inventory_commands", "inventory_movement_add", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_business_payloads", "InventoryMovementAddResult", __package__),
@@ -172,7 +174,7 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_6,
         handler=LazyBinding.available(
-            DeferredTarget("._ledger_inventory_cli", "inventory_valuation_preview", __package__)
+            DeferredTarget(".ledger_inventory_commands", "inventory_valuation_preview", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

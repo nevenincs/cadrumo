@@ -29,9 +29,12 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    create_modelo_operator_profile,
+    invoke_modelo_scenario_cli,
+)
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
-from ._modelo_work_ux_support import _create_profile, _invoke
 from .modelo_profile_seed import seed_profile
 
 __all__ = ["_isolated_cli_backend", "seed_profile"]
@@ -49,7 +52,7 @@ def _calculate_m130_draft() -> str:
     07 (resultado parcial apartado I) = 20 % x 8.000 = 1.600,00 EUR.
     """
 
-    created = _invoke(
+    created = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
@@ -65,7 +68,7 @@ def _calculate_m130_draft() -> str:
     seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR, source_key="trace")
     seed_m130_expense_transaction(amount=Decimal("4000.00"), filing_year=_FILING_YEAR, source_key="trace")
 
-    calculated = _invoke(
+    calculated = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -93,10 +96,10 @@ def test_work_revision_renders_inline_formula_trace_for_computed_casilla() -> No
     default review surface, sourced from the stored engine entry.
     """
 
-    _create_profile()
+    create_modelo_operator_profile()
     revision_id = _calculate_m130_draft()
 
-    shown = _invoke(["app", "modelo", "work", "revision", revision_id])
+    shown = invoke_modelo_scenario_cli(["app", "modelo", "work", "revision", revision_id])
     assert shown.exit_code == 0, shown.output
     assert "Traceback" not in shown.output
 
@@ -112,10 +115,10 @@ def test_work_revision_input_casilla_renders_value_without_trace() -> None:
     ``= ... =`` trace appended.
     """
 
-    _create_profile()
+    create_modelo_operator_profile()
     revision_id = _calculate_m130_draft()
 
-    shown = _invoke(["app", "modelo", "work", "revision", revision_id])
+    shown = invoke_modelo_scenario_cli(["app", "modelo", "work", "revision", revision_id])
     assert shown.exit_code == 0, shown.output
 
     casilla_01_line = next(line for line in shown.output.splitlines() if line.startswith("casilla\t01\t"))
@@ -131,10 +134,10 @@ def test_work_revision_verbose_exposes_full_ledger_entry() -> None:
     operand_casilla_refs and operand_values.
     """
 
-    _create_profile()
+    create_modelo_operator_profile()
     revision_id = _calculate_m130_draft()
 
-    verbose = _invoke(["app", "modelo", "work", "revision", revision_id, "--verbose"])
+    verbose = invoke_modelo_scenario_cli(["app", "modelo", "work", "revision", revision_id, "--verbose"])
     assert verbose.exit_code == 0, verbose.output
 
     trace_line = next(line for line in verbose.output.splitlines() if line.lstrip().startswith("trace\t07\t"))
@@ -146,7 +149,7 @@ def test_work_revision_verbose_exposes_full_ledger_entry() -> None:
 
     # The verbose entry line appears only under --verbose; the default surface
     # carries the inline trace but not the expanded entry row.
-    default = _invoke(["app", "modelo", "work", "revision", revision_id])
+    default = invoke_modelo_scenario_cli(["app", "modelo", "work", "revision", revision_id])
     assert default.exit_code == 0, default.output
     assert not any(line.lstrip().startswith("trace\t07\t") for line in default.output.splitlines())
 
@@ -159,10 +162,10 @@ def test_work_revision_json_observation_carries_formula_op() -> None:
     affordance, so the structured contract never depends on it.
     """
 
-    _create_profile()
+    create_modelo_operator_profile()
     revision_id = _calculate_m130_draft()
 
-    shown = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    shown = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "revision", revision_id])
     assert shown.exit_code == 0, shown.output
     payload = _payload(shown.output)
 

@@ -32,8 +32,7 @@ from ...core.aggregation import IntracomOperationType
 from ...core.hashing import sha256_file
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ._ledger_support import ledger_invoice_validation_no_recovery
 
 

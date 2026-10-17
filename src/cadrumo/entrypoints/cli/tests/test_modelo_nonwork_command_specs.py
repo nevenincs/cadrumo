@@ -322,11 +322,11 @@ def test_work_amend_wizard_parameters_reuse_the_canonical_work_kernel() -> None:
     assert all(actual is expected for actual, expected in zip(wizard.parameters[1:6], _ADDRESS, strict=True))
     assert wizard.policy is _INTERACTIVE_MODEL_WRITE
     assert wizard.handler is not None and wizard.handler.target is not None
-    assert wizard.handler.target.module == "cadrumo.entrypoints.cli._modelo_amend_wizard_cli"
+    assert wizard.handler.target.module == "cadrumo.entrypoints.cli.modelo_amend_wizard_commands"
     assert wizard.handler.target.qualname == "work_amend_wizard"
     assert wizard.result_schema.state is SchemaState.TARGET
     assert wizard.result_schema.target is not None
-    assert wizard.result_schema.target.module == "cadrumo.entrypoints.cli._modelo_amend_wizard_payloads"
+    assert wizard.result_schema.target.module == "cadrumo.entrypoints.cli.modelo_amend_wizard_results"
     assert wizard.result_schema.target.qualname == "WorkAmendWizardResult"
     assert wizard.result_schema.identity == "modelo.work.amend_wizard"
     assert COMMAND_GRAPH.resolve_path(("aeat", "app", "modelo", "work", "amend-wizard")) is wizard

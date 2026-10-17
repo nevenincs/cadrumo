@@ -85,7 +85,11 @@ async def test_profile_chooser_routes_current_selection_to_the_runtime_opener() 
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
     screen = RuntimeLoginScreen(
-        choices=choices, preselected=choices[0].profile_id, open_client=open_client, accept_handoff=lambda _: False
+        choices=choices,
+        preselected=choices[0].profile_id,
+        auto_resume=False,
+        open_client=open_client,
+        accept_handoff=lambda _: False,
     )
     host = ScreenHostApp(screen)
     async with host.run_test(size=(140, 60)) as pilot:
@@ -99,7 +103,7 @@ async def test_profile_chooser_routes_current_selection_to_the_runtime_opener() 
         await pilot.click("#runtime-login-submit")
         await host.workers.wait_for_complete()
         await pilot.pause()
-        assert opened == [UUID(choices[1].profile_id)]
+        assert opened == [UUID(choices[1].profile_id)], opened
         assert field.value == ""
         assert screen.is_mounted and host.return_value is None
         assert screen.query_one("#runtime-login-status", PinnedStatusBar).tone == "error"

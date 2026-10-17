@@ -235,8 +235,8 @@ def test_a_work_target_without_a_calculation_is_refused_with_its_address(
 
     assert refused.exit_code != 0
     message = str(require_error_document(refused.output)["error"]["message"])
-    assert work_unit_id in message
-    assert "111" in message
+    assert work_unit_id in message, refused.output
+    assert "111" in message, refused.output
     assert not output.exists()
 
 

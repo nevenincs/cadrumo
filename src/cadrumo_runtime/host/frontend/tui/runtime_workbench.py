@@ -37,6 +37,7 @@ from cadrumo.entrypoints.tui.historical_export import HistoricalFilingExportScre
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.installation.destination import installation_screen_factory
 from cadrumo.entrypoints.tui.ledger.routes import ledger_screen_factory
+from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceRefreshV1
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from cadrumo.entrypoints.tui.modelo.workbench.factory import compose_installed_modelo_workbench_factory
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1, TuiScreenFactoryV1, build_destination_catalogue
@@ -63,6 +64,10 @@ from .runtime_account_session import (
 from .runtime_actividad_asset import compose_runtime_activity_asset_actions
 from .runtime_evidence import RuntimeEvidenceTuiDoorV1
 from .runtime_invoice_add import compose_runtime_invoice_add_door
+from .runtime_ledger_classification import (
+    RuntimeLedgerClassificationTuiDoorV1,
+    build_runtime_ledger_classification_patch,
+)
 from .runtime_ledger_import import compose_runtime_ledger_import_door
 from .runtime_own_accounts import compose_runtime_own_account_door
 
@@ -348,19 +353,57 @@ class RuntimeWorkbenchRoot:
             return None
         if generation.ledger.projection is None:
             raise RefusalError(RefusalCode.INVALID_FRAME)
-        return ledger_screen_factory(
-            generation.ledger.projection,
-            review_action=_action("operator.ledger.review"),
-            evidence_action=_action("operator.ledger.evidence.review.list"),
-            activity_asset_actions=compose_runtime_activity_asset_actions(self._client, profile_label=self._label),
-            invoice_add_door=compose_runtime_invoice_add_door(
-                client=self._client,
-                profile_label=self._label,
-            ),
-            evidence_door=RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label),
-            own_account_door=compose_runtime_own_account_door(client=self._client, profile_label=self._label),
-            import_door=compose_runtime_ledger_import_door(client=self._client, profile_label=self._label),
-        )
+        current = generation.ledger.projection
+        current_lock = Lock()
+        with self._language_guard:
+            current_epoch = self._language_epoch
+        classification = RuntimeLedgerClassificationTuiDoorV1(self._client, profile_label=self._label)
+        assets = compose_runtime_activity_asset_actions(self._client, profile_label=self._label)
+        invoice_add = compose_runtime_invoice_add_door(client=self._client, profile_label=self._label)
+        evidence = RuntimeEvidenceTuiDoorV1(self._client, profile_label=self._label)
+        own_accounts = compose_runtime_own_account_door(client=self._client, profile_label=self._label)
+        imports = compose_runtime_ledger_import_door(client=self._client, profile_label=self._label)
+
+        def refresh_ledger() -> LedgerWorkspaceRefreshV1:
+            nonlocal current, current_epoch
+            capture = self._read()
+            self._require_binding()
+            captured = capture.generation
+            projection = captured.ledger.projection
+            if (
+                captured.ledger_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
+                or projection is None
+            ):
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+            with self._language_guard:
+                if capture.language_epoch != self._language_epoch:
+                    raise RefusalError(RefusalCode.UNAVAILABLE)
+                with current_lock:
+                    current, current_epoch = projection, capture.language_epoch
+            return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=None)
+
+        def create(context: TuiScreenContextV1) -> Screen[None]:
+            self._require_binding()
+            with self._language_guard, current_lock:
+                if current_epoch != self._language_epoch:
+                    raise RefusalError(RefusalCode.UNAVAILABLE)
+                projection = current
+            return ledger_screen_factory(
+                projection,
+                review_action=_action("operator.ledger.review"),
+                classify_action=_action("operator.ledger.classify"),
+                classification_submitter=classification,
+                classification_patch_builder=build_runtime_ledger_classification_patch,
+                refresh=refresh_ledger,
+                evidence_action=_action("operator.ledger.evidence.review.list"),
+                activity_asset_actions=assets,
+                invoice_add_door=invoice_add,
+                evidence_door=evidence,
+                own_account_door=own_accounts,
+                import_door=imports,
+            )(context)
+
+        return create
 
     def _aeat_sync_factory(self, generation: WorkbenchGenerationV1) -> TuiScreenFactoryV1 | None:
         if generation.aeat_sync_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:

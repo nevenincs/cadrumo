@@ -17,7 +17,7 @@ import pytest
 
 from cadrumo.adapters.inbound.financial.providers.csv import CsvProvider
 from cadrumo.domain.transactions.models import derive_transaction_id
-from cadrumo.entrypoints.tests.ledger_corpus_support import _match
+from cadrumo.entrypoints.tests.ledger_corpus_support import match_corpus_rule
 from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
 
@@ -47,7 +47,7 @@ def _expected_csv_text() -> str:
     lines = ["transaction_id,classification,category_id"]
     for parsed in CsvProvider().ingest(_CORPUS / _ACCOUNT):
         raw = parsed.raw
-        rule = _match(raw.description, rules)
+        rule = match_corpus_rule(raw.description, rules)
         assert rule is not None, raw.description
         if rule["classification"] == "MIXED":
             continue

@@ -22,10 +22,9 @@ from cadrumo.entrypoints.tui import historical_export, reconciliation_export
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.modelo.workbench.ports import WorkbenchExportRequest
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.transport import operation_reads
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-
-from ....frontend.tui.modelo import runtime_workbench_reads
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -157,8 +156,8 @@ def _bind_filing_view_read(monkeypatch, state: SimpleNamespace) -> list[dict[str
 
     _FilingViewController.submitted = []
     _FilingViewController.settled_reads = []
-    monkeypatch.setattr(runtime_workbench_reads, "OperationController", _FilingViewController)
-    monkeypatch.setattr(runtime_workbench_reads, "await_terminal_projection", terminal)
+    monkeypatch.setattr(operation_reads, "OperationController", _FilingViewController)
+    monkeypatch.setattr(operation_reads, "await_terminal_projection", terminal)
     return waited
 
 

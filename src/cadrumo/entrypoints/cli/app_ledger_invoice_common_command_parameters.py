@@ -189,7 +189,7 @@ INVOICE_INTAKE_WIZARD_CORE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="kind",
         declarations=("--kind",),
-        value=ValueContract(DeferredTarget("...domain.iva.classification", "InvoiceKind", __package__)),
+        value=ValueContract(DeferredTarget("...domain.iva.schema", "InvoiceKind", __package__)),
         default=ParameterDefault.required(),
         help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
     ),

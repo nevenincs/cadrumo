@@ -27,10 +27,10 @@ from ....application.live.justificante_read_operation import (
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import _app_live_justificante_cli as handler
+from .. import app_live_justificante_commands as handler
 from .. import operation_justificante_read as bridge
 from .. import operation_profile_operation as profile_operation
-from .._app_live_justificante_payloads import JustificanteListResult, JustificanteViewResult
+from ..app_live_justificante_results import JustificanteListResult, JustificanteViewResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

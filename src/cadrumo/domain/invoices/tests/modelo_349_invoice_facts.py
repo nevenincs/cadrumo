@@ -12,8 +12,9 @@ from decimal import Decimal
 
 from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
+
+from ...iva.schema import InvoiceKind
 
 M349_INVOICES: tuple[tuple[str, str, str, date, Decimal], ...] = (
     ("F-2026-001", "DE", "DE123456789", date(2026, 1, 15), Decimal("1000.00")),

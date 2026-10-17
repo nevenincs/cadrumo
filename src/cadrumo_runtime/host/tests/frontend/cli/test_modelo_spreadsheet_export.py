@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
+from lxml.etree import XMLParser, fromstring
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.storage.calc_sheets.records import TabName
@@ -75,10 +76,17 @@ def test_the_workbook_lands_at_the_chosen_path_described_by_the_facts_of_its_byt
         assert payload["byte_size"] == len(landed)
         assert payload["sha256"] == hashlib.sha256(landed).hexdigest()
         assert (payload["modelo"], payload["period"], payload["year"]) == ("303", "1T", 2025)
-        assert payload["tab_names"] == [tab.value for tab in TabName]
         assert payload["casilla_count"] > 0
         with zipfile.ZipFile(output) as workbook:
             assert "xl/workbook.xml" in workbook.namelist()
+            definition = fromstring(
+                workbook.read("xl/workbook.xml"), parser=XMLParser(resolve_entities=False, no_network=True)
+            )
+            namespace = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+            actual_tabs = [sheet.attrib["name"] for sheet in definition.findall(f"{namespace}sheets/{namespace}sheet")]
+            assert payload["tab_names"] == actual_tabs
+            assert {TabName.ENTRADAS.value, TabName.CALCULOS.value}.issubset(actual_tabs)
+            assert set(actual_tabs).issubset({tab.value for tab in TabName})
         assert [path.name for path in export_directory.iterdir()] == [output.name]
 
 

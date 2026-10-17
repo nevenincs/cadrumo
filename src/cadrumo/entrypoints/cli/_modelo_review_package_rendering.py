@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...domain.modelos.codes import ModeloCode
-from ._modelo_review_package_payloads import (
+from .modelo_review_package_results import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,
     ModeloReviewPackageDecryptResult,

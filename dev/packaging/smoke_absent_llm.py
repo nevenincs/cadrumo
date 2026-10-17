@@ -104,7 +104,7 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     (
         "cadrumo.adapters.outbound.llm.evidence_draft_text",
         "extract_invoice_fields_from_text",
-        "extract_invoice_fields_from_text(_TRANSCRIPTION)",
+        "extract_invoice_fields_from_text(_TRANSCRIPTION, operation=None)",
     ),
     (
         "cadrumo.adapters.outbound.llm.vision_classifier",
@@ -118,11 +118,8 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     ),
     # The three constructors the convenience wrappers above build. Each is
     # public at its own module and carries the guard itself, so the derivation
-    # enrolls it and the completeness claim covers it. Driven with no
-    # arguments, which every
-    # one of them accepts: the guard is the first statement of ``__init__``, so
-    # a bare construction reaches it before any settings or model resolution
-    # could raise something else.
+    # enrolls it and the completeness claim covers it. The guard precedes
+    # settings, authority, and model resolution; inert inputs exercise that cut.
     (
         "cadrumo.adapters.outbound.llm.evidence_draft_vision",
         "LocalVisionDocumentTranscriber",
@@ -131,7 +128,7 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     (
         "cadrumo.adapters.outbound.llm.evidence_draft_text",
         "TextInvoiceFieldExtractor",
-        "TextInvoiceFieldExtractor()",
+        "TextInvoiceFieldExtractor(operation=None)",
     ),
     # The tabular lane's split point: a known fixed-layout file never reaches
     # this call, an unknown header vocabulary does.
@@ -380,6 +377,7 @@ from cadrumo.application.ledger.document_transcription import DocumentTranscript
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.image_media_type import ImageMediaType
 from cadrumo.core.optional_extras import MissingOptionalExtraError
+from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
 {_surface_imports()}
 
@@ -396,7 +394,9 @@ _TRANSCRIPTION = DocumentTranscription(
     text="factura",
     page_count=1,
     source_content_sha256="0" * 64,
-    transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="smoke", revision="lane"),
+    transcriber=TranscriberIdentity(
+        origin=FieldOrigin.TEXT_LAYER, name="smoke", revision="lane", transport=LOCAL_TRANSPORT_LABEL
+    ),
 )
 
 outcomes = []
@@ -620,6 +620,7 @@ from cadrumo.application.ledger.document_transcription import DocumentTranscript
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.image_media_type import ImageMediaType
 from cadrumo.core.optional_extras import MissingOptionalExtraError
+from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
 {_surface_imports()}
 
@@ -636,7 +637,9 @@ _TRANSCRIPTION = DocumentTranscription(
     text="factura",
     page_count=1,
     source_content_sha256="0" * 64,
-    transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="smoke", revision="lane"),
+    transcriber=TranscriberIdentity(
+        origin=FieldOrigin.TEXT_LAYER, name="smoke", revision="lane", transport=LOCAL_TRANSPORT_LABEL
+    ),
 )
 
 outcomes = []

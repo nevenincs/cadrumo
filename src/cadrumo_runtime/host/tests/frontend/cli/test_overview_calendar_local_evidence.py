@@ -221,7 +221,8 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     ) == [
         ("303", 2025, "1T"),
         ("303", 2025, "2T"),
-    ]
+        ("303", 2025, "4T"),
+    ], operator_evidence
     period_1t = Period.from_year_and_code(2025, "1T")
     period_2t = Period.from_year_and_code(2025, "2T")
     period_3t = Period.from_year_and_code(2025, "3T")
@@ -231,7 +232,11 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     assert by_period[period_2t].aeat_submission_state.value == "submitted_observed"
     assert by_period[period_2t].justificante_verified is False
     assert period_3t not in by_period
-    assert period_4t not in by_period
+    # An inactive register entry remains visible as a concern, without being
+    # treated as an observed submission or a verified justificante.
+    assert by_period[period_4t].aeat_submission_state.value == "not_observed"
+    assert by_period[period_4t].justificante_verified is False
+    assert [concern.value for concern in by_period[period_4t].aeat_evidence_concerns] == ["inactive_register"]
 
 
 def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justificante() -> None:

@@ -7,10 +7,10 @@ This module turns modelo application/domain records such as
 :class:`~VerificationReport`, and
 :class:`~cadrumo.application.modelo.work_plazo.ModeloWorkDeadlinePosture` into CLI text lines
 and CommandSpec-declared JSON payload fragments. The payload side feeds
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,
-:class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.WorkUnitPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.CalculationRevisionPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.ModeloRecordPayload`,
+:class:`~cadrumo.entrypoints.cli.modelo_results.VerificationReportPayload`,
 and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 :func:`~cadrumo.entrypoints.cli.common.emit_envelope`.
 """
@@ -38,8 +38,9 @@ from ...domain.modelos.verification_report import ModeloVerificationFinding, Ver
 from ...domain.modelos.work_unit import WorkUnit
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._filing_chain_payloads import aeat_register_lines, aeat_register_payload
-from ._modelo_bindings_payloads import BindingEncodedOptionPayload
-from ._modelo_payloads import (
+from .common import resolve_cli_precondition_action
+from .modelo_bindings_results import BindingEncodedOptionPayload
+from .modelo_results import (
     ExternalEvidencePayload,
     FindingPayload,
     ModeloRecordPayload,
@@ -48,7 +49,6 @@ from ._modelo_payloads import (
     WorkDeadlinePosturePayload,
     WorkUnitPayload,
 )
-from .common import resolve_cli_precondition_action
 from .modelo_revision_rendering import calculation_revision_state_label
 
 if TYPE_CHECKING:
@@ -437,7 +437,7 @@ def _work_unit_deadline_output_from_posture(
     """Project deadline posture onto a payload and unassessed-preview notice.
 
     Returns the typed
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkDeadlinePosturePayload`
+    :class:`~cadrumo.entrypoints.cli.modelo_results.WorkDeadlinePosturePayload`
     (structured result data: the voluntary-filing close date and overdue
     posture) and a warning-severity
     :class:`~cadrumo.core.json_contract.Notice` list. An overdue deadline raises
@@ -805,9 +805,9 @@ def verification_report_payload(
     Both ``aeat app modelo work verify`` and ``verification-report view/list``
     use this function so persisted :class:`~VerificationReport`
     rows expose identical factual
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    :class:`~cadrumo.entrypoints.cli.modelo_results.VerificationReportPayload`
     fields, including nested
-    :class:`~cadrumo.entrypoints.cli._modelo_payloads.FindingPayload` legal and
+    :class:`~cadrumo.entrypoints.cli.modelo_results.FindingPayload` legal and
     source references.
     """
     findings: list[FindingPayload] = []

@@ -11,9 +11,9 @@ from __future__ import annotations
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 
 
-def _json_object(value: object) -> dict[str, object]:
+def require_json_object(value: object) -> dict[str, object]:
     """Narrow one decoded JSON value to a string-keyed object for typed subscripting."""
     return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
-__all__ = ["_json_object"]
+__all__ = ["require_json_object"]

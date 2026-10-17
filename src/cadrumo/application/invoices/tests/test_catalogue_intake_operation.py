@@ -21,7 +21,7 @@ from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader

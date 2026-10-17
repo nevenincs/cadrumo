@@ -227,7 +227,8 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
     error = json.loads(calculated_output)["error"]
     assert error["code"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
     context = error["context"]
-    assert context["reason"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
+    assert context["effect"] == "unknown", calculated_output
+    assert context["captured_retencion_observations"] == "1"
     assert context["terminal_condition"] == "refused", calculated_output
     assert isinstance(context["operation_id"], str) and context["operation_id"], calculated_output
     assert "casilla_values" not in calculated_output

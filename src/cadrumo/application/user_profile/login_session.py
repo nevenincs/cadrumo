@@ -125,11 +125,12 @@ class ProfileLoginOutcome(BaseModel):
             OS login to bind, so the session is process-scoped only.
         already_authenticated: ``True`` when a still-valid persisted
             session was resumed as a no-op (no re-prompt, no new record).
-        closed_previous_bucket_id: Retained result field, always ``None`` for
-            the supported candidate and invocation authentication doors. These
-            doors retire no other profile's sign-in themselves; the runtime
-            does, when it admits a person's sign-in to a profile, because one
-            profile is signed in at a time.
+        closed_previous_bucket_id: The profile whose sign-in this login
+            ended, or ``None``. The candidate and invocation authentication
+            doors retire no other profile's sign-in themselves and leave it
+            ``None``; the runtime does, when it admits a person's password
+            sign-in to a profile, because one profile is signed in at a time,
+            and the command that asked for that sign-in reports it here.
     """
 
     model_config = _STRICT_FROZEN

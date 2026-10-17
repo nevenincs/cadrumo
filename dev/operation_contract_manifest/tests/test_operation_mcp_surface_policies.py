@@ -41,18 +41,18 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests.registered_executor_case_support import (
-    _CloseWitness,
-    _model_runtime_for,
-    _runtime,
-    _seeded_conformance_submission,
+    OperationRuntimeCloseWitness,
+    conformance_operation_runtime,
+    model_runtime_for_operation,
+    seeded_conformance_operation_submission,
 )
 from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 from dev.operation_contract_manifest.tests.test_operation_frontend_parity import _PROBE_PROFILE, _probe_requests
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (
-    _ALLOWED,
-    _CLIENT,
-    _registry,
+    ALLOWED_OPERATION_ACCESS,
+    TEST_CLIENT_INSTANCE_ID,
     answer_for_resolved_access,
+    mcp_operation_registry,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -73,7 +73,7 @@ def _submission_context(
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
-        destination_id=_CLIENT,
+        destination_id=TEST_CLIENT_INSTANCE_ID,
         action=AccessAction.SUBMIT,
         frontend=_MCP,
         contract=registry.lookup_public_contract(definition_id),
@@ -117,8 +117,11 @@ def _assert_read_policy_is_admitted_on_the_surface(
     assert AccessAction.COMMIT not in resolved.policy.actions, f"{where}: a listed read holds the commit action"
     human = resolved.policy.requires_human
     # The same access, without a surface, says whether anything else refuses it.
-    assert answer_for_resolved_access(resolved, None, registry=registry, human=human) == _ALLOWED, where
-    assert answer_for_resolved_access(resolved, _READ_ONLY_LOCAL, registry=registry, human=human) == _ALLOWED, where
+    assert answer_for_resolved_access(resolved, None, registry=registry, human=human) == ALLOWED_OPERATION_ACCESS, where
+    assert (
+        answer_for_resolved_access(resolved, _READ_ONLY_LOCAL, registry=registry, human=human)
+        == ALLOWED_OPERATION_ACCESS
+    ), where
 
 
 def _assert_the_surface_would_catch_a_commit(
@@ -128,7 +131,9 @@ def _assert_the_surface_would_catch_a_commit(
     committing = with_commit_action(resolved)
     human = committing.policy.requires_human
     assert AccessAction.COMMIT in committing.policy.actions
-    assert answer_for_resolved_access(committing, None, registry=registry, human=human) == _ALLOWED, definition_id
+    assert answer_for_resolved_access(committing, None, registry=registry, human=human) == ALLOWED_OPERATION_ACCESS, (
+        definition_id
+    )
     refused = answer_for_resolved_access(committing, _READ_ONLY_LOCAL, registry=registry, human=human)
     assert refused == AccessDenialCode.OPERATION_DENIED.value, definition_id
 
@@ -138,7 +143,7 @@ def test_the_real_resolver_of_every_read_only_local_operation_holds_no_commit_an
     tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Each listed operation is judged on a request its own resolver resolves, whichever way one is built."""
-    schema_registry = _registry()
+    schema_registry = mcp_operation_registry()
     resolutions = _schema_resolutions(schema_registry, definition_id, operation=operation)
     for resolved in resolutions:
         _assert_read_policy_is_admitted_on_the_surface(schema_registry, definition_id, resolved)
@@ -147,11 +152,15 @@ def test_the_real_resolver_of_every_read_only_local_operation_holds_no_commit_an
         return
 
     with (
-        _model_runtime_for(definition_id),
-        _runtime(tmp_path / definition_id, cleanup=_CloseWitness()) as (_driver, registry, profile_id),
+        model_runtime_for_operation(definition_id),
+        conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
+            _driver,
+            registry,
+            profile_id,
+        ),
     ):
         definition = registry.lookup(definition_id)
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         request = OperationRequest[BaseModel](

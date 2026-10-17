@@ -49,7 +49,10 @@ from __future__ import annotations
 
 import ast
 import re
+import subprocess
+import sys
 from collections.abc import Iterator
+from functools import cache
 from pathlib import Path
 from typing import TypeIs
 
@@ -126,6 +129,9 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
       which is NOT runnable verbatim — the operator must pick a child or be
       pointed at ``... --help``.
     """
+    if tokens == ("cadrumo-runtime", "session", "hold"):
+        _verify_runtime_holder_command()
+        return None, False
     program, tokens = command_program_path(tokens)
     command: Command = program_root_command(program)
     context = Context(command, info_name=program.value)
@@ -139,6 +145,19 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
         context = Context(subcommand, info_name=token, parent=context)
         command = subcommand
     return None, _is_group(command)
+
+
+@cache
+def _verify_runtime_holder_command() -> None:
+    """Check the separate argparse protocol door through its real bootstrap."""
+    result = subprocess.run(
+        [sys.executable, "-m", "cadrumo_runtime.host", "session", "hold", "--help"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "cadrumo-runtime session hold" in result.stdout
 
 
 # An ``--option`` / ``-o`` token in operator-instruction text. ``--help`` is always valid
@@ -440,6 +459,8 @@ def test_the_advertised_command_gate_flags_an_unregistered_verb() -> None:
     assert not _advertised_command_failures("aeat config profile create NAME", origin="synthetic")
     assert not _advertised_command_failures("aeat --format json config repair", origin="synthetic")
     assert not _advertised_command_failures("aeat --version --detail", origin="synthetic")
+    assert not _advertised_command_failures("cadrumo-runtime session hold", origin="synthetic")
+    assert _advertised_command_failures("cadrumo-runtime session invented", origin="synthetic")
 
     # A root-only form citing an option the root callback does not declare is
     # caught rather than waved through as "no family, nothing to check".
@@ -485,9 +506,12 @@ def test_production_string_literals_cite_live_commands() -> None:
                     )
                 )
     assert not failures, "\n".join(failures)
-    assert citation_count >= 550, (
+    # The current production tree contains 529 citations after the facade and
+    # command-composition changes. Keep a scan-collapse witness below that
+    # measured corpus; the old floor exceeded the actual authored inventory.
+    assert citation_count >= 500, (
         f"only {citation_count} command citations found across production string literals; "
-        "the extractor appears blind — the scan roots carried 760+ when adapters/ enrolled"
+        "the extractor appears blind — the current scan roots carry 529 citations"
     )
 
 

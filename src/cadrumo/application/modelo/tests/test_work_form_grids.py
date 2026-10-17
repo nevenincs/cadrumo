@@ -19,9 +19,11 @@ from decimal import Decimal
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import lookup_translation
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.modelo_localization import binding_locale_key
 from ....domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
     FormGridBlock,
@@ -31,6 +33,7 @@ from ....domain.calculations.registry.schema_form_layouts import (
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_models import (
+    ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormField,
@@ -247,6 +250,12 @@ def test_a_placeholder_rate_box_claims_no_rate_even_where_its_base_declares_one(
 
 def test_every_390_grid_cell_shows_an_official_box_number_or_none(operation: PinnedAuthorityOperation) -> None:
     form = _form(operation, "390", 2025, "0A")
+    revision = operation.revision_for_context("390", filing_year=2025, period="0A")
+    layout = operation.form_layout("390", revision.id)
+    assert layout is not None
+    declared_boxes = {placement.box_number for placement in layout.placements if placement.box_number is not None}
+    declared_boxes.update(casilla.form_number for casilla in revision.casillas if casilla.form_number is not None)
+    declared_boxes.update(casilla.number for casilla in revision.casillas if casilla.number.isdigit())
     cells = [
         cell.field
         for page in form.pages
@@ -267,11 +276,13 @@ def test_every_390_grid_cell_shows_an_official_box_number_or_none(operation: Pin
         if isinstance(field.address, ModeloFormCasillaAddressV1)
     )
     for field in cells:
-        assert field.box is None or field.box.isdigit(), field.box
-    for field in named:
-        address = field.address
-        assert isinstance(address, ModeloFormCasillaAddressV1)
-        assert field.box != str(address.casilla_id) or str(address.casilla_id).isdigit(), field.box
+        binding_box = (
+            lookup_translation(binding_locale_key("390", str(field.address.binding_id), "box_number"), locale="es")
+            if isinstance(field.address, ModeloFormBindingAddressV1)
+            else None
+        )
+        assert field.box is None or field.box in declared_boxes or field.box == binding_box, field.box
+    assert any(field.box == "K1" for field in cells), "the printed activity key is an alphanumeric box"
 
 
 def test_a_repeating_column_the_design_leaves_unnamed_reads_as_the_label_of_its_box(

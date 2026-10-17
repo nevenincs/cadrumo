@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import SchemaState
 
@@ -20,7 +21,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_modelo_audit_specs_declare_the_exact_family() -> None:
     graph = CommandSpecGraph(
-        (*ROOT_COMMAND_SPECS, MODELO_ROOT_COMMAND_SPEC, *MODELO_AUDIT_COMMAND_SPECS, *MODELO_READINESS_COMMAND_SPECS)
+        (*ROOT_COMMAND_SPECS, MODELO_ROOT_COMMAND_SPEC, *MODELO_AUDIT_COMMAND_SPECS, *MODELO_READINESS_COMMAND_SPECS),
+        resolver=resolve_deferred_target,
     )
     assert {node.path for node in graph.nodes() if "modelo" in node.path} == {
         ("aeat", "app", "modelo"),
@@ -46,9 +48,9 @@ def test_modelo_audit_specs_own_public_handlers_and_schema_identities() -> None:
 
 
 def test_importing_modelo_audit_specs_does_not_import_behavior() -> None:
-    sys.modules.pop("cadrumo.entrypoints.cli._modelo_audit_cli", None)
+    sys.modules.pop("cadrumo.entrypoints.cli.modelo_audit_commands", None)
     importlib.reload(importlib.import_module(".._modelo_audit_command_specs", __package__))
-    assert "cadrumo.entrypoints.cli._modelo_audit_cli" not in sys.modules
+    assert "cadrumo.entrypoints.cli.modelo_audit_commands" not in sys.modules
 
 
 def test_modelo_audit_and_readiness_parameter_contracts_match_public_handlers() -> None:

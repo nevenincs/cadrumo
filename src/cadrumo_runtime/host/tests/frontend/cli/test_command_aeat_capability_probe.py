@@ -92,10 +92,11 @@ from cadrumo_client.commands.tests.command_drive_support import (
     is_runnable,
     synthetic_argv,
 )
-from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
-from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
-from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
+from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute, ProfileAuthenticationPosture
+from cadrumo_runtime.commands.command_targets import resolve_deferred_target
 
+from .....commands.command_specs import RUNTIME_COMMAND_GRAPH
+from .....commands.tests.config.runtime_cli import invoke_runtime_cli
 from ._command_drive_support import seeded_probe_runtime, synthetic_aeat_credentials
 from .cli_runner import invoke_uncached_typer_app
 from .portable_human_cli_runtime import PortableHumanCliRuntime
@@ -497,15 +498,20 @@ def _drive(key: str, tmp_path: Path, *, json_output: bool = False) -> tuple[Aeat
         seeder = _SEEDERS.get(key)
         if seeder is not None:
             seeder(runtime)
-        with observe_aeat_contact(handler_code(handler.target)) as observed:
+        with observe_aeat_contact(handler_code(handler.target, resolver=graph.resolver)) as observed:
             arguments = ["--format", "json", *argv] if json_output else argv
-            if graph is RUNTIME_COMMAND_GRAPH:
+            if (
+                graph is RUNTIME_COMMAND_GRAPH
+                and spec.profile_authentication is ProfileAuthenticationPosture.RESUME_FALLBACK
+            ):
                 passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
                 result = invoke_runtime_cli(
                     ["--profile", runtime.label, "--profile-secrets-stdin", *arguments],
                     input=json.dumps({"profile_passphrase": passphrase}),
                 )
                 assert passphrase not in result.output
+            elif graph is RUNTIME_COMMAND_GRAPH:
+                result = invoke_runtime_cli(arguments)
             else:
                 result = runtime.invoke(arguments)
     return observed, result.exit_code, result.output
@@ -650,7 +656,7 @@ def _teeth_graph() -> CommandSpecGraph:
         handler=LazyBinding.available(_TEETH_TARGET),
         result_schema=_NO_SCHEMA,
     )
-    return CommandSpecGraph((root, leaf))
+    return CommandSpecGraph((root, leaf), resolver=resolve_deferred_target)
 
 
 def test_the_probe_flags_a_network_command_that_reaches_aeat_undeclared(
@@ -661,7 +667,7 @@ def test_the_probe_flags_a_network_command_that_reaches_aeat_undeclared(
     assert [spec.key for spec in population] == ["undeclared_sede_read"]
     argv = synthetic_argv(graph, population[0], Path())
 
-    with observe_aeat_contact(handler_code(_TEETH_TARGET)) as observed:
+    with observe_aeat_contact(handler_code(_TEETH_TARGET, resolver=graph.resolver)) as observed:
         invoke_uncached_typer_app(build_command_app(graph), argv)
 
     sede_host = canonical_remote_hostname(load_external_constants().aeat.domains.sede)

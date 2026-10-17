@@ -16,7 +16,7 @@ from .....application.ledger.models import ManualLedgerTransactionResult
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
 from .....domain.invoices.errors import InvoiceValidationError
-from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.models import BucketTransactionRef
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp

@@ -33,7 +33,7 @@ path is seeded before importing it; its pure-stdlib implementation can then
 load the development-only env bridge and resolve storage controls before
 any runtime, logging, or settings import. This ordering lets ``env/.env``
 storage refinements take effect while ensuring temporary directories,
-shared caches, and the isolated test root are pinned before runtime imports.
+per-run logs, and the isolated test root are pinned before runtime imports.
 Verified by instrumenting ``configure_logging`` to dump its first real
 call stack: importing ``cadrumo.tests`` alone no longer triggers it, and
 the residual triggers found only fire from session-scoped fixtures that
@@ -51,7 +51,6 @@ import tempfile
 from collections.abc import Callable, Iterator, Sequence
 from importlib import import_module
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -66,11 +65,9 @@ if str(_SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(_SOURCE_ROOT))
 
 from cadrumo.core.storage_environment import (  # noqa: E402
-    TOOL_STORAGE_LOCATIONS,
     configured_storage_root,
     resolve_storage_path,
     storage_directory,
-    tool_storage_environment,
 )
 
 # The tests package initializer is intentionally inert and env_loader is pure
@@ -125,15 +122,11 @@ for _report_variable in ("CADRUMO_CI_REPORTS_DIR", "VAULTSPEC_CI_REPORTS"):
     if _report_destination:
         os.environ[_report_variable] = str(resolve_storage_path(_report_destination, root=_BASE_STORAGE_ROOT))
 
-# Resolve external tool caches while the operator's configured root is still
-# active, then preserve them when product tests install their private local
-# storage root below. Cadrumo's refined environment variables are authoritative
-# for the corresponding native-tool locations.
-_TOOL_STORAGE_ENVIRONMENT = tool_storage_environment()
-for _native_variable, (_refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
-    os.environ[_refinement_variable] = _TOOL_STORAGE_ENVIRONMENT[_native_variable]
-os.environ.update(_TOOL_STORAGE_ENVIRONMENT)
-sys.pycache_prefix = _TOOL_STORAGE_ENVIRONMENT["PYTHONPYCACHEPREFIX"]
+# Keep Python bytecode separate from the interpreter's ambient cache setting
+# without rebinding environment variables used by machine-managed tools.
+sys.pycache_prefix = str(
+    storage_directory("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache", root=_BASE_STORAGE_ROOT)
+)
 
 # Python and stdlib temp files start under Cadrumo's configured temporary root.
 # The run logger narrows TEMP/TMP/TMPDIR to its own scratch immediately below.
@@ -210,7 +203,12 @@ if TYPE_CHECKING:
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
 # it. Unset `VAULTSPEC_CI_REPORTS` - every local run - and it does nothing,
 # which is what keeps this repository's zero-artifact posture intact.
-pytest_plugins = ("dev.ci_reports", "cadrumo.tests.pytest_plugin")
+pytest_plugins = (
+    "dev.ci_reports",
+    "dev.packaging.tests.installed_process_fixture",
+    "cadrumo.tests.pytest_plugin",
+    "cadrumo_runtime.host.tests.frontend.cli.modelo_profile_seed",
+)
 
 
 @pytest.fixture(scope="session")
@@ -436,13 +434,9 @@ def compose_runtime_ports() -> Iterator[None]:
 @pytest.fixture
 def overview_cli_backend(tmp_path: Path) -> Iterator[None]:
     """Provide the profile-backed storage lifecycle required by overview CLI tests."""
-    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+    from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 
-    profile_id = "11111111-1111-4111-8111-111111111111"
-    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(profile_id):
-        register_minimal_profile(profile_id=profile_id)
+    with runtime_cli_profile(tmp_path=tmp_path):
         yield
 
 
@@ -630,31 +624,6 @@ def _configure_logging_at_the_host_boundary() -> None:
     from cadrumo.core.logging import configure_logging
 
     configure_logging()
-
-
-@pytest.fixture(scope="session")
-def _resident_service_environment() -> Iterator[None]:
-    """Give resident-service child processes one isolated singleton scope."""
-    with TemporaryDirectory(prefix="vaultspec-rag-pytest-") as root_text:
-        root = Path(root_text)
-        status_dir = root / "status"
-        qdrant_dir = root / "qdrant"
-        status_dir.mkdir()
-        qdrant_dir.mkdir()
-        with temporary_env(
-            _VAULTSPEC_RAG_PYTEST_SINGLETON_ROOT=str(root),
-            _VAULTSPEC_RAG_PYTEST_SINGLETON_ACTIVE="1",
-            VAULTSPEC_RAG_STATUS_DIR=str(status_dir),
-            VAULTSPEC_RAG_QDRANT_STORAGE_DIR=str(qdrant_dir),
-        ):
-            yield
-
-
-@pytest.fixture(autouse=True)
-def _inherit_resident_service_environment(request: pytest.FixtureRequest) -> None:
-    """Activate the shared singleton scope only for resident-service tests."""
-    if request.node.get_closest_marker("resident_service") is not None:
-        request.getfixturevalue("_resident_service_environment")
 
 
 @pytest.hookimpl(tryfirst=True)

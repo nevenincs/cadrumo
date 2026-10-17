@@ -24,7 +24,6 @@ diagnostics through a surface that is not the diagnostic channel.
 
 from __future__ import annotations
 
-import importlib
 from typing import Final
 
 import pytest
@@ -66,13 +65,10 @@ def _schema_targets() -> list[tuple[str, object]]:
     """
     resolved: list[tuple[str, object]] = []
     for spec in COMMAND_GRAPH.specs:
-        schema = getattr(spec, "result_schema", None)
-        if schema is None or schema.state is not SchemaState.TARGET or schema.target is None:
+        schema = spec.result_schema
+        if schema.state is not SchemaState.TARGET or schema.target is None:
             continue
-        module = importlib.import_module(schema.target.module)
-        model: object = module
-        for part in schema.target.qualname.split("."):
-            model = getattr(model, part)
+        model = COMMAND_GRAPH.resolver(schema.target)
         resolved.append((schema.identity or spec.key, model))
     return resolved
 

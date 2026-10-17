@@ -76,8 +76,12 @@ def test_native_filed_history_refuses_finite_period_before_provider_access(tmp_p
 
     assert refused.exit_code == 2
     error = require_error_document(refused.output)["error"]
-    assert error["code"] == "REFUSED_RUNTIME_FRONTEND"
-    assert cast(dict[str, object], error["context"]) == {"reason": "period_denied"}
+    assert error["code"] == "REFUSED_RUNTIME_FRONTEND", error
+    assert cast(dict[str, object], error["context"]) == {
+        "reason": "period_denied",
+        "request_faults": "",
+        "sign_in": "null",
+    }
 
 
 def test_native_filed_history_requires_configured_provider_before_browser(tmp_path: Path, run_cadrumo_cli) -> None:
@@ -92,8 +96,8 @@ def test_native_filed_history_requires_configured_provider_before_browser(tmp_pa
 
     assert refused.exit_code == 2
     error = require_error_document(refused.output)["error"]
-    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["code"] == "REFUSED_AUTH_LOGIN_PRECONDITION", error
     context = cast(dict[str, object], error["context"])
-    assert context["reason"] == "REFUSED_PROFILE_ACCESS"
+    assert context["reason"] == "REFUSED_AUTH_LOGIN_PRECONDITION"
     assert context["terminal_condition"] == "refused"
     assert isinstance(context["operation_id"], str)

@@ -25,7 +25,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.period import Period
 from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ._filing_chain_payloads import filing_reconciliation_payload
-from ._modelo_payloads import FilingRecordImportResult, ModeloRecordPayload
+from .modelo_results import FilingRecordImportResult, ModeloRecordPayload
 
 
 def import_modelo_filing_record(

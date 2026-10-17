@@ -622,7 +622,8 @@ def test_public_amend_service_refuses_missing_motive_before_identity_with_real_p
         (2024, "2T", None),
         (2024, "3T", "2024-desde-09-y-3t"),
         (2025, "1T", "2025"),
-        (2026, "1T", "2026-y-siguientes"),
+        (2026, "1T", "2026-hasta-01-y-1t"),
+        (2026, "2T", "2026-y-siguientes"),
     ),
 )
 def test_motive_capability_is_selected_only_from_exact_registry_evidence(

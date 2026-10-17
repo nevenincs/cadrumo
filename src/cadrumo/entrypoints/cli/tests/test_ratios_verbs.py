@@ -39,7 +39,8 @@ def test_ratios_set_persists_and_list_reflects() -> None:
 
 
 def test_ratios_unset_clears() -> None:
-    _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
+    set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
+    assert set_result.exit_code == 0, set_result.output
     result = _invoke_ratios(["unset", "vehiculo_combustible"])
     assert result.exit_code == 0, result.output
     assert "vehiculo_combustible\t<unset>" in result.output

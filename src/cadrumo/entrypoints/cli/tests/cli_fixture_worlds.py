@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from pathlib import Path
@@ -28,6 +28,9 @@ class HumanProbeSession(Protocol):
     def invoke(self, args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result: ...
 
 
+type ProfileSeeder = Callable[..., HumanProbeSession]
+
+
 class ApiProbeSession(HumanProbeSession, Protocol):
     """Own-grant API inputs, interpreted by the tax assertion owner."""
 
@@ -41,6 +44,22 @@ class ApiProbeSession(HumanProbeSession, Protocol):
     def proposal(self) -> EnrollmentProposal: ...
 
 
+class RegisteredCliProfile(Protocol):
+    """Profile registration inputs retained by a host-owned native scenario."""
+
+    @property
+    def label(self) -> str | None: ...
+
+    @property
+    def passphrase(self) -> str: ...
+
+    @property
+    def storage_root(self) -> Path: ...
+
+    def register(self, *, label: str, facts: Mapping[str, str]) -> None: ...
+    def observe_failures(self, callback: Callable[[object], None]) -> None: ...
+
+
 class CliWorldProvider(Protocol):
     """Own runtime setup and custody behind fixture lifetime ports."""
 
@@ -48,6 +67,11 @@ class CliWorldProvider(Protocol):
         self, tmp_path: Path, *, client_native_store: AutomationSecretStore | None = None
     ) -> AbstractContextManager[HumanProbeSession]: ...
     def api_probe(self, tmp_path: Path) -> AbstractContextManager[ApiProbeSession]: ...
+    def native_profile(self, tmp_path: Path) -> AbstractContextManager[RegisteredCliProfile]: ...
+    def profile_server(self, storage_root: Path) -> AbstractContextManager[None]: ...
+    def seeded_profile(
+        self, *, label: str, facts: Mapping[str, str] | None = None, complete: bool = True
+    ) -> HumanProbeSession: ...
     def backend(self, kind: BackendKind, tmp_path: Path) -> AbstractContextManager[None]: ...
     def seeded_origin(
         self,

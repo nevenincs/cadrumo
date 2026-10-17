@@ -648,7 +648,10 @@ def test_attended_expiry_and_independent_password_access(scenario: Scenario) -> 
         login = changed(scenario.context.login_contexts[0], lock_state=lock_state)
         locked = changed(scenario.context, login_contexts=(login,))
         assert isinstance(replace(scenario, context=locked).evaluate(), AccessAllowed)
-        assert_denied(replace(attended_subject, context=locked), AccessDenialCode.OS_LOCKED)
+        expected = (
+            AccessDenialCode.OS_SESSION_UNAVAILABLE if lock_state is OsLockState.UNKNOWN else AccessDenialCode.OS_LOCKED
+        )
+        assert_denied(replace(attended_subject, context=locked), expected)
         assert_denied(
             replace(scenario, context=locked, grant=changed(scenario.grant, allow_os_lock=False)),
             AccessDenialCode.OS_LOCKED,

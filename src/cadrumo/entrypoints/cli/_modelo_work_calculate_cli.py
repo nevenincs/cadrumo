@@ -28,15 +28,15 @@ from ...core.hashing import canonical_json_bytes
 from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.rescate_type import RescateType
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ._modelo_cli_support import (
     calculation_overrides,
     optional_decimal_option,
     parse_work_calculate_wire_specs,
     resolve_actor_option,
 )
-from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
     m210_plazo_notice,
     source_diagnostic_notice,
@@ -45,6 +45,7 @@ from ._modelo_rendering import (
     work_plazo_lines_from_posture,
 )
 from .common import activate_subcommand_output_language, emit_envelope, no_active_profile_refusal
+from .modelo_results import WorkCalculateResult
 from .modelo_revision_rendering import calculation_revision_state_label
 from .operation_modelo_calculation import (
     calculation_snapshot_lines,
@@ -202,10 +203,21 @@ def _run_work_calculate(
     snapshot = projection.calculation
     advisories = projection.advisories
     language = OutputLanguage(current_output_language())
-    saved_confirmation = tr(
-        "cli.app.modelo.work.calculate_saved",
-        revision_id=snapshot.calculation_revision_id,
-        state=calculation_revision_state_label(snapshot.state.value),
+    reused_sealed_revision = (
+        not projection.revision_published and snapshot.state is not CalculationRevisionState.BORRADOR
+    )
+    saved_confirmation = (
+        tr(
+            "cli.app.modelo.work.calculate_reused_sealed",
+            revision_id=snapshot.calculation_revision_id,
+            state=calculation_revision_state_label(snapshot.state.value),
+        )
+        if reused_sealed_revision
+        else tr(
+            "cli.app.modelo.work.calculate_saved",
+            revision_id=snapshot.calculation_revision_id,
+            state=calculation_revision_state_label(snapshot.state.value),
+        )
     )
     modality = advisories.to_modality()
     modality_payload, modality_lines = _work_calculation_modality_output(modality)
@@ -241,6 +253,26 @@ def _run_work_calculate(
             saved_confirmation,
         ],
         notices=[
+            *(
+                [
+                    Notice(
+                        severity=NoticeSeverity.INFO,
+                        code="modelo.work.calculate.reused_sealed_revision",
+                        message=saved_confirmation,
+                        context={
+                            "calculation_revision_id": snapshot.calculation_revision_id,
+                            **(
+                                {"current_calculation_revision_id": projection.unit.current_calculation_revision_id}
+                                if projection.unit.current_calculation_revision_id is not None
+                                else {}
+                            ),
+                            "revision_published": "false",
+                        },
+                    )
+                ]
+                if reused_sealed_revision
+                else []
+            ),
             *source_advisory_notices,
             *(m210_plazo_notice(item) for item in advisories.to_plazo_resolutions()),
             *deadline_notices,

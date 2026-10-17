@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from pathlib import Path
+from importlib.resources import files
 
 import pytest
 
@@ -18,14 +18,7 @@ from .ledger_ux_support import _invoke, _open_bucket_session
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
 
-_FACTURAE = (
-    Path(__file__).resolve().parents[3]
-    / "application"
-    / "ledger"
-    / "tests"
-    / "_evidence_corpus"
-    / "facturae_32_recargo_invoice.xml"
-)
+_FACTURAE = files("cadrumo.application.ledger.tests") / "_evidence_corpus" / "facturae_32_recargo_invoice.xml"
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 
 
@@ -74,7 +67,8 @@ def test_drive_attachment_is_queued_inspectable_and_confirmed_once() -> None:
         ["--format", "json", "app", "ledger", "evidence", "extract", "--attachment-id", attachment_id],
     )
     assert extracted.exit_code == 0, extracted.output
-    assert json.loads(extracted.output)["result"]["invoice_number"] == "FAC-2024-0007"
+    draft = json.loads(extracted.output)["result"]
+    assert draft["invoice_number"] == "FAC-2024-0007"
 
     command = [
         "--format",
@@ -83,6 +77,10 @@ def test_drive_attachment_is_queued_inspectable_and_confirmed_once() -> None:
         "ledger",
         "evidence",
         "confirm",
+        "--expected-source-sha256",
+        draft["source_sha256"],
+        "--expected-draft-review-sha256",
+        draft["draft_review_sha256"],
         "--attachment-id",
         attachment_id,
         "--kind",
@@ -125,6 +123,8 @@ def test_unsupported_drive_content_refuses_without_leaving_the_queue() -> None:
     )
 
     assert extracted.exit_code != 0, extracted.output
-    assert "document" in extracted.output.lower() or "media" in extracted.output.lower()
+    error = json.loads(extracted.output)["error"]
+    assert error["code"] == "REFUSED_LEDGER_EVIDENCE_INPUT", extracted.output
+    assert error["context"]["reason"] == "REFUSED_LEDGER_EVIDENCE_INPUT"
     queued = _invoke(["--format", "json", "app", "ledger", "evidence", "attachment-queue"])
     assert json.loads(queued.output)["result"]["rows"][0]["attachment_id"] == attachment_id

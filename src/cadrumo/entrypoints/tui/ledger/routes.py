@@ -24,6 +24,7 @@ from .evidence import LedgerEvidenceScreen
 from .import_flow import LedgerImportScreen
 from .models import (
     LEDGER_DESTINATION_BY_AREA,
+    LedgerClassificationPatchBuilderV1,
     LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEvidenceDoorV1,
@@ -155,6 +156,7 @@ def ledger_screen_factory(
     review_action: ActionReference,
     classify_action: ActionReference | None = None,
     classification_submitter: LedgerClassificationSubmitterV1 | None = None,
+    classification_patch_builder: LedgerClassificationPatchBuilderV1 | None = None,
     import_door: LedgerImportDoorV1 | None = None,
     evidence_action: ActionReference | None = None,
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None,
@@ -173,6 +175,7 @@ def ledger_screen_factory(
         review_action=review_action,
         classify_action=classify_action,
         classification_submitter=classification_submitter,
+        classification_patch_builder=classification_patch_builder,
         import_door=import_door,
         evidence_action=evidence_action,
         evidence_items=evidence_items,

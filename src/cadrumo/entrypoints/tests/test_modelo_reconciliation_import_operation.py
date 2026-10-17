@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
 from ...application.modelo.reconciliation import ReconciliationEvidenceInvalidError
+from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...application.modelo.reconciliation_import_operation import (
     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
     HandleVerifiedEvidenceParser,
@@ -28,10 +29,7 @@ from ...application.modelo.reconciliation_parsing import (
     ReconciliationEvidenceParserPort,
     reconciliation_evidence_parser,
 )
-from ...application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationRecord,
-)
+from ...application.modelo.reconciliation_records import ModeloReconciliationRecord
 from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.user_profile.access_contracts import AccessAction
@@ -129,7 +127,9 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
 
     monkeypatch.setattr(ModeloReconciliationPersistence, "persist_with_event", guarded_persist)
 
-    with conformance._runtime(tmp_path / "modelo-reconciliation-import", cleanup=conformance._CloseWitness()) as (
+    with conformance.conformance_operation_runtime(
+        tmp_path / "modelo-reconciliation-import", cleanup=conformance.OperationRuntimeCloseWitness()
+    ) as (
         driver,
         registry,
         profile_id,
@@ -235,7 +235,9 @@ def test_registered_import_refuses_a_relative_source_that_the_working_directory_
     working_directory.mkdir()
     shutil.copyfile(_JUSTIFICANTE_FIXTURE, working_directory / "evidence.pdf")
 
-    with conformance._runtime(tmp_path / "modelo-reconciliation-relative", cleanup=conformance._CloseWitness()) as (
+    with conformance.conformance_operation_runtime(
+        tmp_path / "modelo-reconciliation-relative", cleanup=conformance.OperationRuntimeCloseWitness()
+    ) as (
         driver,
         _registry,
         profile_id,

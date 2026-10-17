@@ -24,7 +24,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 
 from ....core.hashing import content_hash_hex
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ..draft_review import _invoice_catalogue_fingerprint

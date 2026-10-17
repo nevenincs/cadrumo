@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
@@ -347,9 +348,9 @@ _EXPECTED_LEAF_CONTRACTS = {
             _OPTIONAL_ACTOR,
         ),
         _POLICY_4_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_rules_cli:rule_add",
+        "cadrumo.entrypoints.cli.ledger_rules_commands:rule_add",
         "target",
-        "cadrumo.entrypoints.cli._ledger_rule_payloads:RuleAddResult",
+        "cadrumo.entrypoints.cli.ledger_rule_results:RuleAddResult",
         "ledger.rule.add",
     ),
     "app_ledger_rule_apply": (
@@ -383,9 +384,9 @@ _EXPECTED_LEAF_CONTRACTS = {
             _OPTIONAL_ACTOR,
         ),
         _POLICY_3_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_rules_cli:rule_apply",
+        "cadrumo.entrypoints.cli.ledger_rules_commands:rule_apply",
         "target",
-        "cadrumo.entrypoints.cli._ledger_rule_payloads:RuleApplyResult",
+        "cadrumo.entrypoints.cli.ledger_rule_results:RuleApplyResult",
         "ledger.rule.apply",
     ),
     "app_ledger_rule_list": (
@@ -397,9 +398,9 @@ _EXPECTED_LEAF_CONTRACTS = {
         None,
         (),
         _POLICY_5_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_rules_cli:rule_list",
+        "cadrumo.entrypoints.cli.ledger_rules_commands:rule_list",
         "target",
-        "cadrumo.entrypoints.cli._ledger_rule_payloads:RuleListResult",
+        "cadrumo.entrypoints.cli.ledger_rule_results:RuleListResult",
         "ledger.rule.list",
     ),
     "app_ledger_ratios_eligible": (
@@ -411,9 +412,9 @@ _EXPECTED_LEAF_CONTRACTS = {
         None,
         (_OPTIONAL_YEAR, _OPTIONAL_OUTPUT_LANGUAGE),
         _POLICY_6_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_ratios_cli:ratios_eligible",
+        "cadrumo.entrypoints.cli.ledger_ratios_commands:ratios_eligible",
         "target",
-        "cadrumo.entrypoints.cli._ledger_ratios_payloads:RatiosEligibleResult",
+        "cadrumo.entrypoints.cli.ledger_ratios_results:RatiosEligibleResult",
         "ledger.ratios.eligible",
     ),
     "app_ledger_ratios_list": (
@@ -425,9 +426,9 @@ _EXPECTED_LEAF_CONTRACTS = {
         None,
         (_OPTIONAL_YEAR, _OPTIONAL_OUTPUT_LANGUAGE),
         _POLICY_5_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_ratios_cli:ratios_list",
+        "cadrumo.entrypoints.cli.ledger_ratios_commands:ratios_list",
         "target",
-        "cadrumo.entrypoints.cli._ledger_ratios_payloads:RatiosListResult",
+        "cadrumo.entrypoints.cli.ledger_ratios_results:RatiosListResult",
         "ledger.ratios.list",
     ),
     "app_ledger_ratios_set": (
@@ -448,9 +449,9 @@ _EXPECTED_LEAF_CONTRACTS = {
             _OPTIONAL_OUTPUT_LANGUAGE,
         ),
         _POLICY_4_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_ratios_cli:ratios_set",
+        "cadrumo.entrypoints.cli.ledger_ratios_commands:ratios_set",
         "target",
-        "cadrumo.entrypoints.cli._ledger_ratios_payloads:RatiosSetResult",
+        "cadrumo.entrypoints.cli.ledger_ratios_results:RatiosSetResult",
         "ledger.ratios.set",
     ),
     "app_ledger_ratios_unset": (
@@ -469,9 +470,9 @@ _EXPECTED_LEAF_CONTRACTS = {
             _OPTIONAL_OUTPUT_LANGUAGE,
         ),
         _POLICY_4_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_ratios_cli:ratios_unset",
+        "cadrumo.entrypoints.cli.ledger_ratios_commands:ratios_unset",
         "target",
-        "cadrumo.entrypoints.cli._ledger_ratios_payloads:RatiosUnsetResult",
+        "cadrumo.entrypoints.cli.ledger_ratios_results:RatiosUnsetResult",
         "ledger.ratios.unset",
     ),
     "app_ledger_ratios_validate": (
@@ -483,9 +484,9 @@ _EXPECTED_LEAF_CONTRACTS = {
         None,
         (_OPTIONAL_OUTPUT_LANGUAGE,),
         _POLICY_6_CONTRACT,
-        "cadrumo.entrypoints.cli._ledger_ratios_cli:ratios_validate",
+        "cadrumo.entrypoints.cli.ledger_ratios_commands:ratios_validate",
         "target",
-        "cadrumo.entrypoints.cli._ledger_ratios_payloads:RatiosValidateResult",
+        "cadrumo.entrypoints.cli.ledger_ratios_results:RatiosValidateResult",
         "ledger.ratios.validate",
     ),
 }
@@ -513,7 +514,7 @@ def test_shared_facts_have_their_literal_contract_and_only_identical_placements(
 
 
 def test_rule_and_ratios_paths_resolve_from_the_complete_ledger_graph() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LEDGER_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LEDGER_COMMAND_SPECS), resolver=resolve_deferred_target)
     expected_paths = {
         ("aeat", "app", "ledger", "rule", "add"): "app_ledger_rule_add",
         ("aeat", "app", "ledger", "rule", "apply"): "app_ledger_rule_apply",

@@ -55,6 +55,33 @@ def _invoke(profile: NativeCliProfileFixture, *command: str):
     return result
 
 
+def test_auth_provider_choices_are_validated_on_each_runtime_verb(tmp_path: Path) -> None:
+    """The runtime owns AEAT configuration and refuses arbitrary provider text."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="provider-choice-matrix",
+            facts={"identity.name": "Operator", "identity.surnames": "Workflow", "activities.description": "Test"},
+        )
+        configured = _invoke(profile, "config", "auth", "configure", "--provider", "clave_movil")
+        assert configured.exit_code == 0, configured.output
+        assert unwrap_cli_result(configured)["provider"] == "clave_movil"
+        for verb, value in (
+            ("configure", "clave-movil"),
+            ("configure", "unknown_provider"),
+            ("test", "unknown_provider"),
+            ("login", "unknown_provider"),
+            ("reset", "unknown_provider"),
+        ):
+            suffix = ("--yes",) if verb == "reset" else ()
+            refused = _invoke(profile, "config", "auth", verb, "--provider", value, *suffix)
+            assert refused.exit_code != 0, (verb, refused.output)
+            if verb == "configure":
+                assert value not in refused.output
+            else:
+                assert value in refused.output, (verb, refused.output)
+            assert "Traceback" not in refused.output
+
+
 def test_native_cli_auth_configure_settles_and_reads_back_exact_profile_state(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

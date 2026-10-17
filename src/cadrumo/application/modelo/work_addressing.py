@@ -23,7 +23,7 @@ they are allowed to handle.
 See Also:
     :func:`~cadrumo.application.modelo.work_selection.select_modelo_work_resolution`:
         The authoritative pure work selector over one captured catalogue.
-    :mod:`~cadrumo.entrypoints.cli._modelo`:
+    :mod:`~cadrumo.entrypoints.cli.modelo_commands`:
         CLI commands that project operator flags into this facade.
 """
 
@@ -392,7 +392,7 @@ def _modelo_work_period_from_core(
         with bundled_indexed_authority().operation() as pinned:
             return _modelo_work_period_from_core(year, period, modelo=modelo, operation=pinned)
     declared = declared_modelo_period_tokens(modelo, operation=operation)
-    if period.filing_year != year:
+    if period.filing_year != year or (declared and period.registry_token not in declared):
         raise ModeloWorkPeriodTokenError(
             year=year,
             token=str(period),

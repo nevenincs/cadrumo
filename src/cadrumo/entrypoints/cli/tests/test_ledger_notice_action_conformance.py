@@ -14,23 +14,23 @@ import pytest
 
 from ....core.directory_scan import scan_directory
 from .. import (
-    _ledger,
-    _ledger_business_invoice_cli,
     _ledger_classify_cli,
-    _ledger_counterparty_cli,
-    _ledger_evidence_batch_cli,
-    _ledger_evidence_cli,
-    _ledger_evidence_consent_cli,
-    _ledger_evidence_review_cli,
-    _ledger_export_cli,
-    _ledger_import_cli,
     _ledger_llm_cli,
-    _ledger_payloads,
-    _ledger_ratios_cli,
-    _ledger_read_cli,
-    _ledger_review_cli,
-    _ledger_rules_cli,
     _ledger_support,
+    ledger_business_invoice_commands,
+    ledger_commands,
+    ledger_counterparty_commands,
+    ledger_evidence_batch_commands,
+    ledger_evidence_commands,
+    ledger_evidence_consent_commands,
+    ledger_evidence_review_commands,
+    ledger_export_commands,
+    ledger_import_commands,
+    ledger_ratios_commands,
+    ledger_read_commands,
+    ledger_results,
+    ledger_review_commands,
+    ledger_rules_commands,
 )
 from .. import ledger_lifecycle_cli as _ledger_lifecycle_cli
 from .locale_catalogue import LocaleNode, load_locale
@@ -38,27 +38,27 @@ from .locale_catalogue import LocaleNode, load_locale
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
-    _ledger,
-    _ledger_business_invoice_cli,
+    ledger_commands,
+    ledger_business_invoice_commands,
     _ledger_classify_cli,
-    _ledger_counterparty_cli,
-    _ledger_evidence_batch_cli,
-    _ledger_evidence_cli,
-    _ledger_evidence_consent_cli,
-    _ledger_evidence_review_cli,
-    _ledger_export_cli,
-    _ledger_import_cli,
+    ledger_counterparty_commands,
+    ledger_evidence_batch_commands,
+    ledger_evidence_commands,
+    ledger_evidence_consent_commands,
+    ledger_evidence_review_commands,
+    ledger_export_commands,
+    ledger_import_commands,
     _ledger_lifecycle_cli,
     _ledger_llm_cli,
-    _ledger_ratios_cli,
-    _ledger_read_cli,
-    _ledger_review_cli,
-    _ledger_rules_cli,
+    ledger_ratios_commands,
+    ledger_read_commands,
+    ledger_review_commands,
+    ledger_rules_commands,
     _ledger_support,
 )
 
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")
-_PACKAGE_ROOT = Path(inspect.getfile(_ledger)).parents[2]
+_PACKAGE_ROOT = Path(inspect.getfile(ledger_commands)).parents[2]
 # ``_PACKAGE_ROOT`` already addresses ``src/cadrumo``; re-appending it doubled
 # the path, so every catalogue read here resolved to a file that cannot exist.
 _LOCALES_DIR = _PACKAGE_ROOT / "locales"
@@ -216,7 +216,7 @@ _MINIMUM_LEDGER_MODULES = 10
 def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
     """Advisories have one typed envelope home, never bespoke payload strings."""
     failures: list[str] = []
-    payload_directory = Path(inspect.getfile(_ledger_payloads)).parent
+    payload_directory = Path(inspect.getfile(ledger_results)).parent
     forbidden_suffixes = ("_notice", "_hint", "_suggestion", "_recovery")
     payload_modules = tuple(scan_directory(payload_directory, pattern="_ledger*payload*.py"))
 
@@ -251,7 +251,7 @@ _MINIMUM_IMPORT_UX_NODES = 1800
 
 def test_ledger_import_ux_has_no_rendered_message_or_forced_locale_assertions() -> None:
     """Import behavior tests bind machine contracts, not one rendered catalogue."""
-    path = Path(inspect.getfile(_ledger_import_cli)).parent / "tests" / "test_ledger_import_ux.py"
+    path = _PACKAGE_ROOT.parent / "cadrumo_runtime" / "host" / "tests" / "frontend" / "cli" / "test_ledger_import_ux.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
     failures: list[str] = []
     assert sum(1 for _ in ast.walk(tree)) >= _MINIMUM_IMPORT_UX_NODES, (
@@ -301,7 +301,7 @@ def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
             "the claim below holds because that catalogue emptied, not because it is clean"
         )
         failures.extend(f"{locale}:{key}" for key, value in ledger_leaves if _COMMAND_PROSE.search(value))
-    assert failures == []
+    assert failures == [], failures
 
 
 def test_ledger_runtime_command_literals_are_provenance_only() -> None:
@@ -325,7 +325,7 @@ def test_ledger_runtime_command_literals_are_provenance_only() -> None:
 
 def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback() -> None:
     """Every ledger translation resolves from the authored locale catalogues."""
-    ledger_directory = Path(inspect.getfile(_ledger)).parent
+    ledger_directory = Path(inspect.getfile(ledger_commands)).parent
     failures: list[str] = []
     ledger_modules = tuple(scan_directory(ledger_directory, pattern="_ledger*.py"))
 
@@ -415,7 +415,7 @@ def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
     this CLI typed in the result and the module has no failure of its own to
     catch: an except handler here would be a place to flatten one.
     """
-    tree = ast.parse(inspect.getsource(_ledger_import_cli))
+    tree = ast.parse(inspect.getsource(ledger_import_commands))
     forbidden_names = {"resolve_error_message", "_all_files_refused"}
     observed_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
 

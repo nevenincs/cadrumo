@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, cast
 
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
-from cadrumo_client.commands.target import resolve_deferred_target
+from cadrumo_client.commands.target import TargetResolver
 from cadrumo_client.contracts.command_ports import (
     CommandCapabilityClass,
     CommandNodeKind,
@@ -114,12 +114,12 @@ def _json_type(parameter: ParameterSpec) -> JsonType:
     )
 
 
-def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
+def _choices(parameter: ParameterSpec, resolver: TargetResolver) -> tuple[str, ...]:
     if parameter.value.choices:
         return parameter.value.choices
     target = parameter.value.click_type or parameter.value.annotation
     try:
-        value = resolve_deferred_target(target)
+        value = resolver(target)
     except (ImportError, AttributeError, InternalInvariantError):
         return ()
     if isinstance(value, type) and issubclass(value, Enum):
@@ -150,7 +150,7 @@ def command_required_input_names(spec: CommandSpec) -> tuple[str, ...]:
     return tuple(parameter.name for parameter in operator_parameters(spec) if parameter_is_required(parameter))
 
 
-def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:
+def _parameter(parameter: ParameterSpec, resolver: TargetResolver) -> CommandParameterMetadata:
     cli_flag, off_flag = _parameter_flags(parameter)
     json_type = _json_type(parameter)
     return CommandParameterMetadata(
@@ -162,7 +162,7 @@ def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:
         parameter_is_required(parameter),
         isinstance(parameter, OptionSpec) and (parameter.is_flag or json_type == "boolean"),
         isinstance(parameter, OptionSpec) and parameter.multiple,
-        _choices(parameter),
+        _choices(parameter, resolver),
         cast(
             "CommandParameterDefault",
             parameter.default.literal if parameter.default.kind is DefaultKind.LITERAL else None,
@@ -225,15 +225,16 @@ def _target_command_registration_metadata(
     path: tuple[str, ...],
     policy: CommandPolicyMetadata,
     owner: str | None,
+    resolver: TargetResolver,
 ) -> CommandRegistrationMetadata | None:
     """Project a target result schema into :class:`CommandRegistrationMetadata`, if exposed."""
-    from ._profile_authentication_contract import profile_authentication_posture
+    from .profile_authentication_policy import profile_authentication_posture
 
     spec = node.spec
     schema = spec.result_schema
     if schema.state is not SchemaState.TARGET or schema.identity is None or schema.target is None:
         return None
-    parameters = tuple(_parameter(parameter) for parameter in operator_parameters(spec))
+    parameters = tuple(_parameter(parameter, resolver) for parameter in operator_parameters(spec))
     return CommandRegistrationMetadata(
         schema.identity,
         schema.target.qualname,
@@ -310,6 +311,7 @@ def _command_registration_projection(
             path=path,
             policy=policy,
             owner=owner,
+            resolver=graph.resolver,
         )
         if command is not None:
             commands.append(command)
@@ -328,13 +330,18 @@ def command_registration_for_node(
     graph: CommandSpecGraph | None = None,
 ) -> CommandRegistrationMetadata | None:
     """Project one graph node into :class:`CommandRegistrationMetadata` in the output language, if exposed."""
+    if graph is None:
+        from .command_specs import COMMAND_GRAPH
+
+        graph = COMMAND_GRAPH
     spec = node.spec
     return _target_command_registration_metadata(
         node,
         language=output_language(),
-        path=_operator_path(node.path, root_segment="aeat" if graph is None else graph.root().token),
+        path=_operator_path(node.path, root_segment=graph.root().token),
         policy=_policy(spec),
         owner=_handler_owner(spec),
+        resolver=graph.resolver,
     )
 
 
@@ -378,14 +385,12 @@ def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
 @cache
 def command_schema_type(command: str) -> RegisteredSchema:
     """Resolve the authored result-schema target for one command identity."""
-    from cadrumo_client.commands.target import resolve_deferred_target
-
     from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command)
     if spec is None or spec.result_schema.target is None:
         raise LookupError(f"unknown command schema identity: {command}")
-    target = resolve_deferred_target(spec.result_schema.target)
+    target = COMMAND_GRAPH.resolver(spec.result_schema.target)
     if not isinstance(target, type):
         raise TypeError(f"command schema target is not a type: {command}")
     from ...core.json_contract import OutputRootSchema, OutputSchema

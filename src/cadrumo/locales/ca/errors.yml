@@ -377,6 +377,9 @@ errors:
       145 coincideix amb l'id sol·licitat.
     m145_communication_service: Ha fallat una operació del servei local de comunicació
       del Model 145.
+    modelo_calculation_revision_pointer_not_found: No hi ha cap revisió de càlcul
+      disponible per a la declaració %{work_unit_id} (Model %{modelo}) en l’estat
+      sol·licitat.
     modelo_calculation_revision_selector: La selecció de revisió de càlcul ha fallat.
     modelo_calculation_revision_selector_not_found: Cap revisió de càlcul coincideix
       amb el selector indicat.

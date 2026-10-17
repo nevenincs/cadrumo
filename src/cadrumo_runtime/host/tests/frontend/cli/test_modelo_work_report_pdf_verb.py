@@ -72,8 +72,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -85,6 +84,7 @@ from cadrumo.entrypoints.adapter_composition import (
     build_withholding_observation_service,
     build_work_lifecycle_ports,
 )
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import m111_withholding_aggregate_arguments
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -92,7 +92,6 @@ from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 from cadrumo.tests.optional_extra_absence import optional_extra_absent
-from cadrumo_runtime.host.tests.frontend.cli._modelo_work_ux_support import m111_withholding_aggregate_arguments
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from cadrumo_runtime.host.tests.frontend.cli.test_runtime_invoice_add import password_profile_session

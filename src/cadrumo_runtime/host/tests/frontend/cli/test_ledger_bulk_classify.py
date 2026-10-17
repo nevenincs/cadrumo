@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
-from cadrumo.entrypoints.cli._ledger_rule_payloads import (
+from cadrumo.entrypoints.cli.ledger_rule_results import (
     ClassificationRulePayload,
     RuleApplyAppliedPayload,
     RuleApplyMatchPayload,
@@ -56,7 +56,7 @@ def _invoke_cli(args: Sequence[str]) -> Result:
     assert profile is not None and profile.label is not None
     password = profile.passphrase
     close_active_bucket_session()
-    with override_settings(cadrumo_cli_reveal_identifiers=True):
+    with override_settings(cadrumo_cli_reveal_identifiers=True, cadrumo_output_language="en"):
         result = invoke_cached_cli(
             ("--language", "en", "--profile", profile.label, "--profile-secrets-stdin", *args),
             input=json.dumps({"profile_passphrase": password}),

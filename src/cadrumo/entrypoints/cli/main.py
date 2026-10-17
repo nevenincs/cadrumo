@@ -97,18 +97,6 @@ def _execution_policy_from_spec(spec: CommandSpec) -> CommandExecutionPolicy:
     )
 
 
-def command_execution_policy_for_cli_path(
-    cli_path: tuple[str, ...],
-) -> CommandExecutionPolicy:
-    """Return CommandSpec-owned policy for one live path.
-
-    The concrete policy type remains owned by the CLI command graph. This
-    facade keeps cross-distribution consumers on the public entrypoint boundary
-    without importing the complete command tree.
-    """
-    return _declared_execution_policy_for_cli_path(cli_path)
-
-
 def main(*, app: typer.Typer | None = None) -> None:
     """Console-script entry point.
 
@@ -372,7 +360,6 @@ def _emit_command_surface_manifest() -> None:
 
 __all__ = [
     "cli_app",
-    "command_execution_policy_for_cli_path",
     "main",
 ]
 

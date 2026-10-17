@@ -10,6 +10,7 @@ from contextvars import ContextVar
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Self
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, model_validator
@@ -95,6 +96,7 @@ from cadrumo.application.operations.projection_services import (
     UnavailableOperationSecureResponseAuthority,
 )
 from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
@@ -673,6 +675,94 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
         assert schema_mismatch.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
         assert unsafe_output.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
         assert "result_ref" not in type(request).model_fields
+
+
+def test_paged_snapshot_rechecks_terminal_contract_and_keeps_readers_separate(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        projections: list[str] = []
+
+        def project(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+            projections.append("projected")
+            return _project_result(result, receipt)
+
+        root = tmp_path / "paged-result-durable"
+        registry = _registry(result_projector=project, result_schema_type=PublicProjectionResult)
+        repository = OperationJournalRepository(storage_root=root)
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=_NOW))
+        terminal = _terminal_snapshot(registry, result_ref=result_ref)
+        _write(root, repository, _running_snapshot(registry))
+        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
+        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        assert contract.result_schema is not None
+        request = OperationResultProjectionRequestV1(
+            operation_id=_OPERATION_ID,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        )
+        service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
+        scope = (uuid4(), OperationFrontendProjection.TUI)
+
+        def read(
+            selected: OperationResultProjectionRequestV1 = request,
+            *,
+            continuation: bool = True,
+            reader_scope: tuple[UUID, OperationFrontendProjection] = scope,
+        ) -> OperationResultProjectionSuccessV1[PublicProjectionResult] | OperationResultProjectionRefusalV1:
+            return asyncio.run(
+                service.resolve(
+                    selected,
+                    PublicProjectionResult,
+                    snapshot_scope=reader_scope,
+                    continue_snapshot=continuation,
+                )
+            )
+
+        first = read(continuation=False)
+        assert isinstance(first, OperationResultProjectionSuccessV1)
+        assert read() == first
+        assert len(projections) == 1
+        stale = read(request.model_copy(update={"terminal_revision": terminal.revision + 1}))
+        assert isinstance(stale, OperationResultProjectionRefusalV1)
+        assert stale.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
+        changed_contract = read(request.model_copy(update={"definition_contract_digest": "a" * 64}))
+        assert isinstance(changed_contract, OperationResultProjectionRefusalV1)
+        assert changed_contract.code is OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH
+        changed_schema = read(request.model_copy(update={"result_schema": contract.request_schema}))
+        assert isinstance(changed_schema, OperationResultProjectionRefusalV1)
+        assert changed_schema.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
+        assert len(projections) == 1
+        wrong_model = asyncio.run(
+            service.resolve(request, ProjectionResult, snapshot_scope=scope, continue_snapshot=True)
+        )
+        assert isinstance(wrong_model, OperationResultProjectionRefusalV1)
+        assert wrong_model.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
+        assert len(projections) == 2
+
+        # A page-zero read and another session each resolve the real encrypted
+        # operand again; neither is an earlier reader's continuation.
+        assert read(continuation=False) == first
+        assert len(projections) == 3
+        assert read(reader_scope=(uuid4(), OperationFrontendProjection.TUI)) == first
+        assert len(projections) == 4
+        assert read() == first
+        assert len(projections) == 5
+        assert read(reader_scope=(scope[0], OperationFrontendProjection.CLI)) == first
+        assert len(projections) == 6
+        assert read() == first
+        assert len(projections) == 7
+        service.forget_snapshot(_OPERATION_ID)
+        assert read() == first
+        assert len(projections) == 8
+        service.forget_snapshot()
+        assert read() == first
+        assert len(projections) == 9
+
+        # The ordinary service remains a fresh read even while another paged
+        # transfer has a snapshot; the optimization is explicitly requested.
+        assert asyncio.run(service.resolve(request, PublicProjectionResult)) == first
+        assert len(projections) == 10
 
 
 def test_refused_detail_uses_encrypted_operand_and_preserves_the_refused_receipt(tmp_path: Path) -> None:

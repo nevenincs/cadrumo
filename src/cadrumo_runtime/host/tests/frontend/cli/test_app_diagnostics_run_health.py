@@ -20,16 +20,16 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
-from cadrumo.entrypoints.cli._diagnostics_payloads import (
+from cadrumo.entrypoints.cli.diagnostics_results import (
     ErrorKindCountPayload,
     LatencyPercentilesPayload,
     LlmRunProviderPayload,
     RunRecordPayload,
 )
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
-from cadrumo_runtime.commands.tests.diagnostics_native_support import diagnostics_native_profile
+from cadrumo_runtime.commands.tests.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
-from cadrumo_runtime.host.tests.frontend.cli.profile_password_cli import invoke_with_profile_password
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_unbound_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -43,7 +43,7 @@ __all__ = ["diagnostics_native_profile"]
 def _invoke(args: list[str], profile: NativeCliProfileFixture) -> Result:
     if profile.label is None:
         raise AssertionError("native diagnostics profile was not registered")
-    return invoke_with_profile_password(args, label=profile.label)
+    return invoke_diagnostics_cli(args, profile=profile, invoke_cli=invoke_unbound_cli)
 
 
 def _seed_runs() -> None:
@@ -184,7 +184,7 @@ def test_run_health_rejects_malformed_date(diagnostics_native_profile: NativeCli
         diagnostics_native_profile,
     )
     assert result.exit_code != 0
-    assert "ISO date" in result.output
+    assert "ISO date" in result.output, result.output
 
 
 def test_run_health_payloads_mirror_their_canonical_bounds() -> None:

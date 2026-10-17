@@ -42,7 +42,7 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from ...operation_composition import compose_operation_dependencies
-from .._modelo_spreadsheet_payloads import ModeloSpreadsheetPushResult
+from ..modelo_spreadsheet_results import ModeloSpreadsheetPushResult
 from ..operation_modelo_spreadsheet_push import google_operation_error
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

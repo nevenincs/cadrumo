@@ -28,7 +28,7 @@ from pydantic import ValidationError
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha3
 from ..invoice_draft_records import (

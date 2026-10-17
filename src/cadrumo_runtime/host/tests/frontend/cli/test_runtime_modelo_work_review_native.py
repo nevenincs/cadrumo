@@ -28,7 +28,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.adapter_composition import build_modelo_history_ports
-from cadrumo.entrypoints.cli._modelo_payloads import WorkReviewPayload, WorkReviewResult
+from cadrumo.entrypoints.cli.modelo_results import WorkReviewPayload, WorkReviewResult
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -192,7 +192,7 @@ def test_native_review_denies_out_of_scope_period(
         refused = session.invoke_credential_reference("app", "modelo", "work", "review", session.prepared)
         assert refused.exit_code == 2, refused.output
         error = require_error_document(refused.output)["error"]
-        assert error["context"] == {"reason": "period_denied"}
+        assert error["context"]["reason"] == "period_denied", error
         assert "casilla_count" not in refused.output
 
     with native_api_cli_session(

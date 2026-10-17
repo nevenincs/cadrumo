@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from dev.acceptance.installed_cli import build_installed_cli_environment
+from dev.packaging.installed_runtime import installed_cli_runtime
+
 from ..negative_4t_cli_journey import run_iva_negative_4t_cli_journey
 from .journey_year_support import newest_fully_authored_journey_year
 
@@ -28,6 +31,11 @@ def test_installed_cli_negative_fourth_quarter_compensar_generates_wallet_histor
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
         year=year,
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
     )
 
     assert receipt.acceptance_ids == (f"IVA-01-NEGATIVE-{year}-4T-COMPENSAR",)
@@ -82,6 +90,11 @@ def test_installed_cli_negative_fourth_quarter_devolver_leaves_no_wallet_carry(
         artifact_root=tmp_path / "private-source-artifacts",
         year=year,
         refund_election="devolver",
+        runtime_scope=installed_cli_runtime(
+            installed_wheel_aeat,
+            build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
+            tmp_path / "caller-owned-runtime.log",
+        ),
     )
 
     assert receipt.acceptance_ids == (f"IVA-01-NEGATIVE-{year}-4T-DEVOLVER",)

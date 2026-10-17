@@ -670,10 +670,10 @@ def test_native_peer_without_a_logind_session_refuses_and_keeps_borrowed_pidfd_o
 @contextmanager
 def _current_peer_pidfd() -> Generator[int]:
     """Acquire the test peer's kernel identity without optional numeric-PID wrappers."""
-    from cadrumo_client.transport.posix_channel import _linux_peer_pidfd_option
+    from cadrumo_client.transport.posix_channel import linux_peer_pidfd_socket_option
 
     try:
-        option = _linux_peer_pidfd_option()
+        option = linux_peer_pidfd_socket_option()
     except RefusalError as refused:
         if refused.reason is RefusalCode.CONTAINMENT_UNAVAILABLE:
             pytest.skip("native SO_PEERPIDFD ABI is unavailable on this architecture")

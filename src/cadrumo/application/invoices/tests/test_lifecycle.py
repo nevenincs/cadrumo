@@ -18,7 +18,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice

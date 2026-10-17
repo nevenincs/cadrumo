@@ -37,7 +37,7 @@ import pytest
 from click.testing import Result
 
 from ....tests.inventory import FIXTURES_DIR
-from ...tests.ledger_corpus_support import _match, _oracle_rules
+from ...tests.ledger_corpus_support import load_corpus_oracle_rules, match_corpus_rule
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 from .profile_world_fixtures import recorded_fx_seeded_backend
@@ -132,7 +132,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
     amount magnitudes from ``list`` JSON grouped by direction. The sums are
     asserted only for internal consistency, never against a tax formula.
     """
-    rules = _oracle_rules()
+    rules = load_corpus_oracle_rules()
 
     # Bulk-classify the full-corpus business rows against the oracle. --file
     # carries classification + category only, so non-MIXED rows go in one pass.
@@ -144,7 +144,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
         tx_id = row.get("transaction_id")
         assert isinstance(desc, str)
         assert isinstance(tx_id, str)
-        rule = _match(desc, rules)
+        rule = match_corpus_rule(desc, rules)
         if rule is None or rule.get("classification") == "MIXED":
             continue
         cat = rule.get("category_id") or ""

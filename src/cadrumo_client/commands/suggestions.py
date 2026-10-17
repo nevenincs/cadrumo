@@ -39,8 +39,6 @@ import inspect
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from importlib import import_module
-from importlib.util import resolve_name
 from typing import Any, Never, Protocol, cast, override
 
 import typer
@@ -89,65 +87,6 @@ _COMMAND_SYNONYMS: dict[str, dict[str, str]] = {
 }
 
 
-@dataclass(frozen=True, slots=True)
-class LazyOptionalDependencyProvider:
-    """Deferred access to the canonical optional-dependency inventory."""
-
-    resolve: Callable[[], frozenset[str]]
-
-
-type LazyOptionalDependencies = frozenset[str] | LazyOptionalDependencyProvider
-
-
-@dataclass(frozen=True, slots=True)
-class LazyImportTarget:
-    """One explicit module attribute that owns a deferred Typer node.
-
-    Relative modules must name their import package explicitly. Optional
-    dependencies are likewise declared on the target; an arbitrary
-    ``ModuleNotFoundError`` is never enough to make a feature optional.
-    """
-
-    module: str
-    attribute: str = "app"
-    package: str | None = None
-    optional_dependencies: LazyOptionalDependencies = frozenset()
-
-    def __post_init__(self) -> None:
-        """Validate the module, attribute, package, and optional-dependency names, or raise."""
-        if not self.module:
-            raise ValueError("a lazy import target requires a module")
-        if not self.attribute or "." in self.attribute:
-            raise ValueError("a lazy import target requires one public attribute name")
-        if self.module.startswith(".") and not (self.package is not None and self.package):
-            raise ValueError("a relative lazy import target requires its package")
-        dependencies = self.optional_dependencies
-        if isinstance(dependencies, frozenset) and any(
-            not dependency or dependency.startswith(".") for dependency in dependencies
-        ):
-            raise ValueError("optional dependency names must be absolute modules")
-
-    @property
-    def owner(self) -> str:
-        """Return the stable, import-addressable owner of this target."""
-        module = resolve_name(self.module, self.package) if self.module.startswith(".") else self.module
-        return f"{module}:{self.attribute}"
-
-    def optional_dependency_names(self) -> frozenset[str]:
-        """Resolve the explicit optional-dependency set only after a failure."""
-        dependencies = self.optional_dependencies
-        return dependencies if isinstance(dependencies, frozenset) else dependencies.resolve()
-
-    def load(self) -> typer.Typer:
-        """Import exactly this module and read exactly this attribute."""
-        module = import_module(self.module, self.package)
-        try:
-            target = getattr(module, self.attribute)
-        except AttributeError as error:
-            raise InternalInvariantError(f"lazy CLI target {self.owner!r} does not exist") from error
-        return _require_typer_target(target, owner=self.owner)
-
-
 def _callable_owner(callback: object | None) -> str:
     """Project a callable to a stable owner string, or ``<none>``."""
     if callback is None:
@@ -162,7 +101,7 @@ class LazyFactoryTarget:
     """An explicit factory target for a deferred node built at runtime."""
 
     factory: Callable[[], typer.Typer]
-    optional_dependencies: LazyOptionalDependencies = frozenset()
+    optional_dependencies: frozenset[str] = frozenset()
 
     @property
     def owner(self) -> str:
@@ -175,11 +114,9 @@ class LazyFactoryTarget:
 
     def optional_dependency_names(self) -> frozenset[str]:
         """Resolve the explicit optional-dependency set only after a failure."""
-        dependencies = self.optional_dependencies
-        return dependencies if isinstance(dependencies, frozenset) else dependencies.resolve()
+        return self.optional_dependencies
 
 
-type LazyNodeTarget = LazyImportTarget | LazyFactoryTarget
 type OptionalUnavailableFactory = Callable[[str, ModuleNotFoundError], typer.Typer]
 type RequiredUnavailableRefusal = Callable[[str, ModuleNotFoundError], Never]
 
@@ -198,13 +135,9 @@ def _dependency_is_explicitly_optional(missing: str, dependencies: frozenset[str
 class LazySubcommand:
     """A deferred command node materialized from one explicit target.
 
-    Import targets name their module, package, and public attribute. Dynamic
-    factory targets name the callable that constructs the node. The import —
-    and therefore the application-layer / registry cost — is paid only when
-    :meth:`LazySubcommand.load`
-    runs, which
-    :class:`CadrumoTyperGroup`
-    triggers on the first ``get_command`` / ``list_commands`` access.
+    The factory constructs the node when :meth:`LazySubcommand.load` runs.
+    :class:`CadrumoTyperGroup` triggers this on the first ``get_command`` /
+    ``list_commands`` access, deferring the application and registry cost.
 
     ``decorate`` is applied to the Typer instance before it is
     converted to a Click command. The CLI error boundary
@@ -229,7 +162,7 @@ class LazySubcommand:
     def __init__(
         self,
         name: str,
-        target: LazyNodeTarget,
+        target: LazyFactoryTarget,
         *,
         decorate: Callable[[typer.Typer], None] | None = None,
         optional_unavailable: OptionalUnavailableFactory | None = None,
@@ -303,7 +236,7 @@ class LazySubcommand:
             self._decorated.append(typer_instance)
 
     @property
-    def target(self) -> LazyNodeTarget:
+    def target(self) -> LazyFactoryTarget:
         """Expose immutable target metadata without materializing the node."""
         return self._target
 
@@ -552,8 +485,5 @@ __all__ = [
     "INVOCATION_REMAINDER_META_KEY",
     "CadrumoTyperGroup",
     "LazyFactoryTarget",
-    "LazyImportTarget",
-    "LazyNodeTarget",
-    "LazyOptionalDependencyProvider",
     "LazySubcommand",
 ]

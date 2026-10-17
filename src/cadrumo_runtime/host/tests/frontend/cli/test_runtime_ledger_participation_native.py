@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-import json
 import sys
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -12,13 +10,11 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
-from cadrumo.adapters.persistence.storage.errors import RepositoryError
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
@@ -35,7 +31,6 @@ from cadrumo.application.ledger.participation_rebuild_operation import (
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.operations.persistence.events import OperationEffectEvent
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -44,7 +39,6 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
-from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
@@ -320,95 +314,14 @@ def test_native_participation_reads_canonical_index_rebuilds_and_requires_commit
         refused_rebuild = api.invoke_credential_reference("app", "ledger", "participation", "rebuild")
         assert refused_rebuild.exit_code == 2, refused_rebuild.output
         refusal = require_error_document(refused_rebuild.output)["error"]
-        assert refusal["code"] == "REFUSED_CLI_BOUNDARY"
+        assert refusal["code"] == "REFUSED_RUNTIME_FRONTEND", refusal
         context = refusal["context"]
-        assert isinstance(context, dict)
-        operation_id = context.get("operation_id")
-        assert isinstance(operation_id, str) and operation_id
-        runtime_health = api.runtime_health()
-        safe_diagnostics: dict[str, object] = {
-            "refusal": {
-                "code": refusal.get("code"),
-                "category": refusal.get("category"),
-                **{key: context.get(key) for key in ("reason", "effect", "terminal_condition")},
-                "terminal_condition_present": "terminal_condition" in context,
-                "operation_id_present": True,
-            },
-            "journal": None,
-            "runtime_health": {
-                "ready": runtime_health.ready,
-                "stop_requested": runtime_health.stop_requested,
-                "serve_task_done": runtime_health.serve_task_done,
-            },
-            "runtime_failure_observations": tuple(
-                {
-                    "stage": observation.stage,
-                    "action": observation.action,
-                    "exception_type": observation.exception_type,
-                    "reason": observation.reason,
-                    "request_type": observation.request_type,
-                    "response_type": observation.response_type,
-                    "definition_id": observation.definition_id,
-                    "operation_exchange": observation.operation_exchange,
-                    "phase": observation.phase,
-                    "traceback_locations": observation.traceback_locations,
-                }
-                for observation in api.runtime_failure_observations
-            ),
-            "runtime_failure_events": tuple(
-                {
-                    "stage": observation.stage,
-                    "action": observation.action,
-                    "phase": observation.phase,
-                    "exception_type": observation.exception_type,
-                    "reason": observation.reason,
-                    "request_type": observation.request_type,
-                    "definition_id": observation.definition_id,
-                    "traceback_locations": observation.traceback_locations,
-                }
-                for observation in api.runtime_failure_events
-            ),
-        }
-        try:
-            snapshot = asyncio.run(
-                OperationJournalRepository(storage_root=tmp_path / "cadrumo-storage").load(operation_id)
-            )
-        except RepositoryError:
-            safe_diagnostics["journal"] = {"available": False}
-        else:
-            receipt = snapshot.terminal_receipt
-            safe_effect_values = {"none", "updated", "partial", "unknown"}
-            effect_event_values = tuple(
-                event.effect.value
-                for event in snapshot.events
-                if isinstance(event, OperationEffectEvent) and event.effect.value in safe_effect_values
-            )
-            receipt_ref = None if receipt is None else receipt.refusal_ref
-            safe_diagnostics["journal"] = {
-                "available": True,
-                "identity_matches_expected_request": (
-                    snapshot.identity.operation_id == operation_id
-                    and snapshot.identity.definition_id == LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID
-                    and snapshot.identity.subject_ref == profile_operation_subject(str(api.profile_id))
-                ),
-                "lifecycle": snapshot.lifecycle.value,
-                "terminal_condition": None
-                if snapshot.terminal_condition is None
-                else snapshot.terminal_condition.value,
-                "effect": snapshot.effect.value,
-                "phase_code": None if snapshot.phase_code is None else str(snapshot.phase_code),
-                "events": tuple((event.kind.value, str(event.code)) for event in snapshot.events),
-                "effect_events": effect_event_values,
-                "receipt_terminal_condition": None if receipt is None else receipt.condition.value,
-                "receipt_effect": None if receipt is None else receipt.effect.value,
-                "receipt_refusal_ref": (
-                    receipt_ref if receipt_ref in {"REFUSED_PROFILE_ACCESS"} else "<redacted-unrecognized-ref>"
-                ),
-                "failure_error_code": (
-                    None if receipt is None or receipt.failure_error_code is None else str(receipt.failure_error_code)
-                ),
-            }
-        safe_diagnostics_json = json.dumps(safe_diagnostics, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+        assert context == {"reason": "operation_denied", "request_faults": "", "sign_in": "null"}, refusal
+        # Missing COMMIT is denied at admission, so there is no operation
+        # receipt to inspect. Verify the actual encrypted records stayed intact
+        # below, and retain the successful human rebuild as the positive control.
+        assert "operation_id" not in context
+        assert api.runtime_health().ready
         assert "stale_removed_count" not in refused_rebuild.output
 
         _reauthenticate_profile(
@@ -422,10 +335,6 @@ def test_native_participation_reads_canonical_index_rebuilds_and_requires_commit
         assert after_denial_repository.load(seeded["outside"]).model_dump(mode="json") == stale_payload
         assert after_denial_repository.exists(seeded["outside"])
         close_active_bucket_session()
-
-        assert context["reason"] == "REFUSED_PROFILE_ACCESS", safe_diagnostics_json
-        assert context["effect"] == "none", safe_diagnostics_json
-        assert context["terminal_condition"] == "refused", safe_diagnostics_json
 
         rebuilt = api.invoke_password("app", "ledger", "participation", "rebuild")
         assert rebuilt.exit_code == 0, rebuilt.output

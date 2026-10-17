@@ -84,10 +84,10 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1],
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_add", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".ledger_business_invoice_commands", "invoice_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceCreatePayload", __package__),
+            target=DeferredTarget(".ledger_catalogue_invoice_results", "CatalogueInvoiceCreatePayload", __package__),
             identity="ledger.invoice.add",
         ),
     ),
@@ -138,10 +138,12 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_import", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_business_invoice_commands", "invoice_import", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceImportResult", __package__),
+            target=DeferredTarget(".ledger_catalogue_invoice_results", "CatalogueInvoiceImportResult", __package__),
             identity="ledger.invoice.import",
         ),
     ),

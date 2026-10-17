@@ -192,6 +192,10 @@ def test_modelo_cli_uses_centralized_operator_addressing_services() -> None:
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 for alias in node.names:
+                    if path.name == "_modelo_behavior_support.py" and alias.name == "ModeloWorkAddress":
+                        # The shared adapter annotates the centralized service's
+                        # return type; constructing it locally is still forbidden below.
+                        continue
                     if alias.name in _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES:
                         offenders.append(
                             f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}: import {alias.name}",

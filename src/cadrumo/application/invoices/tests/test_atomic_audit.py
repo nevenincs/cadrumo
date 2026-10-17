@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.buckets.event import BucketEventType
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports

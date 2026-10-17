@@ -33,7 +33,9 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.paths import effective_storage_root
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-from .cli_runner import invoke_cached_cli
+# This module already owns a native server. An authentication refusal must not
+# join a second portable server over the same anchored installation.
+from .cli_runner import invoke_unbound_cli
 
 __all__ = ["isolated_profile_storage"]
 from cadrumo.entrypoints.cli.tests.profile_lifecycle_support import create_profile_via_cli
@@ -46,18 +48,19 @@ def _invoke(args: Sequence[str]) -> Result:
     # passphrase and its confirmation, and a test runner is not a terminal: the
     # bounded strict-JSON channel is the only one the verb accepts.
     if "create" in args and "profile" in args and "--secrets-stdin" not in args:
-        return invoke_cached_cli(
+        return invoke_unbound_cli(
             (*args, "--secrets-stdin"),
             input=json.dumps({"passphrase": _dev_passphrase(), "passphrase_confirmation": _dev_passphrase()}),
         )
     # `login` OPENS an existing envelope rather than minting one, so it takes the
     # passphrase alone and refuses a payload carrying the confirmation field.
     if "login" in args and "--secrets-stdin" not in args:
-        return invoke_cached_cli(
+        result = invoke_unbound_cli(
             (*args, "--secrets-stdin"),
             input=json.dumps({"passphrase": _dev_passphrase()}),
         )
-    return invoke_cached_cli(args)
+        return result
+    return invoke_unbound_cli(args)
 
 
 def _clear_selection() -> None:
@@ -171,6 +174,8 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("solo", log_in=False)
+    logged_in = _invoke(("config", "login", "solo"))
+    assert logged_in.exit_code == 0, logged_in.output
 
     _clear_selection()
     assert resolve_active_bucket_id() is None
@@ -338,57 +343,46 @@ def test_deleted_profile_name_is_reusable_by_create(
     assert "operator" in listed.output
 
 
-def test_logout_settles_through_the_supervised_operation_journal(_per_bucket_backend: Path) -> None:
-    """Logout runs on the operation platform, not a direct authority call.
+def test_logout_password_proof_revokes_runtime_access_and_keeps_selection(_per_bucket_backend: Path) -> None:
+    """Generic runtime sign-out requires proof and preserves the login target."""
+    from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
-    The journal is what separates the two implementations. A direct call to the
-    session-revocation authority closes the session and records nothing, so
-    asserting only that the pointer clears would pass against either one. A
-    supervised operation settles through the journal and leaves that record
-    behind, which is what this pins.
-    """
     create_profile_via_cli("solo", log_in=False)
-    root = Path(_per_bucket_backend)
-    before = {path for path in root.rglob("*") if path.is_file()}
-
-    assert _invoke(("config", "logout")).exit_code == 0
-
-    written = {path for path in root.rglob("*") if path.is_file()} - before
-    operation_records = sorted(
-        path.relative_to(root).as_posix() for path in written if "operation" in path.relative_to(root).as_posix()
+    selected = resolve_active_bucket_id()
+    assert selected is not None
+    logged_out = invoke_unbound_cli(
+        ("--format", "json", "config", "logout", "--secrets-stdin"),
+        input=json.dumps({"passphrase": _dev_passphrase()}),
     )
+    assert logged_out.exit_code == 0, logged_out.output
+    result = json.loads(logged_out.output)["result"]
+    assert result["logged_out_profile"] == "solo"
+    assert result["human_receipt_revoked"] is True
+    assert result["already_logged_out"] is False
+    assert resolve_active_bucket_id() == selected
 
-    assert operation_records, (
-        f"logout left no operation-platform record under {root}; "
-        f"it wrote {sorted(path.relative_to(root).as_posix() for path in written)}"
-    )
+    # An unproven new connection cannot reuse the ended authority.
+    repeated = _invoke(("--format", "json", "config", "logout"))
+    assert repeated.exit_code != 0, repeated.output
+    assert json.loads(repeated.output)["error"]["context"]["reason"] == "absent"
+    logged_in = _invoke(("config", "login", "solo"))
+    assert logged_in.exit_code == 0, logged_in.output
+    assert resolve_active_bucket_id() == selected
 
 
-def test_logout_clears_a_stale_selection_without_an_open_session(_per_bucket_backend: Path) -> None:
-    """A registered profile whose session is closed still logs out cleanly.
-
-    This is the ordinary state between two runs of the CLI: the durable active
-    pointer survives, the session does not. Supervision cannot help here -- its
-    journal lives in profile-bound encrypted storage that only an open session
-    unlocks -- so a logout that always supervised refused with a storage
-    readiness error in exactly the state an operator hits most often. The
-    sibling test pins the supervised branch; this one pins the branch that
-    reaches the revocation authority directly, and the two together are what
-    make the gate on the open session observable.
-    """
+def test_logout_without_proof_preserves_a_stale_selection(_per_bucket_backend: Path) -> None:
+    """A selection alone grants no authority to sign a person out."""
     from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
     profile_id = "11111111-1111-4111-8111-111111111111"
     with open_test_profile_session(profile_id):
         register_minimal_profile(profile_id=profile_id, display_name="operator")
-
-    logged_out = _invoke(("config", "logout"))
-
-    assert logged_out.exit_code == 0, logged_out.output
-    assert "logged_out_profile\toperator" in logged_out.output
-
-    # The selection is gone, so the next bare invocation is a login state.
-    landing = _invoke(())
-    assert landing.exit_code == 0, landing.output
-    assert "aeat config login NAME" in landing.output
+    selected_path = pointer_path(effective_storage_root())
+    before = selected_path.read_bytes()
+    logged_out = _invoke(("--format", "json", "config", "logout"))
+    assert logged_out.exit_code != 0, logged_out.output
+    error = json.loads(logged_out.output)["error"]
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["context"]["reason"] == "absent"
+    assert selected_path.read_bytes() == before

@@ -21,8 +21,8 @@ from cadrumo.adapters.persistence.profile.tests.password_only_profile import reg
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, override_locales_root, tr
+from cadrumo.entrypoints.cli.tests.cli_performance import profile_cli_path
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
-from cadrumo.entrypoints.tests.cli_performance import profile_cli_path
 
 from ...cli_runner import invoke_cached_cli
 from .isolated_storage_fixture import native_profile_view_server

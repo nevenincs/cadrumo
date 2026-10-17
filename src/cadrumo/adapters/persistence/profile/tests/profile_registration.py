@@ -37,6 +37,7 @@ from .....tests.live_gate import requires_live_enabled
 from ...storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     seed_test_profile_record,
+    upsert_test_profile_facts,
 )
 from ...storage.tests.secure_sql import isolated_profile_storage_root
 
@@ -181,7 +182,9 @@ def live_clave_movil_profile_scope(base: Path) -> Generator[LiveAeatProfile]:
 
     The profile's fiscal identity is ``CADRUMO_CLAVE_MOVIL_DNI_NIE`` and its
     passphrase the development test password, so a clean checkout can run the
-    live lane without a login left behind by an earlier process. The keyring
+    live lane without a login left behind by an earlier process. Its Cl@ve
+    credential facts are persisted in the encrypted profile so contained
+    workers can resolve them without inheriting private auth variables. The keyring
     is pinned to a backend that stores nothing, in this process and in every
     child it starts: the login stays process-scoped and no session key reaches
     the operator's OS credential store.
@@ -198,6 +201,13 @@ def live_clave_movil_profile_scope(base: Path) -> Generator[LiveAeatProfile]:
     tax_id = configured.get_secret_value().strip().upper() if configured is not None else ""
     if not tax_id:
         pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
+    support = settings.cadrumo_clave_movil_nie_soporte
+    facts = {
+        "identity.tax_id": tax_id,
+        "auth.dni_nie": tax_id,
+        "auth.numero_soporte": support.get_secret_value() if support is not None else "",
+        "auth.fecha_validez": settings.cadrumo_clave_movil_dni_fecha or "",
+    }
     passphrase = settings.cadrumo_dev_test_database_password.get_secret_value()
     previous_keyring = keyring.get_keyring()
     keyring.set_keyring(NullKeyring())
@@ -210,7 +220,7 @@ def live_clave_movil_profile_scope(base: Path) -> Generator[LiveAeatProfile]:
                 if resolve_profile_bucket(_LIVE_PROFILE_LABEL) is None:
                     profile_id = register_cli_profile(
                         label=_LIVE_PROFILE_LABEL,
-                        facts={"identity.tax_id": tax_id},
+                        facts=facts,
                         log_in=False,
                     )
                 else:
@@ -220,6 +230,12 @@ def live_clave_movil_profile_scope(base: Path) -> Generator[LiveAeatProfile]:
                             passphrase_callback=lambda: passphrase,
                             profile_decode_context=operation.profile_decode_context(),
                         ).bucket_id
+                    # A native worker reads the encrypted profile, rather than
+                    # inheriting the test runner's private auth environment.
+                    upsert_test_profile_facts(
+                        profile_id,
+                        tuple(UserProfileFact(path=path, value=value) for path, value in facts.items() if value),
+                    )
                 with _profile_authority_scope() as operation:
                     set_profile_auth_preference(
                         profile_id=profile_id,

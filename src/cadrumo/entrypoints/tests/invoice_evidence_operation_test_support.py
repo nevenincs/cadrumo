@@ -42,8 +42,8 @@ from ...application.local_reader import read_local_reader_status
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.regime_legend import resolve_regime_legends
+from ...domain.iva.schema import InvoiceKind
 from ...domain.user_profile.values import UserProfileFact
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
 

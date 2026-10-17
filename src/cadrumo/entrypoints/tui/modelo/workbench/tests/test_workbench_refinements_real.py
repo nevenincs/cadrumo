@@ -1,8 +1,8 @@
 """A real Modelo 303 reads cleanly: each heading once, and a help band that does not repeat itself.
 
 The declaration is seeded in real encrypted storage and read through the
-production reader against the bundled registry. Its third page prints "Result"
-and "Corrective return" in two parts each; the navigator names each once. The
+production reader against the bundled registry. A historical Modelo 390 has a
+page with two parts under the same heading; the navigator names it once. The
 help band of a box filled from a source says where its value comes from in the
 row's words, without a "Source" line that says the same again and without a
 description that opens by naming the box.
@@ -61,8 +61,13 @@ def _navigator(screen: ModeloWorkbenchScreen) -> list[str]:
 
 
 @pytest.mark.asyncio
-async def test_a_heading_the_real_layout_prints_twice_is_listed_once(workbench: InstalledModeloWorkbench) -> None:
-    with override_settings(cadrumo_output_language="en"):
+async def test_a_heading_the_real_layout_prints_twice_is_listed_once(tmp_path: Path) -> None:
+    # Authored M303 layouts now distinguish their headings. The published
+    # M390 2023 page 2 retains two general-regime sections with one heading.
+    with (
+        real_workbench(tmp_path, modelo="390", filing_year=2023, period_code="0A") as workbench,
+        override_settings(cadrumo_output_language="en"),
+    ):
         screen = ModeloWorkbenchScreen(workbench, actions=workbench)
         app = ScreenHostApp(screen)
         async with app.run_test(size=(160, 48)) as pilot:
@@ -81,13 +86,19 @@ async def test_a_heading_the_real_layout_prints_twice_is_listed_once(workbench: 
                 await pilot.press("right_square_bracket")
             await pilot.pause()
             rows = _navigator(screen)
+            navigator = screen.query_one("#wb-sections", OptionList)
+            row_ids = [navigator.get_option_at_index(i).id for i in range(navigator.option_count)]
+            groups = [group for group in heading_groups(screen.pages_shown[index]) if len(group) > 1]
             app.exit(None)
 
-    assert headings == ["Result", "Corrective return"]
-    for heading in headings:
-        # A section row leads with its mark, whichever level it shows; the heading follows it.
-        listed = [row for row in rows if row.strip().partition(" ")[2].startswith(heading)]
-        assert len(listed) == 1, f"{heading!r} is listed {len(listed)} times: {rows}"
+    assert len(headings) == 1, headings
+    for group in groups:
+        # The real heading is longer than the sidebar and is ellipsized.
+        # Its one navigable row owns the first section; a second section with
+        # the same heading must not get a duplicate row of its own.
+        assert row_ids.count(f"section:{index}:{group[0].id}") == 1, rows
+        for section in group[1:]:
+            assert f"section:{index}:{section.id}" not in row_ids, rows
 
 
 def _sourced(form: ModeloWorkForm) -> ModeloFormField:

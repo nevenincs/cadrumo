@@ -132,7 +132,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
                 assert isinstance(screen, RuntimeLoginScreen)
                 submit = screen.query_one("#runtime-login-submit", Button)
                 async with asyncio.timeout(90):
-                    while screen._worker is None or not screen._worker.is_finished or submit.disabled:
+                    while (screen._worker is not None and not screen._worker.is_finished) or submit.disabled:
                         await pilot.pause(0.05)
                 method = screen.query_one("#runtime-login-method", Select)
                 method.value = RuntimeLoginMethod.PASSWORD

@@ -249,8 +249,9 @@ def test_native_installer_preserves_configuration_and_clears_stale_desktop(tmp_p
         ]
         assert (nested / "packaged-Release").is_file()
         clean_paths = (binary / "native-installer-clean-Release.txt").read_text()
+        owned = [binary / "stage/Release/services", binary / "generated/action-msi-bootstrap-kit-Release.json"]
         assert clean_paths == (
-            (binary / "stage/Release/services").as_posix() if desktop and sys.platform == "win32" else ""
+            ";".join(path.as_posix() for path in owned) if desktop and sys.platform == "win32" else ""
         )
 
     # Different source binary directories share the enrolled distribution owner.

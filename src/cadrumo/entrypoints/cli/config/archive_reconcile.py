@@ -31,7 +31,7 @@ from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, resolve_notice_action
-from ._archive_reconcile_payloads import (
+from .archive_reconcile_results import (
     ProfileBundleReconcileResult,
     ReconciledProfileExportPayload,
     UnreconciledProfileExportPayload,

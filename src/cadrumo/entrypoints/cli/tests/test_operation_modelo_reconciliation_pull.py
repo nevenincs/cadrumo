@@ -14,15 +14,13 @@ from pydantic import ValidationError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.modelo.reconciliation import ModeloReconciliationReport
+from ....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ....application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ....application.modelo.reconciliation_pull_operation import (
     MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
     ModeloReconciliationPullRequest,
 )
-from ....application.modelo.reconciliation_records import (
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
-)
+from ....application.modelo.reconciliation_records import ModeloReconciliationVerdict
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from .. import operation_modelo_reconciliation_pull as bridge

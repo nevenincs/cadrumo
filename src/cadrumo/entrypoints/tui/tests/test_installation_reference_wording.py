@@ -30,13 +30,19 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _LOCALES = ("en", "es", "ca", "hu")
 _NAMESPACES = ("tui.installation.", "tui.reference.")
 _TUI_PACKAGE = Path(__file__).resolve().parents[1]
+_RUNTIME_TUI_PACKAGE = _TUI_PACKAGE.parents[2] / "cadrumo_runtime" / "host" / "frontend" / "tui"
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
 
 
 def _called_keys() -> frozenset[str]:
     """Every literal key of the two namespaces a terminal-interface module passes to ``tr``."""
     keys: set[str] = set()
-    for path in scan_directory(_TUI_PACKAGE, pattern="*.py", recursive=True):
+    paths = (
+        path
+        for root in (_TUI_PACKAGE, _RUNTIME_TUI_PACKAGE)
+        for path in scan_directory(root, pattern="*.py", recursive=True)
+    )
+    for path in paths:
         if "tests" in path.parts:
             continue
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):

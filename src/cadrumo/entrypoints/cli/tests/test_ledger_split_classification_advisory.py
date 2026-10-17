@@ -97,7 +97,7 @@ def test_split_of_classified_parent_emits_dropped_classification_advisory() -> N
 
     envelope = _split_json(parent)
 
-    assert envelope["status"] == "success"
+    assert envelope["status"] == "warning", envelope
     notices = envelope["notices"]
     (notice,) = [n for n in notices if n["code"] == "ledger.split.classification_dropped"]
     assert notice["severity"] == "info"
@@ -207,5 +207,5 @@ def test_split_emits_child_ids_that_merge_accepts() -> None:
 
     # Round-trip: the exact full ids the split emitted are the cohort merge accepts.
     merge_envelope = _merge_json(full_ids)
-    assert merge_envelope["status"] == "success"
+    assert merge_envelope["status"] == "warning", merge_envelope
     assert sorted(merge_envelope["result"]["source_child_ids"]) == sorted(full_ids)

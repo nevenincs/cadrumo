@@ -28,9 +28,14 @@ from ....domain.calculations.registry.schema import BindingDefinition, ModeloRev
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.flow import derive_flow_for_classification
-from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva.schema import (
+    InvoiceKind,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
 from .. import _modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
 from .. import _preconditions as preconditions_module

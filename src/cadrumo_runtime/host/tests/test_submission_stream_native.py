@@ -73,9 +73,9 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmitPayload,
     OperationSubmitted,
 )
-from cadrumo_client.contracts.profile_access import AccessRefusal, Reply, SessionRequest, SessionsLocked
+from cadrumo_client.contracts.profile_access import AccessRefusal, SessionRequest, SessionsLocked
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SubmissionPayloadDescriptor
-from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, read_document, write_document, write_secret
+from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, write_document, write_secret
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -265,9 +265,13 @@ def _stream_request(
     )
 
 
-def _begin_upload(channel: ByteChannel, request: OperationSubmitPayload, *, deadline: float) -> OperationPayloadReady:
+def _begin_upload(
+    channel: ByteChannel, client: VerifiedConnection, request: OperationSubmitPayload, *, deadline: float
+) -> OperationPayloadReady:
     write_document(channel, request, deadline=deadline)
-    reply = read_document(channel, Reply, deadline=deadline).root
+    # Authentication may enqueue a session event before the transfer reply.
+    # Use the canonical reply demultiplexer and exact request correlation.
+    reply = client._reply(request.request_id, deadline=deadline).root
     assert isinstance(reply, OperationPayloadReady), reply
     assert reply.request_id == request.request_id
     assert reply.descriptor == request.descriptor
@@ -415,7 +419,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
             payload_json=partial_json,
         )
         assert SUBMISSION_PAYLOAD_CHUNK_BYTES < len(partial_content) < 2 * SUBMISSION_PAYLOAD_CHUNK_BYTES
-        _begin_upload(interrupted_channel, partial_request, deadline=time.monotonic() + 20)
+        _begin_upload(interrupted_channel, interrupted, partial_request, deadline=time.monotonic() + 20)
         _send_chunk(interrupted_channel, partial_content, 0, deadline=time.monotonic() + 20)
         interrupted.close()
 
@@ -452,7 +456,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
             payload_json=locked_json,
         )
         assert SUBMISSION_PAYLOAD_CHUNK_BYTES < len(locked_content) < 2 * SUBMISSION_PAYLOAD_CHUNK_BYTES
-        _begin_upload(upload_channel, locked_request, deadline=time.monotonic() + 20)
+        _begin_upload(upload_channel, uploader, locked_request, deadline=time.monotonic() + 20)
         _send_chunk(upload_channel, locked_content, 0, deadline=time.monotonic() + 20)
 
         locked = human.session(
@@ -470,7 +474,7 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
 
         try:
             _send_chunk(upload_channel, locked_content, SUBMISSION_PAYLOAD_CHUNK_BYTES, deadline=time.monotonic() + 20)
-            outcome = read_document(upload_channel, Reply, deadline=time.monotonic() + 20).root
+            outcome = uploader._reply(locked_request.request_id, deadline=time.monotonic() + 20).root
         except RefusalError as error:
             assert error.reason is RefusalCode.CONNECTION_CLOSED
         else:

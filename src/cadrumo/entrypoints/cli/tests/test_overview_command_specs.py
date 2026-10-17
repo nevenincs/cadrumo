@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import SchemaState
-from cadrumo_client.commands.target import resolve_deferred_target
 
 from .._overview_command_specs import OVERVIEW_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _graph() -> CommandSpecGraph:
-    return CommandSpecGraph((*ROOT_COMMAND_SPECS, *OVERVIEW_COMMAND_SPECS))
+    return CommandSpecGraph((*ROOT_COMMAND_SPECS, *OVERVIEW_COMMAND_SPECS), resolver=resolve_deferred_target)
 
 
 def test_overview_specs_match_the_independent_operator_path_set() -> None:

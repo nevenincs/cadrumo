@@ -14,10 +14,10 @@ from typer._click.core import Command
 from typer.main import get_command
 
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.contracts.command_program import CommandProgram
-from cadrumo_runtime.host.tests.frontend.cli.modelo_cli import create_modelo_work_unit_via_cli
 
 
 def command_graph(program: CommandProgram) -> CommandSpecGraph:

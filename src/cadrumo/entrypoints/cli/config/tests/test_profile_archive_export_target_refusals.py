@@ -28,9 +28,10 @@ from cadrumo.application.user_profile.capsule_archive import (
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from cadrumo.entrypoints.cli.config._archive_cli import _refuse_an_archive_target_the_writer_would_reject
 from cadrumo.entrypoints.profile_archive_operation_composition import build_profile_archive_operation_ports
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
+from ..archive_commands import _refuse_an_archive_target_the_writer_would_reject
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

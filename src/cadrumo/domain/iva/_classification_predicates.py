@@ -16,11 +16,10 @@ if TYPE_CHECKING:
         CustomerTaxStatus,
         IvaClassificationCatalogue,
         IvaInvoiceClassificationCriteria,
-        IvaTerritorialScope,
         TransactionKind,
         TransactionKindCatalogue,
     )
-    from .schema import EUMemberState
+    from .schema import EUMemberState, IvaTerritorialScope
 
 
 def _scope_predicate_values(
@@ -207,7 +206,7 @@ def _compile_kind_condition(
 
 
 def _compile_direction_condition(value: str) -> Callable[[IvaInvoiceClassificationCriteria], bool]:
-    from .classification import InvoiceKind
+    from .schema import InvoiceKind
 
     try:
         direction = InvoiceKind(value)

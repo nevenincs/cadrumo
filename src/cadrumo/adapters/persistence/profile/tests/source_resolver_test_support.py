@@ -18,11 +18,11 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 from cadrumo.domain.user_profile.values import UserProfileFact
 
+from .....domain.iva.schema import InvoiceKind
 from .published_authority_support import published_authority_operation
 
 _BUCKET_ID = "24242424-2424-4242-8242-242424242424"

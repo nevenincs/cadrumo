@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from importlib import import_module
 from types import MappingProxyType
 from typing import cast
 
@@ -15,6 +14,7 @@ from cadrumo_client.commands._structure_validation import validate_graph as _val
 from cadrumo_client.commands.parameters import OptionSpec, ParameterSpec
 from cadrumo_client.commands.shared_contracts import DeferredTarget, SchemaState
 from cadrumo_client.commands.spec import CommandSpec, CommandSpecNode
+from cadrumo_client.commands.target import TargetResolver
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,11 +29,9 @@ class CommandSpecFamily:
     mount_key: str
     source: DeferredTarget
 
-    def load(self) -> tuple[CommandSpec, ...]:
+    def load(self, resolver: TargetResolver) -> tuple[CommandSpec, ...]:
         """Import the declaring module and return its specs in declared order."""
-        value: object = import_module(self.source.module)
-        for part in self.source.qualname.split("."):
-            value = getattr(value, part)
+        value = resolver(self.source)
         if isinstance(value, CommandSpec):
             return (value,)
         members: tuple[object, ...] = cast("tuple[object, ...]", value) if isinstance(value, tuple) else ()
@@ -59,6 +57,7 @@ class CommandSpecGraph:
 
     declared: tuple[CommandSpec, ...]
     families: tuple[CommandSpecFamily, ...] = ()
+    resolver: TargetResolver = field(kw_only=True, repr=False)
     _loaded: dict[int, tuple[CommandSpec, ...]] = field(default_factory=dict, compare=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -77,7 +76,7 @@ class CommandSpecGraph:
         ]
         if not pending:
             return
-        loaded = {index: self.families[index].load() for index in pending}
+        loaded = {index: self.families[index].load(self.resolver) for index in pending}
         candidate = dict(self._loaded)
         candidate.update(loaded)
         rows = list(self.declared)

@@ -29,7 +29,7 @@ import pytest
 from pydantic import BaseModel
 
 from dev._paths import REPO_ROOT
-from dev.operation_contract_manifest.tests.test_operation_catalogue import _registry
+from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -48,7 +48,7 @@ def _unwrapped(annotation: object) -> object:
 @cache
 def _public_models(definition_id: str) -> tuple[type[BaseModel], type[BaseModel] | None]:
     """The registered request model and, when one is declared, the registered result model."""
-    registry = _registry()
+    registry = production_operation_registry()
     contract = registry.lookup_public_contract(definition_id)
     request = registry.lookup_public_schema_binding(contract.request_schema).model_type
     result = (
@@ -272,7 +272,7 @@ def _attribution_fields(model: type[BaseModel]) -> frozenset[str]:
 
 def _found_on_registered_definitions() -> dict[str, frozenset[str]]:
     found: dict[str, frozenset[str]] = {}
-    for registration in _registry().public_registrations:
+    for registration in production_operation_registry().public_registrations:
         definition_id = registration.contract.definition_id
         request, _result = _public_models(definition_id)
         fields = _attribution_fields(request)

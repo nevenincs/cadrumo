@@ -32,8 +32,8 @@ from ....application.invoices.catalogue_selection import InvoiceLookupRefusalRea
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....domain.invoices.models import Invoice
-from ....domain.iva.classification import InvoiceKind
-from .. import _ledger_business_invoice_cli as handler
+from ....domain.iva.schema import InvoiceKind
+from .. import ledger_business_invoice_commands as handler
 from .. import operation_invoice_catalogue as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]

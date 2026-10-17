@@ -28,7 +28,7 @@ from pydantic import ValidationError
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core.json_contract import strict_round_trip
 from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
-from .._overview_payloads import OverviewCalendarEventPayload
+from ..overview_results import OverviewCalendarEventPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

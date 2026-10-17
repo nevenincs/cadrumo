@@ -63,7 +63,7 @@ def test_every_verb_answers_an_unknown_profile_the_same_way() -> None:
 
     assert {verb: error["code"] for verb, error in errors.items()} == dict.fromkeys(errors, "REFUSED_PROFILE_NOT_FOUND")
     assert {verb: _action_id(error) for verb, error in errors.items()} == dict.fromkeys(errors, "operator.profile.list")
-    assert all(error["context"] == {"name": _UNKNOWN} for error in errors.values())
+    assert all(error["context"] == {"name": _UNKNOWN} for error in errors.values()), errors
 
 
 def test_deleting_the_selected_profile_names_the_command_that_unblocks_it() -> None:

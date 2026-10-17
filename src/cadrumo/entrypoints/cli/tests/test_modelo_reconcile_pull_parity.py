@@ -17,19 +17,19 @@ import pytest
 import typer
 
 from ....application.modelo.reconciliation import ModeloReconciliationReport
+from ....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ....application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ....application.modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
 from ....core.json_contract import Notice
 from ....core.output_rendering import jsonable_output_payload, reveal_cli_identifiers_opt_in
 from ....core.redaction.rules import redact_structured_for_cli_output
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .. import _modelo_reconcile_cli as handler
+from .. import modelo_reconcile_commands as handler
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

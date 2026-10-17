@@ -79,8 +79,6 @@ from cadrumo.core.operations import (
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
-from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileLockResult,
     ConfigProfileSessionsResult,
@@ -98,6 +96,9 @@ from cadrumo_harness.mcp.tests.session import connected_server_and_client_sessio
 from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
+from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
+from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
+from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -176,8 +177,16 @@ def _scope(destination: UUID) -> AccessScope:
 
 @contextmanager
 def _runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_ParityRuntime]:
-    # The isolated worker loads settings independently of this process's override context.
-    monkeypatch.setenv("CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES", "1")
+    # Session policy is internal, not an inherited environment override. Select
+    # a trusted fixture script that runs the real worker under its explicit policy.
+    worker_script = tmp_path / "one_minute_idle_worker.py"
+    worker_script.write_text(
+        "from cadrumo.core.config import override_settings\n"
+        "from cadrumo_runtime.host.worker import run\n"
+        "with override_settings(cadrumo_bucket_default_idle_lock_minutes=1):\n"
+        "    raise SystemExit(run())\n",
+        encoding="utf-8",
+    )
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
     endpoint = WindowsEndpoint(storage_root=root)
@@ -223,6 +232,7 @@ def _runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_Pari
             stop=stop,
             capture_login=lambda _channel: capture[0],
             secret_store=lambda: subject.native,
+            worker_script=worker_script,
         )
         profiles.prepare_registry()
         server = RetainedRuntimeTransportServer(
@@ -326,7 +336,7 @@ def _cli_lock(runtime: _ParityRuntime, *, global_lock: bool, human: bool) -> Con
         else ("--profile-auth-method", "api-key", "--profile-credential-ref", str(runtime.reference))
     )
     result = invoke_typer_app(
-        build_command_app(RUNTIME_COMMAND_GRAPH),
+        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
         (
             "--format",
             "json",
@@ -432,7 +442,7 @@ async def test_cli_own_lock_and_human_proof_loss_preserve_independent_mcp_grant(
                 await _private_read(sdk, runtime.profile_id)
                 cli = await asyncio.to_thread(
                     invoke_typer_app,
-                    build_command_app(RUNTIME_COMMAND_GRAPH),
+                    build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
                     (
                         "--format",
                         "json",
@@ -483,6 +493,18 @@ async def test_cli_global_lock_fences_tui_mcp_and_password_login_cannot_clear_it
                 runtime.assert_worker_contained()
                 before = runtime.subject.store.snapshot()
                 lock_before = runtime.subject.store.profile_lock_state()
+                factories: list[FrontendClient] = []
+
+                async def no_recovery() -> FrontendClient:
+                    raise AssertionError("global unlock requires a separate explicit password recovery")
+
+                def no_requester(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
+                    factories.append(client)
+                    raise AssertionError("globally locked authority must not create enrollment")
+
+                screen = RuntimeAccessManagementScreen(
+                    human, open_recovery_client=no_recovery, requester_factory=no_requester
+                )
                 locked = await asyncio.to_thread(_cli_lock, runtime, global_lock=True, human=True)
                 assert locked.scope == "profile" and locked.denial is not None and locked.denial.access_denied
                 suspended = runtime.subject.store.snapshot()
@@ -510,18 +532,6 @@ async def test_cli_global_lock_fences_tui_mcp_and_password_login_cannot_clear_it
                     await asyncio.to_thread(fresh_human.login_password, password)
                 assert login_denied.value.reason == AccessDenialCode.PROFILE_LOCKED.value
                 assert not any(password)
-                factories: list[FrontendClient] = []
-
-                async def no_recovery() -> FrontendClient:
-                    raise AssertionError("global unlock requires a separate explicit password recovery")
-
-                def no_requester(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
-                    factories.append(client)
-                    raise AssertionError("globally locked authority must not create enrollment")
-
-                screen = RuntimeAccessManagementScreen(
-                    human, open_recovery_client=no_recovery, requester_factory=no_requester
-                )
                 app = ScreenHostApp(screen)
                 async with app.run_test(size=(140, 48)) as pilot:
                     async with asyncio.timeout(30):

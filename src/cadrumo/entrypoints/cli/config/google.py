@@ -22,7 +22,7 @@ from ....application.user_profile.google_configuration_operation_contracts impor
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ..common import emit_envelope
-from ._archive_push_payloads import (
+from .archive_push_results import (
     ProfileArchivePushDegradedManifestPayload,
     ProfileArchivePushFailedManifestPayload,
     ProfileArchivePushFailedObjectPayload,

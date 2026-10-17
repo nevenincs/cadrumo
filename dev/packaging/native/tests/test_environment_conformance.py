@@ -55,8 +55,9 @@ def reference() -> Reference:
 
 
 @pytest.fixture(scope="module")
-def request_(reference: Reference) -> dict[str, Any]:
-    return build_request(reference)
+def request_(reference: Reference, tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
+    scratch = tmp_path_factory.mktemp("environment-facts")
+    return {**build_request(reference), "scratch": str(scratch)}
 
 
 @pytest.fixture(scope="module")
@@ -527,6 +528,11 @@ def test_the_facts_are_reported_by_the_interpreter_asked(
     assert reported == facts
 
 
+def test_package_facts_require_an_explicit_scratch_directory() -> None:
+    with pytest.raises(ValueError, match="absolute build-owned scratch directory"):
+        environment_facts.collect({})
+
+
 def test_the_facts_module_runs_by_path_so_it_imports_no_packaging_tool() -> None:
     source = Path(environment_facts.__file__).read_text(encoding="utf-8")
     imported: set[str] = set()
@@ -555,7 +561,13 @@ def _package(tmp_path: Path) -> Path:
 
 def test_the_check_reports_each_disagreement_and_exits_one(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     # This interpreter has no bundled agent: that alone is the one disagreement reported.
-    status = run(_package(tmp_path), "data/package-manifest.json", REPO_ROOT, python=Path(sys.executable))
+    status = run(
+        _package(tmp_path),
+        "data/package-manifest.json",
+        REPO_ROOT,
+        scratch_root=tmp_path / "testing",
+        python=Path(sys.executable),
+    )
     output = capsys.readouterr().out.splitlines()
     assert status == 1
     assert output[0] == "[agent-names] bundled agent: is not installed in the interpreter under test"
@@ -566,5 +578,5 @@ def test_the_check_exits_two_when_the_package_interpreter_cannot_be_asked(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     package = _package(tmp_path)
-    assert run(package, "data/package-manifest.json", REPO_ROOT) == 2
+    assert run(package, "data/package-manifest.json", REPO_ROOT, scratch_root=tmp_path / "testing") == 2
     assert capsys.readouterr().out == ""

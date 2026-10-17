@@ -85,86 +85,7 @@ class _DeclaredExclusion:
     reason: str
 
 
-_ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/installed_session.py",
-        owner="_run_runtime_session.requester_for_api.fresh_credential_client",
-        construct="asyncio.run",
-        reason="the requester calls this credential-client opener on its owned worker thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/installed_session.py",
-        owner="_attempt_runtime_session",
-        construct="asyncio.run",
-        reason=(
-            "the installed session is the launcher's production composition root; "
-            "it owns one event loop per admitted profile session"
-        ),
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/runtime_account.py",
-        owner="compose_runtime_account_factories.password.rotate",
-        construct="asyncio.run",
-        reason="PassphraseScreen.start_attempt invokes rotation on an owned worker thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_lifecycle.py",
-        owner="_RuntimeModeloLifecycleBindings.admit",
-        construct="asyncio.run",
-        reason="the lifecycle door invokes attestation admission through asyncio.to_thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/runtime_actividad_asset.py",
-        owner="RuntimeActivityAssetTuiActionsV1._call",
-        construct="asyncio.run",
-        reason="the activity-asset screen dispatches these synchronous actions through asyncio.to_thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/runtime_evidence.py",
-        owner="RuntimeEvidenceTuiDoorV1._call_sync",
-        construct="asyncio.run",
-        reason="the evidence screen reads records and reader readiness through asyncio.to_thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/secret/automation_requester_delivery.py",
-        owner="RequesterDeliveryMixin._reconcile_fresh",
-        construct="asyncio.run",
-        reason=(
-            "the enrollment journey invokes this reconciliation callback on the worker thread the "
-            "requester submits from; the fresh credential client it opens there closes asynchronously"
-        ),
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_lifecycle.py",
-        owner="_RuntimeModeloLifecycleBindings.read",
-        construct="asyncio.run",
-        reason="ModeloWorkspaceLifecycleDoor runs prerequisite, renewal and preflight reads through asyncio.to_thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_workbench_reads.py",
-        owner="RuntimeModeloWorkbenchSource.read_form",
-        construct="asyncio.run",
-        reason="ModeloWorkbenchScreen loads its InstalledModeloWorkbench reader through asyncio.to_thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_workbench_reads.py",
-        owner="RuntimeModeloWorkbenchSource.help_card",
-        construct="asyncio.run",
-        reason="WorkbenchHelpMixin reads InstalledModeloWorkbench.help_card through asyncio.to_thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/profile/auth_configuration_client.py",
-        owner="configure_profile_authentication",
-        construct="asyncio.run",
-        reason="the profile field editor invokes ProfileManagerClientComposition._field on its owned worker thread",
-    ),
-    _DeclaredExclusion(
-        path="src/cadrumo_runtime/host/frontend/tui/modelo/runtime_work_create.py",
-        owner="compose_runtime_work_create_handoff.create",
-        construct="asyncio.run",
-        reason="declarations overview and calendar invoke the create handoff through asyncio.to_thread",
-    ),
-)
+_ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = ()
 
 
 @cache
@@ -187,13 +108,13 @@ def _source_files() -> tuple[str, ...]:
     return paths
 
 
-def _production_sources() -> tuple[str, ...]:
+def production_operation_sources() -> tuple[str, ...]:
     """The source files excluding test packages, which declare nothing live."""
     return tuple(path for path in _source_files() if "/tests/" not in path)
 
 
 @cache
-def _tree() -> SourceTree:
+def production_operation_source_tree() -> SourceTree:
     """The census files as one source tree, each parsed once and each import resolved once.
 
     An import resolves only to a file of the census: a module outside its
@@ -214,8 +135,8 @@ def _tree() -> SourceTree:
 def _declared_definition_ids() -> Mapping[str, str]:
     """Every module-level ``*_DEFINITION_ID`` literal or enum-derived ID, id to path."""
     declared: dict[str, str] = dict(_dynamic_definition_ids())
-    for path in _production_sources():
-        for name, value in module_level_bindings(_tree().parsed(path)):
+    for path in production_operation_sources():
+        for name, value in module_level_bindings(production_operation_source_tree().parsed(path)):
             if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
                 continue
             if name.endswith(_DEFINITION_ID_SUFFIX):
@@ -243,13 +164,13 @@ def _definition_id_collections() -> Mapping[tuple[str, str], frozenset[str]]:
 
 
 @cache
-def _registry() -> OperationRegistry:
+def production_operation_registry() -> OperationRegistry:
     """The one production registry, composed through the one production seam."""
     return build_production_operation_registry()
 
 
 def _definitions() -> tuple[OperationDefinition, ...]:
-    return _registry().definitions
+    return production_operation_registry().definitions
 
 
 @cache
@@ -280,10 +201,10 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
         return builders.get(origin, _NO_IDS)
 
     collected: dict[str, frozenset[str]] = {}
-    for path in _production_sources():
-        origins = _tree().name_origins(path)
+    for path in production_operation_sources():
+        origins = production_operation_source_tree().name_origins(path)
         found: set[str] = set(dispatch_ids.get(path, _NO_IDS))
-        for node in ast.walk(_tree().parsed(path)):
+        for node in ast.walk(production_operation_source_tree().parsed(path)):
             if isinstance(node, ast.Name):
                 found |= named_by_name(node.id, origins)
             elif isinstance(node, ast.Attribute):
@@ -322,7 +243,10 @@ def _dispatched_literal_ids() -> Mapping[str, frozenset[str]]:
     dispatch from escaping the census.
     """
     ids = frozenset(_declared_definition_ids())
-    dispatched = {path: _dispatched_literals_in_tree(_tree().parsed(path), ids) for path in _production_sources()}
+    dispatched = {
+        path: _dispatched_literals_in_tree(production_operation_source_tree().parsed(path), ids)
+        for path in production_operation_sources()
+    }
     return {path: found for path, found in dispatched.items() if found}
 
 
@@ -376,7 +300,7 @@ def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
 
     def read(path: str, node: ast.AST, *, read_literals: bool) -> tuple[set[str], set[tuple[str, str]]]:
         """The ids this subtree names outright, and the helpers it defers to."""
-        origins = _tree().name_origins(path)
+        origins = production_operation_source_tree().name_origins(path)
         named: set[str] = set()
         deferred: set[tuple[str, str]] = set()
         for inner in ast.walk(node):
@@ -411,8 +335,8 @@ def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
         direct.setdefault(key, set()).update(named)
         edges.setdefault(key, set()).update(deferred - {key})
 
-    for path in _production_sources():
-        tree = _tree().parsed(path)
+    for path in production_operation_sources():
+        tree = production_operation_source_tree().parsed(path)
         for node in tree.body:
             if not isinstance(node, ast.Assign) or isinstance(node.value, ast.Constant):
                 continue
@@ -440,8 +364,8 @@ def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
 def _definition_id_constants() -> Mapping[tuple[str, str], str]:
     """Canonical declaring module and constant name to the operation id it carries."""
     constants: dict[tuple[str, str], str] = {}
-    for path in _production_sources():
-        for name, value in module_level_bindings(_tree().parsed(path)):
+    for path in production_operation_sources():
+        for name, value in module_level_bindings(production_operation_source_tree().parsed(path)):
             if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
                 continue
             if name.endswith(_DEFINITION_ID_SUFFIX):
@@ -450,7 +374,7 @@ def _definition_id_constants() -> Mapping[tuple[str, str], str]:
 
 
 def _paths_under(prefix: str | tuple[str, ...]) -> Iterable[str]:
-    return (path for path in _production_sources() if path.startswith(prefix))
+    return (path for path in production_operation_sources() if path.startswith(prefix))
 
 
 def test_the_census_denominator_is_the_repository_visible_tree() -> None:
@@ -553,7 +477,7 @@ def test_every_registered_operation_joins_a_real_surface() -> None:
     )
     assert not unreached, (
         f"{len(unreached)} operations join no surface in the source tree "
-        f"(denominator: {len(_production_sources())} production sources, "
+        f"(denominator: {len(production_operation_sources())} production sources, "
         f"{len(_definitions())} registered operations): {unreached}"
     )
 
@@ -596,7 +520,11 @@ def _asyncio_run_sites_in_tree(path: str, tree: ast.AST) -> tuple[tuple[str, str
 def _asyncio_run_sites(prefix: str | tuple[str, ...]) -> tuple[tuple[str, str], ...]:
     """Enumerate exact event-loop owners under one production frontend."""
     return tuple(
-        sorted(site for path in _paths_under(prefix) for site in _asyncio_run_sites_in_tree(path, _tree().parsed(path)))
+        sorted(
+            site
+            for path in _paths_under(prefix)
+            for site in _asyncio_run_sites_in_tree(path, production_operation_source_tree().parsed(path))
+        )
     )
 
 
@@ -671,7 +599,7 @@ def test_no_full_screen_surface_reaches_an_outbound_adapter_directly() -> None:
     prefix = _FRONTEND_PACKAGES[OperationFrontendProjection.TUI]
     offenders: list[tuple[str, str]] = []
     for path in _paths_under(prefix):
-        for node in ast.walk(_tree().parsed(path)):
+        for node in ast.walk(production_operation_source_tree().parsed(path)):
             if (
                 isinstance(node, ast.ImportFrom)
                 and (node.module is not None and node.module)

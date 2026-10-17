@@ -45,7 +45,7 @@ _OFFLINE_WORKBOOK_EXPORT = ExecutionPolicySpec(
 )
 
 _MODULE = ".modelo_spreadsheet_cli"
-_PAYLOADS = "._modelo_spreadsheet_payloads"
+_PAYLOADS = ".modelo_spreadsheet_results"
 
 
 def _option(

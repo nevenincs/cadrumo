@@ -6,6 +6,7 @@ import pytest
 from click import IntRange
 from typer.testing import CliRunner
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.compiler import build_command_app, compile_parameter
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
@@ -20,7 +21,6 @@ from cadrumo_client.commands.shared_contracts import (
     ValueContract,
 )
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from cadrumo_client.commands.target import resolve_deferred_target
 from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
 
 from ....core.i18n.render import tr
@@ -109,7 +109,7 @@ def _graph() -> CommandSpecGraph:
             identity="root.greet",
         ),
     )
-    return CommandSpecGraph((root, leaf))
+    return CommandSpecGraph((root, leaf), resolver=resolve_deferred_target)
 
 
 def test_runtime_preflights_and_invokes_a_synthetic_graph_behavior() -> None:
@@ -126,6 +126,30 @@ def test_runtime_schema_projection_and_public_target_boundary() -> None:
     assert build_command_subtree(_graph(), "greet").registered_commands[0].name == "greet"
 
 
+def test_runtime_uses_the_graph_owner_for_parameters_and_behavior() -> None:
+    requested: list[DeferredTarget] = []
+    seen: list[str] = []
+
+    def greet(ctx: object, *, name: str) -> None:
+        del ctx
+        seen.append(name)
+
+    def resolve(target: DeferredTarget) -> object:
+        requested.append(target)
+        if target == DeferredTarget("builtins", "str"):
+            return str
+        assert target.qualname == "public_behavior"
+        return greet
+
+    graph = replace(_graph(), resolver=resolve)
+    assert requested == []
+    result = CliRunner().invoke(build_command_app(graph), ["greet", "--name", "Ada"])
+    assert result.exit_code == 0, result.output
+    assert seen == ["Ada"]
+    assert DeferredTarget("builtins", "str") in requested
+    assert requested[-1].qualname == "public_behavior"
+
+
 def test_runtime_preserves_an_option_with_no_help_text() -> None:
     graph = _graph()
     leaf = graph.by_key()["greet"]
@@ -135,7 +159,8 @@ def test_runtime_preserves_an_option_with_no_help_text() -> None:
         tuple(
             replace(spec, parameters=(replace(option, help_key=None),)) if spec.key == "greet" else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
 
     result = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--help"])
@@ -155,7 +180,8 @@ def test_runtime_compiles_spec_owned_choices_without_a_handler_enum() -> None:
             if spec.key == "greet"
             else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
 
     accepted = CliRunner().invoke(build_command_app(exact_graph), ["greet", "--name", "Ada"])
@@ -190,7 +216,8 @@ def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
             if spec.key == "greet"
             else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
     _SEEN_MULTIPLE.clear()
 
@@ -269,8 +296,8 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
         hidden=True,
         constraint=constraint,
     )
-    argument = compile_parameter(argument_spec).default
-    option = compile_parameter(option_spec).default
+    argument = compile_parameter(argument_spec, resolver=resolve_deferred_target).default
+    option = compile_parameter(option_spec, resolver=resolve_deferred_target).default
 
     for parameter, spec in ((argument, argument_spec), (option, option_spec)):
         assert spec.help_key is not None
@@ -313,7 +340,8 @@ def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> No
             value=value,
             default=default,
             help_key=None,
-        )
+        ),
+        resolver=resolve_deferred_target,
     ).default
     option = compile_parameter(
         OptionSpec(
@@ -322,7 +350,8 @@ def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> No
             value=value,
             default=default,
             help_key=None,
-        )
+        ),
+        resolver=resolve_deferred_target,
     ).default
 
     for parameter in (argument, option):
@@ -366,7 +395,7 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
         is_flag=True,
         flag_value=True,
     )
-    materialized = compile_parameter(name_option).default
+    materialized = compile_parameter(name_option, resolver=resolve_deferred_target).default
     assert name_option.prompt_key is not None
     assert name_option.confirmation_prompt_key is not None
     assert materialized.param_decls == name_option.declarations
@@ -394,7 +423,8 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
             if spec.key == "greet"
             else spec
             for spec in graph.specs
-        )
+        ),
+        resolver=resolve_deferred_target,
     )
     _SEEN_OPTION_RUNTIME.clear()
 

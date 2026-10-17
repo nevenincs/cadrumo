@@ -258,7 +258,8 @@ def test_review_package_invalid_period_names_the_selected_modelo_tokens(tmp_path
     )
 
     assert result.exit_code != 0, result.output
-    assert "0A" in result.output
+    assert "0A" in result.output, result.output
+    assert not (tmp_path / "invalid-period.zip").exists()
 
 
 def test_review_package_help_advertises_local_only() -> None:

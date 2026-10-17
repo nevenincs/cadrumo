@@ -7,6 +7,7 @@ import sys
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import SchemaState
@@ -48,7 +49,7 @@ def test_target_reconciliation_refuses_an_unknown_identity() -> None:
 
 
 def test_schema_identity_search_matches_the_complete_graph_and_reports_absence() -> None:
-    graph = CommandSpecGraph(COMMAND_GRAPH.declared, COMMAND_GRAPH.families)
+    graph = CommandSpecGraph(COMMAND_GRAPH.declared, COMMAND_GRAPH.families, resolver=resolve_deferred_target)
     nodes_by_key = {node.spec.key: node for node in COMMAND_GRAPH.nodes()}
     complete = COMMAND_GRAPH.by_schema_identity()
 

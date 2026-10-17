@@ -37,8 +37,8 @@ from ._spec_policies import (
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_repair_cli": "._repair_cli",
-    "_repair_profile": "._repair_profile",
+    "_repair_cli": ".repair_commands",
+    "_repair_profile": ".profile_repair_commands",
 }
 
 

@@ -33,10 +33,10 @@ from ...core.operations import OperationLifecycle, OperationTerminalCondition, p
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..operation_composition import build_production_operation_registry
 from .registered_executor_case_support import (
-    _CloseWitness,
-    _model_runtime_for,
-    _runtime,
-    _seeded_conformance_submission,
+    OperationRuntimeCloseWitness,
+    conformance_operation_runtime,
+    model_runtime_for_operation,
+    seeded_conformance_operation_submission,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -52,7 +52,7 @@ No resolver reads their subject, so their executor's own first check is the
 validator the declaration is held to, further down."""
 
 
-_REVIEWED_DECISIONS: frozenset[str] = frozenset(
+REVIEWED_OPERATION_DECISIONS: frozenset[str] = frozenset(
     {
         "user-profile.automation-approve",
         "user-profile.automation-decline",
@@ -66,7 +66,7 @@ runtime owner exists and so no review does either. These two are held to
 their declaration by their own test further down, on a request that names one."""
 
 _PROBE_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_REVIEW_DIGEST = "d" * 64
+OPERATION_REVIEW_DIGEST = "d" * 64
 
 
 def _definition_ids(*, resolved: bool) -> tuple[str, ...]:
@@ -126,10 +126,10 @@ def _resolution(
 def test_the_definitions_without_an_access_resolver_are_the_ones_named_here() -> None:
     """A definition joins or leaves the executor-checked set only by gaining or losing its resolver."""
     assert set(_definition_ids(resolved=False)) == _SUBJECT_CHECKED_BY_THE_EXECUTOR
-    assert set(_definition_ids(resolved=True)) > _REVIEWED_DECISIONS
+    assert set(_definition_ids(resolved=True)) > REVIEWED_OPERATION_DECISIONS
 
 
-@pytest.mark.parametrize("definition_id", sorted(_REVIEWED_DECISIONS))
+@pytest.mark.parametrize("definition_id", sorted(REVIEWED_OPERATION_DECISIONS))
 def test_a_reviewed_decision_resolves_on_its_declared_subject_once_it_names_its_review(
     definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -138,7 +138,7 @@ def test_a_reviewed_decision_resolves_on_its_declared_subject_once_it_names_its_
     definition = registry.lookup(definition_id)
     context = _submission_context(registry, definition_id, profile_id=_PROBE_PROFILE, operation=operation)
     fields = {"profile_id": _PROBE_PROFILE, "request_id": UUID(int=1)}
-    reviewed = definition.request_type.model_validate({**fields, "review_digest": _REVIEW_DIGEST}, strict=True)
+    reviewed = definition.request_type.model_validate({**fields, "review_digest": OPERATION_REVIEW_DIGEST}, strict=True)
     unreviewed = definition.request_type.model_validate(fields, strict=True)
     declared = expected_operation_subject(definition.subject_reference, profile_id=_PROBE_PROFILE, payload=reviewed)
     assert declared is not None
@@ -154,17 +154,21 @@ def test_a_reviewed_decision_resolves_on_its_declared_subject_once_it_names_its_
     assert _resolution(registry, definition_id, declared, unreviewed, context) == "refused:operation_denied"
 
 
-@pytest.mark.parametrize("definition_id", sorted(set(_definition_ids(resolved=True)) - _REVIEWED_DECISIONS))
+@pytest.mark.parametrize("definition_id", sorted(set(_definition_ids(resolved=True)) - REVIEWED_OPERATION_DECISIONS))
 def test_the_real_access_resolver_admits_the_declared_subject_and_refuses_any_other(
     tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A fresh submission resolves on the subject the declaration renders, and on no other."""
     with (
-        _model_runtime_for(definition_id),
-        _runtime(tmp_path / definition_id, cleanup=_CloseWitness()) as (_driver, registry, profile_id),
+        model_runtime_for_operation(definition_id),
+        conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
+            _driver,
+            registry,
+            profile_id,
+        ),
     ):
         definition = registry.lookup(definition_id)
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         context = _submission_context(registry, definition_id, profile_id=profile_id, operation=operation)
@@ -192,11 +196,15 @@ def test_the_real_executor_runs_on_the_declared_subject_and_stops_any_other_befo
 ) -> None:
     """Each of these executors checks the subject first, so a refused subject publishes no phase at all."""
     with (
-        _model_runtime_for(definition_id),
-        _runtime(tmp_path / definition_id, cleanup=_CloseWitness()) as (driver, registry, profile_id),
+        model_runtime_for_operation(definition_id),
+        conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
+            driver,
+            registry,
+            profile_id,
+        ),
     ):
         definition = registry.lookup(definition_id)
-        submission = _seeded_conformance_submission(
+        submission = seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 

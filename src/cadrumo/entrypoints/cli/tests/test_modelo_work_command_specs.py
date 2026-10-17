@@ -17,6 +17,7 @@ from typing import get_args, get_origin
 import pytest
 from typer.main import get_command
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import BindingState, DefaultKind, SchemaState
 
@@ -56,7 +57,8 @@ EXPECTED_TOKENS = {
 
 def _graph() -> CommandSpecGraph:
     return CommandSpecGraph(
-        (*ROOT_COMMAND_SPECS, MODELO_ROOT_COMMAND_SPEC, *MODELO_CORE_COMMAND_SPECS, *MODELO_WORK_COMMAND_SPECS)
+        (*ROOT_COMMAND_SPECS, MODELO_ROOT_COMMAND_SPEC, *MODELO_CORE_COMMAND_SPECS, *MODELO_WORK_COMMAND_SPECS),
+        resolver=resolve_deferred_target,
     )
 
 

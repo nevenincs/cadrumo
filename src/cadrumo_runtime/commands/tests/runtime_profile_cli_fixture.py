@@ -375,6 +375,10 @@ class NativeCliProfileFixture:
     label: str | None = None
     failure_observer: Callable[[RuntimeFailureObservation], None] | None = None
 
+    def observe_failures(self, callback: Callable[[object], None]) -> None:
+        """Expose sanitized failure observations through the tax test fixture port."""
+        self.failure_observer = callback
+
     @property
     def passphrase(self) -> str:
         return load_settings().cadrumo_dev_test_database_password.get_secret_value()

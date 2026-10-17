@@ -20,9 +20,9 @@ from ....application.live.notifications_capture_operation import (
     NotificationsCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import _app_live_notifications_cli as handler
+from .. import app_live_notifications_commands as handler
 from .. import operation_notifications_capture as bridge
-from .._app_live_notifications_payloads import NotificationsCaptureResult
+from ..app_live_notifications_results import NotificationsCaptureResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

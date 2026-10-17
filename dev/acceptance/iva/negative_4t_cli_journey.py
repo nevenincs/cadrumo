@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Mapping
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import asdict, dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -148,6 +149,7 @@ def run_iva_negative_4t_cli_journey(
     artifact_root: Path,
     year: int,
     refund_election: RefundElection = "compensar",
+    runtime_scope: AbstractContextManager[object] | None = None,
 ) -> IvaNegative4TCliJourneyReceipt:
     """File one ``year``/4T local negative election, then reopen its wallet history.
 
@@ -162,34 +164,74 @@ def run_iva_negative_4t_cli_journey(
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
-    artifact_root.mkdir(parents=True, exist_ok=True)
-    artifact = artifact_root / "synthetic-negative-4t-purchase.pdf"
-    artifact.write_bytes(b"%PDF-1.4\n% synthetic negative IVA purchase evidence\n")
+    with runtime_scope if runtime_scope is not None else nullcontext():
+        artifact_root.mkdir(parents=True, exist_ok=True)
+        artifact = artifact_root / "synthetic-negative-4t-purchase.pdf"
+        artifact.write_bytes(b"%PDF-1.4\n% synthetic negative IVA purchase evidence\n")
 
-    cli = InstalledCli(
-        executable,
-        storage_root=storage_root,
-        authority_root=authority_root,
-        passphrase=secrets.token_urlsafe(32),
-    )
-    receipts: list[SanitizedCommandReceipt] = []
-    try:
-        _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
-    except InstalledCliError as exc:
-        raise IvaCliJourneyError("config profile create refused") from exc
-
-    evidence = _result(
-        _run(
-            cli,
-            receipts,
-            artifact,
-            ("app", "ledger", "evidence", "add", str(artifact), "--supplier", "Synthetic supplier SL"),
-            result_keys=("evidence_id",),
+        cli = InstalledCli(
+            executable,
+            storage_root=storage_root,
+            authority_root=authority_root,
+            passphrase=secrets.token_urlsafe(32),
         )
-    )
-    evidence_id = _required_id(evidence, "evidence_id")
+        receipts: list[SanitizedCommandReceipt] = []
+        try:
+            _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+        except InstalledCliError as exc:
+            raise IvaCliJourneyError("config profile create refused") from exc
 
-    purchase = _result(
+        evidence = _result(
+            _run(
+                cli,
+                receipts,
+                artifact,
+                ("app", "ledger", "evidence", "add", str(artifact), "--supplier", "Synthetic supplier SL"),
+                result_keys=("evidence_id",),
+            )
+        )
+        evidence_id = _required_id(evidence, "evidence_id")
+
+        purchase = _result(
+            _run(
+                cli,
+                receipts,
+                artifact,
+                (
+                    "app",
+                    "ledger",
+                    "add",
+                    "--date",
+                    journey_year.iso_date(12, 15),
+                    "--amount",
+                    "60.50",
+                    "--direction",
+                    "OUTGOING",
+                    "--description",
+                    "Synthetic deductible IVA purchase",
+                    "--classification",
+                    "BUSINESS",
+                    "--category-id",
+                    "material_oficina",
+                    "--taxable-base",
+                    "50.00",
+                    "--iva-rate",
+                    "0.21",
+                    "--iva-amount",
+                    "10.50",
+                    "--iva-category",
+                    "domestic_general",
+                    "--purchase-invoice-evidence-id",
+                    evidence_id,
+                    "--source-jurisdiction",
+                    "ES",
+                    "--idempotency-key",
+                    f"iva-01-negative-{year}-4t-purchase",
+                ),
+                result_keys=("transaction_id",),
+            )
+        )
+        transaction_id = _required_id(purchase, "transaction_id")
         _run(
             cli,
             receipts,
@@ -197,277 +239,238 @@ def run_iva_negative_4t_cli_journey(
             (
                 "app",
                 "ledger",
-                "add",
-                "--date",
-                journey_year.iso_date(12, 15),
-                "--amount",
-                "60.50",
-                "--direction",
-                "OUTGOING",
-                "--description",
-                "Synthetic deductible IVA purchase",
+                "classify",
+                transaction_id,
                 "--classification",
                 "BUSINESS",
-                "--category-id",
-                "material_oficina",
-                "--taxable-base",
-                "50.00",
-                "--iva-rate",
-                "0.21",
-                "--iva-amount",
-                "10.50",
-                "--iva-category",
-                "domestic_general",
-                "--purchase-invoice-evidence-id",
-                evidence_id,
-                "--source-jurisdiction",
+                "--deduction-kind",
+                "domestic_current",
+                "--counterparty-country",
                 "ES",
-                "--idempotency-key",
-                f"iva-01-negative-{year}-4t-purchase",
+                "--reaffirm",
             ),
-            result_keys=("transaction_id",),
+            result_keys=(),
         )
-    )
-    transaction_id = _required_id(purchase, "transaction_id")
-    _run(
-        cli,
-        receipts,
-        artifact,
-        (
-            "app",
-            "ledger",
-            "classify",
-            transaction_id,
-            "--classification",
-            "BUSINESS",
-            "--deduction-kind",
-            "domestic_current",
-            "--counterparty-country",
-            "ES",
-            "--reaffirm",
-        ),
-        result_keys=(),
-    )
-    invoice = _result(
+        invoice = _result(
+            _run(
+                cli,
+                receipts,
+                artifact,
+                (
+                    "app",
+                    "ledger",
+                    "invoice",
+                    "add",
+                    "--kind",
+                    "received",
+                    "--counterparty-name",
+                    "Synthetic supplier SL",
+                    "--counterparty-nif",
+                    "A58818501",
+                    "--invoice-number",
+                    f"IVA-REC-NEGATIVE-{year}-4T",
+                    "--invoice-date",
+                    journey_year.iso_date(12, 15),
+                    "--country-code",
+                    "ES",
+                    "--iva-category",
+                    "domestic_general",
+                    "--line",
+                    (
+                        '{"description":"Synthetic deductible purchase","iva_amount":"10.50",'
+                        '"iva_rate":"RATE_21","quantity":"1","subtotal":"50.00","unit_price":"50.00"}'
+                    ),
+                ),
+                result_keys=("invoice_id",),
+            )
+        )
+        invoice_id = _required_id(invoice, "invoice_id")
         _run(
             cli,
             receipts,
             artifact,
-            (
-                "app",
-                "ledger",
-                "invoice",
-                "add",
-                "--kind",
-                "received",
-                "--counterparty-name",
-                "Synthetic supplier SL",
-                "--counterparty-nif",
-                "A58818501",
-                "--invoice-number",
-                f"IVA-REC-NEGATIVE-{year}-4T",
-                "--invoice-date",
-                journey_year.iso_date(12, 15),
-                "--country-code",
-                "ES",
-                "--iva-category",
-                "domestic_general",
-                "--line",
-                (
-                    '{"description":"Synthetic deductible purchase","iva_amount":"10.50",'
-                    '"iva_rate":"RATE_21","quantity":"1","subtotal":"50.00","unit_price":"50.00"}'
-                ),
-            ),
-            result_keys=("invoice_id",),
-        )
-    )
-    invoice_id = _required_id(invoice, "invoice_id")
-    _run(
-        cli,
-        receipts,
-        artifact,
-        ("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id),
-        result_keys=(),
-    )
-
-    work_cli = InstalledCli(
-        cli.executable,
-        storage_root=storage_root,
-        authority_root=authority_root,
-        passphrase=cli.passphrase,
-    )
-    _run(
-        work_cli,
-        receipts,
-        artifact,
-        (
-            "app",
-            "modelo",
-            "iva-wallet",
-            "seed",
-            "--filing-year",
-            str(year),
-            "--period",
-            _PRIOR_PERIOD,
-            "--amount",
-            "0.00",
-            "--confirm",
-        ),
-        result_keys=(),
-    )
-    attestation = _result(
-        _run(
-            work_cli,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "attest-m303-exonerado-390",
-                "--year",
-                str(year),
-                "--period",
-                _PERIOD,
-                "--observed-at",
-                journey_year.noon_utc(12, 31),
-            ),
-            result_keys=("attachment_id", "sha256"),
-        )
-    )
-    attachment_id = _required_id(attestation, "attachment_id")
-    attachment_sha256 = _required_id(attestation, "sha256")
-    created = _result(
-        _run(
-            work_cli,
-            receipts,
-            artifact,
-            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
-            result_keys=("work_unit_id",),
-        )
-    )
-    work_unit_id = _required_id(created, "work_unit_id")
-    calculated = _result(
-        _run(
-            work_cli,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "calculate",
-                work_unit_id,
-                "--no-joint-return-elected",
-                "--m303-exonerado-390-attachment-id",
-                attachment_id,
-                "--m303-exonerado-390-sha256",
-                attachment_sha256,
-            ),
-            result_keys=("calculation_revision_id",),
-        )
-    )
-    if calculated.get("saved") is not True:
-        raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-    calculation_revision_id = _required_id(calculated, "calculation_revision_id")
-    iva_resultado = _decimal_casilla(calculated, "iva.resultado")
-    if iva_resultado != _EXPECTED_RESULT:
-        raise IvaCliJourneyError(
-            f"independent negative IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
-        )
-
-    verify_cli = InstalledCli(
-        cli.executable,
-        storage_root=storage_root,
-        authority_root=authority_root,
-        passphrase=cli.passphrase,
-    )
-    verified = _result(
-        _run(
-            verify_cli,
-            receipts,
-            artifact,
-            ("app", "modelo", "work", "verify", calculation_revision_id),
-            result_keys=("verification_report_id", "calculation_revision_id"),
-        )
-    )
-    if verified.get("calculation_revision_id") != calculation_revision_id:
-        raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
-    if verified.get("granted_verificado_completo") is not True:
-        raise IvaCliJourneyError("Modelo 303 verify did not grant complete verification")
-
-    filed = _result(
-        _run(
-            verify_cli,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "file",
-                calculation_revision_id,
-                "--refund-election",
-                refund_election,
-                "--notes",
-                f"Synthetic local pending {refund_election} filing; not sent to AEAT",
-            ),
-            result_keys=("filing_record_id",),
-        )
-    )
-    filing_record_id, filing_origin, filing_confirmation = _require_negative_local_filing(filed)
-
-    history_cli = InstalledCli(
-        cli.executable,
-        storage_root=storage_root,
-        authority_root=authority_root,
-        passphrase=cli.passphrase,
-    )
-    history = _result(
-        _run(
-            history_cli,
-            receipts,
-            artifact,
-            ("app", "live", "iva-wallet", "history", "--as-of-year", str(year)),
+            ("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id),
             result_keys=(),
         )
-    )
-    wallet_row_count, wallet_generated, wallet_available, wallet_lot_count, wallet_remaining = _assert_wallet_history(
-        history, refund_election=refund_election, filing_year=year
-    )
 
-    descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
-    return IvaNegative4TCliJourneyReceipt(
-        schema_version="iva-01-negative-4t-installed-cli-journey-v3",
-        acceptance_ids=(_acceptance_id(refund_election, filing_year=year),),
-        filing_year=year,
-        executable=str(cli.executable),
-        executable_sha256=_sha256_path(cli.executable),
-        source_identity=_checkout_source_identity(),
-        package_identity=_installed_package_identity(),
-        authority_generation=authority_generation(authority_root),
-        authority_descriptor_sha256=_sha256_path(descriptor),
-        storage_root=str(storage_root.resolve()),
-        purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
-        transaction_id=transaction_id,
-        invoice_id=invoice_id,
-        evidence_id=evidence_id,
-        work_unit_id=work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        iva_resultado=f"{iva_resultado:.2f}",
-        local_refund_election=refund_election,
-        filing_record_id=filing_record_id,
-        filing_origin=filing_origin,
-        filing_confirmation=filing_confirmation,
-        filing_aeat_accepted=False,
-        filing_live_submission=False,
-        wallet_row_count=wallet_row_count,
-        wallet_generated_amount=f"{wallet_generated:.2f}",
-        wallet_available_end_amount=f"{wallet_available:.2f}",
-        wallet_carry_forward_lot_count=wallet_lot_count,
-        wallet_remaining_lot_amount=None if wallet_remaining is None else f"{wallet_remaining:.2f}",
-        commands=tuple(receipts),
-    )
+        work_cli = InstalledCli(
+            cli.executable,
+            storage_root=storage_root,
+            authority_root=authority_root,
+            passphrase=cli.passphrase,
+        )
+        _run(
+            work_cli,
+            receipts,
+            artifact,
+            (
+                "app",
+                "modelo",
+                "iva-wallet",
+                "seed",
+                "--filing-year",
+                str(year),
+                "--period",
+                _PRIOR_PERIOD,
+                "--amount",
+                "0.00",
+                "--confirm",
+            ),
+            result_keys=(),
+        )
+        attestation = _result(
+            _run(
+                work_cli,
+                receipts,
+                artifact,
+                (
+                    "app",
+                    "modelo",
+                    "work",
+                    "attest-m303-exonerado-390",
+                    "--year",
+                    str(year),
+                    "--period",
+                    _PERIOD,
+                    "--observed-at",
+                    journey_year.noon_utc(12, 31),
+                ),
+                result_keys=("attachment_id", "sha256"),
+            )
+        )
+        attachment_id = _required_id(attestation, "attachment_id")
+        attachment_sha256 = _required_id(attestation, "sha256")
+        created = _result(
+            _run(
+                work_cli,
+                receipts,
+                artifact,
+                ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
+                result_keys=("work_unit_id",),
+            )
+        )
+        work_unit_id = _required_id(created, "work_unit_id")
+        calculated = _result(
+            _run(
+                work_cli,
+                receipts,
+                artifact,
+                (
+                    "app",
+                    "modelo",
+                    "work",
+                    "calculate",
+                    work_unit_id,
+                    "--no-joint-return-elected",
+                    "--m303-exonerado-390-attachment-id",
+                    attachment_id,
+                    "--m303-exonerado-390-sha256",
+                    attachment_sha256,
+                ),
+                result_keys=("calculation_revision_id",),
+            )
+        )
+        if calculated.get("saved") is not True:
+            raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
+        calculation_revision_id = _required_id(calculated, "calculation_revision_id")
+        iva_resultado = _decimal_casilla(calculated, "iva.resultado")
+        if iva_resultado != _EXPECTED_RESULT:
+            raise IvaCliJourneyError(
+                f"independent negative IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
+            )
+
+        verify_cli = InstalledCli(
+            cli.executable,
+            storage_root=storage_root,
+            authority_root=authority_root,
+            passphrase=cli.passphrase,
+        )
+        verified = _result(
+            _run(
+                verify_cli,
+                receipts,
+                artifact,
+                ("app", "modelo", "work", "verify", calculation_revision_id),
+                result_keys=("verification_report_id", "calculation_revision_id"),
+            )
+        )
+        if verified.get("calculation_revision_id") != calculation_revision_id:
+            raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
+        if verified.get("granted_verificado_completo") is not True:
+            raise IvaCliJourneyError("Modelo 303 verify did not grant complete verification")
+
+        filed = _result(
+            _run(
+                verify_cli,
+                receipts,
+                artifact,
+                (
+                    "app",
+                    "modelo",
+                    "work",
+                    "file",
+                    calculation_revision_id,
+                    "--refund-election",
+                    refund_election,
+                    "--notes",
+                    f"Synthetic local pending {refund_election} filing; not sent to AEAT",
+                ),
+                result_keys=("filing_record_id",),
+            )
+        )
+        filing_record_id, filing_origin, filing_confirmation = _require_negative_local_filing(filed)
+
+        history_cli = InstalledCli(
+            cli.executable,
+            storage_root=storage_root,
+            authority_root=authority_root,
+            passphrase=cli.passphrase,
+        )
+        history = _result(
+            _run(
+                history_cli,
+                receipts,
+                artifact,
+                ("app", "live", "iva-wallet", "history", "--as-of-year", str(year)),
+                result_keys=(),
+            )
+        )
+        wallet_row_count, wallet_generated, wallet_available, wallet_lot_count, wallet_remaining = (
+            _assert_wallet_history(history, refund_election=refund_election, filing_year=year)
+        )
+
+        descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
+        return IvaNegative4TCliJourneyReceipt(
+            schema_version="iva-01-negative-4t-installed-cli-journey-v3",
+            acceptance_ids=(_acceptance_id(refund_election, filing_year=year),),
+            filing_year=year,
+            executable=str(cli.executable),
+            executable_sha256=_sha256_path(cli.executable),
+            source_identity=_checkout_source_identity(),
+            package_identity=_installed_package_identity(),
+            authority_generation=authority_generation(authority_root),
+            authority_descriptor_sha256=_sha256_path(descriptor),
+            storage_root=str(storage_root.resolve()),
+            purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
+            transaction_id=transaction_id,
+            invoice_id=invoice_id,
+            evidence_id=evidence_id,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=calculation_revision_id,
+            iva_resultado=f"{iva_resultado:.2f}",
+            local_refund_election=refund_election,
+            filing_record_id=filing_record_id,
+            filing_origin=filing_origin,
+            filing_confirmation=filing_confirmation,
+            filing_aeat_accepted=False,
+            filing_live_submission=False,
+            wallet_row_count=wallet_row_count,
+            wallet_generated_amount=f"{wallet_generated:.2f}",
+            wallet_available_end_amount=f"{wallet_available:.2f}",
+            wallet_carry_forward_lot_count=wallet_lot_count,
+            wallet_remaining_lot_amount=None if wallet_remaining is None else f"{wallet_remaining:.2f}",
+            commands=tuple(receipts),
+        )
 
 
 def _decimal_casilla(calculated: Mapping[str, object], casilla_id: str) -> Decimal:

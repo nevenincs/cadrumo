@@ -15,7 +15,7 @@ original profile facts and reruns the calculation with only
 same observation payload shape used by non-warning previews.
 
 See Also:
-    :mod:`cadrumo.entrypoints.cli._modelo_maritime_cli`:
+    :mod:`cadrumo.entrypoints.cli.modelo_maritime_commands`:
         Serves the CLI command that serialises this preview into operator
         payloads.
     :func:`cadrumo.application.calculations.maritime_exemption_service.resolve_maritime_exemption`:

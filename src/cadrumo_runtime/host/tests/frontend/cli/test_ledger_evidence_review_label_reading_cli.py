@@ -115,7 +115,7 @@ def _json_notices() -> list[dict[str, object]]:
     result = _invoke(["--format", "json", *_REVIEW_VIEW])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
-    assert envelope["command"] == "ledger.evidence.review.show", result.output
+    assert envelope["command"] == "ledger.evidence.review.view", result.output
     assert isinstance(envelope["notices"], list), result.output
     notices: list[dict[str, object]] = []
     for notice in envelope["notices"]:

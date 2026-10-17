@@ -127,6 +127,9 @@ def _build_subset_site(out: Path) -> None:
     (src / "conf.py").write_text(
         'project = "cadrumo-smoke"\n'
         'extensions = ["myst_parser"]\n'
+        "from dev.docs.section_anchors import register\n"
+        "def setup(app):\n"
+        "    register(app)\n"
         'source_suffix = {".md": "markdown", ".rst": "restructuredtext"}\n'
         'html_theme = "basic"\n',
         encoding="utf-8",

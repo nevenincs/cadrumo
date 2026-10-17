@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Select, Static
 
 from ....core.i18n.render import tr
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerEvidenceReviewRequested, LedgerWorkspaceController

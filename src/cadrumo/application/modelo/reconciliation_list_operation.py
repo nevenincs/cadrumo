@@ -36,10 +36,10 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
-    ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,

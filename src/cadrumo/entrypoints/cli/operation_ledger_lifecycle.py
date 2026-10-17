@@ -35,9 +35,9 @@ from ...application.review.filter import LedgerReviewStatus
 from ...core.i18n.render import tr
 from ...core.json_contract import OutputSchema
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._ledger_payloads import TransactionPayload
 from ._ledger_support import ledger_validation_bad
 from .common import emit_envelope
+from .ledger_results import TransactionPayload
 
 _SUCCESS_STATES: dict[LedgerLifecycleOperationId, str] = {
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID: "ARCHIVED",

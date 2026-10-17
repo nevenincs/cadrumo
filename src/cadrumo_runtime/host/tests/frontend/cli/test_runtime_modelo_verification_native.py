@@ -36,11 +36,11 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m130_work_unit, operator_profile_facts
 from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-from ._modelo_work_ux_support import _create_m130_work_unit, operator_profile_facts
-from .cli_runner import invoke_cached_cli
+from .cli_runner import invoke_unbound_cli
 from .native_api_cli_support import native_api_cli_session
 
 pytestmark = [
@@ -56,7 +56,7 @@ _LABEL = "Native modelo operator"
 
 def _protected(*args: str):
     secret = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    result = invoke_cached_cli(
+    result = invoke_unbound_cli(
         ("--format", "json", "--profile", _LABEL, "--profile-secrets-stdin", "app", "modelo", "work", *args),
         input=json.dumps({"profile_passphrase": secret}),
     )
@@ -72,10 +72,14 @@ def test_native_cli_verify_and_file_preserve_settled_results_and_noop_notices(tm
             facts=operator_profile_facts(activity_start_date="2025-10-01"),
             log_in=False,
         )
-        work_unit_id = _create_m130_work_unit(period="4T")
         close_active_bucket_session()
 
         with native_profile_view_server(root):
+            created = _protected(
+                "create", "--modelo", "130", "--year", "2025", "--period", "4T", "--revision", "2019-y-siguientes"
+            )
+            assert created.exit_code == 0, created.output
+            work_unit_id = require_schema_envelope(created.output)["work_unit_id"]
             calculated = _protected(
                 "calculate",
                 work_unit_id,
@@ -139,7 +143,7 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
                 expected_content_digest=populated.content_digest,
             )
         assert ready.setup_state is ProfileSetupState.COMPLETE
-        return _create_m130_work_unit(period="4T")
+        return create_m130_work_unit(period="4T")
 
     def scope_for_destination(client_id: UUID) -> AccessScope:
         scope = AccessScope(

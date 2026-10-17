@@ -1,17 +1,4 @@
 cli:
-  censo_auth:
-    field_failed: Could not save {field}. Check its format and try again; fields saved earlier are retained.
-    configure_help: Set up or edit saved AEAT authentication before pulling the census (interactive terminal).
-    offer: Set up AEAT authentication before synchronizing?
-    method: Authentication method
-    route: Cl@ve Móvil route
-    certificate: Certificate file path (blank keeps saved value)
-    field: '{field} (blank keeps saved value)'
-    still_missing: '{field} is still missing.'
-    password: Password (blank keeps saved value)
-    saved: Authentication settings saved.
-    required: 'AEAT synchronization requires: {requirements}. Set or edit authentication here: {command}.'
-    console_required: 'Authentication editing needs an interactive terminal: {command}. Required: {requirements}.'
   app:
     ledger:
       account:
@@ -1394,8 +1381,11 @@ cli:
         bucket_id_help: Profile the declaration belongs to
         calculate_help: Save a new draft calculation for the declaration. This command
           calculates only from the values given to it. Values entered earlier in the
-          full-screen interface (aeat app tui) are not kept unless you give them again
-          here; the full-screen interface keeps them.
+          full-screen interface are not kept unless you give them again here; the
+          full-screen interface keeps them.
+        calculate_reused_sealed: 'These inputs match calculation %{revision_id} (state:
+          %{state}). No new draft was created. Select this saved calculation by its
+          revision ID, or change the inputs.'
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
@@ -1805,6 +1795,23 @@ cli:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> check -> export. Build and export only; never submits
         to AEAT'
+  censo_auth:
+    certificate: Certificate file path (blank keeps saved value)
+    configure_help: Set up or edit saved AEAT authentication before pulling the census
+      (interactive terminal).
+    console_required: 'Authentication editing needs an interactive terminal: {command}.
+      Required: {requirements}.'
+    field: '{field} (blank keeps saved value)'
+    field_failed: Could not save {field}. Check its format and try again; fields saved
+      earlier are retained.
+    method: Authentication method
+    offer: Set up AEAT authentication before synchronizing?
+    password: Password (blank keeps saved value)
+    required: 'AEAT synchronization requires: {requirements}. Set or edit authentication
+      here: {command}.'
+    route: Cl@ve Móvil route
+    saved: Authentication settings saved.
+    still_missing: '{field} is still missing.'
   common:
     errors:
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
@@ -1820,6 +1827,8 @@ cli:
         (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
         --period 1T --year 2024).'
   config:
+    activity:
+      help: Record activity for the signed-in profile without requesting a password.
     app_help: Set up and repair the local profile, credentials, storage and Google
       link.
     auth:
@@ -2591,8 +2600,6 @@ cli:
         stays setup-incomplete; `aeat config profile complete-setup` names the facts
         it still needs. Sufficient on its own; combine with --accept-defaults to fill
         the rest from descriptor defaults.
-    activity:
-      help: "Record activity for the signed-in profile without requesting a password."
     sign_in_status:
       help: Check your sign-in status without resuming or extending it.
     status:
@@ -2810,7 +2817,7 @@ cli:
         invalid_date: '{option} needs a date as YYYY-MM-DD.'
         nothing_to_update: 'Nothing to change on {account}: name a detail or send
           account fields through the secret channel.'
-      none: 'No own accounts yet. Add one with: aeat app ledger account add'
+      none: No own accounts yet.
       prompts:
         bank_address: 'Bank address: '
         bank_city: 'Bank city: '

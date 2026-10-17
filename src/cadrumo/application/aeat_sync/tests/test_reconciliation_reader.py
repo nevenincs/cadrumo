@@ -7,11 +7,8 @@ from uuid import UUID
 
 import pytest
 
-from ...modelo.reconciliation_records import (
-    ModeloReconciliationDiff,
-    ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
-)
+from ...modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from ...modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
 from ..workspace import (
     AeatSyncDiscrepancyKind,
     AeatSyncOverviewArea,

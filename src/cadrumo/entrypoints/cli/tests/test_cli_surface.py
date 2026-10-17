@@ -22,7 +22,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ....tests.cli_json_support import _json_object
+from ....tests.cli_json_support import require_json_object
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import cli_surface_isolated_backend
 from .scenario_support import (
@@ -76,6 +76,7 @@ def test_retired_invoice_declaration_and_archive_surfaces_are_not_user_facing() 
 
 
 def test_app_overview_status_bare_renders_counts() -> None:
+    create_cli_surface_profile()
     result = _invoke(["--format", "json", "app", "overview", "status"])
     assert result.exit_code == 0
     payload = _json(result)
@@ -196,7 +197,7 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
     assert Decimal(cast(str, transaction["amount"])) == Decimal("121.50")
     assert transaction["description"] == "cash office supplies corrected"
     assert edited["bucket_event_ids"]
-    return _json_object(edited)
+    return require_json_object(edited)
 
 
 def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
@@ -223,7 +224,7 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
     assert transaction["business_classification"] == "BUSINESS"
     assert transaction["category_id"] == "software_suscripcion"
     assert classified["review_status"] == "reviewed"
-    return _json_object(classified)
+    return require_json_object(classified)
 
 
 def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
@@ -258,7 +259,7 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
     assert transaction["business_classification"] == "MIXED"
     assert Decimal(cast(str, transaction["business_pct"])) == Decimal("0.60")
     assert transaction["usage_ratio_id"] == "telefonia_movil"
-    return _json_object(allocated)
+    return require_json_object(allocated)
 
 
 def _assert_ledger_status_one_ready_row(bucket_id: str) -> None:

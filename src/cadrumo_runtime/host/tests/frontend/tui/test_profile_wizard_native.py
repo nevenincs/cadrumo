@@ -90,7 +90,7 @@ async def register_profile_through_installed_tui(*, profile_label: str, passphra
     assert screen.outcome is not None
 
 
-async def _until(pilot: Pilot[None], condition: Callable[[], bool], stage: str) -> None:
+async def _until[Result](pilot: Pilot[Result], condition: Callable[[], bool], stage: str) -> None:
     print(f"Wizard step: {stage}", flush=True)
     deadline = time.monotonic() + 90
     while not condition():
@@ -99,7 +99,7 @@ async def _until(pilot: Pilot[None], condition: Callable[[], bool], stage: str) 
         await pilot.pause(0.05)
 
 
-async def _click(pilot: Pilot[None], selector: str) -> None:
+async def _click[Result](pilot: Pilot[Result], selector: str) -> None:
     button = pilot.app.screen.query_one(selector, Button)
     button.scroll_visible(immediate=True)
     await pilot.pause()

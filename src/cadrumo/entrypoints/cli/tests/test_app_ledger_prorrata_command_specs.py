@@ -6,9 +6,9 @@ from typing import Final
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.spec import CommandSpec
-from cadrumo_client.commands.target import resolve_deferred_target
 
 from .._app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
 from ..command_specs import COMMAND_GRAPH

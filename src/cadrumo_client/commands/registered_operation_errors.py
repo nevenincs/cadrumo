@@ -98,6 +98,13 @@ def submitted_operation_error(
         registered = get_registered_error_code_by_code(code)
     except InternalInvariantError:
         return CliRefusedBoundaryError(code, context=context)
+    if registered.code == "REFUSED_REVIEW_UNKNOWN_KIND":
+        # Reconstruct public vocabulary from its application owner. The runtime
+        # records the refusal code without forwarding arbitrary exception
+        # context, so the private submitted selector never crosses this seam.
+        from cadrumo.application.review.operator import ACCEPTED_KINDS
+
+        context["accepted_kinds"] = ", ".join(ACCEPTED_KINDS)
     return CliRecordedOperationError(registered.code, context=context)
 
 

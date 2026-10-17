@@ -72,8 +72,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.schema import InvoiceKind
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (

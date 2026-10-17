@@ -11,7 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....core.config_support import LLMProvider
 from ....core.operations import OperationEffect, profile_operation_subject
-from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import InvoiceKind
 from ...local_reader import LocalReaderStatus
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest

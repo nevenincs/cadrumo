@@ -26,10 +26,11 @@ from cadrumo_client.commands.secure_input import (
     stage_machine_secret_payload,
 )
 from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.commands.target import TargetResolver
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ._profile_authentication_contract import (
+from .profile_authentication_policy import (
     command_needs_state_tree,
     profile_authentication_posture,
     root_profile_secret_model,
@@ -369,13 +370,16 @@ def _selected_variant(spec: CommandSpec, arguments: Mapping[str, object]) -> Mac
 
 
 def _read_and_stage_leaf(
-    *, spec: CommandSpec, arguments: Mapping[str, object], selection: MachineSecretSelection | None
+    *,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+    selection: MachineSecretSelection | None,
+    resolver: TargetResolver,
 ) -> None:
     if selection is None:
         return
-    from cadrumo_client.commands.target import resolve_deferred_target
 
-    model = resolve_deferred_target(_selected_variant(spec, arguments).model)
+    model = resolver(_selected_variant(spec, arguments).model)
     if not isinstance(model, type) or not issubclass(model, MachineSecretPayload):
         raise TypeError("leaf machine-secret model must inherit MachineSecretPayload")
     stage_machine_secret_payload(read_machine_secret_payload(model, selection=selection))
@@ -649,6 +653,7 @@ def preflight_parsed_leaf(
     ) -> ProfileLoginOutcome:
         return consume_root_fallback(
             ctx,
+            graph=graph,
             bucket_id=bucket_id,
             root=root_selection,
             leaf=leaf_selection,
@@ -729,6 +734,7 @@ def consume_root_fallback(
     ctx: typer.Context,
     *,
     bucket_id: str,
+    graph: CommandSpecGraph,
     root: ProfileSecretSelection,
     leaf: MachineSecretSelection | None,
     spec: CommandSpec,
@@ -741,8 +747,8 @@ def consume_root_fallback(
     this one. What stays here is the check only this caller can make: that the
     profile authenticated is the profile the invocation named.
     """
-    _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
-    payload = read_profile_secret_payload(root_profile_secret_model(), selection=root)
+    _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf, resolver=graph.resolver)
+    payload = read_profile_secret_payload(root_profile_secret_model(graph=graph), selection=root)
     passphrase = ""
     try:
         if not isinstance(payload, ProfileAuthenticationSecrets):

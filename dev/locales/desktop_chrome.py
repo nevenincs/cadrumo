@@ -555,7 +555,6 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.settings.dark",
         "desktop.settings.docs_and_tui",
         "desktop.settings.first_pane",
-        "desktop.settings.follow_cadrumo",
         "desktop.settings.follow_docs",
         "desktop.settings.language",
         "desktop.settings.layout_reset",

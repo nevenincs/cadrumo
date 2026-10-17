@@ -26,6 +26,7 @@ the operation rows are written.
 
 from __future__ import annotations
 
+import ast
 import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -402,11 +403,38 @@ def _union_records(annotation: object) -> Iterator[type[BaseModel]]:
         raise TypeError(f"the request door carries a member that is not a record: {annotation!r}")
 
 
+def _live_invocation_service_bindings(tree: SourceTree) -> dict[tuple[Symbol, str], Symbol]:
+    """Read the actual host's callable injection; the interface does not construct its host."""
+    owner = "cadrumo_runtime/host/frontend/cli/app.py"
+    service: Symbol = ("cadrumo/entrypoints/cli/invocation_services.py", "CliInvocationServices")
+    origins = tree.name_origins(owner)
+    bindings: dict[tuple[Symbol, str], Symbol] = {}
+    for call in ast.walk(tree.parsed(owner)):
+        if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name):
+            continue
+        if origins.get(call.func.id) != service:
+            continue
+        for argument in call.keywords:
+            target = origins.get(argument.value.id) if isinstance(argument.value, ast.Name) else None
+            if argument.arg is None or target is None:
+                raise ValueError("the CLI host's callable injection cannot be resolved from source")
+            key = (service, argument.arg)
+            if key in bindings and bindings[key] != target:
+                raise ValueError("the CLI host binds conflicting invocation services")
+            bindings[key] = target
+    return bindings
+
+
 @cache
 def derive_live_command_connection_requests() -> Mapping[CliPath, frozenset[str]]:
-    """Derive the connection requests each live command sends from the live graph and source tree."""
-    tree = SourceTree(SRC_CADRUMO.parent, packages=frozenset({SRC_CADRUMO.name, "cadrumo_client"}))
-    flow = SubmissionFlow(tree, scanned=(*SCANNED_PACKAGES, CONNECTION_REQUEST_PACKAGE), submission=SUBMISSION_RECORD)
+    """Derive requests through the live handlers and their source-bound host effects."""
+    tree = SourceTree(SRC_CADRUMO.parent, packages=frozenset({SRC_CADRUMO.name, "cadrumo_client", "cadrumo_runtime"}))
+    flow = SubmissionFlow(
+        tree,
+        scanned=(*SCANNED_PACKAGES, CONNECTION_REQUEST_PACKAGE, "cadrumo_runtime/host/frontend/cli/"),
+        submission=SUBMISSION_RECORD,
+        callable_members=_live_invocation_service_bindings(tree),
+    )
     return derive_command_connection_requests(
         handlers=live_command_handlers(),
         flow=flow,

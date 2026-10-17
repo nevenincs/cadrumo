@@ -35,6 +35,8 @@ from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from .models import (
     LEDGER_DESTINATION_BY_AREA,
+    LedgerClassificationPatchV1,
+    LedgerClassificationResultV1,
     LedgerClassificationSubmissionV1,
     LedgerEntryRowV1,
     LedgerEvidenceConfirmationV1,
@@ -352,7 +354,14 @@ class LedgerWorkspaceController:
             )
         return tuple(rows)
 
-    async def submit_classification(self, patch: ManualLedgerTransactionPatch) -> ManualLedgerTransactionResult:
+    def build_classification_patch(self, values: dict[str, object]) -> LedgerClassificationPatchV1:
+        """Use the injected request boundary or the existing direct application's patch."""
+        builder = self.injection.classification_patch_builder
+        return ManualLedgerTransactionPatch.model_validate(values) if builder is None else builder(values)
+
+    async def submit_classification(
+        self, patch: LedgerClassificationPatchV1
+    ) -> ManualLedgerTransactionResult | LedgerClassificationResultV1:
         """Submit an explicit patch through the injected authorized door."""
         if self.classify_action is None or self.classification_target is None or self.classification_submitter is None:
             raise InternalInvariantError("classification submission is unavailable")
@@ -362,7 +371,10 @@ class LedgerWorkspaceController:
             patch=patch,
         )
         result = await self.classification_submitter(submission)
-        if result.ref.transaction_id != self.classification_target:
+        transaction_id = (
+            result.transaction_id if isinstance(result, LedgerClassificationResultV1) else result.ref.transaction_id
+        )
+        if transaction_id != self.classification_target:
             raise ValueError("classification result transaction identity disagrees")
         return result
 

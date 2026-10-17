@@ -13,7 +13,7 @@ from ....application.operator_surface.help import build_help_document
 from ....application.operator_surface.help_models import RootLandingReport
 from ....application.overview.calendar_models import OverviewStatusReport
 from ....core.json_contract import strict_round_trip
-from .._root_payloads import AppRootResult, RootStatusResult
+from ..root_results import AppRootResult, RootStatusResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -60,18 +60,7 @@ def test_app_root_payload_accepts_only_the_canonical_help_document() -> None:
 
 # Run out-of-process: this module imports OverviewStatusReport at module scope,
 # so the in-process sys.modules is already poisoned for an import-absence check.
-_HELP_BRANCH_IMPORT_PROBE = """
-import sys
-
-from cadrumo.application.operator_surface.help import build_help_document
-from cadrumo.core.json_contract import strict_round_trip
-from cadrumo.entrypoints.cli._root_payloads import RootStatusResult
-
-document = build_help_document("root")
-projected = strict_round_trip(RootStatusResult, document)
-assert projected.model_dump(mode="json") == document.model_dump(mode="json")
-print("overview" if "cadrumo.application.overview" in sys.modules else "clean")
-"""
+_HELP_BRANCH_IMPORT_PROBE = '\nimport sys\n\nfrom cadrumo.application.operator_surface.help import build_help_document\nfrom cadrumo.core.json_contract import strict_round_trip\nfrom cadrumo.entrypoints.cli.root_results import RootStatusResult\n\ndocument = build_help_document("root")\nprojected = strict_round_trip(RootStatusResult, document)\nassert projected.model_dump(mode="json") == document.model_dump(mode="json")\nprint("overview" if "cadrumo.application.overview" in sys.modules else "clean")\n'
 
 
 def test_help_branch_round_trip_does_not_import_the_overview_graph() -> None:

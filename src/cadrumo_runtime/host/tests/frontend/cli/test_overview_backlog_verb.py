@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import date
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.time.clock import now, today_madrid
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
 from cadrumo_runtime.host.tests.frontend.cli._overview_native_support import invoke_native_overview
@@ -133,9 +136,24 @@ _WORK_UNIT_NAMESPACE = "cadrumo.domain.modelos.work_units"
 _WORK_UNIT_OBJECT_KEY = "catalogue"
 
 
-def _persist_invalid_work_unit_catalogue_payload() -> str:
-    (bucket_id,) = tuple(list_profile_buckets())
-    with open_test_profile_session(bucket_id):
+@contextmanager
+def _authenticated_profile(operation: PinnedAuthorityOperation) -> Generator[str]:
+    profile = _PROFILE.get()
+    assert profile.label is not None
+    authenticate_profile_for_invocation(
+        name=profile.label,
+        passphrase_callback=lambda: profile.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    try:
+        (bucket_id,) = tuple(list_profile_buckets())
+        yield bucket_id
+    finally:
+        close_active_bucket_session()
+
+
+def _persist_invalid_work_unit_catalogue_payload(operation: PinnedAuthorityOperation) -> str:
+    with _authenticated_profile(operation) as bucket_id:
         secure_object_repository_for_bucket(bucket_id).save(
             namespace=_WORK_UNIT_NAMESPACE,
             object_key=_WORK_UNIT_OBJECT_KEY,
@@ -147,7 +165,7 @@ def _persist_invalid_work_unit_catalogue_payload() -> str:
     return bucket_id
 
 
-def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
+def test_work_unit_load_failure_degrades_to_notice_not_refusal(authority_operation: PinnedAuthorityOperation) -> None:
     # Work units are an optional enrichment; when their load fails the overview
     # must degrade to a schedule-only answer with a WARNING notice, NOT refuse
     # the whole surface — refusing left a behind-but-fresh taxpayer (the
@@ -155,9 +173,9 @@ def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
     from cadrumo.core.json_contract import NoticeSeverity
     from cadrumo.entrypoints.overview_evidence_composition import local_modelo_work_units
 
-    bucket_id = _persist_invalid_work_unit_catalogue_payload()
+    bucket_id = _persist_invalid_work_unit_catalogue_payload(authority_operation)
 
-    with open_test_profile_session(bucket_id):
+    with _authenticated_profile(authority_operation):
         units, notice = local_modelo_work_units(bucket_id)
     assert units == ()
     assert notice is not None
@@ -165,15 +183,15 @@ def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
     assert notice.severity is NoticeSeverity.WARNING
 
 
-def test_backlog_renders_despite_work_unit_load_failure() -> None:
+def test_backlog_renders_despite_work_unit_load_failure(authority_operation: PinnedAuthorityOperation) -> None:
     # End-to-end: with the work-unit load forced to fail, the backlog still
     # renders (exit 0) from the deadline schedule and surfaces the degradation
     # line, rather than exiting non-zero with a "persisted work state" refusal.
-    _persist_invalid_work_unit_catalogue_payload()
+    _persist_invalid_work_unit_catalogue_payload(authority_operation)
 
     result = _invoke(
         ["app", "overview", "backlog", "--from", "2026-01-01", "--to", "2026-12-31", "--allow-incomplete"],
     )
     assert result.exit_code == 0, result.output
     assert "late_count\t" in result.output
-    assert "work_units_degraded\t" in result.output
+    assert "work_units_degraded\t" in result.output, result.output

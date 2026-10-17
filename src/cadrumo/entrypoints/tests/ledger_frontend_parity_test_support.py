@@ -38,7 +38,7 @@ from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction
 from ..ledger_action_composition import compose_ledger_action_ports

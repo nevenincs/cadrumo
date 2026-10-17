@@ -36,6 +36,12 @@ from ....application.operator_surface.contract import get_operator_surface_contr
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PINNED_ROOTS: frozenset[str] = frozenset({"config", "app"})
+_PINNED_FAMILIES = {
+    "app": frozenset({"diagnostics", "ledger", "live", "modelo", "overview", "quickfile", "review"}),
+    "config": frozenset(
+        {"check", "collab", "google", "login", "logout", "profile", "provision", "repair", "reset", "storage"}
+    ),
+}
 
 
 def _is_command_group(command: click.Command) -> TypeGuard[click.Group]:
@@ -139,20 +145,16 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
     live = _resolve_live_surface()
     declared = _declared_families()
 
-    # Anti-vacuity floor. A symmetric-difference assertion over two empty maps
-    # passes while checking nothing, and the lazy-Typer tree is a documented
-    # false-green vector: an isinstance-gated or unmaterialised walk yields a
-    # single leaf (or none) and terminates silently. Pin the resolved surface
-    # against its known shape so a collapsed walk reds here rather than passing
-    # a mirror of two empty inventories. The floors sit comfortably below the
-    # live counts (2 roots, 19 operator-service families) yet far above the
-    # single-leaf blind-walk failure.
-    live_family_total = sum(len(families) for families in live.values())
+    # Pin actual family identities independently of the contract. The former
+    # floor of 19 rejected the complete current 17-family tree (134 sub-verbs).
+    # Named anchors still reject a collapsed lazy walk, including a nonempty
+    # tree that omits just one known family. Additional families remain subject
+    # to the exact live/declared comparison below.
     live_sub_verb_total = sum(len(sub) for families in live.values() for sub in families.values())
     assert set(live) == _PINNED_ROOTS, f"live surface did not resolve both pinned roots: {sorted(live)}"
-    assert live_family_total >= 19, (
-        f"live tree resolved only {live_family_total} families; the lazy walk likely collapsed"
-    )
+    for root, required in _PINNED_FAMILIES.items():
+        missing = required.difference(live[root])
+        assert not missing, f"live {root} tree omitted known families: {sorted(missing)}"
     assert live_sub_verb_total >= 120, (
         f"live tree resolved only {live_sub_verb_total} sub-verbs; the lazy walk likely collapsed"
     )

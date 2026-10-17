@@ -67,7 +67,7 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget("._actividad_asset_cli", handler, __package__)),
+        handler=LazyBinding.available(DeferredTarget(".actividad_asset_commands", handler, __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(schema_module, schema_name, __package__ if schema_module.startswith(".") else None),

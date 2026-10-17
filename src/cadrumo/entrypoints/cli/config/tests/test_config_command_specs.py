@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import ast
-import importlib
 import inspect
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
 
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_complete_config_graph_is_unique_connected_and_runtime_derived() -> None:
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS), resolver=resolve_deferred_target)
     config_nodes = tuple(node for node in graph.nodes() if node.path[:2] == ("aeat", "config"))
 
     assert config_nodes
@@ -36,16 +36,16 @@ def test_every_config_handler_and_schema_target_resolves() -> None:
             assert spec.result_schema.state is SchemaState.NOT_SUPPORTED
             continue
         assert spec.handler.target is not None
-        handler = getattr(importlib.import_module(spec.handler.target.module), spec.handler.target.qualname)
+        handler = resolve_deferred_target(spec.handler.target)
         assert callable(handler)
-        assert not handler.__name__.startswith("_")
+        assert hasattr(handler, "__name__")
+        handler_name: object = handler.__name__
+        assert isinstance(handler_name, str)
+        assert not handler_name.startswith("_")
         assert spec.result_schema.state is SchemaState.TARGET
         assert spec.result_schema.target is not None
         assert spec.result_schema.identity is not None
-        schema = getattr(
-            importlib.import_module(spec.result_schema.target.module),
-            spec.result_schema.target.qualname,
-        )
+        schema = resolve_deferred_target(spec.result_schema.target)
         assert inspect.isclass(schema)
 
 
@@ -59,7 +59,7 @@ def test_profile_schema_identities_preserve_compound_command_tokens() -> None:
     """
     from ..profile_command_specs import PROFILE_COMMAND_SPECS
 
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS), resolver=resolve_deferred_target)
     leaf_keys = {spec.key for spec in PROFILE_COMMAND_SPECS if spec.result_schema.identity is not None}
     identities = {
         node.spec.key: (node.path, node.spec.result_schema.identity)
@@ -82,7 +82,8 @@ def test_plain_handler_defaults_match_specs_except_variadic_wizard_boundary() ->
     for spec in CONFIG_COMMAND_SPECS:
         if spec.handler is None or spec.handler.target is None:
             continue
-        handler = getattr(importlib.import_module(spec.handler.target.module), spec.handler.target.qualname)
+        handler = resolve_deferred_target(spec.handler.target)
+        assert callable(handler)
         signature = inspect.signature(handler)
         if any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values()):
             assert spec.key in {"config_profile_create", "config_profile_edit"}
@@ -100,12 +101,13 @@ def test_plain_handler_defaults_match_specs_except_variadic_wizard_boundary() ->
 
 def test_handler_modules_carry_no_typer_structural_authority() -> None:
     modules = {
-        spec.handler.target.module
+        inspect.getmodule(resolve_deferred_target(spec.handler.target))
         for spec in CONFIG_COMMAND_SPECS
         if spec.handler is not None and spec.handler.target is not None
     }
-    for module_name in modules:
-        module = importlib.import_module(module_name)
+    for module in modules:
+        assert module is not None
+        module_name = module.__name__
         module_file = Path(inspect.getfile(module))
         source = module_file.read_text(encoding="utf-8")
         tree = ast.parse(source)
@@ -167,7 +169,7 @@ def test_provision_load_and_setup_extend_the_provision_cluster(
     from .._provision_command_specs import CONFIG_PROVISION_COMMAND_SPECS
     from .._spec_policies import NETWORK_WRITE
 
-    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS), resolver=resolve_deferred_target)
     (node,) = (node for node in graph.nodes() if node.path == ("aeat", "config", "provision", token))
     spec = node.spec
 

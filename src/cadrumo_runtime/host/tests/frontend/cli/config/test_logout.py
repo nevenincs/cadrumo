@@ -24,7 +24,6 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, SignInStatus, SignInStatusReply
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
@@ -96,7 +95,7 @@ def _install_client(monkeypatch: pytest.MonkeyPatch, client: _Client) -> None:
         assert frontend is OperationFrontendProjection.CLI
         return client
 
-    monkeypatch.setattr("cadrumo_client.transport.installed_client.open_installed_client", open_client)
+    monkeypatch.setattr("cadrumo_client.commands.custody.open_installed_client", open_client)
 
 
 def _logout(run_cadrumo_cli: Callable[..., Result]) -> dict[str, object]:
@@ -114,7 +113,7 @@ def test_logout_retains_selection(monkeypatch: pytest.MonkeyPatch, run_cadrumo_c
     captured = observe_active_profile_pointer()
     payload = _logout(run_cadrumo_cli)
     assert payload["result"] == {
-        "logged_out_profile": CLI_PROFILE_ID_PLACEHOLDER,
+        "logged_out_profile": "Selected profile",
         "already_logged_out": False,
         "scope": "profile_human_access",
         "human_receipt_revoked": True,

@@ -142,9 +142,9 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
 
     monkeypatch.setattr(conformance, "build_production_operation_registry", preview_registry_builder)
     profile_decode_context = operation.profile_decode_context()
-    cleanup = conformance._CloseWitness()
+    cleanup = conformance.OperationRuntimeCloseWitness()
 
-    with conformance._runtime(tmp_path / "censal-preview", cleanup=cleanup) as (
+    with conformance.conformance_operation_runtime(tmp_path / "censal-preview", cleanup=cleanup) as (
         driver,
         runtime_registry,
         profile_id,

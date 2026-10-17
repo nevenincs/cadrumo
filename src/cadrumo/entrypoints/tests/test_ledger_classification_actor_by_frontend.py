@@ -65,15 +65,15 @@ def _run[ProjectionT: BaseModel](
 ) -> tuple[ProjectionT, tuple[BucketEvent, ...]]:
     """Run the seeded scenario of one operation as ``frontend`` and read what it left behind."""
     with (
-        conformance._model_runtime_for(definition_id),
-        conformance._runtime(
+        conformance.model_runtime_for_operation(definition_id),
+        conformance.conformance_operation_runtime(
             tmp_path / "runtime",
-            cleanup=conformance._CloseWitness(),
+            cleanup=conformance.OperationRuntimeCloseWitness(),
             execution_caller_reader=_session_host(definition_id, frontend),
         ) as (driver, registry, profile_id),
     ):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        submission = conformance._seeded_conformance_submission(
+        submission = conformance.seeded_conformance_operation_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 

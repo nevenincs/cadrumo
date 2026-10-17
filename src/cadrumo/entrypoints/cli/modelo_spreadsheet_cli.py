@@ -14,11 +14,11 @@ from cadrumo_client.commands.profile_binding import bound_profile_client
 
 from ...application.operations.public_period import PublicPeriod
 from ...core.period import Period, PeriodError
-from ._modelo_spreadsheet_payloads import (
+from .common import emit_envelope
+from .modelo_spreadsheet_results import (
     ModeloSpreadsheetExportResult,
     ModeloSpreadsheetPushResult,
 )
-from .common import emit_envelope
 from .operation_modelo_spreadsheet import (
     export_modelo_spreadsheet,
 )

@@ -68,11 +68,11 @@ from cadrumo.entrypoints.tui.operations.destination import (
 )
 from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProviderV1
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
-from cadrumo_client.transport.operation_controller import OperationController
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.operation_controller import OperationController
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_harness.mcp.admitted_operations import call_admitted_operation
 from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache

@@ -2,7 +2,7 @@
 
 The former shared ``config_payloads`` module was split into focused siblings.
 Bucket-history schemas now live in
-:mod:`cadrumo.entrypoints.cli._config_bucket_history_payloads`, leaving this
+:mod:`cadrumo.entrypoints.cli.profile_history_results`, leaving this
 module to own declared-descendant transport and its full canonical contract.
 
 :class:`ProfileDescendientePayload` is a lossless projection of

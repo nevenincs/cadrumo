@@ -12,8 +12,9 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.invoices.bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
 from cadrumo.core.field_role import FieldRole
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.tests.inventory import FIXTURES_DIR
+
+from .....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

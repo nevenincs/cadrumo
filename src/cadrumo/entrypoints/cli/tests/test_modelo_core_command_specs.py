@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo_client.commands.target import resolve_deferred_target
+from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 

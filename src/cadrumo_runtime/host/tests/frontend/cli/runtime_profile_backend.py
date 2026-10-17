@@ -61,11 +61,20 @@ _STORAGE_ROOT_NAME = "cadrumo-storage"
 class _RuntimeJoinedOnFirstCommand:
     """Join one registered profile's runtime when a command first needs it, until the scope ends."""
 
-    def __init__(self, stack: ExitStack, storage_root: Path, profile_id: UUID, label: str) -> None:
+    def __init__(
+        self,
+        stack: ExitStack,
+        storage_root: Path,
+        profile_id: UUID,
+        label: str,
+        *,
+        os_owner_id: str = "portable-test-owner",
+    ) -> None:
         self._stack = stack
         self._storage_root = storage_root
         self._profile_id = profile_id
         self._label = label
+        self._os_owner_id = os_owner_id
         self._runtime: PortableHumanCliRuntime | None = None
 
     def invoke(self, args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
@@ -80,7 +89,10 @@ class _RuntimeJoinedOnFirstCommand:
                 return first
             self._runtime = self._stack.enter_context(
                 portable_human_cli_runtime(
-                    storage_root=self._storage_root, profile_id=self._profile_id, label=self._label
+                    storage_root=self._storage_root,
+                    profile_id=self._profile_id,
+                    label=self._label,
+                    os_owner_id=self._os_owner_id,
                 )
             )
         return self._runtime.invoke(args, **kwargs)
@@ -344,9 +356,13 @@ def runtime_seeded_profile_backend_fixture(
     return _seeded_origin, _copied_backend
 
 
-def live_session_operator(stack: ExitStack, bucket_id: str) -> ProfileCliInvoker | None:
+def live_session_operator(
+    stack: ExitStack, bucket_id: str, *, os_owner_id: str = "portable-test-owner"
+) -> ProfileCliInvoker | None:
     """Return the operator of a committed profile whose session is live, joined to ``stack`` on first command."""
     pointer = read_profile_bucket_by_id(bucket_id)
     if pointer is None:
         return None
-    return _RuntimeJoinedOnFirstCommand(stack, effective_storage_root(), UUID(pointer.bucket_id), str(pointer.label))
+    return _RuntimeJoinedOnFirstCommand(
+        stack, effective_storage_root(), UUID(pointer.bucket_id), str(pointer.label), os_owner_id=os_owner_id
+    )
