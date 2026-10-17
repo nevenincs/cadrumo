@@ -19,9 +19,9 @@ Clients wait for running operations on a pushed `operation_changed` cue instead 
 
 ## Description
 
-Approved 2026-10-17. The operator approved `2026-10-17-idle-churn-operation-observation-adr` and its implementation in this session ("1 - yes").
+Approved 2026-10-17. The operator approved `2026-10-17-idle-churn-operation-observation-adr` and its implementation in this session ("1 - yes"), then its amended producer ("go ahead with the recommendation. amend adr and go").
 
-The governing decision is `2026-10-17-idle-churn-operation-observation-adr`, which extends `2026-10-16-idle-churn-adr`; every Step is in its scope. The profile worker gains a bounded wait on an operation's next event or terminal state (S01). The runtime holds that wait on behalf of each connection observing a non-terminal operation and cues the connection when it returns (S02). Clients then wait on the cue or their existing deadline and re-read with the unchanged `OperationObserve`: first the shared settlement helpers and the CLI runner (S03), then the remaining TUI and client loops (S04), and the MCP harness's attendance wait on the existing `attendance_changed` cue (S05). S06 rebuilds and proves the whole path on the packaged stages. Runtime process idle wakes, the profile worker's custody pass and the TUI's own timers belong to the session tui-41 and stay out of this plan.
+The governing decision is `2026-10-17-idle-churn-operation-observation-adr`, which extends `2026-10-16-idle-churn-adr`; every Step is in its scope. The profile worker reports each committed operation to the runtime over its existing authorization endpoint (S01). The runtime records which connections observe which non-terminal operations and cues them when a report names one (S02). Clients then wait on the cue or their existing deadline and re-read with the unchanged `OperationObserve`: first the shared settlement helpers and the CLI runner (S03), then the remaining TUI and client loops (S04), and the MCP harness's attendance wait on the existing `attendance_changed` cue (S05). S06 rebuilds and proves the whole path on the packaged stages. Runtime process idle wakes, the profile worker's custody pass and the TUI's own timers belong to the session tui-41 and stay out of this plan.
 
 ## Steps
 
@@ -38,8 +38,8 @@ Strictly sequential. S02 depends on S01's worker action, S03 to S05 consume S02'
 
 ## Verification
 
-- S01: a unit test drives a supervised operation and shows the wait returning on an appended event, on terminal state, and on the bound, never earlier.
-- S02: a host test shows a non-terminal observation arming a watch, an event producing exactly one `operation_changed` on that connection, no cue after terminal or disconnect, and the observing connection's other requests unaffected while the wait is outstanding.
+- S01: tests show the routed persistence calling its observer after each committed snapshot and settlement and never on a refused commit, and the worker's sender coalescing a burst of commits into one report and dropping, not retrying, an undeliverable one.
+- S02: tests show a non-terminal observation recording a watch, a report producing exactly one `operation_changed` on that connection, no cue after a terminal observation, after disconnect or for another profile, and the authorization server refusing a report from anything but its owned worker.
 - S03 to S05: each converted loop has a test that fails when the cue path is replaced by the old fixed-interval sleep, and keeps its deadline and `UNKNOWN` semantics.
 - S06: Debug and Release `app-payload` rebuilt, the concurrent-sessions and backend probes pass on both, and a packaged CLI operation settles without polling.
 - Every Step: ruff, ty and the covering tests on the files it touched; import lint when imports cross packages.
