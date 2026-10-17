@@ -12,6 +12,7 @@ pub struct ChildConfiguration {
     executable: PathBuf,
     working_directory: PathBuf,
     environment: BTreeMap<OsString, OsString>,
+    leading: &'static [&'static str],
 }
 
 impl ChildConfiguration {
@@ -54,7 +55,14 @@ impl ChildConfiguration {
             executable,
             working_directory,
             environment,
+            leading: &[],
         })
+    }
+    /// The same child with its executable, the Cadrumo binary, started as `role`:
+    /// every command it builds begins with the role's arguments.
+    pub fn in_role(mut self, role: crate::role::Role) -> Self {
+        self.leading = role.arguments();
+        self
     }
     /// Explicit preparation through the canonical platform owner. It can create the
     /// resolved root and temporary directory; it is not a capability inspection.
@@ -88,6 +96,7 @@ impl ChildConfiguration {
     pub fn command(&self) -> Command {
         let mut command = Command::new(&self.executable);
         command
+            .args(self.leading)
             .current_dir(&self.working_directory)
             .env_clear()
             .envs(&self.environment);
@@ -131,6 +140,22 @@ mod tests {
                 .is_err()
             );
         }
+    }
+
+    #[test]
+    fn a_child_in_a_role_starts_every_command_with_the_role_arguments() {
+        let executable = std::env::current_exe().unwrap();
+        let plain =
+            ChildConfiguration::new(executable.clone(), std::env::temp_dir(), BTreeMap::new())
+                .unwrap();
+        assert_eq!(plain.command().get_args().count(), 0);
+        let mut command = plain.in_role(crate::role::Role::Cli).command();
+        command.arg("--format");
+        assert_eq!(command.get_program(), executable.as_os_str());
+        assert_eq!(
+            command.get_args().collect::<Vec<_>>(),
+            ["--role", "cli", "--format"]
+        );
     }
 
     #[cfg(windows)]

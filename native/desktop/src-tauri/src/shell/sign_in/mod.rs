@@ -18,6 +18,7 @@ use cadrumo_application::{
     diagnostics::helper::{HelperExecutable, HelperIdentity},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     package::PackageManifest,
+    role::Role,
     value::RelativePath,
 };
 use serde::Deserialize;
@@ -306,12 +307,18 @@ fn resolve_image(launch: &Launch, entrypoint: &str) -> Result<ChildConfiguration
     if !layout.entrypoints.contains_key(entrypoint) {
         return Err(failure(ErrorCode::PackageUnavailable));
     }
-    let relative = RelativePath::new(format!(
-        "{}/{}{}",
-        layout.paths.native.as_str(),
-        entrypoint,
-        layout.entrypoint_suffix
-    ))
+    // The desktop runs a console script that a role hosts as that role of its own
+    // binary, so the helper stays in the window's process tree.
+    let role = Role::hosting(entrypoint).filter(|_| cfg!(windows));
+    let relative = match role {
+        Some(_) => RelativePath::new(format!("cadrumo{}", std::env::consts::EXE_SUFFIX)),
+        None => RelativePath::new(format!(
+            "{}/{}{}",
+            layout.paths.native.as_str(),
+            entrypoint,
+            layout.entrypoint_suffix
+        )),
+    }
     .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
     let manifest = PackageManifest::read(&launch.package_root, &layout.files.package_manifest)
         .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
@@ -326,12 +333,16 @@ fn resolve_image(launch: &Launch, entrypoint: &str) -> Result<ChildConfiguration
         BinaryExpectation::host().map_err(|_| failure(ErrorCode::PackageUnavailable))?,
     )
     .map_err(|_| failure(ErrorCode::PackageUnavailable))?;
-    ChildConfiguration::new(
+    let child = ChildConfiguration::new(
         executable,
         launch.working_directory.clone(),
         launch.child.environment().clone(),
     )
-    .map_err(|_| failure(ErrorCode::EnvironmentFailed))
+    .map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
+    Ok(match role {
+        Some(role) => child.in_role(role),
+        None => child,
+    })
 }
 
 // The CLI currently exposes no GNOME binding capability. Until that projection

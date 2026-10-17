@@ -13,8 +13,11 @@ pub const ROLE_ARGUMENT: &str = "--role";
 /// A role other than the desktop.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Role {
-    /// The supervised local runtime, the `cadrumo-runtime` console script.
+    /// The `cadrumo-runtime` console script: the supervised local runtime, and the
+    /// runtime session commands the desktop runs.
     Runtime,
+    /// The `aeat` console script, for the commands the desktop runs.
+    Cli,
 }
 
 /// What a role runs inside the linked interpreter host.
@@ -36,11 +39,12 @@ pub enum RoleRefusal {
 }
 
 impl Role {
-    pub const ALL: [Role; 1] = [Role::Runtime];
+    pub const ALL: [Role; 2] = [Role::Runtime, Role::Cli];
 
     pub const fn name(self) -> &'static str {
         match self {
             Role::Runtime => "runtime",
+            Role::Cli => "cli",
         }
     }
 
@@ -48,6 +52,7 @@ impl Role {
     pub const fn arguments(self) -> &'static [&'static str; 2] {
         match self {
             Role::Runtime => &[ROLE_ARGUMENT, "runtime"],
+            Role::Cli => &[ROLE_ARGUMENT, "cli"],
         }
     }
 
@@ -57,7 +62,18 @@ impl Role {
                 image: "cadrumo-runtime",
                 entrypoint: "cadrumo-runtime",
             },
+            Role::Cli => HostedImage {
+                image: "aeat",
+                entrypoint: "aeat",
+            },
         }
+    }
+
+    /// The role that runs the console script `entrypoint`, if one does.
+    pub fn hosting(entrypoint: &str) -> Option<Role> {
+        Role::ALL
+            .into_iter()
+            .find(|role| role.hosted().entrypoint == entrypoint)
     }
 
     fn named(name: &OsStr) -> Option<Role> {
@@ -98,6 +114,7 @@ mod tests {
         assert_eq!(role, Role::Runtime);
         assert_eq!(forwarded, &given[2..]);
         assert_eq!(Role::Runtime.arguments(), &["--role", "runtime"]);
+        assert_eq!(Role::Cli.arguments(), &["--role", "cli"]);
     }
 
     #[test]
@@ -134,6 +151,10 @@ mod tests {
             assert!(!hosted.image.is_empty() && !hosted.entrypoint.is_empty());
             assert_eq!(role.arguments()[1], role.name());
             assert_eq!(select(role.arguments()).unwrap().unwrap().0, role);
+            assert_eq!(Role::hosting(hosted.entrypoint), Some(role));
+        }
+        for entrypoint in ["cadrumo-agent-service", "cadrumo-mcp", "", "AEAT"] {
+            assert_eq!(Role::hosting(entrypoint), None, "{entrypoint:?}");
         }
     }
 }
