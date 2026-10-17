@@ -58,6 +58,8 @@ pub struct Person {
     stdin: Option<ChildStdin>,
     received: mpsc::Receiver<Option<Value>>,
     events: Arc<Mutex<Option<PersonEvents>>>,
+    // Whether the last exchange's error was a refusal of that very request.
+    refused_in_step: bool,
     pub identity: Value,
 }
 
@@ -121,6 +123,7 @@ impl Person {
             stdin: Some(stdin),
             received,
             events,
+            refused_in_step: false,
             identity: Value::Null,
         };
         person.identity = person.read()?;
@@ -165,10 +168,14 @@ impl Person {
     }
 
     pub fn exchange(&mut self, mut document: Value) -> Result<Value> {
+        self.refused_in_step = false;
         let reply = self.exchange_once(&mut document);
-        if reply.is_err() {
+        if reply.is_err() && !self.refused_in_step {
             // A missed or malformed reply loses this half-duplex bridge. No
             // later call may replay a decision or consume its delayed reply.
+            // A refusal of this very request leaves it in step: a hold that
+            // survives one, as for an uncertain OS observation, keeps the
+            // person's session, and one that ends is seen closed.
             drop(self.stdin.take());
         }
         reply
@@ -188,6 +195,7 @@ impl Person {
             .and_then(|()| stdin.flush())
             .map_err(|_| failed())?;
         let reply = self.read()?;
+        self.refused_in_step = reply["kind"] == "session_refused" && reply["request_id"] == id;
         if reply["request_id"] != id
             || reply["runtime_boot_id"] != self.identity["runtime_boot_id"]
             || reply["connection_id"] != self.identity["connection_id"]
@@ -442,5 +450,51 @@ mod event_tests {
         let error = person.exchange(json!({"action": "activity"})).unwrap_err();
         assert_eq!(error.code, ErrorCode::ReadFailed);
         assert!(!person.is_open());
+    }
+
+    #[test]
+    fn a_refusal_of_this_request_keeps_the_bridge_and_the_next_request_is_answered() {
+        let identity = json!({
+            "kind": "session_held",
+            "profile_id": PROFILE,
+            "session_id": request_id().unwrap(),
+            "runtime_boot_id": request_id().unwrap(),
+            "connection_id": request_id().unwrap(),
+        });
+        let refused = json!({"kind": "session_refused", "request_id": "", "code": "unavailable"});
+        let status = json!({
+            "kind": "profile_status",
+            "request_id": "",
+            "runtime_boot_id": identity["runtime_boot_id"],
+            "connection_id": identity["connection_id"],
+            "status": {
+                "profile_id": PROFILE,
+                "session_id": identity["session_id"],
+                "connected": true,
+                "credential_authenticated": true,
+                "profile_bound": true,
+                "session_expires_at": "2026-10-17T06:00:00Z",
+                "denial": null,
+            },
+        });
+        let answer = |reply: &Value| {
+            format!(
+                "$request = [Console]::In.ReadLine() | ConvertFrom-Json; \
+                 $reply = '{reply}' | ConvertFrom-Json; $reply.request_id = $request.request_id; \
+                 [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress -Depth 5)); [Console]::Out.Flush(); "
+            )
+        };
+        let script = format!(
+            "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); {}{}\
+             [Console]::In.ReadLine() | Out-Null }}",
+            answer(&refused),
+            answer(&status)
+        );
+        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        // As when the runtime cannot observe the login for a moment: the hold refuses and keeps holding.
+        person.exchange(json!({"action": "activity"})).unwrap_err();
+        assert!(person.is_open());
+        let reply = person.exchange(json!({"action": "activity"})).unwrap();
+        assert_eq!(reply["status"]["session_id"], identity["session_id"]);
     }
 }

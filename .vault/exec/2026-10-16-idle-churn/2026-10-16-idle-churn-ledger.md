@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:63da9c2b7aff18e1521b1333b1e8328a411ee7f0cdcb3057d9faec4ccff290f1'
+body_hash: 'sha256:66b767857146b5d8a2c71a3660e4de96ab8afc8d0c46fb1f8e3060bfccd1fd4c'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -188,6 +188,13 @@ related:
 - `S12` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
 - `S12` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (run by CADRUMO-BUILD-DEBUG, 337 passed)` -> `pass`
 - `S12` `verify:` `rustfmt --edition 2024 --check on the edited files` -> `pass`
+- `S09` `verify:` `pytest -n0 test_lifecycle_wake.py test_server_idle_wait.py test_bootstrap_reset.py test_grant_change.py test_windows_session_notifications.py test_server_cleanup.py test_server_diagnostics.py (59, three combined runs)` -> `pass`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S12` `M` `src/cadrumo_runtime/host/session_hold.py`
+- `S12` `A` `src/cadrumo_runtime/host/tests/test_session_hold_activity.py`
+- `S12` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (run by CADRUMO-BUILD-DEBUG, 339 passed) and desktop-host-unit-clippy` -> `pass`
+- `S12` `verify:` `pytest -n0 test_session_hold_activity.py test_session_hold_stdin_lifetime.py` -> `pass`
+- `S12` `verify:` `ruff check, ruff format --check, ty check, rustfmt --check` -> `pass`
 
 ## Notes
 
@@ -202,3 +209,5 @@ related:
 - `S11` Depends on cadrumo-agent 09bfc8b relaying worker diagnostics on the agent's standard error, proved end to end on the rebuilt stage by CADRUMO-AGENT-SESSION1; the native fixture now models that relay.
 - `S09` Host suite 221 passed, 2 skipped. A first run caught an accept loop that took each profile's admission guard while computing its wait `(test_grant_change[rotate],` `test_bootstrap_reset[reset-and-replay]).` Profile deadlines are now cached during the pass, and request-driven passes coalesce to one interval later. Without WTS notifications, or with a non-desktop or unknown-state login, logins are still observed every 0.5 s, as the ADR allows.
 - `S09` Reopened: signed in, each lifecycle pass owed the next one through the rate-limited sign-in sweep (audit lifecycle-sweep-reowe); the new test fails against the previous code
+- `S09` Reopened by the plan-close review: tick age while parked past its deadline, sweep state outside the guard, WTS callback on the guard; each new test fails against the previous code. `test_bootstrap_reset[reset-and-replay]` failed once in nine runs under load (audit bootstrap-reset-replay-timing)
+- `S12` Reopened by the plan-close review (activity-refusal-ends-the-person-hold, high): the hold keeps holding on `OS_SESSION_UNAVAILABLE` and the bridge keeps a correlated refusal in step; the hold test fails against the previous code

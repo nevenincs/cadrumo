@@ -20,6 +20,7 @@ from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.profile_language import ProfileLanguage, read_profile_language, set_profile_language
 
@@ -228,7 +229,15 @@ async def _hold(
                     reply = client.status()
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
                 elif action == "activity":
-                    reply = client.note_activity()
+                    try:
+                        reply = client.note_activity()
+                    except FrontendRefusedError as error:
+                        if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
+                            _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
+                            return 1
+                        # As for an admission: typing during an uncertain OS observation keeps the held sign-in.
+                        _emit_refusal("unavailable", request_id)
+                        continue
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
                 elif action in {"language_read", "language_set", "language_observe"}:
                     if action != "language_observe" or language_cache is None or language_dirty.is_set():
