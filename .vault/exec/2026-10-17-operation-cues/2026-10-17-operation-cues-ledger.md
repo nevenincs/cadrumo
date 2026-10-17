@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2570d6b2d8fe8a8e61018df22519535c5b69e0ed47d9c278f3c860294f273fe'
+body_hash: 'sha256:0234d7398dec70e7530811b088514b3950a3ebdf64e1a57b4dc33bce77eb5088'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -116,6 +116,16 @@ related:
 - `S08` `M` `native/manager/src/lifecycle.rs`
 - `S08` `verify:` `ctest --preset debug --tests-regex ^manager\.(rust|supervision)$` -> `pass`
 - `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle` -> `pass`
+- `S08` `M` `native/manager/src/desktop_host.rs`
+- `S08` `M` `native/manager/src/session.rs`
+- `S08` `M` `native/manager/src/session/instance.rs`
+- `S08` `A` `native/manager/src/session/status_cue.rs`
+- `S08` `M` `native/manager/src/session/windows.rs`
+- `S08` `M` `native/manager/src/windows_lifecycle.rs`
+- `S08` `verify:` `ctest --preset debug --tests-regex ^manager\.(rust|supervision)$` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-clippy` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `pass`
 
 ## Notes
 
