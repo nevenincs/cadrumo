@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ed959b3ccedfcd990fc118237f0d8b2d803093467a2649a939a2668c6876c5b'
+body_hash: 'sha256:2da75d76d5a454906fcc73c15088edc6404bbf491fdb0d70d9bfccee953f8aa6'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -57,3 +57,18 @@ related:
 - `S01` `verify:` `pytest -m integration test_worker_authorization.py` -> `pass`
 - `S01` `verify:` `pytest operation host and persistence suites` -> `pass`
 - `S01` `verify:` `ruff check, ruff format --check, ty check, lint-imports` -> `pass`
+- `S02` `M` `src/cadrumo_client/contracts/session_events.py`
+- `S02` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S02` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_operations.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_admission.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_sessions.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_connection_cues.py`
+- `S02` `verify:` `pytest test_connection_cues.py` -> `pass`
+- `S02` `verify:` `pytest -m unit cadrumo_runtime/host/tests cadrumo_client/transport/tests cadrumo_client/contracts` -> `pass`
+- `S02` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+
+## Notes
+
+- `S02` `test_frontend_boundaries::test_installed_composition_and_native_journeys_are_runtime_owned` fails before and after this Step: it asserts a test file another session deleted
