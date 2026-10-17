@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a4bd2385c71a1655a63cb455271f358826bdc44d6c4b1a1bf656414d3cf01eb'
+body_hash: 'sha256:b2570d6b2d8fe8a8e61018df22519535c5b69e0ed47d9c278f3c860294f273fe'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -108,9 +108,18 @@ related:
 - `S05` `M` `src/cadrumo_runtime/host/session_events.py`
 - `S05` `M` `src/cadrumo_runtime/host/tests/test_attendance.py`
 - `S05` `verify:` `pytest src/cadrumo_harness/mcp/tests/test_attendance_wait.py src/cadrumo_harness/mcp/tests/test_sign_in_resume.py src/cadrumo_runtime/host/tests/test_attendance.py` -> `pass`
+- `S08` `M` `native/manager/src/background.rs`
+- `S08` `A` `native/manager/src/change_watch.rs`
+- `S08` `M` `native/manager/src/cutover_coordinator.rs`
+- `S08` `M` `native/manager/src/installation_watch.rs`
+- `S08` `M` `native/manager/src/lib.rs`
+- `S08` `M` `native/manager/src/lifecycle.rs`
+- `S08` `verify:` `ctest --preset debug --tests-regex ^manager\.(rust|supervision)$` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle` -> `pass`
 
 ## Notes
 
 - `S02` `test_frontend_boundaries::test_installed_composition_and_native_journeys_are_runtime_owned` fails before and after this Step: it asserts a test file another session deleted
 - `S03` Pre-existing, unchanged by this Step: 9 CLI structural/inventory tests, `test_frontend_boundaries` (deleted file), and `test_runtime_ledger_reads_native::test_native_api_ledger_status_requires_all_periods_even_when_query_selects_one,` which fails one run in three even with the reporter disabled and the old client code
 - `S04` The wide run's pre-existing failures were fixed separately in d07ae808aa (resolution-cost child import, environment reference conformance); the portable fixture's stale `_lapsed` field is fixed in this Step's commit.
+- `S08` Partial: the desktop host's 1 s external-owner pace remains. It mirrors the external manager's status, and the manager IPC has no change signal; removing it needs a status-wait in the manager protocol, pending the user's decision.
