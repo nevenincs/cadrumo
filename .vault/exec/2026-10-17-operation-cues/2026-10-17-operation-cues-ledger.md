@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:673dfa477182db008fada75f466de3978e7f2ab79fe627d2a571329087fc6013'
+body_hash: 'sha256:820ad684e1301af2a96b5b08bde73edf7ac45205cbf4750f971af6ca1efa84b3'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -159,6 +159,8 @@ related:
 - `S06` `verify:` `dev.runtime_lifecycle.concurrent_sessions_probe --package build/windows-x64/stage/Debug/app` -> `fail`
 - `S06` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `pass`
 - `S06` `by:` `tui-41`
+- `S06` `verify:` `concurrent_sessions_probe on stage/Release after bcf4f4085c, every functional check` -> `pass`
+- `S06` `verify:` `concurrent_sessions_probe no_error_records on stage/Release` -> `fail`
 
 ## Notes
 
@@ -172,3 +174,4 @@ related:
 - `S09` The re-review passed; its one low finding, that the constraint promised a retry an escaping error does not give, is resolved in the constraint's wording.
 - `S08` Plan-close finding status-cue-publisher-proof-is-a-bare-pid fixed: the record carries the publisher's creation stamp, schema 2.
 - `S06` S06 stays open: the concurrent probe's desktop holders, launched from bin/cadrumo-runtime, are refused `desktop_holder_unverified` because both stages were built with another writer's uncommitted `service_descriptors.py` edit that points the Windows desktop-session descriptor at the desktop's role-dispatch image; nothing here involves the operation cue. The Debug runtime also exited 1 mid-probe, unexplained. Debug's earlier probes at deed364c87 passed.
+- `S06` With bcf4f4085c the probe's desktop holders launch from the descriptor's image and are admitted. The only failure left is `no_error_records:` 262e873ce3 logs the probe's deliberate signed-out and `authentication_required` refusals at ERROR; its owner is reconciling. The earlier Debug runtime exit 1 was a Codex Debug build's quiesce at 21:27:19 local, mid-probe.
