@@ -1441,8 +1441,8 @@ bytes never enter host diagnostics or the log view.
 
 ### Log aggregation
 
-`src-tauri/src/logs/` merges Python file records and in-memory native events,
-polled every 100 ms. `source` is an open enumeration:
+`src-tauri/src/logs/` merges Python and manager file records and in-memory
+native events, polled every 100 ms. `source` is an open enumeration:
 
 - `python`: the log file the launch projection reports (`cadrumo.log` in the log
   directory) and its numbered rotations, which Python writes through its
@@ -1465,6 +1465,11 @@ polled every 100 ms. `source` is an open enumeration:
   scalar context carries lifecycle stage/outcome, child phase/exit code and
   safe failure code, operation, OS error kind and numeric OS code when known.
   Captured child output is never requested, so terminal bytes cannot appear.
+- `manager`: `cadrumo-manager.log` in the log directory and its numbered
+  rotations, the diagnostics lines a standalone manager process writes, with
+  scrubbed lifecycle facts. A desktop that hosts supervision itself gives the
+  supervisor its own diagnostics, so those records arrive as `host` events and
+  no manager file exists. The manager state is then absent, not `missing`.
 
 Each record exposes `context` alongside `process`. Parsed instants display in
 the viewer's local timezone; offset-free legacy timestamps display unchanged.
@@ -1489,11 +1494,11 @@ the log directory cannot be listed, the line format cannot be parsed, or reading
 fails in two polls in a row; one failure can be a racing rotation. Its `detail`
 names the log file.
 
-`logs_subscribe` (`token`, `records` channel) returns `{subscription, state}`. The
+`logs_subscribe` (`token`, `records` channel) returns `{subscription, states}`. The
 ring holds 10,000 records, and a subscription's first batch carries at most the
 newest 5,000.
 Each subscription then receives at most one batch per 100 ms and none when
-nothing changed. A batch is `{records, dropped, state}`, where `dropped` counts
+nothing changed. A batch is `{records, dropped, states}`, where `dropped` counts
 records the ring overwrote before this subscription saw them. At most 8
 subscriptions exist; a ninth evicts the oldest. A shell-document load ends every
 subscription. `logs_unsubscribe` (`token`, `subscription`) refuses an unknown id

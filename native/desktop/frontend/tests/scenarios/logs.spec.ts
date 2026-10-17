@@ -70,7 +70,18 @@ test("reveal log location is available from the log bar and command palette", as
     .toBe(2);
 });
 
-for (const kind of ["missing", "unreadable", "rejected"] as const) {
+test("an absent manager log is no source and raises no banner", async ({
+  page,
+}) => {
+  await page.goto(`/scenarios.html?scenario=manager-log-absent&latency=0`);
+  await openPanelTab(page, "logs");
+  await expect(page.locator('.record[data-seq="4"]')).toContainText(
+    "Workbench ready",
+  );
+  await expect(page.locator(".source-banner")).toHaveCount(0);
+});
+
+for (const kind of ["unreadable", "rejected"] as const) {
   test(`manager ${kind} state preserves Python records and names its own source`, async ({
     page,
   }) => {

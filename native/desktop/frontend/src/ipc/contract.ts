@@ -242,11 +242,14 @@ export type LogSourceState = {
   rejected: number;
 };
 
-/** Independent file availability; host events are read from memory. */
+/**
+ * Independent file availability; host events are read from memory. A
+ * `manager` state appears once a standalone manager writes its log: a desktop
+ * that hosts supervision itself reports it among the host events.
+ */
 export type LogSourceStates = {
   [source: string]: LogSourceState;
   python: LogSourceState;
-  manager: LogSourceState;
 };
 
 /**

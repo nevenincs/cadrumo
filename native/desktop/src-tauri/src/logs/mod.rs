@@ -106,12 +106,7 @@ impl LogHub {
                 aggregate: Aggregate::new(LogSourceStates {
                     host: host::source(&diagnostics),
                     python: state,
-                    manager: LogSourceState {
-                        kind: SourceKind::Missing,
-                        detail: manager_log_file.display().to_string(),
-                        failure: None,
-                        rejected: 0,
-                    },
+                    manager: None,
                 }),
                 polled: false,
                 resting: true,
@@ -173,7 +168,7 @@ impl LogHub {
                 },
                 None => tail::probe(&self.file),
             },
-            manager: tail::probe(&self.manager_file),
+            manager: standalone(tail::probe(&self.manager_file)),
         });
         Subscribed {
             subscription,
@@ -310,7 +305,7 @@ impl Poller {
             inner.aggregate.lost(std::mem::take(&mut self.host.dropped));
             inner.aggregate.states = LogSourceStates {
                 python,
-                manager,
+                manager: standalone(manager),
                 host: host::source(&self.diagnostics),
             };
             inner.polled = true;
@@ -326,6 +321,14 @@ impl Poller {
             .flatten()
             .min()
     }
+}
+
+/// Only a standalone manager process writes the manager log. A desktop that
+/// hosts the supervisor passes it its own diagnostics, so those records are
+/// host events and no manager file exists: the file's absence is not a
+/// missing source. A file that exists but cannot be read still is reported.
+fn standalone(state: LogSourceState) -> Option<LogSourceState> {
+    (state.kind != SourceKind::Missing).then_some(state)
 }
 
 #[derive(Serialize)]

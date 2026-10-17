@@ -70,7 +70,8 @@ export type Scenario = {
   /** The log subscription: fixture records, an available but empty source, a
    * missing or unreadable source, or a subscription that never answers. */
   logs: "records" | "empty" | "missing" | "unreadable" | "pending";
-  managerLog?: "missing" | "unreadable" | "rejected";
+  /** The manager source; "absent" is a desktop that hosts supervision itself. */
+  managerLog?: "absent" | "unreadable" | "rejected";
   /** Synthetic observation timelines; these never run in a packaged host. */
   supervision?: {
     initial: ManagerStatus;
@@ -823,11 +824,11 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
-    id: "manager-log-missing",
-    title: "Manager log missing",
+    id: "manager-log-absent",
+    title: "No standalone manager log",
     summary:
-      "Python records remain available while the manager log is missing.",
-    managerLog: "missing",
+      "The desktop hosts supervision, so no manager source is reported and none is flagged.",
+    managerLog: "absent",
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },

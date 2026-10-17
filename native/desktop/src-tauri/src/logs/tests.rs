@@ -1232,7 +1232,10 @@ fn manager_and_python_availability_and_rejections_are_delivered_independently() 
     let (hub, mut poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
     let subscribed = hub.subscribe(Arc::new(|_| true));
     assert_eq!(subscribed.states.python.kind, SourceKind::Missing);
-    assert_eq!(subscribed.states.manager.kind, SourceKind::Available);
+    assert_eq!(
+        subscribed.states.manager.map(|state| state.kind),
+        Some(SourceKind::Available)
+    );
     let (_, frames) = subscribe(&hub);
     let now = Instant::now();
     poller.tick(now);
@@ -1256,6 +1259,24 @@ fn manager_and_python_availability_and_rejections_are_delivered_independently() 
 }
 
 #[test]
+fn an_absent_manager_log_is_no_source_until_a_standalone_manager_writes_it() {
+    let scratch = Scratch::new("manager-absent");
+    append(&scratch.log(), line(1).as_bytes());
+    let (hub, mut poller) = hub(scratch.log(), Arc::new(Diagnostics::default()));
+    assert!(hub.subscribe(Arc::new(|_| true)).states.manager.is_none());
+    let (_, frames) = subscribe(&hub);
+    let now = Instant::now();
+    poller.tick(now);
+    append(&scratch.0.join("cadrumo-manager.log"), &manager_line(1));
+    poller.tick(now + SETTLE);
+    let frames = frames.lock().unwrap();
+    assert_eq!(frames[0].1["states"]["python"]["kind"], "available");
+    assert!(frames[0].1["states"].get("manager").is_none());
+    let last = &frames.last().unwrap().1;
+    assert_eq!(last["states"]["manager"]["kind"], "available");
+}
+
+#[test]
 fn manager_directory_refusal_does_not_mark_python_unreadable() {
     let scratch = Scratch::new("manager-unreadable");
     append(&scratch.log(), line(1).as_bytes());
@@ -1269,7 +1290,10 @@ fn manager_directory_refusal_does_not_mark_python_unreadable() {
     );
     let states = hub.subscribe(Arc::new(|_| true)).states;
     assert_eq!(states.python.kind, SourceKind::Available);
-    assert_eq!(states.manager.kind, SourceKind::Unreadable);
+    assert_eq!(
+        states.manager.map(|state| state.kind),
+        Some(SourceKind::Unreadable)
+    );
     let (_, frames) = subscribe(&hub);
     poller.tick(Instant::now());
     let frames = frames.lock().unwrap();

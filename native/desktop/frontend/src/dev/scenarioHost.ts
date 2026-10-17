@@ -46,6 +46,7 @@ import {
   feedBatch,
   FEED_BATCH,
   generatedBatches,
+  MANAGER_AVAILABLE,
   MISSING,
   UNREADABLE,
 } from "./fixtures/logs";
@@ -615,12 +616,17 @@ export function scenarioHost(
                 },
               ];
       let subscribed = true;
-      if (scenario.managerLog) {
+      if (scenario.managerLog === "absent") {
+        for (const batch of batches) {
+          batch.states = { ...batch.states };
+          delete batch.states.manager;
+        }
+      } else if (scenario.managerLog) {
         for (const batch of batches) {
           batch.states = {
             ...batch.states,
             manager: {
-              ...AVAILABLE.manager,
+              ...MANAGER_AVAILABLE,
               kind:
                 scenario.managerLog === "rejected"
                   ? "available"

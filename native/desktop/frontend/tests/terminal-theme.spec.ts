@@ -125,7 +125,6 @@ async function openHost(page: Page) {
                 subscription: 1,
                 states: {
                   python: { kind: "missing", detail: "" },
-                  manager: { kind: "missing", detail: "" },
                 },
               };
             default:

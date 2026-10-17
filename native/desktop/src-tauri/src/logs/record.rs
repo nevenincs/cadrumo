@@ -90,14 +90,20 @@ impl LogSourceState {
 #[derive(Clone, Serialize)]
 pub struct LogSourceStates {
     pub python: LogSourceState,
-    pub manager: LogSourceState,
+    /// Absent while no standalone manager has written its log.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub manager: Option<LogSourceState>,
     pub host: LogSourceState,
 }
 
 impl LogSourceStates {
     fn same(&self, other: &Self) -> bool {
         self.python.same(&other.python)
-            && self.manager.same(&other.manager)
+            && match (&self.manager, &other.manager) {
+                (Some(state), Some(other)) => state.same(other),
+                (None, None) => true,
+                _ => false,
+            }
             && self.host.same(&other.host)
     }
 }
@@ -410,7 +416,7 @@ mod tests {
         LogSourceStates {
             python: state.clone(),
             host: state.clone(),
-            manager: state,
+            manager: Some(state),
         }
     }
 
