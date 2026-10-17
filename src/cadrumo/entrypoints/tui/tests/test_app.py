@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime, timedelta
 from typing import ClassVar
 
 import pytest
@@ -13,7 +14,7 @@ from textual.widgets import Static
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
+from ....application.overview.home import HomeAccountSession, HomeProjectionV1, HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.errors.hierarchy import InternalInvariantError
@@ -385,6 +386,42 @@ def _account_factories(
     )
     object.__setattr__(factories, "onboarding_pending", onboarding_pending)
     return factories
+
+
+@pytest.mark.asyncio
+async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -> None:
+    """No interval polls the session; one timer wakes at each expiry it learns."""
+    reads: list[float] = []
+    loop = asyncio.get_running_loop()
+    first_expiry = datetime.now(UTC) + timedelta(seconds=0.6)
+
+    async def read() -> HomeAccountSession:
+        reads.append(loop.time())
+        if len(reads) == 1:
+            # Activity extended the session: the root must wake again at the new expiry.
+            return HomeAccountSession(
+                posture=HomeSessionPosture.ACTIVE,
+                profile_label="Current profile",
+                expires_at=first_expiry + timedelta(seconds=0.6),
+            )
+        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=None)
+
+    factories = _account_factories()
+    object.__setattr__(factories, "subscribe_retirement", lambda _retired: lambda: None)
+    app = CadrumoTuiApp(account_factories=factories, read_account_session=read)
+    async with app.run_test() as pilot:
+        started = loop.time()
+        app._account_session = HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=first_expiry
+        )
+        app._arm_session_lapse()
+        await asyncio.sleep(0.3)
+        assert reads == []
+        while app.return_value is None and loop.time() - started < 10:
+            await pilot.pause(0.05)
+        assert app.return_value is not None and app.return_value.reason is AccountRecomposeReasonV1.EXPIRED
+        assert len(reads) == 2
+        assert reads[0] - started >= 0.5
 
 
 @pytest.mark.asyncio

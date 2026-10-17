@@ -89,7 +89,7 @@ _ACCOUNT_KEYS: Final[dict[str, AccountActionV1]] = {
 """The key for each account control, reachable from every destination."""
 
 _SESSION_WATCH_SECONDS: Final = 30.0
-"""How often the root checks whether the session has lapsed."""
+"""How often the root checks whether the session has lapsed when no retirement is pushed to it."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,6 +203,8 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
         self._unsubscribe_retirement: Callable[[], None] | None = None
+        self._session_lapse_timer: Timer | None = None
+        """Fires at the known expiry when retirement is pushed; nothing polls meanwhile."""
         self._unsubscribe_notices: Callable[[], None] | None = None
         self._unsubscribe_language: Callable[[], None] | None = None
         self._language_pending = False
@@ -334,7 +336,11 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
             self._unsubscribe_notices = factories.subscribe_notices(self._post_upgrade_notice)
         if factories is not None and factories.subscribe_retirement is not None:
             self._unsubscribe_retirement = factories.subscribe_retirement(self._post_session_retired)
-        if self._read_account_session is not None:
+        if self._unsubscribe_retirement is not None:
+            # Revocation and a lost transport arrive as the retirement push; only
+            # the expiry, a known instant, and renewal by activity remain to observe.
+            self._arm_session_lapse()
+        elif self._read_account_session is not None:
             self.set_interval(_SESSION_WATCH_SECONDS, self._watch_account_session)
         self._describe_account_keys()
         if self._account_factories is None:
@@ -382,8 +388,12 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         except Exception:
             if self._note_activity is note:
                 self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.UNAVAILABLE))
+            return
         finally:
             self._activity_pending = False
+        if self._session_lapse_timer is not None:
+            # Activity may have extended the session; read the new expiry now.
+            self._watch_account_session()
 
     def on_account_session_retired(self, _: AccountSessionRetired) -> None:
         """Clear on the UI thread; the transport callback never waits for rendering."""
@@ -495,6 +505,9 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         unsubscribe, self._unsubscribe_retirement = self._unsubscribe_retirement, None
         if unsubscribe is not None:
             unsubscribe()
+        if self._session_lapse_timer is not None:
+            self._session_lapse_timer.stop()
+            self._session_lapse_timer = None
 
     @property
     def account_actions_available(self) -> bool:
@@ -553,6 +566,21 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
             self._expire_if_reader_current(reader)
             return
         self._renew_account_session(reader, session)
+        if self._read_account_session is reader:
+            self._arm_session_lapse()
+
+    def _arm_session_lapse(self) -> None:
+        """Wake once at the current expiry instead of polling for it."""
+        if self._unsubscribe_retirement is None:
+            return
+        if self._session_lapse_timer is not None:
+            self._session_lapse_timer.stop()
+        session = self._account_session
+        if self._read_account_session is None or session is None or session.expires_at is None:
+            self._session_lapse_timer = None
+            return
+        delay = max(0.0, (session.expires_at - now()).total_seconds())
+        self._session_lapse_timer = self.set_timer(delay, self._watch_account_session)
 
     @staticmethod
     def _session_failure_reason(error: AccountSessionExpiredError) -> AccountRecomposeReasonV1:
@@ -873,6 +901,7 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         # change, so this is where the footer catches up with the page.
         self._describe_account_keys()
         self._account_session = projection.account
+        self._arm_session_lapse()
         self._refresh_account_bars()
         self.query_one("#root-no-areas", Static).display = False
         if self._destination_catalogue is not None:
