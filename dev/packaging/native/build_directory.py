@@ -13,7 +13,6 @@ from .build_paths import build_paths
 
 _PRESET_PROJECTS = (
     (Path("CMakePresets.json"), Path(".")),
-    (Path("native/desktop/CMakePresets.json"), Path("native/desktop")),
     (Path("native/cmake/distribution/CMakePresets.json"), Path("native/cmake/distribution")),
 )
 _CACHE_SETTING = re.compile(r"^(CMAKE_HOME_DIRECTORY|CMAKE_CACHEFILE_DIR):[^=]*=(.*)$")

@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION 4.4)
 list(APPEND CMAKE_MESSAGE_CONTEXT desktop)
+# The desktop builds and is tested inside the repository build, never in a tree of its own.
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Identity.cmake")
-  project(CADRUMO_DESKTOP VERSION "${CADRUMO_ID_VERSION}"
-    DESCRIPTION "${CADRUMO_ID_DESCRIPTION}" HOMEPAGE_URL "${CADRUMO_ID_HOMEPAGE}"
-    SPDX_LICENSE "${CADRUMO_ID_LICENSE}" LANGUAGES NONE)
-  include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Contract.cmake")
+  message(FATAL_ERROR "The desktop is part of the repository build: configure it with cmake --preset <name> "
+    "at the repository root and build its targets in build/<name>.")
 endif()
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Desktop build configuration" FORCE)
@@ -49,24 +47,15 @@ string(JSON desktop_server SET "${desktop_server}" host "\"${CADRUMO_DESKTOP_BIN
 file(CONFIGURE OUTPUT "${CADRUMO_PATH_GENERATED}/desktop-server.json" CONTENT "@desktop_server@\n" @ONLY)
 set(CADRUMO_NATIVE_CONTRACT "${CADRUMO_PATH_GENERATED}/contract.json" CACHE FILEPATH "Generated native package contract")
 set(CADRUMO_DESKTOP_PACKAGE_ROOT "" CACHE PATH "Existing native package for desktop development")
-if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND NOT CADRUMO_DESKTOP_PACKAGE_ROOT)
+if(NOT CADRUMO_DESKTOP_PACKAGE_ROOT)
   set(CADRUMO_DESKTOP_PACKAGE_ROOT "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
-endif()
-if(NOT DEFINED CADRUMO_STORAGE_ROOT_VARIABLE)
-  # The source build reads this from the storage declaration; the standalone project reads it the same way.
-  execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-    "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
-    WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
-    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 endif()
 # The host image desktop-host-build links, in Cargo's profile directory for the configuration.
 # The platform mapping's application image names this variable; tauri.mjs refuses a build whose
 # Cargo binary differs from it.
 set(CADRUMO_DESKTOP_HOST_EXECUTABLE
   "${CADRUMO_PATH_DESKTOP_CARGO}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
-if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
-endif()
+set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
 
 # The checkout's shared node_modules tree is an explicit developer prerequisite. A build
 # may validate it, but installation and removal belong to the operator outside CMake.
@@ -175,6 +164,13 @@ add_custom_target(desktop-frontend-generated
 foreach(action IN ITEMS build test)
   add_dependencies(desktop-frontend-${action} desktop-frontend-generated)
 endforeach()
+cadrumo_build_step(step_comment desktop-frontend-dev GROUP desktop
+  SUMMARY "serve the development display from this build's generated inputs until stopped")
+add_custom_target(desktop-frontend-dev
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} ${desktop_node_path_arguments}
+    "${CADRUMO_NODE}" "${desktop_frontend}/scripts/dev.mjs"
+  DEPENDS desktop-frontend-install desktop-frontend-generated
+  WORKING_DIRECTORY "${desktop_frontend}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Docs.cmake")
 cadrumo_build_step(step_comment desktop-paths-test GROUP verification
@@ -201,10 +197,7 @@ add_custom_target(desktop-host-build
   DEPENDS desktop-frontend-build
   BYPRODUCTS "${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-if(TARGET native_contract)
-  # Inside the source build the contract is a build output, not a configured input.
-  add_dependencies(desktop-host-build native_contract)
-endif()
+add_dependencies(desktop-host-build native_contract)
 
 cadrumo_build_step(step_comment desktop-host-prepare GROUP desktop
   SUMMARY "prepare the desktop host project and its icons"
@@ -224,9 +217,7 @@ add_custom_target(desktop-build-test
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/frontend-clean.test.mjs"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/frontend-install.test.mjs"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-if(TARGET native_contract)
-  add_dependencies(desktop-host-prepare native_contract)
-endif()
+add_dependencies(desktop-host-prepare native_contract)
 
 # Host tests and lint read the staged documentation only when the package bundles it.
 set(desktop_user_docs)
@@ -271,9 +262,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action} ${host_test_arguments}
     DEPENDS ${host_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-  if(TARGET native_contract)
-    add_dependencies(desktop-host-${action} native_contract)
-  endif()
+  add_dependencies(desktop-host-${action} native_contract)
 endforeach()
 
 cadrumo_build_step(step_comment desktop-run GROUP desktop
@@ -307,9 +296,7 @@ add_custom_target(desktop-packaged-host
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
   DEPENDS desktop-frontend-build
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
-if(TARGET native_contract)
-  add_dependencies(desktop-packaged-host native_contract)
-endif()
+add_dependencies(desktop-packaged-host native_contract)
 cadrumo_build_step(step_comment desktop-packaged-test GROUP verification
   SUMMARY "drive the packaged desktop window end to end (needs an interactive desktop)")
 add_custom_target(desktop-packaged-test

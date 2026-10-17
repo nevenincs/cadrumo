@@ -18,7 +18,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 GUARD = REPO_ROOT / "native/cmake/BinaryDirectory.cmake"
 PROJECTS = (
     REPO_ROOT / "CMakePresets.json",
-    REPO_ROOT / "native/desktop/CMakePresets.json",
     REPO_ROOT / "native/cmake/distribution/CMakePresets.json",
 )
 

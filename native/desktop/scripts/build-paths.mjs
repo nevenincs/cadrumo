@@ -1,9 +1,4 @@
-import {
-  existsSync,
-  lstatSync,
-  readFileSync,
-  realpathSync,
-} from "node:fs";
+import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -29,7 +24,9 @@ function linkedMember(path, root) {
     relativePath.startsWith(`..${sep}`) ||
     isAbsolute(relativePath)
   )
-    throw new Error(`CMake output path is outside its binary directory: ${path}`);
+    throw new Error(
+      `CMake output path is outside its binary directory: ${path}`,
+    );
 
   let current = root;
   for (const part of relativePath.split(sep)) {
@@ -44,22 +41,23 @@ function linkedMember(path, root) {
 }
 
 function enrolledPresets(sourceRoot) {
+  // The desktop builds only inside the repository build, so only its presets
+  // name a desktop binary directory.
   const projects = [
     { file: resolve(sourceRoot, "CMakePresets.json"), source: sourceRoot },
-    {
-      file: resolve(sourceRoot, "native/desktop/CMakePresets.json"),
-      source: resolve(sourceRoot, "native/desktop"),
-    },
   ];
   const presets = new Map();
   for (const project of projects) {
     linkedMember(project.file, sourceRoot);
     const document = JSON.parse(readFileSync(project.file, "utf8"));
     if (!Array.isArray(document.configurePresets))
-      throw new Error(`CMake presets have no configure preset list: ${project.file}`);
+      throw new Error(
+        `CMake presets have no configure preset list: ${project.file}`,
+      );
     let visibleCount = 0;
     for (const preset of document.configurePresets) {
-      if (!preset || typeof preset !== "object" || preset.hidden === true) continue;
+      if (!preset || typeof preset !== "object" || preset.hidden === true)
+        continue;
       const name = preset.name;
       if (
         typeof name !== "string" ||
@@ -70,7 +68,9 @@ function enrolledPresets(sourceRoot) {
         name.includes("\\") ||
         name.includes(":")
       )
-        throw new Error(`CMake configure preset has an invalid name: ${String(name)}`);
+        throw new Error(
+          `CMake configure preset has an invalid name: ${String(name)}`,
+        );
       visibleCount += 1;
       const owner = realpathSync(project.source);
       const previous = presets.get(name);
@@ -79,7 +79,9 @@ function enrolledPresets(sourceRoot) {
       presets.set(name, owner);
     }
     if (!visibleCount)
-      throw new Error(`CMake presets have no visible configure presets: ${project.file}`);
+      throw new Error(
+        `CMake presets have no visible configure presets: ${project.file}`,
+      );
   }
   return presets;
 }
@@ -112,7 +114,9 @@ function configuredSources(build, expectedSource) {
   )
     throw new Error(`CMake build-path manifest is incomplete: ${manifestPath}`);
   if (!samePath(realpathSync(manifest.source), expectedSource))
-    throw new Error(`CMake build-path manifest belongs to another source tree: ${manifestPath}`);
+    throw new Error(
+      `CMake build-path manifest belongs to another source tree: ${manifestPath}`,
+    );
 
   const settings = new Map();
   for (const line of readFileSync(cachePath, "utf8").split(/\r?\n/)) {
@@ -122,11 +126,15 @@ function configuredSources(build, expectedSource) {
   const cacheSource = settings.get("CMAKE_HOME_DIRECTORY");
   const cacheBuild = settings.get("CMAKE_CACHEFILE_DIR");
   if (!cacheSource || !cacheBuild)
-    throw new Error(`CMake cache has no source or binary directory: ${cachePath}`);
+    throw new Error(
+      `CMake cache has no source or binary directory: ${cachePath}`,
+    );
   if (!samePath(realpathSync(cacheSource), expectedSource))
     throw new Error(`CMake cache belongs to another source tree: ${cachePath}`);
   if (!samePath(realpathSync(cacheBuild), build))
-    throw new Error(`CMake cache belongs to another binary directory: ${cachePath}`);
+    throw new Error(
+      `CMake cache belongs to another binary directory: ${cachePath}`,
+    );
   return manifest.paths;
 }
 
@@ -154,7 +162,9 @@ export function readBuildPaths(binaryDir, repositoryRoot) {
   if (typeof binaryDir !== "string" || !isAbsolute(binaryDir))
     throw new Error("Select an absolute CMake build directory.");
   if (binaryDir.split(/[\\/]/).includes(".."))
-    throw new Error("Desktop build directory must not contain traversal components.");
+    throw new Error(
+      "Desktop build directory must not contain traversal components.",
+    );
   if (typeof repositoryRoot !== "string" || !isAbsolute(repositoryRoot))
     throw new Error("The repository root must be absolute.");
 
@@ -174,15 +184,22 @@ export function readBuildPaths(binaryDir, repositoryRoot) {
     relativeBuild.startsWith(`..${sep}`) ||
     !presets.has(relativeBuild)
   )
-    throw new Error(`Desktop build directory is not build/<visible configure preset>: ${selected}`);
+    throw new Error(
+      `Desktop build directory is not build/<visible configure preset>: ${selected}`,
+    );
   const expectedSource = presets.get(relativeBuild);
 
   const canonical = resolve(buildOwner, relativeBuild);
   linkedMember(canonical, source);
   if (!existsSync(canonical) || !lstatSync(canonical).isDirectory())
     throw new Error(`Desktop build directory is missing: ${canonical}`);
-  if (!samePath(realpathSync(canonical), canonical) || !samePath(selected, canonical))
-    throw new Error(`Desktop build directory is not its enrolled physical path: ${selected}`);
+  if (
+    !samePath(realpathSync(canonical), canonical) ||
+    !samePath(selected, canonical)
+  )
+    throw new Error(
+      `Desktop build directory is not its enrolled physical path: ${selected}`,
+    );
 
   const manifestPaths = configuredSources(canonical, expectedSource);
   return Object.freeze(declaredPaths(canonical, manifestPaths));

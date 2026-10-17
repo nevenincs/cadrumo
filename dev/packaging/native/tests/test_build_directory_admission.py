@@ -47,20 +47,13 @@ def _root(tmp_path: Path) -> Path:
     root.mkdir()
     (root / "build").mkdir()
     _project(root, "native-one", ".")
-    _project(root, "desktop-one", "native/desktop")
     _project(root, "distribution-one", "native/cmake/distribution")
-    (root / "native/desktop/CMakePresets.json").write_text(
-        json.dumps({"configurePresets": [{"name": "desktop-one"}]}), encoding="utf-8"
-    )
-    (root / "native/cmake/distribution/CMakePresets.json").write_text(
-        json.dumps({"configurePresets": [{"name": "distribution-one"}]}), encoding="utf-8"
-    )
     return root
 
 
 @pytest.mark.parametrize(
     ("name", "source"),
-    (("native-one", "."), ("desktop-one", "native/desktop"), ("distribution-one", "native/cmake/distribution")),
+    (("native-one", "."), ("distribution-one", "native/cmake/distribution")),
 )
 def test_admits_configured_visible_preset_builds(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str, source: str
@@ -100,7 +93,7 @@ def test_requires_a_configured_manifest_from_the_matching_project(
     with pytest.raises(ValueError, match="manifest"):
         build_directory.require_enrolled_build(build)
 
-    _configured_build(root, "native-one", "native/desktop")
+    _configured_build(root, "native-one", "native/cmake/distribution")
     with pytest.raises(ValueError, match="does not match preset"):
         build_directory.require_enrolled_build(build)
 
@@ -161,7 +154,7 @@ def test_rejects_linked_build_and_preset_paths(tmp_path: Path, monkeypatch: pyte
     with pytest.raises(ValueError):
         build_directory.require_enrolled_build(linked_build)
 
-    preset_file = root / "native/desktop/CMakePresets.json"
+    preset_file = root / "native/cmake/distribution/CMakePresets.json"
     preset_file.unlink()
     preset_file.symlink_to(root / "CMakePresets.json")
     with pytest.raises(ValueError, match="symlinks or junctions"):

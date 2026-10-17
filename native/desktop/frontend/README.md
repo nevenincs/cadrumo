@@ -5,9 +5,9 @@ the same components that run inside the Tauri window run on a Vite development
 server, against a simulated host, with hot reload. Compiling the desktop host,
 assembling a package or building the documentation is not needed to edit it.
 
-From the repository root, run `just dev`. It prepares the host's desktop build
-directory and starts the existing development display at
-`http://localhost:15370/scenarios.html`.
+From the repository root, run `just dev`. It generates the shell's inputs in
+the host preset's repository build, `build/<preset>`, and starts the development
+display from that build at `http://localhost:15370/scenarios.html`.
 The fixed listener assignments live in `../development-server.json`: display
 15370, test preview 15371, documentation fixture 15372, and Storybook 6006.
 An occupied port is an error; no server moves to another port.
@@ -26,37 +26,30 @@ and failed operations are ERROR. Diagnostic files retain DEBUG by default;
 - CMake 4.4 or newer.
 - The repository's development Python environment, which the generators run in.
 
-## Bootstrap a build directory
+## The build directory
 
-The development server reads a few generated files from a CMake build
-directory: the build paths, the product identity and the server address. The
-shell reads two more from that directory's `desktop/frontend-generated/`: the
-chrome strings, projected from the locale catalogues, and the palette, projected
-from the documentation theme. Nothing generated is written into the source tree.
-One command writes all of them:
+The frontend has no build directory of its own. Every development, check,
+build and test path reads the repository build under test, `build/<preset>`
+(`build/windows-x64` on Windows), configured once at the repository root with
+`cmake --preset <preset>`. The development server reads the build paths, the
+product identity and the server address from it. The shell reads two more from
+its `desktop/frontend-generated/`: the chrome strings, projected from the locale
+catalogues, and the palette, projected from the documentation theme. Nothing
+generated is written into the source tree.
 
-```sh
-npm run bootstrap
-```
+The `desktop-frontend-generated` target writes those two and regenerates them
+when a locale catalogue or the documentation theme changes. It compiles
+nothing. `desktop-frontend-dev` (what `just dev` builds), `desktop-frontend-build`
+and `desktop-frontend-test` depend on it; `npm run dev` only reads the build and
+never configures or builds it.
 
-It configures the standalone desktop project with the preset for this host
-(`native/desktop/CMakePresets.json`), into the directory that preset names
-under `build/` at the repository root: `build/desktop-windows-x64` on Windows.
-Then it runs the two generators. It compiles nothing and takes a few seconds.
-Options:
+The servers bind the address in `../development-server.json`. Another address
+is a configure option of the repository build, for example
+`cmake --preset windows-x64 -DCADRUMO_DESKTOP_BIND_ADDRESS=127.0.0.1`. Ports
+cannot be overridden.
 
-| Option               | Default           | Meaning                                                |
-| -------------------- | ----------------- | ------------------------------------------------------ |
-| `--build-dir <path>` | the host preset's | Another build directory, configured without the preset |
-| `--host <address>`   | `0.0.0.0`         | The address the servers bind                           |
-
-Ports cannot be overridden. Pass other bootstrap options after `--`, for
-example `npm run bootstrap -- --host 127.0.0.1`.
-Run it again after a locale catalogue or the documentation theme changes.
-
-Check, build, test and catalogue commands need the build directory named in
-the environment. `just dev` and `npm run dev` select and prepare the host's
-desktop preset themselves:
+The CMake targets set the build directory for the commands they run. Running
+an npm script directly needs it named in the environment:
 
 ```sh
 # PowerShell
@@ -168,7 +161,7 @@ npm run storybook
 ```
 
 The catalogue is Storybook on the shell's own theme, at fixed port 6006 of the
-bootstrapped address. An occupied port is an error. Its toolbar switches
+configured address. An occupied port is an error. Its toolbar switches
 the colour scheme and the chrome language, and every story is drawn on a real
 shell surface inside the application's own providers.
 
@@ -274,7 +267,7 @@ Conventions a new component follows:
   may move it inward, never restyle it.
 - **Text** is a chrome string. Add it in English, Spanish, Catalan and
   Hungarian through `python -m dev.locales set-batch`, declare its key in
-  `dev/locales/desktop_chrome.py`, and run the bootstrap again.
+  `dev/locales/desktop_chrome.py`, and build `desktop-frontend-generated` again.
 - **A component's module** exports components and types, nothing else. A
   value beside a component turns every edit of that file into a page reload
   in the development server. Words and helpers that others share live in a
@@ -584,19 +577,19 @@ manager records have `source: "manager"` and scrubbed lifecycle facts in
 
 ## Layout
 
-| Path                                            | Holds                                                                       |
-| ----------------------------------------------- | --------------------------------------------------------------------------- |
-| `index.html`, `src/main.tsx`                    | The production entry                                                        |
-| `scenarios.html`, `src/dev/`                    | The development entry, the scenario host and its fixtures                   |
-| `dev/docs-fixture/`                             | The stand-in documentation site and the server plugin that serves it        |
-| `dev/product-boundary.ts`                       | The build check that keeps development modules out of the product           |
-| `src/App.tsx`, `src/shell/`                     | Composition, the action registry, layout state and the host port            |
-| `src/shell/views.ts`                            | The read-only profile views a host may offer, types only                    |
-| `src/styles/tokens.css`, `src/styles/theme.css` | The design tokens and the colour roles                                      |
-| `src/components/ui/`                            | The primitives                                                              |
-| `src/components/`                               | Public shell components, feature internals and colocated stories            |
-| `.storybook/`, `src/dev/catalogue/`             | The catalogue's configuration and its foundations stories                   |
-| `src/ipc/contract.ts`                           | The published host and bridge contract, types only                          |
-| `virtual:desktop-strings`, `…-palette.css`      | The generated chrome strings and palette, resolved from the build directory |
-| `scripts/`                                      | The bootstrap, the catalogue launcher, its screenshots, the benchmark       |
-| `tests/`                                        | The browser tests                                                           |
+| Path                                            | Holds                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ |
+| `index.html`, `src/main.tsx`                    | The production entry                                                           |
+| `scenarios.html`, `src/dev/`                    | The development entry, the scenario host and its fixtures                      |
+| `dev/docs-fixture/`                             | The stand-in documentation site and the server plugin that serves it           |
+| `dev/product-boundary.ts`                       | The build check that keeps development modules out of the product              |
+| `src/App.tsx`, `src/shell/`                     | Composition, the action registry, layout state and the host port               |
+| `src/shell/views.ts`                            | The read-only profile views a host may offer, types only                       |
+| `src/styles/tokens.css`, `src/styles/theme.css` | The design tokens and the colour roles                                         |
+| `src/components/ui/`                            | The primitives                                                                 |
+| `src/components/`                               | Public shell components, feature internals and colocated stories               |
+| `.storybook/`, `src/dev/catalogue/`             | The catalogue's configuration and its foundations stories                      |
+| `src/ipc/contract.ts`                           | The published host and bridge contract, types only                             |
+| `virtual:desktop-strings`, `…-palette.css`      | The generated chrome strings and palette, resolved from the build directory    |
+| `scripts/`                                      | The development server, the catalogue launcher, its screenshots, the benchmark |
+| `tests/`                                        | The browser tests                                                              |

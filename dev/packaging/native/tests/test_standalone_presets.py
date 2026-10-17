@@ -1,11 +1,10 @@
-"""Standalone CMake projects build into ``build/<configure preset name>``, and the desktop tools default there."""
+"""Standalone CMake projects build into ``build/<configure preset name>``; the desktop has no build of its own."""
 
 from __future__ import annotations
 
 import base64
 import json
 import os
-import platform
 import re
 import shutil
 from pathlib import Path
@@ -29,7 +28,7 @@ $ast = [Management.Automation.Language.Parser]::ParseFile(<runner>, [ref]$null, 
 if ($errors) { throw "The runner does not parse: $errors" }
 $reader = $ast.Find({
     param($node)
-    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Get-DesktopPreset'
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Get-HostBuildDirectory'
 }, $false)
 $default = @($ast.EndBlock.Statements | Where-Object {
     $_ -is [Management.Automation.Language.IfStatementAst] -and
@@ -37,7 +36,6 @@ $default = @($ast.EndBlock.Statements | Where-Object {
 })
 if (-not $reader -or $default.Count -ne 1) { throw 'The runner has no single preset-derived BuildDirectory default.' }
 $Repository = <repository>
-$Desktop = <desktop>
 $BuildDirectory = ''
 . ([scriptblock]::Create($reader.Extent.Text))
 . ([scriptblock]::Create($default[0].Extent.Text))
@@ -78,7 +76,7 @@ def _binary_directory(project: Path, preset: dict[str, Any]) -> str:
 
 def test_standalone_binary_directory_is_named_by_its_configure_preset() -> None:
     projects = _standalone_projects()
-    assert DESKTOP in projects
+    assert projects
     root_names = [preset["name"] for preset in _configure_presets(REPO_ROOT)]
     names = list(root_names)
     for project in projects:
@@ -88,38 +86,19 @@ def test_standalone_binary_directory_is_named_by_its_configure_preset() -> None:
     assert len(names) == len(set(names)), "Two configure presets would share one binary directory"
 
 
-def _desktop_directory(name: str) -> Path:
-    (preset,) = [preset for preset in _configure_presets(DESKTOP) if preset["name"] == name]
-    assert preset["condition"] == {"type": "equals", "lhs": "${hostSystemName}", "rhs": platform.system()}
-    return REPO_ROOT / "build" / name
-
-
-def test_frontend_bootstrap_defaults_to_the_host_desktop_preset() -> None:
-    node = shutil.which("node")
-    assert node is not None
-    script = (DESKTOP / "frontend/scripts/bootstrap.mjs").as_uri()
-    result = run_command(
-        [
-            node,
-            "--input-type=module",
-            "-e",
-            f"import {{ hostPreset }} from {json.dumps(script)}; console.log(JSON.stringify(hostPreset()));",
-        ],
-        cwd=REPO_ROOT,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    selected = json.loads(result.stdout)
-    assert _same_directory(selected["binaryDir"], _desktop_directory(selected["name"]))
+def test_desktop_has_no_build_tree_of_its_own() -> None:
+    assert DESKTOP not in _standalone_projects()
+    assert not (DESKTOP / "CMakePresets.json").exists()
 
 
 @pytest.mark.skipif(os.name != "nt", reason="The desktop test runners are Windows PowerShell scripts")
 @pytest.mark.parametrize("runner", RUNNERS)
-def test_desktop_runner_defaults_to_the_windows_desktop_preset(runner: str) -> None:
+def test_desktop_runner_defaults_to_the_windows_repository_preset(runner: str) -> None:
     powershell = shutil.which("powershell") or shutil.which("pwsh")
     assert powershell is not None
 
     harness = _RUNNER_DEFAULT
-    for name, path in {"<runner>": DESKTOP / "tests" / runner, "<repository>": REPO_ROOT, "<desktop>": DESKTOP}.items():
+    for name, path in {"<runner>": DESKTOP / "tests" / runner, "<repository>": REPO_ROOT}.items():
         harness = harness.replace(name, "'" + str(path).replace("'", "''") + "'")
     result = run_command(
         [
@@ -135,7 +114,7 @@ def test_desktop_runner_defaults_to_the_windows_desktop_preset(runner: str) -> N
     assert result.returncode == 0, result.stdout + result.stderr
     (windows,) = [
         preset["name"]
-        for preset in _configure_presets(DESKTOP)
-        if preset["cacheVariables"]["CADRUMO_TARGET"] == "windows-x86-64"
+        for preset in _configure_presets(REPO_ROOT)
+        if preset.get("cacheVariables", {}).get("CADRUMO_TARGET") == "windows-x86-64"
     ]
-    assert _same_directory(result.stdout.strip().splitlines()[-1], _desktop_directory(windows))
+    assert _same_directory(result.stdout.strip().splitlines()[-1], REPO_ROOT / "build" / windows)

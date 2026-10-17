@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "bootstrap": "node scripts/bootstrap.mjs",
     "dev": "node scripts/dev.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",

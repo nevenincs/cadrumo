@@ -13,27 +13,23 @@ import { buildPath, readBuildPaths } from "../scripts/build-paths.mjs";
 const testing = buildPath("desktop_testing");
 mkdirSync(testing, { recursive: true });
 
-function configuredBuild(presetName = "desktop-test", project = "desktop") {
+function configuredBuild(presetName = "root-test") {
   const repository = mkdtempSync(resolve(testing, "path-admission-"));
-  const desktopSource = resolve(repository, "native/desktop");
-  const source = project === "root" ? repository : desktopSource;
+  const source = repository;
   const build = resolve(repository, "build", presetName);
-  mkdirSync(source, { recursive: true });
-  mkdirSync(desktopSource, { recursive: true });
   mkdirSync(build, { recursive: true });
   writeFileSync(
     resolve(repository, "CMakePresets.json"),
     JSON.stringify({ configurePresets: [{ name: "root-test" }] }),
   );
   writeFileSync(
-    resolve(desktopSource, "CMakePresets.json"),
-    JSON.stringify({ configurePresets: [{ name: "desktop-test" }] }),
-  );
-  writeFileSync(
     resolve(build, "build-paths.json"),
     JSON.stringify({
       source,
-      paths: { desktop_cargo: "cargo/desktop", desktop_testing: "desktop/testing" },
+      paths: {
+        desktop_cargo: "cargo/desktop",
+        desktop_testing: "desktop/testing",
+      },
     }),
   );
   writeFileSync(
@@ -55,11 +51,15 @@ test("desktop paths require an enrolled configured physical build directory", ()
       desktop_testing: resolve(fixture.build, "desktop/testing"),
     });
     assert.throws(
-      () => readBuildPaths(`${fixture.build}/../desktop-test`, fixture.repository),
+      () => readBuildPaths(`${fixture.build}/../root-test`, fixture.repository),
       /traversal|enrolled|preset/i,
     );
     assert.throws(
-      () => readBuildPaths(resolve(fixture.repository, "build/unlisted"), fixture.repository),
+      () =>
+        readBuildPaths(
+          resolve(fixture.repository, "build/unlisted"),
+          fixture.repository,
+        ),
       /visible configure preset/,
     );
   } finally {
@@ -71,9 +71,11 @@ test("desktop paths bind the manifest and cache to the preset source and build",
   const fixture = configuredBuild();
   try {
     const manifest = resolve(fixture.build, "build-paths.json");
+    const otherSource = resolve(fixture.repository, "native/desktop");
+    mkdirSync(otherSource, { recursive: true });
     writeFileSync(
       manifest,
-      JSON.stringify({ source: fixture.repository, paths: { desktop: "desktop" } }),
+      JSON.stringify({ source: otherSource, paths: { desktop: "desktop" } }),
     );
     assert.throws(
       () => readBuildPaths(fixture.build, fixture.repository),
@@ -96,13 +98,23 @@ test("desktop paths bind the manifest and cache to the preset source and build",
   }
 });
 
-test("desktop paths admit the root preset when its manifest and cache name the repository source", () => {
-  const fixture = configuredBuild("root-test", "root");
+test("desktop paths refuse a build of a project other than the repository build", () => {
+  const fixture = configuredBuild();
   try {
-    assert.deepEqual(readBuildPaths(fixture.build, fixture.repository), {
-      desktop_cargo: resolve(fixture.build, "cargo/desktop"),
-      desktop_testing: resolve(fixture.build, "desktop/testing"),
-    });
+    const desktopSource = resolve(fixture.repository, "native/desktop");
+    mkdirSync(desktopSource, { recursive: true });
+    writeFileSync(
+      resolve(desktopSource, "CMakePresets.json"),
+      JSON.stringify({ configurePresets: [{ name: "desktop-test" }] }),
+    );
+    assert.throws(
+      () =>
+        readBuildPaths(
+          resolve(fixture.repository, "build/desktop-test"),
+          fixture.repository,
+        ),
+      /visible configure preset/,
+    );
   } finally {
     rmSync(fixture.repository, { recursive: true, force: true });
   }
@@ -115,13 +127,10 @@ test("desktop paths reject a linked enrolled build directory", (t) => {
     writeFileSync(
       presets,
       JSON.stringify({
-        configurePresets: [
-          { name: "desktop-test" },
-          { name: "desktop-linked" },
-        ],
+        configurePresets: [{ name: "root-test" }, { name: "root-linked" }],
       }),
     );
-    const linked = resolve(fixture.repository, "build/desktop-linked");
+    const linked = resolve(fixture.repository, "build/root-linked");
     try {
       symlinkSync(fixture.build, linked, "junction");
     } catch (error) {
@@ -131,7 +140,10 @@ test("desktop paths reject a linked enrolled build directory", (t) => {
       }
       throw error;
     }
-    assert.throws(() => readBuildPaths(linked, fixture.repository), /Linked CMake output path/);
+    assert.throws(
+      () => readBuildPaths(linked, fixture.repository),
+      /Linked CMake output path/,
+    );
   } finally {
     rmSync(fixture.repository, { recursive: true, force: true });
   }
@@ -143,9 +155,15 @@ test("desktop output declarations reject traversal and linked children", (t) => 
     const manifest = resolve(fixture.build, "build-paths.json");
     writeFileSync(
       manifest,
-      JSON.stringify({ source: fixture.source, paths: { escape: "../outside" } }),
+      JSON.stringify({
+        source: fixture.source,
+        paths: { escape: "../outside" },
+      }),
     );
-    assert.throws(() => readBuildPaths(fixture.build, fixture.repository), /Invalid CMake output/);
+    assert.throws(
+      () => readBuildPaths(fixture.build, fixture.repository),
+      /Invalid CMake output/,
+    );
 
     const outside = resolve(fixture.repository, "outside");
     const linked = resolve(fixture.build, "linked");
@@ -161,9 +179,15 @@ test("desktop output declarations reject traversal and linked children", (t) => 
     }
     writeFileSync(
       manifest,
-      JSON.stringify({ source: fixture.source, paths: { escape: "linked/output" } }),
+      JSON.stringify({
+        source: fixture.source,
+        paths: { escape: "linked/output" },
+      }),
     );
-    assert.throws(() => readBuildPaths(fixture.build, fixture.repository), /Linked CMake output/);
+    assert.throws(
+      () => readBuildPaths(fixture.build, fixture.repository),
+      /Linked CMake output/,
+    );
   } finally {
     rmSync(fixture.repository, { recursive: true, force: true });
   }

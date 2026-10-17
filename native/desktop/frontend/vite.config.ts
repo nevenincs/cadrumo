@@ -106,7 +106,7 @@ export default defineConfig(({ command, mode }) => {
           const file = resolve(generated, name);
           if (!existsSync(file))
             this.error(
-              `${name} has not been generated in ${generated}. Run "npm run bootstrap".`,
+              `${name} has not been generated in ${generated}. Build the desktop-frontend-generated target, or run just dev.`,
             );
           // The file itself: it is then watched and transformed as any
           // stylesheet or JSON module is.

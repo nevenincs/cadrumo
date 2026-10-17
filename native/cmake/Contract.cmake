@@ -1,4 +1,4 @@
-# Shared native contract producer for the full application and standalone desktop.
+# Native contract producer for the full application and its desktop.
 include_guard(GLOBAL)
 set(CONTRACT_DIR "${CADRUMO_PATH_GENERATED}")
 set(CADRUMO_BUILD_HELPER "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py")

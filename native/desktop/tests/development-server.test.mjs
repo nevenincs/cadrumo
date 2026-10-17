@@ -37,10 +37,11 @@ test("Vite refuses alternate ports and automatic port fallback", async () => {
     );
 });
 
-test("bootstrap and catalogue reject legacy port override options", () => {
+test("development display and catalogue reject legacy port override options", () => {
   for (const [script, args] of [
-    ["bootstrap.mjs", ["--dev-port", "25420"]],
-    ["bootstrap.mjs", ["--preview-port", "25421"]],
+    ["dev.mjs", ["--dev-port", "25420"]],
+    ["dev.mjs", ["--preview-port", "25421"]],
+    ["dev.mjs", ["--build-dir", "build"]],
     ["storybook.mjs", ["dev", "--port", "25422"]],
   ]) {
     const result = spawnSync(

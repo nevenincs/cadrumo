@@ -5,9 +5,10 @@
 .DESCRIPTION
   Portable entry points are the desktop-host-unit-test and desktop-host-unit-clippy
   CMake targets. This wrapper assumes a Windows preset and virtual environment.
-  BuildDirectory defaults to the binary directory of the Windows x64 configure
-  preset in native\desktop\CMakePresets.json. It must already contain the
-  standalone CMake build-path manifest and generated native contract. Unit runs
+  BuildDirectory defaults to build\<preset>, the binary directory of the
+  repository's Windows x64 configure preset in CMakePresets.json. It must be a
+  configured repository build with its build-path manifest and generated native
+  contract; the desktop has no build directory of its own. Unit runs
   mock-IPC, policy and subprocess tests.
   Package adds real PTY/projection probes against an existing assembled package;
   use Filter to select a capability. Neither mode starts the GUI or rebuilds the
@@ -29,16 +30,18 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repository = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..\..')).ProviderPath
-# The standalone desktop project's presets own the default build directory:
-# the preset that configures the Windows x64 target names it.
-function Get-DesktopPreset([string]$Source) {
-    $presets = (Get-Content -LiteralPath (Join-Path $Source 'CMakePresets.json') -Raw | ConvertFrom-Json).configurePresets
-    $selected = @($presets | Where-Object { $_.cacheVariables.CADRUMO_TARGET -eq 'windows-x86-64' })
-    if ($selected.Count -ne 1) { throw 'The desktop presets do not name exactly one Windows x64 configure preset.' }
-    $binary = $selected[0].binaryDir.Replace('${sourceDir}', $Source).Replace('${presetName}', $selected[0].name)
-    return [pscustomobject]@{ Name = $selected[0].name; BinaryDirectory = [IO.Path]::GetFullPath($binary) }
+# The repository build is the desktop's only build: its binary directory is
+# build\<name> of the configure preset that targets Windows x64.
+function Get-HostBuildDirectory([string]$Repository) {
+    $presets = (Get-Content -LiteralPath (Join-Path $Repository 'CMakePresets.json') -Raw | ConvertFrom-Json).configurePresets
+    $selected = @($presets | Where-Object {
+        $_.PSObject.Properties['cacheVariables'] -and $_.cacheVariables.PSObject.Properties['CADRUMO_TARGET'] -and
+        $_.cacheVariables.CADRUMO_TARGET -eq 'windows-x86-64'
+    })
+    if ($selected.Count -ne 1) { throw 'The repository presets do not name exactly one Windows x64 configure preset.' }
+    return [IO.Path]::GetFullPath((Join-Path (Join-Path $Repository 'build') $selected[0].name))
 }
-if (-not $BuildDirectory) { $BuildDirectory = (Get-DesktopPreset (Join-Path $repository 'native\desktop')).BinaryDirectory }
+if (-not $BuildDirectory) { $BuildDirectory = Get-HostBuildDirectory $repository }
 if (-not $DevPython) { $DevPython = Join-Path $repository '.venv\Scripts\python.exe' }
 if (-not (Test-Path -LiteralPath $DevPython)) { throw "Development interpreter not found: $DevPython (pass -DevPython)" }
 $DevPython = (Resolve-Path -LiteralPath $DevPython).ProviderPath
@@ -55,9 +58,9 @@ $buildRoot = [IO.Path]::GetFullPath([string]$admittedBuild)
 $cacheLine = Select-String -LiteralPath (Join-Path $buildRoot 'CMakeCache.txt') -Pattern '^CMAKE_HOME_DIRECTORY:[^=]*=(.*)$'
 if (-not $cacheLine) { throw "The selected build has no CMake source directory: $buildRoot" }
 $cacheSource = [IO.Path]::GetFullPath($cacheLine.Matches[0].Groups[1].Value)
-$desktopSource = [IO.Path]::GetFullPath((Join-Path $repository 'native\desktop'))
-if (-not $cacheSource.Equals($desktopSource, [StringComparison]::OrdinalIgnoreCase)) {
-    throw "The selected preset does not configure the standalone desktop project: $buildRoot"
+$repositorySource = [IO.Path]::GetFullPath($repository).TrimEnd('\')
+if (-not $cacheSource.TrimEnd('\', '/').Equals($repositorySource, [StringComparison]::OrdinalIgnoreCase)) {
+    throw "The selected preset does not configure the repository build: $buildRoot"
 }
 $paths = (Get-Content -LiteralPath (Join-Path $buildRoot 'build-paths.json') -Raw | ConvertFrom-Json).paths
 function Resolve-BuildMember([string]$Member) {

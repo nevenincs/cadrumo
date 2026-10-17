@@ -49,13 +49,15 @@ export CADRUMO_AUTHORITY_ROOT := if authority_root == "" {
 default:
     @just --list
 
-# One entry for the desktop development display. All fixed listener assignments
-# are owned by native/desktop/development-server.json; occupied ports are errors.
-[doc('Start the desktop development display on its fixed ports, generating inputs without compiling the desktop.')]
+# One entry for the desktop development display, served from the host preset's
+# configured build/<preset> directory: the same build every frontend check, build
+# and test uses. All fixed listener assignments are owned by
+# native/desktop/development-server.json; occupied ports are errors.
+[doc('Start the desktop development display on its fixed ports from the configured host build, generating inputs without compiling the desktop.')]
 [group('dev')]
-dev:
+dev: (_native-selection "Debug")
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
-    node native/desktop/frontend/scripts/dev.mjs
+    cmake --build --preset {{native_build_preset_prefix}}debug --target desktop-frontend-dev
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 

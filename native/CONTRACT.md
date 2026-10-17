@@ -780,12 +780,14 @@ not a CPython debug ABI. The `python_d` target always exists and is excluded fro
 the default build. Set `-DCADRUMO_INCLUDE_DEVELOPMENT_BINARY=ON` at configure time
 to include it alongside production in the same package; shipping it is optional.
 
-The standalone projects `native/desktop` and `native/cmake/distribution` carry
-their own `CMakePresets.json`. A standalone project's binary directory is
-`build/<configure preset name>` at the repository root, such as
-`build/desktop-windows-x64`. CMake reads those presets from the project's source
-directory: configure with `cmake -S <project> --preset <name>` and build with
-`cmake --build <binary directory> --config <Config>`.
+The standalone project `native/cmake/distribution` carries its own
+`CMakePresets.json`. Its binary directory is `build/<configure preset name>` at
+the repository root, such as `build/distribution-windows-x64`. CMake reads those
+presets from the project's source directory: configure with
+`cmake -S <project> --preset <name>` and build with
+`cmake --build <binary directory> --config <Config>`. The desktop has no project
+or build directory of its own; it is configured, built and tested only inside
+the repository build.
 
 Configuration refuses any other binary directory. `native/cmake/BinaryDirectory.cmake`
 admits only `build/<name>` at the repository root, where `<name>` is a configure
@@ -1016,8 +1018,7 @@ both the CPython SDK extensions and every retained third-party extension identit
 address, the search address, the language set and the `media_types` table of
 files the documentation scheme serves. Each language must be one of
 the product's output languages, and English must be declared. `native/cmake/Docs.cmake`
-defines the `user_docs` target for the source build and the standalone desktop
-project; `app-distro` depends on it. `desktop-host-build` compiles independently.
+defines the `user_docs` target for the source build; `app-distro` depends on it. `desktop-host-build` compiles independently.
 
 `dev/packaging/native/docs_build.py` compiles the documentation once for every
 declared language (`python -m dev.docs.compile_once --html-root`), as a user-scope
@@ -1614,23 +1615,18 @@ These commands are implemented on Windows. Elsewhere `sign_in_status` reports
 
 ### Desktop build and test procedure
 
-The desktop is a standalone CMake project. Configure it with
-`cmake -S native/desktop --preset desktop-windows-x64`, whose binary directory is
-`build/desktop-windows-x64`; the other targets' presets are
-`desktop-linux-x86-64`, `desktop-linux-aarch64` and `desktop-macos-arm64`. Pass
-`CADRUMO_NATIVE_CONTRACT` naming the generated
-`contract.json` of a configured source build, and `CADRUMO_DESKTOP_PACKAGE_ROOT`
-naming an assembled package such as `stage/<Config>/app/`. Set
-`CADRUMO_DEV_PYTHON` when the checkout's development interpreter is not found.
-`frontend/scripts/bootstrap.mjs`, `tests/run-packaged.ps1` and
-`tests/run-backend.ps1` read the host's preset and use its binary directory
-unless another directory is passed.
-The standalone project's host runs from its Cargo output and finds the package
-through `CADRUMO_DESKTOP_PACKAGE_ROOT`. The source build configures this project
-only when a desktop image is staged, which requires the documentation; a `bundle`
-with the documentation then stages `cadrumo.exe` at the package root as an
-[application image](#application-images). Without it, configuring the source build
-needs neither Node.js nor npm.
+The desktop is part of the repository build: `native/desktop` is configured only
+as its subdirectory, and configuring it on its own is refused. Its targets build
+and test in the repository build directory, `build/<preset>` such as
+`build/windows-x64`, the same build every frontend development, check, build and
+test path reads. `tests/run-packaged.ps1` and `tests/run-backend.ps1` default to
+the host preset's directory, never configure it, and refuse a directory that is
+not a configured repository build.
+The host runs from its Cargo output and finds the package through
+`CADRUMO_DESKTOP_PACKAGE_ROOT`. The source build configures the desktop only when
+the platform declares a desktop image; a `bundle` then stages `cadrumo.exe` at the
+package root as an [application image](#application-images). Without it,
+configuring the source build needs neither Node.js nor npm.
 
 In the full source build, an unset `CADRUMO_DESKTOP_PACKAGE_ROOT` resolves to
 the configured stage directory's `<Config>/app`. The `desktop-headless-test`
@@ -1651,6 +1647,7 @@ defaults to `ON`.
 | `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
 | `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
 | `desktop-frontend-generated` | Write the chrome strings and the palette into the binary directory (`desktop/frontend-generated`), never into the source tree: with `npm ci`, all that developing the frontend in a browser needs (`native/desktop/frontend/README.md`) |
+| `desktop-frontend-dev` | Regenerate chrome strings and palette, then serve the development display from this build until stopped (`just dev`) |
 | `user_docs` | Build and stage the user documentation, as above |
 | `desktop-host-build` | Build the frontend and the documentation, then `cadrumo.exe` with `--locked`; refuse a binary other than `CADRUMO_DESKTOP_HOST_EXECUTABLE` and record it in `generated/desktop-<Config>.json` |
 | `desktop-host-test` | `cargo test` with the live package tests against `CADRUMO_DESKTOP_PACKAGE_ROOT`, one test thread, storage under `desktop/testing/storage` |

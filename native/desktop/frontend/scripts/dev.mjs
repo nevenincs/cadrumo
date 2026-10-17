@@ -1,10 +1,28 @@
-// just dev and npm run dev share this entry, including configuration generation.
+// The development display, served from the CMake build directory under test.
+// The build owns every generated input: its desktop-frontend-dev target (what
+// just dev runs) and desktop-frontend-test build desktop-frontend-generated
+// first. This script reads that directory and never configures or builds.
 import { createServer } from "vite";
+import { existsSync } from "node:fs";
+import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bootstrap } from "./bootstrap.mjs";
+import { parseArgs } from "node:util";
+import { buildPath } from "../../scripts/build-paths.mjs";
+
+parseArgs({ options: {} });
+const binaryDir = process.env.CADRUMO_CMAKE_BINARY_DIR;
+if (!binaryDir || !isAbsolute(binaryDir))
+  throw new Error(
+    "Run just dev, or set CADRUMO_CMAKE_BINARY_DIR to the absolute build/<preset> directory of a configured repository build.",
+  );
+const generated = buildPath("desktop_frontend_generated");
+for (const name of ["chrome-strings.json", "palette.css"])
+  if (!existsSync(resolve(generated, name)))
+    throw new Error(
+      `${name} has not been generated in ${generated}. Build the desktop-frontend-generated target of ${binaryDir}, or run just dev.`,
+    );
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));
-process.env.CADRUMO_CMAKE_BINARY_DIR = bootstrap();
 const server = await createServer({ root: frontend });
 try {
   await server.listen();
@@ -13,6 +31,7 @@ try {
   throw error;
 }
 server.printUrls();
+console.log(`Build directory: ${binaryDir}`);
 console.log("Development display: /scenarios.html");
 
 let stopping = false;
