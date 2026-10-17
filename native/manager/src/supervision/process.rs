@@ -130,11 +130,66 @@ impl RuntimeProcess {
         }
     }
 
+    /// A blocking wait on this process's exit, so the supervisor learns of it
+    /// as an event; `None` when it has already ended.
+    pub(super) fn exit_watch(&self) -> io::Result<Option<ExitWatch>> {
+        let watch = match self {
+            #[cfg(windows)]
+            Self::Launched(_) | Self::Adopted(_) => super::windows::ExitWatch::open(self.pid()),
+            #[cfg(target_os = "linux")]
+            Self::Launched(child) => crate::linux::process::ExitWatch::open(child.id()),
+            #[cfg(target_os = "linux")]
+            Self::Adopted(opened) => crate::linux::process::ExitWatch::of(&opened.held),
+            #[cfg(target_os = "macos")]
+            Self::Launched(child) => crate::macos::process::ExitWatch::open(child.id()),
+            #[cfg(target_os = "macos")]
+            Self::Adopted(opened) => {
+                // Registered by pid: the held process proves the pid still names it.
+                let watch = crate::macos::process::ExitWatch::open(opened.identity.pid);
+                if opened.held.exited()? {
+                    return Ok(None);
+                }
+                watch
+            }
+            #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
+            _ => Err(io::Error::from(io::ErrorKind::Unsupported)),
+        };
+        match watch {
+            Ok(watch) => Ok(Some(ExitWatch(watch))),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+            #[cfg(target_os = "linux")]
+            Err(error) if error.raw_os_error() == Some(libc::ESRCH) => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
     /// Force the process to end.
     pub fn terminate(&mut self) -> io::Result<()> {
         match self {
             Self::Launched(child) => child.kill(),
             Self::Adopted(opened) => adopted_terminate(opened),
+        }
+    }
+}
+
+/// A wait on one supervised process's exit.
+pub(super) struct ExitWatch(
+    #[cfg(windows)] super::windows::ExitWatch,
+    #[cfg(target_os = "linux")] crate::linux::process::ExitWatch,
+    #[cfg(target_os = "macos")] crate::macos::process::ExitWatch,
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))] std::convert::Infallible,
+);
+
+impl ExitWatch {
+    /// Block until the process has ended.
+    pub(super) fn wait(&self) -> io::Result<()> {
+        #[cfg(any(windows, target_os = "linux", target_os = "macos"))]
+        {
+            self.0.wait()
+        }
+        #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
+        {
+            match self.0 {}
         }
     }
 }
@@ -466,5 +521,40 @@ mod darwin_tests {
                 Err(InspectError::Failed(_))
             )),
         }
+    }
+}
+
+#[cfg(all(test, any(windows, target_os = "linux", target_os = "macos")))]
+mod exit_watch_tests {
+    use super::*;
+    use std::process::{Command, Stdio};
+
+    fn exits_with(code: u8) -> Command {
+        let mut command = if cfg!(windows) {
+            let mut command = Command::new("cmd");
+            command.args(["/C", &format!("exit {code}")]);
+            command
+        } else {
+            let mut command = Command::new("sh");
+            command.args(["-c", &format!("exit {code}")]);
+            command
+        };
+        command
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+        command
+    }
+
+    #[test]
+    fn a_returned_exit_watch_means_the_exit_is_observable_at_once() {
+        let mut runtime = RuntimeProcess::Launched(exits_with(7).spawn().expect("spawn"));
+        if let Some(watch) = runtime.exit_watch().expect("exit watch") {
+            watch.wait().expect("wait");
+        }
+        assert_eq!(
+            runtime.try_exit().expect("try_exit"),
+            Some(RuntimeExit::from_code(7))
+        );
     }
 }

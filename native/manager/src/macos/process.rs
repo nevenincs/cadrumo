@@ -374,3 +374,87 @@ mod tests {
         .unwrap();
     }
 }
+
+/// A wait on one process's exit that blocks in kqueue instead of polling.
+#[derive(Debug)]
+pub struct ExitWatch(OwnedFd);
+
+impl ExitWatch {
+    /// Register NOTE_EXIT for `pid`; `NotFound` when it has already ended.
+    pub fn open(pid: u32) -> io::Result<Self> {
+        // SAFETY: kqueue creates a distinct descriptor without pointer arguments.
+        let raw = unsafe { libc::kqueue() };
+        if raw < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        // SAFETY: kqueue transferred this descriptor; every later failure closes it.
+        let queue = unsafe { OwnedFd::from_raw_fd(raw) };
+        // SAFETY: the held descriptor is live and must not survive exec.
+        if unsafe { libc::fcntl(queue.as_raw_fd(), libc::F_SETFD, libc::FD_CLOEXEC) } < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        let change = libc::kevent {
+            ident: pid as libc::uintptr_t,
+            filter: libc::EVFILT_PROC,
+            flags: libc::EV_ADD | libc::EV_ENABLE | libc::EV_ONESHOT,
+            fflags: libc::NOTE_EXIT,
+            data: 0,
+            udata: ptr::null_mut(),
+        };
+        // SAFETY: one initialized change record, no output records.
+        let count = unsafe {
+            libc::kevent(
+                queue.as_raw_fd(),
+                &change,
+                1,
+                ptr::null_mut(),
+                0,
+                ptr::null(),
+            )
+        };
+        if count < 0 {
+            let error = io::Error::last_os_error();
+            return Err(if error.raw_os_error() == Some(libc::ESRCH) {
+                io::ErrorKind::NotFound.into()
+            } else {
+                error
+            });
+        }
+        Ok(Self(queue))
+    }
+
+    /// Block until the process has ended.
+    pub fn wait(&self) -> io::Result<()> {
+        loop {
+            // SAFETY: kevent is a plain output record; zeroed fields are valid input storage.
+            let mut event: libc::kevent = unsafe { std::mem::zeroed() };
+            // SAFETY: one output record and no timeout, so the call blocks until an event.
+            let count = unsafe {
+                libc::kevent(
+                    self.0.as_raw_fd(),
+                    ptr::null(),
+                    0,
+                    &mut event,
+                    1,
+                    ptr::null(),
+                )
+            };
+            if count < 0 {
+                let error = io::Error::last_os_error();
+                if error.kind() == io::ErrorKind::Interrupted {
+                    continue;
+                }
+                return Err(error);
+            }
+            if count == 1
+                && event.filter == libc::EVFILT_PROC
+                && event.fflags & libc::NOTE_EXIT != 0
+            {
+                return Ok(());
+            }
+            if event.flags & libc::EV_ERROR != 0 {
+                return Err(io::ErrorKind::InvalidData.into());
+            }
+        }
+    }
+}

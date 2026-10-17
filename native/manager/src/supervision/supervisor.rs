@@ -264,6 +264,12 @@ enum Input {
     Closed {
         generation: u64,
     },
+    /// The exit watch returned: the process ended, or, when `observed` is
+    /// false, the watch failed and exit is polled instead.
+    Exited {
+        generation: u64,
+        observed: bool,
+    },
     Control(Request),
 }
 
@@ -481,6 +487,8 @@ struct Watch {
     termination: Option<Termination>,
     inspection_failure: Option<(ErrorKind, Option<i32>)>,
     announced: Option<ExitReason>,
+    /// Exit arrives as an input event; otherwise every wait is capped at the poll interval.
+    exit_watched: bool,
 }
 
 struct Termination {
@@ -855,7 +863,9 @@ impl Supervisor {
             termination: None,
             inspection_failure: None,
             announced: None,
+            exit_watched: false,
         };
+        watch.exit_watched = self.watch_exit(&watch.runtime);
         loop {
             if self.session_ending.load(Ordering::SeqCst) {
                 self.begin_stop(&mut watch, StopCause::SessionEnd);
@@ -903,8 +913,14 @@ impl Supervisor {
                 self.emit(Event::EffectsUnknown { pid: watch.pid });
             }
             self.advance(&mut watch, now);
-            let wait = self.next_wait(&watch, Instant::now());
-            match self.inputs.recv_timeout(wait) {
+            let input = match self.next_wait(&watch, Instant::now()) {
+                Some(wait) => self.inputs.recv_timeout(wait),
+                None => self
+                    .inputs
+                    .recv()
+                    .map_err(|_| RecvTimeoutError::Disconnected),
+            };
+            match input {
                 Ok(Input::Line { generation, line }) if generation == self.generation => {
                     self.announcement(&mut watch, line);
                 }
@@ -917,11 +933,15 @@ impl Supervisor {
                 Ok(Input::Control(Request::Stop)) => {
                     self.begin_stop(&mut watch, StopCause::Requested)
                 }
+                Ok(Input::Exited {
+                    generation,
+                    observed,
+                }) if generation == self.generation => watch.exit_watched &= observed,
                 Ok(Input::Control(Request::StopIfIdle)) => self.stop_if_idle(&mut watch),
                 Ok(Input::Control(Request::SessionEnd)) => {
                     self.begin_stop(&mut watch, StopCause::SessionEnd)
                 }
-                Ok(Input::Line { .. } | Input::Closed { .. })
+                Ok(Input::Line { .. } | Input::Closed { .. } | Input::Exited { .. })
                 | Err(RecvTimeoutError::Timeout | RecvTimeoutError::Disconnected) => {}
             }
         }
@@ -965,15 +985,44 @@ impl Supervisor {
         }
     }
 
-    fn next_wait(&self, watch: &Watch, now: Instant) -> Duration {
+    /// Arm a thread that blocks on the process's exit and reports it as an
+    /// input; false when the platform cannot watch it, so exit is polled.
+    fn watch_exit(&self, runtime: &RuntimeProcess) -> bool {
+        let watch = match runtime.exit_watch() {
+            Ok(Some(watch)) => watch,
+            // Already ended: the next exit check observes it at once.
+            Ok(None) => return true,
+            Err(_) => return false,
+        };
+        let generation = self.generation;
+        let inputs = self.sender.clone();
+        thread::spawn(move || {
+            let observed = watch.wait().is_ok();
+            let _ = inputs.send(Input::Exited {
+                generation,
+                observed,
+            });
+        });
+        true
+    }
+
+    /// How long to wait for the next input: until the nearest deadline, or
+    /// without bound when exit is an event and nothing else is due.
+    fn next_wait(&self, watch: &Watch, now: Instant) -> Option<Duration> {
+        let bounded = |deadline: Instant| {
+            let wait = deadline.saturating_duration_since(now);
+            if watch.exit_watched {
+                wait
+            } else {
+                wait.min(self.config.poll_interval)
+            }
+        };
+        let unbounded = (!watch.exit_watched).then_some(self.config.poll_interval);
         if let Some(state) = &watch.termination {
             return if state.unconfirmed {
-                self.config.poll_interval
+                unbounded
             } else {
-                state
-                    .deadline
-                    .saturating_duration_since(now)
-                    .min(self.config.poll_interval)
+                Some(bounded(state.deadline))
             };
         }
         let deadline = match (&watch.phase, watch.stop_deadline) {
@@ -989,11 +1038,7 @@ impl Supervisor {
             ) => Some((*next_ping).min(*last_fresh + self.config.heartbeat_staleness)),
             (Phase::Unmonitored, None) => None,
         };
-        deadline.map_or(self.config.poll_interval, |deadline| {
-            deadline
-                .saturating_duration_since(now)
-                .min(self.config.poll_interval)
-        })
+        deadline.map_or(unbounded, |deadline| Some(bounded(deadline)))
     }
 
     fn announcement(&mut self, watch: &mut Watch, line: Result<Announcement, LineRefusal>) {
