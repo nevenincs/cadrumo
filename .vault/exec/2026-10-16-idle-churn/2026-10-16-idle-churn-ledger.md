@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:1276cb993c6833a7f03ed2a8818f6c725316f6f97df8ad113a02c3b506e7ca02'
+body_hash: 'sha256:543be57a178cc311d10dcae319cbe2e1f495c15c1633bf3d479ec0e866f83dba'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -178,6 +178,8 @@ related:
 - `S09` `verify:` `pytest -n0 src/cadrumo_runtime/host/tests/test_lifecycle_wake.py` -> `pass`
 - `S09` `verify:` `pytest -n0 src/cadrumo_runtime/host/tests/test_bootstrap_reset.py src/cadrumo_runtime/host/tests/test_grant_change.py` -> `pass`
 - `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S10` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S10` `verify:` `signed-in idle Release, 120 s, no spawn, no input (psutil CPU-time diff of the stage tree)` -> `pass`
 
 ## Notes
 

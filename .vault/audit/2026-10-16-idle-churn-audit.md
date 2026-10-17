@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:d2e97a807fcb5982b8c32766802f13ad7931617baa4fba5f6d79e5dc1b3e4a0b'
+body_hash: 'sha256:445de285d6fdf96470b7d1cf71528f799c7377b4624638bae7ed8c098e839dd7'
 related: []
 ---
 
@@ -139,3 +139,20 @@ On 2026-10-17 the Release stage, rebuilt with FIX1's package-identity manifests,
 | Total | 15.522 |
 
 The runtime's share was lifecycle-sweep-reowe. Against the baseline, the profile worker dropped from 12% to 0.4% and no `sign-in-status` child was spawned. A re-measurement after the lifecycle fix needs a rebuilt stage.
+
+Both stages were rebuilt with that fix (`67ccdb876c`) and Release passed both probes. The Release desktop was signed in at 05:32 and, after a 60 s settle, measured 05:33-05:35 with no child spawned and no input reaching the window. Signed in, idle, as % of one core:
+
+| Process | Release (05:33) |
+| --- | --- |
+| `cadrumo-agent` | 1.238 |
+| Desktop host (`cadrumo.exe`) | 0.709 |
+| Supervised runtime | 0.477 |
+| WebView2 renderer | 0.284 |
+| Profile worker | 0.271 |
+| Agent service | 0.206 |
+| WebView2 browser and GPU | 0.103 |
+| TUI | 0.077 |
+| `session hold`, `session watch` | 0.000 |
+| Total | 3.366 |
+
+The baseline, signed in on the Debug stage, was 56% for the runtime, 12% for the worker, 2.8% for the desktop and about half a core more in 12 spawned children per 30 s. What remains is agent-recovery-poll in `cadrumo-agent`, manager-supervision-poll in the desktop host, and the runtime's 23 context switches a second, which were not traced further. The Debug stage was not measured signed in: its backend probe fails under the package-identity registration another plan owns, and the operator's Task Manager check uses it.

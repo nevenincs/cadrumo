@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:6778cdc6c9631ce34d7622a7c6866b39341de74bb02cb4b15cd3bf364cc5ce80'
+body_hash: 'sha256:d8f9fc0be674e0796702a3ff54e1c778e518c8072bfa4a4e7062c2a7485e76a1'
 ---
 
 # `idle-churn` plan
@@ -34,7 +34,7 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 - [x] `S07` - Share one watch-driven sign-in observation across the sign-in view, language host and agent host, and push attendance changes to the window; `native/desktop/src-tauri/src/shell/sign_in/observation.rs`.
 - [x] `S08` - Block idle transport loops on the channel and a wake handle; `src/cadrumo_client/transport/verified_transport.py`.
 - [x] `S09` - Wake runtime lifecycle observation on deadlines, explicit wakes and Windows session notifications; `src/cadrumo_runtime/host/profile_connections.py`.
-- [ ] `S10` - Measure the rebuilt desktop at idle and record the result; `.vault/audit/2026-10-16-idle-churn-audit.md`.
+- [x] `S10` - Measure the rebuilt desktop at idle and record the result; `.vault/audit/2026-10-16-idle-churn-audit.md`.
 - [x] `S11` - Drop the agent service's 0.2 s diagnostic file tail now that the agent relays worker diagnostics on its standard error; `src/cadrumo_agent_service/adapters/agent_diagnostics.py`.
 
 ## Parallelization
