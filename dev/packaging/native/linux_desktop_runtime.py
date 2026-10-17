@@ -28,9 +28,10 @@ DEPENDENCY_INPUTS = {
     # The desktop now depends directly on the local platform crate for Linux. That
     # crate has no default features or Linux-target native dependencies; WebView2
     # remains enabled only by the Windows-target dependency. Direct ureq use also
-    # adds no features, preserving the reviewed GTK/WebKit provider envelope.
-    "native/desktop/src-tauri/Cargo.lock": "01932c758e2ad80cedf79b8401077054564aabc7fac3888f98c70c89ca9f0d2c",
-    "native/desktop/src-tauri/Cargo.toml": "ad78a4c00a3f6415e6d92e1ab12e98253f13d84b2fd7623a6c9ea8e21184876e",
+    # adds no features, preserving the reviewed GTK/WebKit provider envelope. The linked
+    # interpreter host and launch guard are Windows-target dependencies only.
+    "native/desktop/src-tauri/Cargo.lock": "e9c6114b64f19afdd549ce0508809f464e9bc1f8d5471a0aa776097840a2d1ec",
+    "native/desktop/src-tauri/Cargo.toml": "d78e2489d3ddbb4a598522fa8d63e78c62537b6182c3ccdbd5df131224aab98c",
     "native/application/Cargo.toml": "2e2f7aa92cad3b936326559ab24da93fba049d0dffda75abc5f7025b410eecf0",
     "native/platform/Cargo.toml": "34225e76a1da73fbb4dcf6654896d5ae85beebf12200cb5b72d0eea5ffa9675d",
 }
