@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:445de285d6fdf96470b7d1cf71528f799c7377b4624638bae7ed8c098e839dd7'
+body_hash: 'sha256:142c35379d30006f9579814e707ac038494f8351a370e7e881dd761974b23eb6'
 related: []
 ---
 
@@ -87,7 +87,7 @@ A pass observes the logins three times: once itself (`src/cadrumo_runtime/host/p
 
 ### activity-report-spawn | medium | Each burst of person input in the window starts a `config activity` process
 
-`usePersonActivity` reports keyboard, pointer, wheel and paste input at most once every 15 s (`native/desktop/frontend/src/shell/usePersonActivity.ts:4`). Each report runs a new `cadrumo-runtime --format json config activity` child (`native/desktop/src-tauri/src/shell/sign_in/mod.rs:237`), which opens a CLI connection, resumes the sign-in receipt and notes activity. A child measured 0.5-1.2 s of CPU. While someone works in the window that is a process every 15 s. The window already holds a person session whose hold accepts an `activity` request (`src/cadrumo_runtime/host/session_hold.py:273`), and activity renews every human session of the same sign-in (`src/cadrumo_runtime/application/session_authority_activity.py:38`). The agent-access list likewise runs a `config profile automation list` child, but only when its settings panel opens.
+`usePersonActivity` reports keyboard, pointer, wheel and paste input at most once every 15 s (`native/desktop/frontend/src/shell/usePersonActivity.ts:4`). Each report runs a new `cadrumo-runtime --format json config activity` child (`native/desktop/src-tauri/src/shell/sign_in/mod.rs:237`), which opens a CLI connection, resumes the sign-in receipt and notes activity. A child measured 0.5-1.2 s of CPU. While someone works in the window that is a process every 15 s. The window already holds a person session whose hold accepts an `activity` request (`src/cadrumo_runtime/host/session_hold.py:273`), and activity renews every human session of the same sign-in (`src/cadrumo_runtime/application/session_authority_activity.py:38`). The agent-access list likewise runs a `config profile automation list` child, but only when its settings panel opens. The window now sends each report as an `activity` request on the held person session (`native/desktop/src-tauri/src/shell/sign_in/mod.rs:226`) and starts no process for it; the bridge accepts only that session's own status as the answer (`native/desktop/src-tauri/src/agent/person.rs:285`).
 
 ### agent-recovery-poll | medium | The agent gateway runs a direct-control recovery pass every 2 s
 

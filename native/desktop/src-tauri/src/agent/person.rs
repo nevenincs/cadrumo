@@ -195,7 +195,8 @@ impl Person {
             return Err(failed());
         }
         let valid = match document["action"].as_str() {
-            Some("status") => {
+            // Noting activity answers with the session's status after the renewal.
+            Some("status" | "activity") => {
                 reply["kind"] == "profile_status"
                     && reply["status"]["profile_id"] == self.identity["profile_id"]
                     && reply["status"]["session_id"] == self.identity["session_id"]
@@ -390,5 +391,56 @@ mod event_tests {
         let reply = person.exchange(json!({"action": "language_read"})).unwrap();
         assert_eq!(reply["language"], "es");
         assert_eq!(heard.try_recv().unwrap(), PersonEvent::LanguageChanged);
+    }
+
+    #[test]
+    fn activity_is_noted_on_the_held_session_and_only_its_own_status_answers() {
+        let identity = json!({
+            "kind": "session_held",
+            "profile_id": PROFILE,
+            "session_id": request_id().unwrap(),
+            "runtime_boot_id": request_id().unwrap(),
+            "connection_id": request_id().unwrap(),
+        });
+        let status = |session: &Value| {
+            json!({
+                "kind": "profile_status",
+                "request_id": "",
+                "runtime_boot_id": identity["runtime_boot_id"],
+                "connection_id": identity["connection_id"],
+                "status": {
+                    "profile_id": PROFILE,
+                    "session_id": session,
+                    "connected": true,
+                    "credential_authenticated": true,
+                    "profile_bound": true,
+                    "session_expires_at": "2026-10-17T06:00:00Z",
+                    "denial": null,
+                },
+            })
+        };
+        let own = status(&identity["session_id"]);
+        let other = status(&json!(request_id().unwrap()));
+        // The fake answers only an activity request, so a reply proves which one was sent.
+        let answer = |reply: &Value| {
+            format!(
+                "$request = [Console]::In.ReadLine() | ConvertFrom-Json; \
+                 if ($request.action -ne 'activity') {{ exit 9 }}; \
+                 $reply = '{reply}' | ConvertFrom-Json; $reply.request_id = $request.request_id; \
+                 [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress -Depth 5)); [Console]::Out.Flush(); "
+            )
+        };
+        let script = format!(
+            "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); {}{}\
+             [Console]::In.ReadLine() | Out-Null }}",
+            answer(&own),
+            answer(&other)
+        );
+        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let reply = person.exchange(json!({"action": "activity"})).unwrap();
+        assert_eq!(reply["status"]["session_id"], identity["session_id"]);
+        let error = person.exchange(json!({"action": "activity"})).unwrap_err();
+        assert_eq!(error.code, ErrorCode::ReadFailed);
+        assert!(!person.is_open());
     }
 }

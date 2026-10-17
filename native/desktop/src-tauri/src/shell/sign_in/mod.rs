@@ -56,14 +56,6 @@ struct Call {
     slow: bool,
     command: &'static str,
 }
-const ACTIVITY: Call = Call {
-    words: &["activity"],
-    leaf: "activity",
-    command: "config.activity",
-    reads: false,
-    runtime: true,
-    slow: false,
-};
 const LOGIN: Call = Call {
     words: &["login"],
     leaf: "login",
@@ -126,8 +118,6 @@ pub struct SignIn {
     runtime: Result<ChildConfiguration>,
     service: Result<ChildConfiguration>,
     pub children: Children,
-    // Person input must never occupy the nonqueueing credential mutation lane.
-    activity_children: Children,
     observation: observation::Observer,
     watch: watch::Watch,
     // The one person session this window holds; each consumer keeps it alive
@@ -146,7 +136,6 @@ impl SignIn {
             runtime,
             service: resolve_image(launch, "cadrumo-agent-service"),
             children: Children::new(launch.diagnostics.clone()),
-            activity_children: Children::new(launch.diagnostics.clone()),
             observation: observation::Observer::default(),
             person: std::sync::Mutex::new(std::sync::Weak::new()),
             person_events: tokio::sync::broadcast::channel(16).0,
@@ -219,7 +208,6 @@ impl SignIn {
     pub async fn stop(&self) -> Result<()> {
         self.observation.close();
         let result = self.children.stop();
-        let activity_result = self.activity_children.stop();
         let joined = self.observation.join().await;
         let watch = self.watch.clone();
         super::blocking(move || {
@@ -228,22 +216,21 @@ impl SignIn {
         })
         .await?;
         result?;
-        activity_result?;
         joined
     }
 
-    fn record_activity(&self) -> Result<wire::Outcome> {
-        let mut command = self.runtime.as_ref().map_err(Clone::clone)?.command();
-        command.args(arguments(&ACTIVITY, None, false));
-        let output = self.activity_children.run(
-            HelperIdentity {
-                command: ACTIVITY.command,
-                executable: HelperExecutable::Runtime,
-            },
-            command,
-            None,
-        )?;
-        wire::decode(ACTIVITY.leaf, &output)
+    /// Notes the person's input through the session this window holds, so a
+    /// report starts no process and never waits on the credential lanes.
+    fn record_activity(&self) -> Result<()> {
+        let profile_id = self
+            .watch
+            .latest()?
+            .profile_id
+            .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
+        let held = self.person(&profile_id)?;
+        let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
+        person.exchange(serde_json::json!({"action": "activity"}))?;
+        Ok(())
     }
 
     fn run(
@@ -373,8 +360,8 @@ pub async fn sign_in_activity(
         return Err(failure(ErrorCode::UnsupportedPlatform).into());
     }
     let state = state.inner().clone();
-    let outcome = super::blocking(move || state.record_activity()).await?;
-    wire::activity(outcome)
+    super::blocking(move || state.record_activity()).await?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -760,10 +747,6 @@ mod tests {
         assert_eq!(
             arguments(&LOGOUT, None, false),
             ["--format", "json", "config", "logout"]
-        );
-        assert_eq!(
-            arguments(&ACTIVITY, None, false),
-            ["--format", "json", "config", "activity"]
         );
     }
 

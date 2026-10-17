@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:543be57a178cc311d10dcae319cbe2e1f495c15c1633bf3d479ec0e866f83dba'
+body_hash: 'sha256:63da9c2b7aff18e1521b1333b1e8328a411ee7f0cdcb3057d9faec4ccff290f1'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -180,6 +180,14 @@ related:
 - `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
 - `S10` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
 - `S10` `verify:` `signed-in idle Release, 120 s, no spawn, no input (psutil CPU-time diff of the stage tree)` -> `pass`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S12` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S12` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S12` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S12` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (run by CADRUMO-BUILD-DEBUG, 337 passed)` -> `pass`
+- `S12` `verify:` `rustfmt --edition 2024 --check on the edited files` -> `pass`
 
 ## Notes
 
