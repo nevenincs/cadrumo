@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.operator_actions.models import PreconditionVerdict
+from cadrumo.core.errors.failure_report import log_boundary_failure, raising_product_frame
 from cadrumo.core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from cadrumo.core.errors.record_fault import internal_record_fault_context
 
@@ -28,14 +30,32 @@ class CliUnexpectedBoundaryError(CadrumoError):
 
 
 def _raising_product_frame(error: BaseException) -> str:
-    located = "unknown"
-    trace = error.__traceback__
-    while trace is not None:
-        module = trace.tb_frame.f_globals.get("__name__", "")
-        if isinstance(module, str) and module.startswith(("cadrumo.", "cadrumo_client.", "cadrumo_runtime.")):
-            located = f"{module}:{trace.tb_frame.f_code.co_name}:{trace.tb_lineno}"
-        trace = trace.tb_next
-    return located
+    return raising_product_frame(error) or "unknown"
+
+
+def log_cli_boundary_failure(boundary: str, error: BaseException, *, durable: bool = True) -> str:
+    """Log a failure a command frontend is about to render, returning its correlation id.
+
+    Internal failures are logged at ERROR and expected refusals at INFO; both
+    reach the durable log. ``durable=False`` is for a refusal raised before any
+    command ran, which must not configure process state just to be logged. The
+    record stays off stderr, which carries the error document.
+    """
+    from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
+    from cadrumo.core.logging import get_logger
+
+    try:
+        internal = get_registered_error_code(error).category is ErrorCategory.INTERNAL
+    except Exception:
+        internal = True
+    return log_boundary_failure(
+        get_logger(__name__),
+        boundary,
+        error,
+        level=logging.ERROR if internal else logging.INFO,
+        operator_document=True,
+        durable=durable,
+    )
 
 
 class CliOutboundPayloadBoundaryError(CadrumoError):
@@ -101,4 +121,5 @@ __all__ = [
     "CliRefusedBoundaryError",
     "CliUnexpectedBoundaryError",
     "attach_cli_policy_verdict",
+    "log_cli_boundary_failure",
 ]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -28,6 +29,8 @@ from cadrumo.application.user_profile.automation_custody_port import (
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo.core.config import load_settings
+from cadrumo.core.errors.failure_report import log_boundary_failure
+from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.attendance import (
     AttendanceAsk,
@@ -57,6 +60,8 @@ from .sign_in_sweep import revoke_other_saved_sign_ins
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
+
+_LOGGER = get_logger(__name__)
 
 
 def _issued_key_can_admit(snapshot: AutomationCustodySnapshot, instant: datetime) -> bool:
@@ -427,7 +432,7 @@ class ProfileConnectionSessionMixin:
         sign_in = None
         try:
             if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="session_context_rebound")
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
             if (
@@ -439,7 +444,7 @@ class ProfileConnectionSessionMixin:
             if isinstance(request, SignInStatusRequest):
                 login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
                 if login.os_owner_id != context.peer.os_owner_id:
-                    raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+                    raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="sign_in_status_owner_mismatch")
                 if request.watch:
                     # Watch before reading, so a change racing this read still cues the watcher.
                     self.watch_sign_in(context)
@@ -477,8 +482,10 @@ class ProfileConnectionSessionMixin:
             code = error.reason
             if isinstance(error, ProfileAccessRefusedError):
                 sign_in = error.sign_in
+            log_boundary_failure(_LOGGER, "profile_request_refused", error, level=logging.INFO)
         except RefusalError as error:
             code = error.reason
+            log_boundary_failure(_LOGGER, "profile_request_refused", error, level=logging.WARNING)
         return AccessRefusal(
             request_id=request.request_id,
             runtime_boot_id=self.boot,

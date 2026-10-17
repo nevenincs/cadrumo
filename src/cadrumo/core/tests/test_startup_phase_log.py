@@ -144,3 +144,43 @@ def test_context_manager_raises_leave_interruption_without_a_body_error() -> Non
 
     with pytest.raises(_Interrupted), startup_phase(logger, "existing_connect"):
         logger.addFilter(_raising_filter(_Interrupted()))
+
+
+class _RefusedError(Exception):
+    reason = "SESSION_REVOKED"
+
+
+class _UnavailableError(Exception):
+    pass
+
+
+def test_failed_leave_names_the_wrapped_refusal_without_messages() -> None:
+    logger, capture = _logger()
+
+    with pytest.raises(_UnavailableError), startup_phase(logger, "tui_workbench_load"):
+        try:
+            raise _RefusedError("synthetic-refusal-text")
+        except _RefusedError as refusal:
+            raise _UnavailableError("synthetic-wrapper-text") from refusal
+
+    leave = capture.records[-1]
+    assert leave.levelno == logging.ERROR
+    assert leave.__dict__["reason"] == "SESSION_REVOKED"
+    chain = leave.__dict__["error_chain"]
+    assert isinstance(chain, str)
+    assert chain.startswith("cadrumo.core.tests.test_startup_phase_log._UnavailableError@")
+    assert leave.__dict__["root_cause"].startswith(
+        "cadrumo.core.tests.test_startup_phase_log._RefusedError[SESSION_REVOKED]@"
+    )
+    assert "synthetic-" not in chain
+
+
+def test_failed_leave_without_a_cause_carries_no_chain() -> None:
+    logger, capture = _logger()
+
+    with pytest.raises(_UnavailableError), startup_phase(logger, "tui_workbench_load"):
+        raise _UnavailableError("wrapper message")
+
+    leave = capture.records[-1]
+    assert "error_chain" not in leave.__dict__
+    assert "reason" not in leave.__dict__

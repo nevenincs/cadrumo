@@ -68,8 +68,8 @@ def read_runtime_account_session(
         if client.profile_id != profile_id or client.session_id != session_id:
             raise AccountSessionExpiredError()
         status = client.status().status
-    except (FrontendRefusedError, RefusalError):
-        raise AccountSessionUnavailableError() from None
+    except (FrontendRefusedError, RefusalError) as error:
+        raise AccountSessionUnavailableError() from error
     if not status.connected or status.denial in {
         AccessDenialCode.OS_SESSION_UNAVAILABLE,
         AccessDenialCode.BACKEND_UNAVAILABLE,

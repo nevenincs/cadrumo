@@ -36,10 +36,21 @@ class RefusalCode(StrEnum):
 class RefusalError(CadrumoError):
     """Carry only an allowlisted transport outcome across public boundaries."""
 
-    def __init__(self, code: RefusalCode) -> None:
-        """Retain only the allowlisted code in the exception's public message."""
+    def __init__(self, code: RefusalCode, *, check: str | None = None) -> None:
+        """Retain only the allowlisted code in the exception's public message.
+
+        ``check`` names which of several checks sharing one code refused. It is
+        diagnostic only: it is logged where the refusal is answered and never
+        reaches the wire, the message or the operator envelope.
+        """
         self.reason = code
+        self._check = check
         super().__init__(code.value)
+
+    @property
+    def check(self) -> str | None:
+        """Return the internal name of the check that refused, if the raiser named one."""
+        return self._check
 
 
 class EndpointPresence(StrEnum):

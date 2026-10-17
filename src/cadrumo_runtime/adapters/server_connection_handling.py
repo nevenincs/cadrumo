@@ -174,7 +174,7 @@ class RuntimeConnectionHandling:
                 "runtime_connection_closed"
                 if error.reason is RefusalCode.CONNECTION_CLOSED
                 else "runtime_connection_refused",
-                fields={"reason": error.reason.value, **diagnostic_error_fields(error)},
+                fields={"reason": error.reason.value, "refusal_check": error.check, **diagnostic_error_fields(error)},
                 # A peer that closes its connection is the ordinary end of every command.
                 level=logging.DEBUG if error.reason is RefusalCode.CONNECTION_CLOSED else logging.INFO,
             )

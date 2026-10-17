@@ -156,8 +156,8 @@ class RuntimeInitialRoot:
             try:
                 if self._client.profile_id != self._profile_id or self._client.session_id != self._session_id:
                     raise AccountSessionExpiredError()
-            except (FrontendRefusedError, RefusalError):
-                raise AccountSessionUnavailableError() from None
+            except (FrontendRefusedError, RefusalError) as error:
+                raise AccountSessionUnavailableError() from error
             with self._language_guard:
                 language, latest = self._language, self._latest_profile
             if latest is None:

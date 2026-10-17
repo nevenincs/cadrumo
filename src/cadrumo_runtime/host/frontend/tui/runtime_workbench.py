@@ -257,8 +257,8 @@ class RuntimeWorkbenchRoot:
                 or self._client.frontend is not OperationFrontendProjection.TUI
             ):
                 raise AccountSessionExpiredError()
-        except (FrontendRefusedError, RefusalError):
-            raise AccountSessionUnavailableError() from None
+        except (FrontendRefusedError, RefusalError) as error:
+            raise AccountSessionUnavailableError() from error
 
     def _read(self, initial_profile: ProfileOverview | None = None) -> _Capture:
         self._require_binding()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -210,7 +211,27 @@ _RUNTIME_ERROR_CONTEXT_ATTRIBUTE = "_cadrumo_runtime_error_context"
 
 
 def capture_runtime_error_context(ctx: typer.Context, error: BaseException) -> None:
-    """Capture the live command identity, profile label and pending notices on refusal."""
+    """Capture the live command identity, profile label and pending notices on refusal.
+
+    Enrichment is best effort and can never replace ``error``: the caller
+    re-raises the original, and a failure here is logged with its own chain.
+    """
+    try:
+        _capture_runtime_error_context(ctx, error)
+    except Exception as enrichment_error:
+        from cadrumo.core.errors.failure_report import log_boundary_failure
+        from cadrumo.core.logging import get_logger
+
+        log_boundary_failure(
+            get_logger(__name__),
+            "runtime_error_context_capture",
+            enrichment_error,
+            level=logging.WARNING,
+            operator_document=True,
+        )
+
+
+def _capture_runtime_error_context(ctx: typer.Context, error: BaseException) -> None:
     root = ctx.find_root()
     state = root.ensure_object(dict)
     raw_notices = state.pop("cadrumo.runtime.notices", ())

@@ -57,7 +57,7 @@ class ProfileConnectionAdmissionMixin:
                         storage_identity=self.storage_identity,
                     )
                 if self._installation.os_owner_id != context.peer.os_owner_id:
-                    raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+                    raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="installation_owner_mismatch")
                 binding = current_automation_profile_binding(
                     profile_id=profile_id,
                     installation_id=self._installation.installation_id,
@@ -143,7 +143,7 @@ class ProfileConnectionAdmissionMixin:
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         self._validate_login_request(request)
         if self._nonhuman_peer(context, channel) and is_persons_frontend(request.frontend):
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="nonhuman_peer_person_frontend")
         if request.method in {"password", "receipt"}:
             self._require_persons_frontend(request.frontend)
         if request.frontend is OperationFrontendProjection.DESKTOP:
@@ -191,7 +191,7 @@ class ProfileConnectionAdmissionMixin:
         login = self._capture(channel)
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="login_owner_inactive_or_mismatch")
         return ProfileConnection(
             context, login, uuid4(), request.profile_id, request.frontend, requested_scope=request.scope
         )
@@ -250,7 +250,7 @@ class ProfileConnectionAdmissionMixin:
         if request.session_id is None:
             return self._prepare_unadmitted(context, channel, request, method="enrollment")
         if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="enrollment_context_rebound")
         connection = self._connected(context.connection_id)
         if (
             connection.context != context
@@ -277,7 +277,7 @@ class ProfileConnectionAdmissionMixin:
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         """Bind a verified native context without publishing a profile access lease."""
         if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="unadmitted_context_rebound")
         if self._nonhuman_peer(context, channel):
             # Enrollment, recovery and reset are the person's acts; the automation's tree takes none.
             raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
@@ -287,7 +287,7 @@ class ProfileConnectionAdmissionMixin:
         login = self._capture(channel)
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observed.active or not observed.unlocked or observed.os_owner_id != context.peer.os_owner_id:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="automation_login_locked_or_mismatch")
         host = self._host(request.profile_id, context)
         connection = ProfileConnection(context, login, uuid4(), request.profile_id, request.frontend, method=method)
         with host.guard, self._guard:

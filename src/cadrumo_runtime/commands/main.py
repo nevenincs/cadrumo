@@ -18,7 +18,11 @@ from cadrumo.core.errors.error_codes import (
 )
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo_client.commands.compiler import build_command_app
-from cadrumo_client.commands.errors import CliRefusedBoundaryError, CliUnexpectedBoundaryError
+from cadrumo_client.commands.errors import (
+    CliRefusedBoundaryError,
+    CliUnexpectedBoundaryError,
+    log_cli_boundary_failure,
+)
 from cadrumo_client.commands.output import write_stderr
 from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 from cadrumo_client.logging import register_client_logging_namespace
@@ -60,6 +64,7 @@ def _emit_error(error: CadrumoError, arguments: Sequence[str], *, click_context:
 
     from cadrumo.core.config import override_settings
 
+    log_cli_boundary_failure("runtime_cli", error, durable=click_context is None)
     captured = runtime_error_context(error)
     language_scope = (
         override_settings(cadrumo_output_language=captured.output_language) if captured is not None else nullcontext()

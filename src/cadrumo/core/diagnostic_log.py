@@ -14,6 +14,8 @@ from datetime import UTC, datetime
 from typing import Literal, cast, override
 from uuid import uuid4
 
+from .errors.failure_report import failure_chain
+
 type DiagnosticValue = str | int | float | bool | None
 type DiagnosticProcessRole = Literal[
     "python", "tui", "runtime", "profile_worker", "extension_service", "external_client"
@@ -58,8 +60,12 @@ _LIFECYCLE_FIELDS = tuple(
             "cleanup_status",
             "drain_timeout_seconds",
             "elapsed_seconds",
+            "error_chain",
+            "error_code",
             "error_origin",
             "error_type",
+            "failure_boundary",
+            "invariant",
             "exit_code",
             "handoff_transferred",
             "headless",
@@ -87,11 +93,15 @@ _LIFECYCLE_FIELDS = tuple(
             "profile_count",
             "profile_persisted",
             "reason_code",
+            "refusal_check",
             "retained_peer_witness_count",
+            "retirement_kind",
+            "root_cause",
             "run_id",
             "runtime_admitted",
             "runtime_boot_id",
             "runtime_version",
+            "session_kinds",
             "stage",
             "startup_phase",
             "step_id",
@@ -210,7 +220,7 @@ def diagnostic_timing_event(
 
 
 def diagnostic_error_fields(error: BaseException) -> dict[str, DiagnosticValue]:
-    """Name an error and its originating frame without its message or locals."""
+    """Name an error, its originating frame and its identifier-only cause chain, never its message or locals."""
     fields: dict[str, DiagnosticValue] = {"error_type": type(error).__name__}
     trace = error.__traceback__
     if trace is not None:
@@ -218,6 +228,14 @@ def diagnostic_error_fields(error: BaseException) -> dict[str, DiagnosticValue]:
             trace = trace.tb_next
         code = trace.tb_frame.f_code
         fields["error_origin"] = f"{code.co_filename}:{trace.tb_lineno}:{code.co_name}"
+    links = failure_chain(error)
+    reason = next((link.reason for link in links if link.reason is not None), None)
+    if reason is not None:
+        fields["reason"] = reason
+    if len(links) > 1:
+        # A wrapper names the symptom; the operator needs the refusal or failure it wraps.
+        fields["error_chain"] = " <- ".join(link.render() for link in links)
+        fields["root_cause"] = links[-1].render()
     return fields
 
 

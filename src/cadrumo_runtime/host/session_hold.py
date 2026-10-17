@@ -67,10 +67,63 @@ def _emit(document: Mapping[str, object]) -> None:
     sys.stdout.flush()
 
 
-def _emit_refusal(code: str, request_id: UUID | None = None) -> None:
-    document = {"kind": "session_refused", "code": code}
+def _report_failure(error: BaseException) -> dict[str, object] | None:
+    """Log a refused hold and return the root cause for its parent.
+
+    The registered error document names the refusal code, the failing
+    exception's type and product frame and the correlation id of the durable
+    log record, never its message. It travels on the refusal line itself, so
+    the parent reads the cause with the refusal instead of waiting on a
+    second pipe; stderr keeps a copy for the parent's own log.
+    """
+    try:
+        import logging
+
+        from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code, render_error_json
+        from cadrumo.core.errors.failure_report import log_boundary_failure, root_cause_context
+        from cadrumo.core.errors.hierarchy import CadrumoError
+        from cadrumo.core.logging import get_logger
+        from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+
+        # As at the CLI boundary: an internal failure is an error, a registered refusal an expected outcome.
+        try:
+            internal = get_registered_error_code(error).category is ErrorCategory.INTERNAL
+        except Exception:
+            internal = True
+        trace_id = log_boundary_failure(
+            get_logger(__name__),
+            "session_hold",
+            error,
+            level=logging.ERROR if internal else logging.INFO,
+            operator_document=True,
+            durable=True,
+        )
+        reported = (
+            error
+            if isinstance(error, CadrumoError)
+            else CliUnexpectedBoundaryError(error if isinstance(error, Exception) else Exception())
+        )
+        rendered = render_error_json(
+            reported, command="session.hold", context=root_cause_context(error), trace_id=trace_id
+        )
+        sys.stderr.write(rendered)
+        sys.stderr.flush()
+        document = json.loads(rendered)
+        if not isinstance(document, dict) or not isinstance(error_document := document.get("error"), dict):
+            return None
+        # The protocol copy names the cause; a message may interpolate context, so it stays off the line.
+        error_document.pop("message", None)
+        return {str(key): value for key, value in document.items()}
+    except Exception:
+        return None
+
+
+def _emit_refusal(code: str, request_id: UUID | None = None, report: Mapping[str, object] | None = None) -> None:
+    document: dict[str, object] = {"kind": "session_refused", "code": code}
     if request_id is not None:
         document["request_id"] = str(request_id)
+    if report is not None:
+        document["report"] = report
     _emit(document)
 
 
@@ -267,10 +320,11 @@ async def _hold(
             except (KeyError, TypeError, ValueError):
                 _emit_refusal("invalid", request_id)
                 return 1
-            except Exception:
+            except Exception as error:
                 # A valid command keeps its correlation key even when transport,
-                # validation, or runtime work fails. Never expose the exception.
-                _emit_refusal("unavailable", request_id)
+                # validation, or runtime work fails. The protocol never carries
+                # the exception, only its registered, message-free report.
+                _emit_refusal("unavailable", request_id, _report_failure(error))
                 return 1
     finally:
         client.close()
@@ -293,6 +347,6 @@ def main(arguments: list[str] | None = None) -> int:
             return asyncio.run(
                 _hold(options.profile_id, password_stdin=options.password_stdin, frontend=options.frontend)
             )
-    except Exception:
-        _emit({"kind": "session_refused", "request_id": str(uuid4()), "code": "unavailable"})
+    except Exception as error:
+        _emit_refusal("unavailable", uuid4(), _report_failure(error))
         return 1

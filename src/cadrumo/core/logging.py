@@ -944,6 +944,11 @@ def resume_logging_configuration() -> None:
     _configuration_deferred = False
 
 
+def logging_configuration_deferred() -> bool:
+    """Return whether a host is still keeping this process's logging state-free."""
+    return _configuration_deferred
+
+
 _PENDING_RECORD_LIMIT = 200
 _pending_records: deque[logging.LogRecord] = deque(maxlen=_PENDING_RECORD_LIMIT)
 _root_level_before_buffering: int | None = None

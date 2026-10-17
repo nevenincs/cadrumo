@@ -454,23 +454,17 @@ def _emit_crash(exc: Exception) -> NoReturn:
     remedy, and would report an operator-actionable condition as a program
     defect. Forward it verbatim instead, with its own exit code.
     """
-    from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+    from cadrumo_client.commands.errors import log_cli_boundary_failure
 
-    from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
     from .errors import (
         project_cli_boundary_error,
         write_stderr,
     )
 
     boundary = project_cli_boundary_error(exc, _emit_crash)
-    if isinstance(boundary, CliUnexpectedBoundaryError):
-        # Log only the static exception type. The extra keeps this record off
-        # stderr while the JSON error document is written there.
-        get_logger(__name__).error(
-            "cli terminal boundary: unexpected exception type=%s",
-            type(exc).__name__,
-            extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
-        )
+    # Types, frames and registered reasons only; the record stays off stderr
+    # while the JSON error document is written there.
+    log_cli_boundary_failure("cli_terminal", boundary)
     with _requested_output_language():
         payload, code = _render_crash_payload(exc, boundary)
     write_stderr(payload)

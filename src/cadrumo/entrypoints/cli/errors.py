@@ -652,6 +652,7 @@ def emit_error_and_exit(error: CadrumoError) -> Never:
         if projection.requested_leaf is not None:
             command = projection.requested_leaf.subject_leaf_key
 
+    _client_commands_errors.log_cli_boundary_failure("cli_command", error)
     code = get_registered_error_code(error)
     payload = render_error_payload(
         error,

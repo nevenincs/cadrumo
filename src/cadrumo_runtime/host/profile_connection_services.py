@@ -51,10 +51,11 @@ class ProfileConnectionServicesMixin:
             return self._admit_service(context, request)
         descriptor = self._service_descriptors.get(request.service_id)
         if descriptor is None:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_descriptor_unknown")
         with self._guard:
             existing = self._services.get(context.connection_id)
             connection = self._connections.get(context.connection_id)
+            host = self._profiles.get(request.profile_id) if existing is not None else None
         # A registered connection proves its admitted incarnation; only a new one hashes the image.
         if existing is None:
             peer = self._service_verifier.verify_service(context, channel, descriptor)
@@ -63,20 +64,25 @@ class ProfileConnectionServicesMixin:
         else:
             peer = None
         if peer is None:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_verification_failed")
         if existing is not None:
-            if existing.descriptor != descriptor or connection is None or connection.profile_id != request.profile_id:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-            if existing.lease is not None:
-                with self._profiles[request.profile_id].guard:
-                    status = self._status(
-                        connection, self._profiles[request.profile_id], request.request_id, existing.lease.session_id
-                    )
-                    if isinstance(status, AccessDenied) or status.status.denial is not None:
-                        approved = existing.lease
+            if (
+                existing.descriptor != descriptor
+                or connection is None
+                or connection.profile_id != request.profile_id
+                or host is None
+            ):
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_connection_mismatch")
+            with host.guard:
+                lease = existing.lease
+                if lease is not None:
+                    status = self._status(connection, host, request.request_id, lease.session_id)
+                    if existing.lease is lease and (
+                        isinstance(status, AccessDenied) or status.status.denial is not None
+                    ):
+                        approved = lease
                         try:
                             holder_id = self._human_parent_connection(approved)
-                            host = self._profiles[request.profile_id]
                             host.authority.human_administration_facts(
                                 connection_id=holder_id, session_id=approved.parent_session_id
                             )
@@ -87,27 +93,29 @@ class ProfileConnectionServicesMixin:
                                 scope=existing.descriptor.operation_scope,
                             )
                         except Exception:
-                            existing.lease = None
+                            if existing.lease is approved:
+                                existing.lease = None
                         else:
                             if isinstance(child, AccessDenied):
-                                existing.lease = None
-                            else:
+                                if existing.lease is approved:
+                                    existing.lease = None
+                            elif existing.lease is approved:
                                 connection.session_id = child.session_id
                                 existing.lease = approved.model_copy(update={"session_id": child.session_id})
-            return ServiceConnected(
-                request_id=request.request_id,
-                runtime_boot_id=self.boot,
-                connection_id=context.connection_id,
-                profile_id=request.profile_id,
-                service_id=request.service_id,
-                lease=existing.lease,
-            )
+                return ServiceConnected(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    profile_id=request.profile_id,
+                    service_id=request.service_id,
+                    lease=existing.lease,
+                )
         if connection is not None:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_connection_exists")
         login = self._capture(channel)
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_login_inactive_or_mismatch")
         with self._guard:
             self._connections[context.connection_id] = ProfileConnection(
                 context,
@@ -213,7 +221,7 @@ class ProfileConnectionServicesMixin:
                 None,
             )
         if holder is None:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="human_parent_connection_absent")
         return holder.context.connection_id
 
     def _verify_desktop_holder(self: RuntimeProfileConnections, context, channel, request) -> None:
@@ -230,22 +238,22 @@ class ProfileConnectionServicesMixin:
             if development_password and context.peer.process_id is not None:
                 native_process_identity(context.peer.process_id, context.peer.os_owner_id)
                 return
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_descriptor_absent")
         if self._service_verifier.verify_service(context, channel, descriptor) is None:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_unverified")
         child = native_process_identity(context.peer.process_id, context.peer.os_owner_id)
         if development_password:
             return
         parent = native_process_identity(child.parent_pid, context.peer.os_owner_id)
         if parent.born > child.born:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_born_after_child")
         if not any(
             self._service_verifier.installed_parent_image_matches(parent.image, item.launch_image, item.image_digest)
             for item in descriptor.allowed_parent_images
         ):
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_image_unlisted")
         if native_process_identity(parent.pid, context.peer.os_owner_id) != parent:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_identity_changed")
 
     def _nonhuman_peer(self: RuntimeProfileConnections, context, channel) -> bool:
         if self._service_tree_owner(context, channel) is not None:
