@@ -39,7 +39,7 @@ def test_spellings_of_one_directory_share_the_name_the_desktop_derives() -> None
     assert append_signal_name(r"C:\Users\Example\AppData\Local\cadrumo\logs", "S-1-5-21-1-2-3-1002") != name
 
 
-def _windows_user_event(directory: Path, sddl_for_sid: str) -> tuple[object, str]:
+def _windows_user_event(directory: Path, sddl_for_sid: str) -> tuple[int, str]:
     """Create the event the desktop's reader would, under ``sddl_for_sid`` formatted with the user's SID."""
     if sys.platform == "win32":
         import pywintypes

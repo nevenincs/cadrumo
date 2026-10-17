@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:bab2105cd88a2f5f0faf1c9a63110175859e3a1c05682485bd805e724b2720f1'
+body_hash: 'sha256:8ec685d783b5f05cbe28f993be13ca21bb0bdbbbbb2c5e60c0463d066a5577e1'
 related: []
 ---
 
@@ -312,3 +312,9 @@ The cadence test covers an unknown count. The idle hang test uses a 1 s idle int
 The heartbeat findings cite current lines, the plan's Verification names S20's checks and allows the minute ping under S10, and the module doc is reflowed. The `manager-supervision-poll` finding keeps its citations as evidence of the code it described.
 
 The re-review of `e03c12849b` passed with no new findings. It traced that the busy-again branch covers a fresh nonzero count, an unknown count and a stale tick after an idle reply, and leaves busy timing equal to the original rule. It also traced that the late-reply test fails against `f2536a9157`, where the hang lands at about 700 ms, and that an implementation treating an unknown count as idle would fail the cadence test. CADRUMO-BUILD-DEBUG ran clippy, `manager.rust` and `manager.supervision` green on that commit, with all three heartbeat tests passing.
+
+## Type runner after the plan closed
+
+### type-runner-not-run-on-s15-and-s17 | low | The append signal and the quiet input loop passed ruff and ty on their files but failed the configured type runner
+
+The S15 and S17 Steps verified with `ty check` on the touched files, not with `dev.quality.types`, which also runs basedpyright and pyrefly on the strict subset and checks the `win32` platform. It found 10 basedpyright, 3 pyrefly and 3 ty diagnostics in `src/cadrumo/core/log_file_handler.py`, where pywin32's stubs leave the token and security calls partly unknown and type the event handle as `int`, and 10 ty diagnostics in `src/cadrumo/entrypoints/tui/windows_input.py`. The append signal now uses ctypes with declared signatures, with the same name, owner-only descriptor, refusals and never-raise guarantee. The input loop passes `HANDLE` objects to the wait, as Textual's `wait_for_handles` requires, keeps a callback that accepts every message the parser yields, and narrows the driver's output file. Neither file has a diagnostic now, and the handler and Windows input tests pass.

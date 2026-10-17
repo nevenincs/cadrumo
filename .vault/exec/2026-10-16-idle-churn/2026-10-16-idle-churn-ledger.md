@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:85b926028f57cfa6666d204c295aeae41aea1aec05db66ceb38d5b1ebfbbb188'
+body_hash: 'sha256:a02ce5098c412b87ab38cec9b56556c6809143766b1643b597641042976d0a17'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -298,6 +298,12 @@ related:
 - `S20` `verify:` `check_manager_lifecycle on e03c12849b (clippy -D warnings, build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
 - `S20` `verify:` `ctest manager.rust on e03c12849b (by CADRUMO-BUILD-DEBUG)` -> `pass`
 - `S20` `verify:` `ctest manager.supervision on e03c12849b incl. late idle reply, cadence and idle hang tests (by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S15` `verify:` `pytest -n0 -m '' test_log_file_handler.py incl. the real and squatted event` -> `pass`
+- `S15` `verify:` `ruff check, ruff format --check` -> `pass`
+- `S15` `verify:` `dev.quality.types diagnostics in log_file_handler.py (none)` -> `pass`
+- `S17` `verify:` `pytest -n0 -m '' test_windows_input.py` -> `pass`
+- `S17` `verify:` `ruff check, ruff format --check` -> `pass`
+- `S17` `verify:` `dev.quality.types diagnostics in windows_input.py (none)` -> `pass`
 
 ## Notes
 
@@ -330,3 +336,5 @@ related:
 - `S17` The resumed case now also asserts the resumed input loop still waits on its stop event; without the reopen it fails
 - `S20` The manager's Rust tests and clippy run through CADRUMO-BUILD-DEBUG's managed targets after this commit; S20 closes on their result.
 - `S20` Reopened for the plan-close review's medium finding (late idle reply left a busy runtime unpinged) and its lows; closes again on the managed Rust run of the fix commit.
+- `S15` Post-close correction: the type runner was not run at S15; the append signal moved from pywin32 to typed ctypes.
+- `S17` Post-close correction: the type runner was not run at S17.
