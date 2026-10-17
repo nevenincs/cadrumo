@@ -11,7 +11,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:b405f14f9b37a8b4fc0388098a72d6f74ed133e55099547acb5ad4a35c8971e9'
+body_hash: 'sha256:498df6b6c128d9054bed1b607ef60f560e8238037591b5d398cadb4168c2866a'
 ---
 
 # `single-binary-process-tree` plan
@@ -27,9 +27,9 @@ Decision coverage: 2026-10-17-single-binary-process-tree-adr governs every Step 
 ## Steps
 
 - [x] `S01` - Start the runtime from the desktop as the cadrumo binary in its runtime role through a linked interpreter host, and have the operator confirm the grouping; `native/desktop/src-tauri/src/main.rs`.
-- [ ] `S02` - Dispatch every declared role before window initialization, refuse unknown roles, and select the linked host per role at run time instead of by compile-time defines; `native/desktop/src-tauri/src/launch.rs`.
+- [ ] `S02` - Dispatch every declared role before window initialization, refuse unknown roles, select the linked host per role at run time instead of by compile-time defines, and start every desktop helper (runtime session commands, aeat sign-in and profile commands) as a role; `native/desktop/src-tauri/src/launch.rs`.
 - [ ] `S03` - Make sys.executable the cadrumo binary in its interpreter role so runtime workers and the KDF child re-enter the same binary; `native/interpreter/windows/host.c`.
-- [ ] `S04` - Identify the manager and runtime by image plus role for supervision, startup items, quiescence and termination, with tests; `native/manager/src/supervision/launch.rs`.
+- [ ] `S04` - Run the machine lifecycle broker and the manager as roles and identify broker, manager and runtime by image plus role for supervision, startup items, quiescence and termination, with tests, so no runtime host runs outside a Cadrumo tree; `native/manager/src/supervision/launch.rs`.
 - [ ] `S05` - Run the agent service and agent as roles and bind service admission to image, role, module and invocation, with tests; `src/cadrumo_agent_service`.
 - [ ] `S06` - Ship one cadrumo image for these roles in the package layout, build and assembly verification; `native/package-layout.json`.
 - [ ] `S07` - Remove the package identity claims, the development registration command and its tests, and retire the package identity plan; `dev/packaging/native/package_identity.py`.
