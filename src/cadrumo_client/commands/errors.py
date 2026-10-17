@@ -12,6 +12,8 @@ from cadrumo.core.errors.failure_report import log_boundary_failure, raising_pro
 from cadrumo.core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from cadrumo.core.errors.record_fault import internal_record_fault_context
 
+from ..contracts.contracts import RefusalError
+
 
 class CliRefusedBoundaryError(CadrumoError):
     """Refuse a command without exposing a success-shaped JSON result."""
@@ -33,14 +35,38 @@ def _raising_product_frame(error: BaseException) -> str:
     return raising_product_frame(error) or "unknown"
 
 
+def boundary_failure_level(error: BaseException) -> int:
+    """Return the log level for a failure a frontend ends its command with.
+
+    Internal faults and local-runtime transport refusals are errors: the
+    runtime could not be used at all. Any other registered refusal, such as a
+    signed-out session, is an expected outcome of the profile's state and is a
+    warning.
+    """
+    from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
+
+    seen: set[int] = set()
+    link: BaseException | None = error
+    while link is not None and id(link) not in seen:
+        if isinstance(link, RefusalError):
+            return logging.ERROR
+        seen.add(id(link))
+        link = link.__cause__ or link.__context__
+    try:
+        internal = get_registered_error_code(error).category is ErrorCategory.INTERNAL
+    except Exception:
+        internal = True
+    return logging.ERROR if internal else logging.WARNING
+
+
 def log_cli_boundary_failure(boundary: str, error: BaseException, *, durable: bool = True) -> str:
     """Log a failure a command frontend is about to render, returning its correlation id.
 
-    Every category is logged at ERROR: the command ends here with an error
-    document and a nonzero exit, so a refusal is as much its failure as an
-    internal fault. ``durable=False`` is for a refusal raised before any
-    command ran, which must not configure process state just to be logged. The
-    record stays off stderr, which carries the error document.
+    The level comes from :func:`boundary_failure_level`; never below WARNING,
+    since the command ends here with an error document. ``durable=False`` is
+    for a refusal raised before any command ran, which must not configure
+    process state just to be logged. The record stays off stderr, which
+    carries the error document.
     """
     from cadrumo.core.logging import get_logger
 
@@ -48,7 +74,7 @@ def log_cli_boundary_failure(boundary: str, error: BaseException, *, durable: bo
         get_logger(__name__),
         boundary,
         error,
-        level=logging.ERROR,
+        level=boundary_failure_level(error),
         operator_document=True,
         durable=durable,
     )
@@ -117,5 +143,6 @@ __all__ = [
     "CliRefusedBoundaryError",
     "CliUnexpectedBoundaryError",
     "attach_cli_policy_verdict",
+    "boundary_failure_level",
     "log_cli_boundary_failure",
 ]

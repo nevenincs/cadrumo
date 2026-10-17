@@ -77,20 +77,17 @@ def _report_failure(error: BaseException) -> dict[str, object] | None:
     second pipe; stderr keeps a copy for the parent's own log.
     """
     try:
-        import logging
-
         from cadrumo.core.errors.error_codes import render_error_json
         from cadrumo.core.errors.failure_report import log_boundary_failure, root_cause_context
         from cadrumo.core.errors.hierarchy import CadrumoError
         from cadrumo.core.logging import get_logger
-        from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+        from cadrumo_client.commands.errors import CliUnexpectedBoundaryError, boundary_failure_level
 
-        # As at the CLI boundary: the hold ends here refused, whatever the category.
         trace_id = log_boundary_failure(
             get_logger(__name__),
             "session_hold",
             error,
-            level=logging.ERROR,
+            level=boundary_failure_level(error),
             operator_document=True,
             durable=True,
         )
