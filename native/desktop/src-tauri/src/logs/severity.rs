@@ -38,6 +38,10 @@ pub fn level(event: &Event) -> Level {
             ServiceFact::AgentRefused {
                 reason: AgentRefusal::SignedOut,
             } => Level::Debug,
+            // No provider key yet is a state the agent column offers a way out of, not a fault.
+            ServiceFact::AgentRefused {
+                reason: AgentRefusal::ProviderCredentialMissing,
+            } => Level::Info,
             ServiceFact::AgentRefused { .. } | ServiceFact::AgentProtocolRefused {} => Level::Error,
             ServiceFact::AgentRetryScheduled { .. } => Level::Warning,
             ServiceFact::AgentRetryExhausted { .. } => Level::Error,
@@ -436,6 +440,12 @@ mod tests {
                     reason: AgentRefusal::SignedOut,
                 },
                 Level::Debug,
+            ),
+            (
+                ServiceFact::AgentRefused {
+                    reason: AgentRefusal::ProviderCredentialMissing,
+                },
+                Level::Info,
             ),
             (
                 ServiceFact::AgentRefused {
