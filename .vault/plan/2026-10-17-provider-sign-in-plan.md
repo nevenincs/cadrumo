@@ -10,7 +10,7 @@ related:
   - '[[2026-10-05-desktop-design-system-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:a3bc8dc640027ed4d155bf0c77a17d3f8881f598efa61b4e87ef022b22f6132e'
+body_hash: 'sha256:38fffb220f18e83efb0bd2cb1ae1fd7359013afc798a199afaf1eb9360367cee'
 ---
 
 # `provider-sign-in` plan
@@ -28,7 +28,7 @@ Discovery: Luna max readers mapped service.py preparation, AgentHost.administer,
 - [x] `S01` - Own hidden helper lifecycle and transient authenticated sign-in administration; `src/cadrumo_agent_service and native/application-environment.toml`.
 - [x] `S02` - Connect token-checked native commands to the localized provider sign-in dialog; `native/desktop and src/cadrumo_agent_service/locales`.
 - [ ] `S03` - Verify integration and document evidence and remaining live-account gates; `tests and native/CONTRACT.md`.
-- [ ] `S04` - Repair the Windows local profile login prerequisite exposed by packaged sign-in verification and verify the real GUI flow; `src/cadrumo_runtime and its native login tests and packaged desktop verification`.
+- [x] `S04` - Repair the Windows local profile login prerequisite exposed by packaged sign-in verification and verify the real GUI flow; `native Windows manifests and session admission and provider catalog compatibility and frontend capability display and localization and external debug storage and packaged GUI verification`.
 
 ## Parallelization
 
