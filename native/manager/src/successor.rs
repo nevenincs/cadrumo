@@ -32,8 +32,13 @@ enum Phase {
 pub struct Reporter {
     send: SyncSender<(u32, Phase)>,
     result: Receiver<ReportResult>,
+    notify: crate::wake::Slot,
 }
 impl Reporter {
+    /// Signal `notify` once the reporting thread has a result or has ended.
+    pub fn notify_with(&self, notify: crate::wake::Notify) {
+        self.notify.install(notify);
+    }
     pub fn launched(&self, pid: u32) -> io::Result<()> {
         self.send
             .try_send((pid, Phase::Launched))

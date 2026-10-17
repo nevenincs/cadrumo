@@ -89,6 +89,11 @@ impl crate::lifecycle::RemovalObservation for InstallationWatch {
         self.next = Instant::now() + Duration::from_secs(2);
         self.observe().unwrap_or(false)
     }
+    // Registration stores and entry points publish no change notification, so
+    // removal is checked at a paced interval.
+    fn next_check(&self) -> Option<Instant> {
+        Some(self.next)
+    }
 }
 
 fn completed(

@@ -75,14 +75,6 @@ unsafe extern "system" {
     fn GetNamedPipeClientProcessId(pipe: Handle, pid: *mut u32) -> i32;
     fn WaitNamedPipeW(name: *const u16, timeout: u32) -> i32;
     fn GetNamedPipeServerProcessId(pipe: Handle, pid: *mut u32) -> i32;
-    fn PeekNamedPipe(
-        pipe: Handle,
-        buffer: Handle,
-        size: u32,
-        read: *mut u32,
-        available: *mut u32,
-        left: *mut u32,
-    ) -> i32;
     fn ReadFile(
         file: Handle,
         buffer: Handle,
@@ -317,7 +309,7 @@ enum Kind {
 }
 struct Operation {
     file: Arc<OwnedHandle>,
-    _event: OwnedHandle,
+    event: OwnedHandle,
     overlapped: Box<Overlapped>,
     buffer: Box<[u8; MAXIMUM_FRAME_BYTES]>,
     complete: Option<u32>,
@@ -335,7 +327,7 @@ impl Operation {
                 event: raw(&event),
                 ..Default::default()
             }),
-            _event: event,
+            event,
             buffer: Box::new([0; MAXIMUM_FRAME_BYTES]),
             complete: Some(0),
         };
@@ -399,12 +391,18 @@ impl Operation {
             if let Some(size) = self.poll()? {
                 return Ok(size);
             }
-            if Instant::now() >= deadline {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
                 return Err(io::ErrorKind::TimedOut.into());
             }
-            // SAFETY: only this operation's event is waited; short slices preserve the bound.
+            // Rounded up, so a wait that times out has reached the deadline.
+            let timeout = remaining
+                .as_nanos()
+                .div_ceil(1_000_000)
+                .min(u128::from(u32::MAX - 1)) as u32;
+            // SAFETY: only this operation's event is waited, for at most the remaining bound.
             unsafe {
-                WaitForSingleObject(raw(&self._event), 10);
+                WaitForSingleObject(raw(&self.event), timeout);
             }
         }
     }
@@ -427,7 +425,9 @@ enum State {
     Connecting(Operation),
     Reading(Operation, Instant),
     Writing(Operation, Instant, Peer),
-    Closing(Instant, Peer),
+    /// A pending read that the client's close completes, keeping the response
+    /// buffered until then. Disconnecting immediately could discard unread bytes.
+    Closing(Operation, Instant, Peer),
 }
 
 pub struct Server {
@@ -574,6 +574,29 @@ impl Server {
         Ok(())
     }
 
+    /// What the owning loop waits on before the next poll is due: the current
+    /// operation's completion and the exchange deadline.
+    pub fn readiness<'a>(&'a self, into: &mut crate::wake::windows::Readiness<'a>) {
+        use std::os::windows::io::AsHandle;
+        let (operation, deadline) = match &self.state {
+            None => return,
+            Some(State::Connecting(operation)) => (operation, None),
+            Some(
+                State::Reading(operation, deadline)
+                | State::Writing(operation, deadline, _)
+                | State::Closing(operation, deadline, _),
+            ) => (operation, Some(*deadline)),
+        };
+        if operation.complete.is_some() {
+            into.now();
+        } else {
+            into.handle(operation.event.as_handle());
+        }
+        if let Some(deadline) = deadline {
+            into.at(deadline);
+        }
+    }
+
     /// Bounded work on the owning message-loop thread; never waits for a client.
     pub fn poll(&mut self, mut handle: impl FnMut(Request) -> Response) -> io::Result<()> {
         self.poll_authenticated(|_, request| handle(request))
@@ -655,26 +678,25 @@ impl Server {
                 if operation.poll()?.is_none() {
                     return Ok((State::Writing(operation, deadline, peer), false));
                 }
-                Ok((State::Closing(deadline, peer), false))
+                Ok((
+                    State::Closing(
+                        Operation::start(self.pipe.clone(), Kind::Read, &[])?,
+                        deadline,
+                        peer,
+                    ),
+                    false,
+                ))
             }
-            State::Closing(deadline, peer) => {
-                let mut available = 0;
-                // SAFETY: peek is nonblocking; keep the response buffered until the
-                // client closes. Disconnecting immediately could discard unread bytes.
-                checked(unsafe {
-                    PeekNamedPipe(
-                        raw(&self.pipe),
-                        ptr::null_mut(),
-                        0,
-                        ptr::null_mut(),
-                        &mut available,
-                        ptr::null_mut(),
-                    )
-                })?;
-                if available != 0 || Instant::now() >= deadline {
+            State::Closing(mut operation, deadline, peer) => {
+                if Instant::now() >= deadline {
                     return Err(io::ErrorKind::TimedOut.into());
                 }
-                Ok((State::Closing(deadline, peer), false))
+                // The client's close fails this read; further bytes break the
+                // one-exchange protocol. Either ends the connection.
+                if operation.poll()?.is_some() {
+                    return Err(io::ErrorKind::InvalidData.into());
+                }
+                Ok((State::Closing(operation, deadline, peer), false))
             }
         }
     }
@@ -791,6 +813,18 @@ mod tests {
         thread,
         time::{SystemTime, UNIX_EPOCH},
     };
+
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn PeekNamedPipe(
+            pipe: Handle,
+            buffer: Handle,
+            size: u32,
+            read: *mut u32,
+            available: *mut u32,
+            left: *mut u32,
+        ) -> i32;
+    }
 
     fn name() -> String {
         format!(
@@ -1025,6 +1059,48 @@ mod tests {
             thread::sleep(Duration::from_millis(5));
         }
         client.join().unwrap();
+    }
+
+    #[test]
+    fn an_idle_endpoint_is_not_due_and_an_exchange_advances_only_on_its_own_events() {
+        use crate::wake::windows::{Readiness, Woken};
+        let name = name();
+        let mut server = server(&name, true);
+        let mut idle = Readiness::default();
+        server.readiness(&mut idle);
+        idle.after(Duration::from_millis(80));
+        assert_eq!(idle.wait().unwrap(), Woken::Elapsed);
+
+        let image = std::env::current_exe().unwrap();
+        let client_name = name.clone();
+        let client =
+            thread::spawn(move || request_to(&client_name, &image, &Request::Retry { schema: 1 }));
+        let started = Instant::now();
+        let mut handled = 0;
+        let mut wakes = 0;
+        // Ends once the request is answered and the client's close has
+        // returned the endpoint to accepting a new connection.
+        while handled == 0 || !matches!(server.state, Some(State::Connecting(_))) {
+            let mut readiness = Readiness::default();
+            server.readiness(&mut readiness);
+            assert_eq!(readiness.wait().unwrap(), Woken::Signaled);
+            wakes += 1;
+            assert!(wakes < 16, "each wake must advance the exchange");
+            server
+                .poll(|request| {
+                    respond(request, || {
+                        handled += 1;
+                        Ok(())
+                    })
+                })
+                .unwrap();
+        }
+        assert!(started.elapsed() < TIMEOUT);
+        assert_eq!(handled, 1);
+        assert_eq!(
+            client.join().unwrap().unwrap().outcome,
+            Outcome::ReEvaluated
+        );
     }
 
     #[test]

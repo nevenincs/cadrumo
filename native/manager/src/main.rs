@@ -177,7 +177,7 @@ fn run_windows(
         } else {
             cadrumo_manager::session::ownership::StartKind::Manual
         },
-    );
+    )?;
     if let Some((permit, reporter)) = successor {
         background.designated(permit, reporter);
     }

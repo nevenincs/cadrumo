@@ -68,9 +68,15 @@ pub fn admit(designation: Designation) -> io::Result<Admitted> {
     };
     let (send, notices) = mpsc::sync_channel(2);
     let (report, result) = mpsc::sync_channel(1);
+    let notify = crate::wake::Slot::default();
+    let notified = notify.clone();
     thread::Builder::new()
         .name("manager-cutover-reports".into())
         .spawn(move || {
+            // Declared before the result sender, so it is dropped after it and the
+            // consumer observes the result or the disconnection when woken.
+            let _notify = crate::wake::NotifyOnDrop(notified);
+            let report = report;
             // Holding the native parent handle prevents its PID being reused. Its
             // already-admitted process retains its own package lease. Missing old
             // auxiliary files cannot invalidate this exact live parent identity.
@@ -163,7 +169,11 @@ pub fn admit(designation: Designation) -> io::Result<Admitted> {
     Ok(Admitted {
         installation,
         permit,
-        reporter: Reporter { send, result },
+        reporter: Reporter {
+            send,
+            result,
+            notify,
+        },
     })
 }
 

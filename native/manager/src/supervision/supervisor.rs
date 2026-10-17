@@ -280,6 +280,7 @@ pub struct SupervisorHandle(
     Arc<AtomicBool>,
     Arc<Mutex<()>>,
     Arc<AtomicU64>,
+    crate::wake::Slot,
 );
 
 impl SupervisorHandle {
@@ -302,6 +303,12 @@ impl SupervisorHandle {
     /// Take and reset the saturating count of observations the receiver did not accept.
     pub fn take_dropped_events(&self) -> u64 {
         self.3.swap(0, Ordering::Relaxed)
+    }
+
+    /// Signal `notify` after every later observation, accepted or dropped.
+    /// Observations queued before installation are drained by the caller.
+    pub fn notify_with(&self, notify: crate::wake::Notify) {
+        self.4.install(notify);
     }
 }
 
@@ -512,6 +519,7 @@ pub struct Supervisor {
     session_ending: Arc<AtomicBool>,
     launch_gate: Arc<Mutex<()>>,
     dropped_events: Arc<AtomicU64>,
+    notify: crate::wake::Slot,
 }
 
 impl Supervisor {
@@ -536,6 +544,7 @@ impl Supervisor {
             session_ending: Arc::new(AtomicBool::new(false)),
             launch_gate: Arc::new(Mutex::new(())),
             dropped_events: Arc::new(AtomicU64::new(0)),
+            notify: crate::wake::Slot::default(),
         }
     }
 
@@ -546,6 +555,7 @@ impl Supervisor {
             Arc::clone(&self.session_ending),
             Arc::clone(&self.launch_gate),
             Arc::clone(&self.dropped_events),
+            self.notify.clone(),
         )
     }
 
@@ -561,6 +571,7 @@ impl Supervisor {
                 count = current;
             }
         }
+        self.notify.notify();
     }
 
     /// Supervise until a requested stop, a stand-down, a foreign owner or the ceiling.
@@ -1294,6 +1305,24 @@ mod tests {
     }
 
     #[test]
+    fn every_later_observation_notifies_its_consumer_whether_queued_or_dropped() {
+        let (supervisor, observed) = observation_supervisor();
+        let handle = supervisor.handle();
+        supervisor.emit(Event::AwaitingActiveSession);
+        let notified = Arc::new(AtomicU64::new(0));
+        let count = Arc::clone(&notified);
+        handle.notify_with(Arc::new(move || {
+            count.fetch_add(1, Ordering::Relaxed);
+        }));
+        for _ in 0..EVENT_QUEUE + 2 {
+            supervisor.emit(Event::AwaitingActiveSession);
+        }
+        assert_eq!(notified.load(Ordering::Relaxed), EVENT_QUEUE as u64 + 2);
+        assert_eq!(observed.try_iter().count(), EVENT_QUEUE);
+        assert_eq!(handle.take_dropped_events(), 3);
+    }
+
+    #[test]
     fn a_full_input_queue_refuses_ordinary_controls_but_accepts_session_end() {
         let (sender, inputs) = mpsc::sync_channel(INPUT_QUEUE);
         let ending = Arc::new(AtomicBool::new(false));
@@ -1302,6 +1331,7 @@ mod tests {
             Arc::clone(&ending),
             Arc::new(Mutex::new(())),
             Arc::new(AtomicU64::new(0)),
+            crate::wake::Slot::default(),
         );
         for _ in 0..INPUT_QUEUE {
             assert!(handle.request(Request::StopIfIdle));

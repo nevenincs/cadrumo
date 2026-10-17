@@ -81,6 +81,9 @@ pub trait ManagerLifecycle: CutoverRuntime {
     fn session_end_settled(&self) -> bool;
     fn session_end(&mut self);
     fn cancel_session_end(&mut self);
+    /// What the host must wait on before the next poll is due.
+    #[cfg(windows)]
+    fn readiness<'a>(&'a self, _into: &mut crate::wake::windows::Readiness<'a>) {}
 }
 #[cfg(any(windows, test))]
 impl ManagerLifecycle for Background {
@@ -114,10 +117,18 @@ impl ManagerLifecycle for Background {
     fn cancel_session_end(&mut self) {
         Background::cancel_session_end(self);
     }
+    #[cfg(windows)]
+    fn readiness<'a>(&'a self, into: &mut crate::wake::windows::Readiness<'a>) {
+        Background::readiness(self, into);
+    }
 }
 
 /// Native evidence that an admitted installation has completed removal.
 /// Unknown observations and transient upgrade gaps must not report removal.
 pub trait RemovalObservation {
     fn removed(&mut self) -> bool;
+    /// When the next observation is due, for an observation with no native notification.
+    fn next_check(&self) -> Option<std::time::Instant> {
+        None
+    }
 }

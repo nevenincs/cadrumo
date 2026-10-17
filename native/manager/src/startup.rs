@@ -45,6 +45,14 @@ impl Running {
     pub fn settled(&mut self) -> io::Result<Option<Outcome>> {
         self.completion.poll(&self.ended)
     }
+
+    /// Signaled once the supervising worker has returned, the point at which
+    /// [`Running::settled`] can deliver its outcome.
+    #[cfg(windows)]
+    pub fn settlement(&self) -> Option<std::os::windows::io::BorrowedHandle<'_>> {
+        use std::os::windows::io::AsHandle;
+        self.completion.worker.as_ref().map(AsHandle::as_handle)
+    }
 }
 
 #[derive(Default)]
@@ -69,7 +77,19 @@ impl Completion {
                     if remaining.is_zero() {
                         return Ok(None);
                     }
-                    thread::sleep(remaining.min(Duration::from_millis(1)));
+                    if self.terminal.is_none() && self.failure.is_none() && !self.delivered {
+                        // Block on the report itself; only the worker's brief return
+                        // after reporting is re-checked below.
+                        match ended.recv_timeout(remaining) {
+                            Ok(result) => self.terminal = Some(result.map_err(Arc::new)),
+                            Err(mpsc::RecvTimeoutError::Timeout) => {}
+                            Err(mpsc::RecvTimeoutError::Disconnected) => {
+                                self.failure = Some("manager_supervisor_lost");
+                            }
+                        }
+                    } else {
+                        thread::sleep(remaining.min(Duration::from_millis(1)));
+                    }
                 }
             }
         }

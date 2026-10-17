@@ -30,6 +30,7 @@ pub mod session;
 pub mod startup;
 pub mod strings;
 pub mod supervision;
+pub mod wake;
 #[cfg(windows)]
 pub mod windows_lifecycle;
 #[cfg(windows)]

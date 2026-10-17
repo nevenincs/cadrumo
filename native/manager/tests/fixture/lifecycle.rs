@@ -47,7 +47,7 @@ fn run() -> std::io::Result<()> {
             cadrumo_manager::windows_lifecycle::activity,
             diagnostics.clone(),
             StartKind::Manual,
-        );
+        )?;
         stage = "supervision";
         let mut sequence = 0;
         let mut stopping = false;

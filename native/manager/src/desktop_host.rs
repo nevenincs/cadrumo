@@ -7,6 +7,7 @@ use crate::{
     ipc::{self, Outcome, Request},
     session::{ManagerSession, instance::claim_session, ownership::StartKind},
     supervision::environment::ManagedLocations,
+    wake::windows::{Event, Readiness, wait_thread},
     windows_lifecycle,
 };
 use cadrumo_application::{
@@ -16,6 +17,7 @@ use cadrumo_application::{
 };
 use std::{
     io,
+    os::windows::io::AsHandle,
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
@@ -26,12 +28,24 @@ use std::{
     time::{Duration, Instant},
 };
 
-const POLL: Duration = Duration::from_millis(100);
 const CLOSE_BOUND: Duration = Duration::from_secs(35);
+// Back-off before re-admitting after a transient host fault.
+const RESTART_DELAY: Duration = Duration::from_secs(1);
+// Pacing: another manager owns the runtime and publishes no change notification,
+// so its status, and the release of its session claim, are observed at this interval.
+const EXTERNAL_PACE: Duration = Duration::from_secs(1);
+// Pacing: a full supervisor input queue publishes no notification when it drains.
+const CLOSE_RETRY: Duration = Duration::from_millis(100);
 
 enum Command {
     Retry,
     Close,
+}
+
+/// The worker's command queue and the event signaled after each command.
+struct Inbox {
+    commands: mpsc::Receiver<Command>,
+    wake: Arc<Event>,
 }
 
 struct Owner {
@@ -43,6 +57,8 @@ struct Owner {
 /// The worker owns its thread-affine session claim through final runtime settlement.
 pub struct DesktopHost {
     commands: mpsc::SyncSender<Command>,
+    /// Signaled after each command, so the worker never polls its queue.
+    wake: Arc<Event>,
     state: Arc<Mutex<Outcome>>,
     worker: Option<JoinHandle<io::Result<()>>>,
     closed: Arc<AtomicBool>,
@@ -59,6 +75,11 @@ impl DesktopHost {
     ) -> io::Result<Self> {
         let locations = ManagedLocations::for_host(&std::env::current_exe()?, package, root)?;
         let (send, receive) = mpsc::sync_channel(16);
+        let wake = Event::new()?;
+        let inbox = Inbox {
+            commands: receive,
+            wake: wake.clone(),
+        };
         let state = Arc::new(Mutex::new(Outcome::Starting));
         let observed = state.clone();
         let closed = Arc::new(AtomicBool::new(false));
@@ -76,7 +97,7 @@ impl DesktopHost {
                             &locations,
                             external_manager.as_deref(),
                             diagnostics.clone(),
-                            &receive,
+                            &inbox,
                             &stopping,
                             &observed,
                             &admission_cancellation,
@@ -98,16 +119,26 @@ impl DesktopHost {
                     // Retry transient host faults without leaving a cached dead worker.
                     failures += 1;
                     *observed.lock().unwrap_or_else(|error| error.into_inner()) = Outcome::Starting;
-                    for _ in 0..10 {
+                    let resume = Instant::now() + RESTART_DELAY;
+                    while Instant::now() < resume {
                         if stopping.load(Ordering::Acquire) {
                             return result;
                         }
-                        thread::sleep(POLL);
+                        // Close signals the wake after publishing `stopping`;
+                        // queued retries remain for the next admission.
+                        let mut readiness = Readiness::default();
+                        readiness.handle(inbox.wake.as_handle());
+                        readiness.at(resume);
+                        readiness.wait()?;
+                    }
+                    if stopping.load(Ordering::Acquire) {
+                        return result;
                     }
                 }
             })?;
         Ok(Self {
             commands: send,
+            wake,
             state,
             worker: Some(worker),
             closed,
@@ -130,7 +161,9 @@ impl DesktopHost {
         }
         self.commands
             .try_send(Command::Retry)
-            .map_err(|_| io::ErrorKind::WouldBlock.into())
+            .map_err(|_| io::Error::from(io::ErrorKind::WouldBlock))?;
+        self.wake.set();
+        Ok(())
     }
 
     pub fn close(mut self) -> io::Result<()> {
@@ -142,6 +175,7 @@ impl DesktopHost {
         self.closed.store(true, Ordering::Release);
         self.cancellation.cancel();
         let _ = self.commands.try_send(Command::Close);
+        self.wake.set();
         self.join_with_bound(bound)
     }
 
@@ -150,20 +184,14 @@ impl DesktopHost {
     }
 
     fn join_with_bound(&mut self, bound: Duration) -> io::Result<()> {
-        let deadline = Instant::now() + bound;
-        while self
-            .worker
-            .as_ref()
-            .is_some_and(|worker| !worker.is_finished())
+        if let Some(worker) = &self.worker
+            && !wait_thread(worker, bound)?
         {
-            if Instant::now() >= deadline {
-                // The dedicated worker remains a custody anchor: its exact
-                // runtime handle and thread-affine claim stay held until death.
-                // The host receives a bounded failure and must exit as failed.
-                self.worker.take();
-                return Err(io::ErrorKind::TimedOut.into());
-            }
-            thread::sleep(POLL);
+            // The dedicated worker remains a custody anchor: its exact
+            // runtime handle and thread-affine claim stay held until death.
+            // The host receives a bounded failure and must exit as failed.
+            self.worker.take();
+            return Err(io::ErrorKind::TimedOut.into());
         }
         if let Some(worker) = self.worker.take() {
             worker
@@ -180,6 +208,7 @@ impl Drop for DesktopHost {
             self.closed.store(true, Ordering::Release);
             self.cancellation.cancel();
             let _ = self.commands.try_send(Command::Close);
+            self.wake.set();
             if let Err(error) = self.join() {
                 self.diagnostics.host_failure(
                     HostStage::Shutdown,
@@ -195,7 +224,7 @@ fn run(
     locations: &ManagedLocations,
     external_manager: Option<&Path>,
     diagnostics: Arc<Diagnostics>,
-    commands: &mpsc::Receiver<Command>,
+    inbox: &Inbox,
     closed: &AtomicBool,
     state: &Mutex<Outcome>,
     cancellation: &Cancellation,
@@ -226,11 +255,13 @@ fn run(
         .under(locations.package_root());
     let mut owner = None;
     let mut closing = false;
+    let mut close_refused = false;
     let mut terminal_error = None;
+    let mut next_external = Instant::now();
     loop {
         closing |= closed.load(Ordering::Acquire);
         let mut retry = false;
-        for command in commands.try_iter() {
+        for command in inbox.commands.try_iter() {
             match command {
                 Command::Close => closing = true,
                 Command::Retry => retry = true,
@@ -241,11 +272,13 @@ fn run(
         }) = &mut owner
         {
             let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                close_refused = false;
                 if closing {
-                    if let Err(error) = background.close_host()
-                        && error.kind() != io::ErrorKind::WouldBlock
-                    {
-                        return Err(error);
+                    if let Err(error) = background.close_host() {
+                        if error.kind() != io::ErrorKind::WouldBlock {
+                            return Err(error);
+                        }
+                        close_refused = true;
                     }
                 } else if retry {
                     background.retry()?;
@@ -277,6 +310,8 @@ fn run(
         } else if closing {
             // An externally owned manager and runtime are never stopped by this host.
             return Ok(());
+        } else if !retry && Instant::now() < next_external {
+            // Woken before the paced observation of the external owner is due.
         } else if let Some(claim) = claim_session(&manager_id, Duration::ZERO)? {
             diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
             let server =
@@ -287,7 +322,7 @@ fn run(
                 windows_lifecycle::activity,
                 diagnostics.clone(),
                 StartKind::Manual,
-            );
+            )?;
             diagnostics.host_event(EventKind::StageCompleted, HostStage::Admission);
             owner = Some(Owner {
                 background,
@@ -312,8 +347,27 @@ fn run(
                 );
             *state.lock().unwrap_or_else(|error| error.into_inner()) =
                 response.map_or(Outcome::Waiting, |reply| reply.outcome);
+            next_external = Instant::now() + EXTERNAL_PACE;
         }
-        thread::sleep(POLL);
+        let mut readiness = Readiness::default();
+        readiness.handle(inbox.wake.as_handle());
+        match &owner {
+            Some(Owner {
+                background, server, ..
+            }) => {
+                background.readiness(&mut readiness);
+                // A closing owner no longer serves its pipe; a completed
+                // operation it leaves unpolled stays signaled.
+                if !closing {
+                    server.readiness(&mut readiness);
+                }
+                if close_refused {
+                    readiness.after(CLOSE_RETRY);
+                }
+            }
+            None => readiness.at(next_external),
+        }
+        readiness.wait()?;
     }
 }
 
@@ -357,6 +411,7 @@ mod tests {
         let closed = Arc::new(AtomicBool::new(false));
         let mut host = DesktopHost {
             commands,
+            wake: Event::new().unwrap(),
             state: Arc::new(Mutex::new(Outcome::Stopping)),
             worker: Some(worker),
             closed: closed.clone(),
@@ -392,6 +447,7 @@ mod tests {
         let worker = thread::spawn(|| Err(io::Error::from_raw_os_error(47)));
         let mut host = DesktopHost {
             commands,
+            wake: Event::new().unwrap(),
             state: Arc::new(Mutex::new(Outcome::Unavailable)),
             worker: Some(worker),
             closed: Arc::new(AtomicBool::new(false)),
@@ -405,5 +461,54 @@ mod tests {
             Some(47)
         );
         assert!(host.worker.is_none());
+    }
+
+    #[test]
+    fn commands_wake_a_waiting_worker_and_close_returns_when_it_does() {
+        // Each latency is far below the former 100 ms poll; the fastest of
+        // several runs tolerates an occasional scheduling delay.
+        let mut retries = Vec::new();
+        let mut closes = Vec::new();
+        for _ in 0..5 {
+            let (commands, receive) = mpsc::sync_channel(16);
+            let wake = Event::new().unwrap();
+            let woken = wake.clone();
+            let (observed, retried) = mpsc::channel();
+            let worker = thread::spawn(move || -> io::Result<()> {
+                loop {
+                    let mut readiness = Readiness::default();
+                    readiness.handle(woken.as_handle());
+                    readiness.after(Duration::from_secs(5));
+                    readiness.wait()?;
+                    for command in receive.try_iter() {
+                        match command {
+                            Command::Retry => observed.send(Instant::now()).unwrap(),
+                            Command::Close => return Ok(()),
+                        }
+                    }
+                }
+            });
+            let mut host = DesktopHost {
+                commands,
+                wake,
+                state: Arc::new(Mutex::new(Outcome::Starting)),
+                worker: Some(worker),
+                closed: Arc::new(AtomicBool::new(false)),
+                cancellation: Arc::new(Cancellation::default()),
+                diagnostics: Arc::new(Diagnostics::default()),
+            };
+            thread::sleep(Duration::from_millis(20));
+            let requested = Instant::now();
+            host.retry().unwrap();
+            let seen = retried.recv_timeout(Duration::from_secs(5)).unwrap();
+            retries.push(seen.saturating_duration_since(requested));
+            let closing = Instant::now();
+            host.close_with_bound(Duration::from_secs(5)).unwrap();
+            closes.push(closing.elapsed());
+            assert!(host.worker.is_none());
+        }
+        let fastest = |latencies: &[Duration]| latencies.iter().min().copied().unwrap();
+        assert!(fastest(&retries) < Duration::from_millis(50), "{retries:?}");
+        assert!(fastest(&closes) < Duration::from_millis(50), "{closes:?}");
     }
 }

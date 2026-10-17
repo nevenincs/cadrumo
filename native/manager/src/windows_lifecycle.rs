@@ -2,16 +2,31 @@
 #![allow(unsafe_code)]
 
 use crate::{
-    background::Background, lifecycle::ManagerLifecycle, supervision::supervisor::SessionActivity,
+    background::Background,
+    lifecycle::ManagerLifecycle,
+    supervision::supervisor::SessionActivity,
+    wake::windows::{Event, Readiness, Woken},
 };
 use std::{
     ffi::c_void,
     io,
-    os::windows::process::CommandExt,
+    os::windows::{
+        io::{AsHandle, BorrowedHandle},
+        process::CommandExt,
+    },
     process::{Command, Stdio},
     ptr,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
 };
+
+// Pacing: a native modal loop (a menu or message box) pumps messages but not
+// this thread's waits, so a timer services the owner while one runs.
+const MODAL_PACE: u32 = 250;
+const MENU_TIMER: usize = 1;
+const REVEAL_TIMER: usize = 2;
 
 /// Set when a window procedure contained a panic; the message loop then ends
 /// and reports the failure instead of continuing on inconsistent state.
@@ -76,7 +91,13 @@ unsafe extern "system" {
     ) -> Handle;
     fn DestroyWindow(window: Handle) -> i32;
     fn DefWindowProcW(window: Handle, message: u32, wparam: usize, lparam: isize) -> isize;
-    fn GetMessageW(message: *mut Message, window: Handle, first: u32, last: u32) -> i32;
+    fn PeekMessageW(
+        message: *mut Message,
+        window: Handle,
+        first: u32,
+        last: u32,
+        remove: u32,
+    ) -> i32;
     fn TranslateMessage(message: *const Message) -> i32;
     fn DispatchMessageW(message: *const Message) -> isize;
     fn SetWindowLongPtrW(window: Handle, index: i32, value: isize) -> isize;
@@ -162,8 +183,28 @@ struct WindowState {
     upgrade_error: bool,
     exit_after_settle: bool,
     handoff_completed: bool,
+    /// Signaled when a version discovery query finishes.
+    wake: Arc<Event>,
+    stop: Option<BorrowedHandle<'static>>,
 }
 impl WindowState {
+    fn readiness<'a>(&'a self, into: &mut Readiness<'a>) {
+        into.handle(self.wake.as_handle());
+        // The broker's stop event stays signaled; it is acted on once.
+        if !self.ending
+            && let Some(stop) = self.stop
+        {
+            into.handle(stop);
+        }
+        if let Some(ipc) = &self.ipc {
+            ipc.readiness(into);
+        }
+        self.background.readiness(into);
+        if let Some(upgrades) = &self.upgrades {
+            upgrades.readiness(&*self.background, into);
+        }
+    }
+
     fn cancel_upgrade(&mut self) {
         if let Some(upgrades) = &mut self.upgrades {
             upgrades.cancel();
@@ -227,6 +268,7 @@ unsafe fn dispatch(window: Handle, message: u32, wparam: usize, lparam: isize) -
             if message == 0x8002 && !(*state).revealing {
                 if let Some(mut tray) = (*state).tray.take() {
                     (*state).revealing = true;
+                    SetTimer(window, REVEAL_TIMER, MODAL_PACE, None);
                     let status = (*state).background.status();
                     let result = tray.reveal(status).and_then(|action| match action {
                         Some(crate::windows_tray::Action::Retry) => (*state).background.retry(),
@@ -248,6 +290,7 @@ unsafe fn dispatch(window: Handle, message: u32, wparam: usize, lparam: isize) -
                     if result.is_err() {
                         tray.error();
                     }
+                    KillTimer(window, REVEAL_TIMER);
                     (*state).tray = Some(tray);
                     (*state).revealing = false;
                     (*state).finish_shutdown();
@@ -289,76 +332,14 @@ unsafe fn dispatch(window: Handle, message: u32, wparam: usize, lparam: isize) -
                     return 0;
                 }
                 0x0113 => {
-                    if crate::service_windows::worker_stop_requested() && !state.ending {
-                        state.ending = true;
-                        state.exit_after_settle = true;
-                        state.cancel_upgrade();
-                        state.background.begin_session_end();
-                    }
-                    if let Some(ipc) = &mut state.ipc {
-                        let result = ipc.poll(|request| {
-                            if matches!(request, crate::ipc::Request::Status { .. }) {
-                                crate::ipc::status(state.background.status())
-                            } else if matches!(request, crate::ipc::Request::Reveal { .. }) {
-                                let queued = (state.tray.is_some() || state.revealing)
-                                    && PostMessageW(window, 0x8002, 0, 0) != 0;
-                                crate::ipc::Response {
-                                    schema: 1,
-                                    outcome: if queued {
-                                        crate::ipc::Outcome::RevealQueued
-                                    } else {
-                                        crate::ipc::Outcome::SurfaceUnavailable
-                                    },
-                                }
-                            } else {
-                                crate::ipc::respond(request, || state.background.retry())
-                            }
-                        });
-                        if result.is_err() {
-                            state.failed = true;
-                            state.exit_after_settle = true;
-                            state.cancel_upgrade();
-                        }
-                    }
-                    if state.background.poll().is_err() {
-                        state.failed = true;
-                        state.exit_after_settle = true;
-                        state.cancel_upgrade();
-                    }
-                    if let Some(tray) = &mut state.tray {
-                        let _ = tray.update(state.background.status());
-                    }
-                    if let Some(upgrades) = &mut state.upgrades {
-                        match upgrades.poll(
-                            &mut *state.background,
-                            &mut state.session,
-                            &mut state.ipc,
-                        ) {
-                            Ok(true) => {
-                                // Committed handoff already authorized this exit.
-                                // Retain that fact if a reentrant menu must unwind.
-                                state.handoff_completed = true;
-                            }
-                            Ok(false) => {}
-                            Err(_) => {
-                                // A failed cleanup retains the claim and all process
-                                // witnesses. It must not exit and launch a second owner.
-                                if !state.upgrade_error
-                                    && let Some(tray) = &mut state.tray
-                                {
-                                    let _ = tray.notice("action_failed");
-                                }
-                                state.upgrade_error = true;
-                            }
-                        }
-                        if let Some(notice) = upgrades.take_notice()
-                            && let Some(tray) = &mut state.tray
-                        {
-                            let _ = tray.notice(notice);
-                        }
-                    }
-                    state.finish_shutdown();
+                    tick(window, state);
                     return 0;
+                }
+                0x0211 => {
+                    SetTimer(window, MENU_TIMER, MODAL_PACE, None);
+                }
+                0x0212 => {
+                    KillTimer(window, MENU_TIMER);
                 }
                 0x0010 => {
                     state.ending = true;
@@ -375,6 +356,81 @@ unsafe fn dispatch(window: Handle, message: u32, wparam: usize, lparam: isize) -
             }
         }
         DefWindowProcW(window, message, wparam, lparam)
+    }
+}
+
+/// Service every owned source once. Each is bounded and never waits.
+///
+/// # Safety
+/// Called on the window's owning thread, outside any borrow of its state.
+unsafe fn tick(window: Handle, state: &mut WindowState) {
+    // SAFETY: the caller guarantees the owning thread; posting only queues.
+    unsafe {
+        if crate::service_windows::worker_stop_requested() && !state.ending {
+            state.ending = true;
+            state.exit_after_settle = true;
+            state.cancel_upgrade();
+            state.background.begin_session_end();
+        }
+        if let Some(ipc) = &mut state.ipc {
+            let result = ipc.poll(|request| {
+                if matches!(request, crate::ipc::Request::Status { .. }) {
+                    crate::ipc::status(state.background.status())
+                } else if matches!(request, crate::ipc::Request::Reveal { .. }) {
+                    let queued = (state.tray.is_some() || state.revealing)
+                        && PostMessageW(window, 0x8002, 0, 0) != 0;
+                    crate::ipc::Response {
+                        schema: 1,
+                        outcome: if queued {
+                            crate::ipc::Outcome::RevealQueued
+                        } else {
+                            crate::ipc::Outcome::SurfaceUnavailable
+                        },
+                    }
+                } else {
+                    crate::ipc::respond(request, || state.background.retry())
+                }
+            });
+            if result.is_err() {
+                state.failed = true;
+                state.exit_after_settle = true;
+                state.cancel_upgrade();
+            }
+        }
+        if state.background.poll().is_err() {
+            state.failed = true;
+            state.exit_after_settle = true;
+            state.cancel_upgrade();
+        }
+        if let Some(tray) = &mut state.tray {
+            let _ = tray.update(state.background.status());
+        }
+        if let Some(upgrades) = &mut state.upgrades {
+            match upgrades.poll(&mut *state.background, &mut state.session, &mut state.ipc) {
+                Ok(true) => {
+                    // Committed handoff already authorized this exit.
+                    // Retain that fact if a reentrant menu must unwind.
+                    state.handoff_completed = true;
+                }
+                Ok(false) => {}
+                Err(_) => {
+                    // A failed cleanup retains the claim and all process
+                    // witnesses. It must not exit and launch a second owner.
+                    if !state.upgrade_error
+                        && let Some(tray) = &mut state.tray
+                    {
+                        let _ = tray.notice("action_failed");
+                    }
+                    state.upgrade_error = true;
+                }
+            }
+            if let Some(notice) = upgrades.take_notice()
+                && let Some(tray) = &mut state.tray
+            {
+                let _ = tray.notice(notice);
+            }
+        }
+        state.finish_shutdown();
     }
 }
 
@@ -414,6 +470,10 @@ fn run_window(
             Some(session),
         )
     });
+    let wake = Event::new()?;
+    if let Some(upgrades) = &upgrades {
+        upgrades.notify_with(wake.notifier());
+    }
     let mut state = Box::new(WindowState {
         background,
         ipc,
@@ -426,7 +486,11 @@ fn run_window(
         upgrade_error: false,
         exit_after_settle: false,
         handoff_completed: false,
+        wake,
+        stop: crate::service_windows::worker_stop_event(),
     });
+    // The window procedure and this loop reach the state only through this pointer.
+    let shared: *mut WindowState = &mut *state;
     // SAFETY: the class, UTF-16 name and boxed state outlive this window and its
     // message loop. It is an invisible top-level window (not HWND_MESSAGE), so
     // Windows delivers end-session broadcasts. No pointer escapes destruction.
@@ -459,7 +523,7 @@ fn run_window(
             ptr::null_mut(),
             ptr::null_mut(),
             instance,
-            (&mut *state as *mut WindowState).cast(),
+            shared.cast(),
         );
         if window.is_null() {
             UnregisterClassW(name.as_ptr(), instance);
@@ -470,26 +534,14 @@ fn run_window(
             .transpose();
         let result = if let Err(error) = installed.as_ref() {
             Err(io::Error::other(error.to_string()))
-        } else if SetTimer(window, 1, 250, None) == 0 {
-            Err(io::Error::last_os_error())
         } else {
-            state.tray = installed.unwrap();
+            (*shared).tray = installed.unwrap();
             created(window);
-            let mut message = Message::default();
-            loop {
-                let result = GetMessageW(&mut message, ptr::null_mut(), 0, 0);
-                if result == 0 {
-                    break Ok(());
-                }
-                if result < 0 {
-                    break Err(io::Error::last_os_error());
-                }
-                TranslateMessage(&message);
-                DispatchMessageW(&message);
-            }
+            pump(window, shared)
         };
-        KillTimer(window, 1);
-        state.tray.take();
+        KillTimer(window, MENU_TIMER);
+        KillTimer(window, REVEAL_TIMER);
+        (*shared).tray.take();
         DestroyWindow(window);
         UnregisterClassW(name.as_ptr(), instance);
         result?;
@@ -503,10 +555,56 @@ fn run_window(
     }
 }
 
+/// Dispatch queued messages, then wait for input, an owned source's event or
+/// its nearest deadline. Only a source that is due is serviced.
+///
+/// # Safety
+/// `shared` is the live state of `window`, used only on its owning thread.
+unsafe fn pump(window: Handle, shared: *mut WindowState) -> io::Result<()> {
+    let mut message = Message::default();
+    loop {
+        // SAFETY: the caller guarantees the owning thread and live state; no
+        // reference into the state is held while messages are dispatched.
+        unsafe {
+            while PeekMessageW(&mut message, ptr::null_mut(), 0, 0, 1) != 0 {
+                if message.message == 0x0012 {
+                    return Ok(());
+                }
+                TranslateMessage(&message);
+                DispatchMessageW(&message);
+            }
+            let state = &mut *shared;
+            if let Some(tray) = &mut state.tray {
+                // Dispatched input may have changed the status shown.
+                let _ = tray.update(state.background.status());
+            }
+        }
+        let woken = {
+            // SAFETY: as above; this shared borrow ends before any dispatch.
+            let state = unsafe { &*shared };
+            let mut readiness = Readiness::default();
+            state.readiness(&mut readiness);
+            readiness.wait_with_messages()?
+        };
+        if woken != Woken::Input {
+            // A panic must not skip the window's native cleanup.
+            let ticked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                // SAFETY: as above.
+                unsafe { tick(window, &mut *shared) }
+            }));
+            if ticked.is_err() {
+                PROCEDURE_PANICKED.store(true, Ordering::Release);
+                // SAFETY: called on this window's owning thread.
+                unsafe { PostQuitMessage(1) };
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::{Arc, Mutex};
+    use std::sync::Mutex;
 
     static WINDOW_TEST: Mutex<()> = Mutex::new(());
 
@@ -713,5 +811,83 @@ mod tests {
         if let Some(error) = failure {
             std::panic::resume_unwind(error);
         }
+    }
+
+    struct Evented {
+        event: Arc<Event>,
+        polls: Arc<Mutex<Vec<std::time::Instant>>>,
+    }
+    impl crate::lifecycle::CutoverRuntime for Evented {}
+    impl ManagerLifecycle for Evented {
+        fn poll(&mut self) -> io::Result<()> {
+            self.polls.lock().unwrap().push(std::time::Instant::now());
+            Ok(())
+        }
+        fn quit_completed(&self) -> bool {
+            !self.polls.lock().unwrap().is_empty()
+        }
+        fn begin_session_end(&mut self) {}
+        fn session_end_settled(&self) -> bool {
+            true
+        }
+        fn session_end(&mut self) {}
+        fn cancel_session_end(&mut self) {}
+        fn readiness<'a>(&'a self, into: &mut Readiness<'a>) {
+            into.handle(self.event.as_handle());
+        }
+    }
+
+    #[test]
+    fn an_idle_window_never_polls_and_a_source_event_polls_it_promptly() {
+        let _window = WINDOW_TEST.lock().expect("native window test lock");
+        use std::{
+            sync::mpsc,
+            time::{Duration, Instant},
+        };
+        let event = Event::new().unwrap();
+        let polls = Arc::new(Mutex::new(Vec::new()));
+        let signalled = Arc::new(Mutex::new(None));
+        let (stop_watchdog, watchdog) = mpsc::channel::<()>();
+        let mut helpers = Vec::new();
+        run_window(
+            Box::new(Evented {
+                event: event.clone(),
+                polls: polls.clone(),
+            }),
+            None,
+            None,
+            None,
+            |window| {
+                let owned = window as usize;
+                helpers.push(std::thread::spawn(move || {
+                    if matches!(
+                        watchdog.recv_timeout(Duration::from_secs(5)),
+                        Err(mpsc::RecvTimeoutError::Timeout)
+                    ) {
+                        // SAFETY: run_window keeps this exact window alive until
+                        // the test stops the watchdog after the loop returns.
+                        unsafe { PostMessageW(owned as Handle, 0x0010, 0, 0) };
+                    }
+                }));
+                let signal = event.clone();
+                let at = signalled.clone();
+                helpers.push(std::thread::spawn(move || {
+                    // Longer than the former 250 ms timer, which would have polled.
+                    std::thread::sleep(Duration::from_millis(400));
+                    *at.lock().unwrap() = Some(Instant::now());
+                    signal.set();
+                }));
+            },
+        )
+        .unwrap();
+        drop(stop_watchdog);
+        for helper in helpers {
+            helper.join().unwrap();
+        }
+        let polls = polls.lock().unwrap();
+        let signalled = signalled.lock().unwrap().expect("the source was signalled");
+        assert_eq!(polls.len(), 1, "only the signalled source caused a poll");
+        assert!(polls[0] >= signalled, "no poll ran before the source event");
+        assert!(polls[0] - signalled < Duration::from_millis(200));
     }
 }

@@ -19,10 +19,19 @@ use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage, lifecycle::LifecycleFact},
     error::application::{ApplicationError, ErrorCode, Operation},
 };
-use std::{io, sync::Arc, time::Duration};
+use std::{
+    io,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 // A continuously replenished diagnostics queue must yield to native events.
 const EVENTS_PER_POLL: usize = 64;
+// Pacing: another owner's release and a changed ownership verdict publish no
+// notification, so a waiting manager reassesses at this interval.
+const OWNERSHIP_PACE: Duration = Duration::from_secs(1);
+// Pacing: a full supervisor input queue publishes no notification when it drains.
+const CONTROL_RETRY: Duration = Duration::from_millis(100);
 
 pub struct Background {
     installed: InstalledRuntime,
@@ -44,6 +53,14 @@ pub struct Background {
     reserved: Option<crate::session::claim::StartClaim>,
     designated: Option<crate::successor::InitialPermit>,
     reporter: Option<crate::successor::Reporter>,
+    /// Signaled by supervisor observations and successor reports.
+    #[cfg(windows)]
+    wake: Arc<crate::wake::windows::Event>,
+    backlog: bool,
+    next_start: Option<Instant>,
+    control_retry: Option<Instant>,
+    /// A refused uninstall stop is retried at the control pace.
+    stop_retry: Option<Instant>,
 }
 
 impl Background {
@@ -53,14 +70,14 @@ impl Background {
         activity: fn() -> Box<dyn SessionActivity>,
         diagnostics: Arc<Diagnostics>,
         initial: StartKind,
-    ) -> Self {
+    ) -> io::Result<Self> {
         let ownership = Ownership::new(
             installed.target.storage_root().to_path_buf(),
             session,
             activity(),
             Box::new(BootRecordLocator::new(installed.target.storage_root())),
         );
-        Self {
+        Ok(Self {
             installed,
             ownership,
             activity,
@@ -80,7 +97,13 @@ impl Background {
             reserved: None,
             designated: None,
             reporter: None,
-        }
+            #[cfg(windows)]
+            wake: crate::wake::windows::Event::new()?,
+            backlog: false,
+            next_start: None,
+            control_retry: None,
+            stop_retry: None,
+        })
     }
 
     pub fn designated(
@@ -88,8 +111,61 @@ impl Background {
         permit: crate::successor::InitialPermit,
         reporter: crate::successor::Reporter,
     ) {
+        #[cfg(windows)]
+        reporter.notify_with(self.wake.notifier());
         self.designated = Some(permit);
         self.reporter = Some(reporter);
+    }
+
+    /// Install the wake before the first drain: earlier observations are queued.
+    fn supervise(&mut self, running: Running) {
+        #[cfg(windows)]
+        running.handle.notify_with(self.wake.notifier());
+        self.backlog = true;
+        self.running = Some(running);
+    }
+
+    /// What the host waits on before the next poll is due: the wake, the
+    /// supervising worker's return, and the deadlines of paced observations.
+    #[cfg(windows)]
+    pub fn readiness<'a>(&'a self, into: &mut crate::wake::windows::Readiness<'a>) {
+        use std::os::windows::io::AsHandle;
+        into.handle(self.wake.as_handle());
+        // While a refused stop waits for its retry, a supervisor that already
+        // returned would keep its handle signalled and spin the wait.
+        if self.stop_retry.is_none()
+            && let Some(settlement) = self.running.as_ref().and_then(Running::settlement)
+        {
+            into.handle(settlement);
+        }
+        if let Some(deadline) = self.next_deadline() {
+            into.at(deadline);
+        }
+    }
+
+    /// The nearest moment a poll is due without any notification.
+    pub fn next_deadline(&self) -> Option<Instant> {
+        let mut deadlines = Vec::with_capacity(4);
+        if self.running.is_some() && self.backlog {
+            deadlines.push(Instant::now());
+        }
+        deadlines.extend(self.control_retry);
+        deadlines.extend(self.stop_retry);
+        if !self.quitting {
+            deadlines.extend(
+                self.installation_watch
+                    .as_ref()
+                    .and_then(|watch| watch.next_check()),
+            );
+        }
+        if self.running.is_none() && !self.start_withheld() {
+            deadlines.push(self.next_start.unwrap_or_else(Instant::now));
+        }
+        deadlines.into_iter().min()
+    }
+
+    fn start_withheld(&self) -> bool {
+        self.suspended || self.blocked || self.quitting || self.cutover_pending
     }
     pub fn storage_root(&self) -> &std::path::Path {
         self.installed.target.storage_root()
@@ -162,6 +238,7 @@ impl Background {
         self.update_failed = true;
         self.blocked = false;
         self.reserved = Some(claim);
+        self.next_start = None;
     }
     pub fn watch_installation(
         &mut self,
@@ -175,13 +252,17 @@ impl Background {
         if let Some(running) = &self.running
             && !running.handle.request(Request::Stop)
         {
+            self.stop_retry = Some(Instant::now() + CONTROL_RETRY);
             return Err(io::ErrorKind::WouldBlock.into());
         }
+        self.stop_retry = None;
         self.quitting = true;
         self.suspended = true;
         Ok(())
     }
     pub fn poll(&mut self) -> io::Result<()> {
+        // Re-armed only if this poll's uninstall is refused again.
+        self.stop_retry = None;
         if let Some(result) = self.reporter.as_ref().and_then(|reporter| reporter.poll()) {
             self.reporter = None;
             if matches!(result, crate::successor::ReportResult::Rejected) {
@@ -198,7 +279,7 @@ impl Background {
         }
         self.restore_adopted_control()?;
         if let Some(running) = &mut self.running {
-            drain_events(
+            self.backlog = drain_events(
                 running,
                 &self.diagnostics,
                 EVENTS_PER_POLL,
@@ -233,7 +314,7 @@ impl Background {
                         self.quitting = true;
                         self.suspended = true;
                         if self.observation.pid.is_some() && !self.settlement_error_reported {
-                            self.running = Some(startup::stop_adopting(
+                            let cleanup = startup::stop_adopting(
                                 self.installed.target.clone(),
                                 SupervisorConfig::default(),
                                 Collaborators {
@@ -242,7 +323,8 @@ impl Background {
                                     versions: Box::new(self.installed.clone()),
                                     stop_signal: Box::new(PlatformStopSignal::default()),
                                 },
-                            )?);
+                            )?;
+                            self.supervise(cleanup);
                         }
                     }
                     if !self.settlement_error_reported {
@@ -254,10 +336,12 @@ impl Background {
                 Ok(None) => return Ok(()),
             }
         }
-        if self.suspended || self.blocked || self.quitting || self.cutover_pending {
+        if self.start_withheld() {
             return Ok(());
         }
         let initial = self.initial.take();
+        // Any outcome but a running supervisor is reassessed at the pace.
+        self.next_start = Some(Instant::now() + OWNERSHIP_PACE);
         let collaborators = Collaborators {
             session: (self.activity)(),
             probe: Box::new(self.installed.clone()),
@@ -298,7 +382,8 @@ impl Background {
                 );
                 self.waiting = None;
                 self.settlement_error_reported = false;
-                self.running = Some(running);
+                self.next_start = None;
+                self.supervise(running);
             }
             Start::Waiting(role) => {
                 let fact = diagnostics::waiting(&role);
@@ -332,6 +417,7 @@ impl Background {
         crate::failed_versions::FailedVersions::retry(self.installed.target.storage_root())?;
         self.blocked = false;
         self.update_failed = false;
+        self.next_start = None;
         self.poll()
     }
 
@@ -348,12 +434,14 @@ impl Background {
         }
         self.blocked = false;
         self.initial = Some(StartKind::Manual);
+        self.next_start = None;
         Ok(())
     }
 
     /// An adopted survivor has no heartbeat channel. Drain its verified process
     /// before launching a fresh incarnation with the canonical control channel.
     fn restore_adopted_control(&mut self) -> io::Result<()> {
+        self.control_retry = None;
         if !self.quitting
             && !self.suspended
             && self.observation.adopted
@@ -361,6 +449,7 @@ impl Background {
         {
             if let Err(error) = self.restart() {
                 if error.kind() == io::ErrorKind::WouldBlock {
+                    self.control_retry = Some(Instant::now() + CONTROL_RETRY);
                     return Ok(());
                 }
                 return Err(error);
@@ -456,6 +545,7 @@ impl Background {
     pub fn cancel_session_end(&mut self) {
         // A still-settling supervisor must exit before a fresh one may start.
         self.session_end.cancel(&mut self.suspended, self.quitting);
+        self.next_start = None;
         self.diagnostics.lifecycle(
             EventKind::StageCompleted,
             HostStage::Shutdown,
@@ -572,13 +662,16 @@ fn wait_session(running: &mut Running, diagnostics: &Diagnostics, bound: Duratio
     }
 }
 
+/// True when the limit was reached, so further observations may be queued.
 fn drain_events(
     running: &Running,
     diagnostics: &Diagnostics,
     limit: usize,
     mut observation: Option<&mut Observation>,
-) {
+) -> bool {
+    let mut drained = 0;
     for event in running.events.try_iter().take(limit) {
+        drained += 1;
         if let Some(observation) = &mut observation {
             observation.observe(&event);
         }
@@ -596,6 +689,7 @@ fn drain_events(
             )),
         );
     }
+    drained == limit
 }
 
 #[cfg(test)]

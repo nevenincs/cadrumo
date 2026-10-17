@@ -19,6 +19,13 @@ use std::{
     time::{Duration, Instant},
 };
 
+// Pacing: a cutover child's progress and a refused session claim publish no
+// notification to this thread.
+const ACTIVE_PACE: Duration = Duration::from_millis(250);
+// Pacing: a pending candidate waits for cutover eligibility, which includes a
+// blocked runtime's process exit and a contended start claim.
+const CANDIDATE_PACE: Duration = Duration::from_secs(1);
+
 pub struct Coordinator {
     current: Selection,
     next: Instant,
@@ -34,6 +41,7 @@ pub struct Coordinator {
     announced: Option<[u32; 3]>,
     cancelled: bool,
     resume_requested: bool,
+    notify: crate::wake::Slot,
 }
 impl Coordinator {
     pub fn new(current: Selection) -> Self {
@@ -52,6 +60,42 @@ impl Coordinator {
             announced: None,
             cancelled: false,
             resume_requested: false,
+            notify: crate::wake::Slot::default(),
+        }
+    }
+    /// Signal `notify` when a version discovery query finishes.
+    pub fn notify_with(&self, notify: crate::wake::Notify) {
+        self.notify.install(notify);
+    }
+    /// When the next poll is due. A discovery query in flight notifies instead.
+    pub fn readiness(
+        &self,
+        runtime: &dyn CutoverRuntime,
+        into: &mut crate::wake::windows::Readiness<'_>,
+    ) {
+        if runtime.stopping() && !self.cancelled {
+            into.now();
+            return;
+        }
+        if self.cancelled {
+            // Without a child or a resumption, one poll releases the rest.
+            if self.parent.is_some() || self.resume_requested {
+                into.after(ACTIVE_PACE);
+            } else if self.claim.is_some() || self.recovering.is_some() || self.candidate.is_some()
+            {
+                into.now();
+            }
+            return;
+        }
+        if self.recovering.is_some() || self.parent.is_some() {
+            into.after(ACTIVE_PACE);
+        } else if self.claim.is_some() {
+            into.at(self.deadline);
+            into.at(self.idle_retry);
+        } else if self.candidate.is_some() {
+            into.after(CANDIDATE_PACE);
+        } else if self.query.is_none() {
+            into.at(self.next);
         }
     }
     pub fn take_notice(&mut self) -> Option<&'static str> {
@@ -259,9 +303,14 @@ impl Coordinator {
             let selected = self.current.clone();
             let cancellation = self.cancellation.clone();
             let (send, receive) = mpsc::sync_channel(1);
+            let notify = self.notify.clone();
             std::thread::Builder::new()
                 .name("manager-version-discovery".into())
                 .spawn(move || {
+                    // Dropped after the sender, so a woken consumer observes the
+                    // result or the disconnection.
+                    let _notify = crate::wake::NotifyOnDrop(notify);
+                    let send = send;
                     let _ = send.send(crate::installation::newer(&selected, &cancellation));
                 })?;
             self.query = Some(receive);

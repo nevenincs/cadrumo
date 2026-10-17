@@ -202,6 +202,16 @@ pub fn admit_worker() -> io::Result<()> {
     let _ = WORKER_STOP.set(event);
     Ok(())
 }
+/// The broker's stop event for a service worker, for a host loop to wait on.
+/// Service containment is fixed at process start, so one admission suffices.
+pub fn worker_stop_event() -> Option<std::os::windows::io::BorrowedHandle<'static>> {
+    use std::os::windows::io::AsHandle;
+    if WORKER_STOP.get().is_none() && in_service_job() {
+        let _ = admit_worker();
+    }
+    WORKER_STOP.get().map(AsHandle::as_handle)
+}
+
 /// Cutover successors inherit the same job and acquire the same stop channel.
 pub fn worker_stop_requested() -> bool {
     if WORKER_STOP.get().is_none() && in_service_job() {
