@@ -24,6 +24,9 @@ fn is_project_python_logger(name: &str) -> bool {
 }
 
 pub fn level(event: &Event) -> Level {
+    if matches!(event.kind, EventKind::Panic) {
+        return Level::Critical;
+    }
     if event.failure.is_some() || event.webview_failure.is_some() {
         return Level::Error;
     }

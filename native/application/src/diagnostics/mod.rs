@@ -1,6 +1,7 @@
 pub mod helper;
 pub mod lifecycle;
 pub mod logging;
+pub mod panic;
 pub mod service;
 pub mod webview;
 
@@ -9,6 +10,7 @@ use crate::{
         helper::{HelperResult, HelperTiming},
         lifecycle::LifecycleFact,
         logging::{LogFile, LogPaths},
+        panic::PanicFact,
         service::ServiceFact,
         webview::WebviewFailure,
     },
@@ -20,8 +22,9 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
+    io::Write,
     path::{Path, PathBuf},
-    sync::Mutex,
+    sync::{Mutex, MutexGuard, TryLockError},
 };
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -42,6 +45,7 @@ pub enum EventKind {
     HostStopped,
     WindowCloseRequested,
     HostExitRequested,
+    Panic,
 }
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -49,6 +53,7 @@ pub enum DiagnosticSource {
     #[default]
     Desktop,
     Manager,
+    Installer,
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -104,6 +109,8 @@ pub struct Event {
     pub helper_result: Option<HelperResult>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub service: Option<ServiceFact>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub panic: Option<PanicFact>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -146,6 +153,9 @@ struct Context {
 pub struct Diagnostics {
     state: Mutex<State>,
     source: DiagnosticSource,
+    // The panic path reads this without the state lock, which the panicking
+    // code may hold; configuration is its only writer.
+    panic_log: Mutex<Option<PathBuf>>,
 }
 impl Diagnostics {
     /// The first event of this process, retained even after the event ring wraps.
@@ -178,6 +188,8 @@ impl Diagnostics {
         {
             // Final environment projection may repeat the early startup sink.
             // Update its rotation policy without replaying records already written.
+            *self.panic_log.lock().unwrap_or_else(|e| e.into_inner()) =
+                Some(file.paths.current.clone());
             state.file = Some(file);
             state.pending_replay = None;
             return Ok(());
@@ -201,8 +213,10 @@ impl Diagnostics {
                 replay.through = event.sequence;
             }
         }
+        let current = file.paths.current.clone();
         state.file = Some(file);
         state.pending_replay = None;
+        *self.panic_log.lock().unwrap_or_else(|e| e.into_inner()) = Some(current);
         Ok(())
     }
     pub fn event(&self, kind: EventKind, process: Option<u64>, failure: Option<ApplicationError>) {
@@ -244,6 +258,7 @@ impl Diagnostics {
             helper_timing: context.helper_timing,
             helper_result: context.helper_result,
             service: context.service,
+            panic: None,
         };
         state.first_event_ms.get_or_insert(event.timestamp_ms);
         if let Some(file) = &state.file {
@@ -253,6 +268,64 @@ impl Diagnostics {
             state.events.pop_front();
         }
         state.events.push_back(event);
+    }
+    /// The panic hook's record. It runs on the panicking thread before unwinding,
+    /// so it never waits for a diagnostics lock: the event ring is joined only when its lock
+    /// is free, and the line is appended straight to the configured file without
+    /// rotation. Without a file, or when the file refuses, the line goes to
+    /// standard error, which never carries the payload.
+    pub fn panicked(&self, fact: PanicFact) {
+        let mut event = Event {
+            sequence: 0,
+            source: self.source,
+            timestamp_ms: timestamp_ms(),
+            host_pid: std::process::id(),
+            kind: EventKind::Panic,
+            process: None,
+            failure: None,
+            status: None,
+            stage: None,
+            role: None,
+            outcome: None,
+            host_exit_code: None,
+            lifecycle: None,
+            webview_failure: None,
+            helper_timing: None,
+            helper_result: None,
+            service: None,
+            panic: Some(fact),
+        };
+        if let Some(mut state) = try_guard(&self.state) {
+            state.next_event += 1;
+            event.sequence = state.next_event;
+            state.first_event_ms.get_or_insert(event.timestamp_ms);
+            if state.events.len() == 512 {
+                state.events.pop_front();
+            }
+            state.events.push_back(event.clone());
+        }
+        let mut line = serde_json::to_vec(&event)
+            .unwrap_or_else(|_| br#"{"kind":"panic","panic":null}"#.to_vec());
+        line.push(b'\n');
+        let written = try_guard(&self.panic_log)
+            .and_then(|current| current.clone())
+            .is_some_and(|current| logging::append_unrotated(&current, &line).is_ok());
+        if !written {
+            let _ = std::io::stderr().write_all(&line);
+        }
+    }
+    /// A panic that a boundary contained; the hook has already recorded where it
+    /// was raised, this records which operation it ended.
+    pub fn contained_panic(&self, stage: Option<HostStage>, operation: Operation) {
+        self.record(
+            EventKind::Failure,
+            None,
+            Some(ApplicationError::new(ErrorCode::Panic, operation)),
+            Context {
+                stage,
+                ..Context::default()
+            },
+        );
     }
     pub fn helper_result(
         &self,
@@ -470,6 +543,60 @@ impl Diagnostics {
         }
     }
 }
+/// A guard only when it is free now; a poisoned lock still yields its data.
+fn try_guard<T>(lock: &Mutex<T>) -> Option<MutexGuard<'_, T>> {
+    match lock.try_lock() {
+        Ok(guard) => Some(guard),
+        Err(TryLockError::Poisoned(poisoned)) => Some(poisoned.into_inner()),
+        Err(TryLockError::WouldBlock) => None,
+    }
+}
 fn poisoned() -> ApplicationError {
     ApplicationError::new(ErrorCode::LockPoisoned, Operation::Logging)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    fn fact() -> PanicFact {
+        PanicFact::new(Some(std::panic::Location::caller()), Some("t"), 1, None)
+    }
+
+    fn panic_lines(directory: &Path) -> usize {
+        std::fs::read_to_string(directory.join("cadrumo-native.jsonl"))
+            .unwrap_or_default()
+            .lines()
+            .filter(|line| line.contains("\"kind\":\"panic\""))
+            .count()
+    }
+
+    #[test]
+    fn a_held_or_poisoned_state_lock_never_stops_the_panic_record() {
+        let directory = tempfile::tempdir().unwrap();
+        let diagnostics = Arc::new(Diagnostics::default());
+        diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
+        {
+            // The panicking code itself may hold the state lock.
+            let _held = diagnostics.state.lock().unwrap();
+            diagnostics.panicked(fact());
+        }
+        assert_eq!(panic_lines(directory.path()), 1);
+        assert!(diagnostics.snapshot(0).events.is_empty());
+        let poisoner = diagnostics.clone();
+        std::thread::spawn(move || {
+            let _held = poisoner.state.lock().unwrap();
+            panic!("poison the state lock");
+        })
+        .join()
+        .unwrap_err();
+        diagnostics.panicked(fact());
+        assert_eq!(panic_lines(directory.path()), 2);
+        let events = diagnostics.snapshot(0).events;
+        assert!(matches!(
+            events.last().map(|e| e.kind),
+            Some(EventKind::Panic)
+        ));
+    }
 }

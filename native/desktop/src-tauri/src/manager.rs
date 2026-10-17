@@ -169,7 +169,9 @@ impl ManagerStart {
                         Ok(target) => target,
                         Err(error) => {
                             // Failed/cancelled optional installation restores GUI ownership.
-                            let _ = owner.dispatch(false, false).await;
+                            if let Err(restored) = owner.dispatch(false, false).await {
+                                owner.diagnostics.host_failure(HostStage::Manager, restored);
+                            }
                             return Err(error);
                         }
                     };
@@ -263,6 +265,8 @@ impl ManagerStart {
 
     pub async fn close_checked(&self) -> Result<()> {
         if let Err(error) = self.observation.set_state(ManagerState::Stopping) {
+            self.diagnostics
+                .host_failure(HostStage::Shutdown, error.clone());
             self.observation.observation_failed(error);
         }
         self.observation.close();
@@ -279,7 +283,11 @@ impl ManagerStart {
         let result = self.stop_owned().await;
         match &result {
             Ok(()) => {
-                let _ = self.observation.set_state(ManagerState::Stopped);
+                if let Err(error) = self.observation.set_state(ManagerState::Stopped) {
+                    self.diagnostics
+                        .host_failure(HostStage::Shutdown, error.clone());
+                    self.observation.observation_failed(error);
+                }
             }
             Err(error) => self.report_failure(error.clone()),
         }

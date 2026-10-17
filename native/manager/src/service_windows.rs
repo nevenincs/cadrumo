@@ -25,6 +25,8 @@ const STOP_BOUND: Duration = Duration::from_secs(10);
 const RECONCILE: Duration = Duration::from_secs(5);
 const JOB_QUERY: u32 = 4;
 const SESSION_LOGON: u32 = 5;
+/// ERROR_PROCESS_ABORTED: the SCM records it in the System event log.
+const BROKER_PANICKED: u32 = 1067;
 static STOP: AtomicBool = AtomicBool::new(false);
 static LOGONS: Mutex<BTreeSet<u32>> = Mutex::new(BTreeSet::new());
 static WORKER_STOP: OnceLock<OwnedHandle> = OnceLock::new();
@@ -565,10 +567,14 @@ unsafe extern "system" fn service_main(_: u32, _: *mut *mut u16) {
     if handle.is_null() {
         return;
     }
-    let outcome = broker(handle);
-    let error = outcome
-        .err()
-        .map_or(0, |error| error.raw_os_error().unwrap_or(1) as u32);
+    // SYSTEM has no diagnostics file. A panic cannot unwind into the SCM
+    // dispatcher; contained, it becomes the stop code the SCM logs.
+    let error = match std::panic::catch_unwind(|| broker(handle)) {
+        Ok(outcome) => outcome
+            .err()
+            .map_or(0, |error| error.raw_os_error().unwrap_or(1) as u32),
+        Err(_) => BROKER_PANICKED,
+    };
     let _ = status(handle, SERVICE_STOPPED, error, 0);
 }
 /// Service mode never enters the ordinary manager/runtime startup path as SYSTEM.

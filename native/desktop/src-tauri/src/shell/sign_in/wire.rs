@@ -147,12 +147,16 @@ pub enum Outcome {
 
 pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
     let envelope: Envelope = if output.success {
-        serde_json::from_slice(&output.stdout).map_err(|_| failure(ErrorCode::ReadFailed))?
+        serde_json::from_slice(&output.stdout).map_err(|error| {
+            failure(ErrorCode::ReadFailed)
+                .with_reason("helper_success_parse")
+                .caused_by(error)
+        })?
     } else {
         error_envelope(&output.stderr)?
     };
     if envelope.schema_version != "2" {
-        return Err(failure(ErrorCode::ReadFailed));
+        return Err(failure(ErrorCode::ReadFailed).with_reason("helper_schema_version"));
     }
     // An answer carries the command's own name. A refusal may carry none:
     // the product can refuse at startup, before it has read its command,
@@ -162,16 +166,16 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
     match envelope.status.as_str() {
         "success" | "warning" if named && output.success && envelope.error.is_none() => {
             Ok(Outcome::Success {
-                result: envelope
-                    .result
-                    .ok_or_else(|| failure(ErrorCode::ReadFailed))?,
+                result: envelope.result.ok_or_else(|| {
+                    failure(ErrorCode::ReadFailed).with_reason("helper_success_without_result")
+                })?,
                 active_profile: envelope.active_profile,
             })
         }
         "error" if (named || unnamed) && !output.success && envelope.result.is_none() => {
-            let error = envelope
-                .error
-                .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
+            let error = envelope.error.ok_or_else(|| {
+                failure(ErrorCode::ReadFailed).with_reason("helper_error_without_body")
+            })?;
             let context = error.context.unwrap_or_default();
             let code = context.get("reason").cloned().unwrap_or(error.code);
             // Only a code crosses IPC; translated error messages and arbitrary
@@ -180,7 +184,7 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
                 || code.len() > 160
                 || !code.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
             {
-                return Err(failure(ErrorCode::ReadFailed));
+                return Err(failure(ErrorCode::ReadFailed).with_reason("helper_refusal_code_shape"));
             }
             // The runtime uses lower-case public reasons. Throttling carries
             // authentication_required plus the typed sign-in provenance; do
@@ -207,9 +211,16 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
                 Some(
                     context
                         .get("seconds")
-                        .ok_or_else(|| failure(ErrorCode::ReadFailed))?
+                        .ok_or_else(|| {
+                            failure(ErrorCode::ReadFailed)
+                                .with_reason("helper_throttle_seconds_missing")
+                        })?
                         .parse()
-                        .map_err(|_| failure(ErrorCode::ReadFailed))?,
+                        .map_err(|error| {
+                            failure(ErrorCode::ReadFailed)
+                                .with_reason("helper_throttle_seconds_parse")
+                                .caused_by(error)
+                        })?,
                 )
             } else {
                 None
@@ -221,7 +232,7 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
                 },
             })
         }
-        _ => Err(failure(ErrorCode::ReadFailed)),
+        _ => Err(failure(ErrorCode::ReadFailed).with_reason("helper_status_unexpected")),
     }
 }
 
@@ -236,10 +247,14 @@ fn error_envelope(bytes: &[u8]) -> Result<Envelope> {
         .filter(|line| line.iter().any(|byte| !byte.is_ascii_whitespace()));
     let last = lines
         .next_back()
-        .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
-    let envelope = serde_json::from_slice(last).map_err(|_| failure(ErrorCode::ReadFailed))?;
+        .ok_or_else(|| failure(ErrorCode::ReadFailed).with_reason("helper_stderr_empty"))?;
+    let envelope = serde_json::from_slice(last).map_err(|error| {
+        failure(ErrorCode::ReadFailed)
+            .with_reason("helper_stderr_envelope_parse")
+            .caused_by(error)
+    })?;
     if lines.any(|line| serde_json::from_slice::<Envelope>(line).is_ok()) {
-        return Err(failure(ErrorCode::ReadFailed));
+        return Err(failure(ErrorCode::ReadFailed).with_reason("helper_stderr_envelope_ambiguous"));
     }
     Ok(envelope)
 }

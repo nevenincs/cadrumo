@@ -14,7 +14,7 @@ mod terminal;
 
 use cadrumo_application::{
     child::ChildConfiguration,
-    diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
+    diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage, panic},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     process,
 };
@@ -56,12 +56,13 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
             .to_owned(),
     };
     let parent = environment::Parent::current()?;
+    // Before the window exists, so a panic in any webview callback has a durable sink.
+    startup_logging::configure(&parent, &diagnostics);
     if matches!(mode, Ok(launch::Mode::Gui)) {
         #[cfg(windows)]
         contain_application()?;
         return app::run(root, parent, diagnostics);
     }
-    startup_logging::configure(&parent, &diagnostics);
     diagnostics.host_event(EventKind::StageStarted, HostStage::Environment);
     let launch =
         tauri::async_runtime::block_on(environment::resolve(root, &parent, diagnostics.clone()))
@@ -186,9 +187,9 @@ fn main() {
     #[cfg(windows)]
     cadrumo_platform::desktop::attach_parent_console();
     let diagnostics = Arc::new(Diagnostics::default());
-    // Report after unwinding: hooks run before locks held by the panicking code release.
-    // Suppress Rust's default hook, which can expose private payloads on stderr.
-    std::panic::set_hook(Box::new(|_| {}));
+    // Every panic, on any thread and including one that cannot unwind, is recorded
+    // before unwinding; the record never carries the payload the default hook prints.
+    panic::install(diagnostics.clone());
     let outcome =
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(diagnostics.clone())))
             .unwrap_or_else(|_| Err(ApplicationError::new(ErrorCode::Panic, Operation::Launch)));

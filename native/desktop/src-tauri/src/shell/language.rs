@@ -296,7 +296,7 @@ async fn desktop_language_set(
 }
 
 #[tauri::command]
-fn desktop_language_observe(
+async fn desktop_language_observe(
     host: State<'_, Arc<LanguageHost>>,
     updates: Channel<DesktopLanguage>,
 ) -> Result<u32> {

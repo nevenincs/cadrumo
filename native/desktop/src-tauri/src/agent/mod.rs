@@ -46,6 +46,7 @@ impl Refused {
 pub struct AgentHost {
     supervisor: Supervisor,
     session: Session,
+    diagnostics: Arc<Diagnostics>,
     sign_in: Arc<SignIn>,
     attendance: std::sync::Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
 }
@@ -80,8 +81,9 @@ impl AgentHost {
             })
         });
         Self {
-            supervisor: Supervisor::new(observe, changed, Some(launch), diagnostics),
+            supervisor: Supervisor::new(observe, changed, Some(launch), diagnostics.clone()),
             session: Session::default(),
+            diagnostics,
             sign_in: held,
             attendance: std::sync::Mutex::new(None),
         }
@@ -105,6 +107,7 @@ impl AgentHost {
                 cadrumo_application::error::application::ErrorCode::ReadFailed,
                 cadrumo_application::error::application::Operation::Cli,
             )
+            .with_reason("person_not_signed_in")
         })?;
         self.sign_in.person(&self.sign_in.profile_id(&profile)?)
     }
@@ -151,10 +154,23 @@ impl AgentHost {
                 cadrumo_application::error::application::ApplicationError::new(
                     cadrumo_application::error::application::ErrorCode::ReadFailed,
                     cadrumo_application::error::application::Operation::Cli,
-                ),
+                )
+                .with_reason("person_not_signed_in"),
             );
         }
         Ok(())
+    }
+
+    /// The column receives only `code`; the failure behind it is recorded with
+    /// its reason and cause chain.
+    fn refuse(
+        &self,
+        code: &str,
+        error: cadrumo_application::error::application::ApplicationError,
+    ) -> Refused {
+        self.diagnostics
+            .host_failure(cadrumo_application::diagnostics::HostStage::Agent, error);
+        Refused::new(code.to_owned())
     }
 }
 
@@ -271,7 +287,7 @@ async fn blocking<T: Send + 'static>(
     let host = host.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         host.require_person()
-            .map_err(|_| Refused::new("agent_signed_out".to_owned()))?;
+            .map_err(|error| host.refuse("agent_signed_out", error))?;
         work(&host)
     })
     .await
@@ -324,7 +340,7 @@ async fn agent_provider_catalog(
 ) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
         host.administer(serde_json::json!({"action":"catalog"}), None)
-            .map_err(|_| Refused::new("agent_service_failed".to_owned()))
+            .map_err(|error| host.refuse("agent_service_failed", error))
     })
     .await
 }

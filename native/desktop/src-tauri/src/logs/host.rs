@@ -74,6 +74,7 @@ impl HostEvents {
                 notice.webview_failure = None;
                 notice.outcome = None;
                 notice.host_exit_code = None;
+                notice.panic = None;
                 fresh.push(entry(&notice));
             }
             self.write_failure = failure;
@@ -110,6 +111,7 @@ pub(super) fn entry(event: &Event) -> Entry {
     let (source, logger) = match event.source {
         DiagnosticSource::Desktop => (SOURCE, LOGGER),
         DiagnosticSource::Manager => ("manager", "manager"),
+        DiagnosticSource::Installer => ("installer", "installer"),
     };
     let process = event.status.as_ref().map_or_else(
         || ProcessRef {
@@ -157,12 +159,27 @@ pub(super) fn entry(event: &Event) -> Entry {
         if let Some(code) = failure.os_code {
             context.insert("os_code".into(), Value::from(code));
         }
+        failure_chain_context(failure, &mut context);
     }
     if let Some(fact) = event.lifecycle {
         super::manager::lifecycle_context(fact, &mut context);
     }
     if let Some(fact) = event.webview_failure {
         webview_context(fact, &mut context);
+    }
+    if let Some(fact) = &event.panic {
+        // Location and thread only: the hook never retains the panic message.
+        if let Some(file) = &fact.file {
+            context.insert("panic_file".into(), Value::from(file.clone()));
+        }
+        for (name, value) in [("panic_line", fact.line), ("panic_column", fact.column)] {
+            if let Some(value) = value {
+                context.insert(name.into(), Value::from(value));
+            }
+        }
+        context.insert("panic_thread".into(), Value::from(fact.thread.clone()));
+        context.insert("panic_thread_id".into(), Value::from(fact.thread_id));
+        context.insert("panic_category".into(), Value::from(token(fact.category)));
     }
     if let Some(fact) = event.helper_timing {
         context.insert("helper_kind".into(), Value::from(token(fact.helper_kind)));
@@ -182,6 +199,9 @@ pub(super) fn entry(event: &Event) -> Entry {
         }
     }
     if let Some(fact) = &event.helper_result {
+        if let Some(trace) = &fact.trace_id {
+            context.insert("trace_id".into(), Value::from(trace.clone()));
+        }
         context.insert("command".into(), Value::from(fact.command));
         context.insert("executable".into(), Value::from(token(fact.executable)));
         context.insert(
@@ -226,6 +246,13 @@ pub(super) fn entry(event: &Event) -> Entry {
         }
     }
     let mut message = token(event.kind);
+    if let Some(fact) = &event.panic {
+        message.push_str(&format!(": {}", token(fact.category)));
+        if let (Some(file), Some(line)) = (&fact.file, fact.line) {
+            message.push_str(&format!(" at {file}:{line}"));
+        }
+        message.push_str(&format!(" on thread {}", fact.thread));
+    }
     if let Some(fact) = event.service {
         let encoded = serde_json::to_value(fact).expect("closed service fact serializes");
         message = encoded["event"]
@@ -276,6 +303,9 @@ pub(super) fn entry(event: &Event) -> Entry {
                 .unwrap_or_default(),
             failure.message
         ));
+        if let Some(chain) = failure.chain_summary() {
+            message.push_str(&format!(" [{chain}]"));
+        }
     }
     let level = super::severity::level(event);
     Entry {
@@ -288,6 +318,27 @@ pub(super) fn entry(event: &Event) -> Entry {
         detail: None,
         process: Some(process),
         context,
+    }
+}
+
+/// The failure's check reason and each cause as payload-free context.
+pub(super) fn failure_chain_context(
+    failure: &cadrumo_application::error::application::ApplicationError,
+    context: &mut BTreeMap<String, Value>,
+) {
+    if let Some(reason) = &failure.reason {
+        context.insert("failure_reason".into(), Value::from(reason.to_string()));
+    }
+    if !failure.causes.is_empty() {
+        let chain: Vec<String> = failure.causes.iter().map(|cause| cause.summary()).collect();
+        context.insert("causes".into(), Value::from(chain.join(" <- ")));
+    }
+    let trace = failure.causes.iter().find_map(|cause| match cause {
+        cadrumo_application::error::application::Cause::Child(refusal) => refusal.trace_id.clone(),
+        _ => None,
+    });
+    if let Some(trace) = trace {
+        context.insert("trace_id".into(), Value::from(trace));
     }
 }
 
@@ -414,6 +465,7 @@ mod tests {
             "schema_version":"2", "command":"config.login", "status":"error",
             "active_profile":"PRIVATE-PROFILE-CANARY",
             "error":{"code":"INTERNAL", "message":"PRIVATE-MESSAGE-CANARY",
+                "trace_id":"0123456789abcdef0123456789abcdef",
                 "context":{"reason":"unexpected_failure", "exception_type":"AttributeError",
                     "raised_at":"cadrumo_runtime.host.connection:submit:42",
                     "private":"PRIVATE-CONTEXT-CANARY"}}
@@ -436,6 +488,10 @@ mod tests {
             fact.raised_at.as_deref(),
             Some("cadrumo_runtime.host.connection:submit:42")
         );
+        assert_eq!(
+            fact.trace_id.as_deref(),
+            Some("0123456789abcdef0123456789abcdef")
+        );
         assert_eq!(fact.stdout_bytes, output.stdout.len() as u64);
         assert_eq!(fact.stderr_bytes, output.stderr.len() as u64);
         assert_eq!(event.process, Some(snapshot.processes[0].id));
@@ -457,6 +513,10 @@ mod tests {
         assert_eq!(record.context["command"], "config.login");
         assert_eq!(record.context["executable"], "cli");
         assert_eq!(record.context["exception_type"], "AttributeError");
+        assert_eq!(
+            record.context["trace_id"],
+            "0123456789abcdef0123456789abcdef"
+        );
         assert_eq!(record.context["stderr_bytes"], fact.stderr_bytes);
         let persisted = std::fs::read_to_string(snapshot.paths.unwrap().current).unwrap();
         for text in [

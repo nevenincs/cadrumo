@@ -19,7 +19,8 @@ mod fixture {
         VersionProbe,
     };
     use serde_json::{Value, json};
-    use std::collections::HashMap;
+    use sha2::{Digest, Sha256};
+    use std::collections::{BTreeMap, HashMap};
     use std::env;
     use std::ffi::c_void;
     use std::fs::{self, File, OpenOptions};
@@ -167,8 +168,21 @@ mod fixture {
         let environment: Vec<String> = env::vars_os()
             .map(|(name, _)| name.to_string_lossy().into_owned())
             .collect();
+        let package_fixed: BTreeMap<String, String> =
+            cadrumo_manager::contract::LAUNCH_PACKAGE_FIXED
+                .iter()
+                .filter_map(|(name, _)| {
+                    env::var(name).ok().map(|value| {
+                        (
+                            (*name).to_owned(),
+                            format!("{:x}", Sha256::digest(value.as_bytes())),
+                        )
+                    })
+                })
+                .collect();
         let record = json!({"pid": process::id(), "arguments": raw, "environment": environment,
-            "pinned_root": env::var(cadrumo_manager::contract::ROOT_VARIABLE).ok()});
+            "pinned_root": env::var(cadrumo_manager::contract::ROOT_VARIABLE).ok(),
+            "package_fixed_sha256": package_fixed});
         for index in 0.. {
             let path = root.join(format!("fixture-launch-{index}"));
             match OpenOptions::new().write(true).create_new(true).open(&path) {

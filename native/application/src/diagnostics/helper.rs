@@ -1,4 +1,7 @@
 //! Closed, payload-free monotonic timing facts for one sign-in helper attempt.
+use crate::error::application::admit::{
+    first_party_source as source, identifier, qualified, trace,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, Eq, PartialEq)]
@@ -73,41 +76,9 @@ pub struct HelperResult {
     pub exception_type: Option<String>,
     pub raised_at: Option<String>,
     pub native_subject: Option<String>,
-}
-fn identifier(value: &str) -> bool {
-    !value.is_empty()
-        && value.len() <= 160
-        && value
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'_')
-}
-fn qualified(value: &str) -> bool {
-    !value.is_empty() && value.len() <= 240 && value.split('.').all(identifier)
-}
-fn source(value: &str) -> bool {
-    let parts: Vec<_> = value.split(':').collect();
-    let first_party = [
-        "cadrumo",
-        "cadrumo_client",
-        "cadrumo_runtime",
-        "cadrumo_agent_service",
-        "cadrumo_harness",
-    ]
-    .iter()
-    .any(|root| {
-        parts[0] == *root
-            || parts[0]
-                .strip_prefix(root)
-                .is_some_and(|suffix| suffix.starts_with('.'))
-    });
-    parts.len() == 3
-        && first_party
-        && qualified(parts[0])
-        && identifier(parts[1])
-        && !parts[2].is_empty()
-        && parts[2].len() <= 10
-        && parts[2].bytes().all(|b| b.is_ascii_digit())
-        && parts[2].parse::<u32>().is_ok_and(|line| line > 0)
+    /// Correlates this row with the helper's own diagnostic log record.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trace_id: Option<String>,
 }
 impl HelperResult {
     pub fn unavailable(identity: HelperIdentity, stdout_bytes: u64, stderr_bytes: u64) -> Self {
@@ -122,6 +93,7 @@ impl HelperResult {
             exception_type: None,
             raised_at: None,
             native_subject: None,
+            trace_id: None,
         }
     }
     pub fn inspect(identity: HelperIdentity, success: bool, stdout: &[u8], stderr: &[u8]) -> Self {
@@ -136,6 +108,7 @@ impl HelperResult {
             exception_type: None,
             raised_at: None,
             native_subject: None,
+            trace_id: None,
         };
         let bytes = if success { stdout } else { stderr };
         let parse = |bytes: &[u8]| serde_json::from_slice::<serde_json::Value>(bytes);
@@ -220,6 +193,11 @@ impl HelperResult {
             fact.raised_at = context["raised_at"]
                 .as_str()
                 .filter(|v| source(v))
+                .map(str::to_owned);
+            fact.trace_id = error["trace_id"]
+                .as_str()
+                .or_else(|| context["trace_id"].as_str())
+                .filter(|v| trace(v))
                 .map(str::to_owned);
         }
         fact

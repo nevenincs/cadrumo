@@ -91,6 +91,7 @@ fn rotation_bounds_files_and_capture_reports_discarded_bytes() {
             helper_timing: None,
             helper_result: None,
             service: None,
+            panic: None,
         })
         .unwrap();
     }

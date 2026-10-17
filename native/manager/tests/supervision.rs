@@ -9,8 +9,8 @@
 mod startup_cases;
 
 use cadrumo_manager::contract::{
-    CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, LAUNCH_NAMES, NAMESPACE_PREFIX,
-    PINNED_ENV, ROOT_VARIABLE,
+    CLEARED_NAMES, CLEARED_PREFIXES, HOST_INHERITED_ENV, LAUNCH_NAMES, LAUNCH_PACKAGE_FIXED,
+    NAMESPACE_PREFIX, PINNED_ENV, ROOT_VARIABLE,
 };
 use cadrumo_manager::session::claim::StartClaim;
 use cadrumo_manager::session::ownership::{BootRecordLocator, Role, WaitReason, reserve_restart};
@@ -26,6 +26,7 @@ use cadrumo_manager::supervision::supervisor::{
     VersionProbe,
 };
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 use std::io::{BufRead, BufReader, Write};
 use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
@@ -456,7 +457,9 @@ fn the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment() 
     assert!(!environment.is_empty());
     for name in environment {
         let name = name.as_str().expect("variable name");
-        if !PINNED_ENV.contains(&name) {
+        if !PINNED_ENV.contains(&name)
+            && !LAUNCH_PACKAGE_FIXED.iter().any(|(fixed, _)| *fixed == name)
+        {
             assert!(
                 !CLEARED_NAMES.contains(&name)
                     && !LAUNCH_NAMES
@@ -482,6 +485,23 @@ fn the_runtime_gets_the_supervised_arguments_and_canonical_strict_environment() 
             .iter()
             .any(|name| name.as_str() == Some(ROOT_VARIABLE))
     );
+    let fixed = launch["package_fixed_sha256"]
+        .as_object()
+        .expect("fixed package digests");
+    assert_eq!(fixed.len(), LAUNCH_PACKAGE_FIXED.len());
+    for (name, value) in LAUNCH_PACKAGE_FIXED {
+        let expected = format!("{:x}", Sha256::digest(value.as_bytes()));
+        assert_eq!(
+            fixed.get(*name).and_then(Value::as_str),
+            Some(expected.as_str()),
+            "{name}"
+        );
+        assert!(
+            environment
+                .iter()
+                .any(|entry| entry.as_str() == Some(*name))
+        );
+    }
 }
 
 #[test]

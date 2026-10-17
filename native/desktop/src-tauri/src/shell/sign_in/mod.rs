@@ -186,11 +186,13 @@ impl SignIn {
     pub(crate) fn profile_id(&self, label: &str) -> Result<String> {
         let observed = self.watch.latest()?;
         if observed.status.active_profile.as_deref() != Some(label) {
-            return Err(failure(ErrorCode::ReadFailed));
+            return Err(
+                failure(ErrorCode::ReadFailed).with_reason("profile_identity_other_profile")
+            );
         }
         observed
             .profile_id
-            .ok_or_else(|| failure(ErrorCode::ReadFailed))
+            .ok_or_else(|| failure(ErrorCode::ReadFailed).with_reason("profile_identity_absent"))
     }
 
     /// The current status if one is already known and fresh; never waits.
@@ -222,11 +224,10 @@ impl SignIn {
     /// Notes the person's input through the session this window holds, so a
     /// report starts no process and never waits on the credential lanes.
     fn record_activity(&self) -> Result<()> {
-        let profile_id = self
-            .watch
-            .latest()?
-            .profile_id
-            .ok_or_else(|| failure(ErrorCode::ReadFailed))?;
+        let profile_id =
+            self.watch.latest()?.profile_id.ok_or_else(|| {
+                failure(ErrorCode::ReadFailed).with_reason("activity_profile_absent")
+            })?;
         let held = self.person(&profile_id)?;
         let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
         person.exchange(serde_json::json!({"action": "activity"}))?;

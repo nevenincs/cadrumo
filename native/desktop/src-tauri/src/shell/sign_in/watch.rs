@@ -250,9 +250,11 @@ fn run(inner: &Inner) -> Result<()> {
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x0800_0000);
     }
-    let mut child = command
-        .spawn()
-        .map_err(|error| failure(ErrorCode::SpawnFailed).caused_by(error))?;
+    let mut child = command.spawn().map_err(|error| {
+        failure(ErrorCode::SpawnFailed)
+            .with_reason("sign_in_watch_spawn")
+            .caused_by(error)
+    })?;
     let output = child.stdout.take();
     *lock(&inner.input) = child.stdin.take();
     *lock(&inner.running) = Some(child);
@@ -260,7 +262,7 @@ fn run(inner: &Inner) -> Result<()> {
         lock(&inner.input).take();
     }
     let read = output
-        .ok_or_else(|| failure(ErrorCode::ReadFailed))
+        .ok_or_else(|| failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_stdout_missing"))
         .and_then(|output| follow(inner, output));
     lock(&inner.input).take();
     if let Some(mut child) = lock(&inner.running).take() {
@@ -280,12 +282,16 @@ fn follow(inner: &Inner, output: std::process::ChildStdout) -> Result<()> {
             .by_ref()
             .take(LINE_LIMIT + 1)
             .read_until(b'\n', &mut line)
-            .map_err(|error| failure(ErrorCode::ReadFailed).caused_by(error))?;
+            .map_err(|error| {
+                failure(ErrorCode::ReadFailed)
+                    .with_reason("sign_in_watch_read")
+                    .caused_by(error)
+            })?;
         if count == 0 {
             return Ok(());
         }
         if line.last() != Some(&b'\n') {
-            return Err(failure(ErrorCode::ReadFailed));
+            return Err(failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_line"));
         }
         publish(inner, observed(&line));
     }
@@ -302,15 +308,18 @@ struct Line {
 }
 
 fn observed(line: &[u8]) -> Result<Observed> {
-    let line: Line = serde_json::from_slice(line)
-        .map_err(|error| failure(ErrorCode::ReadFailed).caused_by(error))?;
+    let line: Line = serde_json::from_slice(line).map_err(|error| {
+        failure(ErrorCode::ReadFailed)
+            .with_reason("sign_in_watch_parse")
+            .caused_by(error)
+    })?;
     if line.kind != "sign_in"
         || line
             .profile_id
             .as_deref()
             .is_some_and(|id| !crate::shell::agent_access::wire::is_uuid(id))
     {
-        return Err(failure(ErrorCode::ReadFailed));
+        return Err(failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_shape"));
     }
     let status = match line.refusal {
         None => SignInStatus {
@@ -325,7 +334,7 @@ fn observed(line: &[u8]) -> Result<Observed> {
                 || code.len() > 160
                 || !code.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
             {
-                return Err(failure(ErrorCode::ReadFailed));
+                return Err(failure(ErrorCode::ReadFailed).with_reason("sign_in_watch_refusal"));
             }
             SignInStatus {
                 supported: true,

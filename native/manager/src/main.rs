@@ -3,32 +3,29 @@
 //! Package verification and ownership precede runtime supervision.
 #![windows_subsystem = "windows"]
 
+use cadrumo_application::diagnostics::{DiagnosticSource, Diagnostics, panic};
 #[cfg(windows)]
-use cadrumo_application::diagnostics::{
-    DiagnosticSource, Diagnostics, EventKind, HostOutcome, HostStage,
-};
+use cadrumo_application::diagnostics::{EventKind, HostOutcome, HostStage};
 use cadrumo_manager::{
     identity,
     invocation::{Intent, Invocation},
 };
-#[cfg(windows)]
-use std::sync::Arc;
 use std::{
     env,
     io::{self, Write},
     process::ExitCode,
+    sync::Arc,
 };
 
 const USAGE_ERROR: u8 = 2;
 const STARTUP_FAILED: u8 = 69;
 
 fn start(
+    diagnostics: Arc<Diagnostics>,
     breakaway_attempted: bool,
     intent: Intent,
     designation: Option<cadrumo_manager::cutover::Designation>,
 ) -> ExitCode {
-    #[cfg(windows)]
-    let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
     #[cfg(windows)]
     diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
     #[cfg(windows)]
@@ -46,7 +43,12 @@ fn start(
             diagnostics.host_stopped(0);
             ExitCode::SUCCESS
         }
-        Err(_) => {
+        Err(error) => {
+            use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+            diagnostics.failure(
+                ApplicationError::new(ErrorCode::ManagerUnavailable, Operation::Manager)
+                    .caused_by(error),
+            );
             diagnostics.host_stopped(i32::from(STARTUP_FAILED));
             let _ = writeln!(io::stderr(), "manager_startup_failed");
             cadrumo_manager::windows_lifecycle::show_startup_failure();
@@ -55,7 +57,7 @@ fn start(
     }
     #[cfg(not(windows))]
     {
-        let _ = (breakaway_attempted, intent, designation);
+        let _ = (diagnostics, breakaway_attempted, intent, designation);
         let _ = writeln!(io::stderr(), "manager_platform_unavailable");
         ExitCode::from(STARTUP_FAILED)
     }
@@ -192,6 +194,10 @@ fn run_windows(
 }
 
 fn main() -> ExitCode {
+    // First, so a panic on any thread is recorded once the log is configured,
+    // and the default hook never prints a payload.
+    let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
+    panic::install(diagnostics.clone());
     let arguments: Vec<_> = env::args_os().skip(1).collect();
     match Invocation::parse(&arguments) {
         #[cfg(windows)]
@@ -209,6 +215,7 @@ fn main() -> ExitCode {
                 return ExitCode::from(STARTUP_FAILED);
             }
             start(
+                diagnostics,
                 true,
                 if sign_in {
                     Intent::SignIn
@@ -223,8 +230,10 @@ fn main() -> ExitCode {
             let _ = writeln!(io::stderr(), "manager_platform_unavailable");
             ExitCode::from(STARTUP_FAILED)
         }
-        Ok(Invocation::Start { intent, breakaway }) => start(breakaway, intent, None),
-        Ok(Invocation::Cutover(designation)) => start(false, Intent::Manual, Some(designation)),
+        Ok(Invocation::Start { intent, breakaway }) => start(diagnostics, breakaway, intent, None),
+        Ok(Invocation::Cutover(designation)) => {
+            start(diagnostics, false, Intent::Manual, Some(designation))
+        }
         Ok(Invocation::SupportsRetry) => ExitCode::SUCCESS,
         Ok(Invocation::Version) => {
             match writeln!(

@@ -90,10 +90,17 @@ impl Startup {
         }
     }
 
+    pub fn diagnostics(&self) -> Arc<Diagnostics> {
+        self.diagnostics.clone()
+    }
+
     pub async fn settle(&self) {
         let task = self.task.lock().unwrap().take();
-        if let Some(task) = task {
-            let _ = task.await;
+        if let Some(task) = task
+            && task.await.is_err()
+        {
+            self.diagnostics
+                .contained_panic(Some(HostStage::Environment), Operation::Launch);
         }
     }
 }
@@ -141,8 +148,10 @@ fn startup_begin<R: tauri::Runtime>(app: tauri::AppHandle<R>, state: State<'_, A
             if let Some(manager) = app.try_state::<Arc<crate::manager::ManagerStart>>() {
                 tauri::async_runtime::block_on(manager.close());
             }
-            if let Some(sign_in) = app.try_state::<Arc<shell::sign_in::SignIn>>() {
-                let _ = tauri::async_runtime::block_on(sign_in.stop());
+            if let Some(sign_in) = app.try_state::<Arc<shell::sign_in::SignIn>>()
+                && let Err(error) = tauri::async_runtime::block_on(sign_in.stop())
+            {
+                startup.diagnostics.host_failure(HostStage::Shutdown, error);
             }
         }
     }));

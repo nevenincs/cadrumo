@@ -5,7 +5,7 @@ use cadrumo_application::{
         DiagnosticSource, Event, EventKind, HostOutcome, HostStage,
         lifecycle::{LifecycleFact, RuntimeExit, StopPath, SupervisorOutcome},
     },
-    error::application::{ApplicationError, ErrorCode, Operation},
+    error::application::{ApplicationError, Cause, ErrorCode, Operation, admit},
     process::status::{ProcessPhase, ProcessRole, ProcessStatus},
 };
 use serde::{Deserialize, Serialize, de::IgnoredAny};
@@ -29,6 +29,7 @@ struct WireEvent {
     host_exit_code: Option<i32>,
     lifecycle: Option<LifecycleFact>,
     service: Option<cadrumo_application::diagnostics::service::ServiceFact>,
+    panic: Option<cadrumo_application::diagnostics::panic::PanicFact>,
 }
 
 #[derive(Deserialize)]
@@ -41,6 +42,8 @@ struct WireFailure {
     _message: IgnoredAny,
     io_kind: Option<IoKind>,
     os_code: Option<i32>,
+    reason: Option<String>,
+    causes: Option<Vec<Cause>>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -130,9 +133,24 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         .failure
         .as_ref()
         .and_then(|failure| failure.io_kind.as_ref());
+    if wire.failure.as_ref().is_some_and(|failure| {
+        failure
+            .reason
+            .as_deref()
+            .is_some_and(|reason| !admit::identifier(reason))
+            || failure
+                .causes
+                .iter()
+                .flatten()
+                .any(|cause| !cause.admissible())
+    }) {
+        return None;
+    }
     let failure = wire.failure.as_ref().map(|failure| {
         let mut error = ApplicationError::new(failure.code, failure.operation);
         error.os_code = failure.os_code;
+        error.reason = failure.reason.clone().map(Into::into);
+        error.causes = failure.causes.clone().unwrap_or_default();
         error
     });
     let mut entry = host::entry(&Event {
@@ -153,6 +171,7 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         helper_timing: None,
         helper_result: None,
         service: wire.service,
+        panic: wire.panic,
     });
     if let Some(kind) = io_kind {
         field(&mut entry.context, "io_kind", kind);
@@ -315,6 +334,64 @@ mod tests {
                 .values()
                 .all(|value| !value.is_array() && !value.is_object())
         );
+    }
+
+    #[test]
+    fn persisted_failure_reasons_and_causes_reach_the_view_and_forgeries_are_refused() {
+        let mut wire = wire();
+        wire["failure"]["reason"] = Value::from("supervisor_spawn");
+        let entry = parse(&serde_json::to_vec(&wire).unwrap()).unwrap();
+        assert_eq!(entry.context["failure_reason"], "supervisor_spawn");
+        assert_eq!(entry.context["causes"], "io NotFound (os 2)");
+        assert!(
+            entry
+                .message
+                .contains("[supervisor_spawn <- io NotFound (os 2)]")
+        );
+        for (field, value) in [
+            ("reason", Value::from("PRIVATE CONTENT")),
+            (
+                "causes",
+                serde_json::json!([{"kind": "child", "raisedAt": "/home/person/private.py:1:2"}]),
+            ),
+            (
+                "causes",
+                serde_json::json!([{"kind": "io", "ioKind": "NotFound", "message": "PRIVATE"}]),
+            ),
+        ] {
+            let mut forged = wire.clone();
+            forged["failure"][field] = value;
+            assert!(parse(&serde_json::to_vec(&forged).unwrap()).is_none());
+        }
+    }
+
+    #[test]
+    fn persisted_manager_panics_are_admitted_as_critical_with_location_only() {
+        let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
+        diagnostics.panicked(cadrumo_application::diagnostics::panic::PanicFact::new(
+            Some(std::panic::Location::caller()),
+            Some("manager-supervisor"),
+            9,
+            Some("called `Result::unwrap()` on an `Err` value: PRIVATE-CONTENT-7f3a"),
+        ));
+        let wire = serde_json::to_vec(&diagnostics.snapshot(u64::MAX).events[0]).unwrap();
+        let entry = parse(&wire).unwrap();
+        assert_eq!(entry.level, Some(crate::logs::Level::Critical));
+        assert_eq!(entry.context["panic_file"], "src/logs/manager.rs");
+        assert_eq!(entry.context["panic_thread"], "manager-supervisor");
+        assert_eq!(entry.context["panic_thread_id"], 9);
+        assert_eq!(entry.context["panic_category"], "result_err");
+        assert!(
+            entry.context["panic_line"]
+                .as_u64()
+                .is_some_and(|line| line > 0)
+        );
+        assert!(
+            entry
+                .message
+                .starts_with("panic: result_err at src/logs/manager.rs:")
+        );
+        assert!(!format!("{entry:?}").contains("7f3a"));
     }
 
     #[test]

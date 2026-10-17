@@ -1443,8 +1443,11 @@ for index in range(total):
 
     #[tokio::test]
     async fn real_rotation_across_processes_while_tailing() {
+        use cadrumo_application::diagnostics::EventKind;
         use std::io::{BufRead, BufReader};
         let scratch = Scratch::new("python-rotation");
+        let diagnostics = Arc::new(Diagnostics::default());
+        diagnostics.event(EventKind::HostStarted, None, None);
         let package = package(&scratch.0).await;
         let mut holder = package
             .command(HOLDER, &scratch.0)
@@ -1571,7 +1574,7 @@ for index in range(total):
             log.clone(),
             log.with_file_name("cadrumo-manager.log"),
             &package.format,
-            Arc::new(Diagnostics::default()),
+            diagnostics,
         );
         let (_, frames) = subscribe(&hub);
         // Paced ticks until the last record settled and every batch is out.

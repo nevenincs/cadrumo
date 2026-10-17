@@ -1,5 +1,12 @@
 //! Explicit CMake maintenance support; MSI remains the distribution format.
 fn main() {
+    // No durable log of its own: a panic's redacted record goes to standard
+    // error for the calling build, never the payload the default hook prints.
+    cadrumo_application::diagnostics::panic::install(std::sync::Arc::new(
+        cadrumo_application::diagnostics::Diagnostics::new(
+            cadrumo_application::diagnostics::DiagnosticSource::Installer,
+        ),
+    ));
     let arguments: Vec<_> = std::env::args_os().skip(1).collect();
     if arguments.len() == 1 && matches!(arguments[0].to_str(), Some("--help" | "-h")) {
         println!(

@@ -667,7 +667,8 @@ the development tool locations are declared for no installed profile. Package-ow
 executables. These directories affect child-process PATH, not DLL search.
 `CADRUMO_CLI_REVEAL_IDENTIFIERS` is in the same group, so the installed command
 line can show profile and bucket identifiers when the person asks for them; it
-reveals no credential. In a package, a setting that no profile passes takes the
+reveals no credential. The runtime image takes no operator setting except this
+one, which the desktop's profile identity read through it requires. In a package, a setting that no profile passes takes the
 command line's default. No development environment template is copied into the
 package.
 

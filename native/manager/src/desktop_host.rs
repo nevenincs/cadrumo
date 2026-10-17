@@ -12,6 +12,7 @@ use crate::{
 use cadrumo_application::{
     component::Cancellation,
     diagnostics::{Diagnostics, EventKind, HostStage},
+    error::application::{ApplicationError, ErrorCode, Operation},
 };
 use std::{
     io,
@@ -46,6 +47,7 @@ pub struct DesktopHost {
     worker: Option<JoinHandle<io::Result<()>>>,
     closed: Arc<AtomicBool>,
     cancellation: Arc<Cancellation>,
+    diagnostics: Arc<Diagnostics>,
 }
 
 impl DesktopHost {
@@ -63,6 +65,7 @@ impl DesktopHost {
         let stopping = closed.clone();
         let cancellation = Arc::new(Cancellation::default());
         let admission_cancellation = cancellation.clone();
+        let recorded = diagnostics.clone();
         let worker = thread::Builder::new()
             .name("desktop-manager".into())
             .spawn(move || {
@@ -79,7 +82,11 @@ impl DesktopHost {
                             &admission_cancellation,
                         )
                     }))
-                    .unwrap_or_else(|_| Err(io::Error::other("desktop supervisor failed")));
+                    .unwrap_or_else(|_| {
+                        diagnostics
+                            .contained_panic(Some(HostStage::Supervision), Operation::Manager);
+                        Err(io::Error::other("desktop supervisor failed"))
+                    });
                     if result.is_ok() || stopping.load(Ordering::Acquire) || failures == 3 {
                         if result.is_err() {
                             *observed.lock().unwrap_or_else(|error| error.into_inner()) =
@@ -105,6 +112,7 @@ impl DesktopHost {
             worker: Some(worker),
             closed,
             cancellation,
+            diagnostics: recorded,
         })
     }
 
@@ -172,7 +180,13 @@ impl Drop for DesktopHost {
             self.closed.store(true, Ordering::Release);
             self.cancellation.cancel();
             let _ = self.commands.try_send(Command::Close);
-            let _ = self.join();
+            if let Err(error) = self.join() {
+                self.diagnostics.host_failure(
+                    HostStage::Shutdown,
+                    ApplicationError::new(ErrorCode::CleanupFailed, Operation::Manager)
+                        .caused_by(error),
+                );
+            }
         }
     }
 }
@@ -245,7 +259,10 @@ fn run(
                 }
                 Ok(())
             }))
-            .unwrap_or_else(|_| Err(io::Error::other("desktop supervisor poll failed")));
+            .unwrap_or_else(|_| {
+                diagnostics.contained_panic(Some(HostStage::Supervision), Operation::Manager);
+                Err(io::Error::other("desktop supervisor poll failed"))
+            });
             if let Err(error) = polled {
                 closing = true;
                 if terminal_error.is_none() {
@@ -344,6 +361,7 @@ mod tests {
             worker: Some(worker),
             closed: closed.clone(),
             cancellation,
+            diagnostics: Arc::new(Diagnostics::default()),
         };
         let started = Instant::now();
         assert_eq!(
@@ -378,6 +396,7 @@ mod tests {
             worker: Some(worker),
             closed: Arc::new(AtomicBool::new(false)),
             cancellation: Arc::new(Cancellation::default()),
+            diagnostics: Arc::new(Diagnostics::default()),
         };
         assert_eq!(
             host.close_with_bound(Duration::from_secs(1))

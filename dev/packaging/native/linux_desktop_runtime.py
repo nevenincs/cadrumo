@@ -12,6 +12,7 @@ from typing import Any, Literal
 
 from dev._paths import REPO_ROOT
 
+from .build_directory import require_enrolled_output
 from .hashing import digest
 from .layout import application_images, load_layout
 
@@ -30,7 +31,7 @@ DEPENDENCY_INPUTS = {
     # adds no features, preserving the reviewed GTK/WebKit provider envelope.
     "native/desktop/src-tauri/Cargo.lock": "01932c758e2ad80cedf79b8401077054564aabc7fac3888f98c70c89ca9f0d2c",
     "native/desktop/src-tauri/Cargo.toml": "ad78a4c00a3f6415e6d92e1ab12e98253f13d84b2fd7623a6c9ea8e21184876e",
-    "native/application/Cargo.toml": "22705f29eda1d68f6c0adfba39665f5112cba9c0971135aa1b4b8d389d645a29",
+    "native/application/Cargo.toml": "2e2f7aa92cad3b936326559ab24da93fba049d0dffda75abc5f7025b410eecf0",
     "native/platform/Cargo.toml": "34225e76a1da73fbb4dcf6654896d5ae85beebf12200cb5b72d0eea5ffa9675d",
 }
 
@@ -203,7 +204,7 @@ def main() -> None:
     """Generate CPack dependency inputs from the exact assembled payload."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--payload", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=require_enrolled_output, required=True)
     arguments = parser.parse_args()
     manifest = json.loads((arguments.payload / "data/package-manifest.json").read_text(encoding="utf-8"))
     included = validate_payload(arguments.payload, manifest)

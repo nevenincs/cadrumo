@@ -10,7 +10,12 @@ use std::{
     os::windows::process::CommandExt,
     process::{Command, Stdio},
     ptr,
+    sync::atomic::{AtomicBool, Ordering},
 };
+
+/// Set when a window procedure contained a panic; the message loop then ends
+/// and reports the failure instead of continuing on inconsistent state.
+static PROCEDURE_PANICKED: AtomicBool = AtomicBool::new(false);
 
 type Handle = *mut c_void;
 type WindowProc = unsafe extern "system" fn(Handle, u32, usize, isize) -> isize;
@@ -193,6 +198,20 @@ unsafe extern "system" fn procedure(
     wparam: usize,
     lparam: isize,
 ) -> isize {
+    // A panic cannot unwind into the system's message dispatch.
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        // SAFETY: the system calls this procedure with its own window arguments.
+        unsafe { dispatch(window, message, wparam, lparam) }
+    }))
+    .unwrap_or_else(|_| {
+        PROCEDURE_PANICKED.store(true, Ordering::Release);
+        // SAFETY: called on this window's owning thread.
+        unsafe { PostQuitMessage(1) };
+        0
+    })
+}
+
+unsafe fn dispatch(window: Handle, message: u32, wparam: usize, lparam: isize) -> isize {
     // SAFETY: WM_NCCREATE supplies a CREATESTRUCT whose first member is the
     // lpParam pointer passed to CreateWindowExW. The Box remains alive until
     // DestroyWindow returns, and all callbacks run on this owning thread.
@@ -475,7 +494,9 @@ fn run_window(
         UnregisterClassW(name.as_ptr(), instance);
         result?;
     }
-    if state.failed {
+    if PROCEDURE_PANICKED.swap(false, Ordering::AcqRel) {
+        Err(io::Error::other("manager_window_panicked"))
+    } else if state.failed {
         Err(io::Error::other("manager_runtime_unavailable"))
     } else {
         Ok(())
@@ -579,6 +600,32 @@ mod tests {
         )
         .unwrap();
         assert_eq!(*observed.lock().unwrap(), ["end", "cancel", "poll", "end"]);
+    }
+
+    struct PanicsOnPoll;
+    impl crate::lifecycle::CutoverRuntime for PanicsOnPoll {}
+    impl ManagerLifecycle for PanicsOnPoll {
+        fn poll(&mut self) -> io::Result<()> {
+            panic!("a window callback fails");
+        }
+        fn begin_session_end(&mut self) {}
+        fn session_end_settled(&self) -> bool {
+            true
+        }
+        fn session_end(&mut self) {}
+        fn cancel_session_end(&mut self) {}
+    }
+
+    #[test]
+    fn a_window_procedure_panic_ends_the_loop_as_a_failure_instead_of_aborting() {
+        let _window = WINDOW_TEST.lock().expect("native window test lock");
+        let error = run_window(Box::new(PanicsOnPoll), None, None, None, |window| {
+            // SAFETY: this test's own live window; WM_TIMER reaches the poll path.
+            assert_ne!(unsafe { PostMessageW(window, 0x0113, 1, 0) }, 0);
+        })
+        .unwrap_err();
+        assert_eq!(error.to_string(), "manager_window_panicked");
+        assert!(!PROCEDURE_PANICKED.load(Ordering::Acquire));
     }
 
     #[test]

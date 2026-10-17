@@ -442,6 +442,9 @@ image = "cadrumo-runtime"
 base = "groups"
 base_groups = ["system", "session", "display", "network"]
 pins = true
+# The desktop reads the active profile's identity through this image's sign-in
+# status command; the reveal opt-in un-redacts only opaque profile/bucket ids.
+pass = ["CADRUMO_CLI_REVEAL_IDENTIFIERS"]
 path = "package"
 
 [profiles.cadrumo-agent-service]
@@ -675,13 +678,13 @@ environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_TEMP_DIR = "scratch", CADRUM
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]
-name = "windows-runtime-keeps-no-operator-setting"
+name = "windows-runtime-keeps-no-operator-setting-but-the-identifier-reveal"
 platform = "windows"
 image = "cadrumo-runtime"
 arguments = []
 ambient = { SYSTEMROOT = "C:\\Windows", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_TEMP_DIR = "scratch", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_AGENT_PORT = "0" }
 profile = "cadrumo-runtime"
-environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_CLI_REVEAL_IDENTIFIERS = "1", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]

@@ -91,7 +91,18 @@ fn dispatch<R: Runtime>(
         };
         let presented = presented_token(invoke.message.payload(), invoke.message.headers());
         match token.verify(presented, Operation::Webview) {
-            Ok(()) => (module.handler)(invoke),
+            Ok(()) => {
+                // Synchronous commands run inside WebView2's request callback,
+                // which cannot unwind: an escaping panic would abort the host.
+                let resolver = invoke.resolver.clone();
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (module.handler)(invoke)))
+                    .unwrap_or_else(|_| {
+                        diagnostics.contained_panic(Some(HostStage::Window), Operation::Webview);
+                        resolver
+                            .reject(ApplicationError::new(ErrorCode::Panic, Operation::Webview));
+                        true
+                    })
+            }
             Err(error) => {
                 diagnostics.failure(error.clone());
                 invoke.resolver.reject(error);
@@ -185,8 +196,11 @@ pub fn run(
                         .clone();
                     startup.cancel();
                     let host = window.app_handle().clone();
-                    let _ = window.hide();
-                    tauri::async_runtime::spawn(async move {
+                    let diagnostics = startup.diagnostics();
+                    if let Err(error) = window.hide() {
+                        diagnostics.failure(webview_failure(error));
+                    }
+                    spawn_detached(host.clone(), diagnostics, HostStage::Shutdown, async move {
                         startup.settle().await;
                         host.exit(0);
                     });
@@ -327,8 +341,14 @@ pub(crate) async fn assemble<R: Runtime>(
                                 );
                             return;
                         }
-                        if let Some(loading) = window.app_handle().get_webview_window("startup") {
-                            let _ = loading.destroy();
+                        if let Some(loading) = window.app_handle().get_webview_window("startup")
+                            && let Err(error) = loading.destroy()
+                        {
+                            window
+                                .state::<Arc<TerminalState>>()
+                                .launch
+                                .diagnostics
+                                .failure(webview_failure(error));
                         }
                     }
                 })
@@ -340,24 +360,50 @@ pub(crate) async fn assemble<R: Runtime>(
     #[cfg(windows)]
     {
         let host = app.clone();
-        tauri::async_runtime::spawn(async move {
-            let mut lost_since = None;
-            while !manager.is_closed() {
-                if let Err(error) = supervision_continues(
-                    manager.supervision_status(),
-                    &mut lost_since,
-                    std::time::Instant::now(),
-                ) {
-                    manager.report_failure(error.clone());
-                    diagnostics.failure(error);
-                    host.exit(1);
-                    break;
+        spawn_detached(
+            app.clone(),
+            diagnostics.clone(),
+            HostStage::Manager,
+            async move {
+                let mut lost_since = None;
+                while !manager.is_closed() {
+                    if let Err(error) = supervision_continues(
+                        manager.supervision_status(),
+                        &mut lost_since,
+                        std::time::Instant::now(),
+                    ) {
+                        manager.report_failure(error.clone());
+                        diagnostics.failure(error);
+                        host.exit(1);
+                        break;
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
                 }
-                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-            }
-        });
+            },
+        );
     }
     Ok(())
+}
+
+fn webview_failure(error: tauri::Error) -> ApplicationError {
+    ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(error)
+}
+
+/// Nothing awaits a detached task; a panic in it is recorded and ends the host,
+/// which would otherwise keep running without the task's work.
+fn spawn_detached<R: Runtime>(
+    host: tauri::AppHandle<R>,
+    diagnostics: Arc<Diagnostics>,
+    stage: HostStage,
+    task: impl std::future::Future<Output = ()> + Send + 'static,
+) {
+    let task = tauri::async_runtime::spawn(task);
+    tauri::async_runtime::spawn(async move {
+        if task.await.is_err() {
+            diagnostics.contained_panic(Some(stage), Operation::Webview);
+            host.exit(1);
+        }
+    });
 }
 
 pub(crate) fn supervision_continues(
@@ -557,5 +603,57 @@ mod tests {
             .verify(presented_token(&body, &headers), Operation::Webview)
             .unwrap_err();
         assert_eq!(error.code, ErrorCode::InvalidArguments);
+    }
+
+    #[tauri::command]
+    fn panicking_command() -> Result<()> {
+        let private = std::hint::black_box("synthetic-private-value");
+        panic!("a synchronous command fails with {private}")
+    }
+
+    #[test]
+    fn a_panicking_synchronous_command_is_rejected_and_recorded_instead_of_aborting() {
+        let token = ShellToken::mint().unwrap();
+        let exact = token.value().to_owned();
+        let diagnostics = Arc::new(Diagnostics::default());
+        let modules = vec![crate::app::commands![panicking_command]];
+        let app = mock_builder()
+            .invoke_handler(dispatch(modules, token, diagnostics.clone()).unwrap())
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+        let reply = get_ipc_response(
+            &window,
+            InvokeRequest {
+                cmd: "panicking_command".into(),
+                callback: CallbackFn(0),
+                error: CallbackFn(1),
+                url: if cfg!(windows) {
+                    "http://tauri.localhost"
+                } else {
+                    "tauri://localhost"
+                }
+                .parse()
+                .unwrap(),
+                body: InvokeBody::Json(serde_json::json!({"token": exact})),
+                headers: HeaderMap::new(),
+                invoke_key: INVOKE_KEY.to_owned(),
+            },
+        )
+        .unwrap_err();
+        assert_eq!(reply["code"], "panic");
+        assert_eq!(reply["operation"], "webview");
+        assert!(!reply.to_string().contains("synthetic-private-value"));
+        let recorded = diagnostics.snapshot(u64::MAX).events;
+        assert!(recorded.iter().any(|event| {
+            matches!(event.kind, EventKind::Failure)
+                && event.stage == Some(HostStage::Window)
+                && event
+                    .failure
+                    .as_ref()
+                    .is_some_and(|failure| failure.code == ErrorCode::Panic)
+        }));
     }
 }

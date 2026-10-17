@@ -480,7 +480,8 @@ export type DiagnosticsEventKind =
   | "failure"
   | "host_stopped"
   | "window_close_requested"
-  | "host_exit_requested";
+  | "host_exit_requested"
+  | "panic";
 
 /** `ProcessPhase` in `native/application/src/process/status.rs`. */
 export type ProcessPhase = "running" | "exited" | "terminated" | "failed";
@@ -505,7 +506,7 @@ export type ProcessStatus = {
 export type DiagnosticsEvent = {
   /** Monotonic identity within this diagnostics instance. */
   sequence: number;
-  source: "desktop" | "manager";
+  source: "desktop" | "manager" | "installer";
   timestampMs: number;
   hostPid: number;
   kind: DiagnosticsEventKind;
@@ -525,6 +526,35 @@ export type DiagnosticsEvent = {
   webviewFailure?: WebviewFailure;
   helperTiming?: HelperTiming;
   helperResult?: HelperResult;
+  panic?: PanicFact;
+};
+
+/** `PanicFact` in `native/application/src/diagnostics/panic.rs`: never the message. */
+export type PanicFact = {
+  /** Crate-relative source path, without the build account's directories. */
+  file: string | null;
+  line: number | null;
+  column: number | null;
+  thread: string;
+  threadId: number;
+  category:
+    | "option_none"
+    | "result_err"
+    | "index_out_of_bounds"
+    | "slice_range"
+    | "arithmetic_overflow"
+    | "division_by_zero"
+    | "borrow_conflict"
+    | "lock_poisoned"
+    | "no_async_runtime"
+    | "nested_async_runtime"
+    | "unreachable"
+    | "unimplemented"
+    | "assertion"
+    | "allocation_failure"
+    | "cannot_unwind"
+    | "explicit"
+    | "unclassified";
 };
 
 export type HelperResult = {

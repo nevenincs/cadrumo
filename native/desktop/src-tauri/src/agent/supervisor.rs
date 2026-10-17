@@ -12,7 +12,7 @@
 use super::launcher::Event;
 use super::runner::{self, Signal, Supervised};
 use cadrumo_application::{
-    diagnostics::Diagnostics,
+    diagnostics::{Diagnostics, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
 use serde::Serialize;
@@ -278,7 +278,8 @@ impl Supervisor {
                     },
                 );
             } else if reply["kind"] != "starting" {
-                return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli));
+                return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("agent_start_reply_unexpected"));
             }
         } else {
             self.retry();
@@ -297,9 +298,10 @@ impl Supervisor {
         secret: Option<Zeroizing<Vec<u8>>>,
     ) -> Result<serde_json::Value> {
         self.begin();
-        let endpoint = lock(&self.shared.admin)
-            .clone()
-            .ok_or_else(|| ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli))?;
+        let endpoint = lock(&self.shared.admin).clone().ok_or_else(|| {
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("agent_admin_unavailable")
+        })?;
         endpoint.exchange(request, secret)
     }
 
@@ -307,7 +309,10 @@ impl Supervisor {
         let person = lock(&self.shared.running)
             .as_ref()
             .and_then(|running| running.person.clone())
-            .ok_or_else(|| ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli))?;
+            .ok_or_else(|| {
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("person_bridge_unavailable")
+            })?;
         lock(&person).exchange(request)
     }
 
@@ -357,8 +362,12 @@ impl Supervisor {
         self.shared.wake.notify_one();
         let worker = lock(&self.shared.worker).take();
         let stopped = stop_running(&self.shared, None, AgentStopCause::WindowClosing).await;
-        if let Some(worker) = worker {
-            let _ = worker.await;
+        if let Some(worker) = worker
+            && worker.await.is_err()
+        {
+            self.shared
+                .diagnostics
+                .contained_panic(Some(HostStage::Agent), Operation::Cli);
         }
         // Supervision may have stored a launcher while this closed; it stops
         // any it holds when it sees the close, and this stops what is left.
@@ -495,7 +504,13 @@ async fn start(
     };
     if let Some(supervised) = refused {
         let grace = shared.grace;
-        let _ = tauri::async_runtime::spawn_blocking(move || supervised.stop(grace)).await;
+        match tauri::async_runtime::spawn_blocking(move || supervised.stop(grace)).await {
+            Ok(Ok(_)) => {}
+            Ok(Err(error)) => shared.diagnostics.host_failure(HostStage::Agent, error),
+            Err(_) => shared
+                .diagnostics
+                .contained_panic(Some(HostStage::Agent), Operation::Cli),
+        }
     }
     Ok(())
 }
@@ -734,11 +749,27 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             let admitted = tauri::async_runtime::spawn_blocking(move || {
                 let mut person = lock(&person);
                 if person.identity["runtime_boot_id"] != runtime_boot_id || person.identity["profile_id"] != profile_id {
-                    return false;
+                    return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                        .with_reason("service_ready_identity_mismatch"));
                 }
-                person.exchange(serde_json::json!({"action":"service_admission", "recipient_connection_id":connection_id, "service_id":service_id}))
-                    .is_ok_and(|reply| reply["kind"] == "service_connected")
-            }).await.unwrap_or(false);
+                let reply = person.exchange(serde_json::json!({"action":"service_admission", "recipient_connection_id":connection_id, "service_id":service_id}))?;
+                if reply["kind"] == "service_connected" {
+                    Ok(())
+                } else {
+                    Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                        .with_reason("service_admission_reply_unexpected"))
+                }
+            }).await.unwrap_or_else(|_| {
+                shared.diagnostics.contained_panic(Some(HostStage::Agent), Operation::Cli);
+                Err(ApplicationError::new(ErrorCode::Panic, Operation::Cli))
+            });
+            let admitted = match admitted {
+                Ok(()) => true,
+                Err(error) => {
+                    shared.diagnostics.host_failure(HostStage::Agent, error);
+                    false
+                }
+            };
             if !admitted {
                 let _ =
                     stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;

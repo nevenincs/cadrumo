@@ -209,9 +209,7 @@ impl Supervised {
             .wait()
             .map_err(|cause| failure(ErrorCode::CleanupFailed).caused_by(cause));
         // Every writer of the pipes has ended, so the readers reach their end.
-        for reader in self.threads.drain(..) {
-            let _ = reader.join();
-        }
+        self.join_readers();
         let phase = match ending {
             Ending::Exited(_) => ProcessPhase::Exited,
             Ending::Terminated => ProcessPhase::Terminated,
@@ -221,6 +219,14 @@ impl Supervised {
         terminated?;
         reaped?;
         Ok(ending)
+    }
+
+    fn join_readers(&mut self) {
+        for reader in self.threads.drain(..) {
+            if reader.join().is_err() {
+                self.diagnostics.contained_panic(None, Operation::Cli);
+            }
+        }
     }
 
     #[cfg(windows)]
@@ -247,11 +253,11 @@ impl Supervised {
     /// Ends the job after a failure, records it, and reaps what it can.
     fn abandon(&mut self, error: ApplicationError) {
         drop(self.stdin.take());
-        let _ = self.terminate();
-        let code = self.child.wait().ok().and_then(|status| status.code());
-        for reader in self.threads.drain(..) {
-            let _ = reader.join();
+        if let Err(cleanup) = self.terminate() {
+            self.diagnostics.failure_for(self.process, cleanup);
         }
+        let code = self.child.wait().ok().and_then(|status| status.code());
+        self.join_readers();
         self.diagnostics.failure_for(self.process, error);
         self.diagnostics
             .finish(self.process, code, ProcessPhase::Terminated);
