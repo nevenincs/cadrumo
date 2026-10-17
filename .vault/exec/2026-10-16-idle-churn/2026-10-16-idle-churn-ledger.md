@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d894348d2962776d17ab33b1000bac83a652b66a27cd53f7d94ec04f0984430'
+body_hash: 'sha256:2118ea7da387ee09854c82b3e66f25bbfc4510af21b754e5c3ece165a9ddc537'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -274,6 +274,8 @@ related:
 - `S17` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S17` `verify:` `pytest src/cadrumo/entrypoints/tui/tests/test_windows_input.py (3 passed, idle started and resumed, lone Escape)` -> `pass`
 - `S17` `verify:` `ruff, ruff format, ty` -> `pass`
+- `S18` `verify:` `pytest test_bound_session, test_runtime_session, automation inventory (in the 134 passed)` -> `pass`
+- `S18` `verify:` `ruff, ruff format, ty` -> `pass`
 
 ## Notes
 
@@ -300,3 +302,4 @@ related:
 - `S19` The new test fails when the activity read wakes custody expiry. The heartbeat's 5 s cadence is unchanged pending the operator's ruling on idle-heartbeat; this step only stops each ping revalidating custody from disk
 - `S16` Reopened by the plan-close review (tui-quiet-app-coverage, high): ScreenHostApp ran the registration, credential and installation screens on a plain Textual App. The new test fails with the plain base
 - `S17` Reopened by the plan-close review (quiet-driver-lost-after-suspend): a suspend closed the stop event for good. Without the reopen the resumed app measured 112 switches in 1.5 s
+- `S18` Plan-close review, low findings: the API-key shell's lapse timer now shares BoundSession's early-wake margin, and BoundSession.watch refuses a second watch instead of replacing the first

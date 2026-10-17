@@ -12,11 +12,12 @@ from textual.timer import Timer
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessStatus
 from cadrumo.core.async_cleanup import await_cancellation_complete
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.time.clock import now
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-#: Past the known expiry, so a timer that wakes a little early still finds it passed.
-_EXPIRY_MARGIN_SECONDS = 0.05
+#: Past a known expiry, so a timer that wakes a little early still finds it passed.
+EXPIRY_MARGIN_SECONDS = 0.05
 
 
 def _status_confirms_session(status: ProfileAccessStatus, profile_id: object, session_id: object) -> bool:
@@ -52,6 +53,8 @@ class BoundSession:
         known expiry is one timer at its deadline, re-armed whenever the runtime
         reports another, so nothing is checked on an interval.
         """
+        if self._watcher is not None:
+            raise InternalInvariantError("a bound session has one lifetime watch at a time")
         self._watcher = (owner, check)
 
         def retired() -> None:
@@ -78,7 +81,7 @@ class BoundSession:
         if self._watcher is None or expires_at is None:
             return
         owner, _check = self._watcher
-        delay = max(0.0, (expires_at - now()).total_seconds()) + _EXPIRY_MARGIN_SECONDS
+        delay = max(0.0, (expires_at - now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
         self._expiry_timer = owner.set_timer(delay, self._expiry_due)
 
     def _expiry_due(self) -> None:

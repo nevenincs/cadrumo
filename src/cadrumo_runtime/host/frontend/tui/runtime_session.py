@@ -48,6 +48,7 @@ from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
+from .bound_session import EXPIRY_MARGIN_SECONDS
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
 type _LockAction = Literal["sign_out", "change_user"]
@@ -313,7 +314,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         """Read status once more when the session or its grant lapses."""
         if self._lapse_timer is not None:
             self._lapse_timer.stop()
-        delay = max(0.0, (deadline - now()).total_seconds())
+        delay = max(0.0, (deadline - now()).total_seconds()) + EXPIRY_MARGIN_SECONDS
         self._lapse_timer = self.set_timer(delay, self._start_status_read)
 
     def _expire(self) -> None:

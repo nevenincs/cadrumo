@@ -20,6 +20,7 @@ from cadrumo.application.user_profile.access_contracts import (
     EffectiveScopeSummary,
     ProfileAccessStatus,
 )
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -174,6 +175,9 @@ async def test_a_watch_checks_at_the_known_expiry_and_on_a_pushed_retirement_but
         pushing.join()
         await pilot.pause()
         assert len(checks) == 2, "a pushed retirement did not reach the owner's loop"
+
+        with pytest.raises(InternalInvariantError):
+            binding.watch(app, lambda: None)
 
         stop()
         assert client.retirement is None
