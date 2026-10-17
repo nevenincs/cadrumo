@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce0bd07039ba8599f34c4ce50cbcd5be34b1d1d3513f34fc482a876e3324e291'
+body_hash: 'sha256:19d65982dbffa71f2d597535232f5d324b623be1470895e0ad362b2cc7712690'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -234,6 +234,13 @@ related:
 - `S16` `verify:` `pytest components/tests, test_manager_onboarding, test_theme (34 and 42 passed)` -> `pass`
 - `S16` `verify:` `pytest TUI suites src/cadrumo/entrypoints/tui, host/frontend/tui, host/tests/frontend/tui: 2406 passed, 7 native runtime tests failed under concurrent load; the four not on the known list each pass alone` -> `pass`
 - `S16` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
+- `S17` `A` `src/cadrumo/entrypoints/tui/windows_input.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/components/quiet_app.py`
+- `S17` `A` `src/cadrumo/entrypoints/tui/tests/test_windows_input.py`
+- `S17` `A` `src/cadrumo/entrypoints/tui/tests/windows_input_apps.py`
+- `S17` `verify:` `pytest src/cadrumo/entrypoints/tui/tests/test_windows_input.py (2 passed)` -> `pass`
+- `S17` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
+- `S17` `verify:` `TUI from source on an isolated runtime, idle 60 s in a console of its own: 0.000% CPU, no thread began or ended in 30 s (before: 0.078% at 143.7 switches a second)` -> `pass`
 
 ## Notes
 
@@ -255,3 +262,4 @@ related:
 - `S14` With cursorBlink true the test fails: 6 animation frames requested over 2 s, expected 0 (run by CADRUMO-BUILD-DEBUG, file restored byte for byte)
 - `S15` With Poller::run sleeping 100 ms instead of waiting, `a_subscribed_poller_reads_nothing_until_a_log_file_changes` fails; without the handler's announce, the Python signal test fails. Linux and macOS still observe the log files every 100 ms: no notification source is used there yet
 - `S16` Each new test fails against the previous behaviour: an always-refreshing spinner, a blinking cursor, and a progress line on a 1 s interval
+- `S17` With Textual's own driver the idle test reads 14 switches in 1.5 s and fails; with the post-input escape wait removed, the lone-Escape test fails
