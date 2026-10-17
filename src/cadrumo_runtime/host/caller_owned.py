@@ -112,12 +112,13 @@ class CallerOwnedRuntime:
         self._stop.request(ExitReason.SUPERVISOR_STOP)
 
     def _announce_ready(self, serving: CallerServing, line: str) -> None:
-        while not self._stop.is_set():
-            if serving.ready.wait(0.05):
-                try:
-                    sys.stdout.write(line + "\n")
-                    sys.stdout.flush()
-                except (OSError, ValueError):
-                    # Nobody reads the readiness line; the caller has gone.
-                    self._stop.request(ExitReason.SUPERVISOR_STOP)
-                return
+        # A daemon blocked on readiness costs nothing; a stop first means it never announces.
+        serving.ready.wait()
+        if self._stop.is_set():
+            return
+        try:
+            sys.stdout.write(line + "\n")
+            sys.stdout.flush()
+        except (OSError, ValueError):
+            # Nobody reads the readiness line; the caller has gone.
+            self._stop.request(ExitReason.SUPERVISOR_STOP)

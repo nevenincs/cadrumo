@@ -314,12 +314,13 @@ class SupervisedRuntime:
     def _announce_ready(
         self, serving: SupervisedServing, ready: RuntimeReady, publish_boot_record: Callable[[], bool]
     ) -> None:
-        while not self._stop.is_set():
-            if serving.ready.wait(0.05):
-                with self._announced:
-                    if not self._stopping_sent and self._published(publish_boot_record):
-                        self._channel.announce(ready)
-                return
+        # A daemon blocked on readiness costs nothing; a stop first means it never announces.
+        serving.ready.wait()
+        if self._stop.is_set():
+            return
+        with self._announced:
+            if not self._stopping_sent and self._published(publish_boot_record):
+                self._channel.announce(ready)
 
     def _published(self, publish_boot_record: Callable[[], bool]) -> bool:
         try:
