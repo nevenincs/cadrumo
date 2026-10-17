@@ -17,9 +17,8 @@ When available to your identity, the command-line interface (CLI) can read filed
 
 You need:
 
-- an [active profile](profile-setup.md#what-the-active-profile-means). `aeat
-  config auth configure` refuses with `No active profile.` until you
-  create one. Start the interactive wizard (it asks for your NIF or NIE; for
+- an [active profile](profile-setup.md#what-the-active-profile-means).
+  Create one with the interactive wizard (it asks for your NIF or NIE; for
   a Spanish citizen, the NIF is the DNI number plus letter). It prompts for
   the profile passphrase and offers an optional recovery code once the
   profile exists:

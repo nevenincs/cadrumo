@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-07 04:04+0200\n"
+"POT-Creation-Date: 2026-10-16 02:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -128,12 +128,13 @@ msgstr ""
 #: ../../how-to/profile-setup.md:48
 msgid ""
 "Log out with `aeat config logout` when you finish. Logout closes the "
-"storage session and clears the active profile, so log in again by name. "
-"It deletes nothing."
+"storage session and keeps the selected profile. Log in again by name to "
+"reopen its session. It deletes nothing."
 msgstr ""
 "Cierra la sesión con `aeat config logout` al terminar. El cierre de "
-"sesión cierra la sesión de almacenamiento y borra el perfil activo, así "
-"que vuelve a iniciar sesión por nombre. No elimina nada."
+"sesión cierra la sesión de almacenamiento y conserva el perfil "
+"seleccionado. Inicia sesión de nuevo por nombre para reabrir su sesión. "
+"No borra nada."
 
 #: ../../how-to/profile-setup.md:52
 msgid "Decide your facts before you start"
@@ -1152,28 +1153,32 @@ msgstr "Eliminar un perfil de forma permanente"
 
 #: ../../how-to/profile-setup.md:469
 msgid ""
-"Close the profile's sign-in before deleting it. Logout keeps that profile"
-" selected, and Cadrumo refuses to delete the selected profile. Log in to "
-"another existing profile to change the default selection, then confirm "
-"the irreversible deletion of the original named profile. The example "
-"assumes `docs-sequence-replacement` already exists; login asks for its "
-"passphrase. It comes after every operation on the original profile "
-"because that profile cannot be used again:"
+"Sign in to the profile you want to remove, then sign out to close its "
+"shared sign-in before deleting it. This also works after the earlier "
+"logout example. Logout keeps that profile selected, and Cadrumo refuses "
+"to delete the selected profile. Log in to another existing profile to "
+"change the default selection, then confirm the irreversible deletion of "
+"the original named profile. The example assumes `docs-sequence-"
+"replacement` already exists; login asks for its passphrase. It comes "
+"after every operation on the original profile because that profile cannot"
+" be used again:"
 msgstr ""
-"Cierra el inicio de sesión del perfil antes de eliminarlo. Cerrar sesión "
-"mantiene ese perfil seleccionado, y Cadrumo se niega a eliminar el perfil"
-" seleccionado. Inicia sesión en otro perfil existente para cambiar la "
-"selección predeterminada y confirma después la eliminación irreversible "
-"del perfil original, indicándolo por su nombre. El ejemplo supone que "
-"`docs-sequence-replacement` ya existe; el inicio de sesión pide su frase "
-"de contraseña. Va después de todas las operaciones sobre el perfil "
-"original porque ese perfil no puede volver a usarse:"
+"Inicia sesión en el perfil que quieras eliminar y después cierra sesión "
+"para cerrar su inicio de sesión compartido antes de eliminarlo. Esto "
+"también funciona después del ejemplo anterior de cierre de sesión. Cerrar"
+" sesión mantiene ese perfil seleccionado, y Cadrumo se niega a eliminar "
+"el perfil seleccionado. Inicia sesión en otro perfil existente para "
+"cambiar la selección predeterminada y confirma después la eliminación "
+"irreversible del perfil original, indicándolo por su nombre. El ejemplo "
+"supone que `docs-sequence-replacement` ya existe; el inicio de sesión "
+"pide su frase de contraseña. Va después de todas las operaciones sobre el"
+" perfil original porque ese perfil no puede volver a usarse:"
 
-#: ../../how-to/profile-setup.md:481
+#: ../../how-to/profile-setup.md:483
 msgid "If setup looks wrong"
 msgstr "Si la configuración parece incorrecta"
 
-#: ../../how-to/profile-setup.md:483
+#: ../../how-to/profile-setup.md:485
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1183,7 +1188,7 @@ msgstr ""
 "no válido o de que estás trabajando bajo el perfil equivocado, consulta "
 "[Diagnosticar y reparar tu configuración local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:487
+#: ../../how-to/profile-setup.md:489
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1196,26 +1201,26 @@ msgstr ""
 "Indica las salidas que debes incluir y los datos personales que debes "
 "omitir antes de llevar el problema al gestor de incidencias del proyecto."
 
-#: ../../how-to/profile-setup.md:493
+#: ../../how-to/profile-setup.md:495
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/profile-setup.md:495
+#: ../../how-to/profile-setup.md:497
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:496
+#: ../../how-to/profile-setup.md:498
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantener los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:497
+#: ../../how-to/profile-setup.md:499
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:498
+#: ../../how-to/profile-setup.md:500
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:499
+#: ../../how-to/profile-setup.md:501
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"

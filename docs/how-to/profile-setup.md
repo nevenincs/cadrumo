@@ -466,7 +466,9 @@ discover the vocabulary.
 
 ## Delete a profile permanently
 
-Close the profile's sign-in before deleting it. Logout keeps that profile
+Sign in to the profile you want to remove, then sign out to close its shared
+sign-in before deleting it. This also works after the earlier logout example.
+Logout keeps that profile
 selected, and Cadrumo refuses to delete the selected profile. Log in to another
 existing profile to change the default selection, then confirm the irreversible
 deletion of the original named profile. The example assumes

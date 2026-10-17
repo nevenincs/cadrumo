@@ -1,3 +1,8 @@
+@step Authenticate the profile to be removed before closing its shared sign-in.
+aeat --format json config login docs-sequence-sandbox
+@expect status == "success"
+@expect result.active_profile == "docs-sequence-sandbox"
+@expect exit_code == 0
 @step Close the selected profile's shared sign-in before deletion.
 aeat --format json config logout
 @expect status == "success"

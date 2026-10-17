@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-07 04:04+0200\n"
+"POT-Creation-Date: 2026-10-16 02:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -130,12 +130,13 @@ msgstr ""
 #: ../../how-to/profile-setup.md:48
 msgid ""
 "Log out with `aeat config logout` when you finish. Logout closes the "
-"storage session and clears the active profile, so log in again by name. "
-"It deletes nothing."
+"storage session and keeps the selected profile. Log in again by name to "
+"reopen its session. It deletes nothing."
 msgstr ""
 "Ha végeztél, jelentkezz ki az `aeat config logout` paranccsal. A "
-"kijelentkezés lezárja a tárolási munkamenetet, és törli az aktív profilt,"
-" ezért név szerint jelentkezz be újra. Semmit nem töröl."
+"kijelentkezés lezárja a tárolási munkamenetet, és megtartja a "
+"kiválasztott profilt. A munkamenet újbóli megnyitásához jelentkezz be "
+"ismét a profil nevével. Semmit sem töröl."
 
 #: ../../how-to/profile-setup.md:52
 msgid "Decide your facts before you start"
@@ -1156,28 +1157,32 @@ msgstr "Profil végleges törlése"
 
 #: ../../how-to/profile-setup.md:469
 msgid ""
-"Close the profile's sign-in before deleting it. Logout keeps that profile"
-" selected, and Cadrumo refuses to delete the selected profile. Log in to "
-"another existing profile to change the default selection, then confirm "
-"the irreversible deletion of the original named profile. The example "
-"assumes `docs-sequence-replacement` already exists; login asks for its "
-"passphrase. It comes after every operation on the original profile "
-"because that profile cannot be used again:"
+"Sign in to the profile you want to remove, then sign out to close its "
+"shared sign-in before deleting it. This also works after the earlier "
+"logout example. Logout keeps that profile selected, and Cadrumo refuses "
+"to delete the selected profile. Log in to another existing profile to "
+"change the default selection, then confirm the irreversible deletion of "
+"the original named profile. The example assumes `docs-sequence-"
+"replacement` already exists; login asks for its passphrase. It comes "
+"after every operation on the original profile because that profile cannot"
+" be used again:"
 msgstr ""
-"Törlés előtt zárd le a profil bejelentkezését. A kijelentkezés után a "
-"profil kiválasztva marad, és a Cadrumo nem hajlandó törölni a "
-"kiválasztott profilt. Jelentkezz be egy másik meglévő profilba, hogy "
-"megváltozzon az alapértelmezett kiválasztás, majd erősítsd meg az "
-"eredeti, név szerint megadott profil visszavonhatatlan törlését. A példa "
-"feltételezi, hogy a `docs-sequence-replacement` már létezik; a "
-"bejelentkezés a jelmondatát kéri. Az eredeti profilon végzett összes "
-"művelet után következik, mert az a profil többé nem használható:"
+"Jelentkezz be a törölni kívánt profilba, majd jelentkezz ki, hogy a "
+"törlés előtt lezárd a közös bejelentkezését. Ez a korábbi kijelentkezési "
+"példa után is működik. A kijelentkezés után a profil kiválasztva marad, "
+"és a Cadrumo nem hajlandó törölni a kiválasztott profilt. Jelentkezz be "
+"egy másik meglévő profilba, hogy megváltozzon az alapértelmezett "
+"kiválasztás, majd erősítsd meg az eredeti, név szerint megadott profil "
+"visszavonhatatlan törlését. A példa feltételezi, hogy a `docs-sequence-"
+"replacement` már létezik; a bejelentkezés a jelmondatát kéri. Az eredeti "
+"profilon végzett összes művelet után következik, mert az a profil többé "
+"nem használható:"
 
-#: ../../how-to/profile-setup.md:481
+#: ../../how-to/profile-setup.md:483
 msgid "If setup looks wrong"
 msgstr "Ha a beállítás hibásnak tűnik"
 
-#: ../../how-to/profile-setup.md:483
+#: ../../how-to/profile-setup.md:485
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1187,7 +1192,7 @@ msgstr ""
 "mezőértéket talált, vagy hogy rossz profil alatt dolgozol, lásd: "
 "[Diagnosztizáld és javítsd a helyi beállításaidat](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:487
+#: ../../how-to/profile-setup.md:489
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1200,28 +1205,28 @@ msgstr ""
 "részt. Megnevezi a mellékelendő kimeneteket és a kihagyandó személyes "
 "adatokat, mielőtt a problémát a projekt hibakövetőjéhez viszi."
 
-#: ../../how-to/profile-setup.md:493
+#: ../../how-to/profile-setup.md:495
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/profile-setup.md:495
+#: ../../how-to/profile-setup.md:497
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:496
+#: ../../how-to/profile-setup.md:498
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Tartsd karban a profilod Modelo 036-os censo-adatait](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:497
+#: ../../how-to/profile-setup.md:499
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezd meg a benyújtási naptárad](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:498
+#: ../../how-to/profile-setup.md:500
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/profile-setup.md:499
+#: ../../how-to/profile-setup.md:501
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

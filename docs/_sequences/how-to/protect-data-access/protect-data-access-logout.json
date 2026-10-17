@@ -27,7 +27,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "logged_out_profile\t<profile-id>\nhuman_receipt_revoked\tTrue\nreceipt_removed\tTrue\nkeychain_removed\tTrue\nautomation_enabled\tNone\n"
+      "text": "logged_out_profile\tdocs-sequence-sandbox\nhuman_receipt_revoked\tTrue\nreceipt_removed\tTrue\nkeychain_removed\tTrue\nautomation_enabled\tNone\nautomation_access_remains\tNone\n"
     },
     {
       "argv": [

@@ -2,7 +2,7 @@
   "frames": [
     {
       "argv": [
-        "aeat",
+        "cadrumo-runtime",
         "--format",
         "json",
         "config",
