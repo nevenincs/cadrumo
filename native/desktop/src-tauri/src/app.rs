@@ -178,15 +178,24 @@ pub fn run(
             loading.height = 300.0;
             loading.min_width = Some(380.0);
             loading.min_height = Some(240.0);
-            tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?
+            let loading = tauri::WebviewWindowBuilder::from_config(app.handle(), &loading)?
                 .center()
                 .incognito(true)
                 .initialization_script(script)
                 .on_navigation(move |url| shell::navigation::allowed(&origins, url))
                 .build()?;
+            #[cfg(windows)]
+            sharpen_icon(loading.as_ref().window(), None)?;
             Ok(())
         })
         .on_window_event(|window, event| {
+            #[cfg(windows)]
+            if let tauri::WindowEvent::ScaleFactorChanged { scale_factor, .. } = event
+                && let Err(error) = sharpen_icon(window.clone(), Some(*scale_factor))
+                && let Some(state) = window.try_state::<Arc<TerminalState>>()
+            {
+                state.launch.diagnostics.failure(webview_failure(error));
+            }
             if window.label() == "startup" {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
@@ -354,6 +363,11 @@ pub(crate) async fn assemble<R: Runtime>(
                 })
                 .build()
         })
+        .and_then(|window| {
+            #[cfg(windows)]
+            sharpen_icon(window.as_ref().window(), None)?;
+            Ok(window)
+        })
         .map_err(|e| {
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
@@ -401,6 +415,23 @@ pub(crate) async fn assemble<R: Runtime>(
         );
     }
     Ok(())
+}
+
+/// Give `window` its small icon at the small icon size of `scale` (its current scale when
+/// `None`). Tauri sets the large-size entry of the application icon as the small icon, which
+/// Windows then shrinks crudely in the title bar and in Task Manager.
+#[cfg(windows)]
+fn sharpen_icon<R: Runtime>(window: tauri::Window<R>, scale: Option<f64>) -> tauri::Result<()> {
+    let scale = match scale {
+        Some(scale) => scale,
+        None => window.scale_factor()?,
+    };
+    let size = (16.0 * scale).round().clamp(16.0, 256.0) as u32;
+    window.set_icon(tauri::image::Image::from_icon_resource(
+        tauri::utils::platform::WINDOWS_APP_ICON_RESOURCE_ID,
+        size,
+        size,
+    )?)
 }
 
 fn webview_failure(error: tauri::Error) -> ApplicationError {
