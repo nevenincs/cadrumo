@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7edffa46864d3cede3947d5e0ec67b155312d6c21374a3b2a8a31016c20cb1a'
+body_hash: 'sha256:ea2b83dea4647087d5be3c773b37cb74d62278fc9e3e8639e97bbe5763250dec'
 related:
   - "[[2026-10-16-idle-churn-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -39,7 +39,7 @@ Every client that waits for a registered operation polls `OperationObserve` on a
 - `operation_changed` is a cue. It names its connection and session and carries no operation fact, cursor or authority. The client re-reads with the existing `OperationObserve`, which re-checks authority. Dedup, the queue bound and the overflow behaviour are those of the other cues.
 - Only a connection that has observed the operation is cued, and only while its last observation was not terminal. A connection that disconnects, or observes the operation terminal, stops being cued for it.
 - The worker's report names operation ids only and grants nothing. It is accepted only from the owned worker on its kernel-verified endpoint. It is applied only to watches in that worker's own profile.
-- Reporting never delays or fails a journal commit. Reports are coalesced, so a burst of commits produces at most one report in flight and one queued. A report that cannot be delivered is dropped, not retried: the client's deadline bounds what it costs.
+- Reporting never delays or fails a journal commit. Reports are coalesced, so a burst of commits produces at most one report in flight and one queued. A report the runtime does not take is queued again ahead of later commits and retried after a backoff that starts at 50 ms and doubles to at most 1 s, until it is delivered or the worker closes; closing tries each pending report once. (Amended 2026-10-17; it read "A report that cannot be delivered is dropped, not retried: the client's deadline bounds what it costs.")
 - A client keeps its existing settlement deadline as the failure bound. It waits on the cue or that deadline, never on a fixed interval. Timeout is still not proof that a mutation did not commit (`UNKNOWN` is preserved).
 - This extends `2026-10-16-idle-churn-adr` to active-operation observation and adds one cue to its hypothesis list. `2026-08-11-tui-architecture-adr` D3's `OperationObservationRequestV1` is unchanged.
 
@@ -61,7 +61,7 @@ Correctness never depended on the polls, only on the re-read each one triggered.
 
 - Operation completion is seen as soon as the worker records it, without the 20 to 500 ms lag. The round trips per operation fall from tens or hundreds to one per change.
 - New protocol: one cue, one worker request kind, and runtime watch state per observing connection. Clients and runtime ship together under the pinned expected version.
-- Staleness now depends on the report reaching the runtime. A dropped report shows progress late, bounded by the client's deadline. It needs a test that commits a change and observes the cue end to end.
+- Staleness now depends on the report reaching the runtime. A report the runtime does not take arrives late, by its retry's backoff, and a waiter with no deadline, such as the operation modal, relies on that retry. (Amended 2026-10-17; it read "A dropped report shows progress late, bounded by the client's deadline.") It needs a test that commits a change and observes the cue end to end.
 - Each report costs one verified connection. Coalescing bounds that to one in flight per worker, however often an operation commits.
 
 Accepted 2026-10-17 on the operator's approval in this session ("1 - yes"), extending the ruling recorded in `2026-10-16-idle-churn-adr` that every recurring check is driven by a real signal.
@@ -69,3 +69,5 @@ Accepted 2026-10-17 on the operator's approval in this session ("1 - yes"), exte
 Amended 2026-10-17 on the operator's approval in this session ("go ahead with the recommendation. amend adr and go"): the producer is the worker's report on its existing request endpoint, not a runtime-held wait on a worker channel, after the worker channels were found to carry one exchange at a time.
 
 Amended 2026-10-17 on the operator's approval in this session ("ok add it"): a desktop that observes another manager waits for that manager's status to change instead of asking every second. The manager's pipe has a single instance and serves one exchange at a time (`native/manager/src/ipc/windows.rs`), so a held status request would block the tray, the CLI and a cutover's successor report for its whole wait; it is rejected for the same reason as the long-poll above. Instead each manager publishes its status to an owner-only record, `.runtime/manager-status/<session>.json` under its storage root, rewritten only when the status changes and naming the publishing process. The record is a cue and carries no authority: an observing desktop watches its directory, waits on the session lock's release for a takeover, and re-reads the status through the authenticated `status` request on either signal. A missing record, or one whose publisher is no longer running, means an older manager or a crashed one, and the desktop then keeps its one-second observation as the bounded fallback.
+
+Amended 2026-10-17 on the operator's approval in this session ("go with recommendation on both"): a report the runtime does not take is retried, not dropped. The plan-close review found that the operation modal waits with no deadline (`2026-10-17-operation-cues-audit`, finding modal-waits-unbounded-on-a-dropped-report), so a dropped report could leave it showing a settled operation as running. Retrying at the producer covers every waiter and keeps the rule that a client never waits on a fixed interval. Retries run only while delivery fails, so nothing wakes while the worker is idle or once the runtime takes its reports. The Constraints and Consequences bullets are reworded in place, each with a note of what it said before.

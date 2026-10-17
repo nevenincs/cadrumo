@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:782e829fd07f1b44cd423e44ccd67c941fde6cf1f57eb294dd4a7b2538b7f44c'
+body_hash: 'sha256:e5e01a8cf6b0b6cbc7ff75594fbd1b5b87a22c1c197d6f5a94ac9375937f6d1d'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
@@ -62,7 +62,9 @@ An expired ask cues holders only (`src/cadrumo_runtime/host/profile_connection_a
 
 ### Resolutions at plan close
 
-reporter-thread-not-replaced is fixed: a reporting thread that ends for any reason clears its record and starts a replacement while work is pending (`src/cadrumo_runtime/host/operation_progress_reporter.py:61-73`), and `test_a_reporting_thread_ended_by_an_escaping_error_is_replaced` fails against the previous reporter. records-describe-a-cue-and-pace-the-code-does-not-have is fixed: the ADR Implementation names `attendance_answered`, and the S05 and S08 rows and a ledger note match the code. modal-waits-unbounded-on-a-dropped-report needs the operator's ruling on which constraint to amend and stays open. attendance-cue-withheld-on-expiry and status-cue-publisher-proof-is-a-bare-pid stay open until a fix is verified.
+reporter-thread-not-replaced is fixed: a reporting thread that ends for any reason clears its record and starts a replacement while work is pending (`src/cadrumo_runtime/host/operation_progress_reporter.py:65-75`), and `test_a_reporting_thread_ended_by_an_escaping_error_is_replaced` fails against the previous reporter. records-describe-a-cue-and-pace-the-code-does-not-have is fixed: the ADR Implementation names `attendance_answered`, and the S05 and S08 rows and a ledger note match the code. attendance-cue-withheld-on-expiry and status-cue-publisher-proof-is-a-bare-pid stay open until a fix is verified.
+
+modal-waits-unbounded-on-a-dropped-report is resolved on the operator's ruling by S09: a report the runtime does not take is queued again ahead of later commits and retried after a backoff from 50 ms to 1 s, and closing gives each pending report one try (`src/cadrumo_runtime/host/operation_progress_reporter.py:77-108`). `test_an_undeliverable_report_is_retried_ahead_of_later_commits` and `test_a_refused_report_waits_out_a_backoff_before_its_retry` fail against the dropping reporter, and `test_a_close_while_the_runtime_refuses_gives_each_pending_report_one_try` guards against a retry that spins after close.
 
 ## Recommendations
 

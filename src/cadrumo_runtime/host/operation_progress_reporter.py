@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from threading import Condition, Thread
+from time import monotonic
 
 from cadrumo.application.operations.models import OperationId
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
@@ -15,6 +16,8 @@ from ..contracts.worker_authorization import WORKER_OPERATIONS_ADVANCED_MAX
 _LOGGER = get_logger(__name__)
 
 _CLOSE_JOIN_SECONDS = 5.0
+_RETRY_FIRST_SECONDS = 0.05
+_RETRY_LONGEST_SECONDS = 1.0
 
 
 class OperationProgressReporter:
@@ -22,8 +25,10 @@ class OperationProgressReporter:
 
     A commit only records its operation and returns. While one report is in
     flight, every later commit joins the next one, so a burst produces at most
-    one report in flight and one queued. A report that cannot be delivered is
-    dropped: a waiting client is still bounded by its own deadline.
+    one report in flight and one queued. A report the runtime does not take is
+    queued again ahead of later commits and retried after a backoff, because a
+    waiter without a deadline would otherwise never see that change. Closing
+    tries what is pending once.
     """
 
     def __init__(self, send: Callable[[tuple[OperationId, ...]], None]) -> None:
@@ -63,19 +68,24 @@ class OperationProgressReporter:
             self._report_until_closed()
         finally:
             with self._condition:
-                # However this thread ended, pending and later commits get a fresh one. Each
-                # run takes a batch before it can fail, so replacements end with the backlog.
+                # However this thread ended, pending and later commits get a fresh one. An
+                # escape loses the batch it took, so replacements end with the backlog.
                 self._thread = None
                 if self._pending and not self._closed:
                     self._start()
 
     def _report_until_closed(self) -> None:
+        backoff = 0.0
         while True:
             with self._condition:
                 while not self._pending and not self._closed:
                     self._condition.wait()
                 if not self._pending:
                     return
+                # A commit's notify does not cut a backoff short; a close does.
+                retry_at = monotonic() + backoff
+                while not self._closed and (remaining := retry_at - monotonic()) > 0:
+                    self._condition.wait(remaining)
                 batch = tuple(self._pending)[:WORKER_OPERATIONS_ADVANCED_MAX]
                 for operation_id in batch:
                     del self._pending[operation_id]
@@ -88,3 +98,11 @@ class OperationProgressReporter:
                     fields={"operations": len(batch), **diagnostic_error_fields(error)},
                     level=logging.DEBUG,
                 )
+                with self._condition:
+                    # Ahead of what committed meanwhile, so the oldest changes still go first.
+                    # Once closed, each batch has had its one try and the rest still get theirs.
+                    if not self._closed:
+                        self._pending = dict.fromkeys(batch) | self._pending
+                backoff = min(max(backoff * 2, _RETRY_FIRST_SECONDS), _RETRY_LONGEST_SECONDS)
+            else:
+                backoff = 0.0

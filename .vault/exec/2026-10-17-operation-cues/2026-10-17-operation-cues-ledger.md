@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ee8e692c96d798f9526a273c11295edca9bb202b8de242d1884c69942b5cadb'
+body_hash: 'sha256:252e3164dee32cda9613ef44c4c85858faccbc7643a3165fa9473e8190d94e34'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -136,6 +136,16 @@ related:
 - `S01` `by:` `tui-41 (took over from CADRUMO-BUILD-DEBUG)`
 - `S08` `M` `.vault/plan/2026-10-17-operation-cues-plan.md`
 - `S08` `M` `.vault/adr/2026-10-17-idle-churn-operation-observation-adr.md`
+- `S09` `M` `src/cadrumo_runtime/host/operation_progress_reporter.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/test_operation_progress_reporter.py`
+- `S09` `M` `.vault/adr/2026-10-17-idle-churn-operation-observation-adr.md`
+- `S09` `M` `.vault/plan/2026-10-17-operation-cues-plan.md`
+- `S09` `M` `.vault/audit/2026-10-17-operation-cues-audit.md`
+- `S09` `verify:` `pytest -n0 test_operation_progress_reporter.py` -> `pass`
+- `S09` `verify:` `retry and backoff tests against the dropping reporter (expected to fail)` -> `fail`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S09` `verify:` `dev.quality.types diagnostics in the reporter (none)` -> `pass`
+- `S09` `by:` `tui-41`
 
 ## Notes
 
