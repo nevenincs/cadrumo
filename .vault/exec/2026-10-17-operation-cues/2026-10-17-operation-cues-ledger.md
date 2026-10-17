@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:aba835e4758ffdedaf5c6dbd3b31c2b1ce48f2bcb841e421075dca60cc71ed91'
+body_hash: 'sha256:5a4bd2385c71a1655a63cb455271f358826bdc44d6c4b1a1bf656414d3cf01eb'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -79,8 +79,38 @@ related:
 - `S03` `verify:` `pytest -m unit cadrumo_client, entrypoints/cli/tests, cli/config/tests, cadrumo_runtime/host/tests` -> `pass`
 - `S03` `verify:` `pytest -m integration test_runtime_modelo_work_create_native.py` -> `pass`
 - `S03` `verify:` `ruff check, ruff format --check, ty check, lint-imports` -> `pass`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/operation_censal_observation.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/operation_censal_review.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/google_saved_review.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/operations/controller_port.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_await_terminal_projection.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_operation_cues.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_google_saved_review.py`
+- `S04` `M` `src/cadrumo_client/commands/runtime_google_consent.py`
+- `S04` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S04` `M` `src/cadrumo_client/transport/frontend_operation_client.py`
+- `S04` `M` `src/cadrumo_client/transport/frontend_profile_view_client.py`
+- `S04` `M` `src/cadrumo_client/transport/operation_changes.py`
+- `S04` `M` `src/cadrumo_client/transport/operation_controller.py`
+- `S04` `M` `src/cadrumo_client/transport/operation_reads.py`
+- `S04` `M` `src/cadrumo_client/transport/profile_password_rotation.py`
+- `S04` `M` `src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/tui/aeat_sync/test_runtime_handoff.py`
+- `S04` `verify:` `pytest -m 'unit or integration' src/cadrumo_client src/cadrumo/entrypoints/cli src/cadrumo/entrypoints/tui src/cadrumo_runtime/host/tests/frontend src/cadrumo_harness/mcp/tests` -> `pass`
+- `S05` `M` `src/cadrumo_client/contracts/session_events.py`
+- `S05` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S05` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
+- `S05` `A` `src/cadrumo_harness/mcp/tests/test_attendance_wait.py`
+- `S05` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
+- `S05` `M` `src/cadrumo_runtime/host/profile_connection_attendance.py`
+- `S05` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S05` `M` `src/cadrumo_runtime/host/tests/test_attendance.py`
+- `S05` `verify:` `pytest src/cadrumo_harness/mcp/tests/test_attendance_wait.py src/cadrumo_harness/mcp/tests/test_sign_in_resume.py src/cadrumo_runtime/host/tests/test_attendance.py` -> `pass`
 
 ## Notes
 
 - `S02` `test_frontend_boundaries::test_installed_composition_and_native_journeys_are_runtime_owned` fails before and after this Step: it asserts a test file another session deleted
 - `S03` Pre-existing, unchanged by this Step: 9 CLI structural/inventory tests, `test_frontend_boundaries` (deleted file), and `test_runtime_ledger_reads_native::test_native_api_ledger_status_requires_all_periods_even_when_query_selects_one,` which fails one run in three even with the reporter disabled and the old client code
+- `S04` The wide run's pre-existing failures were fixed separately in d07ae808aa (resolution-cost child import, environment reference conformance); the portable fixture's stale `_lapsed` field is fixed in this Step's commit.

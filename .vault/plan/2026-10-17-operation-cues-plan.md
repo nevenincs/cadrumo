@@ -8,7 +8,7 @@ related:
   - '[[2026-10-17-idle-churn-operation-observation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:7db4723de064b097550371a054b075f8c4c102453a96f4728f485b333d68e554'
+body_hash: 'sha256:c955b07d628f366e75d214ce6335f7d29d40cb9fb5ecc31e9d699d0e8f75d3c5'
 ---
 
 <!-- RETIRED: S07 -->
@@ -28,8 +28,8 @@ The governing decision is `2026-10-17-idle-churn-operation-observation-adr`, whi
 - [x] `S01` - Report each committed operation from the worker's journal to the runtime as a coalesced operations_advanced request on its authorization endpoint; `src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/entrypoints/operation_composition.py, src/cadrumo_runtime/host/operation_host.py, src/cadrumo_runtime/adapters/worker_authorization_client.py, src/cadrumo_runtime/contracts/worker_authorization.py`.
 - [x] `S02` - Record watches from non-terminal observations and publish operation_changed to the watching connections when a worker report names their operation; `src/cadrumo_client/contracts/session_events.py, src/cadrumo_runtime/host/session_events.py, src/cadrumo_runtime/adapters/worker_authorization.py, src/cadrumo_runtime/host/profile_connection_operations.py`.
 - [x] `S03` - Wait on the operation_changed cue or the deadline in the client settlement helpers and the CLI runner instead of fixed intervals; `src/cadrumo_client/transport/frontend_client.py, src/cadrumo_client/transport/operation_settlement.py, src/cadrumo_client/commands/registered_operation_observations.py`.
-- [ ] `S04` - Move the remaining client and TUI observation loops onto the cue; `src/cadrumo_client/transport/operation_controller.py, src/cadrumo/entrypoints/tui/operations/modal.py, src/cadrumo/entrypoints/tui/google_saved_review.py, src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py, the other OperationObserve poll sites`.
-- [ ] `S05` - Wait for the person's attendance decision on attendance_changed in the MCP harness; `src/cadrumo_harness/mcp/runtime_admission.py`.
+- [x] `S04` - Move the remaining client and TUI observation loops onto the cue; `src/cadrumo_client/transport/operation_controller.py, src/cadrumo/entrypoints/tui/operations/modal.py, src/cadrumo/entrypoints/tui/google_saved_review.py, src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py, the other OperationObserve poll sites`.
+- [x] `S05` - Wait for the person's attendance decision on attendance_changed in the MCP harness; `src/cadrumo_harness/mcp/runtime_admission.py`.
 - [ ] `S06` - Rebuild both stages and prove concurrent sign-in, backend calls and a live operation settle on the cue; `build/windows-x64/stage, dev/runtime_lifecycle`.
 - [ ] `S08` - Wake the installed manager and an observing desktop on installation and ownership events instead of the 2 s installation watch, the 30 s discovery deadline and the 1 s external-owner pace; `native/manager/src/installation_watch.rs, native/manager/src/cutover_coordinator.rs, native/manager/src/desktop_host.rs, native/manager/src/background.rs, native/platform/src/file_changes.rs`.
 
