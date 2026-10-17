@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#idle-churn'
 date: '2026-10-16'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b7755278daaa24c00dba2294a461d8ef04fd1f26dd72dda330d7c0fc0609bcb'
+body_hash: 'sha256:d2e97a807fcb5982b8c32766802f13ad7931617baa4fba5f6d79e5dc1b3e4a0b'
 related: []
 ---
 
@@ -81,6 +81,18 @@ The supervisor's wait is capped at `poll_interval`, 100 ms, even when it is only
 
 `AgentDiagnosticFiles._follow` re-scanned and re-read the hosted runtime log directory every 0.2 s while an agent ran (`src/cadrumo_agent_service/adapters/agent_diagnostics.py:306`). Since cadrumo-agent `09bfc8b`, the agent relays its worker's diagnostics on its own standard error, which the service already drains.
 
+### lifecycle-sweep-reowe | high | Signed in, every lifecycle pass owed the next one, so passes ran each second forever
+
+A pass observes the logins three times: once itself (`src/cadrumo_runtime/host/profile_connections.py:559`), once through each profile's lock-down check and once through each session's revalidation, both by way of the profile's facts. The saved sign-in sweep is rate-limited to once a second. A repeat observation inside that limit owed a pass at the limit's end even when it saw nothing new, so each pass owed another. Signed out no session is revalidated, so the loop never started there. Signed in, py-spy showed a pass every 0.92-1.08 s costing 80-150 ms, 9.9% of a core in the runtime with nobody at the machine. A rate-limited observation now owes a later sweep only when its logins, inventory completeness or hosted profiles differ from what the last sweep was given (`profile_connections.py:331-338`). `test_a_pass_whose_profile_checks_observe_the_logins_again_owes_no_further_pass` fails against the previous code.
+
+### activity-report-spawn | medium | Each burst of person input in the window starts a `config activity` process
+
+`usePersonActivity` reports keyboard, pointer, wheel and paste input at most once every 15 s (`native/desktop/frontend/src/shell/usePersonActivity.ts:4`). Each report runs a new `cadrumo-runtime --format json config activity` child (`native/desktop/src-tauri/src/shell/sign_in/mod.rs:237`), which opens a CLI connection, resumes the sign-in receipt and notes activity. A child measured 0.5-1.2 s of CPU. While someone works in the window that is a process every 15 s. The window already holds a person session whose hold accepts an `activity` request (`src/cadrumo_runtime/host/session_hold.py:273`), and activity renews every human session of the same sign-in (`src/cadrumo_runtime/application/session_authority_activity.py:38`). The agent-access list likewise runs a `config profile automation list` child, but only when its settings panel opens.
+
+### agent-recovery-poll | medium | The agent gateway runs a direct-control recovery pass every 2 s
+
+Signed in and idle, `cadrumo-agent` logged `Direct control recovery pass complete` every 2.0 s with nothing examined, and used 1.3% of a core at 89 context switches a second. The pass belongs to cadrumo-agent and is not changed here.
+
 ### remaining-platform-observation | low | Some observations stay periodic where no notification source exists or the work is not idle
 
 - Without WTS session notifications the runtime observes logins every 0.5 s. That applies to POSIX hosts, a refused registration, non-desktop logons, and unknown lock states. The ADR records this allowance.
@@ -111,3 +123,19 @@ Signed out, idle, as % of one core:
 No Cadrumo process was spawned in either window. The desktop's remaining wakeups, about 41 a second, are the manager core's 100 ms supervision wait and the 500 ms supervision check (see manager-supervision-poll). A WebView2 GPU process started at launch and exited inside the window. A further 90 s watch of the Release tree saw no new GPU process, so it does not recur.
 
 The signed-in idle state, which the baseline above measured, needs the operator's sign-in. Each stage's desktop was then held open for 30 minutes waiting for that sign-in: Debug until 23:02, Release until 23:38. No sign-in came, so the signed-in re-measurement is still open. It is recorded below once measured.
+
+On 2026-10-17 the Release stage, rebuilt with FIX1's package-identity manifests, was signed in at 04:43. The first 120 s window after a 60 s settle measured 38.4% of one core. It was not idle: 10 children were spawned, 7 of them `config activity` (see activity-report-spawn), so the operator was working in the window. A second window then waited until no input had reached the session for 125 s and spawned nothing. Signed in, idle, as % of one core:
+
+| Process | Release (04:48) |
+| --- | --- |
+| Supervised runtime | 9.885 |
+| WebView2 renderer | 2.273 |
+| `cadrumo-agent` | 1.260 |
+| WebView2 browser and GPU | 0.961 |
+| Desktop host (`cadrumo.exe`) | 0.546 |
+| Profile worker | 0.403 |
+| Agent service | 0.169 |
+| TUI, `session hold`, `session watch` | 0.013 |
+| Total | 15.522 |
+
+The runtime's share was lifecycle-sweep-reowe. Against the baseline, the profile worker dropped from 12% to 0.4% and no `sign-in-status` child was spawned. A re-measurement after the lifecycle fix needs a rebuilt stage.

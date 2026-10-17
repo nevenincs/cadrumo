@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Event
@@ -104,19 +105,28 @@ def test_a_login_no_session_notification_reports_is_observed_on_an_interval(
 
 
 class _Host:
-    """A profile whose checks all pass, counting how often its next lapse is asked for."""
+    """A profile whose checks all pass, counting how often its next lapse is asked for.
 
-    def __init__(self, due: float) -> None:
-        self.due, self.asked, self.profile_id = due, 0, uuid4()
+    ``observe`` stands for the login observation the real lock-down check and
+    each session's revalidation make through the profile's facts.
+    """
+
+    def __init__(self, due: float, observe: Callable[[], object] = lambda: None) -> None:
+        self.due, self.asked, self.profile_id, self._observe = due, 0, uuid4(), observe
         self.store = SimpleNamespace(binding=SimpleNamespace(profile_id=self.profile_id))
         self.approvals = SimpleNamespace(expire=lambda: None, retire_sessions=lambda _identities: None)
-        self.authority = SimpleNamespace(revalidate_sessions=tuple)
+        self.authority = SimpleNamespace(revalidate_sessions=self._revalidate_sessions)
         self.owner = SimpleNamespace(lost=False)
+
+    def _revalidate_sessions(self) -> tuple[UUID, ...]:
+        self._observe()
+        return ()
 
     def retire_replaced_binding(self, *, deadline: float) -> bool:
         return False
 
     def observe_human_lock_down(self) -> tuple[UUID, ...]:
+        self._observe()
         return ()
 
     def lifecycle_due(self) -> float:
@@ -135,3 +145,28 @@ def test_the_wait_reads_the_deadlines_the_last_pass_took_and_never_asks_a_profil
     # A profile's guard can be held through a long private effect; the accept loop must not wait on it.
     assert host.asked == 1
     assert due is not None and 59 < due <= 60
+
+
+def test_a_pass_whose_profile_checks_observe_the_logins_again_owes_no_further_pass(tmp_path: Path) -> None:
+    profiles = _runtime(tmp_path, _Login())
+    profiles.session_changes_pushed(True)
+    host = _Host(due=time.monotonic() + 60, observe=profiles._login_contexts)
+    profiles._profiles[host.profile_id] = cast(RuntimeProfileHost, host)
+    profiles.poll()
+    due = profiles.lifecycle_due_in()
+    # The repeat observations inside the sweep's rate limit saw nothing new, so the next pass is the profile's lapse.
+    assert due is not None and 59 < due <= 60
+
+
+def test_a_login_change_the_sweep_rate_limit_held_back_is_swept_once_the_limit_passes(tmp_path: Path) -> None:
+    login = _Login()
+    profiles = _runtime(tmp_path, login)
+    profiles.session_changes_pushed(True)
+    host = _Host(due=time.monotonic() + 60, observe=profiles._login_contexts)
+    profiles._profiles[host.profile_id] = cast(RuntimeProfileHost, host)
+    profiles.poll()
+    login.lock_state = OsLockState.LOCKED
+    # A request's revalidation observes the change before the limit passes.
+    profiles._login_contexts()
+    due = profiles.lifecycle_due_in()
+    assert due is not None and due <= 1.0

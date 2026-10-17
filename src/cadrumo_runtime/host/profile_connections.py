@@ -159,6 +159,8 @@ class RuntimeProfileConnections(
         self._operation_requests = 0
         self._last_poll = 0.0
         self._last_sign_in_sweep = 0.0
+        # What the last sweep was given: logins seen, inventory completeness and hosted profiles.
+        self._swept: tuple[frozenset[tuple[str, bool, OsLockState]], bool, frozenset[UUID]] | None = None
         # A pass runs when this is set, at the earliest deadline, or when one
         # that could not finish is owed; never on a timer while nothing changes.
         self._lifecycle = NativeWake()
@@ -323,11 +325,16 @@ class RuntimeProfileConnections(
         if logins_moved:
             self._sign_in_changed()
         eligible = any(login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed)
+        with self._guard:
+            sweep = (logins_seen, inventory.complete, frozenset(self._profiles) if eligible else frozenset())
         instant = time.monotonic()
         if not eligible or instant - self._last_sign_in_sweep >= 1.0:
             self._sweep_sign_ins(observed, complete=inventory.complete, include_hosted=not eligible)
-            self._last_sign_in_sweep = instant
-        else:
+            self._last_sign_in_sweep, self._swept = instant, sweep
+        elif sweep != self._swept:
+            # A pass observes logins again through each profile's checks: only
+            # a change the rate limit held back is swept later, or each pass
+            # would owe the next one forever.
             self._owe_lifecycle_pass(self._last_sign_in_sweep + 1.0)
         # A logon without a lock surface, or one in an unknown state, changes with no session notification.
         self._unreported_logins = any(

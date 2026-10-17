@@ -3,42 +3,16 @@ tags:
   - '#exec'
   - '#idle-churn'
 date: '2026-10-16'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:99c92e4c5d2a7c582ed0c42ef23fbef728e52e408ca12651148f6992d22842d4'
+body_hash: 'sha256:1276cb993c6833a7f03ed2a8818f6c725316f6f97df8ad113a02c3b506e7ca02'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `idle-churn` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo_client/contracts/service_access.py`
 - `S01` `M` `src/cadrumo/core/path_confinement.py`
@@ -200,6 +174,10 @@ related:
 - `S09` `verify:` `pytest serial server-backed host suite (55 files)` -> `pass`
 - `S09` `verify:` `pytest transport, server, worker, shutdown, cue and authority suites` -> `pass`
 - `S09` `verify:` `ruff ty basedpyright pyrefly lint-imports on touched files` -> `pass`
+- `S09` `M` `src/cadrumo_runtime/host/tests/test_lifecycle_wake.py`
+- `S09` `verify:` `pytest -n0 src/cadrumo_runtime/host/tests/test_lifecycle_wake.py` -> `pass`
+- `S09` `verify:` `pytest -n0 src/cadrumo_runtime/host/tests/test_bootstrap_reset.py src/cadrumo_runtime/host/tests/test_grant_change.py` -> `pass`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
 
 ## Notes
 
@@ -213,3 +191,4 @@ related:
 - `S08` Adapter and transport suites: 913 passed, 1 failed `(test_posix_login_capture,` an unowned uncommitted pidfd option rename in `posix_channel.py).` Host suite: 211 passed, 5 failed, all from other sessions' uncommitted changes: the receipt handover in `profile_connection_sessions.py` and the `AUTHENTICATION_REQUIRED` session mismatch in `profile_connection_operations.py.` The stop-wake gate was shown to fail with the wake removed.
 - `S11` Depends on cadrumo-agent 09bfc8b relaying worker diagnostics on the agent's standard error, proved end to end on the rebuilt stage by CADRUMO-AGENT-SESSION1; the native fixture now models that relay.
 - `S09` Host suite 221 passed, 2 skipped. A first run caught an accept loop that took each profile's admission guard while computing its wait `(test_grant_change[rotate],` `test_bootstrap_reset[reset-and-replay]).` Profile deadlines are now cached during the pass, and request-driven passes coalesce to one interval later. Without WTS notifications, or with a non-desktop or unknown-state login, logins are still observed every 0.5 s, as the ADR allows.
+- `S09` Reopened: signed in, each lifecycle pass owed the next one through the rate-limited sign-in sweep (audit lifecycle-sweep-reowe); the new test fails against the previous code
