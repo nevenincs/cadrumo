@@ -1,20 +1,20 @@
 ---
 tags:
-  - '#adr'
-  - '#application-distribution'
+  - "#adr"
+  - "#application-distribution"
 date: '2026-10-16'
-modified: '2026-10-16'
-body_schema: 'body-v2'
-body_hash: 'sha256:a28be3cb5d34c5613143c4ea26599ca6f1d74fa0cbeb6e05b888618f856bf4fa'
 related:
   - "[[2026-10-16-application-distribution-windows-package-identity-research]]"
   - "[[2026-10-07-application-distribution-windows-versioned-msi-adr]]"
   - "[[2026-10-16-native-build-incremental-adr]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
+superseded_by: '2026-10-17-single-binary-process-tree-adr'
+modified: '2026-10-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:b110c480c9d81fcd0f3774949519ffff0374e1797451e4c0f8d0682d9a95002b'
 ---
-
-# `application-distribution` adr: `Windows package identity: one registered Cadrumo application` | (**status:** `accepted`)
+# `application-distribution` adr: `Windows package identity: one registered Cadrumo application` | (**status:** `superseded`)
 
 ## Problem Statement
 

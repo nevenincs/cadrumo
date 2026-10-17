@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d1f141e3597df67215db32d44194d0e1dbdb627eb02382ff0b83d370c28ef94'
+body_hash: 'sha256:4d51519550d3935c5ae273e54cf9c9be5a6be8a679d35a99ffa3bb30e498f7a9'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -344,3 +344,7 @@ Under the operator's explicit request, the desktop may ensure the manager's scop
 Stable and preview share only the transient family directory, with distinct endpoint identities. Each process resolves the native transport base once through the canonical owner and retains validated namespace identity; the inherited storage-root pin and strict child environment are unchanged, and no new environment pin is added. Persistent `.runtime/` start claims, Quit/failed-version markers, boot/installation records, logs and preferences stay at their declared locations. Development roots remain root-relative and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots keep root-derived endpoint identities. Ordinary reclaim/uninstall never removes the shared directory or namespace-lock inodes, and socket cleanup remains incarnation-checked. Per-session ownership must coordinate with the IPC namespace lock; this amendment does not claim that separate integration complete.
 
 Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. Identity, supervision, signing, login registration and disposable-host lifecycle acceptance gates are unchanged. This decision establishes the transport remedy, not a completed macOS manager port.
+
+## 2026-10-17 amendment: the manager is a role of the one Cadrumo binary
+
+Accepted 2026-10-17 under `2026-10-17-single-binary-process-tree-adr`, which the operator approved. The manager is no longer a separate `cadrumo-manager` image: it runs as the `cadrumo` binary in its manager role, and the runtime it supervises runs as the same binary in its runtime role. Wherever this record identifies the manager or runtime by image (startup items, quiescence, termination targeting, adoption and diagnostics), identification is by the digest-verified image plus the role argument and exact invocation. Supervision, the session lock, IPC endpoints, login startup, logs and the cutover protocol are unchanged.
