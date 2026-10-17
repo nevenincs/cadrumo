@@ -14,7 +14,7 @@ from typing import ClassVar, Literal, override
 from uuid import UUID
 
 from textual import on
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
 from textual.dom import DOMNode
@@ -33,6 +33,7 @@ from cadrumo.entrypoints.tui.account import (
     AccountSessionRetired,
     RuntimeUpgradePending,
 )
+from cadrumo.entrypoints.tui.components.quiet_app import QuietApp
 from cadrumo.entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from cadrumo.entrypoints.tui.disclosure_pages import disclosure_page_text, disclosure_summary_text
 from cadrumo.entrypoints.tui.installation.destination import installation_screen_factory
@@ -80,7 +81,7 @@ def _restricted_scope_text(status: ProfileAccessStatus) -> tuple[str, str, str, 
     return operations, actions, disclosures, delegation, periods
 
 
-class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
+class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
     """Show one API lease without borrowing human workbench or admin authority."""
 
     BINDINGS: ClassVar = [Binding("q", "leave", "", show=False)]

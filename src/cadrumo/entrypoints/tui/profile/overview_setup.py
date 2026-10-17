@@ -6,13 +6,13 @@ from contextvars import copy_context
 from typing import TYPE_CHECKING
 
 from textual.containers import Horizontal
-from textual.widgets import Button, Checkbox, Input, ProgressBar, Static
+from textual.widgets import Button, Checkbox, Input, Static
 from textual.worker import Worker, WorkerState
 
 from ....core.i18n.render import tr
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import ProfileSetupState
-from ..components.status import PinnedStatusBar
+from ..components.status import PinnedStatusBar, ProgressLine
 from ..components.widgets import (
     ContentScroll,
     DisclosureGroup,
@@ -181,7 +181,7 @@ def _render_setup_progress(screen: ProfileManagerScreen, stage: ProfileSetupStag
     """Update the progress bar and stage/answer count line."""
     done = screen.overview.setup_state is ProfileSetupState.COMPLETE
     index = SETUP_STAGES.index(stage)
-    screen.query_one("#onboarding-progress", ProgressBar).update(
+    screen.query_one("#onboarding-progress", ProgressLine).update(
         total=total + 1, progress=answered + (1 if done else 0)
     )
     progress = tr("flows.manager.onboarding.progress", answered=answered, total=total)

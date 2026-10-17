@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf7d53ce2c26198f4bf42e9cf88569978d06291db26be2af8ef17b8cabb7f42e'
+body_hash: 'sha256:ce0bd07039ba8599f34c4ce50cbcd5be34b1d1d3513f34fc482a876e3324e291'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -221,6 +221,19 @@ related:
 - `S15` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S15` `verify:` `platform.resolver (64 passed), application.rust, desktop-host-unit-test (341 passed), desktop-host-unit-clippy (by CADRUMO-BUILD-DEBUG)` -> `pass`
 - `S15` `verify:` `pytest core logging modules and test_log_file_handler (73 passed), ruff, pyrefly, basedpyright, lint-imports` -> `pass`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/status.py`
+- `S16` `A` `src/cadrumo/entrypoints/tui/components/quiet_app.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`
+- `S16` `A` `src/cadrumo/entrypoints/tui/components/tests/test_quiet_app.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/profile/overview_setup.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_onboarding.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S16` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_admission.py`
+- `S16` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_session.py`
+- `S16` `verify:` `pytest components/tests, test_manager_onboarding, test_theme (34 and 42 passed)` -> `pass`
+- `S16` `verify:` `pytest TUI suites src/cadrumo/entrypoints/tui, host/frontend/tui, host/tests/frontend/tui: 2406 passed, 7 native runtime tests failed under concurrent load; the four not on the known list each pass alone` -> `pass`
+- `S16` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
 
 ## Notes
 
@@ -241,3 +254,4 @@ related:
 - `S13` The new status test fails against the previous code. The source runtime with a held synthetic profile measured 0.000% CPU over 60 s, so the stage runtime and worker costs are requests from other processes: every 5 s the manager ping reaches the worker as a status read
 - `S14` With cursorBlink true the test fails: 6 animation frames requested over 2 s, expected 0 (run by CADRUMO-BUILD-DEBUG, file restored byte for byte)
 - `S15` With Poller::run sleeping 100 ms instead of waiting, `a_subscribed_poller_reads_nothing_until_a_log_file_changes` fails; without the handler's announce, the Python signal test fails. Linux and macOS still observe the log files every 100 ms: no notification source is used there yet
+- `S16` Each new test fails against the previous behaviour: an always-refreshing spinner, a blinking cursor, and a progress line on a 1 s interval

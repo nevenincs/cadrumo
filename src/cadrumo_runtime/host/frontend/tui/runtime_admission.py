@@ -6,10 +6,9 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
-from textual.app import App
-
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.entrypoints.tui.components.quiet_app import QuietApp
 from cadrumo.entrypoints.tui.installation.area_factory import InstallationAreaFactory
 
 from .secret.runtime_login import RuntimeLoginScreen, RuntimeRequesterFactory
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
 
 
-class _RuntimeLoginApp(App[None]):
+class _RuntimeLoginApp(QuietApp[None]):
     """Accept exactly one screen-owned connection into the enclosing scope."""
 
     def __init__(

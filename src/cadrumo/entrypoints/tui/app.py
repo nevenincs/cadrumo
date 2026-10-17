@@ -53,6 +53,7 @@ from .components.account_chrome import (
     account_action_label,
     account_key_label,
 )
+from .components.quiet_app import QuietApp
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .home import (
     HomeBackRequested,
@@ -126,7 +127,7 @@ class RootBindingV1:
 type RootLoaderV1 = Callable[[], RootBindingV1]
 
 
-class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None]):
+class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | None]):
     """Host one composed TUI session and whichever areas are joinable."""
 
     _active_destination_catalogue: TuiDestinationCatalogueV1 | None

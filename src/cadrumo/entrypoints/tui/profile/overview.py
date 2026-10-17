@@ -28,7 +28,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Checkbox, DataTable, Footer, Input, ProgressBar, Static
+from textual.widgets import Button, Checkbox, DataTable, Footer, Input, Static
 from textual.worker import Worker
 
 from ....application.auth.sync_readiness import AuthSyncReadiness
@@ -40,7 +40,7 @@ from ....application.user_profile.acquisition_sources import (
 from ....core.i18n.render import tr
 from ....domain.user_profile.values import ProfileSetupState
 from ..components.account_chrome import AccountChromeScreen
-from ..components.status import PinnedStatusBar
+from ..components.status import PinnedStatusBar, ProgressLine
 from ..components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
@@ -130,7 +130,6 @@ class ProfileManagerScreen(
         content-align: left middle;
     }
     #onboarding-progress { width: 100%; }
-    #onboarding-progress Bar { width: 1fr; }
     #onboarding-stages { height: auto; }
     #onboarding-stages Button { width: 1fr; min-width: 0; }
     #onboarding-stages .setup-current { text-style: bold; background: $primary; color: $background; }
@@ -343,7 +342,7 @@ class ProfileManagerScreen(
                 with Horizontal(id="onboarding-stages"):
                     for stage in SETUP_STAGES:
                         yield Button("", id=f"setup-stage-{stage.value}", compact=True)
-                yield ProgressBar(id="onboarding-progress", show_eta=False, show_percentage=False)
+                yield ProgressLine(id="onboarding-progress")
                 with Horizontal(id="onboarding-actions"):
                     yield Button("", id="onboarding-previous", compact=True)
                     yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
