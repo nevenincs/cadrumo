@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:8289d80d988ebae30659a68df646888036f69c62a82a08513980eb21e3a13805'
+body_hash: 'sha256:673dfa477182db008fada75f466de3978e7f2ab79fe627d2a571329087fc6013'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -153,6 +153,12 @@ related:
 - `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle (clippy -D warnings)` -> `pass`
 - `S08` `verify:` `rustfmt --edition 2024 (stdin) status_cue.rs` -> `pass`
 - `S08` `by:` `tui-41`
+- `S06` `verify:` `cmake --build --preset release --target app-payload at 4cc0fdddc0` -> `pass`
+- `S06` `verify:` `dev.runtime_lifecycle.backend_probe --package build/windows-x64/stage/Release/app` -> `pass`
+- `S06` `verify:` `dev.runtime_lifecycle.concurrent_sessions_probe --package build/windows-x64/stage/Release/app` -> `fail`
+- `S06` `verify:` `dev.runtime_lifecycle.concurrent_sessions_probe --package build/windows-x64/stage/Debug/app` -> `fail`
+- `S06` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `pass`
+- `S06` `by:` `tui-41`
 
 ## Notes
 
@@ -165,3 +171,4 @@ related:
 - `S08` Correction to the previous S08 note: the fallback pace is kept by the ADR's second amendment ("ok add it"), not a third.
 - `S09` The re-review passed; its one low finding, that the constraint promised a retry an escaping error does not give, is resolved in the constraint's wording.
 - `S08` Plan-close finding status-cue-publisher-proof-is-a-bare-pid fixed: the record carries the publisher's creation stamp, schema 2.
+- `S06` S06 stays open: the concurrent probe's desktop holders, launched from bin/cadrumo-runtime, are refused `desktop_holder_unverified` because both stages were built with another writer's uncommitted `service_descriptors.py` edit that points the Windows desktop-session descriptor at the desktop's role-dispatch image; nothing here involves the operation cue. The Debug runtime also exited 1 mid-probe, unexplained. Debug's earlier probes at deed364c87 passed.
