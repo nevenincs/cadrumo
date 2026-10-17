@@ -6,7 +6,7 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import BinaryIO, cast
+from typing import BinaryIO, Literal, cast
 from uuid import UUID
 
 import pytest
@@ -38,7 +38,7 @@ boot = {_BOOT!r}
 connection = {_CONNECTION!r}
 sys.stderr.buffer.write(b'x' * 262144)
 sys.stderr.flush()
-if sys.argv[-1:] == ['with-password']:
+if 'with-password' in sys.argv[1:]:
     length = struct.unpack('!I', sys.stdin.buffer.read(4))[0]
     password = sys.stdin.buffer.read(length)
     if length != {len(_PASSWORD)} or password != {_PASSWORD!r}:
@@ -48,7 +48,8 @@ def send(document):
     sys.stdout.buffer.write(json.dumps(document, separators=(',', ':')).encode() + b'\\n')
     sys.stdout.buffer.flush()
 send({{'kind': 'session_held', 'profile_id': profile, 'session_id': session,
-      'runtime_boot_id': boot, 'connection_id': connection}})
+      'runtime_boot_id': boot, 'connection_id': connection,
+      'frontend_mode': 'cli' if sys.argv[-2:] == ['--frontend', 'cli'] else 'desktop'}})
 {finish}
 for frame in sys.stdin.buffer:
     request = json.loads(frame)
@@ -272,15 +273,23 @@ async def test_cancelling_start_waits_for_spawn_then_reaps_the_child(monkeypatch
 
 
 @pytest.mark.windows_only
-def test_windows_holder_owns_correlated_pipe_session_and_cleans_threads(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("frontend", ["desktop", "cli"])
+def test_windows_holder_owns_correlated_pipe_session_and_cleans_threads(
+    monkeypatch: pytest.MonkeyPatch, frontend: Literal["desktop", "cli"]
+) -> None:
     _patch_launcher(monkeypatch)
     password = bytearray(_PASSWORD)
     holder = WindowsRuntimeSessionHolder(
-        Path(sys.executable), profile_id=_PROFILE, environment=_test_environment(), password=password
+        Path(sys.executable),
+        profile_id=_PROFILE,
+        environment=_test_environment(),
+        password=password,
+        frontend=frontend,
     )
 
     assert password == bytearray(len(_PASSWORD))
     assert holder.identity["kind"] == "session_held"
+    assert holder.identity["frontend_mode"] == frontend
     inventory = holder.command("attendance_inventory")
     assert inventory["kind"] == "attendance_inventory"
     assert inventory["profile_id"] == str(_PROFILE)

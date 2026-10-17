@@ -72,7 +72,10 @@ def _decode_holder_line(line: bytes) -> dict[str, Any]:
 
 def _validate_identity(identity: dict[str, Any], profile_id: UUID) -> None:
     """Require the native identity returned by the exact held profile session."""
-    require(identity.get("kind") == "session_held", "runtime did not admit the held session")
+    require(
+        identity.get("kind") == "session_held",
+        f"runtime did not admit the held session: {identity.get('kind')} {identity.get('code')}",
+    )
     require(identity.get("profile_id") == str(profile_id), "holder profile identity differs")
     for member in ("session_id", "runtime_boot_id", "connection_id"):
         try:
@@ -279,6 +282,8 @@ class AsyncRuntimeSessionHolder:
     def __init__(self) -> None:
         """Start unbound and assign the owned pipe process in ``start``."""
         self.identity: dict[str, Any] = {}
+        # The unsolicited ending the runtime reported, `session_retired` or `session_refused`.
+        self.ended: str | None = None
         self._owner: _AsyncPipeOwner | None = None
         self._lock = asyncio.Lock()
         self._closed = False
@@ -341,6 +346,7 @@ class AsyncRuntimeSessionHolder:
             await owner.write(encoded)
             reply = await self._receive()
             if reply.get("kind") in {"session_retired", "session_refused"}:
+                self.ended = str(reply["kind"])
                 await self._close_locked()
                 raise AcceptanceError("the original human holder retired or refused the command")
             _validate_reply(
@@ -351,6 +357,11 @@ class AsyncRuntimeSessionHolder:
                 identity=self.identity,
             )
             return reply
+
+    @property
+    def exit_code(self) -> int | None:
+        """Return the holder process's exit code once it has exited on its own."""
+        return None if self._owner is None else self._owner.process.returncode
 
     async def close(self) -> None:
         """Close stdin and settle the holder process with bounded termination escalation."""
@@ -382,6 +393,7 @@ class WindowsRuntimeSessionHolder:
         profile_id: UUID,
         environment: Mapping[str, str],
         password: bytearray | None = None,
+        frontend: Literal["desktop", "cli"] = "desktop",
     ) -> None:
         """Use a kill-on-close Windows job and private standard pipes."""
         self.identity: dict[str, Any] = {}
@@ -402,6 +414,8 @@ class WindowsRuntimeSessionHolder:
         self._stderr_failure: BaseException | None = None
         try:
             executable, arguments = _holder_launch(runtime, profile_id, environment, password)
+            if frontend == "cli":
+                arguments = (*arguments, "--frontend", "cli")
             try:
                 self._scope = WindowsProcessScope()
             except BaseException as error:

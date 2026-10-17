@@ -55,11 +55,11 @@ class McpSession:
 
 @asynccontextmanager
 async def mcp_session(
-    programs: Programs, environment: Mapping[str, str], directory: Path, *arguments: str
+    programs: Programs, environment: Mapping[str, str], directory: Path, *arguments: str, stderr: Path | None = None
 ) -> AsyncGenerator[McpSession]:
-    """Run the packaged MCP server over stdio for the life of the block."""
+    """Run the packaged MCP server over stdio for the life of the block; ``stderr`` keeps what it wrote there."""
     identities: list[ProcessIdentity] = []
-    with open(os.devnull, "w", encoding="utf-8") as errors:
+    with open(os.devnull if stderr is None else stderr, "w", encoding="utf-8") as errors:
         async with (
             owned_stdio(
                 str(programs.mcp),
@@ -192,8 +192,11 @@ async def ask_and_decide(
                 )
                 return is_error, content
             if call.done():
-                await call
-                raise AcceptanceError("the relay answered before the person's attendance decision")
+                _, content = await call
+                raise AcceptanceError(
+                    "the relay answered before the person's attendance decision: "
+                    f"{content.get('outcome')} {content.get('code')} {content.get('denial')}"
+                )
             require(time.monotonic() < deadline, "runtime recorded no ask from the owned relay")
             await asyncio.sleep(0.25)
     finally:
