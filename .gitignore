@@ -562,6 +562,7 @@ cache/
 /.artifacts/
 !/CMakeLists.txt
 !/native/interpreter/windows/host.manifest
+!/native/desktop/src-tauri/windows/desktop.manifest
 
 # Private VaultSpec environment (never commit)
 /.vaultspec/.env

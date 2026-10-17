@@ -27,11 +27,17 @@ endif()
 foreach(bundled_image IN LISTS CADRUMO_BUNDLED_IMAGES)
   list(APPEND entrypoint_resources "${CONTRACT_DIR}/entrypoint-${bundled_image}.rc")
 endforeach()
+# Application images embed their authored manifest plus the package identity of their build kind.
+set(application_manifests "${CONTRACT_DIR}/process-release.manifest" "${CONTRACT_DIR}/process-development.manifest"
+  "${CONTRACT_DIR}/desktop-release.manifest" "${CONTRACT_DIR}/desktop-development.manifest")
+set(process_manifest "${CONTRACT_DIR}/process-$<IF:$<CONFIG:Debug>,development,release>.manifest")
 cadrumo_cached_command(metadata_command native_metadata SHARED
   INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
     "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${CADRUMO_PATH_TOOLS}/ready"
+    "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"
+    "${CMAKE_CURRENT_SOURCE_DIR}/desktop/src-tauri/windows/desktop.manifest"
   OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources})
+    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources} ${application_manifests})
 cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
   OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
@@ -40,7 +46,7 @@ add_custom_target(native_metadata
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources}
+    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources} ${application_manifests}
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(native_metadata native_build_tools)
 
@@ -153,8 +159,10 @@ foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
   cadrumo_describe_target(${target} GROUP native SUMMARY "compile the ${entrypoint} console entrypoint"
     OUTPUTS "${CADRUMO_PATH_BIN}/$<CONFIG>/${entrypoint}${CMAKE_EXECUTABLE_SUFFIX}")
 endforeach()
-set_property(SOURCE interpreter/windows/host.rc APPEND PROPERTY OBJECT_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest")
+set_property(SOURCE interpreter/windows/host.rc APPEND PROPERTY OBJECT_DEPENDS ${application_manifests})
+# The Visual Studio generator ignores $<COMPILE_LANGUAGE:RC>; only RC compiles this source.
+set_property(SOURCE interpreter/windows/host.rc APPEND PROPERTY COMPILE_DEFINITIONS
+  "CADRUMO_DEV_PACKAGE_IDENTITY=$<CONFIG:Debug>")
 foreach(target IN LISTS host_targets)
   target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows")
   # Entrypoint hosts run from the native directory beside bundled DLLs; resolve their
@@ -162,7 +170,7 @@ foreach(target IN LISTS host_targets)
   target_link_options(${target} PRIVATE /MANIFEST:NO /DEPENDENTLOADFLAG:0x800)
   add_custom_command(TARGET ${target} POST_BUILD
     COMMAND ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
-      "$<TARGET_FILE:${target}>" "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"
+      "$<TARGET_FILE:${target}>" "${process_manifest}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 endforeach()
 target_compile_definitions(cadrumo_python_d PRIVATE CADRUMO_DEVELOPMENT=1)

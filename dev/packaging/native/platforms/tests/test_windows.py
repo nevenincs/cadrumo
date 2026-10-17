@@ -9,6 +9,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from defusedxml import ElementTree
 
 from dev.packaging.native.platforms import windows
 
@@ -95,3 +96,53 @@ def test_sdk_still_refuses_hash_mismatch_and_escaping_archive_before_extraction(
             windows.provision_sdk(destination, "3.13.11", tools, {"sdk": {"root": "sdk/tools"}})
     assert not (destination / "sdk").exists()
     assert not (destination / "escaped.txt").exists()
+
+
+MSIX = "{urn:schemas-microsoft-com:msix.v1}msix"
+
+
+@pytest.mark.parametrize("image", sorted(windows.APPLICATION_MANIFESTS))
+def test_identity_manifest_adds_only_the_claim_to_each_authored_manifest(image: str) -> None:
+    authored = windows.APPLICATION_MANIFESTS[image].read_bytes()
+    rendered = windows.identity_manifest(
+        authored, package_name="md.neve.cadrumo", publisher="CN=Neve Nincs", application="Cadrumo"
+    )
+    claims = ElementTree.fromstring(rendered).findall(MSIX)
+    assert [claim.attrib for claim in claims] == [
+        {"publisher": "CN=Neve Nincs", "packageName": "md.neve.cadrumo", "applicationId": "Cadrumo"}
+    ]
+    claim_line = next(line for line in rendered.splitlines(keepends=True) if b"msix.v1" in line)
+    assert rendered.replace(claim_line, b"", 1) == authored
+
+
+def test_identity_manifest_quotes_attribute_values() -> None:
+    rendered = windows.identity_manifest(
+        b'<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">\n</assembly>\n',
+        package_name="a&b",
+        publisher='CN="x" <y>',
+        application="Cadrumo",
+    )
+    claim = ElementTree.fromstring(rendered).find(MSIX)
+    assert claim is not None
+    assert (claim.get("packageName"), claim.get("publisher")) == ("a&b", 'CN="x" <y>')
+
+
+@pytest.mark.parametrize(
+    "authored",
+    [
+        b'<assembly xmlns="urn:schemas-microsoft-com:asm.v1"><x/></assembly><!-- </assembly> -->',
+        b'<assembly xmlns="urn:schemas-microsoft-com:asm.v1">'
+        b'<msix xmlns="urn:schemas-microsoft-com:msix.v1"/></assembly>',
+        b'<assembly xmlns="urn:schemas-microsoft-com:asm.v1"/>',
+    ],
+)
+def test_identity_manifest_refuses_an_ambiguous_or_already_claimed_source(authored: bytes) -> None:
+    with pytest.raises(ValueError, match="claim no identity"):
+        windows.identity_manifest(authored, package_name="p", publisher="CN=p", application="a")
+
+
+def test_application_manifest_names_are_closed() -> None:
+    assert windows.application_manifest_name("desktop", "development") == "desktop-development.manifest"
+    for image, kind in (("installer", "release"), ("process", "debug")):
+        with pytest.raises(ValueError):
+            windows.application_manifest_name(image, kind)

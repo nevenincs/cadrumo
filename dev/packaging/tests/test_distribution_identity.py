@@ -74,3 +74,34 @@ def test_cmake_projection_carries_every_identity_field_once() -> None:
     assert keys == [f"CADRUMO_ID_{field.name.upper()}" for field in fields(DistributionIdentity)]
     assert "set(CADRUMO_ID_NAME [=[Cadrumo Preview]=])" in projection
     assert "set(CADRUMO_ID_APPLICATION_ID [=[md.neve.cadrumo.preview]=])" in projection
+
+
+@pytest.mark.parametrize(
+    "channel,package_name,display_name",
+    [("stable", "md.neve.cadrumo", "Cadrumo"), ("preview", "md.neve.cadrumo.preview", "Cadrumo Preview")],
+)
+def test_windows_package_identity_follows_the_channel(channel: str, package_name: str, display_name: str) -> None:
+    value = identity("windows-x86-64", channel)
+    assert value.windows_package_name == package_name
+    assert value.name == display_name
+    assert value.windows_package_application == "Cadrumo"
+    assert value.windows_package_version == f"{value.version}.0"
+    assert value.windows_package_publisher == "CN=Neve Nincs"
+    assert value.windows_package_development_publisher == "CN=Cadrumo Development"
+
+
+def test_windows_package_version_follows_the_release(tmp_path: Path) -> None:
+    source = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    project = tmp_path / "pyproject.toml"
+    current = identity("windows-x86-64").version
+    project.write_text(source.replace(f'version = "{current}"', 'version = "255.255.65535"', 1), encoding="utf-8")
+    assert identity("windows-x86-64", project_file=project).windows_package_version == "255.255.65535.0"
+
+
+@pytest.mark.parametrize("author", ["Neve, Nincs", "Neve+Nincs", 'Ne"ve', "CN=Neve", " Neve", ""])
+def test_windows_package_publisher_refuses_names_needing_escapes(author: str, tmp_path: Path) -> None:
+    source = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    project = tmp_path / "pyproject.toml"
+    project.write_text(source.replace('name = "Neve Nincs"', f"name = '{author}'", 1), encoding="utf-8")
+    with pytest.raises(ValueError, match="plain certificate common name"):
+        identity("windows-x86-64", project_file=project)

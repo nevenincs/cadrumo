@@ -619,6 +619,7 @@
         "dev.packaging.native.platforms.macos",
         "dev.packaging.native.platforms.pe",
         "dev.packaging.native.platforms.posix",
+        "dev.packaging.native.package_identity",
         "dev.packaging.native.platforms.windows",
         "dev.packaging.native.platforms.windows_manifest",
         "dev.packaging.native.platforms.windows_trace_analysis",

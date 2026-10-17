@@ -12,6 +12,7 @@ import zipfile
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+from xml.sax.saxutils import quoteattr
 
 import httpx
 from PIL import Image
@@ -22,9 +23,16 @@ from cadrumo.core.storage_taxonomy_locations import storage_location
 from dev._paths import REPO_ROOT
 
 from ..hashing import digest
+from ..identity import DistributionIdentity
 from ..stable_output import write_bytes, write_text
 from .pe import imports as pe_imports
 from .windows_verify import verify as windows_verify
+
+APPLICATION_MANIFESTS = {
+    "process": REPO_ROOT / "native/interpreter/windows/host.manifest",
+    "desktop": REPO_ROOT / "native/desktop/src-tauri/windows/desktop.manifest",
+}
+"""Authored manifests of the application images; each embeds its manifest with the package identity added."""
 
 
 def assemble_native(
@@ -182,11 +190,32 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
 
 
 def resources(
-    destination: Path, version: str, number: int, date: str, tools: Path, entrypoints: dict[str, str]
+    destination: Path,
+    version: str,
+    number: int,
+    date: str,
+    tools: Path,
+    entrypoints: dict[str, str],
+    product: DistributionIdentity,
 ) -> None:
-    """Render the canonical icon and one PE version resource per native executable."""
+    """Render the icon, one PE version resource per native executable and the process manifests."""
     if not 0 <= number <= 65535:
         raise ValueError("Windows resource build number must be between 0 and 65535")
+    for image, source in APPLICATION_MANIFESTS.items():
+        authored = source.read_bytes()
+        for build_kind, publisher in (
+            ("release", product.windows_package_publisher),
+            ("development", product.windows_package_development_publisher),
+        ):
+            write_bytes(
+                destination / application_manifest_name(image, build_kind),
+                identity_manifest(
+                    authored,
+                    package_name=product.windows_package_name,
+                    publisher=publisher,
+                    application=product.windows_package_application,
+                ),
+            )
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
     publisher = _rc_string(metadata["publisher"])
     sys.path.insert(0, str(tools))
@@ -205,6 +234,28 @@ def resources(
     for stem, description in descriptions.items():
         resource = _version_resource(destination, numeric, version, number, date, publisher, _rc_string(description))
         write_text(destination / f"{stem}.rc", resource)
+
+
+def application_manifest_name(image: str, build_kind: str) -> str:
+    """Name the identity-bearing manifest an application image of this build kind embeds."""
+    if image not in APPLICATION_MANIFESTS or build_kind not in {"release", "development"}:
+        raise ValueError(f"Unknown Windows application manifest: {image} {build_kind}")
+    return f"{image}-{build_kind}.manifest"
+
+
+def identity_manifest(authored: bytes, *, package_name: str, publisher: str, application: str) -> bytes:
+    """Add the package identity claim to an authored manifest, keeping every other byte."""
+    closing = b"</assembly>"
+    body = authored.rstrip()
+    if not body.endswith(closing) or authored.count(closing) != 1 or b"urn:schemas-microsoft-com:msix.v1" in authored:
+        raise ValueError("An authored application manifest must end with one </assembly> and claim no identity")
+    newline = b"\r\n" if b"\r\n" in authored else b"\n"
+    claim = (
+        f'  <msix xmlns="urn:schemas-microsoft-com:msix.v1" publisher={quoteattr(publisher)}'
+        f" packageName={quoteattr(package_name)} applicationId={quoteattr(application)} />"
+    ).encode()
+    position = len(body) - len(closing)
+    return authored[:position] + claim + newline + authored[position:]
 
 
 def _rc_string(value: str) -> str:

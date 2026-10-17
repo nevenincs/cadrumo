@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from ...runtime_wheelhouse_contract import target_platform
+from ..identity import DistributionIdentity
 from ..linux_desktop_runtime import desktop_path, external_sonames
 from .posix import (
     acquire_sdk,
@@ -84,11 +85,21 @@ def external_probe(destination: Path) -> list[str]:
 
 
 def resources(
-    destination: Path, version: str, number: int, date: str, tools: Path, entrypoints: dict[str, str]
+    destination: Path,
+    version: str,
+    number: int,
+    date: str,
+    tools: Path,
+    entrypoints: dict[str, str],
+    product: DistributionIdentity,
 ) -> None:
     """Validate embedded build identity; ELF hosts need no additional resource compiler."""
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))
-    if target_platform(metadata["target"]).sys_platform != "linux" or metadata["version"] != version:
+    if (
+        target_platform(metadata["target"]).sys_platform != "linux"
+        or metadata["version"] != version
+        or metadata["application_id"] != product.application_id
+    ):
         raise ValueError("ELF build metadata does not match the selected product/target")
 
 

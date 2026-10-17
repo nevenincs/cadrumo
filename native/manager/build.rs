@@ -1,9 +1,9 @@
 //! Windows linkage for the manager image.
 //!
-//! The image embeds the canonical native-host process manifest unchanged as resource 1,
+//! The image embeds the rendered native-host process manifest unchanged as resource 1,
 //! because linker manifest merging rewrites the document and can discard compatibility
-//! entries. The manager binary also carries a version resource named from the identity
-//! projection, which the shell shows for the image, for example in Task Manager's
+//! entries. The build supplies that document, which carries the package identity claim.
+//! The manager binary also carries a version resource named from the identity projection, which the shell shows for the image, for example in Task Manager's
 //! startup list. Both are serialized here as `.res` files, so the build needs no
 //! resource compiler. Load-time imports resolve from System32 only, like the C hosts.
 
@@ -37,12 +37,10 @@ fn main() {
     if target_os != "windows" || target_env != "msvc" {
         return;
     }
-    let crate_root =
-        PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("Cargo sets CARGO_MANIFEST_DIR"));
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("Cargo sets OUT_DIR"));
-    let manifest = crate_root.join("../interpreter/windows/host.manifest");
+    let manifest = PathBuf::from(projected("CADRUMO_PROCESS_MANIFEST"));
     println!("cargo:rerun-if-changed={}", manifest.display());
-    let document = fs::read(&manifest).expect("read the canonical native-host process manifest");
+    let document = fs::read(&manifest).expect("read the rendered native-host process manifest");
     let manifest_resource = out_dir.join("manager-manifest.res");
     fs::write(
         &manifest_resource,

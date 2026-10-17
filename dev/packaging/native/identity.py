@@ -22,6 +22,8 @@ MANAGER_NAME_SUFFIX = " Background Services"
 """User-facing suffix that names the per-user runtime manager after the channel's name."""
 MANAGER_COMPONENT = "manager"
 """Reverse-DNS component under the channel's application identifier for the runtime manager."""
+WINDOWS_DEVELOPMENT_PUBLISHER_SUFFIX = " Development"
+"""Separates a developer-registered package identity from every distributed one."""
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,11 @@ class DistributionIdentity:
     upgrade_code: str
     manager_id: str
     manager_name: str
+    windows_package_name: str
+    windows_package_publisher: str
+    windows_package_development_publisher: str
+    windows_package_application: str
+    windows_package_version: str
 
 
 def validate_native_version(version: str) -> None:
@@ -52,6 +59,13 @@ def validate_native_version(version: str) -> None:
     major, minor, patch = map(int, version.split("."))
     if major > 255 or minor > 255 or patch > 65535:
         raise ValueError("Version exceeds the MSI ProductVersion limits (255.255.65535)")
+
+
+def _publisher_subject(common_name: str) -> str:
+    """Render a certificate subject whose common name needs no distinguished-name escaping."""
+    if common_name != common_name.strip() or not common_name or set(common_name) & set(',+"\\<>;=#'):
+        raise ValueError(f"Publisher {common_name!r} is not a plain certificate common name")
+    return f"CN={common_name}"
 
 
 def identity(target: str, channel: str = "stable", *, project_file: Path | None = None) -> DistributionIdentity:
@@ -84,6 +98,13 @@ def identity(target: str, channel: str = "stable", *, project_file: Path | None 
         upgrade_code=str(uuid5(NAMESPACE_DNS, f"{app_id}/{platform.name}/machine")).upper(),
         manager_id=f"{app_id}.{MANAGER_COMPONENT}",
         manager_name=name + MANAGER_NAME_SUFFIX,
+        windows_package_name=app_id,
+        windows_package_publisher=_publisher_subject(author["name"]),
+        windows_package_development_publisher=_publisher_subject(
+            PRODUCT_IDENTITY.prose_name + WINDOWS_DEVELOPMENT_PUBLISHER_SUFFIX
+        ),
+        windows_package_application=PRODUCT_IDENTITY.prose_name,
+        windows_package_version=f"{version}.0",
     )
 
 

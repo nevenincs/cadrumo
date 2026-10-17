@@ -23,8 +23,16 @@ set(manager_profile "$<IF:$<CONFIG:Debug>,dev,release>")
 set(CADRUMO_MANAGER_EXECUTABLE
   "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo-manager${CMAKE_EXECUTABLE_SUFFIX}")
 # The crate reads every name from these variables, and the runtime protocol from the generated
-# contract; it authors none of them itself.
-cadrumo_cargo_command(manager_cargo
+# contract; it authors none of them itself. On Windows it embeds the rendered process manifest
+# that carries this build kind's package identity.
+set(manager_process_manifest)
+if(WIN32)
+  if(NOT DEFINED process_manifest)
+    message(FATAL_ERROR "Manager.cmake requires the platform adapter's process_manifest")
+  endif()
+  set(manager_process_manifest --env "CADRUMO_PROCESS_MANIFEST=${process_manifest}")
+endif()
+cadrumo_cargo_command(manager_cargo ${manager_process_manifest}
   --env "CADRUMO_TEST_PYTHON=${CADRUMO_DEV_PYTHON}"
   --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
   --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}"
@@ -35,10 +43,10 @@ cadrumo_cargo_command(manager_cargo
 
 set(manager_manifest_check)
 if(WIN32)
-  # build.rs embeds the canonical native-host manifest; reject a linked image that diverges.
+  # build.rs embeds the rendered process manifest; reject a linked image that diverges.
   set(manager_manifest_check
     COMMAND ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.platforms.windows_manifest
-      "${CADRUMO_MANAGER_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/../interpreter/windows/host.manifest")
+      "${CADRUMO_MANAGER_EXECUTABLE}" "${process_manifest}")
 endif()
 # Cargo owns freshness, including build.rs inputs such as the embedded process manifest.
 # manager_cargo expands only here and in add_test: copying it into another list would split

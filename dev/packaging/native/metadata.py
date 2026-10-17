@@ -54,7 +54,7 @@ def generate(
     header = "\n".join(f"#define CADRUMO_{name} {json.dumps(value)}" for name, value in values.items())
     write_text(destination / "build_metadata.h", header + "\n")
     images = {**layout["entrypoints"], **{name: entry["description"] for name, entry in bundled_images(layout).items()}}
-    backend(layout).resources(destination, version, number, date, tools, images)
+    backend(layout).resources(destination, version, number, date, tools, images, product)
 
 
 if __name__ == "__main__":

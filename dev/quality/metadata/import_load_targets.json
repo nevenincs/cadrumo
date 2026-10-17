@@ -4198,6 +4198,7 @@
         "dev.packaging.native.platforms.windows_verify",
         "dev.packaging.native.process_quiescence",
         "dev.packaging.native.product",
+        "dev.packaging.native.package_identity",
         "dev.packaging.native.provision",
         "dev.packaging.native.release",
         "dev.packaging.native.runtime_exit_reasons",

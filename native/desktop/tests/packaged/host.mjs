@@ -135,6 +135,10 @@ function build(variant) {
     CARGO_TARGET_DIR: paths.cargo,
     CADRUMO_NATIVE_CONTRACT: contract,
     CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
+    CADRUMO_PROCESS_MANIFEST: resolve(
+      contract,
+      `../process-${selected.debug ? "development" : "release"}.manifest`,
+    ),
     CADRUMO_ID_NAME: identity.name,
     CADRUMO_ID_APPLICATION_ID: identity.application_id,
     CADRUMO_ID_VERSION: identity.version,
