@@ -30,6 +30,27 @@ _STARTUP_SECONDS = 30.0
 _CLOSE_SECONDS = 10.0
 _WRITE_SECONDS = 30.0
 _STDERR_CHUNK_BYTES = 4096
+# The leading arguments that start the runtime console script as a role of the desktop image.
+_RUNTIME_ROLE = ("--role", "runtime")
+
+
+def _as_desktop_holder(executable: Path, arguments: tuple[str, ...]) -> tuple[Path, tuple[str, ...]]:
+    """Start a desktop holder from the image the package admits as the desktop's session holder.
+
+    Where the package's ``desktop-session`` descriptor names the desktop's own image, the
+    desktop runs its holder as that image's runtime role, and so does this holder.
+    """
+    package = executable.parent.parent
+    descriptors = package / "data" / "service-descriptors.json"
+    if not descriptors.is_file():
+        return executable, arguments
+    entries = json.loads(descriptors.read_bytes(), object_pairs_hook=reject_duplicate_json_members)
+    holder = next((entry for entry in entries if entry.get("service_id") == "desktop-session"), None)
+    require(holder is not None, "package declares no desktop session holder")
+    image = (package / holder["launch_image"]).resolve(strict=True)
+    if image == executable:
+        return executable, arguments
+    return image, (*_RUNTIME_ROLE, *arguments)
 
 
 def _holder_launch(
@@ -305,6 +326,8 @@ class AsyncRuntimeSessionHolder:
             executable, arguments = _holder_launch(runtime, profile_id, environment, password)
             if frontend == "cli":
                 arguments = (*arguments, "--frontend", "cli")
+            else:
+                executable, arguments = _as_desktop_holder(executable, arguments)
 
             async def assign_owner() -> None:
                 holder._owner = await _AsyncPipeOwner.launch(executable, arguments, environment)
@@ -416,6 +439,8 @@ class WindowsRuntimeSessionHolder:
             executable, arguments = _holder_launch(runtime, profile_id, environment, password)
             if frontend == "cli":
                 arguments = (*arguments, "--frontend", "cli")
+            else:
+                executable, arguments = _as_desktop_holder(executable, arguments)
             try:
                 self._scope = WindowsProcessScope()
             except BaseException as error:

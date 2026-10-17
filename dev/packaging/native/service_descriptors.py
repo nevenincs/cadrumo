@@ -63,11 +63,15 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
         for image in images
         if image.desktop
     ]
+    holder_image = entrypoints["cadrumo-runtime"]
+    if layout["backend"] == "windows" and parents:
+        # Windows hosts the desktop's runtime children in its own role-dispatch image.
+        holder_image = parents[0]["launch_image"]
     holder: dict[str, Any] = {
         "service_id": "desktop-session",
-        "launch_image": entrypoints["cadrumo-runtime"],
+        "launch_image": holder_image,
         "launch_module": "cadrumo_runtime.host.bootstrap",
-        "image_digest": digest(root / entrypoints["cadrumo-runtime"]),
+        "image_digest": digest(root / holder_image),
         "record_capabilities": [],
         "operation_scope": dict(ceiling, operations=[], actions=[]),
         "allow_descendants": False,

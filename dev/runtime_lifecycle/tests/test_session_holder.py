@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import sys
 from pathlib import Path
@@ -377,3 +378,40 @@ def test_windows_holder_retries_a_failed_stdin_close(monkeypatch: pytest.MonkeyP
 
     assert holder._closed
     assert retryable_stream.closed
+
+
+def _package(tmp_path: Path, holder_image: str | None) -> Path:
+    (tmp_path / "bin").mkdir()
+    runtime = tmp_path / "bin" / "cadrumo-runtime.exe"
+    runtime.write_bytes(b"runtime")
+    (tmp_path / "cadrumo.exe").write_bytes(b"desktop")
+    if holder_image is not None:
+        (tmp_path / "data").mkdir()
+        descriptors = [
+            {"service_id": "cadrumo-agent-service", "launch_image": "bin/cadrumo-agent-service.exe"},
+            {"service_id": "desktop-session", "launch_image": holder_image},
+        ]
+        (tmp_path / "data" / "service-descriptors.json").write_text(json.dumps(descriptors), encoding="utf-8")
+    return runtime.resolve()
+
+
+def test_desktop_holder_runs_as_the_role_of_the_image_the_package_admits(tmp_path: Path) -> None:
+    runtime = _package(tmp_path, "cadrumo.exe")
+    executable, arguments = session_holder._as_desktop_holder(runtime, ("session", "hold"))
+    assert executable == (tmp_path / "cadrumo.exe").resolve()
+    assert arguments == ("--role", "runtime", "session", "hold")
+
+
+@pytest.mark.parametrize("holder_image", ["bin/cadrumo-runtime.exe", None])
+def test_desktop_holder_keeps_the_runtime_image_the_package_admits_or_without_descriptors(
+    tmp_path: Path, holder_image: str | None
+) -> None:
+    runtime = _package(tmp_path, holder_image)
+    assert session_holder._as_desktop_holder(runtime, ("session", "hold")) == (runtime, ("session", "hold"))
+
+
+def test_a_package_without_a_desktop_session_holder_is_refused(tmp_path: Path) -> None:
+    runtime = _package(tmp_path, "cadrumo.exe")
+    (tmp_path / "data" / "service-descriptors.json").write_text("[]", encoding="utf-8")
+    with pytest.raises(AcceptanceError):
+        session_holder._as_desktop_holder(runtime, ("session", "hold"))

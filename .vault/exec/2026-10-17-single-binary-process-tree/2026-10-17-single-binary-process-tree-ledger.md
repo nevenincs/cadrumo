@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:409fef6377256b474a1961fda6c267f410c2ccbc547df72766be0f68689ad07f'
+body_hash: 'sha256:b21b773411dcac7c314d1a542c3cc48b9f8fadb79adcf8867f1c960452f0013e'
 related:
   - "[[2026-10-17-single-binary-process-tree-plan]]"
 ---
@@ -73,9 +73,17 @@ related:
 - `S02` `verify:` `run-backend.ps1 -Mode Clippy` -> `pass`
 - `S02` `verify:` `live stage/Debug: session watch runs as cadrumo.exe --role runtime session watch under the window` -> `pass`
 - `S02` `verify:` `fresh Task Manager shows one cadrumo.exe row of 162.9 MB covering window, runtime and session watch` -> `pass`
+- `S02` `M` `dev/packaging/native/service_descriptors.py`
+- `S02` `A` `dev/packaging/tests/test_native_service_descriptors.py`
+- `S02` `M` `dev/runtime_lifecycle/session_holder.py`
+- `S02` `M` `dev/runtime_lifecycle/tests/test_session_holder.py`
+- `S02` `verify:` `pytest test_native_service_descriptors.py and test_session_holder.py` -> `pass`
+- `S02` `verify:` `concurrent_sessions_probe on stage/Debug: fan_in, cross_profile, race, sign_out and resume_race checks` -> `pass`
+- `S02` `verify:` `concurrent_sessions_probe no_error_records` -> `fail`
 
 ## Notes
 
 - `S01` pytest dev/packaging: 1969 passed, 1 pre-existing failure `test_discovered_live_var_members_cover_the_readiness_gate_inputs` outside this change
 - `S01` session watch helper (cadrumo-runtime.exe) still shows as its own row until S02; WebView2 children show under the WebView2 Manager row
 - `S02` Task Manager groups only process trees present when it opens; processes started while it is open get their own rows, so grouping is judged in a freshly opened Task Manager. WebView2 stays under its own Microsoft row. Roles run on Windows only until S08.
+- `S02` desktop-session admission still matches by image and parent image only; once runtime workers run as cadrumo.exe (S03) they would pass it, so admission must bind role and invocation or parent incarnation before S03 lands. `no_error_records` fails on refusal boundaries logged at ERROR since 262e873ce3, outside this change.
