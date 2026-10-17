@@ -8,9 +8,9 @@ related:
   - '[[2026-10-16-application-distribution-windows-package-identity-adr]]'
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
   - '[[2026-10-16-native-build-incremental-adr]]'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:d97660cbae86b1dcb6ae4574acff02b654febdcb677435e1c685b1ade9c7b6c9'
+body_hash: 'sha256:35f2a0c521c23ff7b00a5d4eae64a281979f2701675b737407779a01905ec406'
 ---
 
 # `windows-package-identity` plan
@@ -25,10 +25,10 @@ Decision coverage: 2026-10-16-application-distribution-windows-package-identity-
 
 ## Steps
 
-- [ ] `S01` - Project the package name, publishers, application id, display name and registration version from the distribution identity owner; `dev/packaging/native/identity.py`.
-- [ ] `S02` - Render an identity-bearing process manifest for the C hosts, manager and agent image, keep the installer plain, and check each linked image against its role; `native/interpreter/windows/host.manifest`.
-- [ ] `S03` - Embed Tauri's manifest content plus the identity element in the desktop image; `native/desktop/src-tauri/build.rs`.
-- [ ] `S04` - Render the package manifest and its logo assets from the projection; `dev/packaging/native/package_identity.py`.
+- [x] `S01` - Project the package name, publishers, application id, display name and registration version from the distribution identity owner; `dev/packaging/native/identity.py`.
+- [x] `S02` - Render an identity-bearing process manifest for the C hosts, manager and agent image, keep the installer plain, and check each linked image against its role; `native/interpreter/windows/host.manifest`.
+- [x] `S03` - Embed Tauri's manifest content plus the identity element in the desktop image; `native/desktop/src-tauri/build.rs`.
+- [x] `S04` - Render the package manifest and its logo assets from the projection; `dev/packaging/native/package_identity.py`.
 - [ ] `S05` - Add the developer command that loosely registers and removes a built stage tree, and prove one Cadrumo entry on the real Debug application; `dev/packaging/native/package_identity.py`.
 - [ ] `S06` - Sign the package with the operator-chosen certificate source; `dev/packaging/native/package_identity.py`.
 - [ ] `S07` - Register and remove the package per scope in the native maintenance owner within the shared-registration feature; `native/installer`.
