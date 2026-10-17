@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:45c0a9fa0262a0952ab5a3c2d5313879bcd6cffca2159b1da60d6e27dfe218ec'
+body_hash: 'sha256:bab2105cd88a2f5f0faf1c9a63110175859e3a1c05682485bd805e724b2720f1'
 related: []
 ---
 
@@ -310,3 +310,5 @@ The cadence test covers an unknown count. The idle hang test uses a 1 s idle int
 ### stale-line-citations and module-doc-overlong | low | Records cited moved lines, and the module doc had a 152-character line
 
 The heartbeat findings cite current lines, the plan's Verification names S20's checks and allows the minute ping under S10, and the module doc is reflowed. The `manager-supervision-poll` finding keeps its citations as evidence of the code it described.
+
+The re-review of `e03c12849b` passed with no new findings. It traced that the busy-again branch covers a fresh nonzero count, an unknown count and a stale tick after an idle reply, and leaves busy timing equal to the original rule. It also traced that the late-reply test fails against `f2536a9157`, where the hang lands at about 700 ms, and that an implementation treating an unknown count as idle would fail the cadence test. CADRUMO-BUILD-DEBUG ran clippy, `manager.rust` and `manager.supervision` green on that commit, with all three heartbeat tests passing.
