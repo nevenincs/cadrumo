@@ -9,7 +9,7 @@ related:
   - '[[2026-08-13-profile-session-lifecycle-successor-adr]]'
 modified: '2026-10-15'
 body_schema: body-v2
-body_hash: 'sha256:605e6793eab0e94bdb143f2ac60dc77c223b70a5a1e72fdff269dc5f0db78454'
+body_hash: 'sha256:3be1b27221882f97d9c01308102d253b416430589b295d82e539c4e0f867c1ca'
 ---
 
 # `session-lifetime-repair` plan
@@ -23,7 +23,7 @@ Approved 2026-10-15. The user reported active-use logout and application termina
 - [x] `S01` - Ground and repair active human session lifetime and uncertain OS observations; reconcile authorized policy; `src/cadrumo_runtime, src/cadrumo_client, src/cadrumo/application/user_profile, src/cadrumo/adapters/persistence/storage, .vault/adr`.
 - [x] `S02` - Trace and repair native crash and desktop shutdown sequencing; `native/desktop/src-tauri, native/interpreter host paths and focused tests`.
 - [x] `S03` - Repair TUI background status handling and session-loss recovery; `src/cadrumo/entrypoints/tui and focused tests`.
-- [ ] `S04` - Review integrated repairs, run shared checks and verify rebuilt Debug package; `changed runtime, TUI and native files and build/windows-x64/stage/Debug/app`.
+- [x] `S04` - Review integrated repairs, run shared checks and verify rebuilt Debug package; `changed runtime, TUI and native files and build/windows-x64/stage/Debug/app`.
 
 ## Parallelization
 

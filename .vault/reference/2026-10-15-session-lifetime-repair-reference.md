@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:5307d4b4e459a45cc6eef9bae33bbf706673d3b6da9d3b13911689a3efcd390a'
+body_hash: 'sha256:ceb14bf5c0988da9f7dfb40e9ceb2c23ee564ea8b4008e9ceb30c05da8dd0cba'
 related: []
 ---
 
@@ -27,4 +27,4 @@ Latest local logs on 2026-10-15 show successful TUI login at 07:37:50Z, user-pro
 
 ## Sources
 
-C:/Users/hello/AppData/Local/cadrumo/logs/cadrumo.log and cadrumo-native.jsonl, final Debug run 2026-10-15. Windows Application event log IDs1000/1001 for 2026-10-15. Source locators above; packaged runtime admission and connection-session files match source text.
+%LOCALAPPDATA%/cadrumo/logs/cadrumo.log and cadrumo-native.jsonl, final Debug run 2026-10-15. Windows Application event log IDs1000/1001 for 2026-10-15. Source locators above; packaged runtime admission and connection-session files match source text.

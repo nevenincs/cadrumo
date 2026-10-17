@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:aee4fae2c34ebf234b674766333acc9abfc17f491be309d28aab5a2ea65dcba9'
+body_hash: 'sha256:b4f7444302dc8de38b0c98901ec7d39c09bcb927a5acb6e4ee043c38953d4238'
 related:
   - "[[2026-10-15-session-lifetime-repair-plan]]"
   - "[[2026-10-04-application-sign-in-adr]]"
@@ -51,6 +51,10 @@ A final race review found that every receipt resume invokes cross-profile sign-o
 
 Activity uses an explicit receipt-only intent, omitted from legacy frames when false, that never invokes cross-profile sign-out. Ordinary password/receipt handovers serialize final status revalidation and the cross-profile sweep under a dedicated lock, without holding the profile-map lock or serializing password proof. Revoked/denied completions cannot sweep. Root reviewed lock ordering. All 19 frame/CLI tests and all 4 one-signed-in-profile Windows integration tests pass, including forced late activity completion and overlapping ordinary handovers. Ruff and focused types pass. No high code finding remains. Final incremental Debug rebuild must include this repair.
 
+### final-package-verification | low | Final staged Debug app passed recovery and shutdown
+
+The final `cmake --build build/windows-x64 --config Debug --target app-payload` completed successfully. The packaged `package_launch_smoke --health` probe recovered from exact owned runtime termination, verified runtime IPC, and exited without surviving owned processes. Runtime-holder and service probes also exited zero with empty stderr while their parent kept stdin open, in both Debug and Release. Final Debug session activity, activity-only receipt intent, and handover files match source after normalizing line endings. Concurrent unrelated checkout edits prevented a reusable product snapshot identity; the completed artifact was retained and tested. This verifies the staged app, not an MSI or distributable bundle. Scoped repair acceptance is PASS; workspace aggregate limitations above remain. No private user profile was modified for testing.
+
 ## Recommendations
 
-Finish staged Debug app verification and record exact outcomes. Preserve the distinction between historical native crash evidence and the unproven initiating event in the latest Debug shutdown. Independent final handover review returned PASS with no lock inversion found. No unresolved high code finding remains.
+Staged Debug verification is complete. Preserve the distinction between historical native crash evidence and the unproven initiating event in the latest Debug shutdown. Independent final handover review returned PASS with no lock inversion found. No unresolved high code finding remains.

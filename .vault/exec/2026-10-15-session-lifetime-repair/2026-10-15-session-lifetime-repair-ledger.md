@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c0afe97d2b9f5302318ca13904a77793ed57d149cbee0d95aadf5a8e86061c8'
+body_hash: 'sha256:0165ef58969ff332d3fc0c4c4d1759198cc404b3158d76cd2650f11f3f6357aa'
 related:
   - "[[2026-10-15-session-lifetime-repair-plan]]"
 ---
@@ -96,6 +96,15 @@ related:
 - `S01` `verify:` `activity intent frame and CLI 19 tests` -> `pass`
 - `S01` `verify:` `4770 first-party modules isolated import loadability` -> `pass`
 - `S01` `verify:` `final just check-format` -> `pass`
+- `S04` `M` `.vault/audit/2026-10-15-session-lifetime-repair-audit.md`
+- `S04` `M` `.vault/index/session-lifetime-repair.index.md`
+- `S04` `verify:` `cmake --build build/windows-x64 --config Debug --target app-payload` -> `pass`
+- `S04` `verify:` `packaged Debug package_launch_smoke --health` -> `pass`
+- `S04` `verify:` `packaged Debug and Release stdin-open runtime and service probes` -> `pass`
+- `S04` `verify:` `final staged session source comparison normalized line endings` -> `pass`
+- `S04` `verify:` `just check-format` -> `pass`
+- `S04` `verify:` `just check-code` -> `fail`
+- `S04` `verify:` `isolated import loadability 4770 modules zero failures` -> `pass`
 
 ## Notes
 
@@ -103,3 +112,6 @@ related:
 - `S01` Shared worktree changes are uncommitted; package/global checks belong to S04.
 - `S03` Cross-origin documentation iframe input is not captured as person activity. Shared changes uncommitted.
 - `S01` Activity-only resumption has no profile-switch side effects; ordinary handover completion and revocation are serialized.
+- `S04` Workspace aggregate retains unrelated import-boundary, reachability and unused-code failures; scoped repair checks pass.
+- `S04` No commit: shared dirty workspace contains overlapping unrelated edits.
+- `S04` Verified staged Debug app; installer bundle not completed.
