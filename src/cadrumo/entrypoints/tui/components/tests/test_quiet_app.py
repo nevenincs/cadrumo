@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from typing import override
 
 import pytest
 from textual.app import App, ComposeResult, RenderResult
+from textual.screen import Screen
 from textual.strip import Strip
 from textual.widgets import Input
 
+from ..host import ScreenHostApp
 from ..quiet_app import QuietApp
 from ..status import ProgressLine
 
@@ -26,7 +29,7 @@ class _CountedInput(Input):
         return super().render_line(y)
 
 
-class _QuietHarness(QuietApp, App[None]):
+class _QuietHarness(QuietApp[None]):
     @override
     def compose(self) -> ComposeResult:
         yield _CountedInput(id="search")
@@ -79,3 +82,27 @@ async def test_a_progress_line_repaints_only_when_its_progress_changes() -> None
         await pilot.pause()
         assert line.renders > settled
         assert (line.progress, line.total) == (2, 4)
+
+
+class _InputScreen(Screen[None]):
+    @override
+    def compose(self) -> ComposeResult:
+        yield _CountedInput(id="field")
+
+
+@pytest.mark.asyncio
+async def test_a_screen_run_as_its_own_process_is_as_quiet_as_the_workbench() -> None:
+    """The host for registration, credential and installation screens takes the same quiet base."""
+    host = ScreenHostApp(_InputScreen())
+    if sys.platform == "win32":
+        assert host.driver_class.__name__ == "QuietWindowsDriver"
+    async with host.run_test(size=(40, 5)) as pilot:
+        await pilot.pause()
+        field = host.screen.query_one("#field", _CountedInput)
+        field.focus()
+        await pilot.pause()
+        assert field.cursor_blink is False
+        settled = field.renders
+        await asyncio.sleep(1.3)
+        await pilot.pause()
+        assert field.renders == settled, "a hosted screen's cursor kept repainting the idle screen"

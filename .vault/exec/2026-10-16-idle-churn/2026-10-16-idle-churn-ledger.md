@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:526595743c24d21bc4f9b149b7a07405f7f69becc294518c516ef324cffd0fc4'
+body_hash: 'sha256:0a719b71e8622c7d29d161410fa362a65248b03bc7dc40671cc2452ebe3d4a2e'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -262,6 +262,12 @@ related:
 - `S19` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S19` `verify:` `pytest test_worker_exit_cleanup, test_profile_worker_operations (real workers through the heartbeat count), test_profile_worker_transport, test_supervised_channel (70 passed)` -> `pass`
 - `S19` `verify:` `ruff, ruff format, ty, pyrefly and basedpyright on the contract` -> `pass`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/host.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/tests/test_quiet_app.py`
+- `S16` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S16` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S16` `verify:` `pytest components/tests, test_registration_screen, test_theme and the affected TUI and core suites (134 passed); registration, installation and secret screens (56 passed)` -> `pass`
+- `S16` `verify:` `ruff, ruff format, ty, lint-imports (25 kept)` -> `pass`
 
 ## Notes
 
@@ -286,3 +292,4 @@ related:
 - `S17` With Textual's own driver the idle test reads 14 switches in 1.5 s and fails; with the post-input escape wait removed, the lone-Escape test fails
 - `S18` Each new test fails against the previous behaviour: an enrolment wait with both release paths removed hangs, a lapse timer never armed leaves the shell open, and a watch on an interval checks before anything ended. A Windows timer can wake a few milliseconds early, so the expiry timer runs past the deadline and re-arms when woken before it
 - `S19` The new test fails when the activity read wakes custody expiry. The heartbeat's 5 s cadence is unchanged pending the operator's ruling on idle-heartbeat; this step only stops each ping revalidating custody from disk
+- `S16` Reopened by the plan-close review (tui-quiet-app-coverage, high): ScreenHostApp ran the registration, credential and installation screens on a plain Textual App. The new test fails with the plain base

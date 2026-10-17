@@ -215,7 +215,7 @@ The supervisor pings every 5 s (`native/manager/src/supervision/supervisor.rs:63
 
 ### idle-supervisor-heartbeat | medium | The supervisor's 5 s ping keeps the runtime and its workers waking while idle
 
-With S13 in place, each ping still wakes the supervisor, the runtime's supervision reader, a status thread and the worker, and the worker's status revalidates the binding once. `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` makes the heartbeat the minimum needed to restart after a hang, so removing it while idle changes that decision. Recommendation: decide whether hang supervision may stop while the runtime reports no in-flight work, and how a hang that starts at idle is then found.
+Each ping still wakes the supervisor, the runtime's supervision reader, a status thread and the worker. Since S19 the worker answers an activity read that touches no custody and leaves the expiry pass asleep (`src/cadrumo_runtime/host/worker_service.py:300-310`). `2026-10-04-runtime-manager-architecture-supervisor-contract-adr` makes the heartbeat the minimum needed to restart after a hang, so removing it while idle changes that decision. Recommendation: decide whether hang supervision may stop while the runtime reports no in-flight work, and how a hang that starts at idle is then found.
 
 ### terminal-cursor-blink | medium | A focused terminal pane redrew on a 600 ms blink timer
 
@@ -230,7 +230,7 @@ With S13 in place, each ping still wakes the supervisor, the runtime's supervisi
 Five read-only combs of the TUI (the Textual internals, the runtime-hosted TUI, the shell and its components, the ledger, declarations and Modelo screens, and the runtime client threads) and a headless run that listed every live Textual timer found these. The TUI from source, signed in to a synthetic profile on an isolated runtime and idle in a console of its own, measured 0.078% of one core at 143.7 context switches a second, as the desktop pane had.
 
 - `PinnedStatusBar` composed a `LoadingIndicator` that Textual refreshes 16 times a second from mount, displayed or not. That covered every screen with the bar: the profile manager (the screen an unfinished profile lands on after sign-in), reference, installation, passphrase, registration and sign-in. The spinner now refreshes only while progress shows (`src/cadrumo/entrypoints/tui/components/status.py`).
-- Textual's Windows driver woke every 100 ms to tick its escape parser (`textual/drivers/win32.py`, `EventMonitor.run`). Every Cadrumo app now runs `QuietWindowsDriver`, whose loop waits on console input and on a kernel mirror of the driver's stop flag with no timeout. Only after input does it wait one escape delay, so a lone Escape still times out (`src/cadrumo/entrypoints/tui/windows_input.py`, `components/quiet_app.py`).
+- Textual's Windows driver woke every 100 ms to tick its escape parser (`textual/drivers/win32.py`, `EventMonitor.run`). Every Cadrumo app now runs `QuietWindowsDriver`: the workbench, the runtime sign-in app, the API-key shell, and `ScreenHostApp`, which runs the registration, credential and installation screens as their own processes. Its loop waits on console input and on a kernel mirror of the driver's stop flag with no timeout. Only after input does it wait one escape delay, so a lone Escape still times out (`src/cadrumo/entrypoints/tui/windows_input.py`, `components/quiet_app.py`).
 - A focused `Input` or `TextArea` blinked on a 0.5 s timer and repainted each blink, and Textual has no app-wide switch. `QuietApp` holds each text cursor steady as it takes focus.
 - The onboarding `ProgressBar` re-rendered every second for an estimated time it did not show. It is now a `ProgressLine` that repaints only when its progress changes.
 - The recovery-code handoff polled every 0.1 s while a person copied the code. Every way the code screen ends already released it, so it now waits on that alone (`src/cadrumo/entrypoints/tui/secret/registration.py`).
@@ -243,6 +243,48 @@ After these, the same TUI measured 0.000% over 60 s, and no thread began or ende
 
 The client side is a long poll, not the 20-a-second loop the comb first reported. Once the request is submitted, `wait_for_terminal` sleeps 50 ms between round trips (`src/cadrumo_client/transport/automation_requester.py:224-231`). Each `enrollment_poll` waits up to 5 s in the runtime for work (`src/cadrumo_runtime/application/enrollment_recipient.py:35`, `:233-248`). That makes about one inspect and one poll every 5 s. The runtime's own wait re-checks every 0.1 s (`enrollment_recipient.py:36`, `:197`, `:245`) on purpose. Offer and record expiry are wall-clock authority, and that re-read is what notices a forward clock change, so a one-shot timer at the deadline would let a clock jump extend an automation grant's window. It runs only during an enrolment journey. Recommendation: feed that condition from an OS time-change notification (`WM_TIMECHANGE` on Windows, a `CLOCK_REALTIME` timerfd with cancel-on-set on Linux) and then drop the interval. Owner not yet assigned.
 
+### installed-manager-idle-pacing | medium | An installed manager process still wakes on intervals while the desktop is closed
+
+CADRUMO-BUILD-DEBUG made the desktop host's supervision event-driven: the stage desktop owns its runtime and wakes on no timer while signed in and idle. That covers `d31eaee742`, `1370d44e27` and `2f30bf8217`. The installed manager process (`cadrumo-manager.exe`, started at every login on an installed machine) still paces some waits. It checks the installation every 2 s, gives discovery a 30 s deadline, and loops at 1 s in `desktop_host` while another manager owns the runtime. These run with no window open. Recommendation: drive the installation watch from a directory change notification, as `native/platform/src/file_changes.rs` does for the log directories, and ownership changes from the managers' own named events. Open; CADRUMO-BUILD-DEBUG owns it as a Step of `2026-10-17-operation-cues-plan`, keeping the paces only where no event source exists.
+
 Recorded, not idle work: the operation modal and the settlement waits poll every 20-250 ms while an operation is in flight; CADRUMO-BUILD-DEBUG is replacing them with an `operation_changed` cue. The 30 s session watch in `src/cadrumo/entrypoints/tui/app.py:344` runs only without a retirement subscription, which every production composition supplies. The language retry timer re-arms without a cap, but only after a failed read.
 
 `agent-recovery-poll` and the gateway's other idle wakes are fixed in cadrumo-agent `3ee988e`. CADRUMO-AGENT-SESSION1 replaced them with waits on events and known deadlines: the recovery pass, uvicorn's 100 ms loop tick, the worker watchdog and heartbeat, the retention sweep, the event-writer flush and the 15 s discovery-record heartbeat. A gateway from source idle for 60 s measured 0.00% of one core with no event-loop callbacks. A packaged build shows this only once rebuilt from that commit or later.
+
+## Plan-close review of S13-S19
+
+The review of `de203214bd`, `7a27027f9a`, `f11dba418d`, `19faac9265`, `cc8e682706`, `927d43999e` and `3f16d935ef`, each read on its own, required revision for one high finding. S15, S16 and S17 were reopened, and every finding below is fixed in the follow-up commits.
+
+### tui-quiet-app-coverage | high | The screen host was still a plain Textual app
+
+`ScreenHostApp` runs the registration, credential and installation screens as whole processes (`src/cadrumo/entrypoints/tui/secret/credentials.py:281`, `src/cadrumo_runtime/host/frontend/tui/installed_session.py:111`, `:132`). Built on Textual's `App`, it kept the 100 ms input tick and the blinking cursor that S16 and S17 removed elsewhere. It now takes the `QuietApp` base (`src/cadrumo/entrypoints/tui/components/host.py:23`). `test_a_screen_run_as_its_own_process_is_as_quiet_as_the_workbench` fails against the plain base.
+
+### log-append-signal-squatting | medium | The append event had a default descriptor and no squat refusal
+
+The event was created with no descriptor and no owner check, unlike the repository's own named objects (`native/manager/src/session/windows.rs`, `native/platform/src/desktop.rs`). Its name now carries the user's SID, and both sides create it owner-only. Both refuse an object of that name that another account owns, that is of another type, or that this user cannot fully open (`native/platform/src/desktop.rs`, `user_manual_reset_event`; `src/cadrumo/core/log_file_handler.py`). A refused signal leaves its directory observed on the 100 ms interval, so a squatter can make the reader poll but cannot hide records. Tests: `a_user_event_is_refused_where_a_squatter_or_another_type_holds_the_name`, `a_squatted_signal_falls_back_to_observation_instead_of_going_quiet` and `test_a_squatted_signal_name_costs_no_record`.
+
+### tail-observe-failure-schedules-no-retry | low | A failed directory listing scheduled no retry
+
+The listing's error path now counts as a failed poll, so `Tail::due` asks for the retry (`native/desktop/src-tauri/src/logs/tail.rs`). Test: `a_failed_directory_listing_schedules_a_retry`.
+
+### append-signal-name-normalisation-asymmetry | low | Python made the directory absolute before hashing and Rust did not
+
+Rust now hashes `std::path::absolute` of the directory, which resolves `.` and `..` on Windows as Python's `os.path.abspath` does. The shared vector covers both spellings.
+
+### quiet-driver-lost-after-suspend | low | A suspend closed the stop event for good
+
+`start_application_mode` now reopens it (`src/cadrumo/entrypoints/tui/windows_input.py`). `test_an_idle_app_wakes_no_input_thread_and_its_stop_still_ends_input[resumed]` measured 112 switches in 1.5 s without the reopen.
+
+### lapse-timer-has-no-early-wake-margin | low | The API-key shell's lapse timer had no early-wake margin
+
+It now adds the same `EXPIRY_MARGIN_SECONDS` as `BoundSession`.
+
+### bound-session-single-watcher-slot | low | A second watch silently replaced the first
+
+`BoundSession.watch` now refuses a second watch while one is active.
+
+### audit-heartbeat-entry-stale-after-s19 and plan-description-omits-s16-s19 | low | Two records lagged the code
+
+The heartbeat entry and the plan's Description now describe S16-S19. The heartbeat cadence stays with the operator's decision under `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`.
+
+Pending verification, not code defects: no end-to-end test crosses the Python handler to the Rust hub, so the contract rests on the shared pinned vector plus one test on each side. Two tests are sensitive to load: `test_an_idle_app_wakes_no_input_thread_and_its_stop_still_ends_input` (fewer than 8 switches, against 14 or more without the fix) and the watch test, which leaves 200 ms of slack.
