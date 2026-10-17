@@ -1,8 +1,8 @@
 """Small Cadrumo apps that the Windows input loop tests run in a console of their own.
 
 Run as ``python -m cadrumo.entrypoints.tui.tests.windows_input_apps idle|resumed|escape``.
-The escape app writes what it received to the file named by
-``CADRUMO_TEST_RESULT``.
+The escape app writes what it received, and the resumed app whether its input
+loop still waits on a stop event, to the file named by ``CADRUMO_TEST_RESULT``.
 """
 
 from __future__ import annotations
@@ -44,6 +44,9 @@ class ResumedApp(IdleApp):
     def _suspend_once(self) -> None:
         with self.suspend():
             pass
+        monitor = getattr(self._driver, "_event_thread", None)
+        waking = getattr(monitor, "_wake", None) is not None
+        Path(os.environ["CADRUMO_TEST_RESULT"]).write_text("waking" if waking else "polling", encoding="utf-8")
 
 
 def _press_escape() -> None:
