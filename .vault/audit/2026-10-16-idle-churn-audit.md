@@ -157,6 +157,8 @@ Both stages were rebuilt with that fix (`67ccdb876c`) and Release passed both pr
 
 The baseline, signed in on the Debug stage, was 56% for the runtime, 12% for the worker, 2.8% for the desktop and about half a core more in 12 spawned children per 30 s. What remains is agent-recovery-poll in `cadrumo-agent`, manager-supervision-poll in the desktop host, and the runtime's 23 context switches a second, which were not traced further. The Debug stage was not measured signed in: its backend probe fails under the package-identity registration another plan owns, and the operator's Task Manager check uses it.
 
+On 2026-10-17 both stages were rebuilt from `999aac5c3d` with the uncommitted refusal-protocol change later committed as `f414d28a40`. Release was rebuilt at 08:03-08:06 and Debug at 08:09-08:10. Each stage's staged `server.py`, `profile_connections.py` and `session_hold.py` matched the source. Both stages passed the concurrent and backend probes, Debug's again once its package registration was removed. Passive waits on both stages until 10:20 saw no sign-in, so the plan-close fixes have no signed-in idle measurement; the 3.366 above predates them.
+
 ## Plan-close review
 
 The integrated review of S01-S12 (`286f2033e4` to `a557048915`) required revision for one high finding. The review and the fixes below judged committed code; other sessions' uncommitted edits were read only for context.
