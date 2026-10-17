@@ -113,7 +113,9 @@ export function TerminalPane({
     const element = container.current;
     if (!element) return;
     const term = new Terminal({
-      cursorBlink: true,
+      // A blinking cursor redraws on a timer for as long as the pane has focus, which the
+      // TUI pane keeps while the window sits idle.
+      cursorBlink: false,
       fontFamily,
       fontSize: live.current.fontSize,
       lineHeight: 1,

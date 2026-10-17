@@ -549,3 +549,38 @@ test("font changes while hidden preserve the PTY size until the pane is shown", 
   await drawGrid(page);
   expect(await columnSpread(page)).toBeLessThan(1);
 });
+
+test("a focused terminal with nothing to draw schedules no frames", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const frames = { requested: 0 };
+    const request = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = (callback) => {
+      ++frames.requested;
+      return request(callback);
+    };
+    Object.assign(window, { __frames: frames });
+  });
+  await openTerminal(page);
+  const pane = page.locator('[data-terminal="console"]');
+  await expect(pane.locator("canvas").last()).toBeVisible();
+  await drawGrid(page);
+  await pane.locator(".xterm-screen").click();
+  await expect(pane.locator(".xterm-helper-textarea")).toBeFocused();
+  // Let the click's own repaint finish before counting.
+  await page.waitForTimeout(500);
+  const before = await page.evaluate(
+    () =>
+      (window as unknown as { __frames: { requested: number } }).__frames
+        .requested,
+  );
+  // Well past two blink periods of a blinking cursor.
+  await page.waitForTimeout(2000);
+  const after = await page.evaluate(
+    () =>
+      (window as unknown as { __frames: { requested: number } }).__frames
+        .requested,
+  );
+  expect(after - before).toBe(0);
+});

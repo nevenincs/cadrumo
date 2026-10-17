@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ab29950c433a33d90cfc5e784403b6a83b6d95d22d64efa5970d3e64f6de22c'
+body_hash: 'sha256:4a6bcf9a0ccc186ea1682be0c4722ae3725117ec3aff512a39272e361dda8ac0'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -202,6 +202,11 @@ related:
 - `S13` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
 - `S13` `verify:` `pytest -n0 -m '' src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py` -> `pass`
 - `S13` `verify:` `ruff check, ruff format --check, ty check on both files` -> `pass`
+- `S14` `M` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S14` `M` `native/desktop/frontend/tests/terminal-rendering.spec.ts`
+- `S14` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S14` `verify:` `npm run test -- tests/terminal-rendering.spec.ts -g 'nothing to draw' --project product (managed desktop-frontend-test env, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S14` `verify:` `tsc --noEmit, eslint and prettier --check on both files` -> `pass`
 
 ## Notes
 
@@ -220,3 +225,4 @@ related:
 - `S12` Reopened by the plan-close review (activity-refusal-ends-the-person-hold, high): the hold keeps holding on `OS_SESSION_UNAVAILABLE` and the bridge keeps a correlated refusal in step; the hold test fails against the previous code
 - `S09` Re-review: the tick is refreshed at the park's end so a heartbeat right after a long rest reads no age; the new test fails against the previous code
 - `S13` The new status test fails against the previous code. The source runtime with a held synthetic profile measured 0.000% CPU over 60 s, so the stage runtime and worker costs are requests from other processes: every 5 s the manager ping reaches the worker as a status read
+- `S14` With cursorBlink true the test fails: 6 animation frames requested over 2 s, expected 0 (run by CADRUMO-BUILD-DEBUG, file restored byte for byte)
