@@ -46,6 +46,12 @@ string(JSON CADRUMO_DESKTOP_PREVIEW_PORT GET "${desktop_server}" previewPort)
 string(JSON desktop_server SET "${desktop_server}" host "\"${CADRUMO_DESKTOP_BIND_ADDRESS}\"")
 file(CONFIGURE OUTPUT "${CADRUMO_PATH_GENERATED}/desktop-server.json" CONTENT "@desktop_server@\n" @ONLY)
 set(CADRUMO_NATIVE_CONTRACT "${CADRUMO_PATH_GENERATED}/contract.json" CACHE FILEPATH "Generated native package contract")
+set(desktop_host_contracts native_contract)
+if(WIN32)
+  # Cargo embeds the generated Windows manifests, including the compatibility
+  # claim required by the runtime role's native login observations.
+  list(APPEND desktop_host_contracts native_metadata)
+endif()
 set(CADRUMO_DESKTOP_PACKAGE_ROOT "" CACHE PATH "Existing native package for desktop development")
 if(NOT CADRUMO_DESKTOP_PACKAGE_ROOT)
   set(CADRUMO_DESKTOP_PACKAGE_ROOT "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
@@ -197,7 +203,7 @@ add_custom_target(desktop-host-build
   DEPENDS desktop-frontend-build
   BYPRODUCTS "${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(desktop-host-build native_contract)
+add_dependencies(desktop-host-build ${desktop_host_contracts})
 
 cadrumo_build_step(step_comment desktop-host-prepare GROUP desktop
   SUMMARY "prepare the desktop host project and its icons"
@@ -217,7 +223,7 @@ add_custom_target(desktop-build-test
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/frontend-clean.test.mjs"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/frontend-install.test.mjs"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(desktop-host-prepare native_contract)
+add_dependencies(desktop-host-prepare ${desktop_host_contracts})
 
 # Host tests and lint read the staged documentation only when the package bundles it.
 set(desktop_user_docs)
@@ -262,7 +268,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action} ${host_test_arguments}
     DEPENDS ${host_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-  add_dependencies(desktop-host-${action} native_contract)
+  add_dependencies(desktop-host-${action} ${desktop_host_contracts})
 endforeach()
 
 cadrumo_build_step(step_comment desktop-run GROUP desktop
@@ -296,7 +302,7 @@ add_custom_target(desktop-packaged-host
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
   DEPENDS desktop-frontend-build
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
-add_dependencies(desktop-packaged-host native_contract)
+add_dependencies(desktop-packaged-host ${desktop_host_contracts})
 cadrumo_build_step(step_comment desktop-packaged-test GROUP verification
   SUMMARY "drive the packaged desktop window end to end (needs an interactive desktop)")
 add_custom_target(desktop-packaged-test
