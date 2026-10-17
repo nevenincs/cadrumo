@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc0d4d0237a63610a083c57a37362a45177f5e69d778fe1ef462c520cd8bd876'
+body_hash: 'sha256:5a65be7b0aad2be31f517515034a129556197ee1fda94b5b35f49a2151c46281'
 related: []
 ---
 
@@ -225,8 +225,24 @@ With S13 in place, each ping still wakes the supervisor, the runtime's supervisi
 
 `HostRecordList` is mounted even with the Logs panel hidden, so the logs subscription never ended. The poller listed and opened the log files twice per tail on each tick, and it copied the host event ring as well (`native/desktop/src-tauri/src/logs/mod.rs:194`, `tail.rs:353`, `host.rs:32`). It now waits on a directory change notification for the log files' directories (`native/platform/src/file_changes.rs`), on a hook called after each host event is recorded (`native/application/src/diagnostics/mod.rs`), on subscription changes, and on the deadlines its own work sets: a record settling, a paced batch, or a tail's retry. Windows reports no directory change for an append through a handle that stays open, which is how the Python file handler writes. That handler now sets a session-local event named for its directory after each record (`src/cadrumo/core/log_file_handler.py`), and the wait includes it. The native log opens and closes its file for each append, so the directory notification covers it. Linux and macOS have no notification source here yet, so their wait still ends every 100 ms. Batches are now paced from when they are sent: pacing from the start of a poll let a wake right after a long backlog read send two batches back to back.
 
-### textual-driver-poll | low | The TUI's Windows input loop wakes every 100 ms
+### tui-idle-wakes | medium | The idle TUI woke 144 times a second on widget timers and its input loop
 
-Textual 8.2.8's Windows driver waits on console input for at most 100 ms, then ticks its escape-sequence parser (`textual/drivers/win32.py`, `EventMonitor.run`). It is third-party code running inside the TUI pane's process, which measured 142 context switches a second while idle. Owner not yet assigned.
+Five read-only combs of the TUI (the Textual internals, the runtime-hosted TUI, the shell and its components, the ledger, declarations and Modelo screens, and the runtime client threads) and a headless run that listed every live Textual timer found these. The TUI from source, signed in to a synthetic profile on an isolated runtime and idle in a console of its own, measured 0.078% of one core at 143.7 context switches a second, as the desktop pane had.
 
-`agent-recovery-poll` is fixed in cadrumo-agent `c89d305`. That commit is not yet in a packaged build, and the gateway's remaining 0.36% of one core is not traced; CADRUMO-AGENT-SESSION1 owns both.
+- `PinnedStatusBar` composed a `LoadingIndicator` that Textual refreshes 16 times a second from mount, displayed or not. That covered every screen with the bar: the profile manager (the screen an unfinished profile lands on after sign-in), reference, installation, passphrase, registration and sign-in. The spinner now refreshes only while progress shows (`src/cadrumo/entrypoints/tui/components/status.py`).
+- Textual's Windows driver woke every 100 ms to tick its escape parser (`textual/drivers/win32.py`, `EventMonitor.run`). Every Cadrumo app now runs `QuietWindowsDriver`, whose loop waits on console input and on a kernel mirror of the driver's stop flag with no timeout. Only after input does it wait one escape delay, so a lone Escape still times out (`src/cadrumo/entrypoints/tui/windows_input.py`, `components/quiet_app.py`).
+- A focused `Input` or `TextArea` blinked on a 0.5 s timer and repainted each blink, and Textual has no app-wide switch. `QuietApp` holds each text cursor steady as it takes focus.
+- The onboarding `ProgressBar` re-rendered every second for an estimated time it did not show. It is now a `ProgressLine` that repaints only when its progress changes.
+- The recovery-code handoff polled every 0.1 s while a person copied the code. Every way the code screen ends already released it, so it now waits on that alone (`src/cadrumo/entrypoints/tui/secret/registration.py`).
+- The API-key shell read status every 10 s although retirement is pushed. It now reads at mount and at the lease's next deadline (`src/cadrumo_runtime/host/frontend/tui/runtime_session.py`).
+- The automation decision and inventory screens checked their session every 0.5 s. `BoundSession.watch` now combines the pushed retirement with one timer at the known expiry, re-armed when the runtime reports another (`src/cadrumo_runtime/host/frontend/tui/bound_session.py`). A Windows timer can wake a few milliseconds early, so the timer runs past the deadline and re-arms if woken before it.
+
+After these, the same TUI measured 0.000% over 60 s, and no thread began or ended in a 30 s sample at 50 ms.
+
+### enrolment-journey-clock-recheck | low | While a requester waits for approval, the runtime re-reads the wall clock every 0.1 s
+
+The client side is a long poll, not the 20-a-second loop the comb first reported. Once the request is submitted, `wait_for_terminal` sleeps 50 ms between round trips (`src/cadrumo_client/transport/automation_requester.py:224-231`). Each `enrollment_poll` waits up to 5 s in the runtime for work (`src/cadrumo_runtime/application/enrollment_recipient.py:35`, `:233-248`). That makes about one inspect and one poll every 5 s. The runtime's own wait re-checks every 0.1 s (`enrollment_recipient.py:36`, `:197`, `:245`) on purpose. Offer and record expiry are wall-clock authority, and that re-read is what notices a forward clock change, so a one-shot timer at the deadline would let a clock jump extend an automation grant's window. It runs only during an enrolment journey. Recommendation: feed that condition from an OS time-change notification (`WM_TIMECHANGE` on Windows, a `CLOCK_REALTIME` timerfd with cancel-on-set on Linux) and then drop the interval. Owner not yet assigned.
+
+Recorded, not idle work: the operation modal and the settlement waits poll every 20-250 ms while an operation is in flight; CADRUMO-BUILD-DEBUG is replacing them with an `operation_changed` cue. The 30 s session watch in `src/cadrumo/entrypoints/tui/app.py:344` runs only without a retirement subscription, which every production composition supplies. The language retry timer re-arms without a cap, but only after a failed read.
+
+`agent-recovery-poll` and the gateway's other idle wakes are fixed in cadrumo-agent `3ee988e`. CADRUMO-AGENT-SESSION1 replaced them with waits on events and known deadlines: the recovery pass, uvicorn's 100 ms loop tick, the worker watchdog and heartbeat, the retention sweep, the event-writer flush and the 15 s discovery-record heartbeat. A gateway from source idle for 60 s measured 0.00% of one core with no event-loop callbacks. A packaged build shows this only once rebuilt from that commit or later.

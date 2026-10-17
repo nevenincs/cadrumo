@@ -113,11 +113,6 @@ _SURFACE_REFUSAL_LOCALE_KEYS: dict[str, str] = {
     "application.user_profile.errors.profile_already_exists": ("flows.registration.refusal.profile_already_exists"),
 }
 
-#: Poll interval for the recovery code handoff. This paces the liveness check
-#: only; it is never a deadline on the operator, who may take as long as
-#: copying down a code actually requires.
-_RECOVERY_HANDOFF_POLL_SECONDS = 0.1
-
 _RECOVERY_ENROLLMENT_WORKER = "profile-recovery-enrollment"
 
 _LOGGER = get_logger(__name__)
@@ -883,36 +878,25 @@ def confirm_recovery_possession(
     def _refuse() -> None:
         resolved.set()
 
-    code_screen: RecoveryCodeScreen | None = None
-
     def _show() -> None:
-        nonlocal code_screen
-        code_screen = RecoveryCodeScreen(
-            recovery_key=recovery_key,
-            locale=locale,
-            on_confirm=_accept,
-            on_cancel=_refuse,
+        app.push_screen(
+            RecoveryCodeScreen(
+                recovery_key=recovery_key,
+                locale=locale,
+                on_confirm=_accept,
+                on_cancel=_refuse,
+            )
         )
-        app.push_screen(code_screen)
 
     try:
         app.call_from_thread(_show)
         # The operator is copying down a code, so elapsed time is not a
-        # failure condition. The one real failure is a message loop that
-        # stopped without releasing this handoff through ``on_unmount``,
-        # so wait on that condition instead: poll the event, and give up
-        # only once the app is no longer running or the screen left the
-        # stack without answering.
-        unstacked_polls = 0
-        while not resolved.wait(timeout=_RECOVERY_HANDOFF_POLL_SECONDS):
-            if not app.is_running:
-                break
-            if code_screen is not None and code_screen not in app.screen_stack:
-                unstacked_polls += 1
-                if unstacked_polls > 1:
-                    break
-            else:
-                unstacked_polls = 0
+        # failure condition, and nothing is checked while they do. Every
+        # way the code screen ends releases this wait: confirming, and
+        # refusing, which leaving the screen does as it unmounts; and the
+        # owning screen releases every pending handoff when the application
+        # stops, as Textual unmounts each screen on the way out.
+        resolved.wait()
         if supplied_proof is None:
             raise RecoveryHandoverDeclinedError
         return supplied_proof

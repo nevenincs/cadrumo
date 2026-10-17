@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+import threading
+from collections.abc import Callable
 from datetime import timedelta
 from typing import override
 from uuid import UUID, uuid4
 
 import pytest
+from textual.app import App
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
@@ -39,9 +43,19 @@ class _Client(FrontendClient):
         self.expires_at = now() + timedelta(minutes=5)
         self.denial: AccessDenialCode | None = None
         self.failure: Exception | None = None
+        self.retirement: Callable[[], None] | None = None
 
     def rebind_session(self) -> None:
         self._session_id = uuid4()
+
+    @override
+    def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.retirement = receive
+
+        def unsubscribe() -> None:
+            self.retirement = None
+
+        return unsubscribe
 
     @override
     def status(self, *, timeout: float = 5) -> ProfileStatus:
@@ -135,3 +149,35 @@ async def test_a_client_rebound_before_the_question_is_not_asked_at_all() -> Non
     client.failure = AssertionError("the runtime must not be asked about a session the client left")
 
     assert not await binding.confirm_with_runtime(task_name=_TASK)
+
+
+@pytest.mark.asyncio
+async def test_a_watch_checks_at_the_known_expiry_and_on_a_pushed_retirement_but_never_on_an_interval() -> None:
+    client = _Client()
+    binding = BoundSession(client, known_expires_at=now() + timedelta(milliseconds=500))
+    checks: list[float] = []
+    app: App[None] = App()
+    async with app.run_test() as pilot:
+        stop = binding.watch(app, lambda: checks.append(now().timestamp()))
+        await asyncio.sleep(0.3)
+        await pilot.pause()
+        assert checks == [], "the watch checked before anything could have ended"
+        await asyncio.sleep(0.6)
+        await pilot.pause()
+        assert len(checks) == 1, "the known expiry was not checked once it passed"
+
+        retirement = client.retirement
+        assert retirement is not None
+        # The client pushes retirement from its reader thread.
+        pushing = threading.Thread(target=retirement)
+        pushing.start()
+        pushing.join()
+        await pilot.pause()
+        assert len(checks) == 2, "a pushed retirement did not reach the owner's loop"
+
+        stop()
+        assert client.retirement is None
+        binding.known_expires_at = now() + timedelta(milliseconds=100)
+        await asyncio.sleep(0.3)
+        await pilot.pause()
+        assert len(checks) == 2, "a stopped watch still checked"

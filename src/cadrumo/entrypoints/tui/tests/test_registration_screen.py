@@ -21,6 +21,7 @@ and only a confirmed code installs the wrapper.
 
 from __future__ import annotations
 
+import time
 import unicodedata
 from collections.abc import Callable
 from pathlib import Path
@@ -545,3 +546,25 @@ async def test_cancelling_on_the_code_screen_installs_nothing_and_still_leaves_w
         assert app.outcome.label == "Cancels Recovery"
         assert _recovery_envelopes(storage_root) == ()
         assert profile_recovery_status(profile_id=UUID(app.outcome.profile_id)).enrolled is False
+
+
+@pytest.mark.asyncio
+async def test_an_app_that_stops_while_the_code_is_shown_releases_the_enrolment_and_installs_nothing(
+    tmp_path,
+) -> None:
+    """The waiting enrolment ends with the application, though nothing polls it."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        app = _screen_with_recovery()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _create_and_reach_the_offer(app, pilot, username="Stops Mid Code")
+            await pilot.click("#btn-setup-recovery")
+            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code")
+            await _displayed_recovery_code(pilot)
+            enrolling = [worker for worker in pilot.app.workers if worker.name == "profile-recovery-enrollment"]
+            assert enrolling, "the enrolment must be waiting on the code screen"
+            pilot.app.exit()
+        deadline = time.monotonic() + 10
+        while not all(worker.is_finished for worker in enrolling):
+            assert time.monotonic() < deadline, "the enrolment thread outlived the application"
+            time.sleep(0.05)
+        assert _recovery_envelopes(storage_root) == ()

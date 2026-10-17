@@ -480,3 +480,21 @@ async def test_a_session_retired_while_a_destination_is_open_still_clears_the_sh
             while app.return_value is None:
                 await pilot.pause()
     assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+
+
+@pytest.mark.asyncio
+async def test_the_shell_reads_status_again_only_when_the_session_lapses() -> None:
+    """Retirement is pushed, so idle time costs no status read until the lease's deadline."""
+    client = _Client()
+    client.expires_at = datetime.now(UTC) + timedelta(seconds=2)
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile", operation_registry=_registry)
+    async with app.run_test() as pilot:
+        await _shown(app, pilot)
+        reads = client.status_calls
+        await asyncio.sleep(1.0)
+        await pilot.pause()
+        assert client.status_calls == reads, "the shell read status while nothing changed"
+        async with asyncio.timeout(5):
+            while not app._cleared:
+                await pilot.pause()
+        assert client.status_calls == reads + 1, "the lapse is found by one read at the deadline"

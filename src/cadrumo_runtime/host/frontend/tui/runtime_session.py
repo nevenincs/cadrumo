@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 from typing import ClassVar, Literal, override
 from uuid import UUID
 
@@ -18,6 +19,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
 from textual.dom import DOMNode
+from textual.timer import Timer
 from textual.widgets import Button, Footer, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -48,7 +50,6 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
-_STATUS_INTERVAL_SECONDS = 10.0
 type _LockAction = Literal["sign_out", "change_user"]
 type RestrictedRequesterFactory = Callable[[FrontendClient], RuntimeAutomationRequesterScreen]
 
@@ -125,6 +126,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         self._cleared = False
         self._locking = False
         self._reading = False
+        self._lapse_timer: Timer | None = None
         self._disclosure_digest: ContentDigest | None = None
         self._disclosures = DisclosurePager(client)
         self._unsubscribe_retirement: Callable[[], None] | None = None
@@ -162,12 +164,16 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         install_cadrumo_themes(self)
         self._unsubscribe_retirement = self._client.subscribe_session_retirement(self._post_retirement)
         self._unsubscribe_notices = self._client.subscribe_lifecycle_notices(self._post_upgrade_notice)
-        self.set_interval(_STATUS_INTERVAL_SECONDS, self._start_status_read)
+        # Retirement is pushed, so the shell reads status now and again only
+        # at the lease's next deadline, never on an interval.
         self._start_status_read()
 
     def on_unmount(self) -> None:
         """Fence late status results when the borrowed shell is discarded."""
         self._cleared = True
+        if self._lapse_timer is not None:
+            self._lapse_timer.stop()
+            self._lapse_timer = None
         if self._unsubscribe_notices is not None:
             self._unsubscribe_notices()
             self._unsubscribe_notices = None
@@ -243,6 +249,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         if status.session_expires_at is None or status.grant_expires_at is None:
             self._expire()
             return
+        self._arm_lapse(min(status.session_expires_at, status.grant_expires_at))
         self._disclosure_digest = status.effective_scope.disclosure_digest
         shell = self._shell()
         shell.query_one("#restricted-profile", Static).update(
@@ -301,6 +308,13 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         shell.query_one("#restricted-open-operations", Button).disabled = True
         if self._requester_factory is not None:
             shell.query_one("#restricted-request-access", Button).disabled = True
+
+    def _arm_lapse(self, deadline: datetime) -> None:
+        """Read status once more when the session or its grant lapses."""
+        if self._lapse_timer is not None:
+            self._lapse_timer.stop()
+        delay = max(0.0, (deadline - now()).total_seconds())
+        self._lapse_timer = self.set_timer(delay, self._start_status_read)
 
     def _expire(self) -> None:
         if self._cleared:

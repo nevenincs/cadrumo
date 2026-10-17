@@ -8,7 +8,7 @@ related:
   - '[[2026-10-16-idle-churn-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:f5be1a5bfb2fbd74179f3a0f8b23c9c7c33a6fed1903f7c849df83e1c2a75e60'
+body_hash: 'sha256:db64fe4bc255328c938ff2993f45ea8fa327055e9f553494eaa9661d15c8f477'
 ---
 
 # `idle-churn` plan
@@ -44,7 +44,7 @@ Concurrent owners: CADRUMO-FIX1 has uncommitted shared-person-hold hunks in `she
 - [x] `S15` - Wait for log records or file changes in the desktop log hub instead of a 100 ms tick; `native/desktop/src-tauri/src/logs/mod.rs`.
 - [x] `S16` - Stop TUI widgets animating while idle: the status spinner only while progress shows, a steady text cursor in both Textual apps, and onboarding progress without a ticking bar; `src/cadrumo/entrypoints/tui/components/status.py`.
 - [x] `S17` - Wait in the TUI's Windows input loop for console input or stop, with a deadline only while an escape sequence is pending; `src/cadrumo/entrypoints/tui/windows_input.py`.
-- [ ] `S18` - Move the TUI's remaining interval checks to the deadlines and events they already know: the recovery-code handoff, the API-key status and the automation screen lifetimes; `src/cadrumo/entrypoints/tui/secret/registration.py`.
+- [x] `S18` - Move the TUI's remaining interval checks to the deadlines and events they already know: the recovery-code handoff, the API-key status and the automation screen lifetimes; `src/cadrumo/entrypoints/tui/secret/registration.py`.
 
 ## Parallelization
 

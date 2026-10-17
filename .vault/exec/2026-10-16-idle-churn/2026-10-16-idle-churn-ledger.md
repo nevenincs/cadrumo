@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:19d65982dbffa71f2d597535232f5d324b623be1470895e0ad362b2cc7712690'
+body_hash: 'sha256:31cf862ea79186e501c5ad30bec424854a2fb306ce828777d663c0a155b9e26f'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -241,6 +241,19 @@ related:
 - `S17` `verify:` `pytest src/cadrumo/entrypoints/tui/tests/test_windows_input.py (2 passed)` -> `pass`
 - `S17` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
 - `S17` `verify:` `TUI from source on an isolated runtime, idle 60 s in a console of its own: 0.000% CPU, no thread began or ended in 30 s (before: 0.078% at 143.7 switches a second)` -> `pass`
+- `S18` `M` `src/cadrumo/entrypoints/tui/secret/registration.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_screen.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/bound_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/secret/automation_decision.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/profile/automation_inventory.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_bound_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_automation_inventory.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/secret/test_automation_requester.py`
+- `S18` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S18` `verify:` `pytest test_registration_screen (recovery cases), test_runtime_session (18), test_bound_session (10), automation inventory, decision and requester (34)` -> `pass`
+- `S18` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
 
 ## Notes
 
@@ -263,3 +276,4 @@ related:
 - `S15` With Poller::run sleeping 100 ms instead of waiting, `a_subscribed_poller_reads_nothing_until_a_log_file_changes` fails; without the handler's announce, the Python signal test fails. Linux and macOS still observe the log files every 100 ms: no notification source is used there yet
 - `S16` Each new test fails against the previous behaviour: an always-refreshing spinner, a blinking cursor, and a progress line on a 1 s interval
 - `S17` With Textual's own driver the idle test reads 14 switches in 1.5 s and fails; with the post-input escape wait removed, the lone-Escape test fails
+- `S18` Each new test fails against the previous behaviour: an enrolment wait with both release paths removed hangs, a lapse timer never armed leaves the shell open, and a watch on an interval checks before anything ended. A Windows timer can wake a few milliseconds early, so the expiry timer runs past the deadline and re-arms when woken before it

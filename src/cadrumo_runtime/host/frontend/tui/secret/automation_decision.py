@@ -11,7 +11,6 @@ from typing import ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import ModalScreen
-from textual.timer import Timer
 from textual.widgets import Button, Input, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
@@ -77,7 +76,7 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
         self._consent_text = consent_text
         self._on_access_lost = on_access_lost
         self._binding = BoundSession(client, known_expires_at=session_expires_at)
-        self._lifetime_timer: Timer | None = None
+        self._stop_lifetime_watch: Callable[[], None] | None = None
         self._worker: Worker[None] | None = None
         self._decision_task: asyncio.Task[AutomationDecisionCompletion] | None = None
         self._busy = False
@@ -96,16 +95,16 @@ class RuntimeAutomationDecisionScreen(ModalScreen[AutomationDecisionUiOutcome | 
         yield from decision_widgets(self._decision, self._consent_text)
 
     def on_mount(self) -> None:
-        """Observe known expiry without another private inventory read."""
-        self._lifetime_timer = self.set_interval(0.5, self._check_lifetime)
+        """Observe retirement and the known expiry without another private inventory read."""
+        self._stop_lifetime_watch = self._binding.watch(self, self._check_lifetime)
         self._check_lifetime()
 
     async def on_unmount(self) -> None:
         """Drain a submitted decision before releasing the borrowed client."""
         self._live = False
-        if self._lifetime_timer is not None:
-            self._lifetime_timer.stop()
-            self._lifetime_timer = None
+        if self._stop_lifetime_watch is not None:
+            self._stop_lifetime_watch()
+            self._stop_lifetime_watch = None
         self._consent_text = ""
         self._review = None
         if self._decision == "approve":

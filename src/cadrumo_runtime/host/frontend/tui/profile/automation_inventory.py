@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 from typing import ClassVar, cast, override
 from uuid import UUID
@@ -11,7 +12,6 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.timer import Timer
 from textual.widgets import Button, DataTable, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
@@ -91,7 +91,7 @@ class RuntimeAutomationInventoryScreen(
         self._busy = False
         self._live = True
         self._access_lost = False
-        self._lifetime_timer: Timer | None = None
+        self._stop_lifetime_watch: Callable[[], None] | None = None
 
     @property
     def access_lost(self) -> bool:
@@ -126,15 +126,15 @@ class RuntimeAutomationInventoryScreen(
                 tr("tui.automation_inventory.state"),
                 tr("tui.automation_inventory.expires"),
             )
-        self._lifetime_timer = self.set_interval(0.5, self._check_bound_lifetime)
+        self._stop_lifetime_watch = self._binding.watch(self, self._check_bound_lifetime)
         self.call_after_refresh(self._start_refresh)
 
     async def on_unmount(self) -> None:
         """Clear rows and retain the native read until its worker settles."""
         self._live = False
-        if self._lifetime_timer is not None:
-            self._lifetime_timer.stop()
-            self._lifetime_timer = None
+        if self._stop_lifetime_watch is not None:
+            self._stop_lifetime_watch()
+            self._stop_lifetime_watch = None
         self._clear()
         worker = self._worker
         if worker is not None:

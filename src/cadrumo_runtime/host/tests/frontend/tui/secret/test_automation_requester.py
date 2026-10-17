@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from threading import Event, get_ident
 from types import SimpleNamespace
@@ -315,6 +316,10 @@ async def test_close_waits_for_submitted_delivery_before_closing_owned_client() 
 
 class _ReviewerClient(_OwnedRequesterClient):
     """Presentation status port; this fixture cannot approve runtime work."""
+
+    @override
+    def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
+        return lambda: None
 
     @override
     def status(self, *, timeout: float = 5) -> ProfileStatus:

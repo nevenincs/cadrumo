@@ -63,6 +63,16 @@ class _Client(FrontendClient):
         self.status_calls = 0
         self.closed = False
         self.expires_at = datetime.now(UTC) + timedelta(minutes=5)
+        self.retirement_callback: Callable[[], None] | None = None
+
+    @override
+    def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.retirement_callback = receive
+
+        def unsubscribe() -> None:
+            self.retirement_callback = None
+
+        return unsubscribe
 
     @override
     def status(self, *, timeout: float = 5) -> ProfileStatus:
