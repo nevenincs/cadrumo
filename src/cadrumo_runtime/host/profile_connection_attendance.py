@@ -36,7 +36,7 @@ from cadrumo_client.contracts.attendance import (
 )
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
-from cadrumo_client.contracts.session_events import AttendanceChanged
+from cadrumo_client.contracts.session_events import AttendanceAnswered, AttendanceChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 
 from .profile_host import ProfileConnection
@@ -373,6 +373,25 @@ class ProfileConnectionAttendanceMixin:
             if ask is None or ask.profile_id != request.profile_id or ask.approved is not None:
                 return AccessDenied(code=AccessDenialCode.OPERATION_UNAVAILABLE)
             recipient = self._connections.get(ask.connection_id)
+        try:
+            return self._answer_attendance(holder, host, context, request, ask, recipient)
+        finally:
+            # Whatever the answer, the asker reads its status again to learn it.
+            self._events.publish_cue(
+                AttendanceAnswered(
+                    runtime_boot_id=self.boot, connection_id=ask.connection_id, profile_id=ask.profile_id
+                )
+            )
+
+    def _answer_attendance(
+        self: RuntimeProfileConnections,
+        holder: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        request: AttendanceDecide,
+        ask: PendingAttendance,
+        recipient: ProfileConnection | None,
+    ) -> AttendanceDecided | AccessDenied:
         approved = bool(request.approve)
         if approved:
             if recipient is None or recipient.method != ATTENDANCE_METHOD or recipient.session_id is not None:

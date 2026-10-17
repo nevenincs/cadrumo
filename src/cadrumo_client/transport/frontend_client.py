@@ -73,6 +73,7 @@ from ..contracts.profile_access import (
 )
 from ..contracts.service_access import ServiceAdmission, ServiceConnected
 from ..contracts.session_events import (
+    AttendanceAnswered,
     AttendanceChanged,
     ConnectionEvent,
     LifecycleNotice,
@@ -155,6 +156,7 @@ class FrontendClient(ProfileViewFrontend):
         self._lifecycle_notice: LifecycleNotice | None = None
         self._sign_in_receivers: list[Callable[[], None]] = []
         self._attendance_receivers: list[Callable[[], None]] = []
+        self._answer_receivers: list[Callable[[], None]] = []
         self._operation_receivers: list[Callable[[], None]] = []
 
     def _session_retired(self, event: ConnectionEvent) -> None:
@@ -174,6 +176,13 @@ class FrontendClient(ProfileViewFrontend):
         if event.profile_id != self.profile_id or isinstance(event, ServiceLeaseChanged):
             # A frontend never holds a service lease.
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        if isinstance(event, AttendanceAnswered):
+            # The asker holds no session until its approved ask is read.
+            with self._event_guard:
+                receivers_answer = tuple(self._answer_receivers)
+            for receive_answer in receivers_answer:
+                receive_answer()
+            return
         if isinstance(event, AttendanceChanged):
             with self._event_guard:
                 receivers_attendance = tuple(self._attendance_receivers) if event.session_id == self._session_id else ()
@@ -210,7 +219,9 @@ class FrontendClient(ProfileViewFrontend):
             watchers = tuple(self._sign_in_receivers)
             # An operation waiter observes again and is refused at once.
             observers = tuple(self._operation_receivers)
-        for receive in (*receivers, *watchers, *observers):
+            # So does an asker waiting for its answer.
+            askers = tuple(self._answer_receivers)
+        for receive in (*receivers, *watchers, *observers, *askers):
             receive()
 
     def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
@@ -659,6 +670,22 @@ class FrontendClient(ProfileViewFrontend):
             with self._event_guard:
                 if receive in self._attendance_receivers:
                     self._attendance_receivers.remove(receive)
+
+        return unsubscribe
+
+    def subscribe_attendance_answers(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """Cue ``receive`` when this connection's own ask is answered, or the connection is lost.
+
+        The cue carries no answer; read the ask's status again to learn it.
+        """
+        self._observe_events()
+        with self._event_guard:
+            self._answer_receivers.append(receive)
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._answer_receivers:
+                    self._answer_receivers.remove(receive)
 
         return unsubscribe
 

@@ -89,6 +89,17 @@ class AttendanceChanged(BaseModel):
     session_id: UUID
 
 
+class AttendanceAnswered(BaseModel):
+    """This connection's own attendance ask was decided or withdrawn; read its status again, which grants nothing."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["attendance_answered"] = "attendance_answered"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+
+
 class OperationChanged(BaseModel):
     """An operation this exact session observes may have advanced; observe it again, which grants nothing."""
 
@@ -108,6 +119,7 @@ type ConnectionEvent = (
     | SignInChanged
     | ServiceLeaseChanged
     | AttendanceChanged
+    | AttendanceAnswered
     | OperationChanged
 )
 
@@ -118,6 +130,7 @@ CONNECTION_EVENT_TYPES = (
     SignInChanged,
     ServiceLeaseChanged,
     AttendanceChanged,
+    AttendanceAnswered,
     OperationChanged,
 )
 """Every frame the runtime may push between replies, for exhaustive transport checks."""

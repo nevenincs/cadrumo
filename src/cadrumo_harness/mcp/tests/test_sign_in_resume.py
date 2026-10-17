@@ -104,6 +104,10 @@ class _AttendedConnection:
             request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), status=self.status().status
         )
 
+    def subscribe_attendance_answers(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """This double answers every ask at once, so no answer cue is ever needed."""
+        return lambda: None
+
     def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
         self._receivers.append(receive)
         if self._session is None:

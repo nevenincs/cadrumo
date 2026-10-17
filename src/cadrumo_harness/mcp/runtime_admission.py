@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from time import monotonic, sleep
+from threading import Event
+from time import monotonic
 from typing import Any, Final
 from uuid import UUID
 
@@ -139,8 +140,6 @@ def require_exact_admitted_status(
 ATTENDANCE_WAIT_SECONDS: Final = 90.0
 """How long one call waits for the person to decide an ask before it is answered as refused."""
 
-_ATTENDANCE_POLL_SECONDS: Final = 0.25
-
 
 def attend_held_sign_in(client: FrontendClient, *, profile_id: UUID) -> ProfileAccessStatus:
     """Ask the person holding the sign-in to admit this connection, and wait for their decision.
@@ -151,12 +150,18 @@ def attend_held_sign_in(client: FrontendClient, *, profile_id: UUID) -> ProfileA
     or no held sign-in at all is the runtime's refusal, raised with its code.
     """
     deadline = monotonic() + ATTENDANCE_WAIT_SECONDS
-    reply = client.request_attendance()
-    while isinstance(reply, AttendancePending):
-        if monotonic() >= deadline:
-            raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
-        sleep(_ATTENDANCE_POLL_SECONDS)
-        reply = client.attendance_status(reply.attendance_id)
+    answered = Event()
+    # Subscribed before asking, so an answer given at once still wakes the wait.
+    unsubscribe = client.subscribe_attendance_answers(answered.set)
+    try:
+        reply = client.request_attendance()
+        while isinstance(reply, AttendancePending):
+            if not answered.wait(max(0.0, deadline - monotonic())):
+                raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
+            answered.clear()
+            reply = client.attendance_status(reply.attendance_id)
+    finally:
+        unsubscribe()
     return require_exact_admitted_status(client, profile_id=profile_id, admission=McpAdmission.ATTENDED)
 
 

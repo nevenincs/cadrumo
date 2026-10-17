@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.session_events import (
+    AttendanceAnswered,
     AttendanceChanged,
     ConnectionEvent,
     LifecycleNotice,
@@ -19,7 +20,7 @@ from cadrumo_client.transport.native_wake import NativeWake
 
 SESSION_EVENT_QUEUE_LIMIT = 64
 
-type InvalidationCue = SignInChanged | ServiceLeaseChanged | AttendanceChanged | OperationChanged
+type InvalidationCue = SignInChanged | ServiceLeaseChanged | AttendanceChanged | AttendanceAnswered | OperationChanged
 
 
 @dataclass(frozen=True, slots=True)

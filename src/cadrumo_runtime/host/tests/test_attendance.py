@@ -272,6 +272,37 @@ def test_a_declined_ask_admits_nothing_and_closing_the_holder_ends_attendance(tm
             holder.close()
 
 
+def test_the_asking_connection_alone_is_cued_when_its_ask_is_answered(tmp_path: Path) -> None:
+    external_client, cli = OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.CLI
+    with (
+        _runtime(tmp_path) as (profile_id, _other, launch),
+        _client(launch, profile_id, cli) as holder,
+        _client(launch, profile_id, external_client) as declined,
+        _client(launch, profile_id, external_client) as approved,
+    ):
+        holder.login_password(bytearray(PROFILE_INPUT.encode()), timeout=120)
+        holder.attendance_inventory()
+        declined_answer, approved_answer = Event(), Event()
+        declined.subscribe_attendance_answers(declined_answer.set)
+        approved.subscribe_attendance_answers(approved_answer.set)
+        declined_ask = _pending(declined.request_attendance())
+        approved_ask = _pending(approved.request_attendance())
+        assert len(holder.attendance_inventory().candidates) == 2
+        # Asking, and the person reading the asks, answer nothing.
+        assert not declined_answer.wait(1) and not approved_answer.is_set()
+
+        assert not holder.decide_attendance(declined_ask.attendance_id, approve=False).approved
+        assert declined_answer.wait(10)
+        assert not approved_answer.wait(1)
+        assert _refusal(lambda: declined.attendance_status(declined_ask.attendance_id)) == (
+            AccessDenialCode.AUTHENTICATION_REQUIRED.value
+        )
+
+        assert holder.decide_attendance(approved_ask.attendance_id, approve=True).approved
+        assert approved_answer.wait(10)
+        assert isinstance(approved.attendance_status(approved_ask.attendance_id), ProfileStatus)
+
+
 def test_a_lapsed_attended_lease_is_issued_again_to_the_approved_connection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
