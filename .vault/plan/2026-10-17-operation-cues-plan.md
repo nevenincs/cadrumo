@@ -8,7 +8,7 @@ related:
   - '[[2026-10-17-idle-churn-operation-observation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:a38cb727700b753f0f3cb7e96eed8d15d54ea0031d88beefa7b2f5c83196a9f2'
+body_hash: 'sha256:6db107058c9bd5254995526d19721403d9336874e4c772c5c63d28b91d430d3c'
 ---
 
 <!-- RETIRED: S07 -->
@@ -32,7 +32,7 @@ CADRUMO-BUILD-DEBUG handed the rest of the plan, S06 on Release and the plan-clo
 - [x] `S03` - Wait on the operation_changed cue or the deadline in the client settlement helpers and the CLI runner instead of fixed intervals; `src/cadrumo_client/transport/frontend_client.py, src/cadrumo_client/transport/operation_settlement.py, src/cadrumo_client/commands/registered_operation_observations.py`.
 - [x] `S04` - Move the remaining client and TUI observation loops onto the cue; `src/cadrumo_client/transport/operation_controller.py, src/cadrumo/entrypoints/tui/operations/modal.py, src/cadrumo/entrypoints/tui/google_saved_review.py, src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py, the other OperationObserve poll sites`.
 - [x] `S05` - Wait for the person's attendance decision in the MCP harness on an attendance_answered cue the runtime publishes to the asking connection; `src/cadrumo_harness/mcp/runtime_admission.py, src/cadrumo_runtime/host/profile_connection_attendance.py`.
-- [ ] `S06` - Rebuild both stages and prove concurrent sign-in, backend calls and a live operation settle on the cue; `build/windows-x64/stage, dev/runtime_lifecycle`.
+- [x] `S06` - Rebuild both stages and prove concurrent sign-in, backend calls and a live operation settle on the cue; `build/windows-x64/stage, dev/runtime_lifecycle`.
 - [x] `S08` - Wake the installed manager and an observing desktop on installation and ownership events instead of the 2 s installation watch and the 30 s discovery deadline, and on a publishing manager's status changes instead of the 1 s external-owner pace, which stays the fallback for a manager that does not publish; `native/manager/src/installation_watch.rs, native/manager/src/cutover_coordinator.rs, native/manager/src/desktop_host.rs, native/manager/src/background.rs, native/manager/src/session/status_cue.rs, native/platform/src/file_changes.rs`.
 - [x] `S09` - Retry an operation report the runtime does not take, ahead of later commits, after a backoff from 50 ms to 1 s, and give each pending report one try at close; `src/cadrumo_runtime/host/operation_progress_reporter.py`.
 

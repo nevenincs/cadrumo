@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa1f69045de3c957522a7251b1e1b3c83ca5d966b62a565288da9f5a474a649f'
+body_hash: 'sha256:c93bfc6c7fb6b740221d389e9406ee72d7267c61162c27d05d31c3c8eef693d9'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -165,6 +165,9 @@ related:
 - `S06` `verify:` `concurrent_sessions_probe on stage/Release at d2db5f6e1d (second run)` -> `pass`
 - `S06` `verify:` `backend_probe on stage/Release at d2db5f6e1d` -> `pass`
 - `S06` `verify:` `concurrent_sessions_probe on stage/Release at d2db5f6e1d (first run, KDF calibration clean_exit timeout logged at ERROR)` -> `fail`
+- `S06` `verify:` `cmake --build --preset debug --target app-payload with d2db5f6e1d and 9d7c4cb381 (by CADRUMO-FIX1)` -> `pass`
+- `S06` `verify:` `concurrent_sessions_probe on stage/Debug, failed [] (by CADRUMO-FIX1)` -> `pass`
+- `S06` `verify:` `backend_probe on stage/Debug, failed_steps [] (by CADRUMO-FIX1)` -> `pass`
 
 ## Notes
 
@@ -180,3 +183,4 @@ related:
 - `S06` S06 stays open: the concurrent probe's desktop holders, launched from bin/cadrumo-runtime, are refused `desktop_holder_unverified` because both stages were built with another writer's uncommitted `service_descriptors.py` edit that points the Windows desktop-session descriptor at the desktop's role-dispatch image; nothing here involves the operation cue. The Debug runtime also exited 1 mid-probe, unexplained. Debug's earlier probes at deed364c87 passed.
 - `S06` With bcf4f4085c the probe's desktop holders launch from the descriptor's image and are admitted. The only failure left is `no_error_records:` 262e873ce3 logs the probe's deliberate signed-out and `authentication_required` refusals at ERROR; its owner is reconciling. The earlier Debug runtime exit 1 was a Codex Debug build's quiesce at 21:27:19 local, mid-probe.
 - `S06` Release built from a tree that also held 20 uncommitted paths from other writers (agent service, desktop frontend and terminal, native/desktop/CMakeLists.txt); none is on the sign-in or operation-cue paths. Debug evidence comes from CADRUMO-FIX1's next Debug app-payload.
+- `S06` Both stages are rebuilt and both probes pass on each, so S06 closes.

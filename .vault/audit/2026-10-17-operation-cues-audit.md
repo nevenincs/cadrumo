@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e97456cec95b64dd21bd11a2216c45faf464aa9eac32c41ca43aba206f8d61c'
+body_hash: 'sha256:a0015b5cbc5eacb276605d21de0be4e98d77a6bef6a7971ec3b06ee60d124011'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
@@ -79,6 +79,10 @@ status-cue-publisher-proof-is-a-bare-pid is fixed: the status record carries the
 ### kdf-calibration-timeout-at-clean-exit-logged-as-error | low | A calibration sample that runs out its budget is logged as a failed operation when the timeout lands in its clean-exit wait
 
 One Release `concurrent_sessions_probe` run at `d2db5f6e1d` failed only `no_error_records`, on a `kdf_worker_lifecycle` event with `kdf_operation` `calibrate-v1`, `stage` `clean_exit`, `error_type` `TimeoutError`, `exit_code` 0, 2.06 s elapsed and `outcome` `failed` (`build/acceptance/cadrumo-concurrent-uzk6oa9m`). An over-budget calibration sample is an expected rejection, logged at DEBUG as `sample_rejected`, but only when the timeout lands in `result_wait` (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py:340-347`). When the result arrives just inside the budget, the clean-exit wait gets none and the same rejection is logged at ERROR. The next run passed every check. This is outside the operation cues; the custody KDF owner should decide whether a calibration sample's clean-exit timeout is also a rejected sample.
+
+## Plan close
+
+S06 closed with both stages rebuilt. Release at `d2db5f6e1d` passed `concurrent_sessions_probe` and `backend_probe`. Debug at a HEAD including `d2db5f6e1d` and `9d7c4cb381` passed both probes, run by CADRUMO-FIX1. The plan-close review and its re-review passed. Every finding is resolved except attendance-cue-withheld-on-expiry, a low with no current effect, and kdf-calibration-timeout-at-clean-exit-logged-as-error, which belongs to the custody KDF owner. All Steps are closed and the plan is complete.
 
 ## Recommendations
 
