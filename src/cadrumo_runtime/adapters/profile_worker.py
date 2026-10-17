@@ -13,6 +13,7 @@ from threading import Event, RLock
 from uuid import UUID
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.core.package_interpreter import interpreter_command
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ServerHello
@@ -128,9 +129,11 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 if worker_script is None
                 else (str(worker_script.resolve(strict=True)),)
             )
+            interpreter, *interpreter_arguments = interpreter_command()
             self._process = self._scope.launch(
-                executable=Path(sys.executable),
+                executable=Path(interpreter),
                 arguments=(
+                    *interpreter_arguments,
                     "-I",
                     "-B",
                     *worker_entrypoint,

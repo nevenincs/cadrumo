@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from .....core.child_console import child_console_creation_flags
+from .....core.package_interpreter import interpreter_command
 from .....core.storage_environment import ChildEnvironmentProfile, child_environment
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
@@ -143,10 +144,14 @@ def worker_interpreter() -> tuple[str, ...]:
     that starts the base interpreter as a second process, and the
     site-packages ``.pth`` hooks import modules the child never uses. Both are
     pure start-up cost on every wrap and unwrap. Elsewhere the interpreter
-    itself resolves the environment, so it is kept as is.
+    itself resolves the environment, so it is kept as is. A process the Cadrumo
+    binary hosts starts the binary's interpreter role, also without ``site``.
     """
+    command = interpreter_command()
+    if len(command) > 1:
+        return (*command, "-S")
     if sys.platform != "win32":
-        return (sys.executable,)
+        return command
     base = getattr(sys, "_base_executable", None)
     executable = base if isinstance(base, str) and base and Path(base).is_file() else sys.executable
     return (executable, "-S")

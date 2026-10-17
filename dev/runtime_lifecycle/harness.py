@@ -80,6 +80,9 @@ class LifecycleHarness:
     def __init__(self, manager: Path, package: Path, root: Path) -> None:
         """Bind explicit binaries and a not-yet-created test storage directory."""
         self.manager, self.package, self.root = manager, package, root
+        # The manager runs the runtime as the desktop image in its runtime role; the separate
+        # runtime image remains the operator's administration command.
+        self.server_image = package / "cadrumo.exe"
         self.runtime_image = package / "bin/cadrumo-runtime.exe"
         self.cli_image = package / "bin/aeat.exe"
         self.resources = ExitStack()
@@ -95,7 +98,13 @@ class LifecycleHarness:
         """Launch a job-contained driver without a desktop-context prerequisite."""
         if sys.platform != "win32":
             raise RuntimeError("Lifecycle acceptance requires Windows native IPC")
-        for path in (self.manager, self.runtime_image, self.cli_image, self.package / "data/package-manifest.json"):
+        for path in (
+            self.manager,
+            self.server_image,
+            self.runtime_image,
+            self.cli_image,
+            self.package / "data/package-manifest.json",
+        ):
             if not path.is_file():
                 raise RuntimeError("A complete package and debug lifecycle driver are required")
         self.root.mkdir()
@@ -180,7 +189,7 @@ class LifecycleHarness:
         while True:
             try:
                 native = self.endpoint.connect(
-                    timeout=min(0.2, max(0.001, deadline - time.monotonic())), expected_image=self.runtime_image
+                    timeout=min(0.2, max(0.001, deadline - time.monotonic())), expected_image=self.server_image
                 )
                 wire = VerifiedConnection(
                     native,

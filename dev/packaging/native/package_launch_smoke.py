@@ -125,13 +125,14 @@ def _require_health_running(process: WindowsOwnedProcess, root: Path, deadline: 
 
 
 def _recover_runtime(
-    process: WindowsOwnedProcess, scope: WindowsProcessScope, package: Path, root: Path, deadline: float
+    process: WindowsOwnedProcess, scope: WindowsProcessScope, executable: Path, root: Path, deadline: float
 ) -> None:
     import win32api
     import win32con
     import win32event
     import win32process
 
+    package = executable.parent
     manifest = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))
     authority = member(package, manifest["layout"]["paths"]["authority"])
     generation = AuthorityDescriptor.read(authority / AUTHORITY_DESCRIPTOR_FILENAME).logical_generation
@@ -158,7 +159,8 @@ def _recover_runtime(
         while True:
             _require_health_running(process, root, deadline)
             try:
-                native = endpoint.connect(timeout=0.2, expected_image=package / "bin/cadrumo-runtime.exe")
+                # The desktop's runtime is its own image in the runtime role.
+                native = endpoint.connect(timeout=0.2, expected_image=executable)
                 try:
                     wire = VerifiedConnection(native, expected=expected, deadline=min(deadline, time.monotonic() + 2))
                 except BaseException:
@@ -272,7 +274,7 @@ def verify_health(executable: Path, storage_variable: str, *, scratch_root: Path
             # Observe the existing 180s admission ceiling, 60s health hold and
             # bounded owned shutdown; individual IPC/probe budgets stay unchanged.
             deadline = time.monotonic() + 300
-            _recover_runtime(process, scope, executable.parent, root, deadline)
+            _recover_runtime(process, scope, executable, root, deadline)
             code = process.wait(timeout=max(0, deadline - time.monotonic()))
             if code != 0:
                 raise AssertionError(f"Packaged runtime health failed: exit={code}")

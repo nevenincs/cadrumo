@@ -11,7 +11,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:fad21262bab49b4d2b0a6df76f741068f3ae3a4aecaa0cae36e36c0f4767791c'
+body_hash: 'sha256:912249a2fc2aeb442c3cb8f9524adcd2255651d66620f6d0fc4982f25194827c'
 ---
 
 # `single-binary-process-tree` plan
@@ -28,7 +28,7 @@ Decision coverage: 2026-10-17-single-binary-process-tree-adr governs every Step 
 
 - [x] `S01` - Start the runtime from the desktop as the cadrumo binary in its runtime role through a linked interpreter host, and have the operator confirm the grouping; `native/desktop/src-tauri/src/main.rs`.
 - [x] `S02` - Dispatch every declared role before window initialization, refuse unknown roles, select the linked host per role at run time instead of by compile-time defines, and start every desktop helper (runtime session commands, aeat sign-in and profile commands) as a role; `native/desktop/src-tauri/src/launch.rs`.
-- [ ] `S03` - Bind desktop session holder admission to its role invocation and refuse holders the runtime started, then make sys.executable the cadrumo binary in its interpreter role so runtime workers and the KDF child re-enter the same binary; `native/interpreter/windows/host.c`.
+- [x] `S03` - Bind desktop session holder admission to its role invocation and refuse holders the runtime started, then make sys.executable the cadrumo binary in its interpreter role so runtime workers and the KDF child re-enter the same binary; `native/interpreter/windows/host.c`.
 - [ ] `S04` - Run the machine lifecycle broker and the manager as roles and identify broker, manager and runtime by image plus role for supervision, startup items, quiescence and termination, with tests, so no runtime host runs outside a Cadrumo tree; `native/manager/src/supervision/launch.rs`.
 - [ ] `S05` - Run the agent service and agent as roles and bind service admission to image, role, module and invocation, with tests; `src/cadrumo_agent_service`.
 - [ ] `S06` - Ship one cadrumo image for these roles in the package layout, build and assembly verification; `native/package-layout.json`.

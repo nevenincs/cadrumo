@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:e4531b84e27a4de5d44c022037b3df2deb687f93eb4dbcf67b604357dee897a9'
+body_hash: 'sha256:93795370f549f95d6ef2ffdbf9078f3759215273e369fb2cc93f49abedba6357'
 related:
   - "[[2026-10-17-single-binary-process-tree-plan]]"
 ---
@@ -92,6 +92,24 @@ related:
 - `S03` `verify:` `cmake app-payload debug` -> `pass`
 - `S03` `verify:` `concurrent_sessions_probe stage/Debug with launch_arguments bound` -> `pass`
 - `S03` `verify:` `backend_probe stage/Debug` -> `pass`
+- `S03` `M` `native/interpreter/windows/host.c`
+- `S03` `M` `native/application/src/role.rs`
+- `S03` `M` `native/interpreter_host/src/lib.rs`
+- `S03` `A` `src/cadrumo/core/package_interpreter.py`
+- `S03` `A` `src/cadrumo/core/tests/test_package_interpreter.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`
+- `S03` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_hosted_interpreter.py`
+- `S03` `M` `src/cadrumo_runtime/adapters/profile_worker.py`
+- `S03` `M` `dev/packaging/native/package_launch_smoke.py`
+- `S03` `M` `dev/runtime_lifecycle/harness.py`
+- `S03` `verify:` `cargo test application role and child` -> `pass`
+- `S03` `verify:` `run-backend.ps1 -Mode Clippy with the linked host` -> `pass`
+- `S03` `verify:` `pytest package interpreter, KDF hosted interpreter, KDF import graph, test_agent_image` -> `pass`
+- `S03` `verify:` `lint-imports 25 contracts` -> `pass`
+- `S03` `verify:` `cmake app-payload debug` -> `pass`
+- `S03` `verify:` `ctest bundle.launch and bundle.health on Debug` -> `pass`
+- `S03` `verify:` `live stage/Debug under the manager: workers, a worker KDF child and the runtime KDF child run as cadrumo.exe --role python` -> `pass`
+- `S03` `verify:` `bundle.runtime-lifecycle on Debug 8 of 9` -> `fail`
 
 ## Notes
 
@@ -100,3 +118,4 @@ related:
 - `S02` Task Manager groups only process trees present when it opens; processes started while it is open get their own rows, so grouping is judged in a freshly opened Task Manager. WebView2 stays under its own Microsoft row. Roles run on Windows only until S08.
 - `S02` desktop-session admission still matches by image and parent image only; once runtime workers run as cadrumo.exe (S03) they would pass it, so admission must bind role and invocation or parent incarnation before S03 lands. `no_error_records` fails on refusal boundaries logged at ERROR since 262e873ce3, outside this change.
 - `S03` Admission part of S03 done; sys.executable re-entry for workers and the KDF child is still open.
+- `S03` `test_exact_runtime_crash_manager_recovery_and_operation_state` fails in the full suite with `authentication_required` on Debug and on the Release baseline without this change (Release also fails `test_packaged_client_authentication_and_profile_scope);` alone it passes on both in about 632 s. The lifecycle driver had to be rebuilt; it predated S01. The standalone aeat and cadrumo-runtime images still start python.exe children, as they are operator programs.

@@ -31,16 +31,20 @@ mod windows {
         Some(units)
     }
 
-    /// Run the console script `entrypoint` under the launch profile of `image`, as the
-    /// process `executable` with `arguments` after it. `None` when a value holds NUL.
+    /// Run the console script `entrypoint`, or the interpreter itself when it is `None`,
+    /// under the launch profile of `image`, as the process `executable` with `arguments`
+    /// after it. `None` when a value holds NUL.
     pub fn run_entrypoint(
         image: &str,
-        entrypoint: &str,
+        entrypoint: Option<&str>,
         executable: &OsStr,
         arguments: &[OsString],
     ) -> Option<i32> {
         let image = CString::new(image).ok()?;
-        let entrypoint = wide(OsStr::new(entrypoint))?;
+        let entrypoint = match entrypoint {
+            Some(entrypoint) => Some(wide(OsStr::new(entrypoint))?),
+            None => None,
+        };
         let mut owned = vec![wide(executable)?];
         for argument in arguments {
             owned.push(wide(argument)?);
@@ -48,11 +52,14 @@ mod windows {
         let argc = c_int::try_from(owned.len()).ok()?;
         let mut argv: Vec<*mut u16> = owned.iter_mut().map(|unit| unit.as_mut_ptr()).collect();
         argv.push(std::ptr::null_mut());
+        let entrypoint = entrypoint
+            .as_ref()
+            .map_or(std::ptr::null(), |units| units.as_ptr());
         // SAFETY: every pointer is a NUL-terminated buffer owned above that outlives the
-        // call, argv holds argc of them plus a terminating null, and the host neither
-        // retains nor frees them.
+        // call or, for the interpreter, a null entrypoint the host accepts; argv holds argc
+        // of them plus a terminating null, and the host neither retains nor frees them.
         Some(unsafe {
-            cadrumo_host_entrypoint(image.as_ptr(), entrypoint.as_ptr(), argc, argv.as_mut_ptr())
+            cadrumo_host_entrypoint(image.as_ptr(), entrypoint, argc, argv.as_mut_ptr())
         })
     }
 
@@ -64,19 +71,19 @@ mod windows {
         fn values_holding_nul_are_refused_before_the_host_runs() {
             let executable = OsStr::new("C:\\cadrumo.exe");
             assert_eq!(
-                run_entrypoint("cadrumo-runtime\0", "x", executable, &[]),
+                run_entrypoint("cadrumo-runtime\0", Some("x"), executable, &[]),
                 None
             );
             assert_eq!(
-                run_entrypoint("cadrumo-runtime", "x\0", executable, &[]),
+                run_entrypoint("cadrumo-runtime", Some("x\0"), executable, &[]),
                 None
             );
             assert_eq!(
-                run_entrypoint("cadrumo-runtime", "x", OsStr::new("a\0b"), &[]),
+                run_entrypoint("python", None, OsStr::new("a\0b"), &[]),
                 None
             );
             assert_eq!(
-                run_entrypoint("cadrumo-runtime", "x", executable, &["\0".into()]),
+                run_entrypoint("python", None, executable, &["\0".into()]),
                 None
             );
         }

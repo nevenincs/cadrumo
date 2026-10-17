@@ -39,36 +39,58 @@ static wchar_t *path(cadrumo_context *ctx, uint32_t key) {
 }
 
 /* A console entrypoint runs one declared console script through the package
- * interpreter. sys.executable remains that interpreter: runtime workers and the
- * supervised KDF child relaunch sys.executable with interpreter arguments. */
-static int run_entrypoint(bridge_main run, const host_role *role, int argc, wchar_t **argv, wchar_t **paths) {
+ * interpreter, and the Cadrumo binary's interpreter role runs that interpreter itself.
+ * sys.executable remains the package interpreter. Hosted by the Cadrumo binary, Python
+ * also receives the -X option ROLE_IMAGE_OPTION naming that binary, so the runtime
+ * workers and the supervised KDF child it starts re-enter the binary's interpreter role
+ * and stay in its process tree. */
+#define ROLE_IMAGE_OPTION L"cadrumo_role_image"
+
+static int run_python(bridge_main run, const host_role *role, int argc, wchar_t **argv, wchar_t **paths) {
     static const wchar_t fixed_format[] = L"import %ls as fixed; raise SystemExit(fixed.main())";
     static const wchar_t script_format[] =
         L"import _cadrumo_bootstrap; _cadrumo_bootstrap.run_entrypoint('%ls')";
     const wchar_t *format = role->fixed_module ? fixed_format : script_format;
     const wchar_t *subject = role->fixed_module ? role->fixed_module : role->entrypoint;
-    size_t command_size = wcslen(format) + wcslen(subject) + 1;
+    size_t command_size = subject ? wcslen(format) + wcslen(subject) + 1 : 1;
     size_t size = wcslen(paths[0]) + wcslen(WIDE_LITERAL(CADRUMO_EXECUTABLE)) + 2;
+#ifdef CADRUMO_LINKED_HOST
+    size_t marker_size = wcslen(ROLE_IMAGE_OPTION) + wcslen(argv[0]) + 2;
+#else
+    size_t marker_size = 1;
+#endif
     wchar_t *command = calloc(command_size, sizeof(wchar_t));
     wchar_t *interpreter = calloc(size, sizeof(wchar_t));
-    wchar_t **forwarded = calloc((size_t)argc + 2, sizeof(wchar_t *));
+    wchar_t *marker = calloc(marker_size, sizeof(wchar_t));
+    wchar_t **forwarded = calloc((size_t)argc + 4, sizeof(wchar_t *));
     int result = 123;
-    if (command && interpreter && forwarded
-        && swprintf_s(command, command_size, format, subject) >= 0
+    if (command && interpreter && marker && forwarded
+        && (!subject || swprintf_s(command, command_size, format, subject) >= 0)
+#ifdef CADRUMO_LINKED_HOST
+        && swprintf_s(marker, marker_size, L"%ls=%ls", ROLE_IMAGE_OPTION, argv[0]) >= 0
+#endif
         && swprintf_s(interpreter, size, L"%ls\\%ls", paths[0], WIDE_LITERAL(CADRUMO_EXECUTABLE)) >= 0) {
         free(paths[2]);
         paths[2] = interpreter;
         interpreter = NULL;
-        forwarded[0] = paths[2];
-        forwarded[1] = L"-c";
-        forwarded[2] = command;
-        for (int i = 1; i < argc; ++i) forwarded[i + 2] = argv[i];
-        result = run(argc + 2, forwarded, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
+        int count = 0;
+        forwarded[count++] = paths[2];
+#ifdef CADRUMO_LINKED_HOST
+        forwarded[count++] = L"-X";
+        forwarded[count++] = marker;
+#endif
+        if (subject) {
+            forwarded[count++] = L"-c";
+            forwarded[count++] = command;
+        }
+        for (int i = 1; i < argc; ++i) forwarded[count++] = argv[i];
+        result = run(count, forwarded, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
     } else {
-        fprintf(stderr, "CADRUMO: cannot prepare the %s entrypoint\n", role->image);
+        fprintf(stderr, "CADRUMO: cannot prepare the %s interpreter\n", role->image);
     }
     free(command);
     free(interpreter);
+    free(marker);
     free(forwarded);
     return result;
 }
@@ -121,7 +143,7 @@ static int host_main(const host_role *role, int argc, wchar_t **argv) {
         goto done;
     }
     if (role->entrypoint) {
-        result = run_entrypoint(run, role, argc, argv, paths);
+        result = run_python(run, role, argc, argv, paths);
     } else if (role->bundled) {
         /* The image stays sys.executable, so a child it starts with sys.executable re-enters
          * this image and its launch profiles; sys.frozen is never set. */
@@ -130,7 +152,11 @@ static int host_main(const host_role *role, int argc, wchar_t **argv) {
         wchar_t *check[] = {argv[0], L"-c", L"import _cadrumo_bootstrap; _cadrumo_bootstrap.verify(full=True); print('CADRUMO package verified')"};
         result = run(3, check, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
     } else {
+#ifdef CADRUMO_LINKED_HOST
+        result = run_python(run, role, argc, argv, paths);
+#else
         result = run(argc, argv, (const wchar_t **)paths, CADRUMO_DEVELOPMENT);
+#endif
     }
     goto done;
 failure:
@@ -146,10 +172,12 @@ done:
 }
 
 #ifdef CADRUMO_LINKED_HOST
-/* The Cadrumo binary's entry into a console entrypoint role. argv[0] is the binary and the
- * remaining arguments are the script's; the role argument has already been removed. */
+/* The Cadrumo binary's entry into a role hosted by the interpreter: a console entrypoint,
+ * or the interpreter itself when entrypoint is NULL. argv[0] is the binary and the
+ * remaining arguments are the script's or the interpreter's; the role argument has already
+ * been removed. */
 int cadrumo_host_entrypoint(const char *image, const wchar_t *entrypoint, int argc, wchar_t **argv) {
-    if (!image || !entrypoint || argc < 1 || !argv) return 2;
+    if (!image || argc < 1 || !argv || !argv[0]) return 2;
     host_role role = {image, entrypoint, NULL, 0};
     return host_main(&role, argc, argv);
 }

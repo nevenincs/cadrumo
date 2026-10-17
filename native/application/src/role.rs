@@ -18,6 +18,8 @@ pub enum Role {
     Runtime,
     /// The `aeat` console script, for the commands the desktop runs.
     Cli,
+    /// The package interpreter itself, which the runtime's workers and its KDF child run.
+    Python,
 }
 
 /// What a role runs inside the linked interpreter host.
@@ -25,8 +27,8 @@ pub enum Role {
 pub struct HostedImage {
     /// The declared launch image whose profile defines the environment.
     pub image: &'static str,
-    /// The console script it runs.
-    pub entrypoint: &'static str,
+    /// The console script it runs, or `None` for the interpreter itself.
+    pub entrypoint: Option<&'static str>,
 }
 
 /// Why role selection refused the arguments.
@@ -39,12 +41,13 @@ pub enum RoleRefusal {
 }
 
 impl Role {
-    pub const ALL: [Role; 2] = [Role::Runtime, Role::Cli];
+    pub const ALL: [Role; 3] = [Role::Runtime, Role::Cli, Role::Python];
 
     pub const fn name(self) -> &'static str {
         match self {
             Role::Runtime => "runtime",
             Role::Cli => "cli",
+            Role::Python => "python",
         }
     }
 
@@ -53,6 +56,7 @@ impl Role {
         match self {
             Role::Runtime => &[ROLE_ARGUMENT, "runtime"],
             Role::Cli => &[ROLE_ARGUMENT, "cli"],
+            Role::Python => &[ROLE_ARGUMENT, "python"],
         }
     }
 
@@ -60,11 +64,15 @@ impl Role {
         match self {
             Role::Runtime => HostedImage {
                 image: "cadrumo-runtime",
-                entrypoint: "cadrumo-runtime",
+                entrypoint: Some("cadrumo-runtime"),
             },
             Role::Cli => HostedImage {
                 image: "aeat",
-                entrypoint: "aeat",
+                entrypoint: Some("aeat"),
+            },
+            Role::Python => HostedImage {
+                image: "python",
+                entrypoint: None,
             },
         }
     }
@@ -73,7 +81,7 @@ impl Role {
     pub fn hosting(entrypoint: &str) -> Option<Role> {
         Role::ALL
             .into_iter()
-            .find(|role| role.hosted().entrypoint == entrypoint)
+            .find(|role| role.hosted().entrypoint == Some(entrypoint))
     }
 
     fn named(name: &OsStr) -> Option<Role> {
@@ -135,7 +143,7 @@ mod tests {
             select(&arguments(&["--role"])).unwrap().unwrap_err(),
             RoleRefusal::Missing
         );
-        for name in ["", "Runtime", "desktop", "python", "runtime "] {
+        for name in ["", "Runtime", "desktop", "Python", "interpreter", "runtime "] {
             assert_eq!(
                 select(&arguments(&["--role", name])).unwrap().unwrap_err(),
                 RoleRefusal::Unknown,
@@ -148,12 +156,16 @@ mod tests {
     fn every_role_hosts_a_declared_launch_image() {
         for role in Role::ALL {
             let hosted = role.hosted();
-            assert!(!hosted.image.is_empty() && !hosted.entrypoint.is_empty());
+            assert!(!hosted.image.is_empty());
             assert_eq!(role.arguments()[1], role.name());
             assert_eq!(select(role.arguments()).unwrap().unwrap().0, role);
-            assert_eq!(Role::hosting(hosted.entrypoint), Some(role));
+            if let Some(entrypoint) = hosted.entrypoint {
+                assert!(!entrypoint.is_empty());
+                assert_eq!(Role::hosting(entrypoint), Some(role));
+            }
         }
-        for entrypoint in ["cadrumo-agent-service", "cadrumo-mcp", "", "AEAT"] {
+        assert_eq!(Role::Python.hosted().entrypoint, None);
+        for entrypoint in ["cadrumo-agent-service", "cadrumo-mcp", "python", "", "AEAT"] {
             assert_eq!(Role::hosting(entrypoint), None, "{entrypoint:?}");
         }
     }
