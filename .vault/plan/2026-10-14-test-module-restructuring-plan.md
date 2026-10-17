@@ -7,20 +7,12 @@ tier: L1
 related:
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:b208cfd17cd63110448aee37ed38ba57a9dbd922a1f357b1105d4b2eb3801ff0'
+body_hash: 'sha256:938b9b7afbb699a8f87a92037a286f14efa7c8cf23797a58cb5286b8784c68e3'
 ---
 
-
-
-
-
-
-
-
 # `test-module-restructuring` plan
-
 
 ## Description
 
@@ -35,12 +27,6 @@ The accepted test-topology and test-harness-sanity decisions govern S01-S03: ret
 - [ ] `S01` - Restructure registered executor conformance tests into cohesive modules preserving collected behavior; `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py, new sibling test/helper modules, their direct consumers under src/cadrumo/entrypoints/tests and src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`.
 - [ ] `S02` - Restructure supervisor tests into cohesive modules preserving collected behavior; `src/cadrumo/adapters/persistence/operations/tests/test_supervisor.py and new sibling test/helper modules`.
 - [ ] `S03` - Restructure profile source resolver tests into cohesive modules preserving collected behavior; `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py and new sibling test/helper modules`.
-
-
-
-
-
-
 
 ## Parallelization
 

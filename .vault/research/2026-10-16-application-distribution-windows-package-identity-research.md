@@ -68,4 +68,3 @@ Package name, publisher and display name per channel; which installation role ow
 - `native/cmake/platforms/Windows.cmake:157`
 - `dev/packaging/native/platforms/windows.py:184`
 - commit `286f2033e4`
-

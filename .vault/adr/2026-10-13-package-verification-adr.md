@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#package-verification'
 date: '2026-10-13'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:73a5eaf696c0c26e2f0c54accfb9bf557e754bf1b2abe87b616575ab0e8ea8f7'
+body_hash: 'sha256:8a79f9b7587aa4583b4087bc912d51318a32a04928e40838a2b7700933bb19d7'
 related:
   - "[[2026-10-13-native-agent-adr]]"
   - "[[2026-10-12-live-agent-evaluation-adr]]"
@@ -124,9 +124,9 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 ### Former implementation and ownership (historical)
 
 > ## Constraints
-> 
+>
 > Binding:
-> 
+>
 > 1. **The boundary.** A test or lane whose claim concerns application behaviour as a process runs against `stage/<Config>/app`, unmodified, using the package's own interpreter, entry points and bundled cadrumo-agent. Application behaviour as a process means: the desktop, the manager, the runtime's lifecycle as the application's host, the agent door, the agent column, or cadrumo-agent serving Cadrumo. It never imports a source checkout, a development `.venv`, or a build feature absent from shipped configurations.
 > 2. **What stays outside the boundary, from source or a wheel install:**
 >    - the unit and integration suites of `src` and `dev`;
@@ -134,7 +134,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >    - `dev/acceptance`, `dev/smoke`, the `dev/packaging` wheel campaign and its oracles, and `test-channel-artifacts`, as the wheel channels' proof;
 >    - `dev/ingest_harness`, as domain measurement;
 >    - cadrumo-agent's own unit, component, service and acceptance tests, as agent-library proof.
-> 
+>
 >    None of these may claim application coverage.
 > 3. **The first tool-access proof.** It is earned once, by a live turn on the package's binaries:
 >    - the staged interpreter runs `-m cadrumo_agent.cli.main serve`, with `development_tool_server` set and no hosted root;
@@ -142,20 +142,20 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >    - the root is marked and disposable;
 >    - the profile is synthetic and signed in through `bin/aeat` on the protected secret channel;
 >    - the provider is the real one.
-> 
+>
 >    The turn must meet cadrumo-agent's own recording rule: a tool of the `cadrumo` entry was called, served by the program the entry launches, with a person's session behind it, finishing real work with what the tool returned. Every later agent start goes through the runtime's hosted door. The setting is used for nothing else.
 > 4. **Ownership of the proof record.** The cadrumo-agent owner records the proof in `providers/lane_admission.py` and makes the agent-side commits. Cadrumo supplies the package and the driver, and makes no commit in that repository.
 > 5. **No new parallel paths.** No new harness, bootstrap mode or launch route is built for verification alone. A lane that diverges is repointed or removed. A code path whose only consumer was such a lane is removed with it.
-> 
+>
 > Affected records, with proposed wording for owner approval:
 > - `2026-10-13-native-agent-adr`, Implementation, after "CTest runs the installed agent import, version, dependency and checksum probe through the application's own interpreter": add "It also launches the agent the way the runtime does, `-m cadrumo_agent.cli.main serve` on ephemeral ports, waits for the ready line, and stops it."
 > - `2026-10-12-live-agent-evaluation-adr`, Consequences, under "Where it stops": add "It does not exercise cadrumo-agent. The agent integration is proved by `dev/runtime_lifecycle/agent_live.py` against the same package, under `2026-10-13-package-verification-adr`."
 > - `2026-10-13-desktop-agent-host-live-lane-adr` (proposed): replace deviation L2 and the Implementation's "cadrumo-agent from its source tree". New text: "The lane starts cadrumo-agent only through the runtime's hosted door, from the package's bundled agent. It waits on the first recorded tool-access proof. The `agent-direct-start` feature is removed." Remove the corresponding sentence in Rationale.
 > - `2026-08-05-packaging-smoke-architecture-adr` and `2026-08-14-test-harness-sanity-successor-adr`: no change.
 > - cadrumo-agent records, proposed to their owner: `2026-10-10-cadrumo-integration-capability-proofs-adr` and `2026-10-11-cadrumo-integration-entry-network-proof-adr` state that a Cadrumo-facing proof is earned on the agent as Cadrumo's package ships it. `2026-10-11-cadrumo-integration-hosting-contract-adr` names `CADRUMO_AGENT_HOSTED_RELAY_EXECUTABLE`, which the code already uses, and leaves to the agent owner whether the two program-path variables stay, now that the agent may run Cadrumo's command line and Python (`2026-10-13-canonical-environment-application-internals-adr` constraint 17) (amended 2026-10-13 under `2026-10-13-canonical-environment-application-internals-adr`; before that this read: "and records the retirement of the two program-path variables it still names").
-> 
+>
 > ## Implementation
-> 
+>
 > We will hold application-level verification to the package and retire what diverges. The outline below holds hypotheses that may change within the constraints:
 > - **Runtime launch.** The runtime's agent door launches `-m cadrumo_agent.cli.main serve`, and CTest `bundle.agent` gains the launch and ready-line probe.
 > - **`agent_live.py`.** It drops `--agent-checkout` and runs the staged interpreter's bundled agent with the staged `cadrumo-mcp`. It serves two purposes: the one-time proof run under `development_tool_server`, and afterwards the hosted door. The proof run works as follows:
@@ -166,4 +166,4 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > - **cadrumo-agent side, proposed to its owner:**
 >   - `dev/cadrumo_testbed.py` reads `data/package-manifest.json` instead of hard-coding entry points;
 >   - the owner decides on `desktop-serve`, `desktop_tests` and `_live_desktop_gateway.py`, which no Cadrumo path uses.
-> 
+>

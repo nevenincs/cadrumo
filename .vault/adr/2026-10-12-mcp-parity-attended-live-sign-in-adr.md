@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:b60acebc22c2de51354ff6eea2b89cbd0f9fd43d4a36b18019d54c6f9c5431fd'
+body_hash: 'sha256:ef9f82179bd7864050c5423d6f04b42a37b9fc3b3e0c10dab365397ce9a671cd'
 related:
   - "[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -118,9 +118,7 @@ Amended 2026-10-12 on implementation, within the operator's approval of this rec
 - **Disclosure destination.** On approval the attended connection takes the holder's client identity as its disclosure destination, so the child's disclosures are the person's own. The child remains a distinct session on its own connection.
 - **Status.** The MCP `status` tool reports an attended session as `"session": "attended"`.
 
-
 Amended 2026-10-14 under the operator's runtime separation directive: held sign-in and all authentication administration beyond direct AEAT profile login, logout and creation belong to `cadrumo_runtime`. The host and client API are separate canonical packages with no tax/client import of the host. The earlier 2026-10-12 command-channel refinement is history; the current holder uses the bounded native password frame and correlated decision grammar above. No AEAT hold alias remains. Runtime authority still requires exact native peer proof, current parent authorization and cascading retirement; a marker or known profile alone grants nothing.
-
 
 ## Active human lifetime refinement 2026-10-15
 

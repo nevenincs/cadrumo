@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#desktop-agent-host'
 date: '2026-10-12'
-modified: '2026-10-13'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:1bd17050732b00417d1c91f7bfbe24eec19aaa4ba0d103d37269981d0e06862a'
+body_hash: 'sha256:486e7a56c1ff85549265849da7bb54c8c1ecc83e7dc6518af8149b7fde20f8de'
 related: []
 ---
 

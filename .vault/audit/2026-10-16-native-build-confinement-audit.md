@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#native-build-confinement'
 date: '2026-10-16'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8d4b8bfdcfa223707762b7b5eb85a1dd75c21bd9b3138e15b0d939ba7a625bb'
+body_hash: 'sha256:def9943bf3b3d284fa54895adb6ca120012158be2f9259c145eba9cf3ffc257c'
 related:
   - "[[2026-10-16-native-build-confinement-plan]]"
   - "[[2026-10-16-native-build-confinement-writer-census-reference]]"
@@ -62,6 +62,5 @@ Final native Ruff passes and all 157 native files pass formatting. The fresh con
 ## Recommendations
 
 Retain the new ownership admission and system uv behavior. Reconfigure existing builds whose path manifests still describe obsolete layouts. Finish the independently owned MSI/type/import/format gates before closing the plan's required global verification. This audit does not establish a full native bundle build or OS-level containment of arbitrary external tool hooks; a privileged filesystem trace and target-platform bundle acceptance were not run. Explicit installation and opted-in service/tracing probes retain operator-authorized external system effects.
-
 
 Final scope limitation: directly invoked development pytest itself follows configured development storage unless supplied build-owned overrides. Several audit invocations wrote runner logs/scratch beneath var/storage; later parent checks supplied build roots. This is distinct from controlled CMake build/CTest behavior, and the implementation does not claim a machine-wide filesystem sandbox. Global gate status remains PENDING; steps remain open and changes uncommitted in the shared, concurrently edited worktree.

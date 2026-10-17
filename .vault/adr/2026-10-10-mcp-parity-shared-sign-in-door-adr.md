@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7f5240f792ad84eaf87b9c31744819112a2ca9baad3c6476bdbe737e9b49414'
+body_hash: 'sha256:dfbf24d613d3b23e87c231da97068061b5523e20754ae7ba7de57558ef8cf183'
 related:
   - "[[2026-10-10-mcp-parity-sign-in-doors-reference]]"
   - "[[2026-10-10-mcp-parity-parity-mechanism-options-research]]"
@@ -325,7 +325,6 @@ adding a parallel one.
   that any of it is built.
 
 Amended 2026-10-12 under `2026-10-12-mcp-parity-attended-live-sign-in-adr`: the delegated-child option rejected here is now the chosen door for one case only. An MCP connection with no key and no stored sign-in to resume asks to be attended by a person's held sign-in, and is admitted only by that person's approval of the exact connection. Resuming the shared sign-in stays the default and is unchanged.
-
 
 ## Active human lifetime refinement 2026-10-15
 

@@ -3,56 +3,22 @@ tags:
   - '#audit'
   - '#src-cadrumo-repair'
 date: '2026-10-15'
-modified: '2026-10-15'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:c42edea58811108f3721e09d96150092c69c4a0d23f220af565938f2e04ba78c'
+body_hash: 'sha256:9791916fca482bbdfcadddbea42f82765ff1cb21832b74615c3d44d02859e396'
 related:
   - "[[2026-10-14-src-cadrumo-repair-plan]]"
   - "[[2026-07-01-import-centralization-adr]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace src-cadrumo-repair with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
-
 # `src-cadrumo-repair` audit: `Canonical source and authority repair audit`
 
 ## Scope
 
-<!-- What was audited and why -->
-
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Canonical source and authority repair audit | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Canonical source and authority repair audit is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
-
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
 
 ## Context
 

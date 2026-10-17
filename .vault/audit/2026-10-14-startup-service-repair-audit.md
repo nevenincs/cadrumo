@@ -3,39 +3,18 @@ tags:
   - '#audit'
   - '#startup-service-repair'
 date: '2026-10-14'
-modified: '2026-10-15'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:2abdb2c60b39399bc13d7c1babeeeac63148051c395100203c45746e65486c17'
+body_hash: 'sha256:3220a26def75fd271975ababddc0d09e45ed5b6ef0dbda61f81e7a8cf92500e3'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace startup-service-repair with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `startup-service-repair` audit: startup diagnosis and supervision
 
 ## Scope
 
 Integrated review of the uncommitted startup-service-repair implementation against the accepted canonical environment and desktop shell decisions. Reviewed diagnostic forwarding and containment, worker exchange fencing, KDF cleanup, shared status observations, retry supervision, and user retry integration. Other concurrent work is outside this repair except where it interacts with these workflows.
-
-<!-- What was audited and why -->
 
 ## Findings
 
@@ -50,15 +29,6 @@ The first 10-second worker exchange and the 30.783-second KDF cleanup cannot be 
 ### verification | low | Package acceptance remains pending
 
 Review verdict PENDING. Reused passing focused Python diagnostics, lifecycle, transport and KDF checks; 52 native sign-in tests; nine earlier supervisor tests; frontend check; and browser refusal/retry scenario. Registry gate and diagnostic privacy regressions pass. Root owns remaining shared checks, refreshed supervisor verification, and rebuilt package acceptance. No critical or high code findings identified.
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### {topic} | {level} | {summary}
-
-     followed by a paragraph carrying the detail. {topic} is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### final-native-review | low | Native corrections verified
 
@@ -141,7 +111,3 @@ The live package run `build/acceptance/agent-live-l2a5ehrv` verifies the externa
 The owner confirmed on 2026-10-15 that provider CLI authentication must be performed separately in each profile-owned CLI home. Preserve provider-owned credentials there; do not import the ordinary user's account. The declared agent catalog currently supplies authentication kind and CLI program metadata, but no host-callable login operation or login/probe command descriptors. A saved `provider_sign_in` choice therefore cannot establish authentication. Complete the agent-owned authentication contract and its authenticated service integration before presenting provider sign-in as functional. Keep provider-specific login commands out of a Cadrumo-maintained provider list.
 
 The refreshed Release payload built successfully and its direct environment launch probe passes stores setup, standalone worker launch and sanitation. Its hosted gateway still explicitly refuses `hosted_lane_unproven`. The subsequent live proof at `build/acceptance/agent-live-5hu58oe3` stopped before agent launch because runtime readiness was not received within the existing deadline; it is failed evidence, not a model turn. Installed service source text matches the repair (wheel newline normalization explains differing byte hashes).
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->

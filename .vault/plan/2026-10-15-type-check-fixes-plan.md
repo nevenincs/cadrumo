@@ -7,7 +7,7 @@ tier: L1
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-09-02-gate-integrity-adjudication-negative-test-typing-adr]]'
-modified: '2026-10-14'
+modified: '2026-10-15'
 body_schema: body-v2
 body_hash: 'sha256:4b4631d73a0dbd41f08da6375cefa1739426e4a4b6e1e4b1ff815c1333ebf5b2'
 ---

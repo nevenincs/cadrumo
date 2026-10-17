@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#desktop-shell'
 date: '2026-10-14'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:13b33a04210747f857cb847f976ff6562b1432e8a56500efe1a61670c7d3dc32'
+body_hash: 'sha256:350a25f17cf8a91466f751d9c59699d27859104376dbcefa42a641bef220ac8b'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
 ---
@@ -62,7 +62,6 @@ Diagnostics retains log_failure if appending fails (`native/application/src/diag
 5. For native-history-loss and host-sink-health, report source-specific dropped/gap/truncation counters and persistence health. Decide a bounded desktop-history replay strategy with deduplication; preserve separate source/process lifetime identity. Keep existing ring and pacing limits, and make retained-history limits explicit.
 6. Verification must cover the actual packaged Tauri view: cold/warm startup, installed manager versus GUI supervision, user/machine registration on disposable hosts, real agent ready/refused/stopped transitions, port conflict, sign-in/profile changes, runtime crash/retry, graceful/forced close, reload, ring overflow and rotation/write failure. Assert correct INFO versus DEBUG content and actual process/endpoint facts through real host delivery. Scan with credential/private-content canaries. Existing browser fixtures or source inspection do not prove packaged integration.
 
-
 ## Remediation 2026-10-14
 
 Authorized by the owner's instruction to implement correct DEBUG/INFO/error levels and an environment override, with INFO as the default. Implemented the native severity classifier, including runtime crashes and failed helper outcomes; successful Python timing events now use DEBUG. The host projects CADRUMO_LOG_LEVEL into the frontend initial/reset filter, with all five standard severities and compatibility for the existing CLI verbosity names. CLI children accept the same standard severities. Diagnostic capture remains available below the selected view filter.
@@ -73,7 +72,6 @@ Verification: native logs suite (49 tests), environment suite (7 tests), real ch
 
 Remaining recommendations from the initial audit: a complete authoritative inventory of all runtime-owned descendant processes, bounded replay of earlier desktop log files, and a broader sanitized binary/configuration catalogue. Those remain distinct from the severity/default override implementation and are not claimed complete. Existing unrelated work and commits by other sessions were preserved.
 
-
 ## Agent diagnostic integration 2026-10-14
 
 The owner explicitly extended scope to all hosted cadrumo-agent diagnostics, including the launcher, gateway and workers. The runtime now forwards schema cadrumo-agent.log/1 records from the contained gateway's stderr and follows gateway/worker rotating logs and worker-autospawn stderr files below that run's owned hosted root. CLI invocation warnings/errors use the agent's logger format. The Cadrumo launcher emits its ready/refused/stopped diagnostics into the shared application log. Stdout remains the private readiness/control protocol. The Logs adapter attributes these records to source cadrumo-agent with agent_launcher, agent_gateway, agent_worker or agent_cli roles and original producer PID, timestamp and severity.
@@ -82,7 +80,6 @@ The bridge deduplicates overlapping stream/file copies, frames partial writes, f
 
 Verification: 57 focused Python diagnostic/environment/privacy tests; 16 Windows process/launcher integration tests, including a real gateway process and separate file-only worker PID; 50 native logging tests through the existing Tauri channel; native Clippy. The real process integration verifies original DEBUG and ERROR levels and one record per overlapping output. Packaged interactive GUI acceptance and a provider-backed live agent lane remain unverified. Earlier recommendations about complete live process inventory, installed service registration and replay of desktop-native history remain open. Unrelated concurrent edits were preserved.
 
-
 ## Actual-log corrective audit 2026-10-14
 
 Read the real desktop native JSONL and shared Python log under the user's installed storage, and inspected the running desktop Logs through Windows UI Automation. The native history contained 101 child starts, 99 exits and 80 helper timings. Seven Python worker failures were mislabeled WARNING: two ready-attestation ValueErrors and five clean-exit TimeoutErrors, each with outcome failed despite exit code zero. The running staged executable initially predated the fixes.
@@ -90,7 +87,6 @@ Read the real desktop native JSONL and shared Python log under the user's instal
 Successful native child/host lifecycle, startup stages and helper timings now resolve to DEBUG for every role. Child failure carries a typed ChildFailed catalogue error. Manager asynchronous failures emit one ERROR per transition. Runtime, TUI, profile-worker and KDF producers distinguish completed diagnostics from failed operation outcomes; diagnostic_event defaults technical observations to DEBUG and promotes declared failed/error/unconfirmed outcomes even when callers requested INFO or WARNING. Known retained Python failures and routine lifecycle rows are corrected by the desktop reader. Async/task and thread records retain producer identity and reach the shared file.
 
 Verification so far: 53 native log tests, native Clippy, real helper-churn test with 24 processes, 34 diagnostic/privacy tests, five default/severity regressions, 28 real-process KDF diagnostics/exit tests, scoped Ruff lint and format. Initial external test-host GUI attempt exited before WebView startup; its real native log showed manager_unavailable as a failure. The newly changed startup gate requires the host executable's own installed package evidence, so acceptance proceeds through an isolated assembled test package. Full staged rebuild and final interactive Logs acceptance remain pending at this checkpoint. Concurrent same-tree builds interrupted earlier assembly attempts; passing source tests do not establish that the staged app contains the fixes.
-
 
 ## Session wind-down checkpoint 2026-10-14
 

@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#duplication-remediation'
 date: '2026-10-02'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:342d992e489f2edc28eeac5ad24ba9c55d8ac9951e675cfafdc0de8b3544b3d2'
+body_hash: 'sha256:f722b6ddc01e1ad1006b2f28c6a7a1225eb57c337910cc1fefae123baf6aa5e5'
 related: []
 ---
 # `duplication-remediation` reference: `reported duplication and current consolidation boundaries`
@@ -854,7 +854,6 @@ The original rows 1, 7 and 8 incorrectly attached ADVISORY declarations to separ
 An absent result key and present Decimal zero are distinct in CalculationRevision until each local default collapses them. Required manual input-key checks, unresolved outcomes, registry predicates, verified-complete filing admission and representable-output export checks are separate boundaries. Source of the existing compiled M303 2022 formula-engine test asserts refusal for untranscribed [09] with positive [27]; the standalone synthetic empty-map equals_sum test asserts success. No test, compiler, scanner or live filing ran for this receipt, and neither source assertion establishes a reachable verification-to-filing bypass. The computed M200 ceiling's absence and optional applied amount need different requiredness/origin evidence; advisory warnings retain their severity.
 
 Next evidence is narrowly the M303 2022 [27] formula-output/presence contract and its actual verification/export path, with present zero, optional blank, missing required input and unresolved computed output kept distinct. Candidate production helper/callers and direct/compiled tests are named in the receipt but not reserved or authorized for edits. Do not alter the authored registry, infer a legal default, turn an advisory into a blocker or apply a universal zero-removal rule from this sample. All thirty-one predicate fallback reads, old unmapped blocking sites, S07 row 9 and whole S07/S25 remain open pending their exact role/requiredness and real caller evidence. No new stable-tree census or passing filing result is claimed.
-
 
 ## Condensed chronology and current execution status
 

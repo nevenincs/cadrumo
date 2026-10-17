@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-agent-host'
 date: '2026-10-13'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:57a49ca91c52125429ce175f2af3778a039c3a9a9caaa67a7879289139d5a0a4'
+body_hash: 'sha256:225ccc95dceaeea08678473b99ab809aa91eaaef6f2148ce56246b207f62a5e5'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-12-desktop-agent-host-reference]]"
@@ -92,9 +92,9 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 ### Former proposed lane constraints and stages (historical)
 
 > ## Constraints
-> 
+>
 > Binding if accepted:
-> 
+>
 > **Topology**
 > - These are real and run unmodified:
 >   - the packaged desktop with its Rust agent host;
@@ -103,7 +103,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >   - the provider cadrumo-agent is configured for, and the Cadrumo runtime.
 >   There is no mock host, scripted model or stand-in under test. The fixture host stays an appearance tool.
 > - The launcher builds on the provider-settings controller. It does not add a second lifecycle owner.
-> 
+>
 > **Storage root**
 > - The lane runs only on a storage root it created empty and marked.
 > - The guard compares the root the connected runtime reports it serves, after canonical resolution (junctions, case folding, substituted drives), with the marked root, and refuses on any difference. A non-default root hosts its own supervisor, so the lane desktop does not attach to an installed manager on the default root (`native/desktop/src-tauri/src/manager.rs:370`, `:427-431`).
@@ -112,7 +112,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >   - no `.env` or operator settings file read;
 >   - tracing variables removed.
 > - The relay starts the lane package's `cadrumo-mcp` by absolute path, with the pinned storage root, never by bare name.
-> 
+>
 > **Keys**
 > - Every provider key lives in Cadrumo's encrypted SECRET custody. It reaches cadrumo-agent through the provider-settings resolver on a standard-input frame, and is held in process memory. cadrumo-agent passes it to its worker over a pipe, never through an environment variable.
 > - The key is never:
@@ -123,7 +123,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > - A child that does not need the key does not receive it. The `cadrumo-mcp` relay is already scrubbed (`agent:workspace/environment.py:155-183`).
 > - The key is entered through the protected input channel, never in a webview that is open to a debugger.
 > - Every lane run scans the started processes' command lines, and the root's files and logs, for the value of any stored provider credential. A hit fails the run.
-> 
+>
 > **Authority**
 > - One predicate names the person frontends, `cli` and `tui`. Every person-act refusal and admission gate uses it in place of "is MCP": `src/cadrumo/application/operations/person_acts.py:81-83`, `src/cadrumo/application/user_profile/operation_access_policy.py:213-219`, `src/cadrumo_runtime/host/profile_connection_admission.py:161-163`, `:277`, `profile_connection_sessions.py:229-231`, `profile_connection_access.py:163-168`, `profile_connection_person_acts.py:37-40`, `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py:282-284`.
 > - A door-by-frontend matrix test proves that `mcp` and `agent-host` reach no person act.
@@ -135,20 +135,20 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >   - This is new runtime authority and amends `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`.
 > - Tool permissions and questionnaires raised by cadrumo-agent are answered only through the host's commands behind a person gesture. The model cannot answer them.
 > - Sending is never gated on consent. Every tool call the agent makes waits on the person's approval, unless the person chose to allow that tool always.
-> 
+>
 > **Processes**
 > - The Rust host owns the launcher through a new supervised runner, distinct from the short-call runner (`native/desktop/src-tauri/src/shell/sign_in/process.rs:23-27`). It places the launcher in a kill-on-close Job Object.
 > - The launcher starts the agent tree inside `WindowsProcessScope` (`src/cadrumo_runtime/adapters/windows_process.py:189-232`), so the gateway, the worker and `cadrumo-mcp` end when it ends, however it ends.
 > - Every stop trigger also stops the launcher: sign-out, lock, idle or absolute expiry, a key change, a profile switch, the runtime becoming unavailable, and window close.
 > - The gateway and worker take ephemeral loopback ports, reported in `agent_ready`.
-> 
+>
 > **Writes**
 > - Mutating Cadrumo operations through the agent are tested only after cadrumo-agent's write-proof cases pass in its own tests: refusal, exactly once, worker loss and repeat. Until then the lane runs the full surface, and stage 1 acceptance covers reads, questionnaires, tool permissions and refused writes.
-> 
+>
 > ## Implementation
-> 
+>
 > We will run the live lane as the packaged Cadrumo, with cadrumo-agent started only through the runtime's hosted door from the package's bundled agent, in four stages. The lane waits on the first recorded tool-access proof. The `agent-direct-start` feature is removed (`2026-10-13-package-verification-adr`).
-> 
+>
 > - **Stage 1, the agent column against the real backend.**
 >   - Cadrumo backend:
 >     - the person-frontend predicate and its matrix test;
@@ -171,11 +171,11 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > - **Stage 2, writes.** Mutating operations through the agent, once its write proofs are recorded.
 > - **Stage 3, documents.** Parent contract 5.
 > - **Stage 4, production.** Encrypted agent stores retire L1. Bundling follows BUILD1's route: a lane lock, an agent statement, and a lane preset refused by Release configurations. Hosted start retires L2. The lane collapses into the parent record's packaged verification.
-> 
+>
 > Remaining deviations:
 > - **L1.** Plaintext agent stores on the marked root only, and tool results in them are synthetic profile data.
 > - **L2.** Retired by `2026-10-13-package-verification-adr`: the lane assembles no hosted parts from a source tree.
-> 
+>
 > Test framework:
 > - A Playwright driver attaches to the packaged desktop's WebView2 over a remote-debugging port. Only the lane build opens that port, and only on loopback.
 > - One set of specs runs against two hosts: the fixture host, which is fast and free, and the real lane.
@@ -188,7 +188,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >   - the key scan;
 >   - exits 0, 1 and 3.
 > - It can also check outcomes in the backend, by reading the gateway's history and the Cadrumo record through `aeat`.
-> 
+>
 > Stage 1 passes when, live:
 > - a typed message streams the reply;
 > - stopping settles the reply as `stopped`;
@@ -198,15 +198,15 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > - the agent's attempt to apply a review is refused;
 > - a tool call waits for the person's approval, and a rejected one does not run;
 > - signing out leaves no process and no key in any scanned place.
-> 
+>
 > These stage contents are hypotheses within the constraints.
-> 
+>
 > ## Rationale
-> 
+>
 > Starting cadrumo-agent only from the package measures what ships, as `2026-10-13-package-verification-adr` rules. The authority constraints close the holes the reviews found before the full surface is reachable. The process and root constraints keep a lane from touching the person's real profile or leaving processes behind. Gating writes on cadrumo-agent's own write proofs keeps a repeated write off even synthetic data until it is proven.
-> 
+>
 > ## Consequences
-> 
+>
 > - Most of stage 1's cadrumo-agent items belong to that project. Its owner relays by hand; no direct channel exists from this session.
 > - The person review door and the person-frontend predicate are new runtime authority. They need owner acceptance through the mcp-parity amendment.
 > - The lane waits on hosted start: the first recorded tool-access proof, and a packaged host that passes the agent its environment (`2026-10-13-canonical-environment-application-internals-adr`).

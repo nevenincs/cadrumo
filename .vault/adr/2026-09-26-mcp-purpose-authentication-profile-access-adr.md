@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c45242aed9c7f8dc89da5a548d88d2084c70d54ce6a44cd9bcae9ff2b143548'
+body_hash: 'sha256:045001b1141428678d02a3098e299c84146211d71094e34cb28e7e1e766aa0f9'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -217,9 +217,7 @@ Amended 2026-10-12. Adopted 2026-10-12 under the owner's instruction to follow t
 
 Amended 2026-10-13, extending the 2026-10-12 amendment above in the same decision. Adopted under the owner's instruction to follow the orchestrator's recommendations; awaiting the owner's explicit confirmation. A grant's allowed operations may likewise be one operation grant, meaning every registered operation an agent may run: every operation but the person's own acts, which are the access administration operations and every operation whose contract needs a secret. Admission resolves it against the live registry, as it resolves a category grant, so an operation registered later is covered, a person's act never is, and a lease lists its operations. A listed operation narrows a scope that lists it or holds the operation grant; the operation grant narrows only a scope that holds it too. The scope gains one more field, false by default, which every stored scope already meant. A key issued for an agent stores the operation grant instead of its list. Measured on 2026-10-13, the stored proposal of an agent key is 721 bytes and its inventory scope 636 bytes, against about 47 KB when disclosures and operations were listed and about 8 KB with category grants alone, so the 32 KiB inventory holds many agent keys; a test holds ten. The key review and the inventory count each scope's listed disclosures by category, with the digest of the list, and the full list is read a page at a time by naming the grant or request in an inventory read, with the same page helper the session status uses, on the command line (`config profile automation disclosures`) and the terminal interface.
 
-
 Amended 2026-10-14 under the operator's runtime separation directive: session authority and authentication administration are owned by `src/cadrumo_runtime`; the tax application `src/cadrumo` never imports that host. Shared client contracts and transports are defined once in `src/cadrumo_client`. AEAT retains direct human profile login, logout and creation. Session inventory, lock/resume, credential/grant administration and authentication-provider controls move to `cadrumo-runtime config` while preserving their existing authority and protected secret channels. Public tax-profile metadata listing and tax operations remain AEAT commands. Import-linter alone enforces the package boundary; no AST or text-matching boundary gate is introduced.
-
 
 ## Active human lifetime refinement 2026-10-15
 

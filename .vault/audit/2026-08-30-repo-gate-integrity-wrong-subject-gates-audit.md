@@ -515,5 +515,3 @@ adjudicate an untracked file against Git; a future file was recorded separately.
 8. For current status, keep the `modelo.work.file` wrapper RuntimeError unresolved,
   preserve the async-caller fix requirement, and distinguish historical evidence from present
   certification.
-
-

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#native-agent'
 date: '2026-10-13'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f48ee9b1ab233bb1ff630201684a1334419df4eb558a96d983c3c35cb4d1f96'
+body_hash: 'sha256:4bda2178bb62e5da32f94c561e88392b8705e5949d2b45dd2291a41610855abb'
 related:
   - "[[2026-10-13-native-agent-audit]]"
   - '[[2026-10-13-canonical-environment-application-internals-adr]]'
@@ -55,6 +55,6 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 ### Former implementation and ownership (historical)
 
 > ## Implementation
-> 
+>
 > We will select the local source directory at CMake configuration and build its wheel in `agent_project`, compose its dependency closure in `python_dependencies`, install its wheel in `python_product`, and assemble it into the canonical custom site-packages. Explicit install, uninstall, rebuild, checksum and dependency-lock update targets own their lifecycle. Uninstall removes generated dependent product and staged payloads so the next authorized build reconstructs a coherent package. CTest runs the installed agent import, version, dependency and checksum probe through the application's own interpreter. It also launches the agent the way the runtime does, `-m cadrumo_agent.cli.main serve` on ephemeral ports, waits for the ready line, and stops it (amended 2026-10-13 under `2026-10-13-package-verification-adr`).
-> 
+>

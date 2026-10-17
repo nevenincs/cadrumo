@@ -10,7 +10,7 @@ related:
   - '[[2026-10-16-native-build-incremental-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:35f2a0c521c23ff7b00a5d4eae64a281979f2701675b737407779a01905ec406'
+body_hash: 'sha256:b69d0ee135275e89ce08505abeb5bbba325421041a218391ece9a4615a2725a7'
 ---
 
 # `windows-package-identity` plan
@@ -37,7 +37,6 @@ Decision coverage: 2026-10-16-application-distribution-windows-package-identity-
 ## Parallelization
 
 S01 precedes S02 to S05. S02 and S03 touch disjoint files and can run in parallel. S05 needs a rebuilt Debug stage, coordinated with the session that owns the Debug build. S07 starts only after the native-build-incremental plan's MSI port lands, because both change the native maintenance owner.
-
 
 ## Verification
 

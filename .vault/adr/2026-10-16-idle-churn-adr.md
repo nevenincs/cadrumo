@@ -71,4 +71,3 @@ The fact the runtime authority already re-checks on every read is what makes inv
 Accepted 2026-10-16 under the operator's ruling in this session: "Everything is using proper tauri signals for recurring checks. Ensure you migrate everything that is ineffective python side blocker waits as process loop."
 
 Extended 2026-10-17 by `2026-10-17-idle-churn-operation-observation-adr`, which applies the same cue pattern to clients waiting on a running operation and adds the `operation_changed` cue.
-

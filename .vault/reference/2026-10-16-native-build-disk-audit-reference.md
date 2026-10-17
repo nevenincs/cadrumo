@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#native-build-disk-audit'
 date: '2026-10-16'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:981f8ec228f556a554221762111c0eb03567fb5cf2986f97f211c5e24a175cd5'
+body_hash: 'sha256:41a4e23bfecb310395d1c6059bfe8f6f6ec0f7b45760f29abf845119d8585476'
 related:
   - "[[2026-10-03-application-packaging-interpreter-foundation-adr]]"
   - "[[2026-10-13-native-agent-adr]]"
@@ -157,7 +157,6 @@ Other declared/tool-managed locations:
 
 cmake_build explicitly overrides inherited TEMP/TMP/TMPDIR using prepare_temporary_directory (`dev/packaging/native/cmake_build.py:206`, `src/cadrumo/core/storage_environment.py:656`). Canonical operator overrides can relocate these roots. Inspecting build/ alone therefore cannot account for all build-related disk use.
 
-
 ## Copying, transient staging and publication
 
 | Operation | Source -> destination | Work / lifetime |
@@ -265,21 +264,17 @@ Verification: source/generated path parity, bounded/unique names, preset enrollm
 
 Generated clean counterparts and Visual Studio utility projects are all listed in targets.csv. These complete ownership-manifest names supplement the role map; actual build prerequisites are in the CSV.
 
-
 ### windows-x64 (90 targets)
 
 `Continuous`, `Experimental`, `Nightly`, `NightlyMemoryCheck`, `agent-checksum`, `agent-install`, `agent-lock-linux-aarch64`, `agent-lock-linux-x86-64`, `agent-lock-macos-arm64`, `agent-lock-windows-x86-64`, `agent-rebuild`, `agent-uninstall`, `agent_project`, `app-agent`, `app-distro`, `app-native`, `app-payload`, `app-recover`, `bundle`, `cadrumo_bundled_cadrumo_agent`, `cadrumo_entrypoint_aeat`, `cadrumo_entrypoint_cadrumo_agent_service`, `cadrumo_entrypoint_cadrumo_mcp`, `cadrumo_entrypoint_cadrumo_runtime`, `cadrumo_python`, `cadrumo_python_bridge`, `cadrumo_python_d`, `check_installer`, `check_manager_lifecycle`, `desktop-build-test`, `desktop-configuration-test`, `desktop-frontend-build`, `desktop-frontend-check`, `desktop-frontend-chrome`, `desktop-frontend-generated`, `desktop-frontend-install`, `desktop-frontend-palette`, `desktop-frontend-test`, `desktop-headless-test`, `desktop-host-build`, `desktop-host-clippy`, `desktop-host-prepare`, `desktop-host-test`, `desktop-host-unit-clippy`, `desktop-host-unit-test`, `desktop-packaged-harness-test`, `desktop-packaged-host`, `desktop-packaged-test`, `desktop-paths-test`, `desktop-run`, `desktop-startup-test`, `native-installer`, `native-process-quiesce`, `native_build_tools`, `native_contract`, `native_metadata`, `platform_dll_consumer`, `platform_static_consumer`, `platform_test_binaries`, `python`, `python_d`, `python_dependencies`, `python_product`, `python_sdk`, `registry_authority`, `registry_authority_rebuild`, `release`, `rust_application`, `rust_installer`, `rust_launch_guard`, `rust_manager`, `rust_manager_lifecycle`, `rust_platform`, `rust_platform_consumer`, `rust_platform_shared`, `rust_platform_static`, `setup-native-builder`, `user_docs`, `user_docs_build`, `user_docs_driver_test`, `user_docs_sequences_check`, `user_docs_sequences_refresh`, `user_docs_stage`, `user_docs_verify`, `verify`, `verify-app-distro`, `verify-native-live`, `verify-package`, `verify-release`, `zip`.
-
 
 ### windows-installers-x64 (90 targets)
 
 `Continuous`, `Experimental`, `Nightly`, `NightlyMemoryCheck`, `agent-checksum`, `agent-install`, `agent-lock-linux-aarch64`, `agent-lock-linux-x86-64`, `agent-lock-macos-arm64`, `agent-lock-windows-x86-64`, `agent-rebuild`, `agent-uninstall`, `agent_project`, `app-agent`, `app-distro`, `app-native`, `app-payload`, `app-recover`, `bundle`, `cadrumo_bundled_cadrumo_agent`, `cadrumo_entrypoint_aeat`, `cadrumo_entrypoint_cadrumo_agent_service`, `cadrumo_entrypoint_cadrumo_mcp`, `cadrumo_entrypoint_cadrumo_runtime`, `cadrumo_python`, `cadrumo_python_bridge`, `cadrumo_python_d`, `check_installer`, `check_manager_lifecycle`, `desktop-build-test`, `desktop-configuration-test`, `desktop-frontend-build`, `desktop-frontend-check`, `desktop-frontend-chrome`, `desktop-frontend-generated`, `desktop-frontend-install`, `desktop-frontend-palette`, `desktop-frontend-test`, `desktop-headless-test`, `desktop-host-build`, `desktop-host-clippy`, `desktop-host-prepare`, `desktop-host-test`, `desktop-host-unit-clippy`, `desktop-host-unit-test`, `desktop-packaged-harness-test`, `desktop-packaged-host`, `desktop-packaged-test`, `desktop-paths-test`, `desktop-run`, `desktop-startup-test`, `native-installer`, `native-process-quiesce`, `native_build_tools`, `native_contract`, `native_metadata`, `platform_dll_consumer`, `platform_static_consumer`, `platform_test_binaries`, `python`, `python_d`, `python_dependencies`, `python_product`, `python_sdk`, `registry_authority`, `registry_authority_rebuild`, `release`, `rust_application`, `rust_installer`, `rust_launch_guard`, `rust_manager`, `rust_manager_lifecycle`, `rust_platform`, `rust_platform_consumer`, `rust_platform_shared`, `rust_platform_static`, `setup-native-builder`, `user_docs`, `user_docs_build`, `user_docs_driver_test`, `user_docs_sequences_check`, `user_docs_sequences_refresh`, `user_docs_stage`, `user_docs_verify`, `verify`, `verify-app-distro`, `verify-native-live`, `verify-package`, `verify-release`, `zip`.
 
-
 ### desktop-windows-x64 (33 targets)
 
 `desktop-build-test`, `desktop-configuration-test`, `desktop-frontend-build`, `desktop-frontend-check`, `desktop-frontend-chrome`, `desktop-frontend-generated`, `desktop-frontend-install`, `desktop-frontend-palette`, `desktop-frontend-test`, `desktop-headless-test`, `desktop-host-build`, `desktop-host-clippy`, `desktop-host-prepare`, `desktop-host-test`, `desktop-host-unit-clippy`, `desktop-host-unit-test`, `desktop-packaged-harness-test`, `desktop-packaged-host`, `desktop-packaged-test`, `desktop-paths-test`, `desktop-run`, `desktop-startup-test`, `native_contract`, `registry_authority`, `registry_authority_rebuild`, `setup-native-builder`, `user_docs`, `user_docs_build`, `user_docs_driver_test`, `user_docs_sequences_check`, `user_docs_sequences_refresh`, `user_docs_stage`, `user_docs_verify`.
-
 
 ### distribution-windows-x64 (12 targets)
 

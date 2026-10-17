@@ -11,9 +11,9 @@ related:
   - '[[2026-10-05-google-outbound-review-adr]]'
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
   - '[[2026-10-13-startup-performance-operation-contract-manifest-adr]]'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:1417613c9ebdd85f2bc92aa229d6d611abb106e007038956bb9643671b0a41ae'
+body_hash: 'sha256:8c01a9a4b31f7b7f611d8c7393399c8b27a00b0fc80a57a1ff32d6dfbcdf737a'
 ---
 # `full-suite-repair` plan
 
@@ -41,7 +41,6 @@ Next slices authorized 2026-10-16: remeasure unused code, establish real orphan 
 The newly requested orphan/import repairs include focused verification of affected code and retargeted tests. This authorizes their necessary regression checks while preserving the prohibition on full test-population reruns.
 
 Other-unreconciled follow-up authorized 2026-10-16: source-file-disjoint exact failure batches A/B/C are recorded in var/verification-resume/remaining-offline-batches.json (30/29/29 originally failing selectors). The calculation, typing and frontend agents respectively own those batch source files if a failure reproduces; shared helper changes route through the supervisor. The frontend agent additionally owns the two keychain test fixture repairs. The supervisor owns the four malformed target-string correction in profile_command_specs.py, live prerequisite adjudication, shared evidence and governance. Preserve ongoing import/orphan work and reuse its applicable evidence. No full test lanes or sibling test expansion is authorized.
-
 
 Additional targeted S03 ownership under the user's other-unreconciled follow-up: the Sol calculation worker owns installed IVA/income-tax acceptance helpers, session_authority_activity.py, runtime_workbench.py, the new runtime_ledger_classification.py and their directly connected TUI Ledger models/controller/classification/injection/routes and legacy type-narrowing assertions. The precise fourteen-file snapshot is recorded in var/verification-resume/reconcile-iva-tui-final-review.json. The Sol typing worker owns the bounded backend_probe.py record annotation and the per-node historical inventory. The Sol frontend worker performs independent read-only integrated review of those repairs. The supervisor owns command target-string, keychain and Rust fixture reconciliation, canonical import-load metadata generation, final configured type/import checks and serialized vault evidence. These routine repairs preserve existing registered-operation, registry authority, profile/session custody and immutable projection contracts; no new authority or timeout policy is introduced. Test selection remains exact known failures only.
 

@@ -404,5 +404,3 @@ evidence with each closure.
 No new rule was proposed. The substitutability pre-filter and RAG-cluster-then-`rg` verification
 discipline were already codified in `aeat-swarm-audit-cadence`; architecture boundaries already
 prohibit shims and require relocation atomicity.
-
-

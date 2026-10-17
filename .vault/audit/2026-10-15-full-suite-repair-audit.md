@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#full-suite-repair'
 date: '2026-10-15'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd23ab00ddc5db6603508875a83fe7fc0ceda5d70244218b12821f724823fa33'
+body_hash: 'sha256:0f90db94347fa875f517e9fce3acadd5386cd7209235179860649d43e302c729'
 related:
   - '[[2026-10-15-full-suite-repair-plan]]'
 ---
@@ -61,7 +61,6 @@ Later runs again exhausted Y:. New heavy scratch and caches are on C:. Archiving
 
 Finish the existing run owners and serial failure adjudication before claiming completion. Reuse the applicable passing focused evidence while the relevant source, tests and execution conditions remain unchanged. Append the next integrated review to this Findings log; do not replace the earlier observations or close open plan Steps on pending evidence.
 
-
 ### verification-followup | low | Fresh artifact and caller-owned runtime evidence
 
 The earlier pending installed-oracle population subsequently passed all ten checks in `resume-portable-2015-installed-oracles.log`; the seven portable install forms also have passing receipts. All 24 IVA journey/preflight cases passed against real caller-owned installed runtimes in `resume-all-iva-caller-owned-runtime.log`, and the ordinary positive journey separately passed its encrypted-ledger, verified export and parser readback. The full channel-artifact recipe passed ten checks. Named-profile cross-process reads passed two cases with actual OS session persistence and nonempty decrypted facts; three cold-start wizard cases passed with protected stdin and a caller-owned runtime. These test modules now live with the runtime frontend that they exercise.
@@ -82,7 +81,6 @@ The real Semgrep invocation first failed because uvx selected Python 3.15 while 
 
 Capacity is now stable after checked archives of inactive Debug Cargo caches. The previously paused resident job was officially resumed, is progressing, and retains its original failure receipts. Its service was not killed. The resident retrieval checks, remaining serial failures, fresh release tooling and Python compatibility are still required. S03 and S04 remain open.
 
-
 ### recovered-verification | low | Completed evidence survives the interrupted owners
 
 The full English nitpicky corpus and three catalogue checks passed all five cases in `resume-docs-fullscope-canonical-term.log` (1571.69 seconds). All 29 scanner checks passed with a long configured scratch root in `resume-scanners-long-root-alias.log`; Semgrep used a Windows short alias naming the same physical directory. It did not substitute another storage owner or treat scanner unavailability as cleanliness. The actual short-root diagnostic also scanned 68 files and reported findings rather than an empty green result.
@@ -92,7 +90,6 @@ All 21 request/inventory checks passed in `resume-host-effect-and-import-census-
 The real authenticated MCP journey passed after retaining its newly published sign-in remedy in exact refusal/status expectations. The cross-locale encrypted report proof also passed, checking its canonical locale key and every typed source/date/origin fact. The recovered native parity run has passed real one-minute human expiry, originating-login loss, global-lock fencing and post-revocation discovery refusal. Its fixture uses the constructor's trusted worker script selection to set an internal test policy; it does not reintroduce an ambient session-policy override. The global-lock screen pins its live session before that session is revoked. The two remaining management parity cases are still running.
 
 A daemon restart interrupted the active native installer build, broad unresolved run, golden refresh and waiting tooling owners. Those partial logs have no successful verdict. New `recovered-*` logs retain the restarted owners separately. Eighty-three completed golden refreshes were retained by their recorded write times and the remaining enrolled sequences are being executed by the sanctioned CLI. Profile-free runtime documentation frames now follow the runtime graph's declared authentication posture, preserving the refusal of irrelevant credential input. Full golden comparison and page coherence remain required. Native live/release, release tooling, Python compatibility, resident retrieval and final serial failure reconciliation also remain pending.
-
 
 ### packaging-followup | medium | Exact builder selection and additional worker invocations
 
@@ -124,7 +121,6 @@ The native live command recorded passing launch and health tests and nine passin
 
 The four service cases already execute within native live using the same staged package and default Claude provider. The redundant standalone service queue was cancelled. The pending integrated rerun owns both service assertions and their real cleanup proof. Python compatibility, native release/live, remaining canonical pytest cases and quiet performance gates are still pending; this audit remains pending.
 
-
 ## Further runtime composition and package verification repairs
 
 The fresh serial reconciliation remains red, with at least 85 failure records as of the latest extraction. S03 and S04 remain open. Original failed recipes and focused attempts are retained. New failures include moved test corpus paths, obsolete CLI composition and credentials, locale assumptions, changed public envelopes, and real fixture/state disagreements. This is not an all-green report.
@@ -141,7 +137,6 @@ Cross-profile ledger isolation and all three Modelo 202 payment-period journeys 
 
 All new mutations are checkpointed through the execution ledger (step03-0105 preview and apply both successful). The inactive failed ZIP extraction was relocated to the named C-drive task directory after resolved-root and process-use checks, preserving evidence and freeing the nearly full Y drive. Active stage, docs and resident PID 53544 were not moved or killed. Quiet CI performance remains queued after the long-running populations and cannot yet be reported passing.
 
-
 ## Native live completion and further functional repairs
 
 The whole `just test-native-live` command passed all three CTests (launch, health and lifecycle) in 1053.57 seconds, including all nine Python lifecycle cases and clean teardown. The whole `just test-ci-perf` passed all four checks in 94.83 seconds with unchanged budgets. Its first 41 seconds overlapped a historical export verification; it is not described as entirely quiet. Both exit-zero receipts are retained. The staged native payload predates the latest tax-source edits, so these receipts do not establish a release built from final source.
@@ -157,7 +152,6 @@ The historical M303 fixtures replay their own May tax clock while retaining wall
 Public category validation restores localized, concrete valid-ID guidance before a private edit is submitted; the worker retains its own final validation. Its complete category module and existing operation contracts pass. Stored-calculation drift and the full natural-key module pass. Granted verification may still carry the exact transient-authentication warning; it offers no speculative recovery action. Logout requires actual person proof and preserves the non-authoritative selected target. Updated positive and missing-proof negative controls pass. The former new-file journal heuristic did not prove the generic runtime sign-out contract and has been replaced by observed revocation and denied reuse, with renewed password access proving profile survival.
 
 S03 and S04 remain open. Further source fixes, reconciliation, integrated verification and review remain required. External live tests with missing real inputs and the absent private-ingest corpus remain explicit failures. No credential or legal evidence has been fabricated and no failed receipt has been rewritten. Latest scoped Ruff and ty checks pass 70 Python files; import-load target metadata has been regenerated through its owner.
-
 
 ### Recorded selector recovery and remaining native fixtures | low | Fresh integrated evidence
 
@@ -185,7 +179,6 @@ The whole code gate finished with seven failing gates. Current scoped rechecks f
 
 The reachability scanner omitted the shipped shared-client package because it has no console entrypoint, falsely reporting actual client-consumed symbols as unused. The scanner now loads the canonical application cohort without adding execution roots; existing declared entrypoints and real import edges still determine reachability. The export check also reads actual companion consumers and refuses missing source roots. One real current scan clears the unreachable-module finding, reduces exact unused-symbol findings from fifteen to seven and unconsumed exports from eleven to six, and retains those remaining failures (`current-reachability-recheck.log`). Both scanner files pass scoped lint, formatting and ty. Import target metadata was regenerated through its owner. No finding was suppressed and no baseline or threshold was relaxed. S03, S04 and the audit remain open. The previously recorded real live-credential and private-corpus prerequisites remain unresolved explicit failures.
 
-
 ### Targeted-only repair batch | low | Static contracts and rotation fixture repaired
 
 The user's 2026-10-16 instruction supersedes full-lane verification and the older single-agent restriction: only known failing cases may run, using GPT-6.1 Sol medium agents. The plan now records disjoint assignments and exact-selector verification. No full lanes ran in this batch.
@@ -198,7 +191,6 @@ Seven original Modelo 322/353 calculation failures pass as exact selectors witho
 
 Evidence is indexed in var/verification-resume/targeted-summary.json and its referenced receipts. This batch is PASS within its stated scope: eleven previously failing tests pass and all nine targeted type diagnostics are resolved. The overall repair audit remains PENDING; this batch does not reconcile every original failure or certify a stable full repository revision. S03 and S04 remain open.
 
-
 ### Confirmed orphan and command-loader slice | low | Focused checks pass; final inventories pending
 
 A fresh actual scan found seven exact unused definitions, six unconsumed exports and no unreachable modules. Caller and ownership checks confirmed all seven definitions as obsolete; they were removed without deleting the active indexed authority, canonical storage catalog, runtime policies or manifest resolver. Two additional unused lazy-loader classes and their self-only aliases had no source or tooling consumers and were removed while preserving the actual LazyFactoryTarget compiler path. Per-symbol evidence is in orphan-decisions.json. The post-removal inventory must be measured again after the concurrent canonical module moves settle.
@@ -209,20 +201,17 @@ The latest focused unit run passes 266 cases, including all actual declared targ
 
 The subordinate checker's global union of all record module fields incorrectly assigns unrelated targets to each receiver and can hide unknown constructor values. The import worker owns a source-provenance repair with negative controls. Final shared metadata, whole import gate and post-cleanup unused measurement remain pending. S03/S04 and the overall audit remain open; no baseline, suppression, deadline change or skipped prerequisite was introduced.
 
-
 ### Post-removal unused measurement | low | Unused slice passes
 
 The actual scan after the canonical module and test moves returns exit zero: no unreachable modules, no exact unused symbols and no unconsumed exports. Immutable copies of this result are orphan-after-report.json and orphan-after-verdicts.log; the command receipt is orphan-after-measurement.log. All seven original exact-unused definitions were removed after verifying real ownership and callers. Two additional shared-client lazy loader definitions and their two self-only aliases were also independently confirmed unused and removed.
 
 Detector controls pass for actual companion consumption without inventing execution roots, production versus test-only importers, missing consumer roots and a genuine neighbouring orphan that must remain reported. The first cohort test fixture lacked its required wheel configuration; its failed receipt is retained, the fixture was corrected and only that selector reran successfully. Seven comprehension controls now cover repeated bound names and lambda shadowing in addition to finite and open sources. Scoped Ruff, formatting and ty pass all 56 supervisor files. The unused slice passes; overall import verification and the complete repair audit remain pending.
 
-
 ### Dynamic-provenance prototype review | high | Unknown-source masking must be corrected
 
 Independent source review of the first receiver-provenance prototype identifies additional possible false-green paths beyond its initial eight passing fixtures. A resolver with a finite graph binding may also receive an unknown direct caller; imported declarations may be rebound after a finite first assignment; arbitrary annotated classes are not necessarily automatic dataclass constructors; function parameters may shadow globally imported records; and factory parameters may be reassigned before constructing a target. Each path must remain unresolved or retain the actual forbidden edge rather than borrowing an unrelated finite value.
 
 These findings were sent to the import executor with bounded negative controls. The executor owns corrective implementation and focused proof before the final whole-source census. This is a prototype review, not a claim that a completed source-provenance repair passes. The protective checker remains revision-required and the overall audit remains pending. No namespace filters, permissive fallback, target baselines or suppression are authorized.
-
 
 ### Supplied graph owner correction | low | Focused production seams pass
 
@@ -232,7 +221,6 @@ Forty projection/admission cases pass, including the new root-model owner check.
 
 The import executor reports closed production declaration inventories and is checking the full source population. Fifteen initial source-provenance controls pass, followed by constructor-rewrite and bound-callback safeguards; full acceptance remains pending the whole checker census, strict import gate and final aggregate type receipt. Earlier type sweeps found one Windows-only ctypes return, repaired with explicit object narrowing and a passing real directory regression, and then two transient packaging references already corrected by their other owner and confirmed on all platforms. The registered-operation manifest and dependency-declaration gates pass. No full test population was rerun. The overall audit and S03/S04 remain open.
 
-
 ### CLI profiler and schema detector ownership | low | Real process checks pass
 
 The CLI-only profiler implementation moved from shared entrypoint tests to CLI tests, together with its own child-process module invocation and all eleven consumers. The old source file is removed, with no forwarding module. This repairs the actual shared-entrypoint dependency on CLI/TUI implementation without weakening a direction contract. Twelve current files pass Ruff, formatting and ty; no old module reference remains in authored source, docs or configuration. Three actual fresh-process cases pass in 61.69 seconds, retaining independent process identity, real import/filesystem observations and an output-independent machine envelope.
@@ -240,7 +228,6 @@ The CLI-only profiler implementation moved from shared entrypoint tests to CLI t
 The schema-conformance detector now resolves targets through the owning graph instead of duplicating computed import and attribute traversal. All four actual integration cases pass in 12.04 seconds, including nonempty population and notice-channel assertions. Root pytest orchestration registers the concrete installed-process fixture, while product tests consume an explicit typed environment/runtime-lifetime port. Existing native implementations and lifetime remain with repository orchestration. The reported missing packaging helper exists in the current tree and its canonical consumers type-check; no concurrent packaging implementation was overwritten.
 
 The executor's checker controls now pass 26 focused cases, including explicit unknown callback arguments, record rebinding, constructor rewrites, parameter shadowing and rejection of injected walker targets. Additional canonical config module moves are complete; final owner-test partitions, whole-source import verification and aggregate typing remain pending. This is scoped passing evidence on the moving tree, not a complete suite or immutable release certification.
-
 
 ### Final unused measurement and import review resolution | low | Unused and typing pass
 
@@ -250,21 +237,17 @@ The source-provenance prototype findings above are corrected with passing contro
 
 The first final import gate keeps all 25 direction contracts, loads all 4807 governed non-test modules, reports no hard findings and no current architectural debt. It correctly refuses acceptance with exit 7 because its source snapshots and file censuses disagree. An independently owned packaging test was edited during that run, and an acceptance source immediately afterward. The receipt is preserved in import-slice-final-import-gate.log. This is an unavailable moving-tree result, not a passing import gate. A new whole-gate run is pending; no check was weakened or budget raised. All twelve worker checkpoint batches were previewed and applied successfully through the canonical execution CLI. S03/S04 and the overall repair audit remain open pending final verification and the original strict live prerequisites.
 
-
 ### Exact census repair | low | Both discovery populations agree
 
 The second full import gate again kept all 25 contracts, loaded 4807 modules and reported zero hard findings/debt, but refused acceptance because a separate acceptance test changed during the run and its source censuses still differed by one. Read-only exact membership comparison identified cadrumo_harness.access.tests.test_automation_agent_key as the sole subordinate-only file. Its nested test directory lacked __init__.py; Grimp correctly does not discover nested non-package directories inside a regular package. An inert package marker enrolls this actual existing test in the native authority graph. No source was excluded and no census condition or checker logic was relaxed. The exact comparison now reports 11442 modules in each population with empty differences. Scoped Ruff, formatting and ty pass the marker. The canonical metadata compiler passes after this repair; the final whole strict gate is running again.
 
-
 The whole gate after the marker confirms the repair: 11442 files in both censuses, all 25 contracts kept, all 4807 non-test modules loaded and zero hard findings or current architectural debt. Its sole operational refusal is a changed snapshot. Explicit before/after stat inventories identify only dev/acceptance/income_tax/installed_tui_child.py changing during that run. Both the failed receipt and exact inventories are preserved; no source-membership or snapshot condition was relaxed. A fresh shared-tree acceptance run is pending.
-
 
 ### Import and unused slice acceptance | low | Final strict gate passes
 
 The complete final shared-tree command just check-import-boundaries exits zero in import-slice-final-import-gate-acceptance.log. It keeps 25/25 direction contracts, both native and subordinate censuses agree on 11442 files, and all 4807 governed non-test modules load. There are zero hard findings, current architectural debt, pending retirements or operational failures. The gate's before/after source snapshots match, and the independently saved full input stat inventories also match. This is the final whole-gate acceptance receipt; the earlier concurrent-edit refusals remain preserved.
 
 Together with the final zero-finding unused/export/module verdicts, actual runtime proof for all three retained candidates, full configured type gate, scoped source quality, actual declared-target resolution, registered-operation manifest, real native/process regressions and negative checker controls, the requested import/unused slice passes. No baseline, suppression, skip, widened deadline or weaker authority condition was introduced. The overall full-suite repair audit remains pending because this slice does not replace outstanding original strict live prerequisite evidence or authorize a full test-population rerun. S03/S04 remain open.
-
 
 ### Other historical failures reconciled | low | Exact offline rechecks pass; live prerequisites remain
 
@@ -277,7 +260,6 @@ All 22 previously failing live selectors have completed with live opt-in: ten pa
 The installed IVA case remains the only active offline failure. Its targeted repair restores parent-only packaging imports, canonical manifest ordering, real installed runtime ownership and public finite-worker synchronization before screen proof. Earlier failures and sanitized diagnostics are retained; temporary source observers and speculative login changes were removed, and the test assertions are unchanged. Scoped Ruff, formatting and typing pass; independent review found no authority, origin, manifest or deadline weakening. The exact same selector is rerunning after the observed setup-to-Home worker transition failure. This paragraph records pending verification, not a passing IVA result.
 
 The evidence index is var/verification-resume/reconciliation-summary.json. No full test lane ran. The separate import/unused owner's passing strict gate and configured type receipts above remain their recorded source snapshot; subsequent acceptance-helper edits are not silently certified by that earlier receipt. Overall audit PENDING and S03/S04 remain open. The shared moving tree is not an immutable all-green revision.
-
 
 ### Installed IVA and final reconciliation | low | Clean exact journey and final static gates pass
 

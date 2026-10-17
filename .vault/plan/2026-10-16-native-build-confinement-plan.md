@@ -6,9 +6,9 @@ date: '2026-10-16'
 tier: L1
 related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:0ee9e697983e0b5dae38d7b51e63a5a0a9af00f0f049181b29d07ba11376b01d'
+body_hash: 'sha256:730e399d2577cd9a7e4c0e3cb59efb19c31200fac16ea823e6b68729bb322b06'
 ---
 
 # `native-build-confinement` plan
@@ -27,7 +27,6 @@ The current user instruction authorizes a complete native build writer audit and
 ## Parallelization
 
 S01 and S02 may run concurrently. Luna max agent audit_uv owns S01 tool declarations, justfile and covering bootstrap tests. Within S02, audit_cmake owns frontend prerequisite validation and binary-directory link admission; audit_writes owns verification helpers and their CMake arguments; the parent owns documentation, authority input validation, writer census, all vault metadata and integrated checks. Write scopes are disjoint. Preserve concurrent Bootstrap, BuildPaths, cmake_build and producer incrementality edits.
-
 
 ## Verification
 

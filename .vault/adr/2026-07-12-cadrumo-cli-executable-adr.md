@@ -7,8 +7,8 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 supersedes:
   - '2026-07-12-cadrumo-product-rename-adr'
-modified: '2026-10-14'
-body_hash: 'sha256:4001347781cf987d5b908359be71e5470ac9ac2c112abd1339ad8b543e54809f'
+modified: '2026-10-17'
+body_hash: 'sha256:bbff499ab74611522143668c2de809db31d29379bf6e054f7709845497ef4169'
 ---
 # `cadrumo-cli-executable` adr: `CADRUMO product identity with aeat CLI executable` | (**status:** `accepted`)
 

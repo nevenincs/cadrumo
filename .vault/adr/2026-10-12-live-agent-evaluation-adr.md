@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#live-agent-evaluation'
 date: '2026-10-12'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:163e2f956d3fc2f22f426ac1a449cbea658064e6d24427f00aab77a48d27dd21'
+body_hash: 'sha256:2c2e1d43b834c046c098edef3e00436e9b4e599bd5f7d460787f1e33499491b5'
 related:
   - "[[2026-10-12-live-agent-evaluation-reference]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -209,11 +209,11 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 ### Former implementation and ownership (historical)
 
 > ## Implementation
-> 
+>
 > We will add `dev/agent_eval/live/`, run by two recipes:
 > - `just eval-agent-floor` runs the scenario with a scripted MCP client and no model.
 > - `just eval-agent-live SCENARIO RUNS` runs it with the live agent.
-> 
+>
 > Each run carries the 2026-10-12 test into the project as follows:
 > - **Package copy.** Verify the staged `bundle` against its manifest. Copy it to the development build root. Verify the copy, and re-verify it after each run.
 > - **Isolated root.** Create a fresh root per run. Steps that touch storage run as the package's own code, through the copy's interpreter or command line: installation record, profile creation, sign-in, oracle reads and export parsing. The dev environment only orchestrates processes and reads JSON.
@@ -229,9 +229,9 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >   - `lock` for a locked profile
 >   - `config logout` for no sign-in
 >   - a lease left to lapse for an expired session
-> 
+>
 >   The key scenarios start the packaged MCP server with `--profile-id` and `--credential-reference`. Revocation is triggered by the harness between two agent turns, at a point the scenario declares. The existing scripted tests of enrollment, revocation and lock remain the deterministic floor beneath these.
-> 
+>
 > Hypotheses, free to change within the constraints:
 > - **The first scenario.** Modelo 130 for one quarter, with profile facts and rows chosen so that the published AEAT DR 130 worked example applies. That gives casilla 04 and 07 of 1.600 with casilla 13 zero, the same figure `dev/agent_eval/tests/test_modelo_130_value_oracle.py` uses. The required subsequence is `ledger.add`, `modelo.work.create`, `.calculate`, `.verify`, `modelo.export`.
 > - **The second scenario.** Modelo 303 for the same quarter. Its oracle is cross-artefact agreement on IVA between the ledger rows, verify and the parsed export. The annual flow comes later.
@@ -241,8 +241,8 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > - **Rebuild trigger.** A failed staleness comparison.
 > - **Copy reuse.** One verified copy per manifest digest, re-verified before each run.
 > - **Model.** Declared by configuration and recorded per run.
-> 
+>
 > The `dev/agent_eval/__init__.py` docstring is corrected to state what the package imports. Pure parts are unit-tested in `dev/agent_eval/tests`, where they join the existing portable lanes. Those parts are the scrubber, the two stream-to-trajectory translators, the manifest-copy check against a synthetic manifest, and the verdict rules. Positive controls show that the scrubber fails on a planted secret, that the copy check fails on a changed byte, and that the oracle fails on a planted disagreement.
-> 
+>
 > The scratch folder's role ends here. Its runtime host, `env.json`, password file and `grep` parsing are not carried forward. Every capability they gave is listed above.
-> 
+>
