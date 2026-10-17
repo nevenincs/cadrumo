@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:23fa3983407e402472befa4e754e76b3a23a8854d2e6a16ebcf265a28d0bbb30'
+body_hash: 'sha256:409fef6377256b474a1961fda6c267f410c2ccbc547df72766be0f68689ad07f'
 related:
   - "[[2026-10-17-single-binary-process-tree-plan]]"
 ---
@@ -65,8 +65,17 @@ related:
 - `S01` `verify:` `cargo test (application role, interpreter_host, manager supervision)` -> `pass`
 - `S01` `verify:` `pytest dev/packaging` -> `fail`
 - `S01` `verify:` `Task Manager capture: cadrumo.exe --role runtime nested under Cadrumo (2)` -> `pass`
+- `S02` `M` `native/application/src/role.rs`
+- `S02` `M` `native/application/src/child.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S02` `verify:` `cargo test application role and child` -> `pass`
+- `S02` `verify:` `run-backend.ps1 -Filter shell::sign_in 50 tests` -> `pass`
+- `S02` `verify:` `run-backend.ps1 -Mode Clippy` -> `pass`
+- `S02` `verify:` `live stage/Debug: session watch runs as cadrumo.exe --role runtime session watch under the window` -> `pass`
+- `S02` `verify:` `fresh Task Manager shows one cadrumo.exe row of 162.9 MB covering window, runtime and session watch` -> `pass`
 
 ## Notes
 
 - `S01` pytest dev/packaging: 1969 passed, 1 pre-existing failure `test_discovered_live_var_members_cover_the_readiness_gate_inputs` outside this change
 - `S01` session watch helper (cadrumo-runtime.exe) still shows as its own row until S02; WebView2 children show under the WebView2 Manager row
+- `S02` Task Manager groups only process trees present when it opens; processes started while it is open get their own rows, so grouping is judged in a freshly opened Task Manager. WebView2 stays under its own Microsoft row. Roles run on Windows only until S08.

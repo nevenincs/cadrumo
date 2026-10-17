@@ -11,7 +11,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:498df6b6c128d9054bed1b607ef60f560e8238037591b5d398cadb4168c2866a'
+body_hash: 'sha256:93e854f9e2acd2db565345387f11d8527960c14c90237c34a13044a7389c1679'
 ---
 
 # `single-binary-process-tree` plan
@@ -27,7 +27,7 @@ Decision coverage: 2026-10-17-single-binary-process-tree-adr governs every Step 
 ## Steps
 
 - [x] `S01` - Start the runtime from the desktop as the cadrumo binary in its runtime role through a linked interpreter host, and have the operator confirm the grouping; `native/desktop/src-tauri/src/main.rs`.
-- [ ] `S02` - Dispatch every declared role before window initialization, refuse unknown roles, select the linked host per role at run time instead of by compile-time defines, and start every desktop helper (runtime session commands, aeat sign-in and profile commands) as a role; `native/desktop/src-tauri/src/launch.rs`.
+- [x] `S02` - Dispatch every declared role before window initialization, refuse unknown roles, select the linked host per role at run time instead of by compile-time defines, and start every desktop helper (runtime session commands, aeat sign-in and profile commands) as a role; `native/desktop/src-tauri/src/launch.rs`.
 - [ ] `S03` - Make sys.executable the cadrumo binary in its interpreter role so runtime workers and the KDF child re-enter the same binary; `native/interpreter/windows/host.c`.
 - [ ] `S04` - Run the machine lifecycle broker and the manager as roles and identify broker, manager and runtime by image plus role for supervision, startup items, quiescence and termination, with tests, so no runtime host runs outside a Cadrumo tree; `native/manager/src/supervision/launch.rs`.
 - [ ] `S05` - Run the agent service and agent as roles and bind service admission to image, role, module and invocation, with tests; `src/cadrumo_agent_service`.
