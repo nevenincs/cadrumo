@@ -353,7 +353,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
             "Backend for `cadrumo.adapters.outbound.storage`. "
             "Accepted values: local_filesystem (default), google_drive, in_memory. "
             "google_drive additionally requires a Google sign-in for the profile "
-            "through `aeat config google login`."
+            "through `cadrumo-runtime config google login`."
         ),
     )
     cadrumo_local_storage_root: Path = Field(
@@ -641,7 +641,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_auth_provider: _AuthProviderKind | None = Field(
         default=None,
         description=(
-            "Default auth provider for `aeat config auth status` / `test` when "
+            "Default auth provider for `cadrumo-runtime config auth status` / `test` when "
             "--provider is omitted. When None, the CLI auto-selects the "
             "first configured provider from the canonical registry order."
         ),
@@ -651,7 +651,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_clave_movil_dni_nie: SecretStr | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
+            "Taxpayer DNI/NIE for `cadrumo-runtime config auth configure --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
             "identity and to fill the default app-request form. AEAT-regulated "
             "personal identifier under Spanish tax law; typed as SecretStr to "
@@ -718,7 +718,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_clave_permanente_dni_nie: SecretStr | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat config auth configure "
+            "Taxpayer DNI/NIE for `cadrumo-runtime config auth configure "
             "--provider clave_permanente`. Used as the Cl@ve IdP login "
             "username and to stamp the persisted session with the "
             "operator's identity. AEAT-regulated personal identifier "

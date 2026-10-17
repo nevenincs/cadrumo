@@ -68,13 +68,14 @@ _CLASS_EXCESS_BUDGET: dict[str, int] = {
 _HEAVY_NODE = "app/ledger/import"
 _BATCH_COUNT = 3
 
+# The child runs as a script, so it names this test package rather than importing relatively.
 _PROBE = textwrap.dedent(
-    """
+    f"""
     import json
     import sys
     from pathlib import Path
 
-    from .cli_performance import measure_resolution_costs
+    from {__package__}.cli_performance import measure_resolution_costs
 
     request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     records = measure_resolution_costs(request["paths"], record_names_for=request["record_names_for"])
