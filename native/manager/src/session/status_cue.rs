@@ -11,18 +11,22 @@ use crate::custody::{
     clear_local_record, ensure_local_directory, read_optional_local_record, write_local_record,
 };
 use crate::supervision::boot_record::BOOT_RECORD_LOCATION;
+use crate::supervision::process::open_process;
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::path::{Path, PathBuf};
 
 const MAXIMUM_STATUS_RECORD_BYTES: u64 = 512;
-const SCHEMA_VERSION: u32 = 1;
+const SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 struct StatusRecord {
     schema_version: u32,
     pid: u32,
+    /// The publisher's creation stamp, so a record a crashed manager left behind does not
+    /// name whichever process later reuses its pid.
+    process_created: u64,
     status: String,
 }
 
@@ -48,6 +52,7 @@ fn record_path(storage_root: &Path, session: &str) -> io::Result<PathBuf> {
 /// Rewrites this session's record whenever the published status changes.
 pub struct StatusPublisher {
     path: PathBuf,
+    created: u64,
     published: Option<&'static str>,
 }
 
@@ -57,10 +62,16 @@ impl StatusPublisher {
             return Err(io::ErrorKind::InvalidInput.into());
         }
         let path = record_path(storage_root, session)?;
+        // Without its own creation stamp a manager could not be told from a pid's reuser.
+        let created = open_process(std::process::id())
+            .map_err(|error| io::Error::other(format!("{error:?}")))?
+            .identity
+            .created;
         ensure_local_directory(&storage_root.join(BOOT_RECORD_LOCATION[0]))?;
         ensure_local_directory(&status_cue_directory(storage_root))?;
         Ok(Self {
             path,
+            created,
             published: None,
         })
     }
@@ -74,6 +85,7 @@ impl StatusPublisher {
         let record = StatusRecord {
             schema_version: SCHEMA_VERSION,
             pid: std::process::id(),
+            process_created: self.created,
             status: status.to_owned(),
         };
         let written = serde_json::to_vec(&record)
@@ -92,7 +104,7 @@ impl Drop for StatusPublisher {
 }
 
 /// Whether the owner of this session publishes status changes: its record is
-/// present and names a running process.
+/// present and names a running process created when the publisher was.
 pub fn owner_publishes(storage_root: &Path, session: &str) -> bool {
     let Ok(path) = record_path(storage_root, session) else {
         return false;
@@ -105,7 +117,8 @@ pub fn owner_publishes(storage_root: &Path, session: &str) -> bool {
     };
     record.schema_version == SCHEMA_VERSION
         && record.pid != 0
-        && crate::supervision::process::open_process(record.pid).is_ok()
+        && open_process(record.pid)
+            .is_ok_and(|opened| opened.identity.created == record.process_created)
 }
 
 #[cfg(test)]
@@ -141,6 +154,10 @@ mod tests {
         let record: StatusRecord = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(record.status, "running");
         assert_eq!(record.pid, std::process::id());
+        assert_eq!(
+            record.process_created,
+            open_process(std::process::id()).unwrap().identity.created
+        );
         // Another session's observer finds no publisher of its own.
         assert!(!owner_publishes(&root, "2"));
         drop(publisher);
@@ -154,19 +171,35 @@ mod tests {
         let root = scratch("stale");
         let path = record_path(&root, "1").unwrap();
         drop(StatusPublisher::new(&root, "1").unwrap());
+        let pid = std::process::id();
+        let created = open_process(pid).unwrap().identity.created;
         for payload in [
-            br#"{"schema_version":1,"pid":4294967295,"status":"running"}"#.as_slice(),
-            br#"{"schema_version":2,"pid":1,"status":"running"}"#,
-            br#"{"schema_version":1,"pid":1,"status":"running","extra":0}"#,
-            b"not json",
+            r#"{"schema_version":2,"pid":4294967295,"process_created":0,"status":"running"}"#
+                .to_owned(),
+            // A running process that reused a crashed publisher's pid.
+            format!(
+                r#"{{"schema_version":2,"pid":{pid},"process_created":{},"status":"running"}}"#,
+                created ^ 1
+            ),
+            // A record from before the creation stamp.
+            format!(r#"{{"schema_version":1,"pid":{pid},"status":"running"}}"#),
+            format!(
+                r#"{{"schema_version":3,"pid":{pid},"process_created":{created},"status":"running"}}"#
+            ),
+            format!(
+                r#"{{"schema_version":2,"pid":{pid},"process_created":{created},"status":"running","extra":0}}"#
+            ),
+            "not json".to_owned(),
         ] {
-            write_local_record(&path, payload, MAXIMUM_STATUS_RECORD_BYTES).unwrap();
-            assert!(
-                !owner_publishes(&root, "1"),
-                "{}",
-                String::from_utf8_lossy(payload)
-            );
+            write_local_record(&path, payload.as_bytes(), MAXIMUM_STATUS_RECORD_BYTES).unwrap();
+            assert!(!owner_publishes(&root, "1"), "{payload}");
         }
+        // The same record with the publisher's own stamp does name it.
+        let current = format!(
+            r#"{{"schema_version":2,"pid":{pid},"process_created":{created},"status":"running"}}"#
+        );
+        write_local_record(&path, current.as_bytes(), MAXIMUM_STATUS_RECORD_BYTES).unwrap();
+        assert!(owner_publishes(&root, "1"));
         assert!(record_path(&root, "..\\x").is_err());
         std::fs::remove_dir_all(root).unwrap();
     }

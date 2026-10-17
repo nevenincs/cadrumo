@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:a976abaa2522a017dc5a1965e73dd84df41e49e03f89861f396c8b7e275b2edc'
+body_hash: 'sha256:01e140882a5dcc3923edbbe9822843bee44f4e9fc19d2259a5527c4a321d52c6'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
@@ -71,6 +71,8 @@ The re-review of `c8ab950631`, `6ef45e9c73` and `ae86f24325` passed. It traced t
 ### escaped-send-still-loses-its-batch | low | The amended constraint promised a retry the escape path does not give
 
 An error that is not an `Exception` ends the reporting thread and loses the batch it took (`src/cadrumo_runtime/host/operation_progress_reporter.py:66-75`); that loss is what makes the replacement threads end with the backlog. The constraint now states this exception, so the record matches the code. Only a non-`Exception` out of the worker authorization client reaches it.
+
+status-cue-publisher-proof-is-a-bare-pid is fixed: the status record carries the publisher's creation stamp in schema 2, and an observer counts a publisher only when the named pid is running with that stamp (`native/manager/src/session/status_cue.rs:113-122`). A schema 1 record, a reused pid and an unknown version all read as no publisher, so the desktop keeps its one-second fallback. Both status_cue tests and the desktop host's status-change tests pass in `manager.rust`, with `manager.supervision` and the clippy check also green.
 
 ## Recommendations
 

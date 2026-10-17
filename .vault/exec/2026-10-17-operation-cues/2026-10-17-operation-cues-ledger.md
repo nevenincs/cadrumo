@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:f529984142ecec178bec98d49d64974186c446c2015efb5c48e8ae901db026d6'
+body_hash: 'sha256:8289d80d988ebae30659a68df646888036f69c62a82a08513980eb21e3a13805'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -146,6 +146,13 @@ related:
 - `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
 - `S09` `verify:` `dev.quality.types diagnostics in the reporter (none)` -> `pass`
 - `S09` `by:` `tui-41`
+- `S08` `M` `native/manager/src/session/status_cue.rs`
+- `S08` `M` `.vault/audit/2026-10-17-operation-cues-audit.md`
+- `S08` `verify:` `ctest --preset debug manager.rust incl. both status_cue tests` -> `pass`
+- `S08` `verify:` `ctest --preset debug manager.supervision` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle (clippy -D warnings)` -> `pass`
+- `S08` `verify:` `rustfmt --edition 2024 (stdin) status_cue.rs` -> `pass`
+- `S08` `by:` `tui-41`
 
 ## Notes
 
@@ -157,3 +164,4 @@ related:
 - `S08` The earlier S08 note that the 1 s external-owner pace remains is superseded by ac366af11f: a publishing manager now cues the desktop, and the pace stays only as the fallback the ADR's third amendment keeps.
 - `S08` Correction to the previous S08 note: the fallback pace is kept by the ADR's second amendment ("ok add it"), not a third.
 - `S09` The re-review passed; its one low finding, that the constraint promised a retry an escaping error does not give, is resolved in the constraint's wording.
+- `S08` Plan-close finding status-cue-publisher-proof-is-a-bare-pid fixed: the record carries the publisher's creation stamp, schema 2.
