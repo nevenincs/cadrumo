@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:2da75d76d5a454906fcc73c15088edc6404bbf491fdb0d70d9bfccee953f8aa6'
+body_hash: 'sha256:aba835e4758ffdedaf5c6dbd3b31c2b1ce48f2bcb841e421075dca60cc71ed91'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -68,7 +68,19 @@ related:
 - `S02` `verify:` `pytest test_connection_cues.py` -> `pass`
 - `S02` `verify:` `pytest -m unit cadrumo_runtime/host/tests cadrumo_client/transport/tests cadrumo_client/contracts` -> `pass`
 - `S02` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S03` `A` `src/cadrumo_client/transport/operation_changes.py`
+- `S03` `M` `src/cadrumo_client/transport/operation_settlement.py`
+- `S03` `M` `src/cadrumo_client/commands/registered_operation_observations.py`
+- `S03` `M` `src/cadrumo_client/commands/registered_operation_deadlines.py`
+- `S03` `M` `src/cadrumo_client/transport/tests/test_operation_settlement.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_registered_operation.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_operation_error_detail.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_modelo_filing_settlement.py`
+- `S03` `verify:` `pytest -m unit cadrumo_client, entrypoints/cli/tests, cli/config/tests, cadrumo_runtime/host/tests` -> `pass`
+- `S03` `verify:` `pytest -m integration test_runtime_modelo_work_create_native.py` -> `pass`
+- `S03` `verify:` `ruff check, ruff format --check, ty check, lint-imports` -> `pass`
 
 ## Notes
 
 - `S02` `test_frontend_boundaries::test_installed_composition_and_native_journeys_are_runtime_owned` fails before and after this Step: it asserts a test file another session deleted
+- `S03` Pre-existing, unchanged by this Step: 9 CLI structural/inventory tests, `test_frontend_boundaries` (deleted file), and `test_runtime_ledger_reads_native::test_native_api_ledger_status_requires_all_periods_even_when_query_selects_one,` which fails one run in three even with the reporter disabled and the old client code
