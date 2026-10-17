@@ -608,6 +608,49 @@ fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
     }
 }
 
+/// The input writer blocks without a timeout; a child that exits on its own
+/// must still wake it, or the finisher could never join it and settle.
+#[test]
+fn a_child_that_exits_while_input_is_idle_settles_the_session() {
+    let mut program = chatty_program();
+    let arguments: &[&str] = if cfg!(windows) {
+        &["/d", "/c", "ping", "-n", "2", "127.0.0.1"]
+    } else {
+        &["-c", "sleep 1"]
+    };
+    program.arguments = arguments.iter().map(OsString::from).collect();
+    let captured = Arc::new(Mutex::new(Vec::new()));
+    let output = captured.clone();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            output.lock().unwrap().extend_from_slice(&frame[1..]);
+        }
+        Ok(())
+    });
+    let mut session =
+        Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
+    let began = Instant::now();
+    let mut answered = 0;
+    while session.live() && began.elapsed() < Duration::from_secs(10) {
+        // ConPTY asks for the cursor position before the child runs; answering
+        // is the only input this session ever receives.
+        let bytes = captured.lock().unwrap();
+        let queries = bytes.windows(4).filter(|window| *window == b"[6n").count();
+        session.acknowledge(bytes.len() as u64).unwrap();
+        drop(bytes);
+        while answered < queries {
+            session.write(b"[1;1R").unwrap();
+            answered += 1;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert!(
+        !session.live(),
+        "the idle input writer kept the session open"
+    );
+    session.stop().unwrap();
+}
+
 /// When frames stop reaching the webview the session stops itself: the child
 /// is terminated and every worker joined without anyone closing it.
 #[test]

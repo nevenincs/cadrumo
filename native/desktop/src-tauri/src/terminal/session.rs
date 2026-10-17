@@ -25,7 +25,7 @@ use std::{
     sync::{
         Arc, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
-        mpsc::{self, RecvTimeoutError, SyncSender, TrySendError},
+        mpsc::{self, Receiver, SyncSender, TrySendError},
     },
     thread::{self, JoinHandle},
     time::{Duration, Instant},
@@ -78,6 +78,8 @@ struct Shared {
     process: u64,
     credit: Credit,
     input_stopped: AtomicBool,
+    /// Wakes the input writer when input stops; it blocks without a timeout.
+    input_wake: SyncSender<Input>,
     stop_requested: AtomicBool,
     exited: AtomicBool,
     write_error: Mutex<Option<ApplicationError>>,
@@ -86,16 +88,23 @@ struct Shared {
 }
 
 impl Shared {
-    fn new(killer: Killer, process: u64) -> Self {
+    fn new(killer: Killer, process: u64, input_wake: SyncSender<Input>) -> Self {
         Self {
             process,
             credit: Credit::default(),
             input_stopped: AtomicBool::new(false),
+            input_wake,
             stop_requested: AtomicBool::new(false),
             exited: AtomicBool::new(false),
             write_error: Mutex::new(None),
             killer: Mutex::new(killer),
         }
+    }
+
+    /// A full queue needs no marker: the writer checks the stop after each write.
+    fn stop_input(&self) {
+        self.input_stopped.store(true, Ordering::Release);
+        let _ = self.input_wake.try_send(Input::Stop);
     }
 
     fn write_error(&self) -> MutexGuard<'_, Option<ApplicationError>> {
@@ -110,7 +119,7 @@ impl Shared {
         if self.stop_requested.swap(true, Ordering::AcqRel) {
             return;
         }
-        self.input_stopped.store(true, Ordering::Release);
+        self.stop_input();
         self.credit.stop();
         if !self.exited.load(Ordering::Acquire)
             && let Err(error) = self.killer.lock().unwrap_or_else(|e| e.into_inner()).kill()
@@ -129,13 +138,20 @@ struct Workers {
     writer: Option<JoinHandle<()>>,
 }
 
+enum Input {
+    Bytes(Vec<u8>),
+    Stop,
+}
+
 pub struct Session {
     shared: Arc<Shared>,
-    input: SyncSender<Vec<u8>>,
+    input: SyncSender<Input>,
     master: Master,
     killer: Box<dyn ChildKiller + Send + Sync>,
     kill_error: Option<ApplicationError>,
     finisher: Option<JoinHandle<Result<()>>>,
+    /// Closed when the finisher returns, so settlement is awaited as an event.
+    finished: Receiver<()>,
     settled: bool,
     diagnostics: Arc<Diagnostics>,
 }
@@ -210,8 +226,10 @@ impl Session {
         let process = diagnostics.start(pid, program.role);
         let mut killer = child.clone_killer();
         let master: Master = Arc::new(Mutex::new(Some(pair.master)));
-        let shared = Arc::new(Shared::new(child.clone_killer(), process));
+        let (input, queued) = mpsc::sync_channel::<Input>(INPUT_QUEUE);
+        let shared = Arc::new(Shared::new(child.clone_killer(), process, input.clone()));
         let (deliver_workers, workers) = mpsc::sync_channel::<Workers>(1);
+        let (finishing, finished) = mpsc::sync_channel::<()>(0);
         let finisher = {
             let shared = shared.clone();
             let master = master.clone();
@@ -220,10 +238,11 @@ impl Session {
             thread::Builder::new()
                 .name("terminal-exit".into())
                 .spawn(move || {
+                    let _finishing = finishing;
                     let status = child.wait();
                     let stopped = shared.stop_requested.load(Ordering::Acquire);
                     shared.exited.store(true, Ordering::Release);
-                    shared.input_stopped.store(true, Ordering::Release);
+                    shared.stop_input();
                     // ConPTY reports end of output only once the pseudoconsole
                     // closes; the reader keeps draining meanwhile.
                     drop(take_master(&master));
@@ -272,7 +291,6 @@ impl Session {
                 return Err(error);
             }
         };
-        let (input, queued) = mpsc::sync_channel::<Vec<u8>>(INPUT_QUEUE);
         // From here the session owns cleanup: dropping it on any error settles the child.
         let session = Self {
             shared: shared.clone(),
@@ -281,6 +299,7 @@ impl Session {
             killer,
             kill_error: None,
             finisher: Some(finisher),
+            finished,
             settled: false,
             diagnostics: diagnostics.clone(),
         };
@@ -293,8 +312,8 @@ impl Session {
                     .name("terminal-input".into())
                     .spawn(move || {
                         while !input_shared.input_stopped.load(Ordering::Acquire) {
-                            match queued.recv_timeout(Duration::from_millis(50)) {
-                                Ok(bytes) => {
+                            match queued.recv() {
+                                Ok(Input::Bytes(bytes)) => {
                                     if let Err(error) =
                                         writer.write_all(&bytes).and_then(|()| writer.flush())
                                     {
@@ -303,8 +322,7 @@ impl Session {
                                         break;
                                     }
                                 }
-                                Err(RecvTimeoutError::Timeout) => continue,
-                                Err(RecvTimeoutError::Disconnected) => break,
+                                Ok(Input::Stop) | Err(_) => break,
                             }
                         }
                     })
@@ -408,7 +426,7 @@ impl Session {
             return Ok(());
         }
         self.input
-            .try_send(bytes.to_vec())
+            .try_send(Input::Bytes(bytes.to_vec()))
             .map_err(|error| match error {
                 TrySendError::Full(_) => failure(ErrorCode::QueueFull),
                 TrySendError::Disconnected(_) => failure(ErrorCode::SessionUnavailable),
@@ -437,7 +455,7 @@ impl Session {
             return;
         }
         self.shared.stop_requested.store(true, Ordering::Release);
-        self.shared.input_stopped.store(true, Ordering::Release);
+        self.shared.stop_input();
         // A paused reader resumes and discards, so the PTY drains while it closes.
         self.shared.credit.stop();
         if !self.shared.exited.load(Ordering::Acquire) {
@@ -473,7 +491,8 @@ impl Session {
                 }
                 return Ok(());
             }
-            if Instant::now() >= deadline {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
                 let error = self
                     .kill_error
                     .clone()
@@ -482,7 +501,8 @@ impl Session {
                     .failure_for(self.shared.process, error.clone());
                 return Err(error);
             }
-            thread::sleep(Duration::from_millis(5));
+            // The finisher's end closes this channel; nothing is ever sent.
+            let _ = self.finished.recv_timeout(remaining);
         }
     }
 
