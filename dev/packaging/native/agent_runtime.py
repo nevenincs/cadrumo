@@ -1,4 +1,9 @@
-"""Build and stage the pinned Node/ACP runtime used by cadrumo-agent."""
+"""Build and stage the pinned Node/ACP runtime used by cadrumo-agent.
+
+The agent project owns its Node distribution pin, ``runtime/node.json``: the Node
+version and each target's official archive name and SHA-256 digest. The build reads
+it from the configured agent folder and keeps no copy of its own.
+"""
 
 from __future__ import annotations
 
@@ -16,13 +21,12 @@ from typing import Any
 
 import httpx
 
-from dev._paths import REPO_ROOT
-
 from ..command_execution import run_command
 from ..runtime_wheelhouse_contract import SUPPORTED_TARGETS, target_platform
 from .hashing import digest
 
-_RUNTIME_CONFIG = REPO_ROOT / "native/agent/runtime.json"
+RUNTIME_DECLARATION = PurePosixPath("runtime/node.json")
+"""The agent-owned Node distribution pin, relative to the agent project folder."""
 _MAX_NODE_ARCHIVE_BYTES = 512 * 1024 * 1024
 _MAX_NODE_ARCHIVE_EXPANSION_BYTES = 1024 * 1024 * 1024
 _MAX_NODE_ARCHIVE_MEMBERS = 100_000
@@ -55,11 +59,11 @@ _REPARSE_POINT = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
 
 def build_agent_runtime(output: Path, source: Path, target: str, *, node: Path, npm_cli: Path) -> None:
     """Build an isolated, production-only Node/ACP tree from the configured agent source."""
-    configuration = _load_configuration()
-    archive_record = _target_archive(configuration, target)
     source = source.resolve(strict=True)
     if not source.is_dir():
         raise ValueError("Configured agent source must be a directory")
+    configuration = load_runtime_declaration(source)
+    archive_record = _target_archive(configuration, target)
     _validate_agent_source(source, configuration["node_version"])
     node = node.resolve(strict=True)
     npm_cli = npm_cli.resolve(strict=True)
@@ -75,7 +79,7 @@ def build_agent_runtime(output: Path, source: Path, target: str, *, node: Path, 
         if _is_link_or_reparse(output) or not output.is_dir():
             raise ValueError("Agent runtime output must be a regular directory")
         try:
-            prior = verify_agent_runtime(output)
+            prior = verify_agent_runtime(output, configuration)
         except ValueError:
             prior = None
         if (
@@ -95,7 +99,7 @@ def build_agent_runtime(output: Path, source: Path, target: str, *, node: Path, 
 
         archive_path = work / archive_record["archive"]
         _download_node_archive(archive_path, configuration["node_version"], archive_record)
-        _install_node_archive(archive_path, runtime / "node", target, archive_record)
+        _install_node_archive(archive_path, runtime / "node", target, archive_record, configuration["node_version"])
 
         node_version = configuration["node_version"]
         result = run_command([str(node), "--version"], cwd=work, timeout_seconds=30)
@@ -136,7 +140,7 @@ def build_agent_runtime(output: Path, source: Path, target: str, *, node: Path, 
         _validate_runtime_payload(runtime, target, configuration)
         receipt = _make_receipt(runtime, target, archive_record, node_version)
         (runtime / _RECEIPT_NAME).write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        verify_agent_runtime(runtime)
+        verify_agent_runtime(runtime, configuration)
         previous = work / "previous"
         if output.exists():
             output.rename(previous)
@@ -148,8 +152,8 @@ def build_agent_runtime(output: Path, source: Path, target: str, *, node: Path, 
             raise
 
 
-def verify_agent_runtime(source: Path) -> dict[str, Any]:
-    """Verify a build receipt against the exact runtime tree and return that receipt."""
+def verify_agent_runtime(source: Path, declaration: dict[str, Any]) -> dict[str, Any]:
+    """Verify a build receipt against the exact runtime tree and the agent's Node pin; return the receipt."""
     if _lstat(source) is None or _is_link_or_reparse(source) or not source.is_dir():
         raise ValueError("Agent runtime source must be a regular directory")
     source = source.resolve(strict=True)
@@ -176,10 +180,9 @@ def verify_agent_runtime(source: Path) -> dict[str, Any]:
     target = receipt["target"]
     if not isinstance(target, str):
         raise ValueError("Agent runtime receipt target is invalid")
-    configuration = _load_configuration()
-    archive_record = _target_archive(configuration, target)
+    archive_record = _target_archive(declaration, target)
     if (
-        receipt["node_version"] != configuration["node_version"]
+        receipt["node_version"] != declaration["node_version"]
         or receipt["node_archive"] != archive_record["archive"]
         or receipt["node_archive_sha256"] != archive_record["sha256"]
     ):
@@ -204,15 +207,19 @@ def verify_agent_runtime(source: Path) -> dict[str, Any]:
         raise ValueError("Agent runtime tree differs from its receipt")
     if receipt["package_lock_sha256"] != files.get("package-lock.json"):
         raise ValueError("Agent runtime receipt lock digest is inconsistent")
-    _validate_runtime_payload(source, target, configuration)
+    _validate_runtime_payload(source, target, declaration)
     return receipt
 
 
 def stage_agent_runtime(
-    source: Path, destination: Path, *, copy_function: Callable[[Path, Path], object] = shutil.copyfile
+    source: Path,
+    destination: Path,
+    *,
+    declaration: dict[str, Any],
+    copy_function: Callable[[Path, Path], object] = shutil.copyfile,
 ) -> None:
     """Copy a verified runtime into the installed ``app/cadrumo`` package root."""
-    verify_agent_runtime(source)
+    verify_agent_runtime(source, declaration)
     destination_parent = destination.parent.resolve()
     destination_parent.mkdir(parents=True, exist_ok=True)
     destination = destination_parent / destination.name
@@ -240,9 +247,13 @@ def stage_agent_runtime(
     copy_function(source / _RECEIPT_NAME, destination / _STAGED_RECEIPT_NAME)
 
 
-def _load_configuration() -> dict[str, Any]:
+def load_runtime_declaration(source: Path) -> dict[str, Any]:
+    """Read and check the agent project's Node distribution pin."""
+    path = source / RUNTIME_DECLARATION
+    if _is_link_or_reparse(path) or not path.is_file():
+        raise ValueError(f"Configured agent project has no regular {RUNTIME_DECLARATION}: {source}")
     try:
-        configuration = json.loads(_RUNTIME_CONFIG.read_text(encoding="utf-8"))
+        configuration = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("Pinned agent runtime declaration is invalid") from exc
     if not isinstance(configuration, dict) or set(configuration) != {"schema_version", "node_version", "targets"}:
@@ -296,19 +307,32 @@ def _validate_agent_source(source: Path, node_version: str) -> None:
     dependencies = package.get("dependencies")
     if not isinstance(dependencies, dict):
         raise ValueError("Agent package must declare the ACP production dependency")
-    acp_version = dependencies.get(_ACP_PACKAGE)
+    _locked_acp_version(dependencies.get(_ACP_PACKAGE), lock)
+
+
+def _locked_acp_version(specification: object, lock: object) -> str:
+    """Return the exact ACP adapter version the v3 lock installs for the package's declared spec.
+
+    The package may declare an exact version or a range; the lock's root entry must carry
+    the same spec, and the installed version is the lock's exact entry for the adapter.
+    """
     lock_packages = lock.get("packages") if isinstance(lock, dict) else None
     lock_root = lock_packages.get("") if isinstance(lock_packages, dict) else None
     lock_dependencies = lock_root.get("dependencies") if isinstance(lock_root, dict) else None
+    entry = lock_packages.get(f"node_modules/{_ACP_PACKAGE}") if isinstance(lock_packages, dict) else None
+    version = entry.get("version") if isinstance(entry, dict) else None
     if (
-        not isinstance(acp_version, str)
-        or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", acp_version)
+        not isinstance(specification, str)
+        or not specification.strip()
         or not isinstance(lock, dict)
         or lock.get("lockfileVersion") != 3
         or not isinstance(lock_dependencies, dict)
-        or lock_dependencies.get(_ACP_PACKAGE) != acp_version
+        or lock_dependencies.get(_ACP_PACKAGE) != specification
+        or not isinstance(version, str)
+        or not _NODE_VERSION_RE.fullmatch(version)
     ):
         raise ValueError("Agent ACP production dependency differs from its v3 package lock")
+    return version
 
 
 def _npm_environment(node: Path, user_config: Path, global_config: Path, cache: Path) -> dict[str, str]:
@@ -385,9 +409,11 @@ def _download_node_archive(archive: Path, version: str, record: dict[str, str]) 
         raise ValueError("Node runtime archive SHA256 mismatch")
 
 
-def _install_node_archive(archive: Path, destination: Path, target: str, record: dict[str, str]) -> None:
+def _install_node_archive(
+    archive: Path, destination: Path, target: str, record: dict[str, str], node_version: str
+) -> None:
     suffix, _extension = _NODE_TARGETS[target]
-    archive_root = f"node-v{_load_configuration()['node_version']}-{suffix}"
+    archive_root = f"node-v{node_version}-{suffix}"
     node_member = f"{archive_root}/node.exe" if target == "windows-x86-64" else f"{archive_root}/bin/node"
     license_member = f"{archive_root}/LICENSE"
     if record["archive"].endswith(".zip"):
@@ -490,18 +516,10 @@ def _validate_runtime_payload(runtime: Path, target: str, configuration: dict[st
     dependencies = package.get("dependencies")
     if not isinstance(dependencies, dict):
         raise ValueError("Agent runtime must declare the ACP production dependency")
-    acp_version = dependencies.get(_ACP_PACKAGE)
-    lock_packages = lock.get("packages") if isinstance(lock, dict) else None
-    lock_root = lock_packages.get("") if isinstance(lock_packages, dict) else None
-    lock_dependencies = lock_root.get("dependencies") if isinstance(lock_root, dict) else None
-    if (
-        not isinstance(acp_version, str)
-        or not isinstance(lock, dict)
-        or lock.get("lockfileVersion") != 3
-        or not isinstance(lock_dependencies, dict)
-        or lock_dependencies.get(_ACP_PACKAGE) != acp_version
-    ):
-        raise ValueError("Agent runtime ACP dependency differs from its package lock")
+    try:
+        acp_version = _locked_acp_version(dependencies.get(_ACP_PACKAGE), lock)
+    except ValueError as exc:
+        raise ValueError("Agent runtime ACP dependency differs from its package lock") from exc
     acp_package_path = runtime / "node_modules" / "@agentclientprotocol" / "claude-agent-acp" / "package.json"
     if not acp_package_path.is_file():
         raise ValueError("Agent runtime is missing the installed Claude ACP package metadata")

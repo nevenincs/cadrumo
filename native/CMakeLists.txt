@@ -19,7 +19,7 @@ set(sdk_inputs ${shared_inputs} ${contract_inputs} ${provision_helper_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/command_execution.py")
 set(provision_inputs ${shared_inputs}
-  "${PROJECT_SOURCE_DIR}/native/agent/${CADRUMO_TARGET}.txt"
+  "${CADRUMO_PATH_AGENT}/agent-dependencies.txt" "${CADRUMO_PATH_AGENT}/agent-dependencies.json"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/provision.py"
@@ -59,7 +59,7 @@ add_custom_target(python_dependencies
   DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   BYPRODUCTS "${CADRUMO_PATH_RUNTIME}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(python_dependencies python_sdk)
+add_dependencies(python_dependencies python_sdk agent_project)
 cadrumo_build_step(step_comment native_build_tools GROUP dependencies
   SUMMARY "install the pinned build-only tools" OUTPUTS "${CADRUMO_PATH_TOOLS}")
 add_custom_target(native_build_tools

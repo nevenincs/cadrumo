@@ -26,12 +26,10 @@ _NODE_VERSION = "26.10.0"
 _ACP_PACKAGE = "@agentclientprotocol/claude-agent-acp"
 
 
-def test_runtime_declaration_pins_all_supported_official_archives() -> None:
-    """The four supported package targets use reviewed Node archive identities."""
-    declaration = json.loads(agent_runtime._RUNTIME_CONFIG.read_text(encoding="utf-8"))
-    assert declaration["schema_version"] == 1
-    assert declaration["node_version"] == _NODE_VERSION
-    assert declaration["targets"] == {
+_DECLARATION: dict[str, Any] = {
+    "schema_version": 1,
+    "node_version": _NODE_VERSION,
+    "targets": {
         "windows-x86-64": {
             "archive": "node-v26.10.0-win-x64.zip",
             "sha256": "9fef7eca6743a6b910989cd8e78712376b394fcb9b6e1e9c44a0799a287f90c5",
@@ -48,7 +46,34 @@ def test_runtime_declaration_pins_all_supported_official_archives() -> None:
             "archive": "node-v26.10.0-darwin-arm64.tar.gz",
             "sha256": "751fdf7439f115d87ee2a8f3f18c065b6151852068e3e666ac60ac2996f75ac9",
         },
-    }
+    },
+}
+
+
+def test_runtime_declaration_is_read_from_the_agent_project(tmp_path: Path) -> None:
+    """The agent's own Node pin names every supported target's official archive."""
+    source = tmp_path / "agent-source"
+    (source / "runtime").mkdir(parents=True)
+    (source / "runtime/node.json").write_text(json.dumps(_DECLARATION), encoding="utf-8")
+    assert agent_runtime.load_runtime_declaration(source) == _DECLARATION
+
+
+@pytest.mark.parametrize("defect", ["missing", "archive", "target", "digest"])
+def test_runtime_declaration_refuses_an_unofficial_or_incomplete_pin(tmp_path: Path, defect: str) -> None:
+    """A pin naming another archive, omitting a target or carrying no digest is refused."""
+    source = tmp_path / "agent-source"
+    (source / "runtime").mkdir(parents=True)
+    declaration = json.loads(json.dumps(_DECLARATION))
+    if defect == "archive":
+        declaration["targets"]["windows-x86-64"]["archive"] = "node-v26.9.0-win-x64.zip"
+    elif defect == "target":
+        del declaration["targets"]["macos-arm64"]
+    elif defect == "digest":
+        declaration["targets"]["linux-x86-64"]["sha256"] = "not-a-digest"
+    if defect != "missing":
+        (source / "runtime/node.json").write_text(json.dumps(declaration), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"runtime/node\.json|Pinned"):
+        agent_runtime.load_runtime_declaration(source)
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
@@ -59,7 +84,7 @@ def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
     source = _agent_source(tmp_path / "agent-source")
     node, npm_cli = _build_tools(tmp_path)
     archive = _node_archive(target)
-    _point_config_at_archive(tmp_path, monkeypatch, target, archive)
+    declaration = _point_config_at_archive(source, target, archive)
     _mock_download(monkeypatch, archive)
     monkeypatch.setenv("NPM_TOKEN", "fixture-only-token")
     monkeypatch.setenv("NODE_AUTH_TOKEN", "fixture-only-token")
@@ -98,7 +123,7 @@ def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
     assert (output / "node_modules/@agentclientprotocol/claude-agent-acp/LICENSE").is_file()
     assert (output / "node_modules/@agentclientprotocol/claude-agent-acp/NOTICE").is_file()
 
-    receipt = agent_runtime.verify_agent_runtime(output)
+    receipt = agent_runtime.verify_agent_runtime(output, declaration)
     assert receipt["target"] == target
     assert receipt["node_version"] == _NODE_VERSION
     assert receipt["package_lock_sha256"] == hashlib.sha256(_package_lock_bytes()).hexdigest()
@@ -108,12 +133,36 @@ def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
     package_root = tmp_path / "app" / "cadrumo"
     package_root.mkdir(parents=True)
     (package_root / "existing-package.py").write_text("preserve\n", encoding="utf-8")
-    agent_runtime.stage_agent_runtime(output, package_root)
+    agent_runtime.stage_agent_runtime(output, package_root, declaration=declaration)
     assert (package_root / "existing-package.py").read_text(encoding="utf-8") == "preserve\n"
     assert (package_root / expected_node.relative_to(output)).read_bytes() == b"pinned-node-binary"
     assert (package_root / "node_modules" / _ACP_ENTRY_NAME.removeprefix("node_modules/")).is_file()
     assert (package_root / "agent-runtime.json").read_bytes() == (output / "runtime-receipt.json").read_bytes()
     assert not (package_root / "runtime-receipt.json").exists()
+
+
+def test_ranged_adapter_spec_installs_the_locked_exact_version(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A range in package.json is admitted when the lock carries the same spec and an exact installed version."""
+    source = _agent_source(tmp_path / "agent-source", ">=0.85.1 <0.86.0")
+    node, npm_cli = _build_tools(tmp_path)
+    archive = _node_archive("windows-x86-64")
+    declaration = _point_config_at_archive(source, "windows-x86-64", archive)
+    _mock_download(monkeypatch, archive)
+    _mock_npm(monkeypatch, node)
+    output = tmp_path / "build" / "agent" / "runtime"
+    agent_runtime.build_agent_runtime(output, source, "windows-x86-64", node=node, npm_cli=npm_cli)
+    assert _ACP_ENTRY_NAME in agent_runtime.verify_agent_runtime(output, declaration)["files"]
+
+
+def test_adapter_spec_differing_from_the_lock_is_refused(tmp_path: Path) -> None:
+    """The lock's root spec must be exactly the package's declared spec."""
+    source = _agent_source(tmp_path / "agent-source", ">=0.85.1 <0.86.0", locked_specification="0.85.1")
+    node, npm_cli = _build_tools(tmp_path)
+    _point_config_at_archive(source, "windows-x86-64", _node_archive("windows-x86-64"))
+    with pytest.raises(ValueError, match="differs from its v3 package lock"):
+        agent_runtime.build_agent_runtime(
+            tmp_path / "build/agent/runtime", source, "windows-x86-64", node=node, npm_cli=npm_cli
+        )
 
 
 def test_posix_archive_copies_only_regular_node_and_license_not_distribution_links(
@@ -123,7 +172,7 @@ def test_posix_archive_copies_only_regular_node_and_license_not_distribution_lin
     source = _agent_source(tmp_path / "agent-source")
     node, npm_cli = _build_tools(tmp_path)
     archive = _node_archive("linux-x86-64", include_distribution_symlink=True)
-    _point_config_at_archive(tmp_path, monkeypatch, "linux-x86-64", archive)
+    _point_config_at_archive(source, "linux-x86-64", archive)
     _mock_download(monkeypatch, archive)
     _mock_npm(monkeypatch, node)
 
@@ -143,7 +192,7 @@ def test_runtime_reuses_locked_node_closure_across_python_edits(
     source = _agent_source(tmp_path / "agent-source")
     node, npm_cli = _build_tools(tmp_path)
     archive = _node_archive("windows-x86-64")
-    _point_config_at_archive(tmp_path, monkeypatch, "windows-x86-64", archive)
+    _point_config_at_archive(source, "windows-x86-64", archive)
     _mock_download(monkeypatch, archive)
     calls = _mock_npm(monkeypatch, node)
     output = tmp_path / "build/agent/runtime"
@@ -163,7 +212,7 @@ def test_runtime_rebuilds_tampered_payload_without_destroying_previous_tree_firs
     source = _agent_source(tmp_path / "agent-source")
     node, npm_cli = _build_tools(tmp_path)
     archive = _node_archive("windows-x86-64")
-    _point_config_at_archive(tmp_path, monkeypatch, "windows-x86-64", archive)
+    declaration = _point_config_at_archive(source, "windows-x86-64", archive)
     _mock_download(monkeypatch, archive)
     calls = _mock_npm(monkeypatch, node)
     output = tmp_path / "build/agent/runtime"
@@ -174,7 +223,7 @@ def test_runtime_rebuilds_tampered_payload_without_destroying_previous_tree_firs
 
     assert len(calls) == 4
     assert (output / "node/node.exe").read_bytes() == b"pinned-node-binary"
-    agent_runtime.verify_agent_runtime(output)
+    agent_runtime.verify_agent_runtime(output, declaration)
 
 
 def test_builder_refuses_sdk_platform_cli_payload_and_does_not_publish_partial_output(
@@ -184,7 +233,7 @@ def test_builder_refuses_sdk_platform_cli_payload_and_does_not_publish_partial_o
     source = _agent_source(tmp_path / "agent-source")
     node, npm_cli = _build_tools(tmp_path)
     archive = _node_archive("windows-x86-64")
-    _point_config_at_archive(tmp_path, monkeypatch, "windows-x86-64", archive)
+    _point_config_at_archive(source, "windows-x86-64", archive)
     _mock_download(monkeypatch, archive)
 
     def install_with_sdk_cli(argv: Sequence[str], *, cwd: Path, **kwargs: Any) -> Any:
@@ -205,15 +254,15 @@ def test_builder_refuses_sdk_platform_cli_payload_and_does_not_publish_partial_o
 
 def test_verifier_refuses_changed_or_added_runtime_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A package cannot be staged after a receipt-covered file changes or an unlisted file appears."""
-    output = _build_runtime(tmp_path, monkeypatch, "windows-x86-64")
+    output, declaration = _build_runtime(tmp_path, monkeypatch, "windows-x86-64")
     (output / _ACP_ENTRY_NAME).write_text("changed", encoding="utf-8")
     with pytest.raises(ValueError, match="differs from its receipt"):
-        agent_runtime.verify_agent_runtime(output)
+        agent_runtime.verify_agent_runtime(output, declaration)
 
     (output / _ACP_ENTRY_NAME).write_text("acp entry\n", encoding="utf-8")
     (output / "unexpected-empty-directory").mkdir()
     with pytest.raises(ValueError, match="differs from its receipt"):
-        agent_runtime.stage_agent_runtime(output, tmp_path / "app" / "cadrumo")
+        agent_runtime.stage_agent_runtime(output, tmp_path / "app" / "cadrumo", declaration=declaration)
     assert not (tmp_path / "app" / "cadrumo" / "node").exists()
 
 
@@ -221,7 +270,7 @@ def test_stage_refuses_owned_path_collision_without_overwriting_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Staging owns only named runtime paths and does not replace an existing package member."""
-    output = _build_runtime(tmp_path, monkeypatch, "windows-x86-64")
+    output, declaration = _build_runtime(tmp_path, monkeypatch, "windows-x86-64")
     package_root = tmp_path / "app" / "cadrumo"
     package_root.mkdir(parents=True)
     existing_node = package_root / "node"
@@ -229,7 +278,7 @@ def test_stage_refuses_owned_path_collision_without_overwriting_it(
     (existing_node / "owned-by-other-package").write_text("preserve", encoding="utf-8")
 
     with pytest.raises(ValueError, match="already contains owned paths"):
-        agent_runtime.stage_agent_runtime(output, package_root)
+        agent_runtime.stage_agent_runtime(output, package_root, declaration=declaration)
     assert (existing_node / "owned-by-other-package").read_text(encoding="utf-8") == "preserve"
 
 
@@ -254,29 +303,30 @@ def test_download_rejects_wrong_archive_digest_and_removes_partial_file(
 _ACP_ENTRY_NAME = "node_modules/@agentclientprotocol/claude-agent-acp/dist/index.js"
 
 
-def _build_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target: str) -> Path:
+def _build_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target: str) -> tuple[Path, dict[str, Any]]:
     source = _agent_source(tmp_path / "agent-source")
     node, npm_cli = _build_tools(tmp_path)
     archive = _node_archive(target)
-    _point_config_at_archive(tmp_path, monkeypatch, target, archive)
+    declaration = _point_config_at_archive(source, target, archive)
     _mock_download(monkeypatch, archive)
     _mock_npm(monkeypatch, node)
     output = tmp_path / "build" / "agent" / "runtime"
     agent_runtime.build_agent_runtime(output, source, target, node=node, npm_cli=npm_cli)
-    return output
+    return output, declaration
 
 
-def _agent_source(source: Path) -> Path:
+def _agent_source(source: Path, specification: str = "0.85.1", locked_specification: str | None = None) -> Path:
     source.mkdir(parents=True)
     package = {
         "private": True,
         "name": "cadrumo-agent",
         "engines": {"node": _NODE_VERSION},
-        "dependencies": {_ACP_PACKAGE: "0.85.1"},
+        "dependencies": {_ACP_PACKAGE: specification},
         "devDependencies": {"dev-only-fixture": "1.2.3"},
     }
     (source / "package.json").write_text(json.dumps(package), encoding="utf-8")
-    (source / "package-lock.json").write_bytes(_package_lock_bytes())
+    lock = _package_lock_bytes(specification if locked_specification is None else locked_specification)
+    (source / "package-lock.json").write_bytes(lock)
     (source / ".node-version").write_text(f"{_NODE_VERSION}\n", encoding="utf-8")
     development_dependency = source / "node_modules/dev-only-fixture"
     development_dependency.mkdir(parents=True)
@@ -284,13 +334,16 @@ def _agent_source(source: Path) -> Path:
     return source
 
 
-def _package_lock_bytes() -> bytes:
+def _package_lock_bytes(specification: str = "0.85.1") -> bytes:
     return (
         json.dumps(
             {
                 "name": "cadrumo-agent",
                 "lockfileVersion": 3,
-                "packages": {"": {"name": "cadrumo-agent", "dependencies": {_ACP_PACKAGE: "0.85.1"}}},
+                "packages": {
+                    "": {"name": "cadrumo-agent", "dependencies": {_ACP_PACKAGE: specification}},
+                    f"node_modules/{_ACP_PACKAGE}": {"version": "0.85.1"},
+                },
             }
         )
     ).encode("utf-8")
@@ -333,12 +386,13 @@ def _node_archive(target: str, *, include_distribution_symlink: bool = False) ->
     return output.getvalue()
 
 
-def _point_config_at_archive(root: Path, monkeypatch: pytest.MonkeyPatch, target: str, archive: bytes) -> None:
-    config_path = root / "runtime.json"
-    configuration = json.loads(agent_runtime._RUNTIME_CONFIG.read_text(encoding="utf-8"))
-    configuration["targets"][target]["sha256"] = hashlib.sha256(archive).hexdigest()
-    config_path.write_text(json.dumps(configuration), encoding="utf-8")
-    monkeypatch.setattr(agent_runtime, "_RUNTIME_CONFIG", config_path)
+def _point_config_at_archive(source: Path, target: str, archive: bytes) -> dict[str, Any]:
+    """Pin the fixture archive's digest in the agent project's own Node declaration."""
+    declaration = json.loads(json.dumps(_DECLARATION))
+    declaration["targets"][target]["sha256"] = hashlib.sha256(archive).hexdigest()
+    (source / "runtime").mkdir(exist_ok=True)
+    (source / "runtime/node.json").write_text(json.dumps(declaration), encoding="utf-8")
+    return declaration
 
 
 def _mock_download(monkeypatch: pytest.MonkeyPatch, archive: bytes) -> None:

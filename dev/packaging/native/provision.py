@@ -10,11 +10,13 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from packaging.utils import canonicalize_name
+
 from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..runtime_wheel_selection import plan_target_wheels
-from .agent import locked_requirements
+from .agent import AGENT_DEPENDENCIES, AGENT_DEPENDENCY_RECORD, resolved_requirements
 from .build_directory import require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_toolchain import selected_uv
@@ -51,15 +53,26 @@ def provision(
     build_toolchain: Mapping[str, Any] | None = None,
     uv_executable: Path | None = None,
     sdk: Path | None = None,
+    agent_dependencies: Path,
 ) -> None:
-    """Download one verified SDK and install the repository's base closure."""
+    """Download one verified SDK and install Cadrumo's base closure with the agent's resolved additions.
+
+    ``agent_dependencies`` is the agent build directory holding the bundle-time resolution
+    of the agent wheel against both projects' locks. A distribution it names replaces
+    Cadrumo's locked wheel of the same name, so one version of each ships.
+    """
     destination = destination.resolve()
     uv = selected_uv(build_toolchain, executable=uv_executable)
     destination.mkdir(parents=True, exist_ok=True)
     pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     tools = provisioning_tools(target, build_toolchain)
     contract = load_layout(target)
-    wheels = plan_target_wheels(REPO_ROOT, target, pin, extras=BUNDLED_EXTRAS)
+    agent_requirements = resolved_requirements(agent_dependencies, target, pin)
+    wheels = tuple(
+        wheel
+        for wheel in plan_target_wheels(REPO_ROOT, target, pin, extras=BUNDLED_EXTRAS)
+        if canonicalize_name(wheel.distribution) not in agent_requirements
+    )
     if sdk is None:
         produced = backend(contract).provision_sdk(destination, pin, tools, contract)
         if not isinstance(produced, Path):
@@ -104,34 +117,35 @@ def provision(
     )
     if result.returncode:
         raise RuntimeError(result.stderr)
-    agent_dependencies = locked_requirements(target, pin)
-    result = run_command(
-        [
-            uv,
-            "pip",
-            "install",
-            "--python",
-            sys.executable,
-            "--python-version",
-            pin,
-            "--python-platform",
-            uv_platform(target),
-            "--require-hashes",
-            "--target",
-            str(dependencies),
-            "--only-binary",
-            ":all:",
-            "--no-deps",
-            "--link-mode",
-            "copy",
-            "-r",
-            str(REPO_ROOT / "native/agent" / f"{target}.txt"),
-        ],
-        cwd=REPO_ROOT,
-        environment=uv_environment(target),
-    )
-    if result.returncode:
-        raise RuntimeError(result.stderr)
+    if agent_requirements:
+        result = run_command(
+            [
+                uv,
+                "pip",
+                "install",
+                "--python",
+                sys.executable,
+                "--python-version",
+                pin,
+                "--python-platform",
+                uv_platform(target),
+                "--require-hashes",
+                "--target",
+                str(dependencies),
+                "--only-binary",
+                ":all:",
+                "--no-deps",
+                "--link-mode",
+                "copy",
+                "-r",
+                str(agent_dependencies / AGENT_DEPENDENCIES),
+            ],
+            cwd=REPO_ROOT,
+            environment=uv_environment(target),
+        )
+        if result.returncode:
+            raise RuntimeError(result.stderr)
+    record = json.loads((agent_dependencies / AGENT_DEPENDENCY_RECORD).read_text(encoding="utf-8"))
     (destination / "runtime-inputs.json").write_text(
         json.dumps(
             {
@@ -140,8 +154,11 @@ def provision(
                 "toolchain": {name: value for name, value in tools.items() if name.startswith("cpython_")},
                 "wheels": [asdict(wheel) for wheel in wheels],
                 "agent_dependencies": {
-                    "lock_sha256": digest(REPO_ROOT / "native/agent" / f"{target}.txt"),
-                    "versions": {name: str(requirement.specifier) for name, requirement in agent_dependencies.items()},
+                    "requirements_sha256": digest(agent_dependencies / AGENT_DEPENDENCIES),
+                    "cadrumo_lock_sha256": record["cadrumo_lock_sha256"],
+                    "agent_lock_sha256": record["agent_lock_sha256"],
+                    "versions": {name: str(requirement.specifier) for name, requirement in agent_requirements.items()},
+                    "replaced": record["replaced"],
                 },
             },
             indent=2,
@@ -149,7 +166,10 @@ def provision(
         encoding="utf-8",
     )
     log = BuildLog("provision")
-    log.status(f"installed {len(wheels)} hash-pinned runtime wheels for {target} into {display_path(dependencies)}")
+    log.status(
+        f"installed {len(wheels)} hash-pinned runtime wheels and {len(agent_requirements)} agent dependencies "
+        f"for {target} into {display_path(dependencies)}"
+    )
     log.verbose(result.stderr.strip())
 
 
@@ -159,6 +179,9 @@ if __name__ == "__main__":
     parser.add_argument("--target", required=True)
     parser.add_argument("--uv", type=Path, help="Explicit uv executable for a standalone invocation")
     parser.add_argument(
+        "--agent-dependencies", type=Path, required=True, help="Agent build directory holding its resolved dependencies"
+    )
+    parser.add_argument(
         "--build-toolchain", type=Path, help="Explicit builder toolchain JSON, required for tar.zst SDKs"
     )
     args = parser.parse_args()
@@ -167,4 +190,10 @@ if __name__ == "__main__":
         build_toolchain = json.loads(args.build_toolchain.read_text(encoding="utf-8"))
         if not isinstance(build_toolchain, dict):
             parser.error("build toolchain must be a JSON object")
-    provision(args.destination, args.target, build_toolchain=build_toolchain, uv_executable=args.uv)
+    provision(
+        args.destination,
+        args.target,
+        build_toolchain=build_toolchain,
+        uv_executable=args.uv,
+        agent_dependencies=args.agent_dependencies,
+    )

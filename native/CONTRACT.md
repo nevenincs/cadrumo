@@ -835,12 +835,11 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | --- | --- |
 | default / `bundle` | Build the application payload and, for Windows desktop deliveries, its matching background-services installation kit at `stage/<Config>/services` |
 | `app-distro` | Compatibility target for the complete `bundle` |
-| `agent_project` | Build and inventory the wheel and locked production ACP modules from the local project folder configured with the cache-only variable `-DCADRUMO_PACKAGE_AGENT_SOURCE_DIR=<path>`, and acquire the hash-pinned Node runtime; no environment variable supplies the source selection and no source SHA pin is involved |
+| `agent_project` | Build and inventory the wheel and locked production ACP modules from the local project folder configured with the cache-only variable `-DCADRUMO_PACKAGE_AGENT_SOURCE_DIR=<path>`, resolve the wheel's Python requirements against Cadrumo's and the agent's own `uv.lock`, and acquire the Node runtime the agent pins; no environment variable supplies the source selection and no source SHA pin is involved |
 | `agent-install` | Build the complete bundle with the agent installed in `cadrumo/site-packages`; `cmake --install` copies that built payload to the selected prefix |
 | `agent-uninstall` | Remove generated product dependencies and the selected staged bundle; the next bundle build reconstructs the complete dependency set |
 | `agent-rebuild` | Remove the built agent wheel and dependent payloads, then rebuild the complete bundle from the configured project folder |
 | `agent-checksum` | Build or reuse the agent, then check its recorded wheel checksum |
-| `agent-lock-<target>` | Explicitly regenerate the target's hash-pinned supplemental dependency lock under `native/agent/`, constrained by Cadrumo's current locked versions |
 | `app-payload` | Internal payload assembly at `stage/<Config>/app`, including application images, runtime and documentation; a Windows desktop payload alone is not a complete delivery |
 | `native-process-quiesce` | Before replacing this build's product images, request shutdown only for verified product processes whose executable images resolve inside this build's `stage`, `cargo` or `bin` trees, including their children; wait 10 seconds, then terminate survivors and refuse replacement if any remain alive |
 | `verify-app-distro` | Build the complete bundle, run its smoke tests and inspect the package inventory, without ZIP or release verification |
@@ -854,7 +853,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `python`, `python_d` | Build a runnable standalone interpreter at `stage/<Config>/app`, including `python.zip`, native libraries and site-packages; `python_d` also includes the development executable. Uses the application package layout and assembler without product wheels, application images or user documentation |
 | `cadrumo_entrypoint_<name>` | Compile one declared console entrypoint host, such as `cadrumo-runtime.exe` |
 | `python_sdk` | Acquire and verify the pinned CPython SDK |
-| `python_dependencies` | Install the selected runtime wheel closure, reusing the SDK |
+| `python_dependencies` | Install the selected runtime wheel closure and the agent's resolved dependencies, reusing the SDK |
 | `python_product` | Build and install the CADRUMO wheel cohort into dependency staging |
 | `user_docs` | Build every declared documentation language and stage the shippable subset; a `bundle` prerequisite unless `CADRUMO_PACKAGE_USER_DOCS=OFF` |
 | `user_docs_build`, `user_docs_stage` | Compile documentation or prepare its shippable subset independently |
@@ -876,8 +875,9 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `clean-all` | Remove enrolled outputs in every configuration and bounded cleanup groups; retain configuration, builder and installation receipts |
 
 The agent dependency also builds its production JavaScript closure from the selected
-project's `package.json`, `package-lock.json` and `.node-version`. The Node archives
-and their SHA-256 digests are pinned in `native/agent/runtime.json`. Construction
+project's `package.json`, `package-lock.json` and `.node-version`. The Node version,
+archives and SHA-256 digests are pinned by the agent project in its own
+`runtime/node.json`; Cadrumo keeps no copy. Construction
 uses the configured Node/npm builders with lifecycle scripts, dev dependencies,
 optional dependencies and executable links disabled. In particular, the adapter's
 optional platform packages containing Claude Code are absent. The user's installed
@@ -896,9 +896,23 @@ The agent-only wheel updater refuses a changed runtime receipt and requires
 interpreter. It refuses an interpreter or import outside that package, compares the
 installed agent version and dependency versions with the manifest, checks inventoried
 agent bytes, and invokes the installed version command. No test runner acquires,
-builds or installs the agent. Supplemental native locks widen the application closure
-without changing the Python distribution's base closure; shared versions must match
-the existing root lock. Build provenance records both lock identities and the private
+builds or installs the agent.
+
+The agent owns its Python dependency set and its own `uv.lock`; Cadrumo keeps no
+copy of it and never re-locks it. `agent_project` resolves the built wheel's declared
+requirements with two constraint sets read fresh at build time: Cadrumo's `uv.lock`
+for the shipped extras, and the agent's lock exported with
+`uv export --frozen --no-dev --no-emit-project`. A distribution only one lock names
+keeps that lock's version. For one both locks name at different versions, the newer
+version that satisfies both projects' requirements, transitive ones included, is
+selected; when neither does, the build fails and names the distribution, both
+versions, the requirement each violates and the repositories to change. The
+resolution writes a hash-pinned `agent-dependencies.txt` of the distributions the
+agent adds or whose version it replaces, and `python_dependencies` installs Cadrumo's
+remaining locked wheels and those requirements into the one `site-packages`. Assembly
+requires the installed closure to equal Cadrumo's base closure with the resolved
+versions and the agent itself. The Python distribution's base closure is unchanged.
+Build provenance records both lock identities, the resolved versions and the private
 source/wheel hashes. The desktop launcher receives no source-checkout path.
 
 `cadrumo --check-health` opens no window. It uses the same supervision startup
@@ -943,8 +957,7 @@ or running npm. Provision it explicitly with `just setup-desktop-frontend`
 before building; it keeps a current tree and serializes with other installs. Tool caches retain each
 tool's standard machine configuration; builds do not redirect uv installations
 or caches into application storage. Documentation reuse and verification scratch
-belong to the selected binary directory. `agent-lock-*` produces a candidate
-under `testing/agent-lock/<target>/requirements.txt` for manual author review.
+belong to the selected binary directory.
 
 The root install rule preserves source permissions, including executable bits on
 POSIX hosts. Both installation and the ZIP consume the same staged application.

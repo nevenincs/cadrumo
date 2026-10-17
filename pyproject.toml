@@ -85,8 +85,8 @@ dependencies = [
   # source-citation validation.
   "pypdfium2>=5.14.0,<6",
   # PDF sanitiser; content-stream rewriter for PII redaction.
-  # Upstream 10.14 wheels require macOS 15; retain the declared macOS 14 floor.
-  "pikepdf==10.13.0.post1; sys_platform == 'darwin'",
+  # Ceiling: upstream 10.14 wheels require macOS 15; retain the declared macOS 14 floor.
+  "pikepdf>=10.13.0.post1,<10.14; sys_platform == 'darwin'",
   "pikepdf>=10.17.0,<11; sys_platform != 'darwin'",
   # Imaging primitive behind pypdfium2's `to_pil()` page rasterisation. Same
   # class as the `lxml` entry above and declared for the same reason: Pillow
@@ -580,8 +580,10 @@ dev = [
   "pytest-playwright>=0.10.0",
   # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
   "pytest-xdist>=3.6.0",
-  # Reproducible light-theme CLI GIFs for the repository README.
-  "pillow==12.3.0",
+  # Reproducible light-theme CLI GIFs for the repository README. Ceiling: the
+  # runtime declaration's major line above; regenerate the GIFs after a Pillow
+  # update, since rendered bytes can change between releases.
+  "pillow>=12.3,<13",
   # Generates synthetic fixture PDFs in tests, and is the `pdf` extra's
   # exclusive requirement: without it here the extra's probe reads ABSENT in
   # the dev environment and the calculation-summary suite refuses instead of
@@ -662,7 +664,9 @@ dev = [
   "sphinxcontrib-mermaid>=1.0",
   "pytest-timeout>=2.3.1",
   "basedpyright>=1.40.1",
-  "spylls==0.1.7",
+  # Pure-Python Hunspell behind the locale spelling checks. Ceiling: a 0.x minor
+  # release may change the dictionary API those checks call.
+  "spylls>=0.1.7,<0.2",
 ]
 
 [tool.ruff]

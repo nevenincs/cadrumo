@@ -16,6 +16,9 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from cadrumo.core.toml import parse_toml
+from dev._paths import REPO_ROOT
+
 if TYPE_CHECKING:
     from spylls.hunspell import Dictionary
 
@@ -37,7 +40,6 @@ DICTIONARY_SPECS: Final[tuple[DictionarySpec, ...]] = (
     DictionarySpec("es", "dictionary-es"),
     DictionarySpec("hu", "dictionary-hu"),
 )
-SPYLLS_VERSION: Final[str] = "0.1.7"
 
 
 class SpellingToolError(RuntimeError):
@@ -119,6 +121,19 @@ def _validate_dictionary_installation(repository: Path, roots: dict[str, Path]) 
         )
 
 
+def locked_spylls_version() -> str:
+    """Return the ``spylls`` version this checkout's lock resolved; the project declares only a range."""
+    lock = parse_toml((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    versions = {str(entry["version"]) for entry in lock.get("package", ()) if entry.get("name") == "spylls"}
+    if len(versions) != 1:
+        raise SpellingToolError(
+            kind="spelling_tool_unavailable",
+            detail=f"uv.lock must resolve exactly one spylls version, found {sorted(versions)}",
+            next_action="run uv lock to resolve the declared spell-check engine",
+        )
+    return versions.pop()
+
+
 def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
     """Load every pinned Hunspell dictionary through the pinned Python engine.
 
@@ -126,18 +141,19 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
         SpellingToolError: if the Python engine or any dictionary package is
             unavailable, inconsistent with the manifest, or unreadable.
     """
+    locked_version = locked_spylls_version()
     try:
         installed_version = version("spylls")
     except (ImportError, PackageNotFoundError):
         raise SpellingToolError(
             kind="spelling_tool_unavailable",
-            detail=f"spylls=={SPYLLS_VERSION} is not installed in the active Python environment",
-            next_action="run just setup to install the pinned spell-check engine",
+            detail=f"spylls=={locked_version} is not installed in the active Python environment",
+            next_action="run just setup to install the locked spell-check engine",
         ) from None
-    if installed_version != SPYLLS_VERSION:
+    if installed_version != locked_version:
         raise SpellingToolError(
             kind="spelling_tool_unavailable",
-            detail=f"active spylls is {installed_version}, but the project requires {SPYLLS_VERSION}",
+            detail=f"active spylls is {installed_version}, but uv.lock resolves {locked_version}",
             next_action="run just setup to synchronize uv.lock",
         )
 
@@ -150,9 +166,9 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
     except Exception as exc:  # The checker must fail closed on malformed upstream data.
         raise SpellingToolError(
             kind="spelling_tool_failure",
-            detail=f"spylls=={SPYLLS_VERSION} could not load the pinned Hunspell dictionaries: {exc}",
+            detail=f"spylls=={locked_version} could not load the pinned Hunspell dictionaries: {exc}",
             next_action="run just setup-locale-spelling; if it persists, inspect the locked dictionary packages",
         ) from exc
 
 
-__all__ = ["DICTIONARY_SPECS", "SPYLLS_VERSION", "SpellingToolError", "dictionary_roots", "load_dictionaries"]
+__all__ = ["DICTIONARY_SPECS", "SpellingToolError", "dictionary_roots", "load_dictionaries", "locked_spylls_version"]

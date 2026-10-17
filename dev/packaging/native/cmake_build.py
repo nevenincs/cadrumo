@@ -23,7 +23,7 @@ from ..google_oauth import build_client_json, client_build_identity
 from ..runtime_wheel_selection import plan_target_wheels
 from ..wheel_metadata import installed_wheel_matches
 from .action_cache import action_lock, completed, fingerprint, modified_inputs, staleness
-from .agent import agent_wheel, build_agent, validate_wheel_dependencies
+from .agent import agent_wheel, build_agent, gate_agent_dependencies, validate_wheel_dependencies
 from .agent_runtime import build_agent_runtime
 from .assemble import assemble, image_artifact
 from .build_directory import require_enrolled_build
@@ -370,7 +370,23 @@ def _sync_base_dependencies(source: Path, product: Path) -> None:
             if digest(target) != identity:
                 raise ValueError(f"Obsolete base dependency changed outside its producer: {relative}")
             target.unlink()
+    _remove_empty_directories(destination)
     write_text(receipt, json.dumps(members, sort_keys=True) + "\n")
+
+
+def _remove_empty_directories(root: Path) -> None:
+    """Remove directories a replaced distribution left empty, deepest first.
+
+    An emptied ``*.dist-info`` directory (one that kept only a ``licenses`` folder, or
+    nothing) is still discovered as an installed distribution without metadata, so the
+    staged closure must not keep it. No installed payload is an empty directory.
+    """
+    directories = [path for path in root.rglob("*") if path.is_dir()]
+    for directory in sorted(directories, key=lambda path: len(path.parts), reverse=True):
+        if directory.is_symlink() or directory.is_junction():
+            raise ValueError("Base dependency destination contains a linked member")
+        if not any(directory.iterdir()):
+            directory.rmdir()
 
 
 def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTimings | None = None) -> Path:
@@ -387,6 +403,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
         destination = paths["agent"]
         destination.mkdir(parents=True, exist_ok=True)
         build_agent(destination, arguments.agent_source, selected_uv(configured))
+        gate_agent_dependencies(destination, arguments.agent_source, arguments.target, selected_uv(configured))
         tools = configured["desktop_tools"]
         build_agent_runtime(
             destination / "runtime",
@@ -435,6 +452,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             arguments.target,
             build_toolchain=configured,
             sdk=sdk if "python_sdk" in paths else None,
+            agent_dependencies=paths["agent"],
         )
     elif arguments.action == "product":
         destination = paths["product"]
@@ -451,7 +469,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
         )
         pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
         wheel = agent_wheel(paths["agent"])
-        validate_wheel_dependencies(wheel, arguments.target, pin)
+        validate_wheel_dependencies(wheel, arguments.target, pin, paths["agent"])
         if not installed_wheel_matches(wheel, destination / "dependencies"):
             result = run_command(
                 [
@@ -494,6 +512,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             interpreter=arguments.interpreter,
             target=arguments.target,
             agent_runtime=None if arguments.interpreter else paths["agent"] / "runtime",
+            agent_dependencies=None if arguments.interpreter else paths["agent"],
             provenance={
                 "runtime": {}
                 if arguments.interpreter

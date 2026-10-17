@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -12,11 +13,33 @@ from dev._paths import REPO_ROOT
 
 from ...runtime_wheel_selection import active_requirements
 from ...runtime_wheelhouse_contract import target_platform
-from ..agent import locked_requirements
+from ..agent import AGENT_DEPENDENCIES, AGENT_DEPENDENCY_RECORD
 from ..assemble import assemble
+from ..hashing import digest
 from ..product import BUNDLED_EXTRAS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: The agent's resolved additions: one distribution only the agent needs, and one
+#: shared distribution the resolution moved off Cadrumo's locked version.
+_AGENT_ADDITIONS = {"websockets": "16.1.1", "httpx": "0.28.0"}
+
+
+def _agent_dependencies(root: Path, versions: Mapping[str, str]) -> Path:
+    """Record a resolution as the agent build writes it."""
+    root.mkdir()
+    path = root / AGENT_DEPENDENCIES
+    path.write_bytes(
+        "".join(f"{name}=={version} --hash=sha256:{'a' * 64}\n" for name, version in versions.items()).encode()
+    )
+    record = dict(
+        target="windows-x86-64",
+        python="3.13.11",
+        requirements_sha256=digest(path),
+        versions=dict(versions),
+    )
+    (root / AGENT_DEPENDENCY_RECORD).write_text(json.dumps(record), encoding="utf-8")
+    return root
 
 
 @pytest.mark.parametrize(
@@ -30,6 +53,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
         ("agent-missing", "closure mismatch"),
         ("agent-version", "agent version"),
         ("agent-runtime-missing", "built agent runtime closure"),
+        ("agent-dependency-version", "version differs from lock"),
+        ("agent-dependency-missing", "closure mismatch"),
     ],
 )
 def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, message: str) -> None:
@@ -39,8 +64,8 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
     bundled = active_requirements(REPO_ROOT, target_platform("windows-x86-64"), "3.13.11", extras=BUNDLED_EXTRAS)
     for name, requirement in bundled.items():
         versions[name] = next(iter(requirement.specifier)).version
-    for name, requirement in locked_requirements("windows-x86-64", "3.13.11").items():
-        versions[name] = next(iter(requirement.specifier)).version
+    assert "httpx" in bundled and "websockets" not in bundled
+    versions.update(_AGENT_ADDITIONS)
     versions["cadrumo-agent"] = "0.1.0"
     companion = PRODUCT_IDENTITY.companion_distributions[0]
     if defect == "missing":
@@ -53,6 +78,10 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
         del versions["cadrumo-agent"]
     if defect == "agent-version":
         versions["cadrumo-agent"] = "0.0.1"
+    if defect == "agent-dependency-version":
+        versions["httpx"] = next(iter(bundled["httpx"].specifier)).version
+    if defect == "agent-dependency-missing":
+        del versions["websockets"]
     for name, version in versions.items():
         directory = dependencies / f"{name.replace('-', '_')}-{version}.dist-info"
         directory.mkdir()
@@ -88,5 +117,6 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
             binary_dir=tmp_path,
             target="windows-x86-64",
             provenance={"agent": {"version": "0.1.0"}},
+            agent_dependencies=_agent_dependencies(tmp_path / "agent", _AGENT_ADDITIONS),
         )
     assert not destination.exists()

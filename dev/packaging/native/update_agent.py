@@ -87,7 +87,11 @@ def update(build: Path, config: str) -> None:
     if tuple(map(int, manifest["python"].split("."))) != sys.version_info[:3]:
         raise ValueError("Agent bytecode requires the package's exact Python compiler")
     wheel = agent_wheel(paths["agent"])
-    validate_wheel_dependencies(wheel, target, manifest["python"])
+    resolved = validate_wheel_dependencies(wheel, target, manifest["python"], paths["agent"])
+    for name, requirement in resolved.items():
+        installed = manifest["distributions"].get(name)
+        if installed is None or installed not in requirement.specifier:
+            raise ValueError(f"Agent requires a dependency update: {name}; build app-payload")
     environment = marker_environment(target_platform(target), manifest["python"])
     for value in read_wheel_metadata(wheel).get_all("Requires-Dist", []):
         requirement = Requirement(value)

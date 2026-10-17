@@ -12,7 +12,8 @@ if(NOT EXISTS "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}/pyproject.toml")
 endif()
 get_filename_component(agent_source "${CADRUMO_PACKAGE_AGENT_SOURCE_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
 file(GLOB_RECURSE agent_source_inputs CONFIGURE_DEPENDS "${agent_source}/src/*")
-foreach(agent_file pyproject.toml README.md LICENSE NOTICE .gitignore package.json package-lock.json .node-version)
+foreach(agent_file pyproject.toml uv.lock README.md LICENSE NOTICE .gitignore package.json package-lock.json .node-version
+    runtime/node.json)
   if(EXISTS "${agent_source}/${agent_file}")
     list(APPEND agent_source_inputs "${agent_source}/${agent_file}")
   endif()
@@ -22,19 +23,22 @@ set(agent_inputs ${agent_source_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/archive.py"
-  "${PROJECT_SOURCE_DIR}/native/agent/runtime.json"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheel_selection.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version"
   "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/uv.lock"
   ${shared_inputs} "${CMAKE_COMMAND}")
 list(JOIN agent_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-agent.txt" CONTENT "${input_lines}\n")
 cadrumo_build_step(step_comment agent_project GROUP dependencies
-  SUMMARY "build the agent wheel and its pinned Node/ACP runtime from the configured project folder"
+  SUMMARY "build the agent wheel, resolve its dependencies against both projects' locks and build its pinned Node/ACP runtime"
   OUTPUTS "${CADRUMO_PATH_AGENT}")
 add_custom_target(agent_project
   COMMAND ${CADRUMO_HELPER} agent --build "${PROJECT_BINARY_DIR}"
     --inputs "${PROJECT_BINARY_DIR}/inputs-agent.txt" --agent-source "${agent_source}"
   DEPENDS ${agent_inputs} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
   BYPRODUCTS "${CADRUMO_PATH_AGENT}/ready" "${CADRUMO_PATH_AGENT}/agent-wheel.json"
+    "${CADRUMO_PATH_AGENT}/agent-dependencies.txt" "${CADRUMO_PATH_AGENT}/agent-dependencies.json"
   COMMENT "${step_comment}" VERBATIM)
 cadrumo_register_clean(TARGET agent_project PATHS "${CADRUMO_PATH_AGENT}")
 cadrumo_build_step(step_comment agent-checksum GROUP verification
@@ -42,16 +46,6 @@ cadrumo_build_step(step_comment agent-checksum GROUP verification
 add_custom_target(agent-checksum
   COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.agent checksum --build "${PROJECT_BINARY_DIR}"
   DEPENDS agent_project WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-foreach(agent_target windows-x86-64 linux-x86-64 linux-aarch64 macos-arm64)
-  cadrumo_build_step(step_comment "agent-lock-${agent_target}" GROUP dependencies
-    SUMMARY "generate a build-owned candidate dependency lock for ${agent_target}")
-  add_custom_target("agent-lock-${agent_target}"
-    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.agent lock
-      --build "${PROJECT_BINARY_DIR}" --target "${agent_target}"
-    DEPENDS agent_project WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-  cadrumo_register_clean(TARGET "agent-lock-${agent_target}"
-    PATHS "${CADRUMO_PATH_TESTING}/agent-lock/${agent_target}")
-endforeach()
 cadrumo_build_step(step_comment agent-rebuild GROUP dependencies
   SUMMARY "remove the agent and dependent payloads, then rebuild the application bundle")
 add_custom_target(agent-rebuild

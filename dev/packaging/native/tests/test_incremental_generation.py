@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import io
 import json
 import os
@@ -220,8 +221,26 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     generated = tmp_path / "generated"
     generated.mkdir()
     (generated / "build-toolchain.json").write_text("{}", encoding="utf-8")
-    paths = {name: tmp_path / name for name in ("runtime", "generated", "python_sdk")}
+    paths = {name: tmp_path / name for name in ("runtime", "generated", "python_sdk", "agent")}
     monkeypatch.setattr(cmake_build, "build_paths", lambda build: paths)
+    # The agent build's recorded resolution: one distribution the agent adds to the closure.
+    paths["agent"].mkdir()
+    agent_requirements = paths["agent"] / "agent-dependencies.txt"
+    agent_requirements.write_bytes(f"agent-only==1.0 --hash=sha256:{'d' * 64}\n".encode())
+    (paths["agent"] / "agent-dependencies.json").write_text(
+        json.dumps(
+            {
+                "target": "windows-x86-64",
+                "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip(),
+                "requirements_sha256": hashlib.sha256(agent_requirements.read_bytes()).hexdigest(),
+                "versions": {"agent-only": "1.0"},
+                "cadrumo_lock_sha256": "e" * 64,
+                "agent_lock_sha256": "f" * 64,
+                "replaced": {},
+            }
+        ),
+        encoding="utf-8",
+    )
     sdk = paths["python_sdk"] / "sdk"
     sdk.mkdir(parents=True)
     (sdk / "python.h").write_text("stable SDK bytes", encoding="utf-8")
@@ -237,7 +256,7 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(provision, "backend", unexpected_sdk)
 
     def install(command: list[str], **kwargs: object) -> SimpleNamespace:
-        # Provisioning runs uv twice into one --target: the locked closure, then the agent's lock.
+        # Provisioning runs uv twice into one --target: the locked closure, then the agent's resolved additions.
         dependencies = Path(command[command.index("--target") + 1])
         dependencies.mkdir(exist_ok=True)
         (dependencies / "fixture.py").write_text(wheel.version, encoding="utf-8")

@@ -19,8 +19,8 @@ from dev._paths import REPO_ROOT
 
 from ..runtime_wheel_selection import active_requirements
 from ..runtime_wheelhouse_contract import target_platform
-from .agent import locked_requirements
-from .agent_runtime import stage_agent_runtime
+from .agent import resolved_requirements
+from .agent_runtime import load_runtime_declaration, stage_agent_runtime
 from .assembly_transaction import AssemblyReuse, assembly_candidate
 from .build_directory import require_enrolled_build, require_enrolled_output
 from .build_log import BuildLog, display_path
@@ -184,6 +184,21 @@ def import_surface(name: str, recorded: Iterable[PurePath | str]) -> str:
     return ".".join(selected)
 
 
+def installed_distributions(dependencies: Path) -> list[importlib.metadata.Distribution]:
+    """Return the staged distributions, refusing a ``*.dist-info`` directory without metadata.
+
+    Such a directory is left behind when an install replaced a distribution only
+    partly; it names no distribution, so the closure it belongs to cannot be checked.
+    """
+    broken = sorted(path.name for path in dependencies.glob("*.dist-info") if not (path / "METADATA").is_file())
+    if broken:
+        raise ValueError(
+            f"Staged dependencies in {dependencies} hold distribution metadata directories without METADATA: "
+            f"{', '.join(broken)}. Rebuild the product dependencies (python_product) from a clean dependency closure."
+        )
+    return list(importlib.metadata.distributions(path=[str(dependencies)]))
+
+
 def assemble(
     python: Path,
     dependencies: Path | None,
@@ -199,9 +214,15 @@ def assemble(
     target: str,
     provenance: Mapping[str, object] | None = None,
     agent_runtime: Path | None = None,
+    agent_dependencies: Path | None = None,
     timings: BuildTimings | None = None,
 ) -> None:
-    """Publish a complete candidate, retaining the old package if any phase fails."""
+    """Publish a complete candidate, retaining the old package if any phase fails.
+
+    ``agent_dependencies`` is the agent build directory holding the resolution of the
+    agent wheel against both projects' locks; the installed closure must equal
+    Cadrumo's base closure with those resolved versions and the agent itself.
+    """
     contract = load_layout(target)
     with assembly_candidate(
         destination, contract["files"]["package_manifest"], rewrite_native=contract["backend"] != "windows"
@@ -220,6 +241,7 @@ def assemble(
             target=target,
             provenance=provenance,
             agent_runtime=agent_runtime,
+            agent_dependencies=agent_dependencies,
             timings=timings,
             reuse=reuse,
         )
@@ -240,6 +262,7 @@ def _assemble_candidate(
     target: str,
     provenance: Mapping[str, object] | None,
     agent_runtime: Path | None,
+    agent_dependencies: Path | None,
     timings: BuildTimings | None,
     reuse: AssemblyReuse,
 ) -> None:
@@ -262,11 +285,13 @@ def _assemble_candidate(
     )
     allowed.update(requirements)
     if not interpreter:
-        agent_requirements = locked_requirements(target, build_identity["python"])
+        if agent_dependencies is None:
+            raise ValueError("Application assembly requires the agent's resolved dependencies")
+        agent_requirements = resolved_requirements(agent_dependencies, target, build_identity["python"])
         requirements.update(agent_requirements)
         allowed.update(agent_requirements)
         allowed.add("cadrumo-agent")
-    installed = [] if dependencies is None else list(importlib.metadata.distributions(path=[str(dependencies)]))
+    installed = [] if dependencies is None else installed_distributions(dependencies)
     distributions: dict[str, str] = {
         canonicalize_name(distribution.metadata["Name"]): distribution.version for distribution in installed
     }
@@ -352,7 +377,15 @@ def _assemble_candidate(
             shutil.copytree(dependencies, packages, ignore=omit_development, copy_function=reuse.copy)
     if agent_runtime is not None:
         with timings.phase("agent-runtime-copy") if timings is not None else nullcontext():
-            stage_agent_runtime(agent_runtime, packages.parent, copy_function=reuse.copy)
+            source = agent_metadata.get("source")
+            if not isinstance(source, str):
+                raise ValueError("Agent build provenance names no source project")
+            stage_agent_runtime(
+                agent_runtime,
+                packages.parent,
+                declaration=load_runtime_declaration(Path(source)),
+                copy_function=reuse.copy,
+            )
     pruned = []
     for exclusion in [] if interpreter else contract.get("package_exclusions", []):
         matches = list(packages.glob(exclusion["pattern"]))
@@ -487,6 +520,7 @@ if __name__ == "__main__":
     parser.add_argument("--python", type=Path, required=True)
     parser.add_argument("--dependencies", type=Path, required=True)
     parser.add_argument("--agent-runtime", type=Path, required=True)
+    parser.add_argument("--agent-dependencies", type=Path, required=True)
     parser.add_argument("--build", type=require_enrolled_output, required=True)
     parser.add_argument("--destination", type=require_enrolled_output, required=True)
     parser.add_argument("--metadata", type=Path, required=True)
@@ -512,4 +546,5 @@ if __name__ == "__main__":
         development=args.development,
         target=args.target,
         agent_runtime=args.agent_runtime,
+        agent_dependencies=args.agent_dependencies,
     )
