@@ -15,7 +15,7 @@ from uuid import UUID
 
 import psutil
 
-from .caller_owned_root import AcceptanceError, Programs, require, run_cli
+from .caller_owned_root import AcceptanceError, Programs, error_code, notice_codes, require, run_cli
 
 _TAXPAYER_FACTS = (
     *("--entity-type", "natural_person", "--tax-id", "12345678Z", "--name", "Daniel", "--surnames", "Persona"),
@@ -110,6 +110,31 @@ def create_profile(programs: Programs, environment: Mapping[str, str], name: str
     )
     require(code == 0 and envelope.get("status") in {"success", "warning"}, f"profile create: {code} {envelope}")
     return Profile(name=name, password=password)
+
+
+def login_profile(programs: Programs, environment: Mapping[str, str], profile: Profile) -> bool:
+    """Sign in once through the running runtime and report native receipt persistence."""
+    code, envelope = run_cli(
+        programs,
+        environment,
+        "config",
+        "login",
+        profile.name,
+        "--secrets-stdin",
+        secret={"passphrase": profile.password},
+    )
+    require(
+        code == 0 and envelope.get("status") in {"success", "warning"},
+        f"profile login refused: exit {code}, code {error_code(envelope)}",
+    )
+    result = envelope.get("result")
+    persisted = result.get("session_persisted") if isinstance(result, dict) else None
+    require(type(persisted) is bool, "profile login omitted its persistence outcome")
+    require(
+        persisted is ("config.login.session_not_persisted" not in notice_codes(envelope)),
+        "profile login persistence disagrees with its notice codes",
+    )
+    return persisted is True
 
 
 def identify_profile(programs: Programs, environment: Mapping[str, str], profile: Profile) -> Profile:

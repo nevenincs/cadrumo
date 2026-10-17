@@ -81,6 +81,7 @@ from .proof_support import (
     acceptance_failure,
     create_profile,
     identify_profile,
+    login_profile,
     package_identity,
     started_processes,
     state_taxpayer,
@@ -464,10 +465,16 @@ async def run(package: Path, scratch: Path) -> Receipt:
     directory.mkdir()
     exchange = Exchange(directory)
     environment = consumer_environment(root, secret_store)
-    profile = create_profile(programs, environment, _PROFILE)
+    root.mkdir()
     mark_development_root(root)
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
-        receipt.record("runtime_ready", product_version=runtime.ready().get("product_version"))
+        ready = runtime.ready()
+        require(ready.get("kind") == "runtime_ready", "runtime did not announce readiness")
+        receipt.record("runtime_ready", product_version=ready.get("product_version"))
+        profile = create_profile(programs, environment, _PROFILE)
+        persisted = login_profile(programs, environment, profile)
+        receipt.record("profile_signed_in", session_persisted=persisted)
+        require(persisted, "the CLI sign-in was not persisted; the runner's independent CLI reads cannot resume it")
         profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         before = _ledger_text(programs, environment, profile)

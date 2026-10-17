@@ -675,6 +675,9 @@ verify-reviewed-operation PACKAGE *ARGS:
 verify-agent-live *ARGS:
     uv run --no-sync python -m dev.runtime_lifecycle.agent_live {{ARGS}}
 
+test-agent-service PACKAGE PROVIDER="claude":
+    uv run --no-sync pytest -v -s -n0 -m integration dev/runtime_lifecycle/tests/agent_service --lifecycle-package {{quote(PACKAGE)}} --agent-provider-cli {{quote(PROVIDER)}}
+
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is

@@ -24,8 +24,6 @@ from ..launch_environment import (
     HOSTED_ROOT_VARIABLE,
     PROGRAM_AEAT_VARIABLE,
     PROGRAM_PYTHON_VARIABLE,
-    RULES_DIRECTORY_VARIABLE,
-    SKILLS_DIRECTORY_VARIABLE,
     TOOL_SERVER_ARGUMENTS_VARIABLE,
     TOOL_SERVER_VARIABLE,
     WORKER_PORT_VARIABLE,
@@ -34,6 +32,8 @@ from ..launch_environment import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_RETIRED_INSTRUCTION_VARIABLES = frozenset({"CADRUMO_AGENT_SKILLS_DIR", "CADRUMO_AGENT_RULES_DIR"})
 
 
 def _write_package_manifest(root: Path, *, packages: str, executable: str) -> None:
@@ -307,6 +307,8 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
         GATEWAY_PORT_VARIABLE: "8080",
         "CADRUMO_AGENT_DEVELOPMENT_TOOL_SERVER": "true",
         "CADRUMO_AGENT_ENV_FILE": str(tmp_path / "agent.env"),
+        "CADRUMO_AGENT_SKILLS_DIR": str(tmp_path / "retired-skills"),
+        "CADRUMO_AGENT_RULES_DIR": str(tmp_path / "retired-rules"),
         STORAGE_ROOT.variable: str(tmp_path / "the-developers-own-root"),
     }
     environment = agent_launch_environment(
@@ -325,6 +327,7 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
     assert AGENT_SLOTS | {"CADRUMO_LOCAL_STORAGE_ROOT"} == GATEWAY_SLOTS
     assert set(environment) >= GATEWAY_SLOTS
     assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
+    assert not _RETIRED_INSTRUCTION_VARIABLES & set(environment)
     assert _RETIRED_RELAY_VARIABLE not in environment
     assert not (set(_RETIRED_PROGRAM_VARIABLES) | {_RETIRED_RELAY_VARIABLE}) & GATEWAY_SLOTS
     # The agent forwards the runtime's own root to what it starts, never the root the runtime itself received.
@@ -334,7 +337,7 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
 
 
 @pytest.mark.parametrize("platform", ["win32", "linux"])
-def test_the_advertised_programs_tool_server_directories_and_forwarded_names_are_plain_absolute_values(
+def test_the_advertised_programs_tool_server_and_forwarded_names_are_plain_absolute_values(
     tmp_path: Path, platform: str
 ) -> None:
     bin_directory = tmp_path.resolve() / "bin"
@@ -352,15 +355,7 @@ def test_the_advertised_programs_tool_server_directories_and_forwarded_names_are
     assert environment[TOOL_SERVER_VARIABLE] == str(bin_directory / "cadrumo-mcp")
     # The surface comes from the application's own definition, and the value is a JSON array of strings.
     assert json.loads(environment[TOOL_SERVER_ARGUMENTS_VARIABLE]) == ["--surface", DEFAULT_MCP_SURFACE.value]
-    for variable, name in (
-        (SKILLS_DIRECTORY_VARIABLE, "skills"),
-        (RULES_DIRECTORY_VARIABLE, "rules"),
-    ):
-        directory = Path(environment[variable])
-        assert directory.is_absolute()
-        assert directory.is_dir()
-        assert directory.parts[-4:] == ("cadrumo_harness", "_data", "agent", name)
-        assert any(directory.iterdir())
+    assert not _RETIRED_INSTRUCTION_VARIABLES & set(environment)
     for variable in (PROGRAM_AEAT_VARIABLE, PROGRAM_PYTHON_VARIABLE, TOOL_SERVER_VARIABLE):
         assert Path(environment[variable]).is_absolute()
     forwarded = environment[FORWARD_VARIABLE].split(",")

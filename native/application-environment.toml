@@ -458,7 +458,7 @@ fixed = [
 ]
 path = "package"
 
-# The agent image runs only its gateway and its worker, the four store and version
+# The agent image runs its gateway, worker and scoped tool proxy, the store and version
 # invocations that run in the gateway's environment, and its declared provider
 # catalog (see the invocation tables below). It keeps itself as the interpreter, so
 # the worker the gateway starts re-executes this image. The gateway and the worker
@@ -570,6 +570,15 @@ arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.cli.main" }, { liter
 profile = "agent-worker"
 platform = "all"
 arguments = [{ literal = "-m" }, { literal = "cadrumo_agent.worker" }]
+
+[[invocations]]
+profile = "agent-worker"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.providers._tool_bridge_stdio" },
+  { slot = "scope", kind = "revision" },
+]
 
 [[invocations]]
 profile = "agent-providers"
@@ -762,6 +771,26 @@ ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Window
 profile = "agent-worker"
 environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "49152", CADRUMO_AGENT_WORKER_PORT = "49153", CADRUMO_AGENT_GATEWAY_URL = "http://127.0.0.1:49152", CADRUMO_AGENT_WORKER_HOST = "127.0.0.1", CADRUMO_AGENT_GATEWAY_LIFETIME_ID = "lifetime", CADRUMO_AGENT_WORKER_GENERATION = "1", CADRUMO_AGENT_INTERNAL_TOKEN = "synthetic-token", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "windows-agent-tool-proxy-keeps-its-scoped-transport"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.providers._tool_bridge_stdio", "0123456789abcdef"]
+ambient = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", ANTHROPIC_API_KEY = "synthetic-not-forwarded" }
+profile = "agent-worker"
+environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-tool-proxy-keeps-its-scoped-transport"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.providers._tool_bridge_stdio", "0123456789abcdef"]
+ambient = { HOME = "/home/ada", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", OPENAI_API_KEY = "synthetic-not-forwarded" }
+profile = "agent-worker"
+environment = { HOME = "/home/ada", CADRUMO_AGENT_TOOL_BRIDGE_PORT_0123456789abcdef = "49152", CADRUMO_AGENT_TOOL_BRIDGE_AUTHORITY_0123456789abcdef = "synthetic-bridge-authority-for-vector", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]
 name = "windows-agent-image-refuses-an-undeclared-invocation"

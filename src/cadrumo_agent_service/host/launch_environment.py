@@ -11,12 +11,12 @@ and the admitted runtime's storage root, which the agent forwards to the program
 starts so that they serve the runtime's root and never resolve a default of
 their own. It also tells the agent, in plain variables, what Cadrumo supplies:
 the programs the agent may run, the tool server it may mount with its
-arguments, the directories of Cadrumo's skills and rules, and the
-names it forwards. The agent reads those variables; Cadrumo keeps no list of the
-agent's providers or lanes, and the agent reads each tool's trust from the tool
-server's own declarations. In a package the agent image's host defines the rest
-of the gateway's environment, its search path included, from the image's launch
-profile.
+arguments, and the names it forwards. Skills and rules ship with the agent
+image; the service does not override their locations. The agent reads the
+supplied variables; Cadrumo keeps no list of the agent's providers or lanes,
+and the agent reads each tool's trust from the tool server's own declarations.
+In a package the agent image's host defines the rest of the gateway's
+environment, its search path included, from the image's launch profile.
 """
 
 from __future__ import annotations
@@ -24,7 +24,6 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Mapping
-from importlib import resources
 from pathlib import Path
 from typing import Final
 
@@ -58,10 +57,6 @@ TOOL_SERVER_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_CADRUMO"
 """The absolute path of the ``cadrumo-mcp`` tool server the agent may mount."""
 TOOL_SERVER_ARGUMENTS_VARIABLE: Final = "CADRUMO_AGENT_TOOL_SERVER_ARGS_CADRUMO"
 """The JSON array of arguments the agent gives that tool server."""
-SKILLS_DIRECTORY_VARIABLE: Final = "CADRUMO_AGENT_SKILLS_DIR"
-"""The directory of Cadrumo's agent skills."""
-RULES_DIRECTORY_VARIABLE: Final = "CADRUMO_AGENT_RULES_DIR"
-"""The directory of Cadrumo's agent rules."""
 FORWARD_VARIABLE: Final = "CADRUMO_AGENT_FORWARD"
 """The comma-separated names the agent forwards to the tool servers and programs it starts."""
 ADVERTISED_VARIABLES: Final = frozenset(
@@ -70,20 +65,10 @@ ADVERTISED_VARIABLES: Final = frozenset(
         PROGRAM_PYTHON_VARIABLE,
         TOOL_SERVER_VARIABLE,
         TOOL_SERVER_ARGUMENTS_VARIABLE,
-        SKILLS_DIRECTORY_VARIABLE,
-        RULES_DIRECTORY_VARIABLE,
         FORWARD_VARIABLE,
     }
 )
 """What the service advertises to the gateway under the agent's prefix."""
-
-_AGENT_DATA: Final = ("_data", "agent")
-
-
-def _agent_data_directory(name: str) -> Path:
-    """Return the absolute directory of the harness's packaged agent material ``name``."""
-    root = resources.files("cadrumo_harness")
-    return Path(str(root.joinpath(*_AGENT_DATA, name))).resolve()
 
 
 # Values the operating system and the interpreter need to run at all. None of
@@ -248,7 +233,5 @@ def agent_launch_environment(
         environment[PROGRAM_PYTHON_VARIABLE] = str(python)
     environment[TOOL_SERVER_VARIABLE] = str(relay)
     environment[TOOL_SERVER_ARGUMENTS_VARIABLE] = json.dumps(["--surface", DEFAULT_MCP_SURFACE.value])
-    environment[SKILLS_DIRECTORY_VARIABLE] = str(_agent_data_directory("skills"))
-    environment[RULES_DIRECTORY_VARIABLE] = str(_agent_data_directory("rules"))
     environment[FORWARD_VARIABLE] = ",".join([STORAGE_ROOT.variable])
     return environment

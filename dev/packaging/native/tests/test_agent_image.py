@@ -15,7 +15,15 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..application_environment import DECLARATION, ApplicationEnvironmentError, compile_section, load_for_build, parse
+from ..application_environment import (
+    DECLARATION,
+    ApplicationEnvironmentError,
+    LaunchRefusedError,
+    compile_section,
+    load_for_build,
+    parse,
+    reference_select,
+)
 from ..generate import generate
 from ..layout import bundled_image_files, bundled_images, load_layout
 
@@ -78,6 +86,13 @@ _INVOCATIONS = [
     ),
     ("agent-gateway", _literals(*_MODULE, "version", "--json")),
     ("agent-worker", _literals("-m", "cadrumo_agent.worker")),
+    (
+        "agent-worker",
+        [
+            *_literals("-m", "cadrumo_agent.providers._tool_bridge_stdio"),
+            {"slot": "scope", "kind": "revision", "minimum": 0},
+        ],
+    ),
     ("agent-providers", _literals(*_MODULE, "providers", "--declared", "--json")),
     (
         "agent-auth",
@@ -85,6 +100,33 @@ _INVOCATIONS = [
     ),
     ("agent-providers", _literals(*_MODULE, "auth", "providers", "--json")),
 ]
+
+
+@pytest.mark.parametrize("family", ["windows", "posix"])
+def test_worker_tool_proxy_uses_the_worker_launch_profile(family: str) -> None:
+    declaration = load_for_build(REPO_ROOT)
+    assert (
+        reference_select(
+            declaration,
+            family,
+            _AGENT,
+            ["-m", "cadrumo_agent.providers._tool_bridge_stdio", "0123456789abcdef"],
+        )
+        == "agent-worker"
+    )
+
+
+@pytest.mark.parametrize("family", ["windows", "posix"])
+@pytest.mark.parametrize("suffix", [[], ["--scope"], ["../scope"], ["scope", "extra"]])
+def test_worker_tool_proxy_refuses_missing_unsafe_or_extra_arguments(family: str, suffix: list[str]) -> None:
+    with pytest.raises(LaunchRefusedError) as refused:
+        reference_select(
+            load_for_build(REPO_ROOT),
+            family,
+            _AGENT,
+            ["-m", "cadrumo_agent.providers._tool_bridge_stdio", *suffix],
+        )
+    assert (refused.value.code, refused.value.subject) == ("invocation_undeclared", _AGENT)
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])

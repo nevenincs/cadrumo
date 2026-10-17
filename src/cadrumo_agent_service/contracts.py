@@ -16,7 +16,15 @@ class HostedCertificationStatus(BaseModel):
 
     provider: ProviderId = Field(validation_alias="provider_id")
     transport: Literal["api", "cli"]
-    execution_mode: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
+    execution_mode: Annotated[
+        str,
+        StringConstraints(
+            strip_whitespace=True,
+            min_length=1,
+            max_length=512,
+            pattern=r"^[^\x00-\x1f\x7f]+$",
+        ),
+    ]
     status: Literal["unknown", "pending", "proven"] = Field(default="unknown", validation_alias="hosted_certification")
 
 

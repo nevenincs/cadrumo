@@ -59,8 +59,12 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
 
 
 @pytest.mark.parametrize("certification", ["pending", "proven"])
+@pytest.mark.parametrize("execution_mode", ["example-cli", "claude-agent-acp:node"])
 def test_status_projects_only_valid_certification_from_the_current_served_catalog(
-    certification: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    certification: str,
+    execution_mode: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     service = _service(tmp_path, monkeypatch)
     controller = _Controller(ready=_ready())
@@ -74,7 +78,7 @@ def test_status_projects_only_valid_certification_from_the_current_served_catalo
                 {
                     "provider_id": "example",
                     "transport": "cli",
-                    "execution_mode": "example-cli",
+                    "execution_mode": execution_mode,
                     "hosted_certification": certification,
                     "private_catalog_detail": "must-not-be-projected",
                 }
@@ -98,7 +102,7 @@ def test_status_projects_only_valid_certification_from_the_current_served_catalo
             {
                 "provider": "example",
                 "transport": "cli",
-                "execution_mode": "example-cli",
+                "execution_mode": execution_mode,
                 "status": certification,
             }
         ],
@@ -263,6 +267,8 @@ def test_live_certification_does_not_hide_provider_status_catalog_refusal(
             {"provider_id": "example", "transport": "cli", "execution_mode": "example-cli"},
         ],
         [{"provider_id": "example", "transport": "cli", "execution_mode": "example-cli"}] * 65,
+        [{"provider_id": "example", "transport": "cli", "execution_mode": "a" * 513}],
+        [{"provider_id": "example", "transport": "cli", "execution_mode": "invalid\x00mode"}],
     ],
 )
 def test_malformed_duplicate_or_oversized_hosted_catalog_fails_closed(

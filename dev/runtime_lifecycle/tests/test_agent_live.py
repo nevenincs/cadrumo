@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def test_driver_owner_start_identity_is_stable_and_fails_closed() -> None:
     identity = _driver_process_start_identity(os.getpid())
     if sys.platform == "win32" or sys.platform.startswith("linux"):
-        assert identity
+        assert identity is not None and identity != ""
         assert _driver_process_start_identity(os.getpid()) == identity
     else:
         assert identity is None
@@ -131,7 +131,7 @@ def test_a_document_is_read_whole_absent_or_refused(tmp_path: Path) -> None:
         read_document(path)
 
 
-def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_session() -> None:
+def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_session(tmp_path: Path) -> None:
     profile_id = "250e54c8-ce41-4d97-82d2-dc47e9487d5f"
     profile = Profile(
         "agent-live-acceptance",
@@ -150,8 +150,8 @@ def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_sess
     evidence = _driver_profile_evidence(
         profile,
         session,
-        storage_root=Path("/tmp/agent-live-proof/storage"),
-        secret_store=Path("/tmp/agent-live-proof/secrets"),
+        storage_root=tmp_path / "storage",
+        secret_store=tmp_path / "secrets",
         relay=Path("/package/bin/cadrumo-mcp"),
         scenario={"taxpayer": "Synthetic taxpayer"},
         owner_pid=123,
@@ -167,7 +167,7 @@ def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_sess
     assert "password" not in evidence and "not-exported-passphrase" not in repr(evidence)
 
 
-def test_driver_profile_evidence_refuses_more_than_the_exact_synthetic_profile() -> None:
+def test_driver_profile_evidence_refuses_more_than_the_exact_synthetic_profile(tmp_path: Path) -> None:
     profile_id = "250e54c8-ce41-4d97-82d2-dc47e9487d5f"
     profile = Profile(
         "agent-live-acceptance",
@@ -187,8 +187,8 @@ def test_driver_profile_evidence_refuses_more_than_the_exact_synthetic_profile()
                 "runtime_boot_id": "9428607c-b8c6-4fcd-a52c-c916fd364d8f",
                 "connection_id": "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f",
             },
-            storage_root=Path("/tmp/agent-live-proof/storage"),
-            secret_store=Path("/tmp/agent-live-proof/secrets"),
+            storage_root=tmp_path / "storage",
+            secret_store=tmp_path / "secrets",
             relay=Path("/package/bin/cadrumo-mcp"),
             scenario={"taxpayer": "Synthetic taxpayer"},
             owner_pid=123,
