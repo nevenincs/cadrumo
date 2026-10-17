@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:01e140882a5dcc3923edbbe9822843bee44f4e9fc19d2259a5527c4a321d52c6'
+body_hash: 'sha256:1e97456cec95b64dd21bd11a2216c45faf464aa9eac32c41ca43aba206f8d61c'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
@@ -73,6 +73,12 @@ The re-review of `c8ab950631`, `6ef45e9c73` and `ae86f24325` passed. It traced t
 An error that is not an `Exception` ends the reporting thread and loses the batch it took (`src/cadrumo_runtime/host/operation_progress_reporter.py:66-75`); that loss is what makes the replacement threads end with the backlog. The constraint now states this exception, so the record matches the code. Only a non-`Exception` out of the worker authorization client reaches it.
 
 status-cue-publisher-proof-is-a-bare-pid is fixed: the status record carries the publisher's creation stamp in schema 2, and an observer counts a publisher only when the named pid is running with that stamp (`native/manager/src/session/status_cue.rs:113-122`). A schema 1 record, a reused pid and an unknown version all read as no publisher, so the desktop keeps its one-second fallback. Both status_cue tests and the desktop host's status-change tests pass in `manager.rust`, with `manager.supervision` and the clippy check also green.
+
+## Observed during S06
+
+### kdf-calibration-timeout-at-clean-exit-logged-as-error | low | A calibration sample that runs out its budget is logged as a failed operation when the timeout lands in its clean-exit wait
+
+One Release `concurrent_sessions_probe` run at `d2db5f6e1d` failed only `no_error_records`, on a `kdf_worker_lifecycle` event with `kdf_operation` `calibrate-v1`, `stage` `clean_exit`, `error_type` `TimeoutError`, `exit_code` 0, 2.06 s elapsed and `outcome` `failed` (`build/acceptance/cadrumo-concurrent-uzk6oa9m`). An over-budget calibration sample is an expected rejection, logged at DEBUG as `sample_rejected`, but only when the timeout lands in `result_wait` (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py:340-347`). When the result arrives just inside the budget, the clean-exit wait gets none and the same rejection is logged at ERROR. The next run passed every check. This is outside the operation cues; the custody KDF owner should decide whether a calibration sample's clean-exit timeout is also a rejected sample.
 
 ## Recommendations
 
