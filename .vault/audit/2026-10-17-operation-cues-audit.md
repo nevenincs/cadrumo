@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc844ad1060bbbf964d6c617f50c5e18714327c1a1ecf9eeb956c1efa9408bc2'
+body_hash: 'sha256:782e829fd07f1b44cd423e44ccd67c941fde6cf1f57eb294dd4a7b2538b7f44c'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
@@ -59,6 +59,10 @@ The ADR Implementation (`.vault/adr/2026-10-17-idle-churn-operation-observation-
 ### attendance-cue-withheld-on-expiry | low | The answered cue is not sent when an ask expires, which couples two unwritten constants
 
 An expired ask cues holders only (`src/cadrumo_runtime/host/profile_connection_attendance.py:291-296`). This is harmless while an ask lives 120 s and the harness waits 90 s, but nothing states that the second must stay below the first.
+
+### Resolutions at plan close
+
+reporter-thread-not-replaced is fixed: a reporting thread that ends for any reason clears its record and starts a replacement while work is pending (`src/cadrumo_runtime/host/operation_progress_reporter.py:61-73`), and `test_a_reporting_thread_ended_by_an_escaping_error_is_replaced` fails against the previous reporter. records-describe-a-cue-and-pace-the-code-does-not-have is fixed: the ADR Implementation names `attendance_answered`, and the S05 and S08 rows and a ledger note match the code. modal-waits-unbounded-on-a-dropped-report needs the operator's ruling on which constraint to amend and stays open. attendance-cue-withheld-on-expiry and status-cue-publisher-proof-is-a-bare-pid stay open until a fix is verified.
 
 ## Recommendations
 

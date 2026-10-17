@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7b57718bc5fb976fbd68dd805a988cdad4f24b6e3caa88ba60aece102cb8d08'
+body_hash: 'sha256:c7edffa46864d3cede3947d5e0ec67b155312d6c21374a3b2a8a31016c20cb1a'
 related:
   - "[[2026-10-16-idle-churn-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -49,7 +49,7 @@ We will make every client wait for operation progress through an `operation_chan
 
 - **Worker.** The routed operation persistence calls a commit observer after each successful `commit` and `commit_settlement`. The worker's operation host collects the reported ids, and one sender delivers them as a single batched `operations_advanced` request on the authorization endpoint.
 - **Runtime.** Each `OperationObserve` reply that is not terminal records a watch for that connection, session and operation; a terminal reply or a disconnect removes it. The authorization server hands each report to the profile's connections, which publish `operation_changed` to every connection watching a named operation.
-- **Client.** `FrontendClient` gains a subscription for the cue, and a lost connection wakes it as well. The CLI runner, the settlement helper, the TUI controller and modal, and the other observation loops arm before each observation and wait on the cue or their deadline. The MCP attendance wait does the same with `attendance_changed`, which already exists.
+- **Client.** `FrontendClient` gains a subscription for the cue, and a lost connection wakes it as well. The CLI runner, the settlement helper, the TUI controller and modal, and the other observation loops arm before each observation and wait on the cue or their deadline. The MCP attendance wait does the same with an `attendance_answered` cue, which the runtime publishes to the asking connection when its ask is decided or withdrawn; `attendance_changed` cues the profile's holders, not the asker. (Corrected 2026-10-17 at plan close; it named `attendance_changed`, as the attendance wait's hypothesis below allowed to change.)
 
 Hypotheses that may change within the constraints: the request and cue names; the batch bound; whether watches are keyed by connection or by operation; whether the attendance wait needs any runtime change.
 

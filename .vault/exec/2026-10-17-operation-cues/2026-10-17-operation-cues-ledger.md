@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a965f80a84bde7ec365f8385082a98e731eb2578cc35ba2ada374a82f5eda2e'
+body_hash: 'sha256:4ee8e692c96d798f9526a273c11295edca9bb202b8de242d1884c69942b5cadb'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -134,6 +134,8 @@ related:
 - `S01` `verify:` `ruff check, ruff format --check, ty check on the reporter and its test` -> `pass`
 - `S01` `verify:` `dev.quality.types diagnostics in the reporter (none)` -> `pass`
 - `S01` `by:` `tui-41 (took over from CADRUMO-BUILD-DEBUG)`
+- `S08` `M` `.vault/plan/2026-10-17-operation-cues-plan.md`
+- `S08` `M` `.vault/adr/2026-10-17-idle-churn-operation-observation-adr.md`
 
 ## Notes
 
@@ -142,3 +144,5 @@ related:
 - `S04` The wide run's pre-existing failures were fixed separately in d07ae808aa (resolution-cost child import, environment reference conformance); the portable fixture's stale `_lapsed` field is fixed in this Step's commit.
 - `S08` Partial: the desktop host's 1 s external-owner pace remains. It mirrors the external manager's status, and the manager IPC has no change signal; removing it needs a status-wait in the manager protocol, pending the user's decision.
 - `S01` Plan-close review finding reporter-thread-not-replaced, fixed after S01 closed; the medium finding modal-waits-unbounded-on-a-dropped-report stays open for the operator's decision.
+- `S08` The earlier S08 note that the 1 s external-owner pace remains is superseded by ac366af11f: a publishing manager now cues the desktop, and the pace stays only as the fallback the ADR's third amendment keeps.
+- `S08` Correction to the previous S08 note: the fallback pace is kept by the ADR's second amendment ("ok add it"), not a third.

@@ -8,7 +8,7 @@ related:
   - '[[2026-10-17-idle-churn-operation-observation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:f0df3d6177013d8e61338445fc56cf8dc1fd7ba9dc8a53b6f181eaf1b0948091'
+body_hash: 'sha256:f0e45a7e1541f8e2be7959a92e26a62855d03c2b6a0f6dde6344fe027d8eac59'
 ---
 
 <!-- RETIRED: S07 -->
@@ -29,9 +29,9 @@ The governing decision is `2026-10-17-idle-churn-operation-observation-adr`, whi
 - [x] `S02` - Record watches from non-terminal observations and publish operation_changed to the watching connections when a worker report names their operation; `src/cadrumo_client/contracts/session_events.py, src/cadrumo_runtime/host/session_events.py, src/cadrumo_runtime/adapters/worker_authorization.py, src/cadrumo_runtime/host/profile_connection_operations.py`.
 - [x] `S03` - Wait on the operation_changed cue or the deadline in the client settlement helpers and the CLI runner instead of fixed intervals; `src/cadrumo_client/transport/frontend_client.py, src/cadrumo_client/transport/operation_settlement.py, src/cadrumo_client/commands/registered_operation_observations.py`.
 - [x] `S04` - Move the remaining client and TUI observation loops onto the cue; `src/cadrumo_client/transport/operation_controller.py, src/cadrumo/entrypoints/tui/operations/modal.py, src/cadrumo/entrypoints/tui/google_saved_review.py, src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py, the other OperationObserve poll sites`.
-- [x] `S05` - Wait for the person's attendance decision on attendance_changed in the MCP harness; `src/cadrumo_harness/mcp/runtime_admission.py`.
+- [x] `S05` - Wait for the person's attendance decision in the MCP harness on an attendance_answered cue the runtime publishes to the asking connection; `src/cadrumo_harness/mcp/runtime_admission.py, src/cadrumo_runtime/host/profile_connection_attendance.py`.
 - [ ] `S06` - Rebuild both stages and prove concurrent sign-in, backend calls and a live operation settle on the cue; `build/windows-x64/stage, dev/runtime_lifecycle`.
-- [x] `S08` - Wake the installed manager and an observing desktop on installation and ownership events instead of the 2 s installation watch, the 30 s discovery deadline and the 1 s external-owner pace; `native/manager/src/installation_watch.rs, native/manager/src/cutover_coordinator.rs, native/manager/src/desktop_host.rs, native/manager/src/background.rs, native/platform/src/file_changes.rs`.
+- [x] `S08` - Wake the installed manager and an observing desktop on installation and ownership events instead of the 2 s installation watch and the 30 s discovery deadline, and on a publishing manager's status changes instead of the 1 s external-owner pace, which stays the fallback for a manager that does not publish; `native/manager/src/installation_watch.rs, native/manager/src/cutover_coordinator.rs, native/manager/src/desktop_host.rs, native/manager/src/background.rs, native/manager/src/session/status_cue.rs, native/platform/src/file_changes.rs`.
 
 ## Parallelization
 
