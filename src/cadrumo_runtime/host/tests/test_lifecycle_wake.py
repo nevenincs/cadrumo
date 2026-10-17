@@ -6,7 +6,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from threading import Event
+from threading import Event, Thread
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -156,6 +156,56 @@ def test_a_pass_whose_profile_checks_observe_the_logins_again_owes_no_further_pa
     due = profiles.lifecycle_due_in()
     # The repeat observations inside the sweep's rate limit saw nothing new, so the next pass is the profile's lapse.
     assert due is not None and 59 < due <= 60
+
+
+def test_a_reported_session_change_never_waits_on_the_runtime_guard(tmp_path: Path) -> None:
+    profiles = _runtime(tmp_path, _Login())
+    profiles.session_changes_pushed(True)
+    profiles.poll()
+    held, release = Event(), Event()
+
+    def hold_the_guard() -> None:
+        with profiles._guard:
+            held.set()
+            release.wait(5)
+
+    holder = Thread(target=hold_the_guard)
+    holder.start()
+    assert held.wait(5)
+    try:
+        reported = Thread(target=profiles.os_session_changed)
+        reported.start()
+        reported.join(1)
+        # Windows calls this from its window procedure while long work may hold the guard.
+        assert not reported.is_alive(), "a session change report waited on the runtime guard"
+    finally:
+        release.set()
+        holder.join(5)
+    assert profiles.lifecycle_wake.is_set()
+
+
+def test_two_observations_at_once_run_one_sign_in_sweep(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    profiles = _runtime(tmp_path, _Login())
+    entered, release, sweeps = Event(), Event(), []
+
+    def sweep(logins: tuple[OsLoginContext, ...], *, complete: bool, include_hosted: bool) -> None:
+        sweeps.append(logins)
+        entered.set()
+        release.wait(5)
+
+    monkeypatch.setattr(profiles, "_sweep_sign_ins", sweep)
+    first = Thread(target=profiles._login_contexts)
+    first.start()
+    assert entered.wait(5)
+    try:
+        # A request's revalidation observes the logins while the pass's sweep is still running.
+        second = Thread(target=profiles._login_contexts)
+        second.start()
+        second.join(2)
+    finally:
+        release.set()
+        first.join(5)
+    assert len(sweeps) == 1
 
 
 def test_a_login_change_the_sweep_rate_limit_held_back_is_swept_once_the_limit_passes(tmp_path: Path) -> None:

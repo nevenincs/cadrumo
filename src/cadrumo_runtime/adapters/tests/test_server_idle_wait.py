@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Event
-from typing import cast
+from typing import cast, override
 from uuid import uuid4
 
 import pytest
@@ -184,5 +184,55 @@ def test_an_idle_accept_loop_parks_until_a_lifecycle_wake_and_reports_no_tick_ag
             stop.set()
             serving.result(timeout=10)
             assert time.monotonic() - stopping < server.DRAIN_SECONDS / 3
+        finally:
+            stop.set()
+
+
+class _Overstaying(_Listener):
+    """The real endpoint behind a wait that outlives the deadline it was given, as a lost wake would."""
+
+    def __init__(self, endpoint: WindowsEndpoint, stop: Event) -> None:
+        super().__init__(endpoint)
+        self.stop = stop
+        self.overstaying = Event()
+
+    @override
+    def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
+        if timeout is not None:
+            self.overstaying.set()
+            self.stop.wait(timeout + 2.0)
+        return super().accept(timeout=timeout, wakes=wakes)
+
+
+def test_a_park_that_outlives_its_deadline_reports_the_overrun_as_tick_age(tmp_path: Path) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsEndpoint(storage_root=root)
+    stop, boot = Event(), uuid4()
+    listener = _Overstaying(endpoint, stop)
+    login = _Login()
+    # Nothing reports this login's changes, so each wait is given the next interval as its deadline.
+    profiles = RuntimeProfileConnections(
+        storage_root=root,
+        storage_identity=endpoint.storage_identity,
+        runtime_boot_id=boot,
+        stop=stop,
+        service_descriptors=(),
+        login_inventory=lambda: LoginInventory(logins=(cast(LoginEvidence, login),), complete=True),
+    )
+    server = RetainedRuntimeTransportServer(
+        listener, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+    )
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        serving = pool.submit(server.serve)
+        try:
+            assert server.ready.wait(3)
+            assert listener.overstaying.wait(3)
+            time.sleep(1.2)
+            age = server.accept_tick_age()
+            # The deadline was at most one interval away, so most of the sleep is overrun.
+            assert age is not None and age > 0.5, "a wait past its own deadline is not a loop at rest"
+            stop.set()
+            serving.result(timeout=10)
         finally:
             stop.set()

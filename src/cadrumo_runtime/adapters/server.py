@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 from concurrent.futures import Future, ThreadPoolExecutor, wait
 from threading import BoundedSemaphore, Event, RLock, Thread
@@ -90,20 +91,26 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
         self._requests: set[Future[None]] = set()
         self._drain_guard = RLock()
         self._accept_tick: float | None = None
-        # Waiting for a connection or a wake is the loop at rest, not a loop that is stuck.
-        self._accept_parked = False
+        # While the loop waits, the instant that wait was due to end; ``inf``
+        # when only a connection or a wake ends it. The loop at rest is not stuck.
+        self._parked_until: float | None = None
 
     def accept_tick_age(self) -> float | None:
         """Return seconds since the accept loop last turned, or ``None`` before it first ran.
 
         Each turn runs a lifecycle pass when one is due, then waits for a
         connection, a wake or the next due pass. That wait is the loop at rest
-        and counts as no age, so a growing age means the loop is blocked elsewhere.
+        and counts as no age until the deadline it was given passes, so a
+        growing age means the loop is blocked elsewhere or its wait outlived
+        that deadline.
         """
         tick = self._accept_tick
         if tick is None:
             return None
-        return 0.0 if self._accept_parked else max(0.0, time.monotonic() - tick)
+        parked_until = self._parked_until
+        if parked_until is not None:
+            return max(0.0, time.monotonic() - parked_until)
+        return max(0.0, time.monotonic() - tick)
 
     def open_connection_count(self) -> int:
         """Return the number of accepted verified connections not yet closed."""
@@ -235,7 +242,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             due, wakes = None, (self._stopping,)
             if self.profiles is not None:
                 due, wakes = self.profiles.lifecycle_due_in(), (self._stopping, self.profiles.lifecycle_wake)
-            self._accept_parked = True
+            self._parked_until = math.inf if due is None else time.monotonic() + due
             try:
                 channel = self.listener.accept(timeout=due, wakes=wakes)
             except RefusalError as error:
@@ -246,7 +253,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                 self._retain_channel_cleanup(error)
                 raise
             finally:
-                self._accept_parked = False
+                self._parked_until = None
             channel_owner = self._channel_owner(channel)
             if self.stop.is_set() or not self._slots.acquire(blocking=False):
                 self._close_owned_channel(channel_owner)

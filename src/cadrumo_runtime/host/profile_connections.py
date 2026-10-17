@@ -165,7 +165,8 @@ class RuntimeProfileConnections(
         # that could not finish is owed; never on a timer while nothing changes.
         self._lifecycle = NativeWake()
         self._lifecycle_owed: float | None = None
-        self._lifecycle_called = False
+        # Set from the OS session-change callback, which must not wait on this runtime's guard.
+        self._session_change = Event()
         # Each profile's next lapse, as the last pass found it; reading it takes no profile guard.
         self._host_dues: dict[UUID, float] = {}
         self._session_changes_pushed = False
@@ -325,17 +326,22 @@ class RuntimeProfileConnections(
         if logins_moved:
             self._sign_in_changed()
         eligible = any(login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed)
+        # Request threads observe the logins too: one decides under the guard, claiming the sweep it runs.
         with self._guard:
             sweep = (logins_seen, inventory.complete, frozenset(self._profiles) if eligible else frozenset())
-        instant = time.monotonic()
-        if not eligible or instant - self._last_sign_in_sweep >= 1.0:
-            self._sweep_sign_ins(observed, complete=inventory.complete, include_hosted=not eligible)
-            self._last_sign_in_sweep, self._swept = instant, sweep
-        elif sweep != self._swept:
+            instant = time.monotonic()
+            sweeping = not eligible or instant - self._last_sign_in_sweep >= 1.0
             # A pass observes logins again through each profile's checks: only
             # a change the rate limit held back is swept later, or each pass
             # would owe the next one forever.
-            self._owe_lifecycle_pass(self._last_sign_in_sweep + 1.0)
+            held_back = not sweeping and sweep != self._swept
+            if sweeping:
+                self._last_sign_in_sweep, self._swept = instant, sweep
+            last_sweep = self._last_sign_in_sweep
+        if sweeping:
+            self._sweep_sign_ins(observed, complete=inventory.complete, include_hosted=not eligible)
+        elif held_back:
+            self._owe_lifecycle_pass(last_sweep + 1.0)
         # A logon without a lock surface, or one in an unknown state, changes with no session notification.
         self._unreported_logins = any(
             login.lock_state in (OsLockState.NOT_APPLICABLE, OsLockState.UNKNOWN) for login in observed
@@ -487,8 +493,10 @@ class RuntimeProfileConnections(
         """Run a lifecycle pass when one is called for or due, never racing custody containment or shutdown."""
         # Cleared first, so a change during this pass calls for another.
         self._lifecycle.clear()
-        with self._guard:
-            called, self._lifecycle_called = self._lifecycle_called, False
+        called = self._session_change.is_set()
+        if called:
+            # A change reported after this still falls before the pass, which observes it.
+            self._session_change.clear()
         due = self._lifecycle_due()
         if not called and (due is None or time.monotonic() < due):
             # Woken only to decide the wait again: no pass is due yet.
@@ -517,9 +525,12 @@ class RuntimeProfileConnections(
         self._lifecycle.set()
 
     def os_session_changed(self) -> None:
-        """Call for a pass now: the OS reported a logon, logoff, lock, unlock, connect or disconnect."""
-        with self._guard:
-            self._lifecycle_called = True
+        """Call for a pass now: the OS reported a logon, logoff, lock, unlock, connect or disconnect.
+
+        This runs in the window procedure Windows calls, so it takes no lock
+        another thread may hold through long work.
+        """
+        self._session_change.set()
         self._lifecycle.set()
 
     def session_changes_pushed(self, pushed: bool) -> None:
