@@ -20,8 +20,12 @@ from ..adapters.worker_arguments import validated_worker_arguments
 class _ParentPoll(Protocol):
     """Kernel exit events consumed by the Linux guardian."""
 
-    def poll(self, timeout: int, /) -> list[tuple[int, int]]:
-        """Read pending parent exit events within the bounded wait."""
+    def register(self, fd: int, eventmask: int = ..., /) -> None:
+        """Add one process handle whose exit ends the wait."""
+        ...
+
+    def poll(self, timeout: int | None = ..., /) -> list[tuple[int, int]]:
+        """Read pending exit events, waiting without bound when ``timeout`` is None."""
         ...
 
 
@@ -98,13 +102,26 @@ def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes]
         return None
 
 
-def _watch_worker(watcher: _ParentPoll, worker: subprocess.Popen[bytes]) -> int:
-    while True:
-        if watcher.poll(200):
-            return 2
-        code = worker.poll()
-        if code is not None:
-            return code
+def _watch_worker(watcher: _ParentPoll, parent: int, worker: subprocess.Popen[bytes]) -> int:
+    # The unreaped worker's pid cannot be reused, so its pidfd names exactly it;
+    # both exits then arrive as kernel events. Without one, its exit is polled.
+    try:
+        descriptor: int | None = open_linux_pidfd(worker.pid)
+    except RefusalError:
+        descriptor = None
+    try:
+        if descriptor is not None:
+            watcher.register(descriptor, select.POLLIN | select.POLLERR | select.POLLHUP)
+        while True:
+            events = watcher.poll(None if descriptor is not None else 200)
+            if any(ready == parent for ready, _ in events):
+                return 2
+            code = worker.poll()
+            if code is not None:
+                return code
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def _run_linux_guardian(options: argparse.Namespace) -> int:
@@ -124,7 +141,7 @@ def _run_linux_guardian(options: argparse.Namespace) -> int:
         if not _is_same_parent(options, parent, watcher):
             return 2
         worker = _launch_worker(worker_arguments)
-        return 2 if worker is None else _watch_worker(watcher, worker)
+        return 2 if worker is None else _watch_worker(watcher, descriptor, worker)
     finally:
         os.close(descriptor)
 

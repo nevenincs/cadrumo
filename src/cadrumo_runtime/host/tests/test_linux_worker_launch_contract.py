@@ -178,19 +178,29 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
 
     def pidfd(pid: int) -> int:
         opened.append(pid)
-        return 51
+        return {41: 51, 61: 52}[pid]
+
+    registered: list[int] = []
+    unbounded_waits: list[None] = []
 
     class Poller:
         def register(self, descriptor: int, flags: int) -> None:
-            assert descriptor == 51 and flags == 7
+            assert flags == 7
+            registered.append(descriptor)
 
-        def poll(self, timeout: int) -> list[tuple[int, int]]:
-            assert timeout in {0, 200}
+        def poll(self, timeout: int | None = None) -> list[tuple[int, int]]:
+            if timeout is None:
+                # The worker's exit is the event that ends the wait; nothing polls on a timer.
+                unbounded_waits.append(timeout)
+                return [(52, 1)]
+            assert timeout == 0
             return []
 
     class Child:
-        def poll(self) -> int:
-            return 7
+        pid = 61
+
+        def poll(self) -> int | None:
+            return 7 if unbounded_waits else None
 
     def launch(
         arguments: tuple[str, ...],
@@ -228,7 +238,9 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
         linux_worker_guardian.run(["--parent-pid", "41", "--parent-start", "start-41", *selection, "--", *command]) == 7
     )
     assert launched == [(sys.executable, *command)]
-    assert closed == [51]
+    assert registered == [51, 52] and opened == [41, 61]
+    assert unbounded_waits == [None]
+    assert closed == [52, 51]
 
 
 def test_guardian_forwards_only_storage_controls_to_the_contained_worker(monkeypatch: pytest.MonkeyPatch) -> None:
