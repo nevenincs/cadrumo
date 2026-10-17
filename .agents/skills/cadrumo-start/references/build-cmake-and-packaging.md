@@ -22,5 +22,5 @@ Scoped observations needing current-code checks: the two Linux presets set no to
 - A configured directory cannot change target ([target](../../../../native/cmake/Identity.cmake#L27)).
 - Every build output needs a declared CMake owner, path and generating target; undeclared generation is a build defect, and PowerShell only transports Windows acceptance to a disposable guest ([outputs](../../../../native/CONTRACT.md#L671), [PowerShell](../../../../native/CONTRACT.md#L678)).
 - No concurrent builds or cleanup in one binary directory; build before `cmake --install` ([contract](../../../../native/CONTRACT.md#L819)).
-- Registry or compiler edits do not republish authority; use `registry_authority_rebuild` or `just registry-publish-authority` ([contract](../../../../native/CONTRACT.md#L836)).
+- Native builds only validate authority and refuse a missing or stale publication; after registry or compiler edits run `just registry-publish-authority` before building ([contract](../../../../native/CONTRACT.md#L930)).
 - `CADRUMO_CONFIGURE_PAYLOAD=OFF` yields no bundle, installer or package result ([contract](../../../../native/CONTRACT.md#L32)).
