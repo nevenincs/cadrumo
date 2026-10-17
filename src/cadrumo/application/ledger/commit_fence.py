@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import queue
 import threading
 from collections.abc import Callable, Iterable
@@ -64,6 +65,7 @@ class LedgerCommitAttemptTracker:
         self._confirmed_write = False
         self._uncertain_write = False
         self._closed = False
+        self._queued_listener: Callable[[], None] | None = None
 
     @property
     def attempt_count(self) -> int:
@@ -89,6 +91,11 @@ class LedgerCommitAttemptTracker:
         with self._lock:
             return self._uncertain_write or self._confirmed_write
 
+    def listen_for_queued(self, listener: Callable[[], None] | None) -> None:
+        """Call ``listener`` from the writer's thread whenever an attempt is queued."""
+        with self._lock:
+            self._queued_listener = listener
+
     def next_attempt(self) -> _WriterAttempt | None:
         """Take the next call awaiting commit authority, if one is queued."""
         try:
@@ -109,10 +116,13 @@ class LedgerCommitAttemptTracker:
         with self._lock:
             self._attempt_count += 1
             closed = self._closed
+            listener = self._queued_listener
             if not closed:
                 self._pending.put(attempt)
         if closed:
             attempt.refuse()
+        elif listener is not None:
+            listener()
         if not attempt.wait_for_authority():
             attempt.finished.set()
             raise InternalInvariantError("ledger writer was not authorized by its operation fence")
@@ -305,10 +315,22 @@ async def run_with_ledger_commit_fence[ResultT](
     prior_commit: bool = False,
 ) -> ResultT:
     """Run canonical work, fencing only the concrete persistence calls it reaches."""
+    loop = asyncio.get_running_loop()
+    queued = asyncio.Event()
+
+    def wake() -> None:
+        # The fence may already have left the loop; nothing then waits for this.
+        with contextlib.suppress(RuntimeError):
+            loop.call_soon_threadsafe(queued.set)
+
+    tracker.listen_for_queued(wake)
     worker = asyncio.create_task(asyncio.to_thread(work), name=task_name)
     active_attempt: _WriterAttempt | None = None
     try:
         while True:
+            # Cleared before the queue is read, so an attempt queued after the
+            # read still wakes the wait below.
+            queued.clear()
             attempt = tracker.next_attempt()
             if attempt is not None:
                 active_attempt = attempt
@@ -323,7 +345,11 @@ async def run_with_ledger_commit_fence[ResultT](
                 continue
             if worker.done():
                 break
-            await asyncio.sleep(0.005)
+            waiting = asyncio.create_task(queued.wait(), name=f"{task_name}-queued")
+            try:
+                await asyncio.wait({worker, waiting}, return_when=asyncio.FIRST_COMPLETED)
+            finally:
+                waiting.cancel()
         return await await_cancellation_complete(worker, task_name=task_name)
     except BaseException as error:
         if active_attempt is not None:
@@ -331,6 +357,8 @@ async def run_with_ledger_commit_fence[ResultT](
         tracker.abort()
         await _settle_failed_worker(worker, task_name=task_name, error=error)
         raise
+    finally:
+        tracker.listen_for_queued(None)
 
 
 def is_guaranteed_prewrite_failure(tracker: LedgerCommitAttemptTracker) -> bool:
