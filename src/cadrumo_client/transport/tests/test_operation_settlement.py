@@ -1,7 +1,10 @@
-"""Operation settlement polls one pinned connection and refuses once that connection is lost."""
+"""Operation settlement observes one pinned connection on each runtime cue and refuses once it is lost."""
 
 from __future__ import annotations
 
+import threading
+import time
+from collections.abc import Callable
 from typing import override
 from uuid import UUID, uuid4
 
@@ -113,15 +116,36 @@ def _observation(
 
 
 class _Client(FrontendClient):
-    """Admit a submission, then report a running operation before it settles."""
+    """Admit a submission, then report a running operation before it settles.
 
-    def __init__(self, *, running_observations: int, replace_session_after_first_observation: bool = False) -> None:
+    Like the runtime, it cues the operation's observers when it advances:
+    by default as soon as a running state has been observed.
+    """
+
+    def __init__(
+        self,
+        *,
+        running_observations: int,
+        replace_session_after_first_observation: bool = False,
+        cue_on_observe: bool = True,
+    ) -> None:
         self._profile_id = uuid4()
         self._frontend = OperationFrontendProjection.CLI
         self._session_id = uuid4()
         self.requests: list[OperationRequest] = []
         self._running_left = running_observations
         self._replace_session = replace_session_after_first_observation
+        self._cue_on_observe = cue_on_observe
+        self.observers: list[Callable[[], None]] = []
+
+    @override
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.observers.append(receive)
+        return lambda: self.observers.remove(receive)
+
+    def cue(self) -> None:
+        for receive in tuple(self.observers):
+            receive()
 
     @override
     def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
@@ -143,6 +167,8 @@ class _Client(FrontendClient):
         self._running_left -= 1
         if self._replace_session:
             self._session_id = uuid4()
+        if lifecycle is OperationLifecycle.RUNNING and self._cue_on_observe:
+            self.cue()
         return OperationObserved(
             request_id=request_id,
             runtime_boot_id=boot_id,
@@ -165,7 +191,7 @@ def _settle(client: _Client) -> OperationPublicProjectionV1:
     )
 
 
-def test_polling_continues_through_running_states_until_the_operation_is_terminal() -> None:
+def test_observation_continues_on_each_cue_through_running_states_until_the_operation_is_terminal() -> None:
     client = _Client(running_observations=2)
 
     state = _settle(client)
@@ -179,7 +205,7 @@ def test_polling_continues_through_running_states_until_the_operation_is_termina
     ]
 
 
-def test_a_session_replaced_while_polling_names_the_lost_connection_instead_of_polling_on() -> None:
+def test_a_session_replaced_while_waiting_names_the_lost_connection_instead_of_observing_on() -> None:
     client = _Client(running_observations=5, replace_session_after_first_observation=True)
 
     with pytest.raises(RefusalError) as lost:
@@ -223,7 +249,7 @@ def test_a_submission_is_sent_under_the_pinned_session_with_its_optional_idempot
     assert request.idempotency_key == "key-1"
 
 
-def test_a_refused_observation_surfaces_the_runtime_refusal_rather_than_polling() -> None:
+def test_a_refused_observation_surfaces_the_runtime_refusal_rather_than_observing_again() -> None:
     class _Refusing(_Client):
         @override
         def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
@@ -235,3 +261,44 @@ def test_a_refused_observation_surfaces_the_runtime_refusal_rather_than_polling(
         _settle(_Refusing(running_observations=1))
 
     assert refused.value.reason == "operation_denied"
+
+
+def test_without_a_cue_nothing_is_observed_again_until_the_deadline() -> None:
+    # The first running observation subscribes and observes once more; after that only a cue observes.
+    client = _Client(running_observations=2, cue_on_observe=False)
+    pinned = PinnedConnection.of(client)
+
+    with pytest.raises(RefusalError) as expired:
+        start_and_await_terminal(
+            client,
+            pinned,
+            _OPERATION_ID,
+            contract=_contract(),
+            subject_ref=profile_operation_subject(str(client.profile_id)),
+            deadline=deadline_after(0.5),
+        )
+
+    assert expired.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert sum(isinstance(request, OperationObserve) for request in client.requests) == 2
+    assert client.observers == []
+
+
+def test_a_cue_arriving_while_waiting_observes_again_at_once() -> None:
+    client = _Client(running_observations=2, cue_on_observe=False)
+    waiting_since: list[float] = []
+
+    def cue_later() -> None:
+        while sum(isinstance(request, OperationObserve) for request in client.requests) < 2:
+            time.sleep(0.01)
+        time.sleep(0.2)
+        waiting_since.append(time.monotonic())
+        client.cue()
+
+    cuer = threading.Thread(target=cue_later)
+    cuer.start()
+    state = _settle(client)
+    cuer.join()
+
+    assert state.lifecycle is OperationLifecycle.TERMINAL
+    assert time.monotonic() - waiting_since[0] < 5
+    assert sum(isinstance(request, OperationObserve) for request in client.requests) == 3

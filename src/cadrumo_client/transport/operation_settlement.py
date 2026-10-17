@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
 from typing import Self
 from uuid import UUID, uuid4
@@ -33,8 +32,7 @@ from ..contracts.operation_access import (
 )
 from .frontend_client import FrontendClient
 from .frontend_client_contracts import FrontendRefusedError
-
-_POLL_INTERVAL_SECONDS = 0.02
+from .operation_changes import OperationChanges
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,7 +103,7 @@ def start_and_await_terminal(
     subject_ref: str,
     deadline: float,
 ) -> OperationPublicProjectionV1:
-    """Admit a submitted operation and poll its canonical state until it is terminal.
+    """Admit a submitted operation and observe its canonical state on each cue until it is terminal.
 
     The pinned identity must hold before every observation, and each observed
     state must name this operation, definition, subject and exact contract.
@@ -122,28 +120,35 @@ def start_and_await_terminal(
     )
     if not isinstance(started, OperationAcknowledged) or started.operation_id != operation_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    while True:
-        remaining_budget(deadline)
-        pinned.require_held(client)
-        reply = client.operation(
-            OperationObserve(
-                request_id=uuid4(),
-                profile_id=pinned.profile_id,
-                session_id=pinned.session_id,
-                observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=1),
-            ),
-            deadline=deadline,
-        )
-        if not isinstance(reply, OperationObserved):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        observation = reply.observation
-        if not isinstance(observation, OperationObservationSuccessV1):
-            raise FrontendRefusedError(observation.code.value)
-        state = observation.projection
-        _require_observation_identity(state, operation_id, contract, subject_ref)
-        if state.lifecycle is OperationLifecycle.TERMINAL:
-            return state
-        time.sleep(min(_POLL_INTERVAL_SECONDS, remaining_budget(deadline)))
+    with OperationChanges(client) as changes:
+        while True:
+            remaining_budget(deadline)
+            pinned.require_held(client)
+            if changes.armed:
+                changes.arm()
+            reply = client.operation(
+                OperationObserve(
+                    request_id=uuid4(),
+                    profile_id=pinned.profile_id,
+                    session_id=pinned.session_id,
+                    observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=1),
+                ),
+                deadline=deadline,
+            )
+            if not isinstance(reply, OperationObserved):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            observation = reply.observation
+            if not isinstance(observation, OperationObservationSuccessV1):
+                raise FrontendRefusedError(observation.code.value)
+            state = observation.projection
+            _require_observation_identity(state, operation_id, contract, subject_ref)
+            if state.lifecycle is OperationLifecycle.TERMINAL:
+                return state
+            if not changes.armed:
+                # Subscribed only now; observe once more so nothing between the two reads is missed.
+                changes.arm()
+                continue
+            changes.wait(remaining_budget(deadline))
 
 
 def read_settled_result_bytes(

@@ -1,7 +1,8 @@
-"""Filing settlement keeps bounded admission/polling and the existing settled-result read budget."""
+"""Filing settlement keeps bounded admission, waits on the runtime cue and keeps the settled-result read budget."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import NoReturn, override
@@ -11,7 +12,6 @@ import pytest
 from pydantic import JsonValue, TypeAdapter
 
 import cadrumo_client.commands.registered_operation_deadlines as registered_operation_deadlines
-import cadrumo_client.commands.registered_operation_observations as registered_operation_observations
 from cadrumo.application.auth.operator_scope_ports import (
     OperatorScopeBucketPaths,
     OperatorScopePorts,
@@ -119,7 +119,11 @@ def _filing_contract() -> OperationPublicDefinitionContractV1:
 
 
 class _FilingWire(FrontendClient):
-    """Typed transport with real result-page collection and a clock advanced only between polls."""
+    """Typed transport with real result-page collection.
+
+    Like the runtime, it cues its observer once the operation advances; the
+    clock moves to ``elapsed_after_poll`` and the outcome changes at that cue.
+    """
 
     def __init__(self, *, elapsed_after_poll: float, outcome_after_poll: str) -> None:
         self._profile_id = _PROFILE
@@ -134,16 +138,16 @@ class _FilingWire(FrontendClient):
         self.outcome_after_poll = outcome_after_poll
         self.exchanges: list[tuple[str, float, float]] = []
         self.requests: list[OperationRequest] = []
-        self.poll_sleeps: list[float] = []
+        self.observers: list[Callable[[], None]] = []
+        self.cues = 0
 
     def monotonic(self) -> float:
         return self.elapsed
 
-    def sleep(self, seconds: float) -> None:
-        assert 0 < seconds <= 0.5
-        self.poll_sleeps.append(seconds)
-        self.elapsed = self.elapsed_after_poll
-        self.outcome = self.outcome_after_poll
+    @override
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.observers.append(receive)
+        return lambda: self.observers.remove(receive)
 
     @override
     def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
@@ -191,12 +195,20 @@ class _FilingWire(FrontendClient):
                 request_id=request.request_id, runtime_boot_id=_PROFILE, connection_id=_SESSION, operation_id=_OPERATION
             )
         assert isinstance(request, OperationObserve)
-        return OperationObserved(
+        reply = OperationObserved(
             request_id=request.request_id,
             runtime_boot_id=_PROFILE,
             connection_id=_SESSION,
             observation=self._observation(after_cursor=request.observation.after_cursor),
         )
+        if self.observers and self.cues == 0:
+            # The operation advances once an observer waits for it, and that observer is cued.
+            self.cues += 1
+            self.elapsed = self.elapsed_after_poll
+            self.outcome = self.outcome_after_poll
+            for receive in tuple(self.observers):
+                receive()
+        return reply
 
     def _observation(self, *, after_cursor: int = 0) -> OperationObservationSuccessV1:
         running = self.outcome == "running"
@@ -253,7 +265,6 @@ class _FilingWire(FrontendClient):
 
 def _filing_clock(monkeypatch: pytest.MonkeyPatch, wire: _FilingWire) -> None:
     monkeypatch.setattr(registered_operation_deadlines.time, "monotonic", wire.monotonic)
-    monkeypatch.setattr(registered_operation_observations.time, "sleep", wire.sleep)
 
 
 def _assert_filing_admission(wire: _FilingWire, *, observations: int) -> None:
@@ -279,9 +290,10 @@ def _assert_filing_admission(wire: _FilingWire, *, observations: int) -> None:
     assert started.operation_id == _OPERATION
     observed = [request for request in wire.requests if isinstance(request, OperationObserve)]
     assert [request.observation.operation_id for request in observed] == [_OPERATION] * observations
-    assert [request.observation.after_cursor for request in observed] == list(range(observations))
+    # The one event is read first; every later observation resumes after it.
+    assert [request.observation.after_cursor for request in observed] == [0] + [1] * (observations - 1)
     assert len({request.request_id for request in wire.requests}) == len(wire.requests)
-    assert wire.poll_sleeps == [0.02]
+    assert wire.cues == 1
 
 
 @pytest.mark.parametrize(
@@ -310,7 +322,8 @@ def test_filing_wait_expiry_preserves_identity_without_reading_or_replaying(
     assert get_registered_error_code(raised.value).code == "LOCKED_CLI_OPERATION_STILL_RUNNING"
     assert raised.value.context == {"operation_id": _OPERATION, "effect": OperationEffect.UNKNOWN.value}
     assert wire.result_reads == []
-    _assert_filing_admission(wire, observations=1)
+    # Running, then running once subscribed; the cued wake finds the wait expired.
+    _assert_filing_admission(wire, observations=2)
     assert wire.exchanges[-1][0] == "operation_observe"
 
 
@@ -375,5 +388,6 @@ def test_filing_returns_committed_record_after_one_exchange_budget(
     assert completed.effect is OperationEffect.UPDATED
     assert completed.projection == _filing_result()
     assert completed.projection.handoff_required
-    _assert_filing_admission(wire, observations=2)
+    # Running, running once subscribed, then the cued terminal state.
+    _assert_filing_admission(wire, observations=3)
     assert len(wire.result_reads) == 1

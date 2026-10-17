@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -143,6 +144,16 @@ class ReviewWire:
         self.fault = fault
         self.result_reads = 0
         self.repeated_wait = False
+        self.observers: list[Callable[[], None]] = []
+
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.observers.append(receive)
+        return lambda: self.observers.remove(receive)
+
+    def _cue(self) -> None:
+        # The runtime cues observers whenever the operation commits a change.
+        for receive in tuple(self.observers):
+            receive()
 
     def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
         assert definition_id == CENSAL_OPERATION_DEFINITION_ID
@@ -195,6 +206,8 @@ class ReviewWire:
             if terminal and self.fault == "repeat-wait" and not self.repeated_wait:
                 self.repeated_wait = True
                 terminal = False
+                # The held-back settlement commits after this observation.
+                self._cue()
             return OperationObserved(
                 request_id=reply_id,
                 runtime_boot_id=_PROFILE,
@@ -233,6 +246,7 @@ class ReviewWire:
             assert management.actor_ref == f"session:{_SESSION}"
             assert management.interaction_id == _INTERACTION and management.revision == 4
             self.action = management.response_action
+            self._cue()
             if self.fault == "lost-ack":
                 raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
             if self.fault == "mutation-id":

@@ -31,10 +31,6 @@ from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationReviewCompletion,
     RegisteredOperationReviewHandler,
 )
-from cadrumo_client.commands.registered_operation_deadlines import (
-    OPERATION_POLL_INITIAL_SECONDS,
-    OPERATION_POLL_MAX_SECONDS,
-)
 from cadrumo_client.commands.registered_operation_errors import registered_operation_still_running
 from cadrumo_client.commands.registered_operation_projections import decode_registered_observation
 from cadrumo_client.commands.registered_operation_reviews import respond_registered_pending_review
@@ -45,6 +41,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationRequest,
 )
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.operation_changes import OperationChanges
 
 _OBSERVATION_EVENT_PAGE_LIMIT = 100
 
@@ -129,11 +126,49 @@ def wait_registered_settlement[ReviewT: BaseModel](
     review: RegisteredOperationReviewHandler[ReviewT] | None,
     exchange: Callable[[OperationRequest], OperationReply],
 ) -> tuple[OperationPublicProjectionV1, RegisteredOperationReviewCompletion[ReviewT] | None]:
-    """Observe settlement with bounded polling and sticky uncertainty after response submission."""
+    """Observe settlement on each runtime cue, with sticky uncertainty after response submission."""
     responded_interactions: set[tuple[str, int]] = set()
-    poll = OPERATION_POLL_INITIAL_SECONDS
     event_cursor: OperationEventCursor = 0
+    with OperationChanges(client) as changes:
+        return _observe_until_settled(
+            client,
+            operation_id,
+            profile_id,
+            session_id,
+            definition_id,
+            subject_ref,
+            contract,
+            deadline,
+            pending_check_command,
+            progress,
+            review,
+            exchange,
+            changes,
+            responded_interactions,
+            event_cursor,
+        )
+
+
+def _observe_until_settled[ReviewT: BaseModel](
+    client: FrontendClient,
+    operation_id: OperationId,
+    profile_id: UUID,
+    session_id: UUID,
+    definition_id: str,
+    subject_ref: str,
+    contract: OperationPublicDefinitionContractV1,
+    deadline: float,
+    pending_check_command: str | None,
+    progress: RegisteredOperationProgress,
+    review: RegisteredOperationReviewHandler[ReviewT] | None,
+    exchange: Callable[[OperationRequest], OperationReply],
+    changes: OperationChanges,
+    responded_interactions: set[tuple[str, int]],
+    event_cursor: OperationEventCursor,
+) -> tuple[OperationPublicProjectionV1, RegisteredOperationReviewCompletion[ReviewT] | None]:
     while True:
+        if changes.armed:
+            changes.arm()
         observation = observe_registered_operation(
             client,
             operation_id,
@@ -162,8 +197,12 @@ def wait_registered_settlement[ReviewT: BaseModel](
             )
             if detached_review is not None:
                 return state, detached_review
+        if not changes.armed:
+            # Subscribed only now; observe once more so nothing between the two reads is missed.
+            changes.arm()
+            continue
         remaining = deadline - time.monotonic()
         if remaining > 0:
-            time.sleep(min(poll, remaining))
-        poll = min(poll * 1.5, OPERATION_POLL_MAX_SECONDS)
+            # The next observation refuses an expired deadline.
+            changes.wait(remaining)
     return state, None

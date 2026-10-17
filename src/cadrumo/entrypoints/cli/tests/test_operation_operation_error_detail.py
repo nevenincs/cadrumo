@@ -11,6 +11,7 @@ as a refusal of work that may yet commit.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, NoReturn, cast, override
@@ -20,7 +21,6 @@ import pytest
 from pydantic import JsonValue, TypeAdapter
 
 import cadrumo_client.commands.registered_operation_deadlines as registered_operation_deadlines
-import cadrumo_client.commands.registered_operation_observations as registered_operation_observations
 from cadrumo.application.auth.operator_scope_ports import (
     OperatorScopeBucketPaths,
     OperatorScopePorts,
@@ -196,6 +196,12 @@ class _SettlingWire:
         self.public_contract = _contract() if public_contract is None else public_contract
         self.contract_set_digest = OperationPublicContractSetV1.build((self.public_contract,)).contract_set_digest
         self.detail_reads: list[OperationResultProjectionRequestV1] = []
+        self.observers: list[Callable[[], None]] = []
+
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        # An operation that never advances is never cued.
+        self.observers.append(receive)
+        return lambda: self.observers.remove(receive)
 
     def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
         assert definition_id == self.public_contract.definition_id and deadline > 0
@@ -433,7 +439,11 @@ def _verification_contract() -> OperationPublicDefinitionContractV1:
 
 
 class _VerificationWire(FrontendClient):
-    """Typed transport with real result-page collection and a clock advanced only between polls."""
+    """Typed transport with real result-page collection.
+
+    Like the runtime, it cues its observer once the operation advances; the
+    clock moves to ``elapsed_after_poll`` and the outcome changes at that cue.
+    """
 
     def __init__(
         self,
@@ -453,16 +463,16 @@ class _VerificationWire(FrontendClient):
         self.outcome_after_poll = outcome_after_poll
         self.exchanges: list[tuple[str, float, float]] = []
         self.requests: list[OperationRequest] = []
-        self.poll_sleeps: list[float] = []
+        self.observers: list[Callable[[], None]] = []
+        self.cues = 0
 
     def monotonic(self) -> float:
         return self.elapsed
 
-    def sleep(self, seconds: float) -> None:
-        assert 0 < seconds <= 0.5
-        self.poll_sleeps.append(seconds)
-        self.elapsed = self.elapsed_after_poll
-        self.wire.outcome = self.outcome_after_poll
+    @override
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.observers.append(receive)
+        return lambda: self.observers.remove(receive)
 
     @override
     def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
@@ -495,12 +505,19 @@ class _VerificationWire(FrontendClient):
                 operation_id=_OPERATION,
                 page=project_document_page(encoded, request.page),
             )
-        return self.wire.operation(request, deadline=deadline)
+        reply = self.wire.operation(request, deadline=deadline)
+        if isinstance(request, OperationObserve) and self.observers and self.cues == 0:
+            # The operation advances once an observer waits for it, and that observer is cued.
+            self.cues += 1
+            self.elapsed = self.elapsed_after_poll
+            self.wire.outcome = self.outcome_after_poll
+            for receive in tuple(self.observers):
+                receive()
+        return reply
 
 
 def _verification_clock(monkeypatch: pytest.MonkeyPatch, wire: _VerificationWire) -> None:
     monkeypatch.setattr(registered_operation_deadlines.time, "monotonic", wire.monotonic)
-    monkeypatch.setattr(registered_operation_observations.time, "sleep", wire.sleep)
 
 
 def _assert_verification_admission(wire: _VerificationWire, *, observations: int) -> None:
@@ -525,9 +542,10 @@ def _assert_verification_admission(wire: _VerificationWire, *, observations: int
     assert started.operation_id == _OPERATION
     observed = [request for request in wire.requests if isinstance(request, OperationObserve)]
     assert [request.observation.operation_id for request in observed] == [_OPERATION] * observations
-    assert [request.observation.after_cursor for request in observed] == list(range(observations))
+    # The one event is read first; every later observation resumes after it.
+    assert [request.observation.after_cursor for request in observed] == [0] + [1] * (observations - 1)
     assert len({request.request_id for request in wire.requests}) == len(wire.requests)
-    assert wire.poll_sleeps == [0.02]
+    assert wire.cues == 1
 
 
 @pytest.mark.parametrize(
@@ -563,7 +581,8 @@ def test_verification_settlement_and_recorded_detail_keep_distinct_read_budgets(
     assert error.terminal_precondition_verdict == cli_exception_no_recovery_verdict(
         CliExceptionPrecondition.REFUSAL_RETRIED, facts={"boundary_error_type": "probe"}
     )
-    _assert_verification_admission(wire, observations=2)
+    # Running, running once subscribed, then the cued terminal state.
+    _assert_verification_admission(wire, observations=3)
     assert len(wire.wire.detail_reads) == 1
     assert wire.exchanges[-1] == ("operation_result_page", elapsed, result_deadline)
     assert result_deadline > 60
@@ -593,7 +612,8 @@ def test_verification_wait_expiry_preserves_identity_without_reading_or_replayin
     assert get_registered_error_code(raised.value).code == "LOCKED_CLI_OPERATION_STILL_RUNNING"
     assert raised.value.context == {"operation_id": _OPERATION, "effect": OperationEffect.UNKNOWN.value}
     assert wire.wire.detail_reads == []
-    _assert_verification_admission(wire, observations=1)
+    # Running, then running once subscribed; the cued wake finds the wait expired.
+    _assert_verification_admission(wire, observations=2)
     assert wire.exchanges[-1][0] == "operation_observe"
 
 
@@ -655,10 +675,11 @@ def test_filing_settlement_preserves_approval_and_bounded_exchanges(
     assert isinstance(started, OperationControl)
     assert started.action == "operation_start"
     assert started.operation_id == _OPERATION
-    observations = 2 if outcome == "refused" else 1
+    observations = 3 if outcome == "refused" else 2
     observed = [request for request in wire.requests if isinstance(request, OperationObserve)]
     assert [request.observation.operation_id for request in observed] == [_OPERATION] * observations
-    assert [request.observation.after_cursor for request in observed] == list(range(observations))
+    # The one event is read first; every later observation resumes after it.
+    assert [request.observation.after_cursor for request in observed] == [0] + [1] * (observations - 1)
     bounded = [exchange for exchange in wire.exchanges if exchange[0] != "operation_result_page"]
     assert [stage for stage, _, _ in bounded] == [
         "contract",
@@ -668,7 +689,7 @@ def test_filing_settlement_preserves_approval_and_bounded_exchanges(
     ]
     assert all(0 < deadline - entered <= 60 for _, entered, deadline in bounded)
     assert len({request.request_id for request in wire.requests}) == len(wire.requests)
-    assert wire.poll_sleeps == [0.02]
+    assert wire.cues == 1
     if outcome == "refused":
         assert isinstance(raised.value, CliRecordedOperationError)
         assert get_registered_error_code(raised.value).code == _REFUSAL_CODE
@@ -709,14 +730,22 @@ def _notice(sequence: int, notice_code: str, display_code: str | None = None) ->
 
 
 class _NoticeWire:
-    """A runtime observation port that answers each poll with one scripted event page."""
+    """A runtime observation port that answers each observation with one scripted event page.
+
+    Each scripted page is a committed change, so a subscribed observer is cued after each one.
+    """
 
     session_id = _SESSION
+
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.observers.append(receive)
+        return lambda: self.observers.remove(receive)
 
     def __init__(self) -> None:
         self.public_contract = _contract()
         self.contract_set_digest = OperationPublicContractSetV1.build((self.public_contract,)).contract_set_digest
         self.requested_cursors: list[int] = []
+        self.observers: list[Callable[[], None]] = []
         # (requested cursor, anchor, status, events, restart cursor, terminal)
         self.script: list[tuple[int, int, PublicReplayStatus, tuple[OperationPublicEventV1, ...], int | None, bool]] = [
             (
@@ -783,6 +812,8 @@ class _NoticeWire:
             next_cursor=next_cursor,
             restart_cursor=restart,
         )
+        for receive in tuple(self.observers):
+            receive()
         return OperationObserved(
             request_id=request.request_id,
             runtime_boot_id=_PROFILE,
@@ -792,10 +823,9 @@ class _NoticeWire:
 
 
 def test_settlement_wait_prompts_each_known_operation_notice_once_on_stderr(
-    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The worker's Cl@ve prompt reaches the operator; unknown notices and stdout stay silent."""
-    monkeypatch.setattr(registered_operation_observations.time, "sleep", lambda _s: None)
     wire = _NoticeWire()
     state, review = wait_registered_settlement(
         cast(FrontendClient, wire),
