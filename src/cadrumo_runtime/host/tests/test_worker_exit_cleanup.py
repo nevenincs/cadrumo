@@ -531,6 +531,56 @@ def test_a_status_request_is_answered_without_waking_idle_custody_expiry(monkeyp
     assert not context.changed.is_set(), "a heartbeat's status read woke idle custody expiry"
 
 
+def test_an_activity_read_reads_no_custody_and_leaves_idle_custody_expiry_asleep(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request = ProfileWorkerRequest(root=ProfileWorkerControlRequest(action="activity", request_id=uuid4()))
+    output: list[bytes] = []
+
+    class Custody(_ServeCustody):
+        @override
+        def live_sessions(self) -> tuple[UUID, ...]:
+            raise AssertionError("the heartbeat's activity read revalidated custody")
+
+    class Operations:
+        def in_flight_operation_count(self) -> int:
+            return 3
+
+    class Channel:
+        def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+            assert deadline > 0
+            output.append(bytes(payload))
+
+    context = worker_service._WorkerControl(
+        channel=cast(WorkerChannel, Channel()),
+        custody=cast(ProfileWorkerCustody, Custody()),
+        human=cast(ProfileWorkerHumanLogin, _IdleHuman()),
+        operations=cast(ProfileWorkerOperationHost, Operations()),
+        uploads=cast(worker_service.WorkerSubmissionStaging, _IdleUploads()),
+        failed=asyncio.Event(),
+        operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+        upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+        changed=asyncio.Event(),
+    )
+    receive_calls = 0
+
+    async def receive(*_arguments: object, **_keywords: object) -> ProfileWorkerRequest:
+        nonlocal receive_calls
+        receive_calls += 1
+        if receive_calls == 1:
+            return request
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
+
+    with pytest.raises(RefusalError):
+        asyncio.run(worker_service._serve_control_requests(context))
+
+    written = b"".join(output)
+    assert b'"kind":"activity"' in written and b'"in_flight_operations":3' in written
+    assert not context.changed.is_set(), "a heartbeat's activity read woke idle custody expiry"
+
+
 def test_idle_custody_validation_keeps_worker_loop_responsive() -> None:
     """A storage-bound custody check must permit concurrent IPC task progress."""
 

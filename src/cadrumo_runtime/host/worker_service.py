@@ -26,6 +26,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.extension_records import ProfileWorkerExtensionRecordRequest
 from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerActivity,
     ProfileWorkerContractRequest,
     ProfileWorkerControlRequest,
     ProfileWorkerDrained,
@@ -62,6 +63,8 @@ from .worker_submission_staging import WorkerSubmissionStaging
 _ControlDisposition = Literal["handled", "status", "stop"]
 _CONTROL_DISPATCH_SLOW_SECONDS = 0.5
 _EXPIRY_MARGIN_SECONDS = 0.05
+#: Control actions that only read, so they leave custody expiry asleep.
+_READS = frozenset({"status", "activity"})
 _log = get_logger(__name__)
 
 _CONTROL_REQUEST_TYPES = (
@@ -94,6 +97,7 @@ _CONTROL_ACTIONS = frozenset(
         "retire",
         "operation_settlement",
         "status",
+        "activity",
         "stop",
         "password",
         "receipt",
@@ -293,6 +297,17 @@ async def _handle_human_control(context: _WorkerControl, request: object) -> _Co
 async def _handle_action_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
     if not isinstance(request, ProfileWorkerControlRequest):
         return None
+    if request.action == "activity":
+        write_document(
+            context.channel,
+            ProfileWorkerActivity(
+                identity=context.custody.identity,
+                request_id=request.request_id,
+                in_flight_operations=context.operations.in_flight_operation_count(),
+            ),
+            deadline=time.monotonic() + 5,
+        )
+        return "handled"
     if request.action == "prepare_api":
         context.operations.prepare()
         return "status"
@@ -451,9 +466,9 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
                     in_flight_operations=context.operations.in_flight_operation_count(),
                 )
                 write_document(context.channel, result, deadline=time.monotonic() + 5)
-                # The supervisor's heartbeat asks this every few seconds. Answering it adds and
-                # moves no deadline, so expiry keeps sleeping until the one it already waits for.
-                observed = isinstance(request, ProfileWorkerControlRequest) and request.action == "status"
+            # A read adds and moves no deadline, so expiry keeps sleeping until the one it
+            # already waits for; the supervisor's heartbeat asks for activity every few seconds.
+            observed = isinstance(request, ProfileWorkerControlRequest) and request.action in _READS
         except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
             if context.failed.is_set():
                 raise

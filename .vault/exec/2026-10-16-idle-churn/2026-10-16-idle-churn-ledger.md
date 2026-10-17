@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:31cf862ea79186e501c5ad30bec424854a2fb306ce828777d663c0a155b9e26f'
+body_hash: 'sha256:526595743c24d21bc4f9b149b7a07405f7f69becc294518c516ef324cffd0fc4'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -254,6 +254,14 @@ related:
 - `S18` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
 - `S18` `verify:` `pytest test_registration_screen (recovery cases), test_runtime_session (18), test_bound_session (10), automation inventory, decision and requester (34)` -> `pass`
 - `S18` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
+- `S19` `M` `src/cadrumo_runtime/contracts/profile_worker.py`
+- `S19` `M` `src/cadrumo_runtime/host/worker_service.py`
+- `S19` `M` `src/cadrumo_runtime/adapters/profile_worker_transport.py`
+- `S19` `M` `src/cadrumo_runtime/host/session_owner.py`
+- `S19` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S19` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S19` `verify:` `pytest test_worker_exit_cleanup, test_profile_worker_operations (real workers through the heartbeat count), test_profile_worker_transport, test_supervised_channel (70 passed)` -> `pass`
+- `S19` `verify:` `ruff, ruff format, ty, pyrefly and basedpyright on the contract` -> `pass`
 
 ## Notes
 
@@ -277,3 +285,4 @@ related:
 - `S16` Each new test fails against the previous behaviour: an always-refreshing spinner, a blinking cursor, and a progress line on a 1 s interval
 - `S17` With Textual's own driver the idle test reads 14 switches in 1.5 s and fails; with the post-input escape wait removed, the lone-Escape test fails
 - `S18` Each new test fails against the previous behaviour: an enrolment wait with both release paths removed hangs, a lapse timer never armed leaves the shell open, and a watch on an interval checks before anything ended. A Windows timer can wake a few milliseconds early, so the expiry timer runs past the deadline and re-arms when woken before it
+- `S19` The new test fails when the activity read wakes custody expiry. The heartbeat's 5 s cadence is unchanged pending the operator's ruling on idle-heartbeat; this step only stops each ping revalidating custody from disk

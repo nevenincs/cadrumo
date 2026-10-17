@@ -90,7 +90,7 @@ class ProfileWorkerControlRequest(BaseModel):
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    action: Literal["status", "stop", "password", "receipt", "cancel_human", "prepare_api"]
+    action: Literal["status", "activity", "stop", "password", "receipt", "cancel_human", "prepare_api"]
     request_id: UUID
     originating_login_id: Annotated[str, Field(min_length=1, max_length=256)] | None = None
 
@@ -325,6 +325,16 @@ class ProfileWorkerStatus(BaseModel):
     in_flight_operations: int | None = Field(default=None, ge=0)
 
 
+class ProfileWorkerActivity(BaseModel):
+    """How many operations the worker is running, read without revalidating custody."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["activity"] = "activity"
+    identity: _ProfileWorkerIdentity
+    request_id: UUID
+    in_flight_operations: int = Field(ge=0)
+
+
 class ProfileWorkerDrained(BaseModel):
     """Bounded operation shutdown result, requiring native containment on return."""
 
@@ -493,6 +503,7 @@ class ProfileWorkerReply(
     RootModel[
         Annotated[
             ProfileWorkerStatus
+            | ProfileWorkerActivity
             | ProfileWorkerDrained
             | ProfileWorkerSettlement
             | ProfileWorkerHumanOutcome

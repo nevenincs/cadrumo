@@ -21,6 +21,7 @@ from cadrumo_client.contracts.extension_records import ExtensionRecordReply, Pro
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document, write_secret
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerActivity,
     ProfileWorkerControlRequest,
     ProfileWorkerDrained,
     ProfileWorkerExtensionRecordReply,
@@ -156,6 +157,13 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         self._exchange(
             ProfileWorkerRequest(ProfileWorkerRetireRequest(request_id=uuid4(), session_id=session_id)),
             ProfileWorkerStatus,
+        )
+
+    def activity(self) -> ProfileWorkerActivity:
+        """Read how many operations the worker is running, without revalidating its custody."""
+        return self._exchange(
+            ProfileWorkerRequest(ProfileWorkerControlRequest(action="activity", request_id=uuid4())),
+            ProfileWorkerActivity,
         )
 
     def status(self) -> ProfileWorkerStatus:

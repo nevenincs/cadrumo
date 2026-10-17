@@ -153,7 +153,7 @@ class ProfileWorkerSessionOwner:
                 # heartbeat timeout must not kill a healthy busy worker. Only
                 # one observation may remain pending; its late answer is never
                 # reused as proof that a subsequent admission fence was idle.
-                result[0] = worker.status().in_flight_operations
+                result[0] = worker.activity().in_flight_operations
             except (RefusalError, AutomationCustodyError):
                 pass
             finally:
