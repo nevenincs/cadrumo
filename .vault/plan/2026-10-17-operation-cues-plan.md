@@ -8,7 +8,7 @@ related:
   - '[[2026-10-17-idle-churn-operation-observation-adr]]'
 modified: '2026-10-17'
 body_schema: body-v2
-body_hash: 'sha256:71fccad91adc98f7ff800517588db2e2720d596832751a3ab96deb57882b0e70'
+body_hash: 'sha256:89e306583712287d79322a652994b49b83d1c49a1c3c7182053532b6cb266b36'
 ---
 
 <!-- RETIRED: S07 -->
@@ -25,8 +25,8 @@ The governing decision is `2026-10-17-idle-churn-operation-observation-adr`, whi
 
 ## Steps
 
-- [ ] `S01` - Add a bounded worker operation_wait action that returns on a new event after a cursor, terminal state or the bound; `src/cadrumo_runtime/host/operation_host.py, src/cadrumo_runtime/host/worker_service.py, src/cadrumo_runtime/contracts/profile_worker.py, src/cadrumo_runtime/adapters/profile_worker_transport.py`.
-- [ ] `S02` - Publish an operation_changed cue from a runtime-held worker wait for each connection observing a non-terminal operation; `src/cadrumo_client/contracts/session_events.py, src/cadrumo_runtime/host/session_events.py, src/cadrumo_runtime/host/profile_connection_operations.py`.
+- [ ] `S01` - Report each committed operation from the worker's journal to the runtime as a coalesced operations_advanced request on its authorization endpoint; `src/cadrumo/adapters/persistence/operations/durability_router.py, src/cadrumo/entrypoints/operation_composition.py, src/cadrumo_runtime/host/operation_host.py, src/cadrumo_runtime/adapters/worker_authorization_client.py, src/cadrumo_runtime/contracts/worker_authorization.py`.
+- [ ] `S02` - Record watches from non-terminal observations and publish operation_changed to the watching connections when a worker report names their operation; `src/cadrumo_client/contracts/session_events.py, src/cadrumo_runtime/host/session_events.py, src/cadrumo_runtime/adapters/worker_authorization.py, src/cadrumo_runtime/host/profile_connection_operations.py`.
 - [ ] `S03` - Wait on the operation_changed cue or the deadline in the client settlement helpers and the CLI runner instead of fixed intervals; `src/cadrumo_client/transport/frontend_client.py, src/cadrumo_client/transport/operation_settlement.py, src/cadrumo_client/commands/registered_operation_observations.py`.
 - [ ] `S04` - Move the remaining client and TUI observation loops onto the cue; `src/cadrumo_client/transport/operation_controller.py, src/cadrumo/entrypoints/tui/operations/modal.py, src/cadrumo/entrypoints/tui/google_saved_review.py, src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py, the other OperationObserve poll sites`.
 - [ ] `S05` - Wait for the person's attendance decision on attendance_changed in the MCP harness; `src/cadrumo_harness/mcp/runtime_admission.py`.

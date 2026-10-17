@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:c25dab44ad8c473121befba130fd300741bf49dcd78cef92c3a36a770eef3e5d'
+body_hash: 'sha256:5ec0b752862bd5d3222ae23b010225efa33b975913be4cc27d80a8ee557c0e12'
 related:
   - "[[2026-10-16-idle-churn-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -21,8 +21,9 @@ Every client that waits for a registered operation polls `OperationObserve` on a
 ## Considerations
 
 - The runtime serves one request at a time per connection and flushes pushed events only between requests (`src/cadrumo_runtime/adapters/server_connection_handling.py:207-231`). The client holds one exchange lock per connection (`src/cadrumo_client/transport/verified_transport.py:162`).
-- Operations run in the profile worker. The runtime forwards observation to it (`src/cadrumo_runtime/host/operation_host.py:609`), and the worker protocol is request and reply (`src/cadrumo_runtime/contracts/profile_worker.py`).
-- The worker's supervisor already awaits terminal state without polling (`src/cadrumo/application/operations/_supervisor_execution.py:268`, `:636`). The bounded `operation_settlement` action uses this for password rotation alone (`src/cadrumo_runtime/host/operation_host.py:499-546`).
+- Operations run in the profile worker. The runtime forwards observation to it (`src/cadrumo_runtime/host/operation_host.py:609`) over one of two worker channels, control and operation, each carrying one exchange at a time under its own lock (`src/cadrumo_runtime/adapters/profile_worker_transport.py:60-90`).
+- The worker already opens a fresh kernel-verified connection to its runtime for each concurrent request it makes, on a private endpoint the runtime serves with up to eight concurrent connections (`src/cadrumo_runtime/adapters/worker_authorization_client.py:46`, `src/cadrumo_runtime/adapters/worker_authorization.py:133-160`).
+- Every visible change to an operation, each non-terminal snapshot with its events and the terminal settlement, is written through `OperationJournal.commit` or `commit_settlement` (`src/cadrumo/application/operations/persistence/journal.py:402-432`), routed for durable and ephemeral operations alike by `DurabilityRoutedOperationPersistence` (`src/cadrumo/adapters/persistence/operations/durability_router.py:130-155`).
 - Observation is versioned and cursor-based (`OperationObservationRequestV1`, `src/cadrumo/application/operations/frontend_requests.py:173`; `2026-08-11-tui-architecture-adr` D3).
 - Cues already travel on per-connection queues, deduplicated per kind, carry no authority, and are followed by one re-read (`src/cadrumo_runtime/host/session_events.py`, `2026-10-16-idle-churn-adr`).
 
@@ -30,36 +31,39 @@ Every client that waits for a registered operation polls `OperationObserve` on a
 
 - **Keep polling, with backoff.** No protocol change, but it is a fixed-interval loop over an observable event. Rejected under the operator's ruling recorded in `2026-10-16-idle-churn-adr`.
 - **Long-poll on the client's connection.** `OperationObserve` would wait, bounded, until the cursor advances. This is simple, but it holds the connection. Cancels, activity notes and pushed retirement or attendance cues would wait behind it. Rejected.
-- **Unsolicited worker frames to the runtime.** The worker would push "operation advanced" and the runtime would cue. This needs a new push direction on a request and reply worker protocol and its own flow control. Rejected as larger than needed.
-- **Runtime-held bounded wait to the worker, then a cue.** While a connection observes an operation, the runtime keeps one bounded worker request outstanding: "return when an event after this cursor exists, or the operation is terminal, or the bound passes". On return the runtime publishes `operation_changed` to the observing connection. The client connection stays free, the worker uses its existing awaits, and cue semantics are unchanged. Chosen.
+- **Runtime-held bounded wait to the worker.** The runtime would keep one worker request outstanding per observed operation. Each worker channel carries one exchange at a time, so the outstanding wait would stall every other operation or control request for the profile for its whole bound. Rejected. It was the first choice of this record, and was withdrawn when this was found.
+- **The worker reports committed operations on its existing request endpoint, and the runtime cues.** After each journal commit the worker names the operation in a coalesced report. It sends the report on a fresh connection to the endpoint it already uses for its own requests. The runtime cues the connections observing those operations. No channel is held, and nothing new is opened between the processes. Chosen.
 
 ## Constraints
 
-- `operation_changed` is a cue. It names its connection and carries no operation fact, cursor or authority. The client re-reads with the existing `OperationObserve`, which re-checks authority. Dedup, the queue bound and the overflow behaviour are those of the other cues.
-- Only a connection that has observed the operation is cued, and only while it keeps observing, i.e. its last observation was not terminal. A connection that disconnects or reaches terminal ends the runtime's watch.
-- The runtime's wait to the worker is bounded and re-armed. A bound expiring is not a cue. The watch never extends a lease, a session or attendance, and never delays the observing connection's other requests.
-- A client keeps its existing settlement deadline as the failure bound. It waits on the cue or that deadline, never on a fixed interval. A missing cue fails as the deadline does today. Timeout is still not proof that a mutation did not commit (`UNKNOWN` is preserved).
+- `operation_changed` is a cue. It names its connection and session and carries no operation fact, cursor or authority. The client re-reads with the existing `OperationObserve`, which re-checks authority. Dedup, the queue bound and the overflow behaviour are those of the other cues.
+- Only a connection that has observed the operation is cued, and only while its last observation was not terminal. A connection that disconnects, or observes the operation terminal, stops being cued for it.
+- The worker's report names operation ids only and grants nothing. It is accepted only from the owned worker on its kernel-verified endpoint. It is applied only to watches in that worker's own profile.
+- Reporting never delays or fails a journal commit. Reports are coalesced, so a burst of commits produces at most one report in flight and one queued. A report that cannot be delivered is dropped, not retried: the client's deadline bounds what it costs.
+- A client keeps its existing settlement deadline as the failure bound. It waits on the cue or that deadline, never on a fixed interval. Timeout is still not proof that a mutation did not commit (`UNKNOWN` is preserved).
 - This extends `2026-10-16-idle-churn-adr` to active-operation observation and adds one cue to its hypothesis list. `2026-08-11-tui-architecture-adr` D3's `OperationObservationRequestV1` is unchanged.
 
 ## Implementation
 
-We will make every client wait for operation progress through an `operation_changed` cue fed by a runtime-held, bounded worker wait, and remove the fixed-interval observation polls.
+We will make every client wait for operation progress through an `operation_changed` cue that the runtime publishes when the worker reports a committed change, and remove the fixed-interval observation polls.
 
-- **Worker.** A bounded `operation_wait` action returns when the supervisor records an event after the given cursor, when the operation reaches terminal state, or when the bound passes. It reports nothing beyond "changed or not".
-- **Runtime.** On each `OperationObserve` that is not terminal, it arms or renews a watch for that connection and operation. One outstanding worker wait serves every connection watching the same operation. On a change it publishes `operation_changed` to each of them.
-- **Client.** `FrontendClient` gains a subscription for the cue. The CLI runner, the settlement helper, the TUI controller and modal, and the other observation loops wait on the cue or their deadline. The MCP attendance wait does the same with `attendance_changed`, which already exists.
+- **Worker.** The routed operation persistence calls a commit observer after each successful `commit` and `commit_settlement`. The worker's operation host collects the reported ids, and one sender delivers them as a single batched `operations_advanced` request on the authorization endpoint.
+- **Runtime.** Each `OperationObserve` reply that is not terminal records a watch for that connection, session and operation; a terminal reply or a disconnect removes it. The authorization server hands each report to the profile's connections, which publish `operation_changed` to every connection watching a named operation.
+- **Client.** `FrontendClient` gains a subscription for the cue, and a lost connection wakes it as well. The CLI runner, the settlement helper, the TUI controller and modal, and the other observation loops arm before each observation and wait on the cue or their deadline. The MCP attendance wait does the same with `attendance_changed`, which already exists.
 
-Hypotheses that may change within the constraints: the action and cue names; the worker wait's bound (about 5 s, matching `operation_settlement`); whether the runtime keys watches by connection or by operation; whether the attendance wait needs any runtime change.
+Hypotheses that may change within the constraints: the request and cue names; the batch bound; whether watches are keyed by connection or by operation; whether the attendance wait needs any runtime change.
 
 ## Rationale
 
-Correctness never depended on the polls, only on the re-read each one triggered. That is why the cue pattern of `2026-10-16-idle-churn-adr` applies unchanged. The decisive constraint is that a connection is half-duplex and flushes events only between requests. Any wait on the client's own connection degrades the pushes the previous decision relies on. A wait the runtime holds toward the worker keeps every client connection free and needs no new push direction, because the worker already awaits supervisor state.
+Correctness never depended on the polls, only on the re-read each one triggered. That is why the cue pattern of `2026-10-16-idle-churn-adr` applies unchanged. Two facts decide the producer. Client connections are half-duplex, so a wait there degrades the pushes the previous decision relies on. Worker channels carry one exchange at a time, so a wait there stalls the profile. The worker's own request endpoint takes one connection per request and is already kernel-verified and owned. A report sent on it holds nothing open. The journal commit is the single point every visible change passes through, so observing it there misses no event and no settlement.
 
 ## Consequences
 
 - Operation completion is seen as soon as the worker records it, without the 20 to 500 ms lag. The round trips per operation fall from tens or hundreds to one per change.
-- New protocol: one cue, one worker action, and runtime watch state per observing connection. Clients and runtime ship together under the pinned expected version.
-- Staleness now depends on the worker wait observing every event append. A missed append shows progress late, bounded by the wait's bound or the client's deadline. It needs a test that appends an event and observes the cue.
-- If the worker channel cannot carry an outstanding wait alongside other requests, the worker wait needs its own channel. Reconsider the unsolicited-frame option then.
+- New protocol: one cue, one worker request kind, and runtime watch state per observing connection. Clients and runtime ship together under the pinned expected version.
+- Staleness now depends on the report reaching the runtime. A dropped report shows progress late, bounded by the client's deadline. It needs a test that commits a change and observes the cue end to end.
+- Each report costs one verified connection. Coalescing bounds that to one in flight per worker, however often an operation commits.
 
 Accepted 2026-10-17 on the operator's approval in this session ("1 - yes"), extending the ruling recorded in `2026-10-16-idle-churn-adr` that every recurring check is driven by a real signal.
+
+Amended 2026-10-17 on the operator's approval in this session ("go ahead with the recommendation. amend adr and go"): the producer is the worker's report on its existing request endpoint, not a runtime-held wait on a worker channel, after the worker channels were found to carry one exchange at a time.
