@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:e5e01a8cf6b0b6cbc7ff75594fbd1b5b87a22c1c197d6f5a94ac9375937f6d1d'
+body_hash: 'sha256:a976abaa2522a017dc5a1965e73dd84df41e49e03f89861f396c8b7e275b2edc'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
@@ -62,9 +62,15 @@ An expired ask cues holders only (`src/cadrumo_runtime/host/profile_connection_a
 
 ### Resolutions at plan close
 
-reporter-thread-not-replaced is fixed: a reporting thread that ends for any reason clears its record and starts a replacement while work is pending (`src/cadrumo_runtime/host/operation_progress_reporter.py:65-75`), and `test_a_reporting_thread_ended_by_an_escaping_error_is_replaced` fails against the previous reporter. records-describe-a-cue-and-pace-the-code-does-not-have is fixed: the ADR Implementation names `attendance_answered`, and the S05 and S08 rows and a ledger note match the code. attendance-cue-withheld-on-expiry and status-cue-publisher-proof-is-a-bare-pid stay open until a fix is verified.
+reporter-thread-not-replaced is fixed: a reporting thread that ends for any reason clears its record and starts a replacement while work is pending (`src/cadrumo_runtime/host/operation_progress_reporter.py:66-75`), and `test_a_reporting_thread_ended_by_an_escaping_error_is_replaced` fails against the previous reporter. records-describe-a-cue-and-pace-the-code-does-not-have is fixed: the ADR Implementation names `attendance_answered`, and the S05 and S08 rows and a ledger note match the code. attendance-cue-withheld-on-expiry and status-cue-publisher-proof-is-a-bare-pid stay open until a fix is verified.
 
 modal-waits-unbounded-on-a-dropped-report is resolved on the operator's ruling by S09: a report the runtime does not take is queued again ahead of later commits and retried after a backoff from 50 ms to 1 s, and closing gives each pending report one try (`src/cadrumo_runtime/host/operation_progress_reporter.py:77-108`). `test_an_undeliverable_report_is_retried_ahead_of_later_commits` and `test_a_refused_report_waits_out_a_backoff_before_its_retry` fail against the dropping reporter, and `test_a_close_while_the_runtime_refuses_gives_each_pending_report_one_try` guards against a retry that spins after close.
+
+The re-review of `c8ab950631`, `6ef45e9c73` and `ae86f24325` passed. It traced that the backoff is waited with the lock released, so a commit never blocks, that re-queueing keeps the oldest-first order without duplicates, and that close stays within its join bound when the runtime refuses. It also read the working-tree `status_cue.rs` fix as correct and fail-closed for older records. Its one finding follows.
+
+### escaped-send-still-loses-its-batch | low | The amended constraint promised a retry the escape path does not give
+
+An error that is not an `Exception` ends the reporting thread and loses the batch it took (`src/cadrumo_runtime/host/operation_progress_reporter.py:66-75`); that loss is what makes the replacement threads end with the backlog. The constraint now states this exception, so the record matches the code. Only a non-`Exception` out of the worker authorization client reaches it.
 
 ## Recommendations
 

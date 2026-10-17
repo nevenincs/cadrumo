@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea2b83dea4647087d5be3c773b37cb74d62278fc9e3e8639e97bbe5763250dec'
+body_hash: 'sha256:15476b546b7d5283c1e5413100838cd40469e3b18ba017629572a9ed23dc0463'
 related:
   - "[[2026-10-16-idle-churn-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -39,7 +39,7 @@ Every client that waits for a registered operation polls `OperationObserve` on a
 - `operation_changed` is a cue. It names its connection and session and carries no operation fact, cursor or authority. The client re-reads with the existing `OperationObserve`, which re-checks authority. Dedup, the queue bound and the overflow behaviour are those of the other cues.
 - Only a connection that has observed the operation is cued, and only while its last observation was not terminal. A connection that disconnects, or observes the operation terminal, stops being cued for it.
 - The worker's report names operation ids only and grants nothing. It is accepted only from the owned worker on its kernel-verified endpoint. It is applied only to watches in that worker's own profile.
-- Reporting never delays or fails a journal commit. Reports are coalesced, so a burst of commits produces at most one report in flight and one queued. A report the runtime does not take is queued again ahead of later commits and retried after a backoff that starts at 50 ms and doubles to at most 1 s, until it is delivered or the worker closes; closing tries each pending report once. (Amended 2026-10-17; it read "A report that cannot be delivered is dropped, not retried: the client's deadline bounds what it costs.")
+- Reporting never delays or fails a journal commit. Reports are coalesced, so a burst of commits produces at most one report in flight and one queued. A report the runtime does not take is queued again ahead of later commits and retried after a backoff that starts at 50 ms and doubles to at most 1 s, until it is delivered or the worker closes; closing tries each pending report once. An error that ends the reporting thread itself loses the one batch that thread held, and the next commit starts a replacement; losing it is what bounds the replacements. (Amended 2026-10-17; it read "A report that cannot be delivered is dropped, not retried: the client's deadline bounds what it costs.")
 - A client keeps its existing settlement deadline as the failure bound. It waits on the cue or that deadline, never on a fixed interval. Timeout is still not proof that a mutation did not commit (`UNKNOWN` is preserved).
 - This extends `2026-10-16-idle-churn-adr` to active-operation observation and adds one cue to its hypothesis list. `2026-08-11-tui-architecture-adr` D3's `OperationObservationRequestV1` is unchanged.
 

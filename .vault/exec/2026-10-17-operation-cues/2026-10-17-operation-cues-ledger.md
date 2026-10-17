@@ -5,7 +5,7 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:252e3164dee32cda9613ef44c4c85858faccbc7643a3165fa9473e8190d94e34'
+body_hash: 'sha256:f529984142ecec178bec98d49d64974186c446c2015efb5c48e8ae901db026d6'
 related:
   - "[[2026-10-17-operation-cues-plan]]"
 ---
@@ -156,3 +156,4 @@ related:
 - `S01` Plan-close review finding reporter-thread-not-replaced, fixed after S01 closed; the medium finding modal-waits-unbounded-on-a-dropped-report stays open for the operator's decision.
 - `S08` The earlier S08 note that the 1 s external-owner pace remains is superseded by ac366af11f: a publishing manager now cues the desktop, and the pace stays only as the fallback the ADR's third amendment keeps.
 - `S08` Correction to the previous S08 note: the fallback pace is kept by the ADR's second amendment ("ok add it"), not a third.
+- `S09` The re-review passed; its one low finding, that the constraint promised a retry an escaping error does not give, is resolved in the constraint's wording.
