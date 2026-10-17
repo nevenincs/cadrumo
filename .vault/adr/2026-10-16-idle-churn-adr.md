@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#idle-churn'
 date: '2026-10-16'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:b31dc7d051555df3fa76951568c92076b5b8a8658c78a17b4fd4704ef592db2d'
+body_hash: 'sha256:af0e38db9049953ca11a12900b02ee9892b486baff9f5e02267d91a4bf89a582'
 related:
   - "[[2026-10-04-application-sign-in-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -69,3 +69,6 @@ The fact the runtime authority already re-checks on every read is what makes inv
 - On platforms without an OS session notification source, the runtime keeps a periodic lifecycle observation. Reconsider when a notification source exists there.
 
 Accepted 2026-10-16 under the operator's ruling in this session: "Everything is using proper tauri signals for recurring checks. Ensure you migrate everything that is ineffective python side blocker waits as process loop."
+
+Extended 2026-10-17 by `2026-10-17-idle-churn-operation-observation-adr`, which applies the same cue pattern to clients waiting on a running operation and adds the `operation_changed` cue.
+

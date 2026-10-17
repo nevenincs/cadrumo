@@ -5,14 +5,14 @@ tags:
 date: '2026-10-17'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd2b58b237f2e7e74732562d0d1b0bd74bf278e4d13cc887579a268191c709bb'
+body_hash: 'sha256:c25dab44ad8c473121befba130fd300741bf49dcd78cef92c3a36a770eef3e5d'
 related:
   - "[[2026-10-16-idle-churn-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-10-16-idle-churn-audit]]"
 ---
 
-# `idle-churn` adr: `Operation observation without polling` | (**status:** `proposed`)
+# `idle-churn` adr: `Operation observation without polling` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -61,3 +61,5 @@ Correctness never depended on the polls, only on the re-read each one triggered.
 - New protocol: one cue, one worker action, and runtime watch state per observing connection. Clients and runtime ship together under the pinned expected version.
 - Staleness now depends on the worker wait observing every event append. A missed append shows progress late, bounded by the wait's bound or the client's deadline. It needs a test that appends an event and observes the cue.
 - If the worker channel cannot carry an outstanding wait alongside other requests, the worker wait needs its own channel. Reconsider the unsolicited-frame option then.
+
+Accepted 2026-10-17 on the operator's approval in this session ("1 - yes"), extending the ruling recorded in `2026-10-16-idle-churn-adr` that every recurring check is driven by a real signal.
