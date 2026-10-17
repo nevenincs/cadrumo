@@ -29,9 +29,10 @@ static void write_launch_refusal(const cadrumo_buffer *line) {
 /* Define this process's environment from the profile the image's invocation selects.
  * Returns 0 when defined, CADRUMO_LAUNCH_PROFILE_REFUSED_EXIT after reporting a
  * refusal, or -1 with the platform's message in error. Python has not started. */
-static int define_launch(cadrumo_context *ctx, int argc, cadrumo_native_char **argv, cadrumo_buffer *error) {
+static int define_launch(cadrumo_context *ctx, const char *image, int argc, cadrumo_native_char **argv,
+    cadrumo_buffer *error) {
     uint32_t count = argc > 1 ? (uint32_t)(argc - 1) : 0;
-    uint32_t status = cadrumo_platform_define(ctx, CADRUMO_LAUNCH_IMAGE, count,
+    uint32_t status = cadrumo_platform_define(ctx, image, count,
         (const cadrumo_native_char *const *)(argv + 1), error);
     if (status == 0) return 0;
     if (status == 4) {

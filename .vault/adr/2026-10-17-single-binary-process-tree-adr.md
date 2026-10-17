@@ -46,7 +46,7 @@ Accepted 2026-10-17: after the explanation of the role model, the grouped view a
 5. **Containment is unchanged.** Owned processes stay in kill-on-close job objects with the existing launch methods; no package identity and no desktop-app breakaway policy.
 6. **Package identity is retired.** This supersedes `2026-10-16-application-distribution-windows-package-identity-adr`. The identity claims in application manifests, the developer registration command and the planned installer registration are removed by forward changes through the implementing plan.
 7. **External programs stay external.** WebView2, browsers started for authenticated reads and local model runtimes are not Cadrumo binaries and appear under their own application.
-8. **Operator-started programs.** `aeat` and `cadrumo-mcp` are started by the operator or an MCP client, not managed by Cadrumo, and remain separate console entry points.
+8. **Operator-started programs.** `aeat`, `cadrumo-mcp` and the `cadrumo-runtime` administration commands (sign-in configuration, session commands) are started by the operator, an MCP client or a frontend as a client, not supervised as a managed role, and remain separate console entry points. Only the supervised runtime host runs as the runtime role.
 9. **Proof before migration.** The first implementing step makes the binary start one role of itself; the operator confirms the grouping before the remaining roles move.
 
 ## Implementation

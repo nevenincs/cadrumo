@@ -33,7 +33,7 @@ int main(void) {
     char *kdf[] = {"python", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker",
         "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024", NULL};
     assert(setenv("CADRUMO_INVOCATION_MARKER", "kept", 1) == 0);
-    assert(define_launch(ctx, 9, kdf, &error) == 0);
+    assert(define_launch(ctx, CADRUMO_LAUNCH_IMAGE, 9, kdf, &error) == 0);
     assert(error.data == NULL);
     const char *kept = getenv("CADRUMO_INVOCATION_MARKER");
     assert(kept != NULL && strcmp(kept, "kept") == 0);
@@ -41,7 +41,7 @@ int main(void) {
     /* A standard descriptor is not the declared invocation: the interpreter's own
      * profile defines a closed environment that drops the undeclared marker. */
     kdf[4] = "2";
-    assert(define_launch(ctx, 9, kdf, &error) == 0);
+    assert(define_launch(ctx, CADRUMO_LAUNCH_IMAGE, 9, kdf, &error) == 0);
     assert(getenv("CADRUMO_INVOCATION_MARKER") == NULL && getenv("PATH") != NULL);
     cadrumo_platform_destroy(ctx);
     puts("interpreter launch profile: refusal line, declared invocation and closed default pass");

@@ -7,6 +7,7 @@ mod environment;
 mod launch;
 mod logs;
 mod manager;
+mod role;
 mod shell;
 mod startup;
 mod startup_logging;
@@ -182,6 +183,10 @@ fn launch_error() -> ApplicationError {
 }
 
 fn main() {
+    // A role is its own process of this binary; it shares nothing with the desktop below.
+    if let Some(code) = role::dispatch() {
+        std::process::exit(code);
+    }
     // A GUI launch never allocates a console. CLI callers may already have one;
     // attach before Rust initializes its standard streams, preserving redirection.
     #[cfg(windows)]

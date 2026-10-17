@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     bridge_main run = (bridge_main)dlsym(bridge, "cadrumo_python_main");
     if (!run) goto failure;
     /* The launch profile defines the environment before Python starts. */
-    int defined = define_launch(ctx, argc, argv, &error);
+    int defined = define_launch(ctx, CADRUMO_LAUNCH_IMAGE, argc, argv, &error);
     if (defined < 0) goto failure;
     if (defined > 0) {
         result = defined;

@@ -135,6 +135,8 @@ function crates(t) {
     "platform",
     "installer",
     "manager",
+    "launch_guard",
+    "interpreter_host",
     "desktop/src-tauri",
   ]) {
     mkdirSync(join(native, crate, "src"), { recursive: true });
@@ -144,7 +146,13 @@ function crates(t) {
   for (const entry of ["Cargo.lock", "build.rs"])
     writeFileSync(join(native, "desktop/src-tauri", entry), entry);
   mkdirSync(join(native, "interpreter/windows"), { recursive: true });
-  writeFileSync(join(native, "interpreter/windows/host.manifest"), "manifest");
+  for (const source of [
+    "interpreter/windows/host.manifest",
+    "interpreter/windows/host.c",
+    "interpreter/launch_guard.h",
+    "interpreter/launch_profile.h",
+  ])
+    writeFileSync(join(native, source), source);
   return { root, native, declared: join(root, "build/desktop/host") };
 }
 
@@ -157,6 +165,8 @@ test("a full host snapshot drops renamed sources and keeps generated files", (t)
     "platform",
     "installer",
     "manager",
+    "launch_guard",
+    "interpreter_host",
     "desktop/src-tauri",
   ])
     renameSync(

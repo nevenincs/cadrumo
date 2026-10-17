@@ -4,6 +4,7 @@
 //! developer roots and authority overrides never become managed by clearing variables.
 
 use crate::contract::{HOST_INHERITED_ENV, LAUNCH_AUTHORITY_PIN, ROOT_VARIABLE};
+use cadrumo_application::role::Role;
 use cadrumo_platform::launch::{self, DefineError};
 use cadrumo_platform::storage::{self, Evidence, Mode, ResolvedRoot, RootSource};
 use std::ffi::OsString;
@@ -106,9 +107,6 @@ impl ManagedLocations {
     }
 }
 
-/// The packaged runtime image whose launch profile defines the runtime's environment.
-const RUNTIME_IMAGE: &str = "cadrumo-runtime";
-
 fn same_name(name: &std::ffi::OsStr, declared: &str) -> bool {
     if cfg!(windows) {
         name.to_str()
@@ -155,7 +153,8 @@ pub fn runtime_environment(
         }
         DefineError::Failed(message) => io::Error::new(io::ErrorKind::InvalidInput, message),
     };
-    let profile = launch::select(RUNTIME_IMAGE, &[]).map_err(failed)?;
+    // The runtime role's declared image owns the runtime's launch profile.
+    let profile = launch::select(Role::Runtime.hosted().image, &[]).map_err(failed)?;
     let defined = launch::define_environment(profile, &ambient, package.unwrap_or(root), &|_| {
         Ok(root.to_path_buf())
     })
