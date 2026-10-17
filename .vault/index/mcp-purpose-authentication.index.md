@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-14'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:c61b151a88a5caae774101065dcc86681c7559ed30df08344eda06f64e837f04'
+body_hash: 'sha256:eee181d0408c6707047774da21eead382265fe409eea4ecd358dbc9fe3b97b17'
 related:
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-audit]]'
@@ -28,7 +28,7 @@ Auto-generated index of all documents tagged with `#mcp-purpose-authentication`.
 
 - `2026-09-26-mcp-purpose-authentication-adr` - `mcp-purpose-authentication` adr: local runtime ownership and replacement MCP harness | (**status:** `accepted`)
 - `2026-09-26-mcp-purpose-authentication-profile-access-adr` - `mcp-purpose-authentication` adr: profile API keys, delegated sessions and CLI/TUI parity | (**status:** `accepted`)
-- `2026-10-14-mcp-purpose-authentication-renewable-stage-permits-adr` - `mcp-purpose-authentication` adr: `Renewable authority permits for executing operation stages` | (**status:** `proposed`)
+- `2026-10-14-mcp-purpose-authentication-renewable-stage-permits-adr` - `mcp-purpose-authentication` adr: `Renewable authority permits for executing operation stages` | (**status:** `rejected`)
 
 ### audit
 

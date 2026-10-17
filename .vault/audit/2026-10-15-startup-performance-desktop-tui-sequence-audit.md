@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:c9990b2d908c330083c45901a91c5ae2070a804c775c2cb3e3ea434f67cc130c'
+body_hash: 'sha256:bf19210a93a7ef66adc048b2633b3664f870c73b29d3e7c0bcafab77ae172c5a'
 related:
   - "[[2026-10-13-startup-performance-operation-contract-manifest-adr]]"
 ---
@@ -15,7 +15,7 @@ related:
 
 Audit requested on 2026-10-15 for executable launch through desktop authentication, TUI admission and the profile wizard. The owner confirmed `build/windows-x64/stage/Release/app` as the affected package. Observed desktop PID 61116 used that package. Review and measurements only; no product code, profile data, authentication policy or running application was changed. Luna max agents gathered source context, summarized logs and checked package/source parity; the parent performed benchmarks, reproduction and adjudication.
 
-Evidence is the 09:20 local-time run on 2026-10-15 in `C:/Users/hello/AppData/Local/Cadrumo/logs/cadrumo-native.jsonl` and `cadrumo.log`, plus fresh sequential subprocess measurements in `.tmp/startup-audit-20261015/component-timings.json` and `installed-session-importtime.txt`. The latter are local scratch artifacts. The durable scalar results are preserved below. Historical October 13 timings are not current benchmark results. The running desktop subsequently exited; a separate read-only CLI status probe at 09:26 returned runtime_unavailable and is not a password benchmark.
+Evidence is the 09:20 local-time run on 2026-10-15 in `%LOCALAPPDATA%/Cadrumo/logs/cadrumo-native.jsonl` and `cadrumo.log`, plus fresh sequential subprocess measurements in `.tmp/startup-audit-20261015/component-timings.json` and `installed-session-importtime.txt`. The latter are local scratch artifacts. The durable scalar results are preserved below. Historical October 13 timings are not current benchmark results. The running desktop subsequently exited; a separate read-only CLI status probe at 09:26 returned runtime_unavailable and is not a password benchmark.
 
 ### Measured sequence
 

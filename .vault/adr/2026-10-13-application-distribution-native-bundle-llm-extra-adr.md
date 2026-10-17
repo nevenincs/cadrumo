@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-13'
-modified: '2026-10-13'
+modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ea815175353d95b405a5d84358918118f03c7a8bb6bbfee0ac88d56258d8817'
+body_hash: 'sha256:844cc942386cc66c7f9a09b11ba0c033bc0c3fd536120929747801368228da01'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]"
   - "[[2026-10-04-application-distribution-adr]]"
