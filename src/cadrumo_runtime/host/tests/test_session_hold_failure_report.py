@@ -49,6 +49,7 @@ def test_refused_hold_logs_and_answers_with_the_refusal_report(
     assert "desktop_holder_descriptor_absent" not in captured.err
 
     (record,) = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "session_hold"]
+    assert record.levelno == logging.ERROR
     assert record.__dict__["trace_id"] == error["trace_id"] == error["context"]["trace_id"]
     assert record.__dict__["reason"] == "desktop_holder_descriptor_absent"
     assert record.__dict__["error_code"] == error["code"]

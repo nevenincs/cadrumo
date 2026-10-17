@@ -36,23 +36,19 @@ def _raising_product_frame(error: BaseException) -> str:
 def log_cli_boundary_failure(boundary: str, error: BaseException, *, durable: bool = True) -> str:
     """Log a failure a command frontend is about to render, returning its correlation id.
 
-    Internal failures are logged at ERROR and expected refusals at INFO; both
-    reach the durable log. ``durable=False`` is for a refusal raised before any
+    Every category is logged at ERROR: the command ends here with an error
+    document and a nonzero exit, so a refusal is as much its failure as an
+    internal fault. ``durable=False`` is for a refusal raised before any
     command ran, which must not configure process state just to be logged. The
     record stays off stderr, which carries the error document.
     """
-    from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
     from cadrumo.core.logging import get_logger
 
-    try:
-        internal = get_registered_error_code(error).category is ErrorCategory.INTERNAL
-    except Exception:
-        internal = True
     return log_boundary_failure(
         get_logger(__name__),
         boundary,
         error,
-        level=logging.ERROR if internal else logging.INFO,
+        level=logging.ERROR,
         operator_document=True,
         durable=durable,
     )
