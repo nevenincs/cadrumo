@@ -19,7 +19,7 @@ if sys.platform == "win32":
     import threading
     from collections.abc import Callable
     from ctypes import byref, wintypes
-    from typing import TYPE_CHECKING, override
+    from typing import TYPE_CHECKING, Any, override
 
     from textual import constants
     from textual._xterm_parser import XTermParser
@@ -27,9 +27,11 @@ if sys.platform == "win32":
     from textual.drivers._writer_thread import WriterThread
     from textual.drivers.windows_driver import WindowsDriver
 
+    from cadrumo.core.errors.hierarchy import InternalInvariantError
+
     if TYPE_CHECKING:
         from textual.app import App
-        from textual.events import Event
+        from textual.message import Message
 
     _CREATE_EVENT_MANUAL_RESET = 0x0001
     _EVENT_MODIFY_STATE = 0x0002
@@ -72,23 +74,23 @@ if sys.platform == "win32":
             """Create the kernel event if a suspend closed it, in the flag's current state."""
             if self.handle is None:
                 self.handle = _create_event(None, None, _CREATE_EVENT_MANUAL_RESET, _EVENT_MODIFY_STATE | _SYNCHRONIZE)
-                if self.handle and self.is_set():
+                if self.handle is not None and self.is_set():
                     _set_event(self.handle)
 
         @override
         def set(self) -> None:
             super().set()
-            if self.handle:
+            if self.handle is not None:
                 _set_event(self.handle)
 
         @override
         def clear(self) -> None:
             super().clear()
-            if self.handle:
+            if self.handle is not None:
                 _reset_event(self.handle)
 
         def close(self) -> None:
-            if self.handle:
+            if self.handle is not None:
                 _close_handle(self.handle)
                 self.handle = None
 
@@ -98,12 +100,14 @@ if sys.platform == "win32":
         def __init__(
             self,
             loop: asyncio.AbstractEventLoop,
-            app: App,
+            app: App[Any],
             exit_event: _WakingEvent,
-            process_event: Callable[[Event], None],
+            process_event: Callable[[Message], None],
         ) -> None:
             super().__init__(loop, app, exit_event, process_event)
-            self._wake = exit_event.handle
+            # The parser yields messages that are not all events; the driver's handler takes any.
+            self._process = process_event
+            self._wake = None if exit_event.handle is None else wintypes.HANDLE(exit_event.handle)
 
         @override
         def run(self) -> None:
@@ -111,7 +115,9 @@ if sys.platform == "win32":
             parser = XTermParser(debug=constants.DEBUG)
             try:
                 read_count = wintypes.DWORD(0)
-                console = win32.GetStdHandle(win32.STD_INPUT_HANDLE)
+                # Handle objects, not integers, so the wait passes full-width handles and
+                # returns the ready one for an identity test.
+                console = wintypes.HANDLE(win32.GetStdHandle(win32.STD_INPUT_HANDLE))
                 records = (win32.INPUT_RECORD * _MAXIMUM_EVENTS)()
                 handles = [console] if self._wake is None else [console, self._wake]
                 keys: list[str] = []
@@ -119,7 +125,7 @@ if sys.platform == "win32":
                 timeout = _INFINITE if self._wake is not None else 100
                 while not exit_requested():
                     for event in parser.tick():
-                        self.process_event(event)
+                        self._process(event)
                     ready = win32.wait_for_handles(handles, timeout)
                     if ready is not console:
                         # A stop, or the escape wait elapsed: the loop rechecks both, then sleeps again.
@@ -137,12 +143,12 @@ if sys.platform == "win32":
                                 keys.append(key_event.uChar.UnicodeChar)
                         elif record.EventType == _WINDOW_BUFFER_SIZE_EVENT:
                             size = record.Event.WindowBufferSizeEvent.dwSize
-                            new_size = (size.X, size.Y)
+                            new_size = (int(size.X), int(size.Y))
                     if keys:
                         # Round-trip through UTF-16 so surrogate pairs combine, as Textual does.
                         text = "".join(keys).encode("utf-16", "surrogatepass").decode("utf-16")
                         for event in parser.feed(text):
-                            self.process_event(event)
+                            self._process(event)
                     if new_size is not None:
                         self.on_size_change(*new_size)
                     timeout = _ESCAPE_WAIT_MS
@@ -154,7 +160,7 @@ if sys.platform == "win32":
 
         def __init__(
             self,
-            app: App,
+            app: App[Any],
             *,
             debug: bool = False,
             mouse: bool = True,
@@ -168,8 +174,12 @@ if sys.platform == "win32":
         @override
         def start_application_mode(self) -> None:
             loop = asyncio.get_running_loop()
+            screen = self._file
+            if screen is None:
+                # Textual draws on the process's original standard output.
+                raise InternalInvariantError("the Windows driver has no standard output to draw on")
             self._restore_console = win32.enable_application_mode()
-            self._writer_thread = WriterThread(self._file)
+            self._writer_thread = WriterThread(screen)
             self._writer_thread.start()
             self.write("\x1b[?1049h")  # Enable alt screen
             self._enable_mouse_support()
