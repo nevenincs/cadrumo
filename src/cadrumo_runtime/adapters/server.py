@@ -253,6 +253,9 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                 self._retain_channel_cleanup(error)
                 raise
             finally:
+                # The wait's end is a turn: refresh the tick before leaving the park, so no
+                # sample in between reads the whole wait as age.
+                self._accept_tick = time.monotonic()
                 self._parked_until = None
             channel_owner = self._channel_owner(channel)
             if self.stop.is_set() or not self._slots.acquire(blocking=False):

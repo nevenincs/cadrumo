@@ -188,6 +188,59 @@ def test_an_idle_accept_loop_parks_until_a_lifecycle_wake_and_reports_no_tick_ag
             stop.set()
 
 
+def test_the_tick_age_right_after_a_long_park_counts_from_its_end(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsEndpoint(storage_root=root)
+    listener = _Listener(endpoint)
+    stop, boot = Event(), uuid4()
+    login = _Login()
+    profiles = RuntimeProfileConnections(
+        storage_root=root,
+        storage_identity=endpoint.storage_identity,
+        runtime_boot_id=boot,
+        stop=stop,
+        service_descriptors=(),
+        login_inventory=lambda: LoginInventory(logins=(cast(LoginEvidence, login),), complete=True),
+    )
+    # Reported logins and no lapse: the loop rests with no deadline at all.
+    profiles.session_changes_pushed(True)
+    server = RetainedRuntimeTransportServer(
+        listener, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+    )
+    ages: list[float | None] = []
+    owner = server._channel_owner
+
+    def sampled(channel: ByteChannel) -> object:
+        # What a heartbeat would read as the loop takes the connection the park ended on.
+        ages.append(server.accept_tick_age())
+        return owner(channel)
+
+    monkeypatch.setattr(server, "_channel_owner", sampled)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        serving = pool.submit(server.serve)
+        try:
+            assert server.ready.wait(3)
+            time.sleep(1.5)
+            client = VerifiedConnection(
+                endpoint.connect(timeout=5),
+                expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
+                deadline=time.monotonic() + 5,
+            )
+            try:
+                assert ages, "the loop never took the connection"
+                first = ages[0]
+                assert first is not None and first < 0.5, "the end of a long park was read as a stuck loop"
+            finally:
+                client.close()
+            stop.set()
+            serving.result(timeout=10)
+        finally:
+            stop.set()
+
+
 class _Overstaying(_Listener):
     """The real endpoint behind a wait that outlives the deadline it was given, as a lost wake would."""
 

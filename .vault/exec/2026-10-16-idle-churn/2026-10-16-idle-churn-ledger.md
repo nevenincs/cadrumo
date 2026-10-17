@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:66b767857146b5d8a2c71a3660e4de96ab8afc8d0c46fb1f8e3060bfccd1fd4c'
+body_hash: 'sha256:189f169a642190ba671fbe6ccd633a50db2042a9d6f05bfc5a6ab214803074b2'
 related:
   - "[[2026-10-16-idle-churn-plan]]"
 ---
@@ -195,6 +195,8 @@ related:
 - `S12` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (run by CADRUMO-BUILD-DEBUG, 339 passed) and desktop-host-unit-clippy` -> `pass`
 - `S12` `verify:` `pytest -n0 test_session_hold_activity.py test_session_hold_stdin_lifetime.py` -> `pass`
 - `S12` `verify:` `ruff check, ruff format --check, ty check, rustfmt --check` -> `pass`
+- `S09` `verify:` `pytest -n0 test_server_idle_wait.py test_server_cleanup.py test_server_diagnostics.py test_lifecycle_wake.py (52)` -> `pass`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
 
 ## Notes
 
@@ -211,3 +213,4 @@ related:
 - `S09` Reopened: signed in, each lifecycle pass owed the next one through the rate-limited sign-in sweep (audit lifecycle-sweep-reowe); the new test fails against the previous code
 - `S09` Reopened by the plan-close review: tick age while parked past its deadline, sweep state outside the guard, WTS callback on the guard; each new test fails against the previous code. `test_bootstrap_reset[reset-and-replay]` failed once in nine runs under load (audit bootstrap-reset-replay-timing)
 - `S12` Reopened by the plan-close review (activity-refusal-ends-the-person-hold, high): the hold keeps holding on `OS_SESSION_UNAVAILABLE` and the bridge keeps a correlated refusal in step; the hold test fails against the previous code
+- `S09` Re-review: the tick is refreshed at the park's end so a heartbeat right after a long rest reads no age; the new test fails against the previous code
