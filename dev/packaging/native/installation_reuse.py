@@ -26,7 +26,7 @@ def public_directory(parent: Path, prefix: str) -> Generator[Path]:
 
 
 class InstallationReuse:
-    """Link only bytes still matching the previous installation owner's inventory."""
+    """Reuse an admitted prior stage; candidate and prior bytes are rechecked before publication."""
 
     def __init__(self, previous: Path, candidate: Path, files: dict[str, str]) -> None:
         """Bind immutable reuse to one admitted previous stage and private candidate."""
@@ -40,12 +40,7 @@ class InstallationReuse:
         relative = output.relative_to(self.candidate).as_posix()
         checksum = self.files.get(relative)
         previous = member(self.previous, relative)
-        if (
-            checksum is not None
-            and digest(original) == checksum
-            and digest(previous) == checksum
-            and original.stat().st_mode == previous.stat().st_mode
-        ):
+        if checksum is not None and digest(original) == checksum and original.stat().st_mode == previous.stat().st_mode:
             try:
                 os.link(previous, output)
                 return destination

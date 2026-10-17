@@ -5,7 +5,7 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f0c9d2e1cf4b1d248e7c2e1f37c90ea7530ab02dde4fcaae7ff51ac2603a811'
+body_hash: 'sha256:51981e2c84dac09d01dcced6ca72c5054f50bf0ea6352b2155fd62807696ed63'
 related:
   - "[[2026-10-16-native-build-incremental-plan]]"
 ---
@@ -110,7 +110,32 @@ related:
 - `S04` `verify:` `build-directory admission 14 tests` -> `pass`
 - `S04` `verify:` `CMake desktop paths 6 tests` -> `pass`
 - `S04` `verify:` `scoped Ruff ty and Rust checks` -> `pass`
+- `S05` `M` `dev/packaging/native/cached_command.py`
+- `S05` `M` `dev/packaging/native/distribution_prepare.py`
+- `S05` `M` `dev/packaging/native/installation.py`
+- `S05` `M` `dev/packaging/native/installation_reuse.py`
+- `S05` `A` `dev/packaging/native/installation_plan.py`
+- `S05` `A` `dev/packaging/native/installation_currency.py`
+- `S05` `M` `native/cmake/CachedCommand.cmake`
+- `S05` `M` `native/cmake/InstallerFlow.cmake`
+- `S05` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S05` `M` `dev/packaging/native/tests/test_build_directory_admission.py`
+- `S05` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S05` `A` `dev/packaging/native/tests/test_installation_currency.py`
+- `S05` `M` `dev/packaging/tests/test_native_installation.py`
+- `S05` `M` `.vault/audit/2026-10-16-native-build-incremental-audit.md`
+- `S05` `verify:` `currency behavior tests 36 plus receipt tamper tests 4` -> `pass`
+- `S05` `verify:` `staging CMake race rollback kit tests 18` -> `pass`
+- `S05` `verify:` `installation compatibility tests 23 with 2 skips` -> `pass`
+- `S05` `verify:` `independent integrated S05 source review` -> `pass`
+- `S05` `verify:` `scoped Ruff and ty` -> `pass`
+- `S05` `verify:` `final Debug publication with concurrent active harness` -> `fail`
+- `S05` `verify:` `Debug full native-installer prior agent generation and exactly one actual WiX build` -> `pass`
+- `S05` `verify:` `Debug noninstalling bootstrap after external app generation replacement` -> `fail`
+- `S05` `verify:` `owned canceled build tree settled without publication` -> `pass`
 
 ## Notes
 
 - `S04` Disposable Windows installed upgrade rollback removal acceptance remains unavailable; no workstation installation ran.
+- `S05` S05 remains open: another live `dev.package_runner` test all session continuously starts Debug processes; both build configurations use whole-build quiescence. No manual kills or guard bypass. Final full package no-op proofs and commit await owner coordination.
+- `S05` External agent and client source publishers changed the shared Debug generation after successful MSI kit publication. Digest guard correctly refuses stale pairing. Only our exact build tree was stopped; final current-generation packages, no-op proofs and S05 commit remain pending coordinated source/output ownership.

@@ -7,6 +7,7 @@ import re
 import shutil
 import sys
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -73,6 +74,65 @@ def test_refresh_links_unchanged_payload_and_keeps_changed_members_private(tmp_p
     assert payload.joinpath("docs/user/index.html").stat().st_ino != previous_identity
 
 
+@pytest.mark.parametrize("race", ["prior-before-link", "source-before-link", "prior-before-publication"])
+def test_refresh_refuses_late_mutation_without_publishing_candidate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, race: str
+) -> None:
+    from .. import distribution_prepare, installation_reuse
+
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
+    build = tmp_path / "build"
+    _paths(build)
+    refresh(payload, identity_file, build)
+    previous = build / "installation/stage/app/docs/user/index.html"
+    receipt = build / "installation/metadata/installation.json"
+    receipt_bytes = receipt.read_bytes()
+    previous_identity = previous.stat().st_ino
+    _change_payload(payload)
+    injected = False
+    if race == "prior-before-publication":
+        prepare = distribution_prepare.prepare
+
+        def after_prepare(
+            source: Path,
+            identity: Path,
+            candidate: Path,
+            desktop: str | None = None,
+            *,
+            copy_file: Callable[[str | Path, str | Path], str | Path] | None = None,
+        ) -> Path:
+            nonlocal injected
+            result = prepare(source, identity, candidate, desktop, copy_file=copy_file)
+            previous.write_bytes(b"late prior mutation")
+            injected = True
+            return result
+
+        monkeypatch.setattr(distribution_prepare, "prepare", after_prepare)
+    else:
+        copy = installation_reuse.InstallationReuse.copy
+
+        def before_link(
+            self: installation_reuse.InstallationReuse, source: str | Path, output: str | Path
+        ) -> str | Path:
+            nonlocal injected
+            if Path(source).relative_to(payload).as_posix() == "docs/user/index.html":
+                affected = Path(source) if race == "source-before-link" else previous
+                affected.write_bytes(b"late source or prior mutation")
+                injected = True
+            return copy(self, source, output)
+
+        monkeypatch.setattr(installation_reuse.InstallationReuse, "copy", before_link)
+    with pytest.raises(ValueError, match=r"modified|changed"):
+        refresh(payload, identity_file, build)
+    assert injected
+    assert previous.stat().st_ino == previous_identity
+    assert receipt.read_bytes() == receipt_bytes
+    assert (build / "installation/stage/app/cadrumo").read_bytes() == b"synthetic test executable"
+    if race == "source-before-link":
+        assert previous.read_bytes() == b"synthetic documentation"
+    assert not list((build / "installation/work").glob("candidate-*"))
+
+
 def test_refresh_restores_previous_stage_and_metadata_when_second_publish_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -129,8 +189,14 @@ def _cmake(source: Path, *arguments: str) -> str:
     return result.stdout
 
 
-def _configure_distribution(tmp_path: Path, target: str, *, manager: bool = False) -> tuple[Path, Path, Path]:
-    payload, identity_file = payload_fixture(tmp_path, target, manager=manager)
+def _configure_distribution(
+    tmp_path: Path,
+    target: str,
+    *,
+    manager: bool = False,
+    payload_target: str | None = None,
+) -> tuple[Path, Path, Path]:
+    payload, identity_file = payload_fixture(tmp_path, payload_target or target, manager=manager)
     source = tmp_path / "native/cmake/distribution"
     source.mkdir(parents=True)
     build = tmp_path / "build/distribution-fixture"
@@ -237,6 +303,15 @@ def test_distribution_build_presets_are_host_bound() -> None:
         assert f'"{name}"' not in presets
 
 
+@pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
+def test_distribution_enrolls_native_desktop_cargo_dependencies_only_for_linux(tmp_path: Path, target: str) -> None:
+    # This tests graph enrollment only, without building/accepting a Linux runtime.
+    _, _, build = _configure_distribution(tmp_path, target, payload_target="windows-x86-64")
+    inputs = json.loads((build / "action-installation_prepare-Release.json").read_text(encoding="utf-8"))["inputs"]
+    cargo = (REPO_ROOT / "native/application/Cargo.toml").as_posix()
+    assert (cargo in inputs) == target.startswith("linux-")
+
+
 @pytest.mark.parametrize("manager", [False, True])
 def test_distribution_wix_guard_and_authoring_are_in_the_real_graph(tmp_path: Path, manager: bool) -> None:
     _, source, build = _configure_distribution(tmp_path, "windows-x86-64", manager=manager)
@@ -253,6 +328,73 @@ def test_distribution_wix_guard_and_authoring_are_in_the_real_graph(tmp_path: Pa
         assert result.returncode == 0, result.stdout + result.stderr
     _cmake(source, "--build", str(build), "--target", "zip")
     assert list((build / "packages").glob("*.zip"))
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="Requires the native Windows MSI validator")
+def test_cmake_bootstrap_kit_reuses_admitted_outputs_and_repairs_tampering(tmp_path: Path) -> None:
+    wix = shutil.which("wix")
+    assert wix is not None, "Put WiX 5+ on PATH for the native compiler lane"
+    payload, source, build = _configure_distribution(tmp_path, "windows-x86-64", manager=True)
+    owner = tmp_path / "build/fixture-root"
+    owner_paths = _paths(owner)
+    (owner / "build-paths.json").write_text(
+        json.dumps({"source": tmp_path.as_posix(), "paths": owner_paths}), encoding="utf-8"
+    )
+    (owner / "CMakeCache.txt").write_text(
+        f"CMAKE_HOME_DIRECTORY:INTERNAL={tmp_path.as_posix()}\nCMAKE_CACHEFILE_DIR:INTERNAL={owner.as_posix()}\n",
+        encoding="utf-8",
+    )
+    owned_payload = owner / "stage/Release/app"
+    owned_payload.parent.mkdir(parents=True)
+    payload.rename(owned_payload)
+    payload = owned_payload
+    adapter = tmp_path / "fixture-adapter.dll"
+    runner = tmp_path / "fixture-runner.exe"
+    adapter.write_bytes(b"offline embedded adapter fixture; never executed")
+    runner.write_bytes(b"offline runner fixture; never executed")
+    _cmake(
+        source,
+        "-S",
+        str(source),
+        "-B",
+        str(build),
+        f"-DCADRUMO_WIX_EXECUTABLE={wix}",
+        f"-DCADRUMO_PAYLOAD={payload}",
+        f"-DCADRUMO_PAYLOAD_BUILD={owner}",
+        "-DCADRUMO_DESKTOP_EXECUTABLE=cadrumo",
+        f"-DCADRUMO_MSI_ADAPTER={adapter}",
+        f"-DCADRUMO_MSI_RUNNER={runner}",
+    )
+    _cmake(source, "--build", str(build), "--target", "msi-bootstrap-kit")
+    kit = payload.parent / "services"
+    assert not kit.is_relative_to(build)
+    assert (owner / "generated/action-msi-bootstrap-kit-Release.json").is_file()
+    assert not (build / "generated/action-msi-bootstrap-kit-Release.json").exists()
+    before = {path.name: (path.stat().st_ino, path.stat().st_mtime_ns) for path in kit.iterdir()}
+    artifact = build / "packages/msi/application.msi"
+    compilation = artifact.stat().st_mtime_ns
+    repeat = _cmake(source, "--build", str(build), "--target", "msi-bootstrap-kit")
+    assert "[cadrumo:msi-bootstrap-kit] up to date" in repeat
+    assert {path.name: (path.stat().st_ino, path.stat().st_mtime_ns) for path in kit.iterdir()} == before
+    assert artifact.stat().st_mtime_ns == compilation
+    (kit / "application.msi").write_bytes(b"tampered delivery")
+    _cmake(source, "--build", str(build), "--target", "msi-bootstrap-kit")
+    assert digest(kit / "application.msi") == digest(artifact)
+    assert artifact.stat().st_mtime_ns == compilation
+    (payload / "cadrumo").write_bytes(b"tampered payload")
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    refused = run_command([cmake, "--build", str(build), "--target", "msi-bootstrap-kit"], cwd=source)
+    assert refused.returncode != 0
+    assert "Payload file is missing or modified" in refused.stdout + refused.stderr
+    assert artifact.stat().st_mtime_ns == compilation
+    _cmake(source, "--build", str(build), "--target", "clean-msi-bootstrap-kit")
+    assert (kit / "application.msi").is_file()
+    assert (owner / "generated/action-msi-bootstrap-kit-Release.json").is_file()
+    _cmake(source, "--build", str(build), "--target", "clean")
+    assert (kit / "application.msi").is_file()
+    assert (owner / "generated/action-msi-bootstrap-kit-Release.json").is_file()
 
 
 @pytest.mark.windows_only
@@ -355,8 +497,9 @@ def test_distribution_cmake_zip_noop_refresh_and_clean_rebuild(tmp_path: Path, m
     payload, source, build = _configure_distribution(tmp_path, "windows-x86-64", manager=manager)
     _cmake(source, "--build", str(build), "--target", "zip")
     if manager:
-        assert "Desktop.wxs" in (build / "CPackConfig.cmake").read_text(encoding="utf-8")
-        assert (build / "installation/metadata/Desktop.wxs").is_file()
+        assert "Desktop.wxs" not in (build / "CPackConfig.cmake").read_text(encoding="utf-8")
+        assert not (build / "installation/metadata/Desktop.wxs").exists()
+        assert not (build / "installation/metadata/DesktopPatch.xml").exists()
     package = f"versions/{identity('windows-x86-64').version}" if manager else "app"
     archive = next((build / "packages").glob("*.zip"))
     original_time = archive.stat().st_mtime_ns

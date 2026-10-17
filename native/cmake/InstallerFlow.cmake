@@ -28,6 +28,7 @@ cmake_path(NORMAL_PATH distribution_binary)
 
 set(distribution_arguments
   "-DCADRUMO_PAYLOAD:PATH=${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
+  "-DCADRUMO_PAYLOAD_BUILD:PATH=${PROJECT_BINARY_DIR}"
   "-DCADRUMO_DEV_PYTHON:FILEPATH=${CADRUMO_DEV_PYTHON}"
   "-DCADRUMO_CHANNEL:STRING=${CADRUMO_CHANNEL}")
 set(distribution_desktop "")
@@ -98,7 +99,8 @@ if(WIN32 AND distribution_desktop)
   install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}/"
     DESTINATION "${bootstrap_directory}" USE_SOURCE_PERMISSIONS)
   cadrumo_register_clean(TARGET native-installer
-    PATHS "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}")
+    PATHS "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}"
+      "${PROJECT_BINARY_DIR}/generated/action-msi-bootstrap-kit-$<CONFIG>.json")
 else()
   cadrumo_register_clean(TARGET native-installer)
 endif()

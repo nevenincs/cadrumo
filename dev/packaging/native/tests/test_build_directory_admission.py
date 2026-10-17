@@ -168,15 +168,24 @@ def test_rejects_linked_build_and_preset_paths(tmp_path: Path, monkeypatch: pyte
         build_directory.require_enrolled_build(root / "build/native-one")
 
 
-def test_real_cli_rejects_an_arbitrary_root_before_creating_it(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("module", "arguments"),
+    [
+        ("dev.packaging.native.windows_msi", ["reject-combined"]),
+        ("dev.packaging.native.cached_command", ["--spec", "never-cache-spec.json"]),
+    ],
+)
+def test_real_cli_rejects_an_arbitrary_root_before_creating_it(
+    tmp_path: Path, module: str, arguments: list[str]
+) -> None:
     rogue = tmp_path / "rogue-build"
     result = run_command(
         [
             sys.executable,
             "-B",
             "-m",
-            "dev.packaging.native.windows_msi",
-            "reject-combined",
+            module,
+            *arguments,
             "--build",
             str(rogue),
         ],

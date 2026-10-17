@@ -14,6 +14,7 @@ from dev._paths import REPO_ROOT
 from ..command_execution import run_command
 from ..google_oauth import build_client_json, client_build_identity
 from .action_cache import action_lock
+from .build_directory import require_enrolled_build
 from .build_log import BuildLog, command_line, display_path
 from .build_timing import measure_build
 from .build_toolchain import sysroot_inventory
@@ -129,7 +130,7 @@ def run_cached(build: Path, spec_file: Path, command: list[str]) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--spec", type=Path, required=True)
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()

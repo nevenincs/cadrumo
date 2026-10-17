@@ -6,9 +6,10 @@ tags:
 date: '2026-10-16'
 modified: '2026-10-16'
 body_schema: 'body-v2'
-body_hash: 'sha256:d61f6e7421adbf2a9cba5ba8bdf2500daac03bcf9b0b683710a4b81d9788075f'
+body_hash: 'sha256:f0eabda0f4cf8a82c44050c44ad00958dc979433f6e159bc228402dc8aa47f40'
 related:
   - '[[2026-10-16-native-build-incremental-adr]]'
+  - '[[2026-10-16-native-build-incremental-audit]]'
   - '[[2026-10-16-native-build-incremental-ledger]]'
   - '[[2026-10-16-native-build-incremental-plan]]'
 ---
@@ -22,6 +23,10 @@ Auto-generated index of all documents tagged with `#native-build-incremental`.
 ### adr
 
 - `2026-10-16-native-build-incremental-adr` - `native-build-incremental` adr: externally managed tools and one incremental installer | (**status:** `accepted`)
+
+### audit
+
+- `2026-10-16-native-build-incremental-audit` - `native-build-incremental` audit: incremental packaging and single-MSI integration
 
 ### exec
 

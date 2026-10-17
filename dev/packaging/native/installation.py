@@ -5,25 +5,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import plistlib
 import re
 import shutil
-import tempfile
 from collections.abc import Callable
 from pathlib import Path, PurePosixPath
-from uuid import UUID, uuid5
-from xml.etree.ElementTree import Element, SubElement, tostring
 
 from dev._paths import REPO_ROOT
 
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
-from .identity import DistributionIdentity
 from .installation_filesystem import file_identity, remove_owned_file
-from .layout import application_images, desktop_image, load_layout
+from .layout import desktop_image, load_layout
 from .linux_desktop_runtime import validate_payload as validate_linux_desktop_runtime
-from .macos_launchagent import author_agent, verify_agent
 from .package_inventory import package_inventory
 
 
@@ -164,22 +158,15 @@ def prepare(
     root = paths["installation_stage"]
     metadata = paths["installation_metadata"]
     if root.exists():
-        receipt = member(metadata, "installation.json")
-        if not receipt.is_file():
-            raise ValueError("Existing native installation stage has no owning receipt; select a fresh build directory")
-        verify_inventory(root, receipt)
-        paths["installation_work"].mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=paths["installation_work"]) as scratch:
-            candidate = Path(scratch)
-            _prepare_fresh(payload, identity_file, candidate / "stage", candidate / "metadata", desktop)
-            expected = json.loads((candidate / "metadata/installation.json").read_text(encoding="utf-8"))
-            existing = json.loads(receipt.read_text(encoding="utf-8"))
-            if existing != expected:
-                raise ValueError(
-                    "Native installation stage differs from the requested payload; select a fresh build directory"
-                )
-        # Recheck after construction: another writer may have touched the stage.
-        verify_inventory(root, receipt)
+        from .installation_currency import existing
+
+        if existing(payload, identity_file, root, metadata, desktop, REPO_ROOT, allow_change=False):
+            return root
+        # Legacy/mismatched helper generations migrate through the same admitted
+        # candidate and rollback publication path; never scratch-copy to compare.
+        from .distribution_prepare import refresh
+
+        refresh(payload, identity_file, build, desktop)
         return root
     return _prepare_fresh(payload, identity_file, root, metadata, desktop, copy_file=copy_file)
 
@@ -195,164 +182,40 @@ def _prepare_fresh(
 ) -> Path:
     """Create platform installation layout, with desktop registration only for a real entrypoint."""
     validate_payload(payload, identity_file, desktop)
-    value = json.loads(identity_file.read_text(encoding="utf-8"))
+    from .installation_plan import project
+
+    plan = project(payload, identity_file, desktop, REPO_ROOT)
     build = build.absolute()
     build.mkdir(parents=True, exist_ok=True)
     if payload.resolve().is_relative_to(root) or root.is_relative_to(payload.resolve()):
         raise ValueError("Payload and installer staging directory must not overlap")
     root.mkdir(parents=True, mode=0o755 if os.name == "nt" else 0o700)
-    target = value["target"]
-    manifest = json.loads(member(payload, "data/package-manifest.json").read_text(encoding="utf-8"))
-    managers = [image for image in application_images(manifest["layout"]) if image.target == "rust_manager"]
-    versioned = target.startswith("windows-") and bool(managers)
-    definition = manifest["layout"].get("installation", {})
-    if versioned:
-        if definition != load_layout("windows-x64")["installation"]:
-            raise ValueError("Manager payload requires the canonical installation layout; rebuild the package")
-        if len(managers) != 1 or managers[0].placement != ".":
-            raise ValueError("Versioned installation requires one root-level manager image")
-        if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", value["version"]):
-            raise ValueError("Versioned installation requires a canonical numeric release")
-    if target.startswith("linux-"):
-        destination = root / "opt" / value["package_name"]
-    elif target.startswith("macos-"):
-        if not (desktop is not None and desktop) or "/" in desktop:
-            raise ValueError("A macOS application bundle requires a root-level desktop executable")
-        destination = root / f"{value['name']}.app" / "Contents/MacOS"
-    elif versioned:
-        destination = member(root, definition["versions"]) / value["version"]
-    else:
-        destination = root / "app"
+    destination = member(root, plan.destination)
     shutil.copytree(payload, destination, dirs_exist_ok=True, copy_function=copy_file or shutil.copy2)
     validate_payload(destination, identity_file, desktop)
-    # Installer-added notices must not mutate the verified immutable package inventory.
-    license_dir = (root if versioned else destination) / "docs/licenses"
-    license_dir.mkdir(parents=True, exist_ok=True)
-    for original, name in ((REPO_ROOT / "LICENSE", "CADRUMO.txt"), (REPO_ROOT / "NOTICE", "NOTICE.txt")):
-        # Notices may overlap a payload member reused from the previous stage.
-        # Detach before writing so the admitted previous stage remains immutable.
-        destination_notice = license_dir / name
-        destination_notice.unlink(missing_ok=True)
-        shutil.copy2(original, destination_notice)
-    for file in license_dir.iterdir():
-        if file.is_file():
-            file.chmod(0o644)
-    if versioned:
-        manager = managers[0]
-        shutil.copy2(member(destination, manager.package_path), member(root, manager.package_path))
-        marker = member(root, definition["marker"])
-        marker.parent.mkdir(parents=True, exist_ok=True)
-        marker.write_text(
-            json.dumps(
-                {
-                    "schema": definition["schema"],
-                    "application_id": value["application_id"],
-                    "channel": value["channel"],
-                    "platform": manifest["layout"]["platform"],
-                    "abi": manifest["layout"]["abi"],
-                    "launch_policy": "portable",
-                },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-    if target.startswith("linux-") and (desktop is not None and desktop):
-        applications = root / "usr/share/applications"
-        applications.mkdir(parents=True)
-        (applications / f"{value['application_id']}.desktop").write_text(
-            "[Desktop Entry]\nType=Application\nVersion=1.5\n"
-            f'Name={value["name"]}\nExec="/opt/{value["package_name"]}/{desktop}"\n'
-            f"Icon={value['application_id']}\nTerminal=false\nCategories=Office;Finance;\n"
-            "StartupNotify=true\n",
-            encoding="utf-8",
-        )
-        icons = root / "usr/share/icons/hicolor/scalable/apps"
-        icons.mkdir(parents=True)
-        shutil.copy2(REPO_ROOT / "docs/_static/cadrumo-favicon.svg", icons / f"{value['application_id']}.svg")
-    if target.startswith("macos-"):
-        plist = {
-            "CFBundleIdentifier": value["application_id"],
-            "CFBundleName": value["name"],
-            "CFBundleDisplayName": value["name"],
-            "CFBundleExecutable": desktop,
-            "CFBundlePackageType": "APPL",
-            "CFBundleShortVersionString": value["version"],
-            "CFBundleVersion": value["version"],
-            "LSMinimumSystemVersion": value["compatibility_floor"].removeprefix("macos-"),
-            "LSApplicationCategoryType": "public.app-category.finance",
-            "NSHighResolutionCapable": True,
-        }
-        (destination.parent / "Info.plist").write_bytes(plistlib.dumps(plist))
-        if managers:
-            if len(managers) != 1 or managers[0].package_path not in manifest["files"]:
-                raise ValueError("A macOS LaunchAgent requires one inventory-owned manager image")
-            manager = managers[0]
-            if not member(destination, manager.package_path).is_file():
-                raise ValueError("The bundled manager image is missing")
-            identity = DistributionIdentity(**value)
-            agent = author_agent(identity, manager)
-            agent_file = member(destination.parent.parent, agent.destination.as_posix())
-            agent_file.parent.mkdir(parents=True, exist_ok=True)
-            agent_file.write_bytes(agent.contents)
-            verify_agent(agent_file.read_bytes(), identity, manager)
-    if target.startswith("windows-") and ((desktop is not None and desktop) or versioned):
-        wix = Element("Wix", xmlns="http://wixtoolset.org/schemas/v4/wxs")
-        fragment = SubElement(wix, "Fragment")
-        if desktop is not None and desktop:
-            menu = SubElement(fragment, "StandardDirectory", Id="ProgramMenuFolder")
-            folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=value["name"])
-        else:
-            folder = SubElement(fragment, "DirectoryRef", Id="INSTALL_ROOT")
-        component = SubElement(
-            folder,
-            "Component",
-            Id="CADRUMO_MENU_COMPONENT",
-            Bitness="always64",
-            Guid=str(uuid5(UUID(value["upgrade_code"]), "start-menu")).upper(),
-        )
-        if desktop is not None and desktop:
-            shortcut = SubElement(
-                component,
-                "Shortcut",
-                Id="CADRUMO_LAUNCH",
-                Name=value["name"],
-                Target="[INSTALL_ROOT]"
-                + destination.relative_to(root).as_posix().replace("/", "\\")
-                + "\\"
-                + desktop.replace("/", "\\"),
-                WorkingDirectory="INSTALL_ROOT",
-            )
-            SubElement(shortcut, "ShortcutProperty", Key="System.AppUserModel.ID", Value=value["application_id"])
-        SubElement(
-            component,
-            "RegistryValue",
-            Root="HKLM",
-            Key="Software\\" + value["application_id"],
-            Name="InstallLocation",
-            Type="string",
-            Value="[INSTALL_ROOT]",
-            KeyPath="yes",
-        )
-        if desktop is not None and desktop:
-            SubElement(component, "RemoveFolder", Id="CADRUMO_REMOVE_MENU", On="uninstall")
-        if versioned:
-            SubElement(
-                component,
-                "RegistryValue",
-                Root="HKLM",
-                Key="Software\\" + value["application_id"],
-                Name="EntryPoint",
-                Type="string",
-                Value="[INSTALL_ROOT]" + managers[0].package_path.replace("/", "\\"),
-            )
-        (build / "Desktop.wxs").write_bytes(tostring(wix, encoding="utf-8", xml_declaration=True))
-        patch = Element("CPackWiXPatch")
-        feature = SubElement(patch, "CPackWiXFragment", Id="#PRODUCTFEATURE")
-        SubElement(feature, "ComponentRef", Id="CADRUMO_MENU_COMPONENT")
-        (build / "DesktopPatch.xml").write_bytes(tostring(patch, encoding="utf-8", xml_declaration=True))
-    # Receipt lives in the build tree, outside the user's installation and storage.
+    for name, contents in plan.controls.items():
+        output = member(root, name)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        # A reused member may still share the admitted previous stage's inode.
+        output.unlink(missing_ok=True)
+        output.write_bytes(contents)
+        output.chmod(plan.modes[name])
+    for name, mode in plan.modes.items():
+        output = member(root, name)
+        if output.stat().st_mode & 0o777 != mode:
+            output.chmod(mode)
+    for name, contents in plan.metadata.items():
+        output = member(build, name)
+        output.write_bytes(contents)
+        output.chmod(0o644)
+    value = json.loads(identity_file.read_text(encoding="utf-8"))
     inventory(root, build / "installation.json", value["application_id"], staging_generation=1)
+    receipt_file = build / "installation.json"
+    receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
+    if receipt["files"] != plan.files:
+        raise ValueError("Installation candidate differs from current payload and controls")
+    receipt["preparation"] = plan.identity
+    receipt_file.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     return root
 
 

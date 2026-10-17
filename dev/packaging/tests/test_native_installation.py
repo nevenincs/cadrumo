@@ -145,18 +145,8 @@ def test_windows_manager_stage_has_stable_entry_and_unmodified_version_inventory
         "abi": 1,
         "launch_policy": "portable",
     }
-    namespaces = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
-    wix = ElementTree.parse(tmp_path / "build/installation/metadata/Desktop.wxs")
-    entry = wix.find(".//w:RegistryValue[@Name='EntryPoint']", namespaces)
-    assert entry is not None
-    assert entry.attrib["Root"] == "HKLM"
-    assert entry.attrib["Value"] == "[INSTALL_ROOT]cadrumo-manager"
-    shortcut = wix.find(".//w:Shortcut", namespaces)
-    if desktop:
-        assert shortcut is not None
-        assert shortcut.attrib["Target"] == f"[INSTALL_ROOT]versions\\{version}\\cadrumo"
-    else:
-        assert shortcut is None
+    assert not (tmp_path / "build/installation/metadata/Desktop.wxs").exists()
+    assert not (tmp_path / "build/installation/metadata/DesktopPatch.xml").exists()
     assert prepare(payload, identity_file, tmp_path / "build", desktop_entry) == root
     # A receipt for one version cannot remove entry points shared by another version.
     other = root / "versions/0.0.1/data"

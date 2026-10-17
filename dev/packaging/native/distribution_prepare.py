@@ -11,6 +11,7 @@ from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .installation import member, prepare, verify_inventory
+from .installation_currency import existing
 from .installation_reuse import InstallationReuse, public_directory, publish
 
 
@@ -27,7 +28,10 @@ def _refresh(payload: Path, identity: Path, build: Path, desktop: str | None = N
     metadata = paths["installation_metadata"]
     receipt = member(metadata, "installation.json")
     if stage.exists():
-        verify_inventory(stage, receipt)
+        from . import installation
+
+        if existing(payload, identity, stage, metadata, desktop, installation.REPO_ROOT, allow_change=True):
+            return
     work = paths["installation_work"]
     work.mkdir(parents=True, exist_ok=True)
     with public_directory(work, "candidate-") as candidate:
