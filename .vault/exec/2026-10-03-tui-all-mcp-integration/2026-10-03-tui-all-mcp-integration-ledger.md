@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-all-mcp-integration'
 date: '2026-10-03'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:717576b6831c2ed189fc6b1e45a4a3d43fb22ca34704b88bdfea193b9982b74a'
+body_hash: 'sha256:8f7377e4648fe495c751eb27c5641780b77d0a29f0aff5abf12072f4ec9090d9'
 related:
   - "[[2026-10-03-tui-all-mcp-integration-plan]]"
 ---
@@ -72,7 +72,6 @@ related:
 ## Notes
 
 - Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
-
 
 - `S02` Protected Keychain positive round trips unavailable in locked login context; unchanged Keychain provider requires unlocked native verification under S05. No protected-store success claimed.
 - `S03` User directed a concrete complete MCP baseline checkpoint before remaining verification. Implementation and original-base dispositions are recorded; this Step remains open. No final combined or installed-runtime success is claimed. Interrupted affected test run:466 passed,61 failed,41 uncompleted; follow-up verification deferred.

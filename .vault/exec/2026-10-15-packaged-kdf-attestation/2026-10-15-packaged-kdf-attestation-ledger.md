@@ -10,7 +10,6 @@ related:
   - "[[2026-10-15-packaged-kdf-attestation-plan]]"
 ---
 
-
 # `packaged-kdf-attestation` ledger
 
 ## Changes

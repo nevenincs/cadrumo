@@ -3,42 +3,16 @@ tags:
   - '#exec'
   - '#full-suite-repair'
 date: '2026-10-15'
-modified: '2026-10-16'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:adabbd4628ca479cd53a35a18a0bed46f7fe29b7e174abaa34b4f42e422c48ce'
+body_hash: 'sha256:b7ead9fa5837dc0bf91f57ab99602a08dee495c07187ebdff9b9eeba21d037be'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `full-suite-repair` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S02` `M` `native/application-environment.toml`
 - `S02` `M` `native/platform/src/launch.rs`

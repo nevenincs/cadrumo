@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:12fcef356ff41a35ccac6c508edb8467b8e71fd0e229456a8f6b73bedc9d0d3a'
+body_hash: 'sha256:f4df2105c59a0fa9815be51a7e86b8f607840918f47e6f2e8e941a0b6d2cb999'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -409,7 +409,6 @@ related:
 ## Notes
 
 - Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
-
 
 - `S08` The subject-reference form could not be stated from inside the harness and moved to its own Step. One existing result-page test was already failing at HEAD on a stale page-size literal and is corrected here.
 - `S01` The import-boundary gate fails for reasons outside this Step: two private cross-package findings under dev/packaging and a stale generated module inventory; all 15 contracts are kept and no chain involves these files. The inventory entries for the new modules are regenerated in a separate commit. Twelve MCP-listed operations are not proven through their real resolver and are pinned in a named set; the no-submission assertion covers what operations, tools and commands declare and cannot see executor or adapter behaviour.

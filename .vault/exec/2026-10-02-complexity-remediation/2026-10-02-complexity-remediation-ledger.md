@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#complexity-remediation'
 date: '2026-10-02'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:e34f576ab6b9e4b3ce3d80b48172eed8bcf7eed3475683db687200c730d4fc61'
+body_hash: 'sha256:6cdf0d3f2660001330927e03c8a19ee5823fb80146ffc04de44e18cc17e3b54a'
 related:
   - "[[2026-10-02-complexity-remediation-plan]]"
 ---
@@ -89,7 +89,6 @@ related:
 ## Notes
 
 - Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
-
 
 - `S04` Focused packaging test selection passed 44 tests with 12 integration tests deselected by the configured default marker; broader verification remains pending. S04 remains open because the other assigned packaging and acceptance files still have findings.
 - `S04` S04 remains open. Wheelhouse tests have 8 passes and one unchanged real-lock failure: pikepdf==10.16.0 has no compatible macos-arm64 wheel at the declared support floor. Captured pre-refactor and current planners produce identical plans and refusal messages for Python 3.13/3.14; no dependency or support-floor policy changed.

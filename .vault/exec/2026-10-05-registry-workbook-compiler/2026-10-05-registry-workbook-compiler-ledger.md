@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-workbook-compiler'
 date: '2026-10-05'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:775c538cb8da1f6d9f5c45b2eb725e6242813d372a0b28da5860251916943d3d'
+body_hash: 'sha256:50eb6a401d6d0add9c2d2a6a188b2fd52963efb6a9174ef5ff272c8eaa64f9d0'
 related:
   - "[[2026-10-05-registry-workbook-compiler-plan]]"
 ---
@@ -67,7 +67,6 @@ related:
 ## Notes
 
 - Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
-
 
 - `S01` Configured type/style checks include pre-existing concurrent diagnostics outside assigned paths. Two new strict compiler diagnostics were fixed and targeted basedpyright is clean. Format changes in owned files were repaired; unrelated formatting remains. Boundary pass kept all 15 contracts and loaded all 4441 modules, but tree mutation invalidated a stable gate; rerun pending. Shared files contained earlier outbound-review edits on entry; no unrelated changes reverted or staged.
 - `S02` Compiler accepts scenario/template plans and explicitly refuses real saved-review metadata until exact baseline identity and value mapping are integrated. Reuses `saved_form_records` for typed repeating records and `declaration_result_casillas` for result highlighting. Layouts remain generated, not officially reviewed.

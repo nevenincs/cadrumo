@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:86654c7355c92a11287d277509b892d87546516bd371ca77213dd3c2c46217cb'
+body_hash: 'sha256:8554ed044192fe3585401d806d9ad50d4a43118a1f6e86444d1df727578cd3c3'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---
@@ -161,7 +161,6 @@ related:
 ## Notes
 
 - Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
-
 
 - `S01` Global vault baseline remains 26 errors and 486 warnings; this feature has no findings. No platform/custody runtime acceptance is claimed.
 - `S01` No commit: aeat-no-destructive-git requires an explicit operator request for committing; continuation authorized plan work, not a Git publication action.

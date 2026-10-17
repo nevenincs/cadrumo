@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#duplication-remediation'
 date: '2026-10-02'
-modified: '2026-10-14'
+modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:5dfcdb3782995bc450436f108362a1e102efb6a005d42d05aa5ea77b2e75a0db'
+body_hash: 'sha256:9f85ccd069be361ef94f907bd1d006beddae50705476f9110ef9f52ce6fe7afb'
 related:
   - "[[2026-10-02-duplication-remediation-plan]]"
 ---
@@ -213,7 +213,6 @@ related:
 ## Notes
 
 - Summary semantics: `summary:` labels preserve Step coverage, while the parser reports zero native path-change rows. Original operation and domain counts appear above; exact path-per-row history and verification commands are in `<local-archive>/markdown-originals-2026-10-14.tar.gz` (manifest: `<temp>/cadrumo-markdown-condensation-2026-10-14/manifest.json`).
-
 
 - `S03` Changes remain unstaged and uncommitted under the operator's authorization boundary. Remaining G19-G20 host/Cl@ve consolidation belongs to S26.
 - `S04` Query escaping migration passes focused checks. S04 remains open for Drive reference/context consolidation and reported ID-length disposition. Existing staged request admission and acknowledgement changes are preserved.

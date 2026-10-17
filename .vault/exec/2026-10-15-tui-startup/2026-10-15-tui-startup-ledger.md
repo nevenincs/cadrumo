@@ -10,7 +10,6 @@ related:
   - "[[2026-10-15-tui-startup-plan]]"
 ---
 
-
 # `tui-startup` ledger
 
 ## Changes
