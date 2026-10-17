@@ -101,3 +101,20 @@ def test_an_image_that_does_not_match_its_digest_is_not_verified(tmp_path: Path)
         descriptor = _descriptor(image).model_copy(update={"image_digest": "0" * 64})
 
         assert InstalledNativeServiceVerifier().verify_service(context, channel, descriptor) is None
+
+
+def test_a_descriptor_that_binds_launch_arguments_admits_only_that_invocation(tmp_path: Path) -> None:
+    with _peer_channel(tmp_path) as channel:
+        assert channel.peer.image_path is not None and channel.peer.process_id is not None
+        image = Path(channel.peer.image_path).resolve(strict=True)
+        context = ConnectionContext(uuid4(), uuid4(), channel.peer)
+        started = service_verification.native_process_arguments(channel.peer.process_id, channel.peer.os_owner_id)
+        assert started
+        verifier = InstalledNativeServiceVerifier()
+
+        bound = _descriptor(image).model_copy(update={"launch_arguments": started[:1]})
+        assert verifier.verify_service(context, channel, bound) is not None
+        other_role = _descriptor(image).model_copy(update={"launch_arguments": ("--role", "runtime")})
+        assert verifier.verify_service(context, channel, other_role) is None
+        longer = _descriptor(image).model_copy(update={"launch_arguments": (*started, "session")})
+        assert verifier.verify_service(context, channel, longer) is None

@@ -38,6 +38,9 @@ class InstalledServiceDescriptor(BaseModel):
     operation_scope: AccessScope
     allow_descendants: bool = False
     allowed_parent_images: tuple[InstalledParentImage, ...] = ()
+    # The arguments the image must be started with, first after the image itself: the role
+    # of an image that runs several. Empty for an image that runs one service.
+    launch_arguments: tuple[Annotated[str, Field(min_length=1, max_length=256)], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

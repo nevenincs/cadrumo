@@ -39,6 +39,8 @@ def test_holder_admission_binds_the_platform_launcher(
     descriptors = json.loads((tmp_path / relative).read_bytes())
     holder = next(item for item in descriptors if item["service_id"] == "desktop-session")
     assert holder["launch_image"] == expected_holder
+    expected_arguments = ["--role", "runtime", "session", "hold"] if expected_holder == "cadrumo.exe" else None
+    assert holder.get("launch_arguments") == expected_arguments
     assert holder["image_digest"] == digest(tmp_path / expected_holder)
     assert holder["allowed_parent_images"] == [
         {"launch_image": image.package_path, "image_digest": digest(tmp_path / image.package_path)}

@@ -111,6 +111,65 @@ def native_process_identity(pid: int, owner: str) -> NativeProcessIdentity:
         close(handle)
 
 
+_MAXIMUM_COMMAND_LINE_BYTES = 2 * 32768 + 64
+
+
+def native_process_arguments(pid: int, owner: str) -> tuple[str, ...]:
+    """Read the arguments a process was started with, after its image; unknown facts refuse."""
+    if sys.platform == "linux":
+        directory = Path("/proc") / str(pid)
+        if str(directory.stat().st_uid) != owner:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        parts = (directory / "cmdline").read_bytes().split(b"\0")
+        return tuple(os.fsdecode(part) for part in parts[1:-1])
+    if sys.platform != "win32":
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    from ctypes import wintypes
+
+    from cadrumo_client.transport.windows_native_io import windows_owner_sid
+
+    class UnicodeString(ctypes.Structure):
+        _fields_ = (("length", wintypes.USHORT), ("maximum", wintypes.USHORT), ("buffer", ctypes.c_void_p))
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    opened = kernel.OpenProcess
+    opened.argtypes, opened.restype = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD), wintypes.HANDLE
+    handle = opened(0x1000, False, pid)
+    if not handle:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    close = kernel.CloseHandle
+    close.argtypes, close.restype = (wintypes.HANDLE,), wintypes.BOOL
+    try:
+        if windows_owner_sid(handle) != owner:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        query = ctypes.WinDLL("ntdll").NtQueryInformationProcess
+        query.argtypes = (wintypes.HANDLE, wintypes.ULONG, ctypes.c_void_p, wintypes.ULONG, ctypes.c_void_p)
+        query.restype = wintypes.LONG
+        needed = wintypes.ULONG()
+        query(handle, 60, None, 0, ctypes.byref(needed))
+        if not 0 < needed.value <= _MAXIMUM_COMMAND_LINE_BYTES:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        buffer = ctypes.create_string_buffer(needed.value)
+        if query(handle, 60, buffer, needed.value, ctypes.byref(needed)) != 0:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        text = UnicodeString.from_buffer(buffer)
+        line = ctypes.wstring_at(text.buffer, text.length // 2) if text.buffer else ""
+    finally:
+        close(handle)
+    split = ctypes.WinDLL("shell32", use_last_error=True).CommandLineToArgvW
+    split.argtypes, split.restype = (wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_int)), ctypes.POINTER(wintypes.LPWSTR)
+    count = ctypes.c_int()
+    arguments = split(line, ctypes.byref(count))
+    if not arguments:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    free = kernel.LocalFree
+    free.argtypes, free.restype = (ctypes.c_void_p,), ctypes.c_void_p
+    try:
+        return tuple(str(arguments[index]) for index in range(1, count.value))
+    finally:
+        free(ctypes.cast(arguments, ctypes.c_void_p))
+
+
 def _require_channel(channel: ByteChannel, identity: NativeProcessIdentity) -> None:
     if isinstance(channel, (WindowsChannel, PosixChannel)):
         require_live_native_peer(channel)
@@ -167,6 +226,11 @@ class InstalledNativeServiceVerifier:
                 image_identity = _file_identity(opened.status())
             if digest != descriptor.image_digest or _running_image_identity(identity) != image_identity:
                 return None
+            expected = descriptor.launch_arguments
+            if expected:
+                started = native_process_arguments(identity.pid, context.peer.os_owner_id)
+                if started[: len(expected)] != expected:
+                    return None
             if native_process_identity(identity.pid, context.peer.os_owner_id) != identity:
                 return None
             _require_channel(channel, identity)

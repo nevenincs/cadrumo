@@ -14,6 +14,9 @@ from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from .hashing import digest
 from .layout import ApplicationImage, entrypoint_files
 
+# The leading arguments that start the runtime console script as a role of the desktop image.
+_RUNTIME_ROLE = ("--role", "runtime")
+
 
 def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[ApplicationImage, ...]) -> str:
     """Write immutable policy only after relocation has fixed executable hashes."""
@@ -64,9 +67,12 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
         if image.desktop
     ]
     holder_image = entrypoints["cadrumo-runtime"]
+    holder_arguments: list[str] = []
     if layout["backend"] == "windows" and parents:
-        # Windows hosts the desktop's runtime children in its own role-dispatch image.
+        # Windows hosts the desktop's runtime children in its own role-dispatch image, which
+        # also runs the runtime and its workers, so the holder is bound to its invocation.
         holder_image = parents[0]["launch_image"]
+        holder_arguments = [*_RUNTIME_ROLE, "session", "hold"]
     holder: dict[str, Any] = {
         "service_id": "desktop-session",
         "launch_image": holder_image,
@@ -77,6 +83,8 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
         "allow_descendants": False,
         "allowed_parent_images": parents,
     }
+    if holder_arguments:
+        holder["launch_arguments"] = holder_arguments
     descriptors: list[Mapping[str, Any]] = []
     for descriptor in (service, holder):
         descriptor["descriptor_digest"] = sha256_hex(canonical_json_bytes(descriptor))

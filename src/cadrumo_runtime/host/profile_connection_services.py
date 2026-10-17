@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
@@ -24,7 +25,36 @@ from cadrumo_client.contracts.transport import ConnectionContext
 from .profile_host import ProfileConnection
 
 if TYPE_CHECKING:
+    from ..adapters.service_verification import NativeProcessIdentity
     from .profile_connections import RuntimeProfileConnections
+
+_MAXIMUM_ANCESTRY_DEPTH = 32
+
+
+def _descends_from_this_runtime(process: NativeProcessIdentity, owner: str) -> bool:
+    """Whether this runtime started ``process``, directly or through its own children.
+
+    The runtime's workers run the same image as the desktop, so a desktop holder must not
+    trace back to this process. A chain that ends, leaves the owner, or reaches a parent born
+    after its child (a reused id) no longer leads back here; one too deep to follow is refused.
+    """
+    from ..adapters.service_verification import native_process_identity
+
+    runtime = os.getpid()
+    current = process
+    for _ in range(_MAXIMUM_ANCESTRY_DEPTH):
+        if current.pid == runtime:
+            return True
+        if current.parent_pid in (0, current.pid):
+            return False
+        try:
+            parent = native_process_identity(current.parent_pid, owner)
+        except (RefusalError, OSError):
+            return False
+        if parent.born > current.born:
+            return False
+        current = parent
+    return True
 
 
 @dataclass(slots=True)
@@ -254,6 +284,8 @@ class ProfileConnectionServicesMixin:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_image_unlisted")
         if native_process_identity(parent.pid, context.peer.os_owner_id) != parent:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_identity_changed")
+        if _descends_from_this_runtime(parent, context.peer.os_owner_id):
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_started_by_runtime")
 
     def _nonhuman_peer(self: RuntimeProfileConnections, context, channel) -> bool:
         if self._service_tree_owner(context, channel) is not None:
