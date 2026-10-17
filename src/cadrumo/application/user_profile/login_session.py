@@ -9,6 +9,7 @@ exact-profile cleanup boundary.
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
@@ -22,6 +23,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ...core.config import load_settings
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
@@ -732,9 +734,17 @@ def _mint_or_warn(
     except BaseException as exc:
         if not profile_is_keyring_unavailable(exc):
             raise
-        _log.info(
-            "profile session not persisted (no usable OS keychain); login is process-scoped profile_id=%s",
-            material.envelope.profile_id,
+        # The type and origin name why the keychain refused, which the cause of a
+        # process-scoped sign-in otherwise hides; the message is never logged.
+        diagnostic_event(
+            _log,
+            "profile_session_not_persisted",
+            fields={
+                "cause": "keychain_unavailable",
+                "profile_id": str(material.envelope.profile_id),
+                **diagnostic_error_fields(exc),
+            },
+            level=logging.INFO,
         )
         return False
     if minted is None:
