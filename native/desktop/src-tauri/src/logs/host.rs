@@ -446,6 +446,8 @@ mod tests {
                 "-Command",
                 script,
             ]);
+            // A test's children never open a console on the person's screen.
+            std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
             command
         };
         use cadrumo_application::diagnostics::helper::HelperDecode;

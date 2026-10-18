@@ -291,6 +291,9 @@ mod tests {
             "-Command",
             script,
         ]);
+        // A test's children never open a console: the person's terminal is
+        // not theirs to take.
+        std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
         command
     }
 

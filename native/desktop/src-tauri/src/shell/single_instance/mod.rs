@@ -445,6 +445,7 @@ if (-not $created) { throw "the name already existed" }
 [void][Console]::In.ReadLine()
 $held.Dispose()
 "#;
+        use std::os::windows::process::CommandExt;
         let root = std::env::var_os("SystemRoot").expect("SystemRoot");
         let powershell =
             PathBuf::from(root).join(r"System32\WindowsPowerShell\v1.0\powershell.exe");
@@ -456,6 +457,8 @@ $held.Dispose()
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::inherit())
+                // The squatter never opens a console on the person's screen.
+                .creation_flags(0x0800_0000)
                 .spawn()
                 .unwrap(),
         );
@@ -565,7 +568,8 @@ $held.Dispose()
     }
 
     fn launch(executable: &PathBuf, family: &str, stdin: Stdio) -> std::process::Child {
-        Command::new(executable)
+        let mut command = Command::new(executable);
+        command
             .args([
                 "--exact",
                 "shell::single_instance::tests::helper",
@@ -575,9 +579,11 @@ $held.Dispose()
             .env(FAMILY_VARIABLE, family)
             .stdin(stdin)
             .stdout(Stdio::piped())
-            .stderr(Stdio::inherit())
-            .spawn()
-            .unwrap()
+            .stderr(Stdio::inherit());
+        // The helper instance never opens a console on the person's screen.
+        #[cfg(windows)]
+        std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
+        command.spawn().unwrap()
     }
 
     /// The helper's report on `line`. The test harness may print its own

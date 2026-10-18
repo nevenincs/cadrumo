@@ -360,18 +360,23 @@ pub(crate) mod tests {
             "-Command",
             script,
         ]);
+        // A test's children never open a console: the person's terminal is
+        // not theirs to take.
+        std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
         command
     }
 
     #[cfg(windows)]
     pub(crate) fn alive(pid: u32) -> bool {
-        let output = Command::new(
+        let mut command = Command::new(
             std::path::Path::new(&std::env::var_os("SystemRoot").unwrap())
                 .join("System32/tasklist.exe"),
-        )
-        .args(["/FI", &format!("PID eq {pid}"), "/FO", "CSV", "/NH"])
-        .output()
-        .unwrap();
+        );
+        std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
+        let output = command
+            .args(["/FI", &format!("PID eq {pid}"), "/FO", "CSV", "/NH"])
+            .output()
+            .unwrap();
         String::from_utf8_lossy(&output.stdout).contains(&format!("\"{pid}\""))
     }
 

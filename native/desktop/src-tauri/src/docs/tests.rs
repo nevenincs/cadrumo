@@ -888,6 +888,7 @@ fn links_inside_the_tree_cannot_redirect_a_stored_read_outside_it() {
 
 #[cfg(windows)]
 fn link_directory(target: &Path, link: &Path) {
+    use std::os::windows::process::CommandExt;
     // A junction needs no privilege, unlike a Windows symbolic link.
     fs::create_dir_all(link.parent().unwrap()).unwrap();
     let status = std::process::Command::new("cmd")
@@ -897,6 +898,8 @@ fn link_directory(target: &Path, link: &Path) {
         .arg(link)
         .arg(target)
         .stdout(std::process::Stdio::null())
+        // mklink runs without opening a console on the person's screen.
+        .creation_flags(0x0800_0000)
         .status()
         .unwrap();
     assert!(status.success());

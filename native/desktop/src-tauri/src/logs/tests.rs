@@ -1365,6 +1365,10 @@ print(default_log_file_path(), flush=True)
                 .envs(self.environment.iter().map(|(k, v)| (k, v)))
                 .current_dir(directory)
                 .stdin(Stdio::null());
+            // The packaged interpreter never opens a console on the person's
+            // screen.
+            #[cfg(windows)]
+            std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
             command
         }
     }
