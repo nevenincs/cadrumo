@@ -35,7 +35,7 @@ from cadrumo.application.runtime.profile_worker import (
 )
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo.entrypoints.runtime import worker, worker_service
+from cadrumo.entrypoints.runtime import worker, worker_cleanup, worker_service
 from cadrumo.entrypoints.runtime.operation_host import ProfileWorkerOperationHost
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 
@@ -64,9 +64,18 @@ def test_description_keeps_loop_responsive_and_retains_host_until_thread_settles
             finished.set()
             raise refusal
 
-        context = cast(
-            worker_service._WorkerControl,
-            SimpleNamespace(operations=SimpleNamespace(describe=describe)),
+        # The description raises before any other dependency is reached, so
+        # only the operation host is a working double.
+        unreached = object()
+        context = worker_service._WorkerControl(
+            channel=cast(WorkerChannel, unreached),
+            custody=cast(ProfileWorkerCustody, unreached),
+            human=cast(ProfileWorkerHumanLogin, unreached),
+            operations=cast(ProfileWorkerOperationHost, SimpleNamespace(describe=describe)),
+            uploads=cast(worker_service.WorkerSubmissionStaging, unreached),
+            failed=asyncio.Event(),
+            operation_release=cast(worker_cleanup.WorkerRelease[OperationDrainResult], unreached),
+            upload_release=cast(worker_cleanup.WorkerRelease[None], unreached),
         )
         handler = asyncio.create_task(worker_service._handle_metadata_control(context, request))
         started = asyncio.create_task(entered.wait())
