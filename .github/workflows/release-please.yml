@@ -14,10 +14,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  # What the default token needs to do the App token's former work:
-  # release commits, tags and releases (contents), the release pull
-  # request and its labels (pull-requests, issues), and dispatching
-  # merge-gate.yml and release.yml (actions).
+  # The default token cuts tags and GitHub releases (contents), moves the
+  # merged release pull request's labels (pull-requests, issues), and
+  # dispatches release.yml (actions). It never writes the release pull
+  # request or its branch.
   contents: write
   pull-requests: write
   issues: write
@@ -33,138 +33,55 @@ jobs:
     name: "Build: Release proposal (Linux)"
     runs-on: [self-hosted, Linux, X64]
     steps:
-      - name: Run release-please
+      # Tags and releases stay on the default token: GitHub raises no workflow
+      # events for refs and releases that token creates, so nothing keyed on a
+      # tag or a release starts a second time.
+      - name: Cut the release of a merged release pull request
         id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          skip-github-pull-request: true
+
+      - name: Mint the release App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # Written by the release App, the release pull request and every push to
+      # its branch raise ordinary pull_request events, so the merge gate runs on
+      # it like on any trusted pull request. The version bump and the uv.lock
+      # versions land in release-please's own commit, so the branch has one head.
+      - name: Open or update the release pull request
+        id: release-pr
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: true
 
       - name: Check out the release branch
-        id: release-branch-checkout
-        if: steps.release.outputs.pr && !steps.release.outputs.release_created
+        if: steps.release-pr.outputs.pr
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+          ref: ${{ steps.release-pr.outputs.pr && fromJSON(steps.release-pr.outputs.pr).headBranchName || '' }}
           persist-credentials: false
 
-      - name: Set up uv for the release branch
-        if: steps.release.outputs.pr && !steps.release.outputs.release_created
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-        with:
-          prune-cache: false
-          version: "0.11.29"
-          enable-cache: false
-
-      # The App token is handed only to the step that pushes, never to the one
-      # that resolves the lockfile, and it is never written to .git/config.
-      - name: Regenerate uv.lock on the release branch
-        id: branch-lock
-        if: steps.release.outputs.pr && !steps.release.outputs.release_created
-        run: |
-          if uv lock --locked; then
-            echo "uv.lock is already up to date"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            uv lock
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Push the regenerated uv.lock onto the release branch
-        if: steps.branch-lock.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
-          CHECKOUT_COMMIT: ${{ steps.release-branch-checkout.outputs.commit }}
-        run: |
-          set -euo pipefail
-          test -n "$HEAD_BRANCH" && test -n "$CHECKOUT_COMMIT"
-          sha="$(gh api --method GET "repos/${GITHUB_REPOSITORY}/contents/uv.lock" -f "ref=$CHECKOUT_COMMIT" --jq .sha)"
-          jq -n --rawfile content uv.lock --arg branch "$HEAD_BRANCH" --arg sha "$sha" \
-            '{message: "chore: update uv.lock for release", content: ($content | @base64), branch: $branch, sha: $sha}' \
-            > "$RUNNER_TEMP/release-lock-request.json"
-          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/uv.lock" \
-            --input "$RUNNER_TEMP/release-lock-request.json" > /dev/null
-
-      # The lockfile push lands after release-please makes the pull request
-      # mergeable. A release merged inside that window ships the previous
-      # version's lockfile, and every job installing with `--frozen` then fails
-      # at dependency install. Reconcile through a pull request rather than
-      # assuming the window was missed.
-      - name: Check out main to verify the released lockfile
-        id: main-checkout
-        if: steps.release.outputs.release_created == 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: main
-          persist-credentials: false
-
-      - name: Set up uv for the lockfile verification
-        if: steps.release.outputs.release_created == 'true'
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-        with:
-          prune-cache: false
-          version: "0.11.29"
-          enable-cache: false
-
-      - name: Reconcile uv.lock with the released version
-        id: main-lock
-        if: steps.release.outputs.release_created == 'true'
-        run: |
-          if uv lock --locked; then
-            echo "uv.lock on main matches the released version"
-            echo "drifted=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "::warning::uv.lock on main did not match the released version; opening a reconciling pull request"
-          uv lock
-          echo "drifted=true" >> "$GITHUB_OUTPUT"
-
-      - name: Open a reconciling pull request when the lockfile drifted
-        if: steps.main-lock.outputs.drifted == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.release.outputs.tag_name }}
-          CHECKOUT_COMMIT: ${{ steps.main-checkout.outputs.commit }}
-        run: |
-          set -euo pipefail
-          test -n "$CHECKOUT_COMMIT"
-          BRANCH="chore/reconcile-uv-lock-${TAG}"
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
-            -f "ref=refs/heads/$BRANCH" -f "sha=$CHECKOUT_COMMIT" > /dev/null
-          sha="$(gh api --method GET "repos/${GITHUB_REPOSITORY}/contents/uv.lock" -f "ref=$CHECKOUT_COMMIT" --jq .sha)"
-          jq -n --rawfile content uv.lock --arg branch "$BRANCH" --arg sha "$sha" --arg tag "$TAG" \
-            '{message: ("chore(deps): reconcile uv.lock with " + $tag), content: ($content | @base64), branch: $branch, sha: $sha}' \
-            > "$RUNNER_TEMP/main-lock-request.json"
-          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/uv.lock" \
-            --input "$RUNNER_TEMP/main-lock-request.json" > /dev/null
-          gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
-            --title "chore(deps): reconcile uv.lock with ${TAG}" \
-            --body "Reconcile the released version's frozen dependency lock."
-
-      # The default token's pushes and pull requests start no workflow runs,
-      # so the release pull request would never report the required merge
-      # gate. A dispatch is exempt from that rule, and its check run lands on
-      # the branch head the pull request is waiting on. Last of the release-
-      # branch steps, so it validates the lockfile commit pushed above.
-      - name: Dispatch the merge gate for the release pull request
-        if: steps.release.outputs.pr && !steps.release.outputs.release_created
+      - name: Dispatch release proof for the release pull request
+        if: steps.release-pr.outputs.pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Guarded, because a step's `env` is prepared before its `if` is
-          # weighed: on the run that CREATES the release there is no pull
-          # request, `pr` is empty, and a bare `fromJSON('')` fails the step
-          # that the condition was about to skip. Upstream, that failure then
-          # skipped the release dispatch below and a version was tagged with
-          # nothing built or published behind it.
-          HEAD_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
-        run: gh workflow run merge-gate.yml --repo "${GITHUB_REPOSITORY}" --ref "${HEAD_BRANCH}"
-
-      - name: Dispatch release proof for the release pull request
-        if: steps.release.outputs.pr && !steps.release.outputs.release_created
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+          # weighed: on a run that opens no release pull request `pr` is empty,
+          # and a bare `fromJSON('')` fails the step the condition was about to
+          # skip, which then skips every later step.
+          HEAD_BRANCH: ${{ steps.release-pr.outputs.pr && fromJSON(steps.release-pr.outputs.pr).headBranchName || '' }}
         run: |
           version="$(jq -r '."."' .release-please-manifest.json)"
           if [ -z "${version}" ] || [ "${version}" = "null" ]; then

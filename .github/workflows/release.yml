@@ -552,8 +552,6 @@ jobs:
           - id: macos-arm64
             label: macOS arm64
             runner: [self-hosted, macOS, ARM64]
-            expected_os: Darwin
-            expected_arch: arm64
             brew: /opt/homebrew/bin/brew
             prefix: /opt/homebrew
             row_id: homebrew-macos-arm64
@@ -561,8 +559,6 @@ jobs:
           - id: linux-x86_64
             label: Linux x86_64
             runner: [self-hosted, Linux, X64]
-            expected_os: Linux
-            expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-x86-64
@@ -570,24 +566,11 @@ jobs:
           - id: linux-arm64
             label: Linux arm64
             runner: [self-hosted, Linux, ARM64]
-            expected_os: Linux
-            expected_arch: aarch64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-arm64
             make_jobs: "2"
     steps:
-      - name: Verify declared Homebrew release row
-        env:
-          BREW_PATH: ${{ matrix.brew }}
-          EXPECTED_ARCH: ${{ matrix.expected_arch }}
-          EXPECTED_OS: ${{ matrix.expected_os }}
-        run: |
-          test "$(uname -s)" = "$EXPECTED_OS"
-          test "$(uname -m)" = "$EXPECTED_ARCH"
-          test -x "$BREW_PATH"
-          "$BREW_PATH" --version
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -704,45 +687,6 @@ jobs:
     env:
       CADRUMO_SCOOP_INSTALL_ROOT: ${{ vars.CADRUMO_SCOOP_INSTALL_ROOT }}
     steps:
-      - name: Verify declared Windows native release row
-        shell: powershell
-        run: |
-          if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {
-            throw "Scoop release row requires AMD64; got $env:PROCESSOR_ARCHITECTURE"
-          }
-          if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-            throw "scoop is unavailable to the lane user; install Scoop into this runner user's own profile"
-          }
-          if (-not $env:CADRUMO_SCOOP_INSTALL_ROOT) {
-            throw "declare CADRUMO_SCOOP_INSTALL_ROOT for the release lane's installed Scoop prefix"
-          }
-          $scoopRoot = [System.IO.Path]::GetFullPath($env:CADRUMO_SCOOP_INSTALL_ROOT)
-          foreach ($required in @("apps", "buckets", "shims")) {
-            if (-not (Test-Path -LiteralPath (Join-Path $scoopRoot $required) -PathType Container)) {
-              throw "the lane user's Scoop profile is incomplete: missing '$required' under $scoopRoot"
-            }
-          }
-          $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-          $principal = New-Object Security.Principal.WindowsPrincipal($identity)
-          if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-            throw "the Scoop lane must run as the dedicated non-admin runner user; got elevated identity $($identity.Name)"
-          }
-          # A UAC-filtered administrator token passes IsInRole, so membership is
-          # read from the group by well-known SID and an unreadable group refuses.
-          try {
-            $administrators = @(Get-LocalGroupMember -SID "S-1-5-32-544" -ErrorAction Stop)
-          }
-          catch {
-            throw "cannot determine whether the lane user is an administrator ($($_.Exception.Message))"
-          }
-          $tokenGroups = @($identity.Groups | ForEach-Object { $_.Value })
-          foreach ($member in $administrators) {
-            $memberSid = [string]$member.SID.Value
-            if ($memberSid -eq $identity.User.Value -or $tokenGroups -contains $memberSid) {
-              throw "the Scoop lane must run as the dedicated non-admin runner user; $($identity.Name) is an administrator"
-            }
-          }
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

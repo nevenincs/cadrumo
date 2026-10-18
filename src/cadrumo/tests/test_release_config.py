@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import re
+from typing import Literal
 
 import pytest
 import yaml
@@ -65,6 +66,16 @@ class ChangelogSection(BaseModel):
     hidden: bool = False
 
 
+class ReleasePleaseTomlFile(BaseModel):
+    """An ``extra-files`` entry that rewrites one TOML value addressed by JSONPath."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["toml"]
+    path: str
+    jsonpath: str
+
+
 class ReleasePleasePackage(BaseModel):
     """Per-package block under ``packages`` in the release-please config."""
 
@@ -73,7 +84,7 @@ class ReleasePleasePackage(BaseModel):
     package_name: str = Field(alias="package-name")
     release_type: str = Field(alias="release-type")
     changelog_path: str = Field(alias="changelog-path")
-    extra_files: list[str] = Field(default_factory=list, alias="extra-files")
+    extra_files: list[str | ReleasePleaseTomlFile] = Field(default_factory=list, alias="extra-files")
     component: str | None = None
 
 

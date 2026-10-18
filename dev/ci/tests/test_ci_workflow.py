@@ -18,7 +18,6 @@ from dev.packaging.command_execution import run_command
 
 from ..lane_reachability import declared_lanes
 from ..lane_recipe_commands import resolved_recipe_commands
-from ..workflow_job_gates import dispatch_input_defaults
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -595,17 +594,23 @@ def _dispatched_fields(workflow_name: str, documents: tuple[tuple[Path, dict[str
     return dispatches
 
 
-def test_the_merge_gate_dispatch_passes_only_declared_inputs() -> None:
-    """An undeclared input makes the dispatch fail, and the release pull request then never reports the gate."""
-    declared = set(dispatch_input_defaults(yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))))
-    dispatches = _dispatched_fields(_MERGE_GATE.name, _lane_documents((_WORKFLOWS_DIR / "release-please.yml",)))
-    assert dispatches, "release-please no longer dispatches the merge gate"
-    assert [set(fields) - declared for fields in dispatches] == [set()] * len(dispatches)
+def test_nothing_dispatches_the_merge_gate() -> None:
+    """The release pull request reports the gate from its own events, never from a dispatch.
+
+    A dispatched run's checks attach to no pull request, so the required check
+    stays expected while the dispatch looks like proof. The release App writes
+    the release pull request, whose events run the gate like any other.
+
+    Proved able to fail: restoring a `gh workflow run merge-gate.yml --ref
+    "${HEAD_BRANCH}"` step in `release-please.yml` and running this test alone
+    failed on its assertion; removing the step made it pass.
+    """
+    assert _dispatched_fields(_MERGE_GATE.name, _lane_documents()) == [], "a lane dispatches the merge gate"
 
 
-def test_the_dispatch_field_reader_sees_every_passed_input() -> None:
-    """Teeth: a passed input field is read by name, so an undeclared one cannot hide."""
-    document = {"jobs": {"lane": {"steps": [{"run": 'gh workflow run merge-gate.yml --ref "$B" -f "ref=$B"'}]}}}
+def test_the_dispatch_reader_sees_every_merge_gate_dispatch() -> None:
+    """Teeth: a dispatch is read with its passed fields, so it cannot hide behind a continuation."""
+    document = {"jobs": {"lane": {"steps": [{"run": 'gh workflow run merge-gate.yml \\\n --ref "$B" -f "ref=$B"'}]}}}
     assert _dispatched_fields("merge-gate.yml", ((Path("fixture.yml"), document),)) == [("ref",)]
 
 
