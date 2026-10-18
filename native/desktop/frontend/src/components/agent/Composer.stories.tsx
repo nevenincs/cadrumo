@@ -2,6 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps, ReactNode } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
+import {
+  FIXTURE_SKILLS,
+  MANY_FIXTURE_SKILLS,
+} from "@/dev/fixtures/agentSkills";
 import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
 import { SOURCE_LOCALE, translator } from "../../shell/strings";
 import { Composer } from "./Composer";
@@ -168,6 +172,37 @@ export const UploadsInProgress: Story = {
   args: {
     defaultDraft: "Read these when they arrive.",
     attachments: UPLOADING_FILES,
+  },
+};
+
+const BUNDLED_SKILLS = () => Promise.resolve(FIXTURE_SKILLS);
+const HUNDREDS_OF_SKILLS = () => Promise.resolve(MANY_FIXTURE_SKILLS);
+
+export const SlashSkills: Story = {
+  name: "Slash: skills and commands",
+  args: { defaultDraft: "/", skills: BUNDLED_SKILLS, onSkillCommand: NOOP },
+};
+
+export const SlashFiltered: Story = {
+  name: "Slash: filtered",
+  args: {
+    defaultDraft: "Revisa /fact",
+    skills: BUNDLED_SKILLS,
+    onSkillCommand: NOOP,
+  },
+};
+
+export const SlashHundreds: Story = {
+  name: "Slash: hundreds of skills scroll",
+  args: { defaultDraft: "/", skills: HUNDREDS_OF_SKILLS },
+};
+
+export const SlashCommandArgument: Story = {
+  name: "Slash: a command asks for its skill",
+  args: {
+    defaultDraft: "/skill-verify ",
+    skills: BUNDLED_SKILLS,
+    onSkillCommand: NOOP,
   },
 };
 

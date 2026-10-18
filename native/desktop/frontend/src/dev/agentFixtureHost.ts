@@ -27,6 +27,13 @@ import {
 } from "../shell/agentViews";
 import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
 import {
+  FIXTURE_SKILLS,
+  MANY_FIXTURE_SKILLS,
+  fixtureSkillDetail,
+  fixtureSkillVerification,
+  type FixtureSkills,
+} from "./fixtures/agentSkills";
+import {
   FIXTURE_CONVERSATIONS,
   FIXTURE_RUNS,
   conversationRecords,
@@ -328,6 +335,7 @@ export function fixtureAgent({
   stream,
   asks,
   refused,
+  skills = "bundled",
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -339,7 +347,15 @@ export function fixtureAgent({
   asks: FixtureAsks | null;
   /** Thrown by a read while nobody is signed in. */
   refused: () => unknown;
+  /** How the agent serves its skills to `/`. */
+  skills?: FixtureSkills;
 }): { agent: AgentViews; session: AgentSession } {
+  const inventory = skills === "many" ? MANY_FIXTURE_SKILLS : FIXTURE_SKILLS;
+  const knownSkill = (name: string) => {
+    const held = inventory.find((one) => one.name === name);
+    if (!held) throw coded("agent_gateway_skill_not_found");
+    return held;
+  };
   // This run's conversations, which a send adds to.
   const conversations: AgentConversationRecord[] = empty
     ? []
@@ -756,6 +772,30 @@ export function fixtureAgent({
       await check();
       return FIXTURE_CATALOG;
     },
+    ...(skills === "unavailable"
+      ? {}
+      : {
+          async skills() {
+            say("agentSkills");
+            await check();
+            if (skills === "failed")
+              throw coded("agent_gateway_skills_unavailable");
+            return {
+              revision: "fixture",
+              skills: structuredClone([...inventory]),
+            };
+          },
+          async skill(name: string) {
+            say(`agentSkill ${name}`);
+            await check();
+            return fixtureSkillDetail(knownSkill(name));
+          },
+          async verifySkill(name: string) {
+            say(`agentSkillVerify ${name}`);
+            await check();
+            return fixtureSkillVerification(knownSkill(name));
+          },
+        }),
     async startConversation() {
       say("agentStartConversation");
       await check();
@@ -775,6 +815,10 @@ export function fixtureAgent({
       await check();
       const conversationId = request.conversation_id;
       const { text } = request;
+      if (request.skills) {
+        say(`agentSendSkills ${request.skills.join(",")}`);
+        for (const name of request.skills) knownSkill(name);
+      }
       const runs = runsIn(conversationId);
       const last = runs.at(-1);
       // The host checks a message before it asks the agent anything.

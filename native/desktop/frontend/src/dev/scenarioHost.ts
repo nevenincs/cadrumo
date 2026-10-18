@@ -25,6 +25,7 @@ import {
   type FixtureStream,
 } from "./agentFixtureHost";
 import { agentAccessFixture } from "./agentAccessFixture";
+import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
   providerSettingsFixture,
@@ -81,6 +82,8 @@ export type ScenarioHostOptions = {
   agentStream?: FixtureStream;
   /** What every agent reply stops to ask the person, if anything. */
   agentAsks?: FixtureAsks;
+  /** How the agent serves its skills to `/`. */
+  agentSkills?: FixtureSkills;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -273,6 +276,7 @@ export function scenarioHost(
     stream: options.agentStream ?? "steady",
     asks: options.agentAsks ?? null,
     refused: () => failure("timed_out", "cli"),
+    skills: options.agentSkills ?? "bundled",
   });
 
   const providerFixture = providerSettingsFixture({

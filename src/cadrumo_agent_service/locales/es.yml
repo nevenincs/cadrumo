@@ -129,6 +129,7 @@ desktop:
     send: Enviar
     send_nothing: Escribe un mensaje o añade un archivo primero
     send_too_long: Este mensaje tiene {count} caracteres; el máximo es {max}
+    send_too_many_skills: Un mensaje puede cargar como máximo {max} habilidades
     send_waiting: Espera a que se suban todos los archivos
     sent_files: Archivos enviados con este mensaje
     service_absent: El agente no está instalado.
@@ -149,6 +150,36 @@ desktop:
     show: Mostrar el agente
     show_active: Mostrar activas
     sign_in_first: Inicia sesión para usar el agente
+    skill_applies_always: Siempre
+    skill_applies_asked: Solo cuando se pide
+    skill_applies_phase: En la fase de trabajo {phase}
+    skill_applies_profile_all: 'El perfil cumple todas estas condiciones:'
+    skill_applies_profile_any: 'El perfil cumple alguna de estas condiciones:'
+    skill_applies_time: 'Disparador temporal: {trigger}'
+    skill_applies_when: Se aplica cuando
+    skill_close: Cerrar
+    skill_command_review: 'Revisa una habilidad: su descripción, cuándo se aplica,
+      sus archivos y SKILL.md'
+    skill_command_verify: Comprueba una habilidad con las comprobaciones del propio
+      agente
+    skill_failed: El agente no ha podido responder. Vuelve a intentarlo.
+    skill_files: Archivos
+    skill_finding_error: Error
+    skill_finding_warning: Aviso
+    skill_findings: Resultados
+    skill_loading: Preguntando al agente…
+    skill_not_found: El agente no tiene ninguna habilidad llamada {name}
+    skill_review_title: Habilidad {name}
+    skill_verify_clean: La habilidad supera todas las comprobaciones
+    skill_verify_failed: La habilidad no supera las comprobaciones del agente
+    skill_verify_title: Comprobaciones de {name}
+    skill_verify_warned: La habilidad las supera, con avisos
+    slash_commands: Comandos
+    slash_empty: Ninguna habilidad ni comando coincide
+    slash_failed: No se han podido leer las habilidades del agente
+    slash_label: Habilidades y comandos
+    slash_loading: Leyendo las habilidades del agente…
+    slash_skills: Habilidades
     status_extracting: Leyendo
     status_failed: Con error
     status_needs_review: Por revisar
@@ -239,7 +270,6 @@ desktop:
     save: Guardar
     saved_unread: Guardada, pero no se ha podido leer su estado.
     saving: Guardando…
-    sign_in_only: Usa el inicio de sesión propio de {provider}.
     sign_in_action: Iniciar sesión
     sign_in_cancel: Cancelar el inicio de sesión
     sign_in_cancel_failed: Cadrumo aún no ha podido cancelar el inicio de sesión.
@@ -249,7 +279,9 @@ desktop:
     sign_in_continue_browser: Continuar en el navegador
     sign_in_description: Continúa en la página de inicio de sesión de {provider}.
       Escribe tu contraseña solo allí.
-    sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo más tarde.
+    sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo
+      más tarde.
+    sign_in_only: Usa el inicio de sesión propio de {provider}.
     sign_in_open_failed: Cadrumo no pudo abrir la página de inicio de sesión del proveedor.
     sign_in_security: Cadrumo nunca te pedirá la contraseña del proveedor.
     sign_in_start_browser: Iniciar sesión en el navegador
@@ -259,10 +291,13 @@ desktop:
       que este canal puede ejecutar un agente.
     sign_in_timeout: El inicio de sesión tardó demasiado y se canceló.
     sign_in_title: Iniciar sesión con {provider}
-    sign_in_unavailable: El inicio de sesión desde Cadrumo aún no está disponible para este proveedor.
+    sign_in_unavailable: El inicio de sesión desde Cadrumo aún no está disponible
+      para este proveedor.
     sign_in_user_code: Código de dispositivo
-    sign_in_waiting: Termina de iniciar sesión en la página del proveedor y vuelve aquí.
-    sign_in_waiting_device: Escribe este código en la página del proveedor para terminar de iniciar sesión.
+    sign_in_waiting: Termina de iniciar sesión en la página del proveedor y vuelve
+      aquí.
+    sign_in_waiting_device: Escribe este código en la página del proveedor para terminar
+      de iniciar sesión.
     source_environment: Usa la clave del entorno de desarrollo
     source_profile: Clave guardada en este perfil
     through: A través de {url}

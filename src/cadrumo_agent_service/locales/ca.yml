@@ -130,6 +130,7 @@ desktop:
     send: Envia
     send_nothing: Primer escriu un missatge o afegeix un fitxer
     send_too_long: Aquest missatge té {count} caràcters; el màxim és {max}
+    send_too_many_skills: Un missatge pot carregar com a màxim {max} habilitats
     send_waiting: Espera que es pugin tots els fitxers
     sent_files: Fitxers enviats amb aquest missatge
     service_absent: L'agent no està instal·lat.
@@ -149,6 +150,36 @@ desktop:
     show: Mostra l'agent
     show_active: Mostra les actives
     sign_in_first: Inicia la sessió per fer servir l'agent
+    skill_applies_always: Sempre
+    skill_applies_asked: Només quan es demana
+    skill_applies_phase: A la fase de treball {phase}
+    skill_applies_profile_all: 'El perfil compleix totes aquestes condicions:'
+    skill_applies_profile_any: 'El perfil compleix alguna d''aquestes condicions:'
+    skill_applies_time: 'Activador temporal: {trigger}'
+    skill_applies_when: S'aplica quan
+    skill_close: Tanca
+    skill_command_review: 'Revisa una habilitat: la descripció, quan s''aplica, els
+      fitxers i SKILL.md'
+    skill_command_verify: Comprova una habilitat amb les comprovacions del mateix
+      agent
+    skill_failed: L'agent no ha pogut respondre. Torna-ho a provar.
+    skill_files: Fitxers
+    skill_finding_error: Error
+    skill_finding_warning: Avís
+    skill_findings: Resultats
+    skill_loading: S'està preguntant a l'agent…
+    skill_not_found: L'agent no té cap habilitat anomenada {name}
+    skill_review_title: Habilitat {name}
+    skill_verify_clean: L'habilitat supera totes les comprovacions
+    skill_verify_failed: L'habilitat no supera les comprovacions de l'agent
+    skill_verify_title: Comprovacions de {name}
+    skill_verify_warned: L'habilitat les supera, amb avisos
+    slash_commands: Ordres
+    slash_empty: No hi coincideix cap habilitat ni ordre
+    slash_failed: No s'han pogut llegir les habilitats de l'agent
+    slash_label: Habilitats i ordres
+    slash_loading: S'estan llegint les habilitats de l'agent…
+    slash_skills: Habilitats
     status_extracting: S'està llegint
     status_failed: Amb error
     status_needs_review: Per revisar
@@ -241,7 +272,6 @@ desktop:
     save: Desa
     saved_unread: Desada, però no se n'ha pogut llegir l'estat.
     saving: S'està desant…
-    sign_in_only: Fa servir l'inici de sessió propi de {provider}.
     sign_in_action: Inicia la sessió
     sign_in_cancel: Cancel·la l'inici de sessió
     sign_in_cancel_failed: El Cadrumo encara no ha pogut cancel·lar l'inici de sessió.
@@ -251,8 +281,11 @@ desktop:
     sign_in_continue_browser: Continua al navegador
     sign_in_description: Continua a la pàgina d'inici de sessió de {provider}. Escriu-hi
       la contrasenya només allà.
-    sign_in_failure: No s'ha pogut completar l'inici de sessió. Torna-ho a provar més tard.
-    sign_in_open_failed: El Cadrumo no ha pogut obrir la pàgina d'inici de sessió del proveïdor.
+    sign_in_failure: No s'ha pogut completar l'inici de sessió. Torna-ho a provar
+      més tard.
+    sign_in_only: Fa servir l'inici de sessió propi de {provider}.
+    sign_in_open_failed: El Cadrumo no ha pogut obrir la pàgina d'inici de sessió
+      del proveïdor.
     sign_in_security: El Cadrumo mai no et demanarà la contrasenya del proveïdor.
     sign_in_start_browser: Inicia la sessió al navegador
     sign_in_start_device: Fes servir un codi de dispositiu
@@ -261,10 +294,12 @@ desktop:
       comprovar que aquest canal pot executar un agent.
     sign_in_timeout: L'inici de sessió ha trigat massa i s'ha cancel·lat.
     sign_in_title: Inicia la sessió amb {provider}
-    sign_in_unavailable: Encara no es pot iniciar la sessió amb aquest proveïdor des del Cadrumo.
+    sign_in_unavailable: Encara no es pot iniciar la sessió amb aquest proveïdor des
+      del Cadrumo.
     sign_in_user_code: Codi del dispositiu
     sign_in_waiting: Acaba d'iniciar la sessió a la pàgina del proveïdor i torna aquí.
-    sign_in_waiting_device: Escriu aquest codi a la pàgina del proveïdor per acabar d'iniciar la sessió.
+    sign_in_waiting_device: Escriu aquest codi a la pàgina del proveïdor per acabar
+      d'iniciar la sessió.
     source_environment: Fa servir la clau de l'entorn de desenvolupament
     source_profile: Clau desada en aquest perfil
     through: A través de {url}

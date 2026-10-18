@@ -1,4 +1,9 @@
 import type {
+  AgentSkillDetail,
+  AgentSkillInventory,
+  AgentSkillVerification,
+} from "./agentSkills";
+import type {
   AgentConversationRecord,
   AgentProviderCondition,
   AgentToolCall,
@@ -198,6 +203,10 @@ export type AgentSendRequest = {
   conversation_id: string;
   text: string;
   selection: AgentSelectionRecord;
+  /** The skills the message names, which the run loads before it answers:
+   * at most 8 unique names of the agent's inventory. Absent when none is
+   * named. */
+  skills?: string[];
 };
 
 /** What a send started. cadrumo-agent names no id for the person's message,
@@ -376,6 +385,14 @@ export interface AgentSession {
   ): Promise<() => void>;
   /** cadrumo-agent's provider catalog, as it serves it. */
   providerCatalog(): Promise<AgentProviderCatalog>;
+  /** cadrumo-agent's own skills, every one, by name. Absent where the host
+   * serves none. */
+  skills?(): Promise<AgentSkillInventory>;
+  /** One skill in full, for the person to review. An unknown name is
+   * refused with `agent_gateway_skill_not_found`. */
+  skill?(name: string): Promise<AgentSkillDetail>;
+  /** The agent's checks of one skill. */
+  verifySkill?(name: string): Promise<AgentSkillVerification>;
   /** A new conversation of the signed-in profile: the id its first run will
    * have, reserved by the host. No run exists behind it until the first
    * message is sent. */

@@ -129,6 +129,7 @@ desktop:
     send: Send
     send_nothing: Write a message or add a file first
     send_too_long: This message has {count} characters; {max} is the most
+    send_too_many_skills: A message can load at most {max} skills
     send_waiting: Wait until every file has uploaded
     sent_files: Files sent with this message
     service_absent: The agent isn't installed.
@@ -148,6 +149,35 @@ desktop:
     show: Show the agent
     show_active: Show active
     sign_in_first: Sign in to use the agent
+    skill_applies_always: Always
+    skill_applies_asked: Only when it is asked for
+    skill_applies_phase: In the workflow phase {phase}
+    skill_applies_profile_all: 'The profile meets all of these:'
+    skill_applies_profile_any: 'The profile meets any of these:'
+    skill_applies_time: 'Time trigger: {trigger}'
+    skill_applies_when: Applies when
+    skill_close: Close
+    skill_command_review: 'Review a skill: its description, when it applies, its files
+      and SKILL.md'
+    skill_command_verify: Check a skill with the agent's own checks
+    skill_failed: The agent could not answer. Try again.
+    skill_files: Files
+    skill_finding_error: Error
+    skill_finding_warning: Warning
+    skill_findings: Findings
+    skill_loading: Asking the agent…
+    skill_not_found: The agent has no skill called {name}
+    skill_review_title: Skill {name}
+    skill_verify_clean: The skill passes every check
+    skill_verify_failed: The skill fails the agent's checks
+    skill_verify_title: Checks of {name}
+    skill_verify_warned: The skill passes, with warnings
+    slash_commands: Commands
+    slash_empty: No skill or command matches
+    slash_failed: The agent's skills could not be read
+    slash_label: Skills and commands
+    slash_loading: Reading the agent's skills…
+    slash_skills: Skills
     status_extracting: Reading
     status_failed: Failed
     status_needs_review: Needs review
@@ -258,7 +288,8 @@ desktop:
     sign_in_unavailable: Sign-in from Cadrumo isn't available for this provider yet.
     sign_in_user_code: Device code
     sign_in_waiting: Finish signing in on the provider's page, then return here.
-    sign_in_waiting_device: Enter this code on the provider's page to finish signing in.
+    sign_in_waiting_device: Enter this code on the provider's page to finish signing
+      in.
     source_environment: Using the development environment's key
     source_profile: Key saved in this profile
     through: Through {url}

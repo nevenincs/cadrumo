@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -10,7 +16,20 @@ import { useStrings } from "../../shell/strings";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
 import { AttachmentWell } from "./AttachmentWell";
+import {
+  ComposerSuggestions,
+  useComposerSuggestions,
+  type AnySource,
+} from "./ComposerSuggestions";
 import { ProviderMark } from "./ProviderMark";
+import { useSlashSources } from "./SlashSuggestions";
+import {
+  MAX_SKILLS_PER_MESSAGE,
+  skillCommand,
+  skillReferences,
+  type AgentSkillSummary,
+  type SkillCommand,
+} from "../../shell/agentSkills";
 import type {
   AgentSelection,
   ModelOption,
@@ -18,6 +37,13 @@ import type {
   ProviderWay,
   StagedAttachment,
 } from "./types";
+
+/** What a message names beside its words, which its send carries as
+ * structured references. */
+export type ComposerReferences = {
+  /** The skills the message's `/name` tokens name, once each. */
+  skills: string[];
+};
 
 /** The lines the message field grows to before it scrolls. */
 const MAX_LINES = 8;
@@ -58,6 +84,10 @@ function selectionWords(
  * The draft is the composer's own until it is sent. `onSend` takes it; the
  * field is cleared unless `onSend` returns false. While `running`, Send is
  * Stop. Nothing is sent while any file is still waiting or uploading.
+ *
+ * `/` at the start or after a space lists cadrumo-agent's skills and the
+ * composer's own commands above the field. A message that is one of those
+ * commands and a skill is never sent: `onSkillCommand` runs it.
  */
 export function Composer({
   locale,
@@ -74,6 +104,9 @@ export function Composer({
   onRemoveAttachment,
   onRemoveAllAttachments,
   onShowAllAttachments,
+  skills,
+  onSkillCommand,
+  suggestionSources,
 }: {
   locale: string;
   attachments: readonly StagedAttachment[];
@@ -85,17 +118,34 @@ export function Composer({
   running?: boolean;
   defaultDraft?: string;
   /** Send the draft with the ready files. Return false to keep the draft. */
-  onSend?: (text: string) => boolean | void;
+  onSend?: (text: string, references: ComposerReferences) => boolean | void;
   onStop?: () => void;
   onAddFiles?: () => void;
   onSelectionChange?: (selection: AgentSelection) => void;
   onRemoveAttachment?: (id: string) => void;
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
+  /** cadrumo-agent's skills; without it `/` lists nothing. */
+  skills?: () => Promise<readonly AgentSkillSummary[]>;
+  /** Runs a skill command: reviewing or verifying a skill. */
+  onSkillCommand?: (command: SkillCommand) => void;
+  /** Further suggestion lists, after the `/` list; memoized. */
+  suggestionSources?: readonly AnySource[];
 }) {
   const t = useStrings();
   const [draft, setDraft] = useState(defaultDraft);
   const field = useRef<HTMLTextAreaElement>(null);
+  const slashSources = useSlashSources(skills, onSkillCommand);
+  const sources = useMemo(
+    () => [...slashSources, ...(suggestionSources ?? [])],
+    [slashSources, suggestionSources],
+  );
+  const suggestions = useComposerSuggestions({
+    field,
+    value: draft,
+    onValueChange: setDraft,
+    sources,
+  });
 
   // The field is as tall as its text, up to a few lines, then scrolls.
   // It is measured again whenever its width changes, which includes being
@@ -142,23 +192,37 @@ export function Composer({
   // A message of the agent is one to 65536 characters, counted as code points.
   const length =
     draft.length > MAX_CONTINUATION_CHARS ? characters(draft) : draft.length;
-  const heldBy = waiting
-    ? t("desktop.agent.send_waiting")
-    : length > MAX_CONTINUATION_CHARS
-      ? t("desktop.agent.send_too_long", {
-          count: length,
-          max: MAX_CONTINUATION_CHARS,
-        })
-      : !sendable
-        ? t("desktop.agent.send_nothing")
-        : undefined;
+  const command = onSkillCommand ? skillCommand(draft) : null;
+  const named = command ? [] : skillReferences(draft);
+  const heldBy = command
+    ? undefined
+    : waiting
+      ? t("desktop.agent.send_waiting")
+      : length > MAX_CONTINUATION_CHARS
+        ? t("desktop.agent.send_too_long", {
+            count: length,
+            max: MAX_CONTINUATION_CHARS,
+          })
+        : named.length > MAX_SKILLS_PER_MESSAGE
+          ? t("desktop.agent.send_too_many_skills", {
+              max: MAX_SKILLS_PER_MESSAGE,
+            })
+          : !sendable
+            ? t("desktop.agent.send_nothing")
+            : undefined;
 
   const send = () => {
+    if (command && onSkillCommand) {
+      onSkillCommand(command);
+      setDraft("");
+      return;
+    }
     if (!onSend || heldBy || running) return;
-    if (onSend(draft) !== false) setDraft("");
+    if (onSend(draft, { skills: named }) !== false) setDraft("");
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (suggestions.onKeyDown(event)) return;
     if (
       event.key !== "Enter" ||
       event.shiftKey ||
@@ -198,74 +262,79 @@ export function Composer({
   );
 
   return (
-    <div className="rounded-xl border bg-card text-card-foreground shadow-raised has-[textarea:focus-visible]:outline-(length:--focus-ring) has-[textarea:focus-visible]:outline-offset-(length:--focus-ring) has-[textarea:focus-visible]:outline-solid">
-      <textarea
-        ref={field}
-        rows={1}
-        value={draft}
-        aria-label={t("desktop.agent.message_label")}
-        placeholder={t("desktop.agent.message_placeholder")}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={onKeyDown}
-        className="block w-full resize-none bg-transparent px-3 pt-3 pb-1 text-base text-foreground placeholder:text-faint focus-visible:outline-none"
-      />
-      <div className="flex min-w-0 items-center gap-1 px-2 pb-2">
-        <AgentIconAction
-          icon="plus"
-          label={t("desktop.agent.add_files")}
-          side="top"
-          onAction={onAddFiles}
+    <ComposerSuggestions state={suggestions}>
+      <div className="rounded-xl border bg-card text-card-foreground shadow-raised has-[textarea:focus-visible]:outline-(length:--focus-ring) has-[textarea:focus-visible]:outline-offset-(length:--focus-ring) has-[textarea:focus-visible]:outline-solid">
+        <textarea
+          ref={field}
+          rows={1}
+          value={draft}
+          aria-label={t("desktop.agent.message_label")}
+          placeholder={t("desktop.agent.message_placeholder")}
+          {...suggestions.fieldProps}
+          onChange={(event) => setDraft(event.target.value)}
+          onSelect={suggestions.onCaret}
+          onClick={suggestions.onCaret}
+          onKeyDown={onKeyDown}
+          className="block w-full resize-none bg-transparent px-3 pt-3 pb-1 text-base text-foreground placeholder:text-faint focus-visible:outline-none"
         />
-        {onSelectionChange ? (
-          <AgentSettingsPopover
-            providers={providers}
-            models={models}
-            selection={selection}
-            onChange={onSelectionChange}
-          >
-            {settingsButton}
-          </AgentSettingsPopover>
-        ) : (
-          <AgentTextAction
-            variant="ghost"
-            size="xs"
-            className="min-w-0"
-            aria-label={`${settingsName}, ${t("desktop.agent.unavailable")}`}
-          >
-            {settingsLook}
-          </AgentTextAction>
-        )}
-        <span className="flex-1" />
-        {running ? (
+        <div className="flex min-w-0 items-center gap-1 px-2 pb-2">
           <AgentIconAction
-            icon="stop"
-            label={t("desktop.agent.stop")}
+            icon="plus"
+            label={t("desktop.agent.add_files")}
             side="top"
-            variant="primary"
-            size="sm"
-            className="rounded-full"
-            onAction={onStop}
+            onAction={onAddFiles}
           />
-        ) : (
-          <AgentIconAction
-            icon="send"
-            label={t("desktop.agent.send")}
-            side="top"
-            variant="primary"
-            size="sm"
-            className="rounded-full"
-            heldBy={heldBy}
-            onAction={onSend ? send : undefined}
-          />
-        )}
+          {onSelectionChange ? (
+            <AgentSettingsPopover
+              providers={providers}
+              models={models}
+              selection={selection}
+              onChange={onSelectionChange}
+            >
+              {settingsButton}
+            </AgentSettingsPopover>
+          ) : (
+            <AgentTextAction
+              variant="ghost"
+              size="xs"
+              className="min-w-0"
+              aria-label={`${settingsName}, ${t("desktop.agent.unavailable")}`}
+            >
+              {settingsLook}
+            </AgentTextAction>
+          )}
+          <span className="flex-1" />
+          {running ? (
+            <AgentIconAction
+              icon="stop"
+              label={t("desktop.agent.stop")}
+              side="top"
+              variant="primary"
+              size="sm"
+              className="rounded-full"
+              onAction={onStop}
+            />
+          ) : (
+            <AgentIconAction
+              icon="send"
+              label={t("desktop.agent.send")}
+              side="top"
+              variant="primary"
+              size="sm"
+              className="rounded-full"
+              heldBy={heldBy}
+              onAction={onSend ? send : undefined}
+            />
+          )}
+        </div>
+        <AttachmentWell
+          attachments={attachments}
+          locale={locale}
+          onRemove={onRemoveAttachment}
+          onRemoveAll={onRemoveAllAttachments}
+          onShowAll={onShowAllAttachments}
+        />
       </div>
-      <AttachmentWell
-        attachments={attachments}
-        locale={locale}
-        onRemove={onRemoveAttachment}
-        onRemoveAll={onRemoveAllAttachments}
-        onShowAll={onShowAllAttachments}
-      />
-    </div>
+    </ComposerSuggestions>
   );
 }

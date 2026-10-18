@@ -48,9 +48,12 @@ import { useStrings, type Translate } from "../shell/strings";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
-import { Composer } from "./agent/Composer";
+import { Composer, type ComposerReferences } from "./agent/Composer";
 import { HistoryList } from "./agent/HistoryList";
 import { QuestionsPrompt } from "./agent/QuestionsPrompt";
+import { SkillDialog } from "./agent/SkillDialog";
+import { useSkillInventory } from "./agent/SlashSuggestions";
+import type { SkillCommand } from "../shell/agentSkills";
 import { AgentAccess as AgentAccessSection } from "./settings/AgentAccess";
 import { ProviderSettings as ProviderSettingsSection } from "./settings/ProviderSettings";
 import { Transcript } from "./agent/Transcript";
@@ -248,6 +251,14 @@ export function AgentColumn({
 
   // The service, and what it can run, while the column could send.
   const status = useAgentStatus(session, readable);
+  // cadrumo-agent's skills, which `/` lists, and the skill command shown.
+  const skills = useSkillInventory(session);
+  const reviewSkill = useMemo(() => session?.skill?.bind(session), [session]);
+  const verifySkill = useMemo(
+    () => session?.verifySkill?.bind(session),
+    [session],
+  );
+  const [skillShown, setSkillShown] = useState<SkillCommand | null>(null);
   const ready = status?.state === "ready";
   // What it can run is the agent's own catalog, every lane of it.
   const readCatalog = useMemo(
@@ -325,7 +336,11 @@ export function AgentColumn({
   };
   // Pressing Send is the person's decision: the message goes, and nothing
   // asks them again.
-  const submit = async (text: string, chosen: AgentSelection) => {
+  const submit = async (
+    text: string,
+    chosen: AgentSelection,
+    references: ComposerReferences,
+  ) => {
     if (!session || catalog.kind !== "ready") return;
     const runs = selectionRecord(catalog.value, chosen);
     if (!runs) {
@@ -344,6 +359,7 @@ export function AgentColumn({
       // first word.
       await live.watch(id);
       request = { conversation_id: id, text, selection: runs };
+      if (references.skills.length > 0) request.skills = references.skills;
     } catch (error) {
       giveBack(text, failureCode(error));
       return;
@@ -402,9 +418,9 @@ export function AgentColumn({
     answering && questionnaire
       ? (text: string) => void answer(questionnaire, { kind: "message", text })
       : answering && selection && runnable && !heldByRun
-        ? (text: string) => {
+        ? (text: string, references: ComposerReferences) => {
             change({ sending: true, sendFailure: null });
-            void submit(text, selection);
+            void submit(text, selection, references);
           }
         : undefined;
   const stop =
@@ -677,11 +693,24 @@ export function AgentColumn({
             running={!questionnaire && (live.working || view.sending)}
             onSend={send}
             onStop={stop}
+            skills={skills}
+            onSkillCommand={
+              reviewSkill || verifySkill ? setSkillShown : undefined
+            }
             onSelectionChange={
               offer ? (chosen) => change({ chosen }) : undefined
             }
           />
         </div>
+      )}
+      {skillShown && (
+        <SkillDialog
+          command={skillShown}
+          locale={locale}
+          review={reviewSkill}
+          verify={verifySkill}
+          onClose={() => setSkillShown(null)}
+        />
       )}
     </>
   );

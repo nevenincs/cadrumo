@@ -189,6 +189,25 @@ impl Client {
         self.get(&format!("/runs/{run}/history"))
     }
 
+    /// `GET /v1/skills`: every skill of the agent, by name.
+    pub fn skills(&self) -> Result<Value, Refused> {
+        self.get("/skills")
+    }
+
+    /// `GET /v1/skills/{name}`, for a name the caller has checked.
+    pub fn skill(&self, name: &str) -> Result<Value, Refused> {
+        self.get(&format!("/skills/{name}"))
+    }
+
+    /// `POST /v1/skills/{name}/verify`, for a name the caller has checked.
+    pub fn verify_skill(&self, name: &str) -> Result<Value, Refused> {
+        self.post(
+            &format!("/skills/{name}/verify"),
+            &serde_json::json!({}),
+            None,
+        )
+    }
+
     /// `GET /v1/runs/{id}/stream`, resumed after `cursor`, or from the start
     /// of what the run retains.
     pub fn stream(&self, run: &str, cursor: Option<&str>) -> Result<impl Read + use<>, Refused> {

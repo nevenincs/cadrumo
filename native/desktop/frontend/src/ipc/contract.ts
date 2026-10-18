@@ -970,6 +970,15 @@ export interface HostCommands {
   };
   /** cadrumo-agent's catalog, unchanged and unfiltered. */
   agent_provider_catalog: { args: Authorized; result: AgentProviderCatalog };
+  /** cadrumo-agent's skills, as `GET /v1/skills` lists them, unchanged. */
+  agent_skills: { args: Authorized; result: unknown };
+  /** One skill with its SKILL.md, as `GET /v1/skills/{name}` serves it. A
+   * name outside the skill grammar is refused as `agent_invalid_request`
+   * before the agent is asked, and an unknown one as
+   * `agent_gateway_skill_not_found`. */
+  agent_skill: { args: Authorized<{ name: string }>; result: unknown };
+  /** The agent's checks of one skill, from `POST /v1/skills/{name}/verify`. */
+  agent_skill_verify: { args: Authorized<{ name: string }>; result: unknown };
   agent_conversation_start: {
     args: Authorized;
     result: AgentConversationRecord;

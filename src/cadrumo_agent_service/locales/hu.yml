@@ -130,6 +130,7 @@ desktop:
     send: Küldés
     send_nothing: Előbb írj üzenetet, vagy adj hozzá fájlt
     send_too_long: Ez az üzenet {count} karakter hosszú; legfeljebb {max} lehet
+    send_too_many_skills: Egy üzenet legfeljebb {max} készséget tölthet be
     send_waiting: Várd meg, amíg minden fájl feltöltődik
     sent_files: Az üzenettel küldött fájlok
     service_absent: Az ügynök nincs telepítve.
@@ -149,6 +150,35 @@ desktop:
     show: Ügynök megjelenítése
     show_active: Aktívak megjelenítése
     sign_in_first: Jelentkezz be az ügynök használatához
+    skill_applies_always: Mindig
+    skill_applies_asked: Csak ha kérik
+    skill_applies_phase: A(z) {phase} munkafázisban
+    skill_applies_profile_all: 'A profil megfelel mindegyik feltételnek:'
+    skill_applies_profile_any: 'A profil megfelel bármelyik feltételnek:'
+    skill_applies_time: 'Időzítő: {trigger}'
+    skill_applies_when: Mikor alkalmazandó
+    skill_close: Bezárás
+    skill_command_review: 'Nézz át egy készséget: a leírását, mikor alkalmazandó,
+      a fájljait és a SKILL.md-t'
+    skill_command_verify: Ellenőrizz egy készséget az ügynök saját ellenőrzéseivel
+    skill_failed: Az ügynök nem tudott válaszolni. Próbáld újra.
+    skill_files: Fájlok
+    skill_finding_error: Hiba
+    skill_finding_warning: Figyelmeztetés
+    skill_findings: Eredmények
+    skill_loading: Az ügynök megkérdezése…
+    skill_not_found: Az ügynöknek nincs {name} nevű készsége
+    skill_review_title: 'Készség: {name}'
+    skill_verify_clean: A készség minden ellenőrzésen átmegy
+    skill_verify_failed: A készség nem megy át az ügynök ellenőrzésein
+    skill_verify_title: 'Ellenőrzések: {name}'
+    skill_verify_warned: A készség átmegy, figyelmeztetésekkel
+    slash_commands: Parancsok
+    slash_empty: Nincs egyező készség vagy parancs
+    slash_failed: Nem sikerült beolvasni az ügynök készségeit
+    slash_label: Készségek és parancsok
+    slash_loading: Az ügynök készségeinek beolvasása…
+    slash_skills: Készségek
     status_extracting: Olvasás
     status_failed: Hibás
     status_needs_review: Ellenőrzésre vár
@@ -241,7 +271,6 @@ desktop:
     save: Mentés
     saved_unread: Mentve, de az állapotát nem sikerült beolvasni.
     saving: Mentés…
-    sign_in_only: A szolgáltató ({provider}) saját bejelentkezését használja.
     sign_in_action: Bejelentkezés
     sign_in_cancel: Bejelentkezés megszakítása
     sign_in_cancel_failed: A Cadrumo még nem tudta megszakítani a bejelentkezést.
@@ -249,21 +278,27 @@ desktop:
     sign_in_cancelled: A bejelentkezés megszakadt.
     sign_in_close: Bejelentkezés bezárása
     sign_in_continue_browser: Folytatás a böngészőben
-    sign_in_description: 'Folytasd a bejelentkezést itt: {provider}. A jelszavadat csak a szolgáltató oldalán add meg.'
+    sign_in_description: 'Folytasd a bejelentkezést itt: {provider}. A jelszavadat
+      csak a szolgáltató oldalán add meg.'
     sign_in_failure: Nem sikerült befejezni a bejelentkezést. Próbáld meg később újra.
-    sign_in_open_failed: A Cadrumo nem tudta megnyitni a szolgáltató bejelentkezési oldalát.
+    sign_in_only: A szolgáltató ({provider}) saját bejelentkezését használja.
+    sign_in_open_failed: A Cadrumo nem tudta megnyitni a szolgáltató bejelentkezési
+      oldalát.
     sign_in_security: A Cadrumo soha nem kéri el a szolgáltatói jelszavadat.
     sign_in_start_browser: Bejelentkezés böngészőben
     sign_in_start_device: Eszközkód használata
     sign_in_starting: Bejelentkezés indítása…
-    sign_in_success: 'Sikeresen bejelentkeztél ide: {provider}. A Cadrumónak még igazolnia kell, hogy ez a sáv képes ügynököt futtatni.'
+    sign_in_success: 'Sikeresen bejelentkeztél ide: {provider}. A Cadrumónak még igazolnia
+      kell, hogy ez a sáv képes ügynököt futtatni.'
     sign_in_timeout: A bejelentkezés túl sokáig tartott, ezért megszakadt.
     sign_in_title: 'Bejelentkezés: {provider}'
     sign_in_unavailable: Ebből a Cadrumo-verzióból még nem lehet bejelentkezni ehhez
       a szolgáltatóhoz.
     sign_in_user_code: Eszközkód
-    sign_in_waiting: Fejezd be a bejelentkezést a szolgáltató oldalán, majd térj vissza ide.
-    sign_in_waiting_device: A bejelentkezés befejezéséhez írd be ezt a kódot a szolgáltató oldalán.
+    sign_in_waiting: Fejezd be a bejelentkezést a szolgáltató oldalán, majd térj vissza
+      ide.
+    sign_in_waiting_device: A bejelentkezés befejezéséhez írd be ezt a kódot a szolgáltató
+      oldalán.
     source_environment: A fejlesztői környezet kulcsát használja
     source_profile: A kulcs ebben a profilban van mentve
     through: 'Ezen keresztül: {url}'

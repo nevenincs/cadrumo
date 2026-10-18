@@ -193,6 +193,9 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_status_subscribe,
         agent_status_unsubscribe,
         agent_provider_catalog,
+        agent_skills,
+        agent_skill,
+        agent_skill_verify,
         agent_conversation_start,
         agent_send,
         agent_cancel,
@@ -341,6 +344,45 @@ async fn agent_provider_catalog(
     blocking(&host, |host| {
         host.administer(serde_json::json!({"action":"catalog"}), None)
             .map_err(|error| host.refuse("agent_service_failed", error))
+    })
+    .await
+}
+
+/// cadrumo-agent's skills, relayed unchanged.
+#[tauri::command]
+async fn agent_skills(host: State<'_, Arc<AgentHost>>) -> std::result::Result<Value, Refused> {
+    blocking(&host, |host| {
+        gateway::Client::new(&Session::gateway(&host.supervisor)?).skills()
+    })
+    .await
+}
+
+/// One skill with its SKILL.md, for a name of the skill grammar.
+#[tauri::command]
+async fn agent_skill(
+    host: State<'_, Arc<AgentHost>>,
+    name: String,
+) -> std::result::Result<Value, Refused> {
+    if !session::skill_name(&name) {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        gateway::Client::new(&Session::gateway(&host.supervisor)?).skill(&name)
+    })
+    .await
+}
+
+/// The agent's checks of one skill, for a name of the skill grammar.
+#[tauri::command]
+async fn agent_skill_verify(
+    host: State<'_, Arc<AgentHost>>,
+    name: String,
+) -> std::result::Result<Value, Refused> {
+    if !session::skill_name(&name) {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        gateway::Client::new(&Session::gateway(&host.supervisor)?).verify_skill(&name)
     })
     .await
 }

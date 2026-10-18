@@ -13,6 +13,11 @@ import type {
   AgentSession,
   AgentStreamEvent,
 } from "./agentSession";
+import {
+  readSkillDetail,
+  readSkillInventory,
+  readSkillVerification,
+} from "./agentSkills";
 import type { AgentViews } from "./agentViews";
 import type { Host } from "./host";
 import type { HostCall } from "./hostCall";
@@ -327,6 +332,16 @@ function tauriAgentAccess(call: HostCall): AgentAccess {
 // and each conversation's stream arrive on channels, everything else is one
 // token-checked call. A refusal rejects with the host's `{ code }`.
 
+/** An answer of the agent read into its shape, else refused as one the host
+ * could not read. */
+function readable<T>(read: T | null): T {
+  if (read === null)
+    throw Object.assign(new Error("The agent's answer was unreadable."), {
+      code: "agent_gateway_unreadable",
+    });
+  return read;
+}
+
 /** The agent session and views of the desktop host. */
 function tauriAgent(call: HostCall): {
   agentSession: AgentSession;
@@ -348,6 +363,18 @@ function tauriAgent(call: HostCall): {
         };
       },
       providerCatalog: () => call("agent_provider_catalog", {}),
+      skills: () =>
+        call("agent_skills", {}).then((answer) =>
+          readable(readSkillInventory(answer)),
+        ),
+      skill: (name) =>
+        call("agent_skill", { name }).then((answer) =>
+          readable(readSkillDetail(answer)),
+        ),
+      verifySkill: (name) =>
+        call("agent_skill_verify", { name }).then((answer) =>
+          readable(readSkillVerification(answer)),
+        ),
       startConversation: () => call("agent_conversation_start", {}),
       send: (request) => call("agent_send", { request }),
       cancel: (replyId) =>

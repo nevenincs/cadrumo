@@ -72,6 +72,10 @@ function readParams() {
     agentAsks: (["questions", "approval", "review"] as const).find(
       (asks) => asks === params.get("asks"),
     ),
+    // How the agent serves its skills to `/`.
+    agentSkills: (["bundled", "many", "failed", "unavailable"] as const).find(
+      (skills) => skills === params.get("skills"),
+    ),
   };
 }
 
@@ -121,6 +125,7 @@ function Scenarios() {
       calendar: initial.calendar,
       agentStream: initial.agentStream,
       agentAsks: initial.agentAsks,
+      agentSkills: initial.agentSkills,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {

@@ -75,6 +75,26 @@ pub struct SendRequest {
     pub conversation_id: String,
     pub text: String,
     pub selection: Selection,
+    /// The agent's skills the message names, which the run loads before it
+    /// answers.
+    #[serde(default)]
+    pub skills: Vec<String>,
+}
+
+/// The most skills one message may load.
+const SKILL_LIMIT: usize = 8;
+
+/// A bundled skill's name as the agent writes one: `cadrumo-`, then a
+/// lowercase letter or digit and up to 118 more of those or hyphens.
+pub fn skill_name(name: &str) -> bool {
+    name.strip_prefix("cadrumo-").is_some_and(|rest| {
+        let bytes = rest.as_bytes();
+        (1..=119).contains(&bytes.len())
+            && (bytes[0].is_ascii_lowercase() || bytes[0].is_ascii_digit())
+            && bytes
+                .iter()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || *b == b'-')
+    })
 }
 
 /// Which pending request of which reply an answer is for.
@@ -134,6 +154,15 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
     }) {
         return Err(invalid());
     }
+    let mut skills = HashSet::new();
+    if request.skills.len() > SKILL_LIMIT
+        || !request
+            .skills
+            .iter()
+            .all(|name| skill_name(name) && skills.insert(name.as_str()))
+    {
+        return Err(invalid());
+    }
     Ok(())
 }
 
@@ -157,6 +186,9 @@ pub fn start_body(
         agent["effort"] = json!(effort);
     }
     let mut body = json!({ "run_id": run_id, "message": request.text, "agent": agent });
+    if !request.skills.is_empty() {
+        body["skills"] = json!(request.skills);
+    }
     match continues {
         Some(predecessor) => body["continues_run_id"] = json!(predecessor),
         None => {
@@ -464,7 +496,7 @@ pub struct Session {
 
 impl Session {
     /// The gateway, while the service is ready.
-    fn gateway(supervisor: &Supervisor) -> Result<Gateway, Refused> {
+    pub fn gateway(supervisor: &Supervisor) -> Result<Gateway, Refused> {
         match (supervisor.gateway(), supervisor.status().state) {
             (Some(gateway), State::Ready { .. }) => Ok(gateway),
             (_, State::Refused { code }) => Err(Refused::new(
@@ -923,6 +955,44 @@ mod tests {
             admit_send(&send(effort)).unwrap_err().code,
             "agent_invalid_request"
         );
+    }
+
+    #[test]
+    fn a_send_names_skills_by_their_grammar_once_each() {
+        let mut named = request();
+        named["skills"] = json!(["cadrumo-iva-303", "cadrumo-0"]);
+        assert!(admit_send(&send(named.clone())).is_ok());
+        let body = start_body("r00ff", &send(named), r"C:\ws", Some("r0"));
+        assert_eq!(body["skills"], json!(["cadrumo-iva-303", "cadrumo-0"]));
+        assert!(
+            start_body("r00ff", &send(request()), r"C:\ws", None)
+                .get("skills")
+                .is_none()
+        );
+        let longest = format!("cadrumo-{}", "a".repeat(119));
+        assert!(skill_name(&longest));
+        let many: Vec<Value> = (0..=SKILL_LIMIT)
+            .map(|i| json!(format!("cadrumo-s{i}")))
+            .collect();
+        for skills in [
+            json!(["iva"]),
+            json!(["cadrumo-"]),
+            json!(["cadrumo--x"]),
+            json!(["cadrumo-IVA"]),
+            json!(["cadrumo-a/b"]),
+            json!(["/cadrumo-a"]),
+            json!([format!("{longest}a")]),
+            json!(["cadrumo-a", "cadrumo-a"]),
+            Value::Array(many),
+        ] {
+            let mut bad = request();
+            bad["skills"] = skills.clone();
+            assert_eq!(
+                admit_send(&send(bad)).unwrap_err().code,
+                "agent_invalid_request",
+                "{skills}"
+            );
+        }
     }
 
     #[test]
