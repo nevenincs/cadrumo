@@ -305,6 +305,7 @@ pub(crate) async fn assemble<R: Runtime>(
         shell::plugin(&launch),
         agent::plugin(&launch),
         shell::clipboard_plugin(),
+        agent::dialog_plugin(),
     ] {
         startup.check_cancelled()?;
         app.plugin(plugin).map_err(|e| {

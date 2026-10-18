@@ -11,6 +11,7 @@ desktop:
     archive: Arxiva
     archived_empty: No hi ha res arxivat
     archived_toggle: Arxivades ({count})
+    attach_filter: Documents
     attachments: Fitxers per al missatge següent
     attachments_refused: 'Rebutjats: {count}'
     attachments_uploading: 'S''estan pujant: {count}'
@@ -82,6 +83,11 @@ desktop:
     lane_unreachable: No s'hi pot connectar
     members_multiple: '{count} fitxers'
     members_single: 1 fitxer
+    mention_empty: Cap document desat no coincideix
+    mention_failed: No s'han pogut llegir els documents desats
+    mention_label: Documents desats
+    mention_loading: S'estan llegint els documents desats…
+    mention_unavailable: Els documents desats encara no estan disponibles
     message_label: Missatge
     message_placeholder: Pregunta per un model, un termini o els teus registres
     model: Model
@@ -107,6 +113,13 @@ desktop:
     queued: Esperant per pujar
     ran_with: 'S''ha executat amb: {selection}'
     ready: A punt
+    reference_changed: Un document que has esmentat ha canviat des que el vas triar.
+      Torna a triar-lo amb @.
+    reference_missing: Un document que has esmentat ja no està desat. Treu-lo i torna
+      a enviar.
+    reference_refused: Un document que has esmentat no es pot compartir amb l'agent.
+    references_unavailable: Els documents desats d'aquesta conversa no estan disponibles
+      ara.
     refused: Rebutjat
     remove_all: Treu-ho tot
     remove_document: Treu {name}
@@ -205,6 +218,12 @@ desktop:
     transcript: Conversa
     transcript_empty: Encara no hi ha missatges
     unavailable: Encara no està disponible
+    upload_failed: No s'ha pogut desar
+    upload_format_refused: L'agent no admet aquest tipus de fitxer
+    upload_name_refused: El seu nom no es pot desar; canvia'l i torna-ho a provar
+    upload_quota_exceeded: L'emmagatzematge d'aquesta conversa és ple
+    upload_too_large: Massa gran per a aquesta conversa
+    upload_unreadable: No s'ha pogut llegir
     uploading: S'està pujant
     uploading_name: S'està pujant {name}
     usage: 'Tokens: {input} d''entrada, {output} de sortida'

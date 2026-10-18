@@ -11,6 +11,7 @@ desktop:
     archive: Archiválás
     archived_empty: Nincs archivált beszélgetés
     archived_toggle: Archivált ({count})
+    attach_filter: Dokumentumok
     attachments: Fájlok a következő üzenethez
     attachments_refused: 'Elutasítva: {count}'
     attachments_uploading: 'Feltöltés alatt: {count}'
@@ -82,6 +83,11 @@ desktop:
     lane_unreachable: Nem érhető el
     members_multiple: '{count} fájl'
     members_single: 1 fájl
+    mention_empty: Nincs egyező tárolt dokumentum
+    mention_failed: A tárolt dokumentumokat nem sikerült beolvasni
+    mention_label: Tárolt dokumentumok
+    mention_loading: A tárolt dokumentumok beolvasása…
+    mention_unavailable: A tárolt dokumentumok még nem érhetők el
     message_label: Üzenet
     message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
     model: Modell
@@ -107,6 +113,13 @@ desktop:
     queued: Feltöltésre vár
     ran_with: 'Ezzel futott: {selection}'
     ready: Kész
+    reference_changed: Az egyik megnevezett dokumentum megváltozott, mióta kiválasztottad.
+      Válaszd ki újra a @ jellel.
+    reference_missing: Az egyik megnevezett dokumentum már nincs tárolva. Távolítsd
+      el, és küldd újra.
+    reference_refused: Az egyik megnevezett dokumentumot nem lehet megosztani az ügynökkel.
+    references_unavailable: Ennek a beszélgetésnek a tárolt dokumentumai most nem
+      érhetők el.
     refused: Elutasítva
     remove_all: Az összes eltávolítása
     remove_document: 'Eltávolítás: {name}'
@@ -204,6 +217,12 @@ desktop:
     transcript: Beszélgetés
     transcript_empty: Még nincsenek üzenetek
     unavailable: Még nem érhető el
+    upload_failed: Nem sikerült tárolni
+    upload_format_refused: Az ügynök nem fogad el ilyen típusú fájlt
+    upload_name_refused: A neve nem tárolható; nevezd át, és próbáld újra
+    upload_quota_exceeded: Ennek a beszélgetésnek a tárhelye megtelt
+    upload_too_large: Túl nagy ehhez a beszélgetéshez
+    upload_unreadable: Nem sikerült beolvasni
     uploading: Feltöltés
     uploading_name: 'Feltöltés: {name}'
     usage: 'Tokenek: {input} bemenet, {output} kimenet'

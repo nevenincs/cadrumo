@@ -22,6 +22,7 @@ import type { ProfileViews } from "../shell/views";
 import {
   fixtureAgent,
   type FixtureAsks,
+  type FixtureDocuments,
   type FixtureStream,
 } from "./agentFixtureHost";
 import { agentAccessFixture } from "./agentAccessFixture";
@@ -82,6 +83,8 @@ export type ScenarioHostOptions = {
   agentStream?: FixtureStream;
   /** What every agent reply stops to ask the person, if anything. */
   agentAsks?: FixtureAsks;
+  /** What the agent's conversations have stored for `@` to name. */
+  agentDocuments?: FixtureDocuments;
   /** How the agent serves its skills to `/`. */
   agentSkills?: FixtureSkills;
   /** Receives one line per host call; never a password or its length. */
@@ -276,6 +279,7 @@ export function scenarioHost(
     stream: options.agentStream ?? "steady",
     asks: options.agentAsks ?? null,
     refused: () => failure("timed_out", "cli"),
+    documents: options.agentDocuments ?? "stored",
     skills: options.agentSkills ?? "bundled",
   });
 

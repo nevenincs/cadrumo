@@ -11,6 +11,7 @@ import type {
 import {
   isLiveStatus,
   replyIdOf,
+  type AgentDocumentReference,
   type AgentRead,
   type AgentReplyRecord,
   type AgentToolStatus,
@@ -362,6 +363,8 @@ export type PersonSent = {
   /** `start` for a message that began the reply, `end` for one that continued
    * it. */
   at: "start" | "end";
+  /** The stored documents the message named. */
+  attachments?: AgentDocumentReference[];
 };
 
 /** `live` with the person's own message. */
@@ -380,6 +383,7 @@ export function withSent(
     reply_id: sent.reply_id,
     text: sent.text,
     sent_at: now.toISOString(),
+    ...(sent.attachments?.length ? { attachments: sent.attachments } : {}),
   };
   const places = placesOf(turns, sent.reply_id);
   return {

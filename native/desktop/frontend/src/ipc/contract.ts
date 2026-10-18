@@ -13,6 +13,8 @@ import type {
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
+  AgentUploadEvent,
+  AgentUploadPick,
   AgentSendResult,
   AgentServiceStatus,
   AgentStreamEvent,
@@ -20,7 +22,8 @@ import type {
 import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type {
   AgentConversationRecord,
-  AgentDocumentRecord,
+  AgentDocumentPage,
+  AgentDocumentsQuery,
   AgentTurnRecord,
 } from "../shell/agentViews";
 import type {
@@ -988,6 +991,16 @@ export interface HostCommands {
     args: Authorized<{ conversationId: string; title: string }>;
     result: null;
   };
+  /** Opens the host's file picker and stores what is picked in the
+   * conversation's storage, following each upload on `updates`. */
+  agent_attach: {
+    args: Authorized<{
+      conversationId: string;
+      filterLabel: string;
+      updates: Channel<AgentUploadEvent>;
+    }>;
+    result: AgentUploadPick[];
+  };
   agent_send: {
     args: Authorized<{ request: AgentSendRequest }>;
     result: AgentSendResult;
@@ -1034,9 +1047,10 @@ export interface HostCommands {
     args: Authorized<{ conversationId: string }>;
     result: AgentTurnRecord[];
   };
+  /** One page of the documents stored for a conversation, by name. */
   agent_documents: {
-    args: Authorized<{ conversationId: string }>;
-    result: AgentDocumentRecord[];
+    args: Authorized<{ query: AgentDocumentsQuery }>;
+    result: AgentDocumentPage;
   };
   // provider_settings_set takes the key as a raw body, with the provider,
   // revision and base URL in headers, as sign_in_submit takes a password.

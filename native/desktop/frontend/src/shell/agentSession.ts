@@ -5,6 +5,7 @@ import type {
 } from "./agentSkills";
 import type {
   AgentConversationRecord,
+  AgentDocumentRecord,
   AgentProviderCondition,
   AgentToolCall,
 } from "./agentViews";
@@ -197,17 +198,43 @@ export type AgentSelectionRecord = {
 };
 
 /** One message the person sends, of one to 65536 characters that say
- * something (cadrumo-agent's `message`, `content` and `prompt`). No document
- * goes with it: Cadrumo serves none to the agent yet. */
+ * something (cadrumo-agent's `message`, `content` and `prompt`), with the
+ * stored documents it names. */
 export type AgentSendRequest = {
   conversation_id: string;
   text: string;
   selection: AgentSelectionRecord;
+  /** At most 32 documents already stored for the conversation, each by
+   * its name and the digest it was listed with, uniquely named. The agent
+   * reads each where it is stored and refuses one that changed since; no
+   * bytes go with the message. */
+  attachments?: AgentDocumentRef[];
   /** The skills the message names, which the run loads before it answers:
    * at most 8 unique names of the agent's inventory. Absent when none is
    * named. */
   skills?: string[];
 };
+
+/** A file picked for a conversation's storage, as the host stages it. */
+export type AgentUploadPick = {
+  /** The host's handle for this upload; its events name it. */
+  id: string;
+  /** The file's own name; never its path. */
+  name: string;
+  size_bytes: number;
+  state: "queued" | "refused";
+  /** Why the file was refused before anything was sent. */
+  code: string | null;
+};
+
+/** Where one upload is: how far it has been sent, stored, or refused. */
+export type AgentUploadEvent =
+  | { kind: "progress"; id: string; sent: number }
+  | { kind: "stored"; id: string; document: AgentDocumentRecord }
+  | { kind: "refused"; id: string; code: string };
+
+/** A stored document a send names. */
+export type AgentDocumentRef = { name: string; sha256: string };
 
 /** What a send started. cadrumo-agent names no id for the person's message,
  * so the column shows it as sent until history has it. */
@@ -403,6 +430,18 @@ export interface AgentSession {
    * conversation is still live is refused with `agent_reply_in_progress`:
    * nothing is queued. */
   send(request: AgentSendRequest): Promise<AgentSendResult>;
+  /** Opens the host's own file picker for the kinds of file the
+   * conversation's storage takes, and stores each file picked in that
+   * storage, streamed by the host: the page never has a file's path or its
+   * bytes. It answers with what was picked, each queued or refused already,
+   * and reports each upload to `onEvent` until it is stored or refused. A
+   * picker closed without a pick answers with none. `filterLabel` names the
+   * kinds of file in the picker. */
+  attach?(
+    conversationId: string,
+    filterLabel: string,
+    onEvent: (event: AgentUploadEvent) => void,
+  ): Promise<AgentUploadPick[]>;
   /** Stops a reply that is still working. The run is `cancelling` until it
    * is `cancelled`. */
   cancel(replyId: string): Promise<void>;

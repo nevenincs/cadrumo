@@ -41,6 +41,12 @@ const PAGE: usize = 100;
 const LISTED: usize = 2_000;
 /// How many messages a continuing run is seeded with, at most.
 const SEEDED: usize = 20;
+/// `MAX_RUN_ATTACHMENTS`: the most stored documents one message names.
+const REFERENCE_LIMIT: usize = 32;
+/// `MAX_ATTACHMENT_NAME_LENGTH`.
+const NAME_LIMIT: usize = 255;
+/// How many documents one listing page asks for.
+const DOCUMENT_PAGE: usize = 500;
 /// The run statuses a run does not leave.
 const SETTLED: &[&str] = &["completed", "failed", "cancelled", "archived"];
 
@@ -69,12 +75,24 @@ pub struct Selection {
     pub effort: Option<String>,
 }
 
+/// A stored document a message names: a file stored for its conversation, by
+/// its name and the digest it was listed with. Its bytes stay
+/// where they are; the agent reads them there.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DocumentRef {
+    pub name: String,
+    pub sha256: String,
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SendRequest {
     pub conversation_id: String,
     pub text: String,
     pub selection: Selection,
+    #[serde(default)]
+    pub attachments: Vec<DocumentRef>,
     /// The agent's skills the message names, which the run loads before it
     /// answers.
     #[serde(default)]
@@ -95,6 +113,112 @@ pub fn skill_name(name: &str) -> bool {
                 .iter()
                 .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || *b == b'-')
     })
+}
+
+/// Which page of a conversation's stored documents a listing asks for: those
+/// after a name, whose names hold some text. A conversation reserved here and
+/// not sent yet has its own storage too.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DocumentsQuery {
+    pub conversation_id: String,
+    pub after: Option<String>,
+    pub q: Option<String>,
+}
+
+/// `_is_plain_name`, as far as the host can tell: one file name, never a path.
+pub fn plain_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.chars().count() <= NAME_LIMIT
+        && name != "."
+        && name != ".."
+        && !name.chars().any(|c| {
+            c.is_control() || matches!(c, '/' | '\\' | '<' | '>' | ':' | '"' | '|' | '?' | '*')
+        })
+}
+
+/// A SHA-256 digest as the agent writes one: 64 lowercase hex digits.
+fn digest(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+/// A listing's checks before anything is asked of the gateway: the name the
+/// page starts after and the text names are filtered by, if any.
+pub fn admit_documents(query: &DocumentsQuery) -> Result<(Option<&str>, Option<&str>), Refused> {
+    if !gateway::run_id(&query.conversation_id) {
+        return Err(refused("agent_invalid_request"));
+    }
+    let after = query.after.as_deref();
+    if after.is_some_and(|after| !plain_name(after)) {
+        return Err(refused("agent_invalid_request"));
+    }
+    let q = query.q.as_deref().filter(|q| !q.is_empty());
+    if q.is_some_and(|q| q.chars().count() > NAME_LIMIT || q.chars().any(char::is_control)) {
+        return Err(refused("agent_invalid_request"));
+    }
+    Ok((after, q))
+}
+
+/// One stored document as the column reads it: its name, size, time, digest
+/// and type, and nothing else the agent says of it.
+pub fn document_record(item: &Value) -> Result<Value, Refused> {
+    let name = text(item, "name").filter(|name| plain_name(name));
+    let sha256 = text(item, "sha256").filter(|sha| digest(sha));
+    let size = item.get("size_bytes").and_then(Value::as_u64);
+    let modified = text(item, "modified_at");
+    match (name, sha256, size, modified) {
+        (Some(name), Some(sha256), Some(size), Some(modified)) => Ok(json!({
+            "name": name,
+            "size_bytes": size,
+            "modified_at": modified,
+            "sha256": sha256,
+            "media_type": text(item, "media_type"),
+        })),
+        _ => Err(refused("agent_gateway_unreadable")),
+    }
+}
+
+/// One listing page as the column reads it: each document by its name, size,
+/// time, digest and type, and the name the next page starts after, or null
+/// at the end. An entry that does not read as a document refuses the page.
+pub fn documents_page(page: &Value) -> Result<Value, Refused> {
+    let unreadable = || refused("agent_gateway_unreadable");
+    let documents = page
+        .get("attachments")
+        .and_then(Value::as_array)
+        .ok_or_else(unreadable)?
+        .iter()
+        .map(document_record)
+        .collect::<Result<Vec<_>, _>>()?;
+    let next_after = match page.get("next_after") {
+        None | Some(Value::Null) => Value::Null,
+        Some(Value::String(name)) if plain_name(name) => json!(name),
+        Some(_) => return Err(unreadable()),
+    };
+    Ok(json!({ "documents": documents, "next_after": next_after }))
+}
+
+/// The stored documents a user message names, as its history echoes them.
+fn echoed_documents(message: &Value) -> Value {
+    Value::Array(
+        message
+            .get("attachments")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(|item| {
+                let name = text(item, "name").filter(|name| plain_name(name))?;
+                Some(json!({
+                    "name": name,
+                    "sha256": text(item, "sha256").filter(|sha| digest(sha)),
+                    "media_type": text(item, "media_type"),
+                }))
+            })
+            .collect(),
+    )
 }
 
 /// Which pending request of which reply an answer is for.
@@ -154,6 +278,16 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
     }) {
         return Err(invalid());
     }
+    let mut named = HashSet::new();
+    if request.attachments.len() > REFERENCE_LIMIT
+        || !request.attachments.iter().all(|reference| {
+            plain_name(&reference.name)
+                && digest(&reference.sha256)
+                && named.insert(reference.name.as_str())
+        })
+    {
+        return Err(invalid());
+    }
     let mut skills = HashSet::new();
     if request.skills.len() > SKILL_LIMIT
         || !request
@@ -188,6 +322,13 @@ pub fn start_body(
         agent["effort"] = json!(effort);
     }
     let mut body = json!({ "run_id": run_id, "message": request.text, "agent": agent });
+    if !request.attachments.is_empty() {
+        body["attachments"] = request
+            .attachments
+            .iter()
+            .map(|reference| json!({ "name": reference.name, "sha256": reference.sha256 }))
+            .collect();
+    }
     if !request.skills.is_empty() {
         body["skills"] = json!(request.skills);
     }
@@ -404,6 +545,7 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
                 "reply_id": run,
                 "text": text(message, "content").unwrap_or_default(),
                 "sent_at": message.get("timestamp").cloned().unwrap_or(Value::Null),
+                "attachments": echoed_documents(message),
             }));
         }
         for call in state
@@ -660,6 +802,24 @@ impl Session {
             })
             .collect::<Result<Vec<_>, Refused>>()?;
         Ok(Value::Array(history_records(&runs)))
+    }
+
+    /// One page of the documents stored for one conversation: its own
+    /// storage, which only its messages name.
+    pub fn documents(
+        &self,
+        supervisor: &Supervisor,
+        query: &DocumentsQuery,
+    ) -> Result<Value, Refused> {
+        let (after, q) = admit_documents(query)?;
+        let gateway = Self::gateway(supervisor)?;
+        let page = Client::new(&gateway).attachments(
+            &query.conversation_id,
+            after,
+            q,
+            DOCUMENT_PAGE,
+        )?;
+        documents_page(&page)
     }
 
     /// Starts the conversation's next run with the person's message. A
@@ -999,6 +1159,72 @@ mod tests {
     }
 
     #[test]
+    fn a_send_starts_its_run_as_the_gateway_takes_one() {
+        let first = start_body("r00ff", &send(request()), r"C:\agent\ws\main", None, None);
+        assert_eq!(
+            first,
+            json!({
+                "run_id": "r00ff",
+                "message": "\n  ¿Cuánto IVA declaré?\nen 2025",
+                "agent": {"provider": "claude", "transport": "api", "model": "m1", "effort": "high",
+                          "workspace_root": r"C:\agent\ws\main"},
+                "title": "¿Cuánto IVA declaré?"
+            })
+        );
+        let mut plain = request();
+        plain["selection"].as_object_mut().unwrap().remove("effort");
+        let next = start_body("r0100", &send(plain), r"C:\ws", Some("r00ff"), Some("Renta"));
+        assert_eq!(next["continues_run_id"], "r00ff");
+        assert!(next.get("title").is_none());
+        assert!(next["agent"].get("effort").is_none());
+    }
+
+    #[test]
+    fn a_title_given_before_the_first_send_names_the_first_run() {
+        let first = start_body("r00ff", &send(request()), r"C:\ws", None, Some("Renta 2025"));
+        assert_eq!(first["title"], "Renta 2025");
+    }
+
+    const SHA: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    #[test]
+    fn a_send_names_stored_documents_by_name_and_digest_only() {
+        let mut named = request();
+        named["attachments"] = json!([{"name": "factura.pdf", "sha256": SHA}]);
+        assert!(admit_send(&send(named.clone())).is_ok());
+        let body = start_body("r00ff", &send(named), r"C:\ws", None, None);
+        assert_eq!(body["attachments"], json!([{"name": "factura.pdf", "sha256": SHA}]));
+        // A message naming none sends no field at all.
+        assert!(start_body("r00ff", &send(request()), r"C:\ws", None, None)
+            .get("attachments")
+            .is_none());
+        let mut extra = request();
+        extra["attachments"] = json!([{"name": "a", "sha256": SHA, "path": "C:\\a"}]);
+        assert!(serde_json::from_value::<SendRequest>(extra).is_err());
+        let many: Vec<Value> = (0..=REFERENCE_LIMIT)
+            .map(|i| json!({"name": format!("d{i}"), "sha256": SHA}))
+            .collect();
+        for refs in [
+            json!([{"name": "../x", "sha256": SHA}]),
+            json!([{"name": "a\\b", "sha256": SHA}]),
+            json!([{"name": "..", "sha256": SHA}]),
+            json!([{"name": "", "sha256": SHA}]),
+            json!([{"name": "a", "sha256": SHA.to_uppercase()}]),
+            json!([{"name": "a", "sha256": "abc"}]),
+            json!([{"name": "a", "sha256": SHA}, {"name": "a", "sha256": SHA}]),
+            Value::Array(many),
+        ] {
+            let mut bad = request();
+            bad["attachments"] = refs.clone();
+            assert_eq!(
+                admit_send(&send(bad)).unwrap_err().code,
+                "agent_invalid_request",
+                "{refs}"
+            );
+        }
+    }
+
+    #[test]
     fn a_send_names_skills_by_their_grammar_once_each() {
         let mut named = request();
         named["skills"] = json!(["cadrumo-iva-303", "cadrumo-0"]);
@@ -1037,30 +1263,60 @@ mod tests {
     }
 
     #[test]
-    fn a_send_starts_its_run_as_the_gateway_takes_one() {
-        let first = start_body("r00ff", &send(request()), r"C:\agent\ws\main", None, None);
+    fn a_document_page_reads_only_whole_documents() {
+        let page = json!({"workspace_root": "C:\\private\\ws", "attachments": [
+            {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
+             "sha256": SHA, "media_type": "application/pdf"},
+            {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z", "sha256": SHA}],
+            "skipped": [{"name": "link", "reason": "link"}], "truncated": true, "next_after": "b"});
+        // The workspace's path and what was skipped never reach the column.
         assert_eq!(
-            first,
-            json!({
-                "run_id": "r00ff",
-                "message": "\n  ¿Cuánto IVA declaré?\nen 2025",
-                "agent": {"provider": "claude", "transport": "api", "model": "m1", "effort": "high",
-                          "workspace_root": r"C:\agent\ws\main"},
-                "title": "¿Cuánto IVA declaré?"
-            })
+            documents_page(&page).unwrap(),
+            json!({"documents": [
+                {"name": "a.pdf", "size_bytes": 10, "modified_at": "2026-10-18T10:00:00Z",
+                 "sha256": SHA, "media_type": "application/pdf"},
+                {"name": "b", "size_bytes": 0, "modified_at": "2026-10-18T10:00:00Z",
+                 "sha256": SHA, "media_type": null}],
+                "next_after": "b"})
         );
-        let mut plain = request();
-        plain["selection"].as_object_mut().unwrap().remove("effort");
-        let next = start_body("r0100", &send(plain), r"C:\ws", Some("r00ff"), Some("Renta"));
-        assert_eq!(next["continues_run_id"], "r00ff");
-        assert!(next.get("title").is_none());
-        assert!(next["agent"].get("effort").is_none());
+        assert_eq!(
+            documents_page(&json!({"attachments": []})).unwrap()["next_after"],
+            Value::Null
+        );
+        for bad in [
+            json!({}),
+            json!({"attachments": [{"name": "a", "size_bytes": 1, "modified_at": "t"}]}),
+            json!({"attachments": [{"name": "a/b", "size_bytes": 1, "modified_at": "t", "sha256": SHA}]}),
+            json!({"attachments": [{"name": "a", "size_bytes": -1, "modified_at": "t", "sha256": SHA}]}),
+            json!({"attachments": [], "next_after": "../x"}),
+            json!({"attachments": [], "next_after": 3}),
+        ] {
+            assert_eq!(documents_page(&bad).unwrap_err().code, "agent_gateway_unreadable", "{bad}");
+        }
     }
 
     #[test]
-    fn a_title_given_before_the_first_send_names_the_first_run() {
-        let first = start_body("r00ff", &send(request()), r"C:\ws", None, Some("Renta 2025"));
-        assert_eq!(first["title"], "Renta 2025");
+    fn a_document_listing_is_checked_before_it_is_asked() {
+        let query = |after: Option<&str>, q: Option<&str>| DocumentsQuery {
+            conversation_id: "r00ff".to_owned(),
+            after: after.map(str::to_owned),
+            q: q.map(str::to_owned),
+        };
+        let mut foreign = query(None, None);
+        foreign.conversation_id = "../r00ff".to_owned();
+        assert!(admit_documents(&foreign).is_err());
+        assert_eq!(admit_documents(&query(None, Some(""))).unwrap(), (None, None));
+        assert_eq!(
+            admit_documents(&query(Some("b.pdf"), Some("fact"))).unwrap(),
+            (Some("b.pdf"), Some("fact"))
+        );
+        for bad in [
+            query(Some("../b"), None),
+            query(None, Some("a\nb")),
+            query(None, Some(&"x".repeat(NAME_LIMIT + 1))),
+        ] {
+            assert!(admit_documents(&bad).is_err());
+        }
     }
 
     #[test]
@@ -1155,7 +1411,10 @@ mod tests {
         let second = json!({"state": {"status": "failed",
             "messages": [message("s1", "user", "Hola"), message("s2", "assistant", "¿Qué tal?"),
                          message("tool", "tool", "private result"),
-                         message("u2", "user", "Otra")],
+                         {"message_id": "u2", "role": "user", "content": "Otra",
+                          "timestamp": "2026-10-13T12:00:00Z",
+                          "attachments": [{"name": "factura.pdf", "sha256": SHA, "media_type": "application/pdf"},
+                                          {"name": "notas.txt"}, {"name": "../escape"}, "x"]}],
             "tool_calls": []},
             "usage": null});
         let status = json!({"status": "completed", "queued_messages": 0,
@@ -1168,7 +1427,8 @@ mod tests {
         assert_eq!(
             Value::Array(records),
             json!([
-                {"kind": "person", "id": "u1", "reply_id": "c1", "text": "Hola", "sent_at": "2026-10-13T12:00:00Z"},
+                {"kind": "person", "id": "u1", "reply_id": "c1", "text": "Hola", "sent_at": "2026-10-13T12:00:00Z",
+                 "attachments": []},
                 {"kind": "tool", "reply_id": "c1", "id": "t1", "title": "ledger_list", "tool_kind": "read", "status": "completed"},
                 {"kind": "agent", "id": "a1", "reply_id": "c1", "text": "¿Qué tal?"},
                 {"kind": "reply", "id": "c1", "status": "completed", "provider_condition": null,
@@ -1176,7 +1436,9 @@ mod tests {
                  "selection": {"provider": "claude", "transport": "api", "provider_display_name": "Claude",
                                "model": "m1", "model_display_name": "Model One", "effort": null},
                  "usage": {"input_tokens": 10, "output_tokens": 4}},
-                {"kind": "person", "id": "u2", "reply_id": "c2", "text": "Otra", "sent_at": "2026-10-13T12:00:00Z"},
+                {"kind": "person", "id": "u2", "reply_id": "c2", "text": "Otra", "sent_at": "2026-10-13T12:00:00Z",
+                 "attachments": [{"name": "factura.pdf", "sha256": SHA, "media_type": "application/pdf"},
+                                 {"name": "notas.txt", "sha256": null, "media_type": null}]},
                 {"kind": "reply", "id": "c2", "status": "failed", "provider_condition": "throttled",
                  "failure_reason": "rate limited", "queued_messages": 0, "selection": null, "usage": null},
             ])

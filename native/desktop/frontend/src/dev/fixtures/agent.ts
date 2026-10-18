@@ -1,5 +1,7 @@
 import type {
   AgentConversationRecord,
+  AgentDocumentRecord,
+  AgentDocumentReference,
   AgentProviderCondition,
   AgentRanWith,
   AgentRunStatus,
@@ -32,6 +34,8 @@ export type FixtureMessage = {
   role: "user" | "assistant";
   text: string;
   sent_at?: string | null;
+  /** The stored documents a person's message named. */
+  attachments?: AgentDocumentReference[];
 };
 
 /** One run as the agent keeps it. */
@@ -115,6 +119,9 @@ export function conversationRecords(
               reply_id: run.id,
               text: message.text,
               sent_at: message.sent_at ?? null,
+              ...(message.attachments?.length
+                ? { attachments: message.attachments }
+                : {}),
             }
           : { kind: "agent", id, reply_id: run.id, text: message.text },
       );
@@ -220,6 +227,58 @@ const IVA_QUESTION =
 const IVA_ANSWER =
   "He leído 42 apuntes del trimestre. La factura 2026-031 necesita tu revisión antes de contarla: el NIF del emisor no coincide con el del contrato. Con lo demás, el IVA repercutido es de 3.150,00 € y el soportado deducible de 1.204,35 €.";
 
+/** A made-up digest, the same for the same name. */
+const fixtureDigest = (name: string) =>
+  messageDigest("document", name).padEnd(64, "0").slice(0, 64);
+
+const storedDocument = (
+  name: string,
+  size_bytes: number,
+  media_type: string | null,
+  at: number,
+): AgentDocumentRecord => ({
+  name,
+  size_bytes,
+  modified_at: ago(at),
+  sha256: fixtureDigest(name),
+  media_type,
+});
+
+/** The trimester's invoices: enough of them that the `@` list scrolls and is
+ * read in several pages. */
+const IVA_INVOICES: AgentDocumentRecord[] = Array.from(
+  { length: 240 },
+  (_, index) => {
+    const number = String(index + 1).padStart(3, "0");
+    return storedDocument(
+      `factura-2026-${number}.pdf`,
+      18_000 + index * 731,
+      "application/pdf",
+      3 * HOUR + index * MINUTE,
+    );
+  },
+);
+
+/** The documents each conversation has stored, in name order. A
+ * conversation not here has stored none. */
+export const FIXTURE_DOCUMENTS: Record<string, AgentDocumentRecord[]> = {
+  "c-iva-t3": [
+    storedDocument("extracto-banco-t3.csv", 48_210, "text/csv", 3 * HOUR),
+    ...IVA_INVOICES,
+    storedDocument("libro-registro-iva.xlsx", 96_400, null, 3 * HOUR),
+    storedDocument("notas del trimestre.txt", 1_204, "text/plain", 4 * HOUR),
+    storedDocument("ticket-gasolinera.jpg", 412_000, "image/jpeg", 4 * HOUR),
+  ].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)),
+  "c-gastos-vehiculo": [
+    storedDocument(
+      "contrato-renting.pdf",
+      220_000,
+      "application/pdf",
+      6 * HOUR,
+    ),
+  ],
+};
+
 const FIRST_IVA: FixtureMessage[] = [
   user(IVA_QUESTION, ago(2 * HOUR + 20 * MINUTE)),
   agent(IVA_ANSWER),
@@ -269,10 +328,19 @@ export const FIXTURE_RUNS: Record<string, FixtureRun[]> = {
       id: "c-gastos-vehiculo",
       status: "completed",
       messages: [
-        user(
-          "Uso el coche para visitar clientes. ¿Puedo deducir la gasolina?",
-          ago(5 * HOUR),
-        ),
+        {
+          ...user(
+            "Uso el coche para visitar clientes. ¿Puedo deducir la gasolina?",
+            ago(5 * HOUR),
+          ),
+          attachments: [
+            {
+              name: "contrato-renting.pdf",
+              sha256: fixtureDigest("contrato-renting.pdf"),
+              media_type: "application/pdf",
+            },
+          ],
+        },
         agent(
           "Depende de cómo uses el vehículo. Para el IVA, si lo usas también para fines particulares, solo se deduce la parte que puedas acreditar como afecta.",
         ),

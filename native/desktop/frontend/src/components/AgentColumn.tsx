@@ -17,6 +17,8 @@ import {
   offeredSelection,
   selectionRecord,
 } from "../shell/agentCatalog";
+import { DocumentLister, documentRefs } from "../shell/agentDocuments";
+import { useStagedDocuments } from "../shell/agentStaging";
 import {
   newestReply,
   useAgentStatus,
@@ -50,6 +52,7 @@ import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 import { Composer, type ComposerReferences } from "./agent/Composer";
+import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
 import { QuestionsPrompt } from "./agent/QuestionsPrompt";
 import { SkillDialog } from "./agent/SkillDialog";
@@ -62,12 +65,10 @@ import type {
   AgentSelection,
   ModelOption,
   ProviderOption,
-  StagedAttachment,
 } from "./agent/types";
 
 // What the composer is given while nothing serves it: nothing. Sending,
 // adding files and choosing a model each say they are not available yet.
-const NO_ATTACHMENTS: StagedAttachment[] = [];
 const NO_PROVIDERS: ProviderOption[] = [];
 const NO_MODELS: Record<string, ModelOption[]> = {};
 const NO_SELECTION: AgentSelection = {
@@ -105,6 +106,15 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.service_failed");
     case "agent_reply_in_progress":
       return t("desktop.agent.reply_in_progress");
+    case "agent_gateway_attachment_not_found":
+      return t("desktop.agent.reference_missing");
+    case "agent_gateway_attachment_changed":
+      return t("desktop.agent.reference_changed");
+    case "agent_gateway_attachment_refused":
+    case "agent_gateway_attachments_invalid":
+      return t("desktop.agent.reference_refused");
+    case "agent_gateway_attachments_unavailable":
+      return t("desktop.agent.references_unavailable");
     default:
       return t("desktop.messages.failed", { code });
   }
@@ -327,6 +337,53 @@ export function AgentColumn({
       ? () => change({ panel: "settings" })
       : undefined;
 
+  // The stored documents the next message names: chosen with `@`, or
+  // attached and stored first. A send that does not go keeps them.
+  const staging = useStagedDocuments({
+    reader,
+    conversationId,
+    session,
+    filterLabel: t("desktop.agent.attach_filter"),
+    t,
+  });
+  const namedFor = staging.namedFor;
+  const lister = useMemo(
+    () => (agent?.documents ? new DocumentLister(agent.documents) : null),
+    [agent],
+  );
+  const nameDocument = staging.name;
+  const mentionSources = useMemo(
+    () => [
+      documentSource({
+        lister: reader !== null ? lister : null,
+        conversationId,
+        locale,
+        t,
+        onPick: nameDocument,
+      }),
+    ],
+    [lister, reader, conversationId, locale, t, nameDocument],
+  );
+  // Files are stored in the conversation's own storage, so a conversation
+  // not started yet is reserved first, as its first message would.
+  const attach =
+    staging.attach && session && reader !== null
+      ? async () => {
+          let id = conversationId;
+          try {
+            if (id === null) {
+              id = (await session.startConversation()).id;
+              open(id);
+            }
+          } catch (error) {
+            change({ sendFailure: failureCode(error) });
+            return;
+          }
+          const failure = await staging.attach?.(id);
+          if (failure) change({ sendFailure: failure });
+        }
+      : undefined;
+
   // A send that did not go is given back to the composer to try again.
   const giveBack = (text: string, failure: string | null) =>
     setView((held) => ({
@@ -341,7 +398,16 @@ export function AgentColumn({
       const { reply_id } = await session.send(request);
       // The agent returns no id for the message, so it is shown as sent until
       // the history has it.
-      live.sent({ reply_id, text: request.text, at: "start" });
+      live.sent({
+        reply_id,
+        text: request.text,
+        at: "start",
+        attachments: namedFor(request.conversation_id).map(
+          ({ name, sha256, media_type }) => ({ name, sha256, media_type }),
+        ),
+      });
+      // What the message named went with it.
+      staging.sent(request.conversation_id);
       // A message sent may name the conversation, so it is read again.
       setView((held) => ({
         ...held,
@@ -378,6 +444,8 @@ export function AgentColumn({
       await live.watch(id);
       request = { conversation_id: id, text, selection: runs };
       if (references.skills.length > 0) request.skills = references.skills;
+      const named = namedFor(id);
+      if (named.length > 0) request.attachments = documentRefs(named);
     } catch (error) {
       giveBack(text, failureCode(error));
       return;
@@ -715,7 +783,11 @@ export function AgentColumn({
             key={view.draft.key}
             defaultDraft={view.draft.text}
             locale={locale}
-            attachments={NO_ATTACHMENTS}
+            attachments={staging.staged}
+            suggestionSources={mentionSources}
+            onAddFiles={attach ? () => void attach() : undefined}
+            onRemoveAttachment={staging.remove}
+            onRemoveAllAttachments={() => staging.remove(null)}
             providers={offer?.providers ?? NO_PROVIDERS}
             models={offer?.models ?? NO_MODELS}
             selection={selection ?? NO_SELECTION}

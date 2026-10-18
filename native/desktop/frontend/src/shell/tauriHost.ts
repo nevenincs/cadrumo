@@ -12,6 +12,7 @@ import type {
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
+  AgentUploadEvent,
 } from "./agentSession";
 import {
   readSkillDetail,
@@ -381,6 +382,11 @@ function tauriAgent(call: HostCall): {
           () => undefined,
         ),
       send: (request) => call("agent_send", { request }),
+      attach: (conversationId, filterLabel, onEvent) => {
+        const updates = new Channel<AgentUploadEvent>();
+        updates.onmessage = onEvent;
+        return call("agent_attach", { conversationId, filterLabel, updates });
+      },
       cancel: (replyId) =>
         call("agent_cancel", { replyId }).then(() => undefined),
       pending: (conversationId) => call("agent_pending", { conversationId }),
@@ -410,6 +416,7 @@ function tauriAgent(call: HostCall): {
     agent: {
       conversations: () => call("agent_conversations", {}),
       history: (conversationId) => call("agent_history", { conversationId }),
+      documents: (query) => call("agent_documents", { query }),
     },
   };
 }

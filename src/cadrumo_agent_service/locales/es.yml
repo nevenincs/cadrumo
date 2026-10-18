@@ -11,6 +11,7 @@ desktop:
     archive: Archivar
     archived_empty: No hay nada archivado
     archived_toggle: Archivadas ({count})
+    attach_filter: Documentos
     attachments: Archivos para el próximo mensaje
     attachments_refused: 'Rechazados: {count}'
     attachments_uploading: 'Subiendo: {count}'
@@ -81,6 +82,11 @@ desktop:
     lane_unreachable: No se puede conectar
     members_multiple: '{count} archivos'
     members_single: 1 archivo
+    mention_empty: Ningún documento guardado coincide
+    mention_failed: No se han podido leer los documentos guardados
+    mention_label: Documentos guardados
+    mention_loading: Leyendo los documentos guardados…
+    mention_unavailable: Los documentos guardados aún no están disponibles
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
@@ -106,6 +112,14 @@ desktop:
     queued: Esperando para subir
     ran_with: 'Se ejecutó con: {selection}'
     ready: Listo
+    reference_changed: Un documento que has nombrado ha cambiado desde que lo elegiste.
+      Vuelve a elegirlo con @.
+    reference_missing: Un documento que has nombrado ya no está guardado. Quítalo
+      y vuelve a enviar.
+    reference_refused: Un documento que has nombrado no se puede compartir con el
+      agente.
+    references_unavailable: Los documentos guardados de esta conversación no están
+      disponibles ahora.
     refused: Rechazado
     remove_all: Quitar todo
     remove_document: Quitar {name}
@@ -205,6 +219,12 @@ desktop:
     transcript: Conversación
     transcript_empty: Aún no hay mensajes
     unavailable: Aún no está disponible
+    upload_failed: No se ha podido guardar
+    upload_format_refused: El agente no admite este tipo de archivo
+    upload_name_refused: Su nombre no se puede guardar; cámbialo y vuelve a intentarlo
+    upload_quota_exceeded: El almacenamiento de esta conversación está lleno
+    upload_too_large: Demasiado grande para esta conversación
+    upload_unreadable: No se ha podido leer
     uploading: Subiendo
     uploading_name: Subiendo {name}
     usage: 'Tokens: {input} de entrada, {output} de salida'

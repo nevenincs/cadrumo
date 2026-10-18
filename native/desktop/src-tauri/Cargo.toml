@@ -32,6 +32,10 @@ tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros
 # Rust APIs only: the shell reaches them through token-checked app commands
 # and grants the webview no plugin command.
 tauri-plugin-clipboard-manager = "2.4.1"
+# The agent column's file picker, opened by the host for the files it uploads.
+tauri-plugin-dialog = "2"
+# The digest an upload is sent with; already in the graph.
+sha2 = "0.10"
 opener = "0.9"
 # The agent host's loopback gateway client; already in the graph through
 # cadrumo-application.

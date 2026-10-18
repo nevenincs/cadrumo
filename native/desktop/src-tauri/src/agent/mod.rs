@@ -15,6 +15,7 @@ mod session;
 mod sse;
 mod stream;
 mod supervisor;
+mod upload;
 
 use crate::{
     app::Commands,
@@ -175,6 +176,12 @@ impl AgentHost {
 }
 
 /// Registers the host once the shell's sign-in owner exists.
+/// The host's own file dialog, for the files the agent column attaches. The
+/// webview is granted none of its commands.
+pub fn dialog_plugin<R: Runtime>() -> TauriPlugin<R> {
+    tauri_plugin_dialog::init()
+}
+
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let diagnostics = launch.diagnostics.clone();
     tauri::plugin::Builder::new("cadrumo-agent")
@@ -208,6 +215,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_conversations,
         agent_history,
         agent_documents,
+        agent_attach,
         runtime_attendance_inventory,
         runtime_attendance_decide,
         runtime_attendance_subscribe,
@@ -514,9 +522,62 @@ async fn agent_history(
     .await
 }
 
-/// Conversation documents are not built in Cadrumo custody.
+/// One page of the documents stored for a conversation, which its messages
+/// can name; never their bytes, and never where they are kept.
 #[tauri::command]
-async fn agent_documents(conversation_id: String) -> std::result::Result<Value, Refused> {
-    let _ = conversation_id;
-    refused("agent_documents_unavailable")
+async fn agent_documents(
+    host: State<'_, Arc<AgentHost>>,
+    query: session::DocumentsQuery,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        host.session.documents(&host.supervisor, &query)
+    })
+    .await
+}
+
+/// Opens the host's file dialog over the window, for files of the kinds the
+/// conversation's storage takes, and streams each one the person picks into
+/// that storage. It answers with what was picked, each queued or refused
+/// already, and follows each upload on `updates`. The page never learns a
+/// file's path or reads its bytes. A dialog closed without a pick picks
+/// nothing.
+#[tauri::command]
+async fn agent_attach<R: Runtime>(
+    host: State<'_, Arc<AgentHost>>,
+    window: tauri::WebviewWindow<R>,
+    conversation_id: String,
+    filter_label: String,
+    updates: Channel<upload::UploadEvent>,
+) -> std::result::Result<Vec<upload::Picked>, Refused> {
+    use tauri_plugin_dialog::DialogExt;
+    if !gateway::run_id(&conversation_id)
+        || filter_label.is_empty()
+        || filter_label.chars().count() > 64
+        || filter_label.chars().any(char::is_control)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        let gateway = Session::gateway(&host.supervisor)?;
+        let policy = upload::policy_of(&gateway::Client::new(&gateway).attachment_policy()?)?;
+        let extensions: Vec<&str> = policy.extensions.iter().map(String::as_str).collect();
+        let paths: Vec<std::path::PathBuf> = window
+            .dialog()
+            .file()
+            .set_parent(&window)
+            .add_filter(filter_label, &extensions)
+            .blocking_pick_files()
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|picked| picked.into_path().ok())
+            .collect();
+        let (picked, queued) = upload::stage(paths, &policy);
+        if !queued.is_empty() {
+            std::thread::spawn(move || {
+                upload::send_all(&gateway, &conversation_id, queued, &updates);
+            });
+        }
+        Ok(picked)
+    })
+    .await
 }

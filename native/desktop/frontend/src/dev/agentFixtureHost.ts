@@ -20,6 +20,8 @@ import type {
 import {
   isLiveStatus,
   type AgentConversationRecord,
+  type AgentDocumentRecord,
+  type AgentDocumentReference,
   type AgentRanWith,
   type AgentToolCall,
   type AgentToolStatus,
@@ -35,6 +37,7 @@ import {
 } from "./fixtures/agentSkills";
 import {
   FIXTURE_CONVERSATIONS,
+  FIXTURE_DOCUMENTS,
   FIXTURE_RUNS,
   conversationRecords,
   seeded,
@@ -65,6 +68,17 @@ export type FixtureStream = "steady" | "gap";
 /** What every fixture reply stops to wait on, if anything: questions, a
  * tool the agent wants to use, or a Cadrumo operation to review. */
 export type FixtureAsks = "questions" | "approval" | "review";
+
+/** What the conversations have stored: the fixture documents, nothing at
+ * all, storage the host does not serve, or storage that cannot be read. */
+export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
+
+/** How many stored documents one listing page holds here: few enough that
+ * the fixture's longest list is read in several. */
+const DOCUMENT_PAGE = 100;
+
+/** How long each step of a fixture upload takes. */
+const UPLOAD_STEP_MS = 150;
 
 /** Between one streamed event and the next, in milliseconds. */
 const STEP_MS = 40;
@@ -335,6 +349,7 @@ export function fixtureAgent({
   stream,
   asks,
   refused,
+  documents = "stored",
   skills = "bundled",
 }: {
   say: (call: string) => void;
@@ -347,6 +362,7 @@ export function fixtureAgent({
   asks: FixtureAsks | null;
   /** Thrown by a read while nobody is signed in. */
   refused: () => unknown;
+  documents?: FixtureDocuments;
   /** How the agent serves its skills to `/`. */
   skills?: FixtureSkills;
 }): { agent: AgentViews; session: AgentSession } {
@@ -356,6 +372,13 @@ export function fixtureAgent({
     if (!held) throw coded("agent_gateway_skill_not_found");
     return held;
   };
+  // What each conversation has stored, which an attach adds to.
+  const storage = new Map<string, AgentDocumentRecord[]>(
+    documents === "stored" && !empty
+      ? Object.entries(FIXTURE_DOCUMENTS).map(([id, held]) => [id, [...held]])
+      : [],
+  );
+  const stored = (conversationId: string) => storage.get(conversationId) ?? [];
   // This run's conversations, which a send adds to.
   const conversations: AgentConversationRecord[] = empty
     ? []
@@ -751,6 +774,33 @@ export function fixtureAgent({
       await check();
       return structuredClone(conversationRecords(runsIn(conversationId)));
     },
+    ...(documents === "unavailable"
+      ? {}
+      : {
+          async documents(query) {
+            say(
+              `agentDocuments ${query.conversation_id}${query.after ? ` after ${query.after}` : ""}`,
+            );
+            await check();
+            if (documents === "failed")
+              throw coded("agent_gateway_attachments_unavailable");
+            const q = query.q?.toLowerCase() ?? "";
+            const after = query.after;
+            const matching = stored(query.conversation_id).filter(
+              (document) =>
+                (after === undefined || document.name > after) &&
+                document.name.toLowerCase().includes(q),
+            );
+            const page = matching.slice(0, DOCUMENT_PAGE);
+            return {
+              documents: structuredClone(page),
+              next_after:
+                matching.length > DOCUMENT_PAGE
+                  ? (page.at(-1)?.name ?? null)
+                  : null,
+            };
+          },
+        }),
   };
 
   const session: AgentSession = {
@@ -808,10 +858,82 @@ export function fixtureAgent({
         archived: false,
       };
     },
+    ...(documents === "unavailable"
+      ? {}
+      : {
+          // The picker always picks the same three files: one the storage
+          // takes, one the host refuses before sending anything, and one the
+          // storage refuses once it is sent.
+          async attach(conversationId, filterLabel, onEvent) {
+            say(`agentAttach ${conversationId} ${filterLabel}`);
+            await check();
+            const ids = [id("upload"), id("upload"), id("upload")] as const;
+            const timer = (ms: number, then: () => void) =>
+              window.setTimeout(then, ms);
+            timer(UPLOAD_STEP_MS, () =>
+              onEvent({ kind: "progress", id: ids[0], sent: 60_000 }),
+            );
+            timer(UPLOAD_STEP_MS * 2, () => {
+              const document: AgentDocumentRecord = {
+                name: "recibo-luz.pdf",
+                size_bytes: 120_000,
+                modified_at: new Date().toISOString(),
+                sha256: "a".repeat(64),
+                media_type: "application/pdf",
+              };
+              const held = stored(conversationId).filter(
+                (kept) => kept.name !== document.name,
+              );
+              storage.set(
+                conversationId,
+                [...held, document].sort((a, b) =>
+                  a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
+                ),
+              );
+              onEvent({ kind: "stored", id: ids[0], document });
+            });
+            timer(UPLOAD_STEP_MS * 3, () =>
+              onEvent({
+                kind: "refused",
+                id: ids[2],
+                code: "agent_gateway_attachment_quota_exceeded",
+              }),
+            );
+            return [
+              {
+                id: ids[0],
+                name: "recibo-luz.pdf",
+                size_bytes: 120_000,
+                state: "queued",
+                code: null,
+              },
+              {
+                id: ids[1],
+                name: "copias.zip",
+                size_bytes: 9_000,
+                state: "refused",
+                code: "agent_attachment_format_refused",
+              },
+              {
+                id: ids[2],
+                name: "escaneo-anual.pdf",
+                size_bytes: 3_400_000,
+                state: "queued",
+                code: null,
+              },
+            ];
+          },
+        }),
     async send(request) {
       window.__fixtureAgentSession = session;
       const { provider, transport } = request.selection;
-      say(`agentSend ${request.conversation_id} ${provider}/${transport}`);
+      say(
+        `agentSend ${request.conversation_id} ${provider}/${transport}${
+          request.attachments?.length
+            ? ` attachments ${request.attachments.map((named) => named.name).join("|")}`
+            : ""
+        }`,
+      );
       await check();
       const conversationId = request.conversation_id;
       const { text } = request;
@@ -827,13 +949,34 @@ export function fixtureAgent({
       // A reply still going takes no second message, and none is queued.
       if ((last && isLiveStatus(last.status)) || BUSY_ELSEWHERE.test(text))
         throw coded("agent_reply_in_progress");
+      // Each named document is read where the conversation stored it, as
+      // it was when it was named.
+      const named: AgentDocumentReference[] = [];
+      for (const reference of request.attachments ?? []) {
+        const held = stored(conversationId).find(
+          (document) => document.name === reference.name,
+        );
+        if (!held) throw coded("agent_gateway_attachment_not_found");
+        if (held.sha256 !== reference.sha256)
+          throw coded("agent_gateway_attachment_changed");
+        named.push({
+          name: held.name,
+          sha256: held.sha256,
+          media_type: held.media_type,
+        });
+      }
       const sentAt = new Date().toISOString();
       const fresh: FixtureRun = {
         // The first run of a conversation has the conversation's id.
         id: last ? id("r") : conversationId,
         status: "running",
         messages: seeded(last?.messages ?? [], [
-          { role: "user", text, sent_at: sentAt },
+          {
+            role: "user",
+            text,
+            sent_at: sentAt,
+            ...(named.length > 0 ? { attachments: named } : {}),
+          },
         ]),
         tools: [],
         selection: ranWith(request),

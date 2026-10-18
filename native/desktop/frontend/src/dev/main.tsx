@@ -72,6 +72,10 @@ function readParams() {
     agentAsks: (["questions", "approval", "review"] as const).find(
       (asks) => asks === params.get("asks"),
     ),
+    // What the conversations have stored for `@` to name.
+    agentDocuments: (["stored", "none", "unavailable", "failed"] as const).find(
+      (documents) => documents === params.get("documents"),
+    ),
     // How the agent serves its skills to `/`.
     agentSkills: (["bundled", "many", "failed", "unavailable"] as const).find(
       (skills) => skills === params.get("skills"),
@@ -125,6 +129,7 @@ function Scenarios() {
       calendar: initial.calendar,
       agentStream: initial.agentStream,
       agentAsks: initial.agentAsks,
+      agentDocuments: initial.agentDocuments,
       agentSkills: initial.agentSkills,
       language: run.language,
       latencyMs: initial.latencyMs,

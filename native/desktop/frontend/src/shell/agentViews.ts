@@ -6,6 +6,7 @@ import type {
 } from "@/components/agent/types";
 import { failureCode } from "../errors";
 import { effortWords } from "./agentCatalog";
+import { sentFiles } from "./agentDocuments";
 import type {
   AgentEffort,
   AgentToolKind,
@@ -99,13 +100,45 @@ export type AgentConversationRecord = {
   archived: boolean;
 };
 
-/** A document of a conversation. Cadrumo's custody serves none yet: no host
- * answers `documents`, and the column does not ask. */
+/** A document stored for a conversation, as cadrumo-agent lists the files
+ * of that conversation's own storage: the storage is the record, so a
+ * document is its name, and the digest tells one version from another. The
+ * conversation's messages name it, the agent reads it where it is stored,
+ * and nothing is uploaded again. */
 export type AgentDocumentRecord = {
-  id: string;
+  /** A plain file name, unique in the directory. */
   name: string;
-  media_type: string;
   size_bytes: number;
+  /** When the file last changed, as an ISO instant. */
+  modified_at: string;
+  /** SHA-256 of its bytes, as 64 lowercase hex digits. */
+  sha256: string;
+  /** Its type, where the agent can tell; null where it cannot. */
+  media_type: string | null;
+};
+
+/** One page of the stored documents, ordered by name. */
+export type AgentDocumentPage = {
+  documents: AgentDocumentRecord[];
+  /** The name the next page starts after; null on the last page. */
+  next_after: string | null;
+};
+
+/** Which page to read: the documents after a name, whose names hold `q`,
+ * ignoring case. */
+export type AgentDocumentsQuery = {
+  /** The conversation, by its first run's id; one reserved and not sent yet
+   * has its own storage too. */
+  conversation_id: string;
+  after?: string;
+  q?: string;
+};
+
+/** A stored document a message names, as the history echoes it. */
+export type AgentDocumentReference = {
+  name: string;
+  sha256: string | null;
+  media_type: string | null;
 };
 
 /** The record of a reply (a run) itself. */
@@ -151,6 +184,9 @@ export type AgentTurnRecord =
       /** When it was sent, as an ISO instant; null where the agent has no
        * time for it. */
       sent_at: string | null;
+      /** The stored documents the message named, in the order it named
+       * them; absent where none. */
+      attachments?: AgentDocumentReference[];
     }
   | {
       kind: "agent";
@@ -173,8 +209,9 @@ export interface AgentViews {
   conversations(): Promise<AgentConversationRecord[]>;
   /** The records of one conversation, oldest first. */
   history(conversationId: string): Promise<AgentTurnRecord[]>;
-  /** Not served by any host yet, and not asked for. */
-  documents?(conversationId: string): Promise<AgentDocumentRecord[]>;
+  /** One page of the documents stored for a conversation. Refused while
+   * its storage cannot be read. */
+  documents?(query: AgentDocumentsQuery): Promise<AgentDocumentPage>;
 }
 
 /** A read the column makes: not offered by the host, on its way, refused,
@@ -329,6 +366,9 @@ export function transcriptItems(
           kind: "person",
           id: unique(`person:${record.reply_id}:${record.id}`),
           text: record.text,
+          ...(record.attachments?.length
+            ? { files: sentFiles(record.attachments) }
+            : {}),
           ...(sentAtLabel ? { sentAtLabel } : {}),
         });
         return;

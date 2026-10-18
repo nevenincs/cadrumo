@@ -36,6 +36,19 @@ pub fn request_id(value: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'.' | b'-'))
 }
 
+/// A file name as one path segment: every byte but the unreserved ones
+/// percent-encoded, so no name reaches another route.
+pub fn segment(name: &str) -> String {
+    name.bytes().fold(String::new(), |mut out, b| {
+        if b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.' | b'_' | b'~') {
+            out.push(char::from(b));
+        } else {
+            out.push_str(&format!("%{b:02X}"));
+        }
+        out
+    })
+}
+
 /// The typed code of a gateway refusal: its own code where it gives one,
 /// else its status.
 pub fn refusal(status: u16, body: &[u8]) -> Refused {
@@ -200,6 +213,69 @@ impl Client {
         Self::answer(response)
     }
 
+    /// `GET /v1/attachments/policy`: what a conversation's storage takes.
+    pub fn attachment_policy(&self) -> Result<Value, Refused> {
+        self.get("/attachments/policy")
+    }
+
+    /// `PUT /v1/conversations/{id}/attachments/{name}`: stores `length` bytes
+    /// read from `body` under `name` in the conversation's own storage, with
+    /// the digest the service checks them against. Not bounded by the call
+    /// deadline: a large file on a slow disk takes the time it takes.
+    pub fn upload(
+        &self,
+        conversation: &str,
+        name: &str,
+        body: &mut dyn Read,
+        length: u64,
+        sha256: &str,
+    ) -> Result<Value, Refused> {
+        let response = self
+            .streams
+            .put(format!(
+                "{}/conversations/{conversation}/attachments/{}",
+                self.base,
+                segment(name)
+            ))
+            .header("Authorization", &self.authorization)
+            .header("Content-Type", "application/octet-stream")
+            .header("Content-Length", length.to_string())
+            .header("X-Content-SHA256", sha256)
+            .send(ureq::SendBody::from_reader(body))
+            .map_err(|_| unreachable())?;
+        Self::answer(response)
+    }
+
+    /// `GET /v1/conversations/{id}/attachments`: one page of the documents
+    /// stored for the conversation whose first run is `conversation`, by name,
+    /// after `after`, whose names hold `q`.
+    pub fn attachments(
+        &self,
+        conversation: &str,
+        after: Option<&str>,
+        q: Option<&str>,
+        limit: usize,
+    ) -> Result<Value, Refused> {
+        let mut request = self
+            .calls
+            .get(format!(
+                "{}/conversations/{conversation}/attachments",
+                self.base
+            ))
+            .query("limit", limit.to_string());
+        if let Some(after) = after {
+            request = request.query("after", after);
+        }
+        if let Some(q) = q {
+            request = request.query("q", q);
+        }
+        let response = request
+            .header("Authorization", &self.authorization)
+            .call()
+            .map_err(|_| unreachable())?;
+        Self::answer(response)
+    }
+
     /// `GET /v1/runs/{id}/history`.
     pub fn history(&self, run: &str) -> Result<Value, Refused> {
         self.get(&format!("/runs/{run}/history"))
@@ -273,6 +349,13 @@ mod tests {
         for bad in ["", ".x", "a/b", "a?b", "a".repeat(129).as_str()] {
             assert!(!request_id(bad), "{bad}");
         }
+    }
+
+    #[test]
+    fn a_file_name_is_one_path_segment() {
+        assert_eq!(segment("factura-2026_01.pdf"), "factura-2026_01.pdf");
+        assert_eq!(segment("notas del año.txt"), "notas%20del%20a%C3%B1o.txt");
+        assert_eq!(segment("a/b?c#d%"), "a%2Fb%3Fc%23d%25");
     }
 
     #[test]
