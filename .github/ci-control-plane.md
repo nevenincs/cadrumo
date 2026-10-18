@@ -11,7 +11,11 @@ reads a measurement rather than re-deriving one.
 - **Merge gate** (`merge-gate.yml`) is the only pull request workflow. It runs
   two Linux jobs, lint then gate (security scan, registry gate, import
   boundaries, scoped tests, committed sequence goldens); the required check is
-  `Check: Merge gate (Linux)`.
+  `Check: Merge gate (Linux)`. A pull request reaches the self-hosted runners
+  only from this repository and from an owner, a collaborator or the
+  `nevenincs-release` App; any other pull request starts no job and its
+  verdict reports as `Check: Merge gate withheld (Linux)`, so the required
+  check never reports and the pull request cannot merge.
 - **Release** (`release.yml`) is dispatched only by release-please, using the
   default `GITHUB_TOKEN`. `phase=prove` runs against the release pull request's
   head: the merge gate's full scan, the full test suites, conformance checks, the
@@ -22,13 +26,12 @@ reads a measurement rather than re-deriving one.
   (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, `SCOOP_BUCKET_REPOSITORY`),
   then the documentation site.
 - **Release-please** (`release-please.yml`) is the only workflow that runs on
-  a push to main (plus manual dispatch for recovery). It opens or updates the
-  release pull request and dispatches `release.yml`'s prove and publish
-  phases. It also dispatches the merge gate itself, as its last release-branch
-  step: refs and pull requests written with the default token start no workflow
-  runs, so the release pull request would otherwise never report the one check
-  main requires. A dispatch is exempt from that rule, and running it last means
-  it validates the lockfile commit pushed above it.
+  a push to main (plus manual dispatch for recovery). It cuts tags and
+  releases with the default token, opens or updates the release pull request
+  with the `nevenincs-release` App's token, so that pull request's own events
+  run the merge gate, and dispatches `release.yml`'s prove and publish phases.
+  The release commit carries the `uv.lock` version bump itself, through
+  release-please's `extra-files`, so the release branch has one head.
 
 ## The runners are shared, not a cloud
 

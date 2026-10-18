@@ -19,7 +19,27 @@
         "pyproject.toml",
         "packaging/cadrumo_data_manuals/pyproject.toml",
         "packaging/cadrumo_data_official/pyproject.toml",
-        "packaging/cadrumo_data_normatives/pyproject.toml"
+        "packaging/cadrumo_data_normatives/pyproject.toml",
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='cadrumo')].version"
+        },
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='cadrumo-data-manuals')].version"
+        },
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='cadrumo-data-official')].version"
+        },
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='cadrumo-data-normatives')].version"
+        }
       ],
       "component": ""
     }

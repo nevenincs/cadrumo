@@ -17,7 +17,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import STORAGE_ROOT, ChildEnvironmentProfile, child_environment
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, GOOGLE_OAUTH_RESOURCE
 
-from .._dotenv import provision
+from .._dotenv import provision, provision_google_client
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -166,6 +166,8 @@ def test_setup_materializes_client_for_a_worker_that_scrubs_environment(
     )
     monkeypatch.delenv(GOOGLE_OAUTH_ENV)
     assert provision(root, None) == 0
+    assert not (root / GOOGLE_OAUTH_RESOURCE).exists(), "the standard-library preflight staged the Google client"
+    assert provision_google_client(root) == 0
     resource = root / GOOGLE_OAUTH_RESOURCE
     assert resource.read_text(encoding="utf-8") == synthetic
     worker = child_environment(
@@ -189,6 +191,7 @@ def test_setup_without_google_credentials_succeeds_without_a_resource(
     monkeypatch.delenv(GOOGLE_OAUTH_ENV)
     root = _worktree(tmp_path / "checkout", template=GOOGLE_OAUTH_ENV + "=\n")
     assert provision(root, None) == 0
+    assert provision_google_client(root) == 0
     resource = root / GOOGLE_OAUTH_RESOURCE
     assert not resource.exists()
     monkeypatch.setattr(config_google, "installation_client_source", lambda: resource)
@@ -204,6 +207,7 @@ def test_setup_refuses_malformed_google_credentials_without_disclosure(
         template=GOOGLE_OAUTH_ENV + "=\n",
         dotenv=GOOGLE_OAUTH_ENV + "='{invalid-" + _MARKER + "}'\n",
     )
-    assert provision(root, None) == 1
+    assert provision(root, None) == 0
+    assert provision_google_client(root) == 1
     assert not (root / GOOGLE_OAUTH_RESOURCE).exists()
     assert _MARKER not in _output(capsys)

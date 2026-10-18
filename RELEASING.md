@@ -5,8 +5,11 @@ no rehearsal mode, and no sealed candidate to retire afterwards.
 
 `release-please` watches `main`, keeps a release pull request up to date from the
 conventional commits merged since the last release, and dispatches `release.yml` in its
-prove phase against that pull request's branch. The prove run builds the release cohort
-once, refuses any file the index would reject, and proves the sealed files on every stable
+prove phase against that pull request's branch. The `nevenincs-release` GitHub App opens
+and updates that pull request, so its own pull request events run the required merge gate
+like any trusted pull request, and it merges like any other once that check passes. The
+prove run builds the release cohort once, refuses any file the index would reject, and
+proves the sealed files on every stable
 runtime and channel across Linux, macOS and Windows. When the pull request merges,
 release-please writes the version surfaces and the changelog, tags `vX.Y.Z`, creates the
 GitHub release, and dispatches `release.yml` in its publish phase, which reuses the proven
@@ -80,7 +83,10 @@ reviewers.
 
 Confirm the repository configuration used by the destinations that are enabled:
 
-- variable `HOMEBREW_TAP_REPO` and secret `HOMEBREW_TAP_TOKEN`
+- variable `RELEASE_APP_CLIENT_ID` and secret `RELEASE_APP_PRIVATE_KEY`, the
+  `nevenincs-release` App that writes the release pull request
+- variable `HOMEBREW_TAP_REPOSITORY` (default `nevenincs/homebrew-tap`) and secret
+  `HOMEBREW_TAP_TOKEN`
 - the `release-alert` repository label, or the configured webhook fallback
 
 ## Google OAuth and desktop publisher setup
@@ -187,8 +193,8 @@ software; it does not prevent the counterfeit from calling Google directly.
 
 ## Per-release preflight
 
-Both workflows run on hosted runners, so no self-hosted runner needs to be online to
-release. Work from a clean `main` checkout with an authenticated GitHub CLI:
+Both workflows run in GitHub Actions; nothing in a release runs locally. Work from a
+clean `main` checkout with an authenticated GitHub CLI:
 
 ```console
 git status --short
@@ -279,14 +285,6 @@ the same phase against its branch:
 ```console
 gh workflow run release.yml --repo nevenincs/cadrumo --ref <RELEASE_BRANCH> \
   -f phase=prove -f ref=<RELEASE_BRANCH> -f version=<VERSION>
-```
-
-The prove run needs all three self-hosted runner shapes online — Linux x64, Windows x64
-and macOS ARM64. A queue watchdog cancels the run when a lane has no runner, but confirm
-before dispatching:
-
-```console
-gh api repos/nevenincs/cadrumo/actions/runners --jq '.runners[] | "\(.status)  \(.name)"'
 ```
 
 Merge the release PR once the prove run is green.
