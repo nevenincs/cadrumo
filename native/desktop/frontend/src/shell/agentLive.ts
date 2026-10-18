@@ -365,6 +365,8 @@ export type PersonSent = {
   at: "start" | "end";
   /** The stored documents the message named. */
   attachments?: AgentDocumentReference[];
+  /** The skills the message loaded. */
+  skills?: string[];
 };
 
 /** `live` with the person's own message. */
@@ -384,6 +386,7 @@ export function withSent(
     text: sent.text,
     sent_at: now.toISOString(),
     ...(sent.attachments?.length ? { attachments: sent.attachments } : {}),
+    ...(sent.skills?.length ? { skills: sent.skills } : {}),
   };
   const places = placesOf(turns, sent.reply_id);
   return {

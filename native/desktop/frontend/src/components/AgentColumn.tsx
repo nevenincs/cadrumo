@@ -405,6 +405,7 @@ export function AgentColumn({
         attachments: namedFor(request.conversation_id).map(
           ({ name, sha256, media_type }) => ({ name, sha256, media_type }),
         ),
+        ...(request.skills ? { skills: request.skills } : {}),
       });
       // What the message named went with it.
       staging.sent(request.conversation_id);

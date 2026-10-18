@@ -148,6 +148,7 @@ desktop:
     send_too_many_skills: Egy üzenet legfeljebb {max} készséget tölthet be
     send_waiting: Várd meg, amíg minden fájl feltöltődik
     sent_files: Az üzenettel küldött fájlok
+    sent_skills: Betöltött készségek
     service_absent: Az ügynök nincs telepítve.
     service_credential_missing: Ehhez a szolgáltatóhoz nincs beállítva kulcs.
     service_failed: Az ügynök leállt.

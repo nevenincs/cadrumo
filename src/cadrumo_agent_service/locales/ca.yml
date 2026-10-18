@@ -148,6 +148,7 @@ desktop:
     send_too_many_skills: Un missatge pot carregar com a màxim {max} habilitats
     send_waiting: Espera que es pugin tots els fitxers
     sent_files: Fitxers enviats amb aquest missatge
+    sent_skills: Habilitats carregades
     service_absent: L'agent no està instal·lat.
     service_credential_missing: No hi ha cap clau configurada per a aquest proveïdor.
     service_failed: L'agent ha deixat de funcionar.

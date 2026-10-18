@@ -142,6 +142,12 @@ test("the send carries the skills the message names", async ({
     personTurns(target).filter({ hasText: "revisa esta factura" }),
   ).toBeVisible();
   expect(await calls(target)).toContain("agentSendSkills cadrumo-facturas");
+  // The person's turn says which skill it loaded, as history echoes it.
+  await expect(
+    personTurns(target)
+      .filter({ hasText: "revisa esta factura" })
+      .getByRole("list", { name: label("desktop.agent.sent_skills") }),
+  ).toHaveText("/cadrumo-facturas");
 });
 
 test("hundreds of skills are all listed and the list scrolls", async ({

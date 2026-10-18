@@ -80,6 +80,25 @@ function SentFiles({
   );
 }
 
+/** The skills a message loaded, read-only, above its bubble. */
+function SentSkills({ skills }: { skills: readonly string[] }) {
+  const t = useStrings();
+  return (
+    <ul
+      aria-label={t("desktop.agent.sent_skills")}
+      className="flex max-w-full flex-wrap justify-end gap-1"
+    >
+      {skills.map((name) => (
+        <li key={name} title={name} className="min-w-0">
+          <Badge className="h-control-xs max-w-60 min-w-0">
+            <span className="truncate font-mono">/{name}</span>
+          </Badge>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function PersonTurn({
   message,
   locale,
@@ -89,6 +108,7 @@ function PersonTurn({
 }) {
   const t = useStrings();
   const files = message.files ?? [];
+  const skills = message.skills ?? [];
   return (
     <li className="flex justify-end pl-8">
       <article
@@ -96,6 +116,7 @@ function PersonTurn({
         className="flex min-w-0 flex-col items-end gap-1"
       >
         {files.length > 0 && <SentFiles files={files} locale={locale} />}
+        {skills.length > 0 && <SentSkills skills={skills} />}
         {message.text && (
           <p className="max-w-full rounded-lg bg-accent px-3 py-2 whitespace-pre-wrap text-foreground wrap-anywhere">
             {message.text}

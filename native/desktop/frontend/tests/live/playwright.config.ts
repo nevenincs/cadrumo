@@ -41,6 +41,7 @@ export default defineConfig({
         /live\/attach\.live\.ts$/,
         /scenarios\/agent\.spec\.ts$/,
         /scenarios\/agent-prompts\.spec\.ts$/,
+        /scenarios\/agent-live-skills\.spec\.ts$/,
       ],
       metadata: { agentHost: "live" },
       expect: { timeout: 3 * 60_000 },

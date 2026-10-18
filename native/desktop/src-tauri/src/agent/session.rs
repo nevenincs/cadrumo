@@ -221,6 +221,22 @@ fn echoed_documents(message: &Value) -> Value {
     )
 }
 
+/// The skills a user message loaded, as its history echoes them: names of
+/// the skill grammar only.
+fn echoed_skills(message: &Value) -> Value {
+    Value::Array(
+        message
+            .get("skills")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .filter(|name| skill_name(name))
+            .map(|name| json!(name))
+            .collect(),
+    )
+}
+
 /// Which pending request of which reply an answer is for.
 #[derive(Deserialize)]
 pub struct RequestRef {
@@ -546,6 +562,7 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
                 "text": text(message, "content").unwrap_or_default(),
                 "sent_at": message.get("timestamp").cloned().unwrap_or(Value::Null),
                 "attachments": echoed_documents(message),
+                "skills": echoed_skills(message),
             }));
         }
         for call in state
@@ -1414,7 +1431,8 @@ mod tests {
                          {"message_id": "u2", "role": "user", "content": "Otra",
                           "timestamp": "2026-10-13T12:00:00Z",
                           "attachments": [{"name": "factura.pdf", "sha256": SHA, "media_type": "application/pdf"},
-                                          {"name": "notas.txt"}, {"name": "../escape"}, "x"]}],
+                                          {"name": "notas.txt"}, {"name": "../escape"}, "x"],
+                          "skills": ["cadrumo-facturas", "../escape", 7, "cadrumo-IVA"]}],
             "tool_calls": []},
             "usage": null});
         let status = json!({"status": "completed", "queued_messages": 0,
@@ -1428,7 +1446,7 @@ mod tests {
             Value::Array(records),
             json!([
                 {"kind": "person", "id": "u1", "reply_id": "c1", "text": "Hola", "sent_at": "2026-10-13T12:00:00Z",
-                 "attachments": []},
+                 "attachments": [], "skills": []},
                 {"kind": "tool", "reply_id": "c1", "id": "t1", "title": "ledger_list", "tool_kind": "read", "status": "completed"},
                 {"kind": "agent", "id": "a1", "reply_id": "c1", "text": "¿Qué tal?"},
                 {"kind": "reply", "id": "c1", "status": "completed", "provider_condition": null,
@@ -1438,7 +1456,8 @@ mod tests {
                  "usage": {"input_tokens": 10, "output_tokens": 4}},
                 {"kind": "person", "id": "u2", "reply_id": "c2", "text": "Otra", "sent_at": "2026-10-13T12:00:00Z",
                  "attachments": [{"name": "factura.pdf", "sha256": SHA, "media_type": "application/pdf"},
-                                 {"name": "notas.txt", "sha256": null, "media_type": null}]},
+                                 {"name": "notas.txt", "sha256": null, "media_type": null}],
+                 "skills": ["cadrumo-facturas"]},
                 {"kind": "reply", "id": "c2", "status": "failed", "provider_condition": "throttled",
                  "failure_reason": "rate limited", "queued_messages": 0, "selection": null, "usage": null},
             ])

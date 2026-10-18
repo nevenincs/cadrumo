@@ -157,6 +157,8 @@ export type TranscriptMessage =
       text: string;
       /** The files sent with the message, in the order they were sent. */
       files?: readonly SentFile[];
+      /** The skills the message loaded, by name. */
+      skills?: readonly string[];
       /** When it was sent, already worded, e.g. "10:42". */
       sentAtLabel?: string;
     }

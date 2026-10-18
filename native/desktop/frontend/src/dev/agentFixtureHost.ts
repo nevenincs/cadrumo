@@ -976,6 +976,7 @@ export function fixtureAgent({
             text,
             sent_at: sentAt,
             ...(named.length > 0 ? { attachments: named } : {}),
+            ...(request.skills?.length ? { skills: request.skills } : {}),
           },
         ]),
         tools: [],

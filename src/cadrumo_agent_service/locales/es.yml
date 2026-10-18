@@ -148,6 +148,7 @@ desktop:
     send_too_many_skills: Un mensaje puede cargar como máximo {max} habilidades
     send_waiting: Espera a que se suban todos los archivos
     sent_files: Archivos enviados con este mensaje
+    sent_skills: Habilidades cargadas
     service_absent: El agente no está instalado.
     service_credential_missing: No hay ninguna clave configurada para este proveedor.
     service_failed: El agente ha dejado de funcionar.

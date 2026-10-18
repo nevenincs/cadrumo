@@ -36,6 +36,8 @@ export type FixtureMessage = {
   sent_at?: string | null;
   /** The stored documents a person's message named. */
   attachments?: AgentDocumentReference[];
+  /** The skills a person's message loaded. */
+  skills?: string[];
 };
 
 /** One run as the agent keeps it. */
@@ -122,6 +124,7 @@ export function conversationRecords(
               ...(message.attachments?.length
                 ? { attachments: message.attachments }
                 : {}),
+              ...(message.skills?.length ? { skills: message.skills } : {}),
             }
           : { kind: "agent", id, reply_id: run.id, text: message.text },
       );

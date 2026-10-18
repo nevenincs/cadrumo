@@ -283,6 +283,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.agent.send_too_many_skills",
         "desktop.agent.send_waiting",
         "desktop.agent.sent_files",
+        "desktop.agent.sent_skills",
         "desktop.agent.service_absent",
         "desktop.agent.service_credential_missing",
         "desktop.agent.service_failed",

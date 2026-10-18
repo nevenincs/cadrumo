@@ -81,7 +81,7 @@ from .scans import (
 _REPOSITORY: Final = Path(__file__).resolve().parents[2]
 _FRONTEND: Final = _REPOSITORY / "native" / "desktop" / "frontend"
 _BUILD: Final = _REPOSITORY / "build" / "windows-x64"
-_PACKAGE: Final = _BUILD / "stage" / "Release" / "app"
+_STAGE: Final = _BUILD / "stage"
 _PROFILE: Final = "desktop-agent-live"
 _PACKAGED_ENTRY: Final = "http://tauri.localhost/index.html"
 _DEVTOOLS_SECONDS: Final = 120.0
@@ -104,10 +104,16 @@ class UnavailableError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class TestHost:
-    """The recorded remote-debugging desktop host and the shell it loads."""
+    """The recorded remote-debugging desktop host, the shell it loads and the configuration it was built in."""
 
     executable: Path
     entry: str
+    configuration: str
+
+    @property
+    def package(self) -> Path:
+        """The staged package of the host's own configuration, which the run starts the desktop against."""
+        return _STAGE / self.configuration / "app"
 
 
 @dataclass(slots=True)
@@ -235,7 +241,10 @@ def test_host(served: bool) -> TestHost:
     if hashlib.sha256(executable.read_bytes()).hexdigest() != value.get("sha256"):
         raise UnavailableError(f"the desktop host changed after its build recorded it; rebuild it with: {build}")
     shell = value.get("shell")
-    return TestHost(executable, f"{shell}index.html" if served and shell else _PACKAGED_ENTRY)
+    configuration = value.get("configuration")
+    if configuration not in ("Debug", "Release"):
+        raise UnavailableError(f"the desktop host record names no build configuration; rebuild it with: {build}")
+    return TestHost(executable, f"{shell}index.html" if served and shell else _PACKAGED_ENTRY, configuration)
 
 
 def require_served_shell(entry: str) -> None:
@@ -382,14 +391,19 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
     host = test_host(served)
     if served:
         require_served_shell(host.entry)
-    programs = Programs.of(_PACKAGE)
+    if not (host.package / "cadrumo.exe").is_file():
+        raise UnavailableError(
+            f"no {host.configuration} package is staged at {host.package}; "
+            f"stage it with: just build-native {host.configuration} bundle"
+        )
+    programs = Programs.of(host.package)
     root, secret_store, results = run_directory / "storage", run_directory / "secrets", run_directory / "playwright"
     for directory in (root, secret_store, results):
         directory.mkdir(parents=True)
     mark_lane_root(root)
     environment = consumer_environment(root, secret_store)
     environment = {name: value for name, value in environment.items() if not name.upper().startswith("WEBVIEW2_")}
-    environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] = str(_PACKAGE)
+    environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] = str(host.package)
 
     password = secrets.token_urlsafe(32)
     code, envelope = run_cli(

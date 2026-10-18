@@ -187,6 +187,9 @@ export type AgentTurnRecord =
       /** The stored documents the message named, in the order it named
        * them; absent where none. */
       attachments?: AgentDocumentReference[];
+      /** The skills the message loaded, by name; absent or empty where
+       * none. */
+      skills?: string[];
     }
   | {
       kind: "agent";
@@ -369,6 +372,7 @@ export function transcriptItems(
           ...(record.attachments?.length
             ? { files: sentFiles(record.attachments) }
             : {}),
+          ...(record.skills?.length ? { skills: record.skills } : {}),
           ...(sentAtLabel ? { sentAtLabel } : {}),
         });
         return;
