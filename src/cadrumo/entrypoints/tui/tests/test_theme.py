@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from textual.app import App, ComposeResult
+    from textual.color import Color
 
 
 # ── WCAG 2.1 contrast, recomputed from the published formula ────────────────
@@ -308,6 +309,68 @@ async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(
         }
         assert reversed_labels == {"Previous": False, "Start setup": True}
         pilot.app.exit(None)
+
+
+async def _button_states(theme_name: str | None) -> dict[str, tuple[Color, Color]]:
+    """Drive a real action row through each button state and read its fill and label colour."""
+    states: dict[str, tuple[Color, Color]] = {}
+
+    def record(state: str, button: Button) -> None:
+        states[state] = (button.styles.background, button.styles.color)
+
+    app = ScreenHostApp(_ActionRow())
+    async with app.run_test(size=(40, 8)) as pilot:
+        if theme_name is not None:
+            pilot.app.theme = theme_name
+        await pilot.pause()
+        previous = pilot.app.screen.query_one("#previous", Button)
+        start = pilot.app.screen.query_one("#start", Button)
+        record("focus", start)
+        record("rest", previous)
+        await pilot.hover("#previous")
+        await pilot.pause()
+        record("hover", previous)
+        pilot.app.set_focus(previous)
+        await pilot.pause()
+        record("primary", start)
+        pilot.app.exit(None)
+    return states
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("theme_name", [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME])
+async def test_every_button_state_has_its_own_legible_fill(monkeypatch: pytest.MonkeyPatch, theme_name: str) -> None:
+    """Focus must not look like the primary action, and no state may lose its fill.
+
+    A focused button once took the primary blue, so a focused secondary
+    button read as the recommended one, and the dark primary label resolved to
+    white on light blue.
+    """
+    monkeypatch.setenv("TERM_PROGRAM", "WindowsTerminal")
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    states = await _button_states(theme_name)
+    fills = {state: fill for state, (fill, _) in states.items()}
+    assert len({fill.hex for fill in fills.values()}) == len(fills), fills
+    for state, (fill, label) in states.items():
+        assert fill.a == 1 and label.a == 1, state
+        assert _contrast(label.hex, fill.hex) >= _WCAG_AA_BODY_TEXT, state
+
+
+@pytest.mark.asyncio
+async def test_every_desktop_button_state_paints_its_own_palette_slot(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The desktop palette has no derived shades, so each state must name a slot.
+
+    Focus is the ink slot under the paper slot, the pair the desktop maps to
+    its foreground and background.
+    """
+    monkeypatch.setenv("TERM_PROGRAM", "cadrumo")
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    states = await _button_states(None)
+    slots = {state: fill.ansi for state, (fill, _) in states.items()}
+    assert all(slot is not None and slot >= 0 for slot in slots.values()), slots
+    assert len(set(slots.values())) == len(slots), slots
+    focus_fill, focus_label = states["focus"]
+    assert (focus_fill.ansi, focus_label.ansi) == (7, 0)
 
 
 def test_no_stylesheet_carries_an_unsubstituted_token() -> None:

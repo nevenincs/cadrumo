@@ -441,29 +441,47 @@ BASE_CSS: Final[str] = tokenised("""
         background: $panel;
         color: $foreground;
     }
-    Button:hover {
-        border: $cadrumo-control-edge $panel-lighten-1;
-        background: $panel-lighten-1;
-    }
     /* The edge always matches its own fill, so the slab stays seamless and
-       state is carried by the fill colour, never by a second outline. */
-    Button:focus {
-        border: $cadrumo-control-edge $primary;
-        background: $primary;
-        color: $text;
-        text-style: bold;
+       state is carried by the fill colour, never by a second outline. Each
+       state takes a fill no other state uses:
+
+         rest     panel           the quiet default
+         primary  primary blue    the one action a row recommends
+         hover    border-blurred  one step off the panel in every theme
+         focus    ink             the strongest fill there is
+
+       Hover cannot be derived as `$panel-lighten-1`: the desktop palette's
+       colours are ANSI slots, which have no lighter shade, and the derived
+       value came out transparent, so a hovered button vanished into the page.
+       Focus used to be blue too, which made a focused secondary button look
+       like the primary one and moved a focused primary button only from one
+       slate blue to another. */
+    Button:hover {
+        border: $cadrumo-control-edge $border-blurred;
+        background: $border-blurred;
     }
     Button.-primary {
         border: $cadrumo-control-edge $primary;
         background: $primary;
-        color: $text;
+        /* Page colour, not `$text`: Textual resolves that to white on the
+           dark theme's light blue, under 3:1. */
+        color: $background;
     }
-    Button.-primary:focus {
-        border: $cadrumo-control-edge $accent;
-        background: $accent;
+    Button:focus, Button.-primary:focus {
+        border: $cadrumo-control-edge $foreground;
+        background: $foreground;
+        color: $background;
         text-style: bold;
     }
-    Button:ansi:focus, Button:ansi.-primary { color: ansi_black; }
+    /* The desktop palette's foreground and background are the terminal's
+       defaults, which as a fill would be the page itself. Its ink and paper
+       are the slots its theme names as the ANSI foreground and background. */
+    Button:ansi.-primary { color: $ansi-background; }
+    Button:ansi:focus, Button:ansi.-primary:focus {
+        border: $cadrumo-control-edge $ansi-foreground;
+        background: $ansi-foreground;
+        color: $ansi-background;
+    }
     /* Without colour every cell is default ink on default paper, so the
        slab's half-block edge stops merging with a fill and prints as a solid
        ink frame. A monochrome button is a line box instead, and state moves
@@ -472,7 +490,7 @@ BASE_CSS: Final[str] = tokenised("""
         border: $cadrumo-radius $foreground;
     }
     Button:nocolor.-primary { text-style: bold; }
-    Button:nocolor:focus {
+    Button:nocolor:focus, Button:nocolor.-primary:focus {
         border: $cadrumo-radius $foreground;
         text-style: bold reverse;
     }
