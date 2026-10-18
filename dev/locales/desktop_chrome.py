@@ -183,6 +183,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.agent.condition_unknown",
         "desktop.agent.condition_usage_exhausted",
         "desktop.agent.consent_allow",
+        "desktop.agent.conversation_deleting",
+        "desktop.agent.conversation_id_taken",
         "desktop.agent.consent_decline",
         "desktop.agent.consent_items",
         "desktop.agent.consent_lead",

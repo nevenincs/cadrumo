@@ -115,6 +115,10 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.reference_refused");
     case "agent_gateway_attachments_unavailable":
       return t("desktop.agent.references_unavailable");
+    case "agent_gateway_conversation_deleting":
+      return t("desktop.agent.conversation_deleting");
+    case "agent_gateway_conversation_id_taken":
+      return t("desktop.agent.conversation_id_taken");
     default:
       return t("desktop.messages.failed", { code });
   }

@@ -45,6 +45,9 @@ desktop:
     consent_note: No s'envia res fins que triïs. Si no l'envies, es queda en aquest
       ordinador.
     consent_title: Vols enviar això a {provider}?
+    conversation_deleting: Aquesta conversa s'està eliminant, així que no admet fitxers.
+    conversation_id_taken: Aquesta conversa no pot desar fitxers. Comença una conversa
+      nova per adjuntar-los.
     delete: Suprimeix
     delete_confirm: Vols suprimir «{title}» i els seus documents ({count})? No es
       pot desfer.

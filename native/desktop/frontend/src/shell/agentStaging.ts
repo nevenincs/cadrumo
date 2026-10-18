@@ -35,6 +35,10 @@ export function uploadRefusalWords(t: Translate, code: string): string {
       return t("desktop.agent.upload_format_refused");
     case "agent_gateway_attachment_quota_exceeded":
       return t("desktop.agent.upload_quota_exceeded");
+    case "agent_gateway_conversation_deleting":
+      return t("desktop.agent.conversation_deleting");
+    case "agent_gateway_conversation_id_taken":
+      return t("desktop.agent.conversation_id_taken");
     case "agent_attachment_unreadable":
       return t("desktop.agent.upload_unreadable");
     case "agent_attachment_name_refused":

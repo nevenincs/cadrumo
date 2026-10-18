@@ -109,7 +109,8 @@ pub fn admit(path: &Path, policy: &Policy) -> Result<(String, u64), &'static str
     let name = path
         .file_name()
         .and_then(|name| name.to_str())
-        .filter(|name| plain_name(name))
+        // The storage takes no name that starts with a dot.
+        .filter(|name| plain_name(name) && !name.starts_with('.'))
         .ok_or("agent_attachment_name_refused")?;
     let extension = Path::new(name)
         .extension()
@@ -298,7 +299,11 @@ mod tests {
         let large = write("grande.pdf", &[0u8; 11]);
         let zipped = write("archivo.zip", b"PK");
         let missing = root.join("ausente.pdf");
-        let (picked, queued) = stage(vec![fits, large, zipped, missing, root.clone()], &policy());
+        let hidden = write(".oculto.pdf", b"%PDF-1");
+        let (picked, queued) = stage(
+            vec![fits, large, zipped, missing, root.clone(), hidden],
+            &policy(),
+        );
         let states: Vec<(&str, &str, Option<&str>)> = picked
             .iter()
             .map(|p| (p.name.as_str(), p.state, p.code.as_deref()))
@@ -313,6 +318,7 @@ mod tests {
             ]
         );
         assert_eq!(picked[4].state, "refused");
+        assert_eq!(picked[5].code.as_deref(), Some("agent_attachment_name_refused"));
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].size, 6);
         assert!(picked.iter().all(|p| !p.name.contains(std::path::MAIN_SEPARATOR)));

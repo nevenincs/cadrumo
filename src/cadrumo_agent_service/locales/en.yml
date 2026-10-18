@@ -45,6 +45,9 @@ desktop:
     consent_note: Nothing is sent until you choose. If you don't send it, it stays
       on this computer.
     consent_title: Send this to {provider}?
+    conversation_deleting: This conversation is being deleted, so it takes no files.
+    conversation_id_taken: This conversation can't hold files. Start a new conversation
+      to attach them.
     delete: Delete
     delete_confirm: Delete “{title}” and its documents ({count})? This can't be undone.
     delete_confirm_bare: Delete “{title}”? This can't be undone.

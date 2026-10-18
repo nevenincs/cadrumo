@@ -45,6 +45,9 @@ desktop:
     consent_note: Semmi sem megy el, amíg nem döntesz. Ha nem küldöd el, ezen a számítógépen
       marad.
     consent_title: 'Elküldöd ezt ide: {provider}?'
+    conversation_deleting: Ez a beszélgetés törlés alatt áll, ezért nem fogad fájlokat.
+    conversation_id_taken: Ez a beszélgetés nem tárolhat fájlokat. Kezdj új beszélgetést
+      a csatolásukhoz.
     delete: Törlés
     delete_confirm: 'Törlöd ezt: „{title}”, a dokumentumaival együtt ({count})? Ez
       nem vonható vissza.'
