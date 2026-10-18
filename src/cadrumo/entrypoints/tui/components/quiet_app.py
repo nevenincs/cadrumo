@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from typing import override
 
@@ -9,6 +10,8 @@ from textual.app import App
 from textual.driver import Driver
 from textual.events import DescendantFocus
 from textual.widgets import Input, TextArea
+
+from ....core.config import Settings
 
 
 class QuietApp[ReturnType](App[ReturnType]):
@@ -19,6 +22,17 @@ class QuietApp[ReturnType](App[ReturnType]):
     widget's cursor is held steady as the widget takes focus. On Windows the
     console input loop waits for input instead of waking every 100 ms.
     """
+
+    def __init__(self) -> None:
+        """Choose native ANSI handling before Textual installs its color filters."""
+        # Textual chooses the NO_COLOR filter during construction. Its RGB
+        # monochrome filter would turn the desktop theme's ANSI roles black.
+        # It also reads a mere presence of NO_COLOR as monochrome, while
+        # Cadrumo declares the variable a boolean: NO_COLOR=false keeps colour
+        # in the CLI, so it keeps colour here.
+        if "NO_COLOR" in os.environ and not Settings().no_color:
+            del os.environ["NO_COLOR"]
+        super().__init__(ansi_color=True if os.environ.get("TERM_PROGRAM") == "cadrumo" else None)
 
     @override
     def get_driver_class(self) -> type[Driver]:

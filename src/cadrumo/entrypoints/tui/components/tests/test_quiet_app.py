@@ -106,3 +106,13 @@ async def test_a_screen_run_as_its_own_process_is_as_quiet_as_the_workbench() ->
         await asyncio.sleep(1.3)
         await pilot.pause()
         assert field.renders == settled, "a hosted screen's cursor kept repainting the idle screen"
+
+
+@pytest.mark.parametrize(("value", "monochrome"), [("false", False), ("0", False), ("true", True), ("1", True)])
+def test_no_color_is_read_as_the_boolean_cadrumo_declares(
+    monkeypatch: pytest.MonkeyPatch, value: str, *, monochrome: bool
+) -> None:
+    """``NO_COLOR=false`` keeps colour, as it does in the CLI; Textual alone reads any value as monochrome."""
+    monkeypatch.setenv("TERM_PROGRAM", "WindowsTerminal")
+    monkeypatch.setenv("NO_COLOR", value)
+    assert ScreenHostApp(_InputScreen()).no_color is monochrome
