@@ -21,12 +21,13 @@ from __future__ import annotations
 import math
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import pytest
 from textual.containers import Vertical
 from textual.screen import Screen
 from textual.theme import Theme
+from textual.widgets import Button
 
 from ....core.config_support import TuiAppearance
 from ....core.directory_scan import scan_directory
@@ -54,7 +55,7 @@ pytestmark = [
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from textual.app import App
+    from textual.app import App, ComposeResult
 
 
 # ── WCAG 2.1 contrast, recomputed from the published formula ────────────────
@@ -262,6 +263,50 @@ async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> 
         scroll = pilot.app.screen.query_one(".cadrumo-scroll")
         assert scroll.styles.scrollbar_size_vertical == 1
         assert scroll.styles.scrollbar_gutter != "stable", "a stable gutter reserves the cell even with no overflow"
+        pilot.app.exit(None)
+
+
+class _ActionRow(Screen[None]):
+    """A secondary and a focused primary button, as an action row draws them."""
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield Button("Previous", id="previous")
+        yield Button("Start setup", id="start", variant="primary")
+
+    def on_mount(self) -> None:
+        self.query_one("#start", Button).focus()
+
+
+_SLAB_GLYPHS = frozenset("▄▀█▌▐")
+"""The half- and full-block cells a ``block`` edge is drawn from."""
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("term_program", ["cadrumo", "WindowsTerminal"])
+async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(
+    monkeypatch: pytest.MonkeyPatch,
+    term_program: str,
+) -> None:
+    """Without colour a block edge prints as a solid ink frame, so it is not drawn.
+
+    Read off the composited strips the terminal receives, since the defect is
+    in what the colour filter leaves behind rather than in any declared style.
+    """
+    monkeypatch.setenv("TERM_PROGRAM", term_program)
+    monkeypatch.setenv("NO_COLOR", "1")
+    app = ScreenHostApp(_ActionRow())
+    async with app.run_test(size=(40, 8)) as pilot:
+        await pilot.pause()
+        strips = pilot.app.screen._compositor.render_strips()
+        cells = [segment for strip in strips for segment in strip]
+        assert not _SLAB_GLYPHS & set("".join(segment.text for segment in cells))
+        reversed_labels = {
+            segment.text.strip(): segment.style is not None and segment.style.reverse is True
+            for segment in cells
+            if segment.text.strip() in {"Previous", "Start setup"}
+        }
+        assert reversed_labels == {"Previous": False, "Start setup": True}
         pilot.app.exit(None)
 
 

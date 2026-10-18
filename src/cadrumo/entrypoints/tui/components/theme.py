@@ -464,6 +464,18 @@ BASE_CSS: Final[str] = tokenised("""
         text-style: bold;
     }
     Button:ansi:focus, Button:ansi.-primary { color: ansi_black; }
+    /* Without colour every cell is default ink on default paper, so the
+       slab's half-block edge stops merging with a fill and prints as a solid
+       ink frame. A monochrome button is a line box instead, and state moves
+       to the label: bold for the primary action, reversed for focus. */
+    Button:nocolor {
+        border: $cadrumo-radius $foreground;
+    }
+    Button:nocolor.-primary { text-style: bold; }
+    Button:nocolor:focus {
+        border: $cadrumo-radius $foreground;
+        text-style: bold reverse;
+    }
 
     Input {
         width: 100%;
