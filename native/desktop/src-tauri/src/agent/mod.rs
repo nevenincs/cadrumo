@@ -561,16 +561,21 @@ async fn agent_attach<R: Runtime>(
         let gateway = Session::gateway(&host.supervisor)?;
         let policy = upload::policy_of(&gateway::Client::new(&gateway).attachment_policy()?)?;
         let extensions: Vec<&str> = policy.extensions.iter().map(String::as_str).collect();
-        let paths: Vec<std::path::PathBuf> = window
-            .dialog()
-            .file()
-            .set_parent(&window)
-            .add_filter(filter_label, &extensions)
-            .blocking_pick_files()
-            .unwrap_or_default()
-            .into_iter()
-            .filter_map(|picked| picked.into_path().ok())
-            .collect();
+        // The packaged test host takes the lane's files where the lane gives
+        // some; every other build always asks the person.
+        let paths: Vec<std::path::PathBuf> = match upload::lane_picks(upload::lane_directory()) {
+            Some(paths) => paths,
+            None => window
+                .dialog()
+                .file()
+                .set_parent(&window)
+                .add_filter(filter_label, &extensions)
+                .blocking_pick_files()
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|picked| picked.into_path().ok())
+                .collect(),
+        };
         let (picked, queued) = upload::stage(paths, &policy);
         if !queued.is_empty() {
             std::thread::spawn(move || {

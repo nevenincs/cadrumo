@@ -90,10 +90,19 @@ pub struct Picked {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum UploadEvent {
-    Progress { id: String, sent: u64 },
+    Progress {
+        id: String,
+        sent: u64,
+    },
     /// Stored: the record the agent keeps of it, which a message can name.
-    Stored { id: String, document: Value },
-    Refused { id: String, code: String },
+    Stored {
+        id: String,
+        document: Value,
+    },
+    Refused {
+        id: String,
+        code: String,
+    },
 }
 
 /// One file the policy admits, still to be sent.
@@ -174,6 +183,44 @@ pub fn stage(paths: Vec<PathBuf>, policy: &Policy) -> (Vec<Picked>, Vec<Queued>)
     (picked, queued)
 }
 
+/// The directory the live lane gives the packaged test host's picker. Read
+/// only by that host; no other build knows the name.
+#[cfg(feature = "webview2-remote-debugging")]
+pub const LANE_ATTACH_DIRECTORY: &str = "CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR";
+
+/// Where the live lane put the files the packaged test host picks, if it
+/// says.
+#[cfg(feature = "webview2-remote-debugging")]
+pub fn lane_directory() -> Option<std::ffi::OsString> {
+    std::env::var_os(LANE_ATTACH_DIRECTORY).filter(|value| !value.is_empty())
+}
+
+/// No other build reads where the lane put any files.
+#[cfg(not(feature = "webview2-remote-debugging"))]
+pub fn lane_directory() -> Option<std::ffi::OsString> {
+    None
+}
+
+/// The files the packaged test host picks in place of the dialog: every
+/// entry of the lane's directory, by name, which are then staged and sent
+/// as a person's picks are.
+#[cfg(feature = "webview2-remote-debugging")]
+pub fn lane_picks(directory: Option<std::ffi::OsString>) -> Option<Vec<PathBuf>> {
+    let mut paths: Vec<PathBuf> = std::fs::read_dir(directory?)
+        .ok()?
+        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+        .collect();
+    paths.sort();
+    Some(paths)
+}
+
+/// Every other build picks nothing here, whatever it is given, and opens the
+/// dialog.
+#[cfg(not(feature = "webview2-remote-debugging"))]
+pub fn lane_picks(_directory: Option<std::ffi::OsString>) -> Option<Vec<PathBuf>> {
+    None
+}
+
 /// The SHA-256 of what `reader` holds, as 64 lowercase hex digits.
 pub fn sha256_of(reader: &mut dyn Read) -> io::Result<String> {
     let mut hasher = Sha256::new();
@@ -213,7 +260,12 @@ impl<R: Read> Read for Reporting<'_, R> {
 }
 
 /// Sends one file: its digest first, then its bytes, as they are now.
-fn send_one(client: &Client, conversation: &str, file: &Queued, channel: &Channel<UploadEvent>) -> Result<Value, Refused> {
+fn send_one(
+    client: &Client,
+    conversation: &str,
+    file: &Queued,
+    channel: &Channel<UploadEvent>,
+) -> Result<Value, Refused> {
     let unreadable = || Refused::new("agent_attachment_unreadable".to_owned());
     let sha256 = sha256_of(&mut File::open(&file.path).map_err(|_| unreadable())?)
         .map_err(|_| unreadable())?;
@@ -226,7 +278,9 @@ fn send_one(client: &Client, conversation: &str, file: &Queued, channel: &Channe
     // Exactly the length announced is sent: a file that grew since is cut
     // there, and one that shrank fails, so the digest decides.
     let mut body = Reporting {
-        inner: File::open(&file.path).map_err(|_| unreadable())?.take(file.size),
+        inner: File::open(&file.path)
+            .map_err(|_| unreadable())?
+            .take(file.size),
         sent: 0,
         reported: 0,
         report: &report,
@@ -236,7 +290,12 @@ fn send_one(client: &Client, conversation: &str, file: &Queued, channel: &Channe
 }
 
 /// Sends each queued file in turn and tells the page how each went.
-pub fn send_all(gateway: &Gateway, conversation: &str, queued: Vec<Queued>, channel: &Channel<UploadEvent>) {
+pub fn send_all(
+    gateway: &Gateway,
+    conversation: &str,
+    queued: Vec<Queued>,
+    channel: &Channel<UploadEvent>,
+) {
     let client = Client::new(gateway);
     for file in queued {
         let event = match send_one(&client, conversation, &file, channel) {
@@ -259,10 +318,12 @@ mod tests {
     use serde_json::json;
 
     fn policy() -> Policy {
-        policy_of(&json!({"max_file_bytes": 10, "max_files_per_conversation": 200,
+        policy_of(
+            &json!({"max_file_bytes": 10, "max_files_per_conversation": 200,
             "max_total_bytes_per_conversation": 1_000,
             "formats": [{"media_type": "application/pdf", "extensions": [".pdf", "PDF"]},
-                        {"media_type": "text/plain", "extensions": ["txt"]}]}))
+                        {"media_type": "text/plain", "extensions": ["txt"]}]}),
+        )
         .unwrap()
     }
 
@@ -282,7 +343,11 @@ mod tests {
             json!({"max_file_bytes": 1, "formats": [{"extensions": ["p/f"]}]}),
             json!({"max_file_bytes": 1, "formats": [{"extensions": [3]}]}),
         ] {
-            assert_eq!(policy_of(&bad).unwrap_err().code, "agent_gateway_unreadable", "{bad}");
+            assert_eq!(
+                policy_of(&bad).unwrap_err().code,
+                "agent_gateway_unreadable",
+                "{bad}"
+            );
         }
     }
 
@@ -313,15 +378,50 @@ mod tests {
             [
                 ("factura.PDF", "queued", None),
                 ("grande.pdf", "refused", Some("agent_attachment_too_large")),
-                ("archivo.zip", "refused", Some("agent_attachment_format_refused")),
-                ("ausente.pdf", "refused", Some("agent_attachment_unreadable")),
+                (
+                    "archivo.zip",
+                    "refused",
+                    Some("agent_attachment_format_refused")
+                ),
+                (
+                    "ausente.pdf",
+                    "refused",
+                    Some("agent_attachment_unreadable")
+                ),
             ]
         );
         assert_eq!(picked[4].state, "refused");
-        assert_eq!(picked[5].code.as_deref(), Some("agent_attachment_name_refused"));
+        assert_eq!(
+            picked[5].code.as_deref(),
+            Some("agent_attachment_name_refused")
+        );
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].size, 6);
-        assert!(picked.iter().all(|p| !p.name.contains(std::path::MAIN_SEPARATOR)));
+        assert!(
+            picked
+                .iter()
+                .all(|p| !p.name.contains(std::path::MAIN_SEPARATOR))
+        );
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn only_the_packaged_test_host_takes_the_lanes_files() {
+        let root = std::env::temp_dir().join(format!("cadrumo-lane-picks-{}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("b.txt"), b"b").unwrap();
+        std::fs::write(root.join("a.csv"), b"a").unwrap();
+        let picks = lane_picks(Some(root.clone().into_os_string()));
+        #[cfg(feature = "webview2-remote-debugging")]
+        assert_eq!(picks, Some(vec![root.join("a.csv"), root.join("b.txt")]));
+        // A shipped build opens the dialog whatever directory it is given,
+        // and reads no variable naming one.
+        #[cfg(not(feature = "webview2-remote-debugging"))]
+        {
+            assert_eq!(picks, None);
+            assert_eq!(lane_directory(), None);
+        }
+        assert_eq!(lane_picks(None), None);
         std::fs::remove_dir_all(&root).unwrap();
     }
 

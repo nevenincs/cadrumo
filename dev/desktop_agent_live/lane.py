@@ -9,7 +9,9 @@ programs, and the desktop window through its WebView2 DevTools endpoint:
 3. starts the remote-debugging desktop test host in a kill-on-close Job, with
    ``CADRUMO_LOCAL_STORAGE_ROOT`` and exactly one
    ``--remote-debugging-port=<port>`` in ``WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS``,
-   and requires the DevTools endpoint to listen on loopback only;
+   and requires the DevTools endpoint to listen on loopback only; its attach
+   button takes the run's synthetic files from ``CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR``
+   in place of its native dialog, a seam only the test host has;
 4. signs the profile in through the command line, the password on its standard
    input only, and requires the sign-in to be stored so the desktop resumes it;
 5. stores the developer's provider key through the desktop's service
@@ -91,6 +93,21 @@ _SETTLE_SECONDS: Final = 10.0
 _WATCH_SECONDS: Final = 1.0
 _DESKTOP_UNAVAILABLE: Final = 69
 """The desktop host's exit when the logon has no interactive desktop for its window."""
+_ATTACH_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR"
+"""Where the packaged test host's attach button takes its files from, in place of its dialog."""
+
+LANE_ATTACHMENTS: Final[Mapping[str, bytes]] = {
+    # Stored, and read by the agent: the word is what its reply must name.
+    "lane-notes.txt": b"Lane check. The word in this file is GIRASOL.\n",
+    "lane-ledger.csv": b"date,concept,amount\n2026-01-15,lane check,12.50\n",
+    # An empty ZIP archive: a format the storage refuses.
+    "lane-archive.zip": b"PK\x05\x06" + bytes(18),
+    # A name the host refuses before sending anything.
+    ".lane-hidden.txt": b"hidden\n",
+    # Text under a PDF's name: the storage refuses what does not match.
+    "lane-mismatch.pdf": b"This is plain text, not a PDF.\n",
+}
+"""The synthetic files the attach button picks. Nothing in them is anyone's."""
 
 
 def key_variable(provider_id: str) -> str:
@@ -266,6 +283,14 @@ def require_served_shell(entry: str) -> None:
     raise UnavailableError(f"port {port} is served by another checkout; stop it and run just dev here")
 
 
+def write_lane_attachments(directory: Path) -> Path:
+    """Write the files the attach button picks into a fresh ``directory``."""
+    directory.mkdir(parents=True)
+    for name, content in LANE_ATTACHMENTS.items():
+        (directory / name).write_bytes(content)
+    return directory
+
+
 def free_port() -> int:
     """A loopback TCP port that was free a moment ago."""
     import socket
@@ -400,6 +425,7 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
     root, secret_store, results = run_directory / "storage", run_directory / "secrets", run_directory / "playwright"
     for directory in (root, secret_store, results):
         directory.mkdir(parents=True)
+    attachments = write_lane_attachments(run_directory / "attach")
     mark_lane_root(root)
     environment = consumer_environment(root, secret_store)
     environment = {name: value for name, value in environment.items() if not name.upper().startswith("WEBVIEW2_")}
@@ -422,7 +448,9 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
     signed_in = False
     absent: UnavailableError | None = None
     failures: list[str] = []
-    with lane_desktop(host, environment, run_directory, port) as (scope, desktop):
+    # Only the desktop is told where the attach button's files are.
+    desktop_environment = {**environment, _ATTACH_VARIABLE: str(attachments)}
+    with lane_desktop(host, desktop_environment, run_directory, port) as (scope, desktop):
         watch.members = scope.active_process_ids
         watch.start()
         try:
