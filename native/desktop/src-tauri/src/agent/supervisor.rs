@@ -159,6 +159,7 @@ struct Shared {
     diagnostics: Arc<Diagnostics>,
     grace: Duration,
     retry: Duration,
+    start_limit: Duration,
 }
 
 /// The supervision of one host's launcher.
@@ -245,11 +246,22 @@ impl Supervisor {
                 diagnostics,
                 grace,
                 retry,
+                start_limit: START_LIMIT,
             }),
             observe,
             changed,
             launch,
         }
+    }
+
+    /// A fixture launcher's speed is not under test; it gets `limit` to report
+    /// its service instead of the product's start limit.
+    #[cfg(test)]
+    fn starting_within(mut self, limit: Duration) -> Self {
+        Arc::get_mut(&mut self.shared)
+            .expect("timing is set before supervision begins")
+            .start_limit = limit;
+        self
     }
 
     /// The status now. The first ask begins supervision.
@@ -595,7 +607,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
             break;
         }
         let starting_expired = lock(&shared.running).as_ref().is_some_and(|running| {
-            lock(&shared.admin).is_none() && running.started.elapsed() >= START_LIMIT
+            lock(&shared.admin).is_none() && running.started.elapsed() >= shared.start_limit
         });
         if starting_expired {
             publish(
@@ -706,7 +718,7 @@ fn next_due(shared: &Shared, retries: &RetryBudget) -> Option<Instant> {
     let starting = lock(&shared.running).as_ref().and_then(|running| {
         lock(&shared.admin)
             .is_none()
-            .then_some(running.started + START_LIMIT)
+            .then_some(running.started + shared.start_limit)
     });
     retry.into_iter().chain(starting).min()
 }
@@ -1175,7 +1187,9 @@ mod tests {
     mod live {
         use super::*;
         use crate::agent::runner::tests::{alive, launcher_script, powershell, reported};
+        use crate::shell::sign_in::process::tests::HANG_GUARD;
         use tauri::ipc::InvokeResponseBody;
+        use tokio::sync::watch;
 
         #[tokio::test(flavor = "multi_thread")]
         async fn launcher_refusal_is_handled_while_status_read_is_pending() {
@@ -1237,6 +1251,8 @@ mod tests {
             statuses: Arc<Mutex<Vec<serde_json::Value>>>,
             diagnostics: Arc<Diagnostics>,
             holders: Arc<Mutex<Vec<HolderFixture>>>,
+            /// Moves on at each published status and each recorded diagnostic.
+            recorded: Arc<watch::Sender<u64>>,
         }
 
         struct HolderFixture {
@@ -1292,8 +1308,12 @@ mod tests {
                      [Console]::Out.Flush(); \
                  }} }}"
             );
-            let person =
-                crate::agent::person::Person::hold(powershell(&holder_script), profile_id).unwrap();
+            let person = crate::agent::person::Person::hold_answering_within(
+                powershell(&holder_script),
+                profile_id,
+                HANG_GUARD,
+            )
+            .unwrap();
             assert_eq!(person.identity, identity);
             let witness = HolderFixture {
                 pid: person.child_id(),
@@ -1342,7 +1362,10 @@ mod tests {
                 lock(&witnesses).push(witness);
                 Ok(prepared)
             });
+            let recorded = Arc::new(watch::Sender::new(0u64));
             let diagnostics = Arc::new(Diagnostics::default());
+            let moved = recorded.clone();
+            diagnostics.on_recorded(Arc::new(move || moved.send_modify(|count| *count += 1)));
             let supervisor = Supervisor::with_timing(
                 observe,
                 every(Duration::from_millis(100)),
@@ -1350,9 +1373,11 @@ mod tests {
                 diagnostics.clone(),
                 Duration::from_millis(if ignore_end { 500 } else { 10_000 }),
                 Duration::from_secs(60),
-            );
+            )
+            .starting_within(HANG_GUARD);
             let statuses = Arc::new(Mutex::new(Vec::new()));
             let sink = statuses.clone();
+            let moved = recorded.clone();
             supervisor.subscribe(Channel::new(move |body| {
                 let InvokeResponseBody::Json(body) = body else {
                     panic!("expected a JSON status")
@@ -1360,6 +1385,7 @@ mod tests {
                 sink.lock()
                     .unwrap()
                     .push(serde_json::from_str(&body).unwrap());
+                moved.send_modify(|count| *count += 1);
                 Ok(())
             }));
             Rig {
@@ -1368,30 +1394,36 @@ mod tests {
                 statuses,
                 diagnostics,
                 holders,
+                recorded,
             }
+        }
+
+        /// What `seen` finds once a published status or recorded diagnostic
+        /// makes it true. The guard bounds only a supervisor that hangs.
+        async fn until_seen<T>(rig: &Rig, what: &str, mut seen: impl FnMut() -> Option<T>) -> T {
+            let mut recorded = rig.recorded.subscribe();
+            tokio::time::timeout(HANG_GUARD, async {
+                loop {
+                    if let Some(found) = seen() {
+                        return found;
+                    }
+                    recorded.changed().await.unwrap();
+                }
+            })
+            .await
+            .unwrap_or_else(|_| panic!("{what}: {:?}", rig.statuses.lock().unwrap()))
         }
 
         /// The first status in `state` published at or after index `from`.
         async fn until(rig: &Rig, from: usize, state: &str) -> serde_json::Value {
-            let deadline = Instant::now() + Duration::from_secs(40);
-            loop {
-                let found = {
-                    let statuses = rig.statuses.lock().unwrap();
-                    statuses[from.min(statuses.len())..]
-                        .iter()
-                        .find(|status| status["state"] == state)
-                        .cloned()
-                };
-                if let Some(status) = found {
-                    return status;
-                }
-                assert!(
-                    Instant::now() < deadline,
-                    "never {state}: {:?}",
-                    rig.statuses.lock().unwrap()
-                );
-                tokio::time::sleep(Duration::from_millis(50)).await;
-            }
+            until_seen(rig, &format!("never {state}"), || {
+                let statuses = rig.statuses.lock().unwrap();
+                statuses[from.min(statuses.len())..]
+                    .iter()
+                    .find(|status| status["state"] == state)
+                    .cloned()
+            })
+            .await
         }
 
         /// The launcher, its reported grandchild, and its real held-protocol child.
@@ -1464,12 +1496,44 @@ mod tests {
             (launcher, grandchild, witness.pid)
         }
 
-        async fn gone(pids: (u32, u32, u32)) {
-            let deadline = Instant::now() + Duration::from_secs(20);
-            while alive(pids.0) || alive(pids.1) || alive(pids.2) {
-                assert!(Instant::now() < deadline, "a started process survived");
-                tokio::time::sleep(Duration::from_millis(50)).await;
-            }
+        /// The running processes among `pids`, each as its pid and start time:
+        /// once a process ends, another process can be given its pid.
+        fn instances(pids: (u32, u32, u32)) -> Vec<String> {
+            let output = powershell(&format!(
+                "foreach ($id in {},{},{}) {{ \
+                     $p = Get-Process -Id $id -ErrorAction SilentlyContinue; \
+                     if ($p) {{ [Console]::Out.WriteLine(\"$id@$($p.StartTime.Ticks)\") }} }}; \
+                 exit 0",
+                pids.0, pids.1, pids.2
+            ))
+            .output()
+            .unwrap();
+            assert!(output.status.success());
+            String::from_utf8(output.stdout)
+                .unwrap()
+                .lines()
+                .map(str::to_owned)
+                .collect()
+        }
+
+        /// Every one of the launcher's processes, while it serves.
+        fn started(pids: (u32, u32, u32)) -> Vec<String> {
+            let started = instances(pids);
+            assert!(
+                started.len() == 3 && started.iter().all(|process| !process.ends_with('@')),
+                "every started process runs: {started:?}"
+            );
+            started
+        }
+
+        /// Once the supervisor has finished stopping them, none of the started
+        /// processes remains: the job is empty and the holder reaped.
+        fn gone(pids: (u32, u32, u32), started: &[String]) {
+            let running = instances(pids);
+            assert!(
+                started.iter().all(|process| !running.contains(process)),
+                "a started process survived: {running:?}"
+            );
         }
 
         #[tokio::test(flavor = "multi_thread")]
@@ -1499,14 +1563,21 @@ mod tests {
                     "the service reports no invented lane"
                 );
                 let first = serving(&rig, 0).await;
+                let processes = started(first);
                 let changed = rig.statuses.lock().unwrap().len();
                 *rig.observation.lock().unwrap() = observation;
-                gone(first).await;
+                // Each outcome is published only after the launcher is stopped.
+                let settled = if published == "ready" {
+                    "stopped"
+                } else {
+                    published
+                };
+                let after = until(&rig, changed, settled).await;
+                gone(first, &processes);
                 assert!(
                     rig.supervisor.gateway().is_none_or(|g| g.generation > 1),
                     "{trigger}: the old gateway is forgotten"
                 );
-                let after = until(&rig, changed, published).await;
                 if published == "ready" {
                     // The new profile is served by a new launcher with a new bearer.
                     let second = serving(&rig, changed).await;
@@ -1545,10 +1616,11 @@ mod tests {
             let rig = rig(true);
             rig.supervisor.status();
             let pids = serving(&rig, 0).await;
+            let processes = started(pids);
             let closing = Instant::now();
             rig.supervisor.close().await.unwrap();
             assert!(closing.elapsed() < Duration::from_secs(15));
-            gone(pids).await;
+            gone(pids, &processes);
             assert!(rig.supervisor.gateway().is_none());
             // Closed for good: nothing starts again.
             rig.supervisor.status();

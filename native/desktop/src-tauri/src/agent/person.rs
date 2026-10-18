@@ -14,6 +14,8 @@ use std::{
 /// Diagnostic standard error kept from the bridge child; its registered error
 /// document is the only part ever read back.
 const STDERR_LIMIT: usize = 64 * 1024;
+/// How long the bridge child has to answer each request, its identity included.
+const REPLY_LIMIT: Duration = Duration::from_secs(12);
 
 fn failed(reason: &'static str) -> ApplicationError {
     ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason(reason)
@@ -70,6 +72,7 @@ pub struct Person {
     events: Arc<Mutex<Option<PersonEvents>>>,
     // Whether the last exchange's error was a refusal of that very request.
     refused_in_step: bool,
+    reply_limit: Duration,
     pub identity: Value,
 }
 
@@ -79,7 +82,22 @@ impl Person {
         self.child.id()
     }
 
-    pub fn hold(mut command: Command, profile: &str) -> Result<Self> {
+    pub fn hold(command: Command, profile: &str) -> Result<Self> {
+        Self::hold_within(command, profile, REPLY_LIMIT)
+    }
+
+    /// A fixture child's speed is not under test; its replies are awaited
+    /// within `reply_limit` instead.
+    #[cfg(test)]
+    pub(crate) fn hold_answering_within(
+        command: Command,
+        profile: &str,
+        reply_limit: Duration,
+    ) -> Result<Self> {
+        Self::hold_within(command, profile, reply_limit)
+    }
+
+    fn hold_within(mut command: Command, profile: &str, reply_limit: Duration) -> Result<Self> {
         command
             .args(["session", "hold", "--profile-id", profile])
             .stdin(Stdio::piped())
@@ -167,6 +185,7 @@ impl Person {
             stderr_closed,
             events,
             refused_in_step: false,
+            reply_limit,
             identity: Value::Null,
         };
         person.identity = person.read()?;
@@ -193,7 +212,7 @@ impl Person {
     }
 
     fn read(&mut self) -> Result<Value> {
-        match self.received.recv_timeout(Duration::from_secs(12)) {
+        match self.received.recv_timeout(self.reply_limit) {
             Ok(Some(value)) => Ok(value),
             Ok(None) => Err(self.with_child_report(failed("person_reply_unreadable"))),
             Err(error @ mpsc::RecvTimeoutError::Timeout) => {

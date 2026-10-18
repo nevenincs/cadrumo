@@ -81,6 +81,23 @@ impl Drop for PhaseTimer<'_> {
     }
 }
 
+/// The time a read's turn and a child's own deadline are measured in. Only a
+/// test can hold it still and move it on.
+#[derive(Default)]
+struct Clock {
+    #[cfg(test)]
+    held: Mutex<Option<Instant>>,
+}
+impl Clock {
+    fn now(&self) -> Instant {
+        #[cfg(test)]
+        if let Some(held) = *self.held.lock().unwrap_or_else(|e| e.into_inner()) {
+            return held;
+        }
+        Instant::now()
+    }
+}
+
 #[derive(Default)]
 struct Active {
     busy: bool,
@@ -102,6 +119,7 @@ pub struct Children {
     read: Lane,
     mutation: Lane,
     diagnostics: Arc<Diagnostics>,
+    clock: Clock,
 }
 
 pub struct Output {
@@ -244,7 +262,7 @@ impl Children {
     }
 
     fn admit(&self, kind: HelperKind, slot_wait: Duration) -> Result<MutexGuard<'_, Active>> {
-        let asked = Instant::now();
+        let asked = self.clock.now();
         let lane = self.lane(kind);
         let mut active = lane
             .active
@@ -265,7 +283,7 @@ impl Children {
                 lane.changed.notify_all();
                 return Err(failure(ErrorCode::SessionUnavailable));
             }
-            if pending && asked.elapsed() >= slot_wait {
+            if pending && self.clock.now().saturating_duration_since(asked) >= slot_wait {
                 Self::release_pending(&mut active, &mut pending);
                 lane.changed.notify_all();
                 return Err(failure(ErrorCode::CliWaitTimedOut));
@@ -286,7 +304,8 @@ impl Children {
                 pending = true;
                 lane.changed.notify_all();
             }
-            let remaining = slot_wait.saturating_sub(asked.elapsed());
+            let remaining =
+                slot_wait.saturating_sub(self.clock.now().saturating_duration_since(asked));
             if remaining.is_zero() {
                 Self::release_pending(&mut active, &mut pending);
                 lane.changed.notify_all();
@@ -378,7 +397,7 @@ impl Children {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let (process, stdin, stdout, stderr, start) = {
+        let (process, stdin, stdout, stderr, start, began) = {
             let admission_started = Instant::now();
             let admission = self.admit(kind, slot_wait);
             let mut active = match admission {
@@ -428,6 +447,7 @@ impl Children {
                 }
             };
             let start = Instant::now();
+            let began = self.clock.now();
             let pid = child.id();
             active.busy = true;
             active.child = Some(child);
@@ -443,7 +463,7 @@ impl Children {
             measurement.timing.outcome = HelperOutcome::ExecutionFailed;
             active.process = Some(process);
             lane.changed.notify_all();
-            (process, pipes.0, pipes.1, pipes.2, start)
+            (process, pipes.0, pipes.1, pipes.2, start, began)
         };
         // The child's own time, from its start: not the wait for its turn.
         let overflow = AtomicBool::new(false);
@@ -461,7 +481,7 @@ impl Children {
             });
             let out = scope.spawn(|| read(stdout, &overflow, &stdout_bytes));
             let err = scope.spawn(|| read(stderr, &overflow, &stderr_bytes));
-            let status = self.wait(lane, &overflow, start, deadline);
+            let status = self.wait(lane, &overflow, began, deadline);
             measurement.timing.execution_ms = Some(milliseconds(start.elapsed()));
             // Always terminate/reap before joining pipe threads, including limit,
             // timeout and window-close paths. No child bytes enter diagnostics.
@@ -524,7 +544,7 @@ impl Children {
         &self,
         lane: &Lane,
         overflow: &AtomicBool,
-        start: Instant,
+        began: Instant,
         deadline: Duration,
     ) -> Result<ExitStatus> {
         loop {
@@ -548,7 +568,7 @@ impl Children {
             {
                 return Ok(status);
             }
-            if start.elapsed() >= deadline {
+            if self.clock.now().saturating_duration_since(began) >= deadline {
                 return Err(failure(ErrorCode::TimedOut));
             }
             drop(active);
@@ -604,7 +624,7 @@ fn read(
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     pub(super) const TEST_IDENTITY: HelperIdentity = HelperIdentity {
         command: "config.login",
@@ -647,6 +667,105 @@ mod tests {
         assert!(overflow.load(Ordering::Acquire));
     }
 
+    /// Bounds only a fixture that never arrives; arriving is the event awaited.
+    #[cfg(windows)]
+    pub(crate) const HANG_GUARD: Duration = Duration::from_secs(120);
+
+    /// A handshake with one fixture child, apart from its pipes: the child
+    /// reports where it has reached and blocks there until the test lets it go.
+    #[cfg(windows)]
+    pub(crate) struct Gate {
+        port: u16,
+        accepted: std::sync::mpsc::Receiver<std::net::TcpStream>,
+        stream: Option<(std::io::BufReader<std::net::TcpStream>, std::net::TcpStream)>,
+    }
+
+    #[cfg(windows)]
+    impl Gate {
+        pub(crate) fn new() -> Self {
+            let listener = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
+            let port = listener.local_addr().unwrap().port();
+            let (connected, accepted) = std::sync::mpsc::channel();
+            thread::spawn(move || {
+                if let Ok((stream, _)) = listener.accept() {
+                    let _ = connected.send(stream);
+                }
+            });
+            Self {
+                port,
+                accepted,
+                stream: None,
+            }
+        }
+
+        /// PowerShell defining `Wait-Gate <point>`, which reports `point` and
+        /// returns once the test lets it go.
+        pub(crate) fn script(&self) -> String {
+            format!(
+                "function Wait-Gate($point) {{ \
+                     if (-not $script:gate) {{ \
+                         $script:gate = New-Object System.Net.Sockets.TcpClient('127.0.0.1', {}); \
+                         $stream = $script:gate.GetStream(); \
+                         $script:gateIn = New-Object System.IO.StreamReader($stream); \
+                         $script:gateOut = New-Object System.IO.StreamWriter($stream); \
+                         $script:gateOut.AutoFlush = $true }}; \
+                     $script:gateOut.WriteLine($point); \
+                     if ($script:gateIn.ReadLine() -ne 'go') {{ exit 9 }} }}; ",
+                self.port
+            )
+        }
+
+        /// Returns once the child reports `point`; it stays blocked there.
+        pub(crate) fn reached(&mut self, point: &str) {
+            use std::io::BufRead;
+            if self.stream.is_none() {
+                let stream = self
+                    .accepted
+                    .recv_timeout(HANG_GUARD)
+                    .expect("the fixture child never reached its gate");
+                stream.set_read_timeout(Some(HANG_GUARD)).unwrap();
+                self.stream = Some((std::io::BufReader::new(stream.try_clone().unwrap()), stream));
+            }
+            let (reader, _) = self.stream.as_mut().unwrap();
+            let mut line = String::new();
+            reader.read_line(&mut line).unwrap();
+            assert_eq!(line.trim_end(), point);
+        }
+
+        /// Lets a child that has reached its gate go on.
+        pub(crate) fn go(&mut self) {
+            let (_, writer) = self.stream.as_mut().expect("let go only once reached");
+            writer.write_all(b"go\n").unwrap();
+        }
+    }
+
+    #[cfg(windows)]
+    impl Children {
+        /// Holds the clock still, so only the test moves time on.
+        fn hold_clock(&self) {
+            *self.clock.held.lock().unwrap() = Some(Instant::now());
+        }
+
+        /// Moves the held clock on while `lane`'s waiters cannot miss it.
+        fn advance(&self, lane: &Lane, by: Duration) {
+            let _active = lane.active.lock().unwrap();
+            let mut held = self.clock.held.lock().unwrap();
+            *held = Some(held.expect("the clock is held") + by);
+            lane.changed.notify_all();
+        }
+
+        /// Returns once a read is waiting for its turn on the read lane.
+        fn until_a_read_queues(&self) {
+            let active = self.read.active.lock().unwrap();
+            let (_active, waited) = self
+                .read
+                .changed
+                .wait_timeout_while(active, HANG_GUARD, |active| active.pending_readers == 0)
+                .unwrap();
+            assert!(!waited.timed_out(), "no read ever queued");
+        }
+    }
+
     #[cfg(windows)]
     pub(super) fn powershell(script: &str) -> Command {
         let root = std::env::var_os("SystemRoot").unwrap();
@@ -657,9 +776,13 @@ mod tests {
             "-NoLogo",
             "-NoProfile",
             "-NonInteractive",
+            "-WindowStyle",
+            "Hidden",
             "-Command",
             script,
         ]);
+        // A fixture child never opens a console window, whoever spawns it.
+        std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
         command
     }
 
@@ -890,48 +1013,57 @@ mod tests {
     #[test]
     fn a_queued_read_waits_for_another_read_and_then_has_its_whole_deadline() {
         let children = Children::default();
+        // Time passes only when the test moves it, whatever the machine's speed.
+        children.hold_clock();
+        let mut gate = Gate::new();
+        let script = format!(
+            "{}Wait-Gate 'running'; [Console]::Out.Write('made')",
+            gate.script()
+        );
         thread::scope(|scope| {
-            let slow = scope.spawn(|| {
-                children.read(
+            let slow = scope.spawn(|| children.read(TEST_IDENTITY, powershell(&script)));
+            gate.reached("running");
+            let queued = scope.spawn(|| {
+                children.execute(
                     TEST_IDENTITY,
-                    powershell("Start-Sleep -Seconds 4; [Console]::Out.Write('made')"),
+                    powershell("[Console]::Out.Write('status')"),
+                    None,
+                    HelperKind::Read,
+                    Duration::from_secs(60),
+                    Duration::from_secs(3),
                 )
             });
-            let seen = Instant::now() + Duration::from_secs(5);
-            while children.read.active.lock().unwrap().child.is_none() {
-                assert!(Instant::now() < seen);
-                thread::sleep(Duration::from_millis(10));
-            }
+            children.until_a_read_queues();
             // Its deadline is shorter than the wait for its turn.
-            let read = children.execute(
-                TEST_IDENTITY,
-                powershell("[Console]::Out.Write('status')"),
-                None,
-                HelperKind::Read,
-                Duration::from_secs(60),
-                Duration::from_secs(3),
-            );
-            assert_eq!(&*read.unwrap().stdout, b"status");
+            children.advance(&children.read, Duration::from_secs(4));
+            gate.go();
+            assert_eq!(&*queued.join().unwrap().unwrap().stdout, b"status");
             assert_eq!(&*slow.join().unwrap().unwrap().stdout, b"made");
         });
         // And it does not wait for its turn beyond the bound it was given.
+        let mut gate = Gate::new();
+        let script = format!("{}Wait-Gate 'running'", gate.script());
         thread::scope(|scope| {
-            let slow =
-                scope.spawn(|| children.read(TEST_IDENTITY, powershell("Start-Sleep -Seconds 3")));
-            let seen = Instant::now() + Duration::from_secs(5);
-            while children.read.active.lock().unwrap().child.is_none() {
-                assert!(Instant::now() < seen);
-                thread::sleep(Duration::from_millis(10));
-            }
-            let read = children.execute(
-                TEST_IDENTITY,
-                powershell("[Console]::Out.Write('status')"),
-                None,
-                HelperKind::Read,
-                Duration::from_millis(300),
-                Duration::from_secs(30),
+            let slow = scope.spawn(|| children.read(TEST_IDENTITY, powershell(&script)));
+            gate.reached("running");
+            let queued = scope.spawn(|| {
+                children.execute(
+                    TEST_IDENTITY,
+                    powershell("[Console]::Out.Write('status')"),
+                    None,
+                    HelperKind::Read,
+                    Duration::from_millis(300),
+                    Duration::from_secs(30),
+                )
+            });
+            children.until_a_read_queues();
+            // The bound passes while the other read still holds the lane.
+            children.advance(&children.read, Duration::from_millis(300));
+            assert_eq!(
+                queued.join().unwrap().err().unwrap().code,
+                ErrorCode::CliWaitTimedOut
             );
-            assert_eq!(read.err().unwrap().code, ErrorCode::CliWaitTimedOut);
+            gate.go();
             assert!(slow.join().unwrap().is_ok());
         });
         assert!(children.read.active.lock().unwrap().child.is_none());
