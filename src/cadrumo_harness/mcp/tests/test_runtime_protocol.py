@@ -39,6 +39,19 @@ async def test_fresh_adapter_orients_without_claiming_profile_access() -> None:
         names = [tool.name for tool in advertised_tools]
         assert len(names) == len(set(names))
         assert {"status", "search", "execute", "result", "respond"} <= set(names)
+        observe_schema = next(tool for tool in advertised_tools if tool.name == "observe").input_schema
+        observation = observe_schema["properties"]["observation"]
+        # An opaque object made agents guess connection fields instead of the
+        # required replay cursor and page size when following an execute reply.
+        assert set(observation["required"]) == {"operation_id", "after_cursor", "page_limit"}
+        assert observation["additionalProperties"] is False
+        cursor_ref = observation["properties"]["after_cursor"]["$ref"]
+        limit_ref = observation["properties"]["page_limit"]["$ref"]
+        cursor = observe_schema["$defs"][cursor_ref.removeprefix("#/$defs/")]
+        limit = observe_schema["$defs"][limit_ref.removeprefix("#/$defs/")]
+        assert cursor["minimum"] == 0
+        assert limit["exclusiveMinimum"] == 0
+        assert limit["maximum"] > 0
         # No tool signs in, names a key, requests one, or acts outside the profile.
         assert not {
             "authorization_prepare",

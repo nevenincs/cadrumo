@@ -124,6 +124,8 @@ desktop:
     remove_all: Treu-ho tot
     remove_document: Treu {name}
     remove_file: Treu {name}
+    rename: Canvia el nom
+    rename_label: Nom de la conversa
     reply_deleting: S'està eliminant
     reply_failed: Aquesta resposta no s'ha completat.
     reply_in_progress: Encara hi ha una resposta en curs.

@@ -18,6 +18,7 @@ from cadrumo.core.async_cleanup import (
     await_cancellation_complete,
     close_async_resources,
 )
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, ProfileStatus
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -56,6 +57,7 @@ from .runtime_cleanup import (
 from .surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 
 WireResultT = TypeVar("WireResultT")
+_LOGGER = get_logger(__name__)
 
 
 _SESSION_ENDED = frozenset(
@@ -383,9 +385,17 @@ class RuntimeMcpAdapter:
     async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serialize all blocking wire calls; cancellation waits for cleanup."""
         if name not in MCP_TOOL_NAMES or name not in self.surface.tools:
+            _LOGGER.warning("MCP tool refused: reason=unknown_tool")
             return {"outcome": "refused", "code": "unknown_tool"}
         async with self._lock:
             reply = await self._answer(name, args)
+            status = reply.get("status")
+            denial = reply.get("denial") or (status.get("denial") if isinstance(status, dict) else None)
+            code = reply.get("code") if reply.get("outcome") == "refused" else denial
+            if code:
+                # These replies are protocol successes, so transport exception
+                # logging cannot see them. Never log arguments or tool results.
+                _LOGGER.warning("MCP tool refused: tool=%s reason=%s", name, code)
             self._notices.annotate(name, reply)
             return reply
 

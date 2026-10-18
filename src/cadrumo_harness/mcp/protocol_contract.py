@@ -11,7 +11,10 @@ from typing import Any, Final, NotRequired, TypedDict, cast
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.corpus_search.errors import CorpusSearchError
-from cadrumo.application.operations.frontend_requests import OperationResultProjectionRefusalV1
+from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRequestV1,
+    OperationResultProjectionRefusalV1,
+)
 from cadrumo.application.user_profile.access_contracts import DISCLOSURE_PAGE_ENTRIES, AccessDenialCode
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
@@ -58,6 +61,14 @@ def _schema(required: Mapping[str, _FieldSchema], optional: Mapping[str, _FieldS
     fields = dict(required)
     fields.update(optional or {})
     return {"type": "object", "additionalProperties": False, "properties": fields, "required": list(required)}
+
+
+def _observation_arguments_schema() -> _ToolSchema:
+    """Expose the request fields and keep their JSON Schema references rooted at the tool."""
+    observation = OperationObservationRequestV1.model_json_schema()
+    definitions = observation.pop("$defs", {})
+    schema = _schema({"observation": cast(_FieldSchema, observation)})
+    return cast(_ToolSchema, {**schema, "$defs": definitions})
 
 
 _TEXT: _FieldSchema = {"type": "string"}
@@ -122,6 +133,12 @@ def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | N
     """
     if code == AccessDenialCode.PROFILE_MISMATCH.value:
         return PROFILE_CHANGED_REMEDY
+    if code == AccessDenialCode.PRIVILEGE_EXPANSION.value:
+        return (
+            "Cadrumo could not authorize this tool connection within its parent session. "
+            "This does not mean the person is signed out. Ask them to restart the agent; "
+            "if it persists, check Cadrumo's logs. Do not ask for credentials."
+        )
     if (facts is not None and facts) and "sign_in_keychain" in facts:
         # No sign-in can be followed from this logon, so signing in again would change nothing.
         return KEYCHAIN_REMEDY
@@ -308,7 +325,7 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "Read a currently authorized operation observation. A read that a registered error stops, here or in "
         "result, result_page, review or respond with action inspect, is answered refused with code invalid, and "
         "faults carries that error's code as its type and the message the command line prints for it",
-        _schema({"observation": _DOC}),
+        _observation_arguments_schema(),
         _reads("Observe an operation"),
     ),
     (

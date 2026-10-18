@@ -124,6 +124,8 @@ desktop:
     remove_all: Quitar todo
     remove_document: Quitar {name}
     remove_file: Quitar {name}
+    rename: Cambiar nombre
+    rename_label: Nombre de la conversación
     reply_deleting: Eliminándose
     reply_failed: Esta respuesta no se ha completado.
     reply_in_progress: Todavía hay una respuesta en curso.

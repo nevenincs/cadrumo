@@ -123,6 +123,8 @@ desktop:
     remove_all: Remove all
     remove_document: Remove {name}
     remove_file: Remove {name}
+    rename: Rename
+    rename_label: Conversation name
     reply_deleting: Being deleted
     reply_failed: This reply didn't finish.
     reply_in_progress: A reply is still in progress.

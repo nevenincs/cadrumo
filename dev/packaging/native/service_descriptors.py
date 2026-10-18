@@ -57,7 +57,10 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
                 "actions": ["read", "write", "delete", "generation"],
             }
         ],
-        "operation_scope": ceiling,
+        # Hosted MCP processes attend through this service's session. The runtime
+        # verifies their process ancestry and intersects their scope with this
+        # ceiling; they retain the original human session as their authority root.
+        "operation_scope": dict(ceiling, allow_delegation=True),
         "allow_descendants": True,
         "allowed_parent_images": [],
     }

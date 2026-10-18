@@ -23,6 +23,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
+    AccessDenied,
     AccessEvaluationContext,
     AccessScope,
     AccessSession,
@@ -351,6 +352,38 @@ def test_a_refreshed_key_lease_keeps_its_narrowed_scope() -> None:
     assert refreshed.scope == _READ_ONLY_SCOPE
     assert _submission(authority, registry, refreshed, _READ) == _ALLOWED
     assert _submission(authority, registry, refreshed, _WRITE) == _OPERATION_DENIED
+
+
+@pytest.mark.parametrize("allow_tools", [False, True])
+def test_hosted_tool_attendance_reads_profile_and_ends_with_human_sign_out(allow_tools: bool) -> None:
+    authority, registry = _authority(), _registry()
+    human = _resume(authority)
+    service = authority.attend(
+        connection_id=human.connection_id,
+        parent_session_id=human.session_id,
+        recipient_connection_id=_RECIPIENT_CONNECTION,
+        scope=_READ_ONLY_SCOPE.model_copy(update={"allow_delegation": allow_tools}),
+    )
+    assert isinstance(service, AccessSession), service
+    tool = authority.attend(
+        connection_id=service.connection_id,
+        parent_session_id=service.session_id,
+        recipient_connection_id=UUID("5cc00000-0000-4000-8000-000000000010"),
+        scope=_SCOPE.model_copy(update={"allow_delegation": False}),
+        delegated_parent=True,
+    )
+    if not allow_tools:
+        assert isinstance(tool, AccessDenied)
+        assert tool.code is AccessDenialCode.PRIVILEGE_EXPANSION
+        return
+    assert isinstance(tool, AccessSession), tool
+    assert tool.parent_session_id == service.session_id
+    assert not tool.scope.allow_delegation
+    assert _submission(authority, registry, tool, _READ) == _ALLOWED
+    assert _submission(authority, registry, tool, _WRITE) == _OPERATION_DENIED
+    retired = authority.retire_human_sessions()
+    assert {human.session_id, service.session_id, tool.session_id} <= set(retired)
+    assert _submission(authority, registry, tool, _READ) != _ALLOWED
 
 
 @pytest.mark.parametrize("parent_scope", [_SCOPE, _READ_ONLY_SCOPE])

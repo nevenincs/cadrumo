@@ -124,6 +124,8 @@ desktop:
     remove_all: Az összes eltávolítása
     remove_document: 'Eltávolítás: {name}'
     remove_file: 'Eltávolítás: {name}'
+    rename: Átnevezés
+    rename_label: Beszélgetés neve
     reply_deleting: Törlés folyamatban
     reply_failed: Ez a válasz nem készült el.
     reply_in_progress: Még folyamatban van egy válasz.
