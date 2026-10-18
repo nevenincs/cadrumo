@@ -376,6 +376,10 @@ function tauriAgent(call: HostCall): {
           readable(readSkillVerification(answer)),
         ),
       startConversation: () => call("agent_conversation_start", {}),
+      rename: (conversationId, title) =>
+        call("agent_conversation_rename", { conversationId, title }).then(
+          () => undefined,
+        ),
       send: (request) => call("agent_send", { request }),
       cancel: (replyId) =>
         call("agent_cancel", { replyId }).then(() => undefined),

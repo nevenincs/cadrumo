@@ -499,6 +499,102 @@ test("a conversation is archived from the history for good, and cannot be restor
   ).toEqual(["agentArchive c-facturas-septiembre"]);
 });
 
+const titleField = (target: Page) =>
+  column(target).getByRole("textbox", {
+    name: label("desktop.agent.rename_label"),
+  });
+
+test("a conversation is renamed from its row's context menu", async ({
+  page: target,
+}) => {
+  scenarioOnly("the conversations are the scenario host's");
+  await open(target);
+  const body = await openHistory(target);
+  await rowOf(body, "Facturas de septiembre").click({ button: "right" });
+  await target
+    .getByRole("menuitem", { name: label("desktop.agent.rename") })
+    .click();
+  await expect(titleField(target)).toHaveValue("Facturas de septiembre");
+  await titleField(target).fill("  Facturas del tercer trimestre ");
+  await target.keyboard.press("Enter");
+  await expect(titleField(target)).toHaveCount(0);
+  await expect(body.getByText("Facturas del tercer trimestre")).toBeVisible();
+  await expect(body.getByText("Facturas de septiembre")).toHaveCount(0);
+  // The keyboard is back on the row it renamed.
+  await expect(
+    rowOf(body, "Facturas del tercer trimestre").getByRole("button").first(),
+  ).toBeFocused();
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("agentRename ")),
+  ).toEqual(["agentRename c-facturas-septiembre"]);
+});
+
+test("a rename F2 opened is given up with Escape, or with nothing changed", async ({
+  page: target,
+}) => {
+  scenarioOnly("the conversations are the scenario host's");
+  await open(target);
+  const body = await openHistory(target);
+  const row = rowOf(body, "Facturas de septiembre");
+  await row.getByRole("button").first().focus();
+  await target.keyboard.press("F2");
+  await titleField(target).fill("Otro título");
+  await target.keyboard.press("Escape");
+  await expect(titleField(target)).toHaveCount(0);
+  // Escape gives up the rename, and leaves the history open.
+  await expect(body.getByText("Facturas de septiembre")).toBeVisible();
+  await expect(row.getByRole("button").first()).toBeFocused();
+  await target.keyboard.press("F2");
+  await titleField(target).fill("   ");
+  await target.keyboard.press("Enter");
+  await expect(body.getByText("Facturas de septiembre")).toBeVisible();
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("agentRename ")),
+  ).toEqual([]);
+});
+
+test("a double click on the conversation's title renames it, and does not maximize", async ({
+  page: target,
+}) => {
+  scenarioOnly("the conversations are the scenario host's");
+  await open(target);
+  await openConversation(target, "Facturas de septiembre");
+  const heading = column(target).getByRole("heading", {
+    name: "Facturas de septiembre",
+  });
+  const width = (await column(target).boundingBox())?.width;
+  await heading.dblclick();
+  await titleField(target).fill("Facturas de septiembre revisadas");
+  await target.keyboard.press("Enter");
+  await expect(
+    column(target).getByRole("heading", {
+      name: "Facturas de septiembre revisadas",
+    }),
+  ).toBeVisible();
+  expect((await column(target).boundingBox())?.width).toBe(width);
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("agentRename ")),
+  ).toEqual(["agentRename c-facturas-septiembre"]);
+});
+
+test("a title the agent will not take is refused, and the history says why", async ({
+  page: target,
+}) => {
+  scenarioOnly("the conversations are the scenario host's");
+  await open(target);
+  const body = await openHistory(target);
+  await rowOf(body, "Facturas de septiembre").click({ button: "right" });
+  await target
+    .getByRole("menuitem", { name: label("desktop.agent.rename") })
+    .click();
+  // The field holds no more than the agent keeps; a control character is
+  // the host's to refuse.
+  await titleField(target).fill("Facturas\u0007");
+  await target.keyboard.press("Enter");
+  await expect(body.getByRole("alert")).toBeVisible();
+  await expect(body.getByText("Facturas de septiembre")).toBeVisible();
+});
+
 test("a conversation with a reply going cannot be archived, and the history says why", async ({
   page: target,
 }) => {

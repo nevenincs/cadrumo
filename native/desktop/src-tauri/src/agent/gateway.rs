@@ -184,6 +184,22 @@ impl Client {
         self.post("/runs", body, None)
     }
 
+    /// `PATCH /v1/conversations/{root}`: the conversation's title, kept on its
+    /// first run.
+    pub fn rename_conversation(&self, root: &str, title: &str) -> Result<Value, Refused> {
+        let response = self
+            .calls
+            .patch(format!("{}/conversations/{root}", self.base))
+            .header("Authorization", &self.authorization)
+            .header("Content-Type", "application/json")
+            .send(
+                serde_json::to_vec(&serde_json::json!({ "title": title }))
+                    .map_err(|_| unreachable())?,
+            )
+            .map_err(|_| unreachable())?;
+        Self::answer(response)
+    }
+
     /// `GET /v1/runs/{id}/history`.
     pub fn history(&self, run: &str) -> Result<Value, Refused> {
         self.get(&format!("/runs/{run}/history"))

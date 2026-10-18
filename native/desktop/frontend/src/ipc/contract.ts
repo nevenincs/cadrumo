@@ -983,6 +983,11 @@ export interface HostCommands {
     args: Authorized;
     result: AgentConversationRecord;
   };
+  /** One trimmed line of 1 to 200 characters, else `agent_invalid_request`. */
+  agent_conversation_rename: {
+    args: Authorized<{ conversationId: string; title: string }>;
+    result: null;
+  };
   agent_send: {
     args: Authorized<{ request: AgentSendRequest }>;
     result: AgentSendResult;

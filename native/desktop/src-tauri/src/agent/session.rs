@@ -168,12 +168,14 @@ pub fn admit_send(request: &SendRequest) -> Result<(), Refused> {
 
 /// The run start a send makes: its run, its message, its agent in the
 /// profile's workspace, the predecessor it continues, and for a
-/// conversation's first run a title from the message's first line.
+/// conversation's first run the title the person gave it, else one from the
+/// message's first line.
 pub fn start_body(
     run_id: &str,
     request: &SendRequest,
     workspace_root: &str,
     continues: Option<&str>,
+    named: Option<&str>,
 ) -> Value {
     let selection = &request.selection;
     let mut agent = json!({
@@ -192,11 +194,14 @@ pub fn start_body(
     match continues {
         Some(predecessor) => body["continues_run_id"] = json!(predecessor),
         None => {
-            let title: String = request
-                .text
-                .lines()
-                .map(str::trim)
-                .find(|line| !line.is_empty())
+            let title: String = named
+                .or_else(|| {
+                    request
+                        .text
+                        .lines()
+                        .map(str::trim)
+                        .find(|line| !line.is_empty())
+                })
                 .unwrap_or_default()
                 .chars()
                 .take(TITLE_LIMIT)
@@ -207,6 +212,17 @@ pub fn start_body(
         }
     }
     body
+}
+
+/// A title the person gave a conversation: one line of 1 to `TITLE_LIMIT`
+/// characters once trimmed, with no control characters in it.
+pub fn admit_title(title: &str) -> Result<String, Refused> {
+    let title = title.trim();
+    let length = title.chars().count();
+    if length == 0 || length > TITLE_LIMIT || title.chars().any(char::is_control) {
+        return Err(refused("agent_invalid_request"));
+    }
+    Ok(title.to_owned())
 }
 
 /// The questionnaires and approvals a run waits on, from its status and its
@@ -492,6 +508,8 @@ pub struct Session {
     known: Mutex<HashMap<String, Option<String>>>,
     /// Conversations started here whose first run has not been sent yet.
     reserved: Mutex<Vec<(String, String)>>,
+    /// Titles given to reserved conversations, sent with their first run.
+    named: Mutex<HashMap<String, String>>,
 }
 
 impl Session {
@@ -598,14 +616,34 @@ impl Session {
             .map(|chain| conversation_record(chain))
             .collect();
         let started: HashSet<&str> = chains.iter().map(|chain| chain[0].id.as_str()).collect();
+        let named = lock(&self.named);
         for (id, at) in lock(&self.reserved).iter() {
             if !started.contains(id.as_str()) {
+                let title = named.get(id).map(String::as_str).unwrap_or_default();
                 records.push(
-                    json!({ "id": id, "title": "", "last_active_at": at, "archived": false }),
+                    json!({ "id": id, "title": title, "last_active_at": at, "archived": false }),
                 );
             }
         }
         Ok(Value::Array(records))
+    }
+
+    /// Gives the conversation the person's title. One not sent yet keeps it
+    /// here until its first run carries it; one the agent holds is renamed
+    /// there, on its first run.
+    pub fn rename(
+        &self,
+        supervisor: &Supervisor,
+        conversation: &str,
+        title: &str,
+    ) -> Result<(), Refused> {
+        let title = admit_title(title)?;
+        let client = Client::new(&Self::gateway(supervisor)?);
+        if self.chain(&client, conversation)?.is_empty() {
+            lock(&self.named).insert(conversation.to_owned(), title);
+            return Ok(());
+        }
+        client.rename_conversation(conversation, &title).map(|_| ())
     }
 
     pub fn history(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
@@ -643,17 +681,20 @@ impl Session {
                 (mint_run_id()?, Some(last.id.clone()))
             }
         };
+        let named = lock(&self.named).get(&request.conversation_id).cloned();
         let started = client.start_run(&start_body(
             &run_id,
             request,
             &gateway.workspace_root,
             continues.as_deref(),
+            named.as_deref(),
         ))?;
         if text(&started, "run_id") != Some(run_id.as_str()) {
             return Err(refused("agent_gateway_unreadable"));
         }
         lock(&self.known).insert(run_id.clone(), continues);
         lock(&self.reserved).retain(|(id, _)| *id != request.conversation_id);
+        lock(&self.named).remove(&request.conversation_id);
         // Every watch of the conversation follows the new reply.
         let mut watches = lock(&self.watches);
         for watch in watches
@@ -962,10 +1003,10 @@ mod tests {
         let mut named = request();
         named["skills"] = json!(["cadrumo-iva-303", "cadrumo-0"]);
         assert!(admit_send(&send(named.clone())).is_ok());
-        let body = start_body("r00ff", &send(named), r"C:\ws", Some("r0"));
+        let body = start_body("r00ff", &send(named), r"C:\ws", Some("r0"), None);
         assert_eq!(body["skills"], json!(["cadrumo-iva-303", "cadrumo-0"]));
         assert!(
-            start_body("r00ff", &send(request()), r"C:\ws", None)
+            start_body("r00ff", &send(request()), r"C:\ws", None, None)
                 .get("skills")
                 .is_none()
         );
@@ -997,7 +1038,7 @@ mod tests {
 
     #[test]
     fn a_send_starts_its_run_as_the_gateway_takes_one() {
-        let first = start_body("r00ff", &send(request()), r"C:\agent\ws\main", None);
+        let first = start_body("r00ff", &send(request()), r"C:\agent\ws\main", None, None);
         assert_eq!(
             first,
             json!({
@@ -1010,10 +1051,29 @@ mod tests {
         );
         let mut plain = request();
         plain["selection"].as_object_mut().unwrap().remove("effort");
-        let next = start_body("r0100", &send(plain), r"C:\ws", Some("r00ff"));
+        let next = start_body("r0100", &send(plain), r"C:\ws", Some("r00ff"), Some("Renta"));
         assert_eq!(next["continues_run_id"], "r00ff");
         assert!(next.get("title").is_none());
         assert!(next["agent"].get("effort").is_none());
+    }
+
+    #[test]
+    fn a_title_given_before_the_first_send_names_the_first_run() {
+        let first = start_body("r00ff", &send(request()), r"C:\ws", None, Some("Renta 2025"));
+        assert_eq!(first["title"], "Renta 2025");
+    }
+
+    #[test]
+    fn a_title_is_one_trimmed_line_of_at_most_the_gateway_limit() {
+        assert_eq!(admit_title("  IVA del trimestre ").unwrap(), "IVA del trimestre");
+        assert_eq!(admit_title(&"ñ".repeat(TITLE_LIMIT)).unwrap().chars().count(), TITLE_LIMIT);
+        for refused_title in ["", "   ", "dos\nlíneas", "tab\there"] {
+            assert_eq!(
+                admit_title(refused_title).unwrap_err().code,
+                "agent_invalid_request"
+            );
+        }
+        assert!(admit_title(&"a".repeat(TITLE_LIMIT + 1)).is_err());
     }
 
     #[test]

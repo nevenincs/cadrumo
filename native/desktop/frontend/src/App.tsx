@@ -24,20 +24,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toast } from "@/components/ui/toast";
 import { CommandPalette, type DocsSearch } from "./components/CommandPalette";
-import { ContextMenu, type MenuAnchor } from "./components/ContextMenu";
+import {
+  ContextMenu,
+  type MenuAnchor,
+  type MenuEntry,
+} from "./components/ContextMenu";
 import { Icon, type IconName } from "@/components/ui/icon";
 import {
   DocsFrame,
   type DocsFrameApi,
   type DocsMenuRequest,
 } from "./components/DocsFrame";
-import type {
-  ContextMenuAction,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  DocsTheme,
-  HostFailure,
-} from "./ipc/contract";
+import type { ContextMenuItem, DocsTheme, HostFailure } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn } from "./components/AgentColumn";
@@ -122,8 +120,6 @@ const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["logs", "desktop.rail.logs", "logs"],
 ];
 
-type MenuEntry =
-  (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
 type OpenMenu = { items: MenuEntry[]; at: MenuAnchor };
 
 const isSeparator = (item: MenuEntry): item is { separator: true } =>
@@ -2104,6 +2100,7 @@ export function App({ host }: { host: Host }) {
         locale={locale}
         body={agentBody}
         onToggleMaximize={() => toggleMaximize("agent")}
+        onMenu={openMenu}
         trailing={[
           maximizeControl("agent", "desktop.pane.maximize_agent"),
           {

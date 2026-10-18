@@ -197,6 +197,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_skill,
         agent_skill_verify,
         agent_conversation_start,
+        agent_conversation_rename,
         agent_send,
         agent_cancel,
         agent_pending,
@@ -394,6 +395,20 @@ async fn agent_conversation_start(
 ) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
         host.session.start_conversation(&host.supervisor)
+    })
+    .await
+}
+
+/// Gives a conversation the title the person chose.
+#[tauri::command]
+async fn agent_conversation_rename(
+    host: State<'_, Arc<AgentHost>>,
+    conversation_id: String,
+    title: String,
+) -> std::result::Result<(), Refused> {
+    blocking(&host, move |host| {
+        host.session
+            .rename(&host.supervisor, &conversation_id, &title)
     })
     .await
 }

@@ -414,6 +414,13 @@ export interface AgentSession {
    * archiving.
    */
   archive?(conversationId: string): Promise<void>;
+  /**
+   * Gives the conversation the person's title in place of the one its first
+   * message gave it. One not sent yet takes it with its first run. A title
+   * that is not one line of 1 to 200 characters is refused with
+   * `agent_invalid_request`. Absent where the host offers no renaming.
+   */
+  rename?(conversationId: string, title: string): Promise<void>;
   /** What the conversation's unfinished reply waits on, so a reload shows
    * the same questions and approvals the stream raised. */
   pending(conversationId: string): Promise<{

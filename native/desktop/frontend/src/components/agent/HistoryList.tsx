@@ -3,7 +3,9 @@ import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { useStrings } from "../../shell/strings";
+import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
+import { TitleEditor } from "./TitleEditor";
 import type { ConversationGroup, ConversationSummary } from "./types";
 
 /** A title matches a search when it holds every word of it, in any case. */
@@ -68,7 +70,9 @@ function DeleteConfirmation({
  * The conversations, under the date headings the caller words, with a
  * search over their titles. A row's Archive (or Restore) and Delete show on
  * hover and on focus; Delete asks first, in the row, naming what goes. The
- * footer switches between the active and the archived conversations.
+ * footer switches between the active and the archived conversations. Where
+ * renaming is offered, F2 on a row, or Rename in its context menu, writes
+ * over its title in place.
  */
 export function HistoryList({
   groups,
@@ -79,6 +83,8 @@ export function HistoryList({
   onArchive,
   onRestore,
   onDelete,
+  onRename,
+  onMenu,
 }: {
   groups: readonly ConversationGroup[];
   /** The list is showing archived conversations, not active ones. */
@@ -89,10 +95,14 @@ export function HistoryList({
   onArchive?: (id: string) => void;
   onRestore?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onRename?: (id: string, title: string) => void;
+  /** Opens a row's context menu. */
+  onMenu?: OpenMenu;
 }) {
   const t = useStrings();
   const [query, setQuery] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const searchId = useId();
 
@@ -120,6 +130,59 @@ export function HistoryList({
   const cancel = (id: string) => {
     refocus.current = id;
     setConfirming(null);
+  };
+
+  // A rename settled puts the keyboard back on the row it renamed.
+  const refocusRow = useRef<string | null>(null);
+  useEffect(() => {
+    const id = refocusRow.current;
+    if (renaming !== null || id === null) return;
+    refocusRow.current = null;
+    list.current
+      ?.querySelector<HTMLElement>(`[data-open-for="${CSS.escape(id)}"]`)
+      ?.focus();
+  }, [renaming]);
+  const settleRename = (id: string, title?: string) => {
+    refocusRow.current = id;
+    setRenaming(null);
+    if (title !== undefined) onRename?.(id, title);
+  };
+
+  const rowMenu = (conversation: ConversationSummary): MenuEntry[] => {
+    const restore = viewingArchived ? onRestore : undefined;
+    const archive = viewingArchived ? undefined : onArchive;
+    const items: MenuEntry[] = [];
+    if (onRename)
+      items.push({
+        id: "rename",
+        label: t("desktop.agent.rename"),
+        enabled: true,
+        run: () => setRenaming(conversation.id),
+      });
+    if (restore)
+      items.push({
+        id: "restore",
+        label: t("desktop.agent.restore"),
+        enabled: true,
+        run: () => restore(conversation.id),
+      });
+    if (archive)
+      items.push({
+        id: "archive",
+        label: t("desktop.agent.archive"),
+        enabled: true,
+        run: () => archive(conversation.id),
+      });
+    if (onDelete) {
+      if (items.length > 0) items.push({ separator: true });
+      items.push({
+        id: "delete",
+        label: t("desktop.agent.delete"),
+        enabled: true,
+        run: () => setConfirming(conversation.id),
+      });
+    }
+    return items;
   };
 
   return (
@@ -181,11 +244,41 @@ export function HistoryList({
                             : undefined
                         }
                       />
+                    ) : renaming === conversation.id ? (
+                      <div className="px-1 py-1">
+                        <TitleEditor
+                          title={conversation.title}
+                          onCommit={(title) =>
+                            settleRename(conversation.id, title)
+                          }
+                          onCancel={() => settleRename(conversation.id)}
+                        />
+                      </div>
                     ) : (
-                      <div className="group/row flex min-w-0 items-center gap-1 rounded-md pr-1 hover:bg-accent has-[[aria-current=true]]:bg-selected">
+                      <div
+                        className="group/row flex min-w-0 items-center gap-1 rounded-md pr-1 hover:bg-accent has-[[aria-current=true]]:bg-selected"
+                        onContextMenu={(event) => {
+                          const items = rowMenu(conversation);
+                          if (!onMenu || items.length === 0) return;
+                          event.preventDefault();
+                          onMenu(
+                            items,
+                            { x: event.clientX, y: event.clientY },
+                            true,
+                          );
+                        }}
+                      >
                         <AgentTextAction
                           variant="ghost"
                           aria-current={conversation.current || undefined}
+                          data-open-for={conversation.id}
+                          aria-keyshortcuts={onRename ? "F2" : undefined}
+                          onKeyDown={(event) => {
+                            if (event.key === "F2" && onRename) {
+                              event.preventDefault();
+                              setRenaming(conversation.id);
+                            }
+                          }}
                           onAction={
                             onOpen ? () => onOpen(conversation.id) : undefined
                           }

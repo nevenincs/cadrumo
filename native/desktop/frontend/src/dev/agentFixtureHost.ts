@@ -877,6 +877,16 @@ export function fixtureAgent({
       const record = conversations.find((held) => held.id === conversationId);
       if (record) record.archived = true;
     },
+    async rename(conversationId, title) {
+      say(`agentRename ${conversationId}`);
+      await check();
+      const named = title.trim();
+      if (!named || [...named].length > 200 || /\p{Cc}/u.test(named))
+        throw coded("agent_invalid_request");
+      const record = conversations.find((held) => held.id === conversationId);
+      if (!record) throw coded("agent_conversation_unknown");
+      record.title = named;
+    },
     async pending(conversationId) {
       say(`agentPending ${conversationId}`);
       await check();

@@ -249,6 +249,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.agent.remove_all",
         "desktop.agent.remove_document",
         "desktop.agent.remove_file",
+        "desktop.agent.rename",
+        "desktop.agent.rename_label",
         "desktop.agent.reply_deleting",
         "desktop.agent.reply_failed",
         "desktop.agent.reply_in_progress",

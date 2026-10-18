@@ -45,6 +45,7 @@ import {
   type ProviderSettings,
 } from "../shell/providerSettings";
 import { useStrings, type Translate } from "../shell/strings";
+import type { OpenMenu } from "./ContextMenu";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
@@ -132,6 +133,7 @@ export function AgentColumn({
   body,
   trailing,
   onToggleMaximize,
+  onMenu,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -155,6 +157,8 @@ export function AgentColumn({
   /** The column's own controls, after the conversation's. */
   trailing: ReactNode;
   onToggleMaximize: () => void;
+  /** Opens a context menu, drawn by the operating system where it can be. */
+  onMenu?: OpenMenu;
 }) {
   const t = useStrings();
   const currentReader = useRef(reader);
@@ -170,7 +174,7 @@ export function AgentColumn({
     chosen: null as AgentSelection | null,
     sending: false,
     sendFailure: null as string | null,
-    // Why the history's last archive was refused.
+    // Why the history's last archive or rename was refused.
     archiveFailure: null as string | null,
     // The composer is drawn anew with this draft when a send is given back.
     draft: { key: 0, text: "" },
@@ -279,6 +283,20 @@ export function AgentColumn({
   // Archiving is the agent's, one run at a time and for good: the history
   // offers it where the host does, and never an undo.
   const archiveHost = session?.archive ? session : undefined;
+  // Renaming is offered where the host renames. A refusal is said where the
+  // rename was asked: in the history, or over the composer for the header.
+  const renameHost = session?.rename ? session : undefined;
+  const rename = (id: string, title: string, where: "history" | "header") => {
+    const said = (code: string | null) =>
+      change(
+        where === "history" ? { archiveFailure: code } : { sendFailure: code },
+      );
+    said(null);
+    renameHost?.rename?.(id, title).then(
+      () => setView((held) => ({ ...held, revision: held.revision + 1 })),
+      (error: unknown) => said(failureCode(error)),
+    );
+  };
   const open = useCallback(
     (id: string) =>
       setView((held) => ({
@@ -462,6 +480,12 @@ export function AgentColumn({
             ? current.title || t("desktop.agent.unavailable")
             : t("desktop.agent.new_conversation")
         }
+        onRename={
+          renameHost && current
+            ? (title) => rename(current.id, title, "header")
+            : undefined
+        }
+        onMenu={onMenu}
         historyOpen={historyOpen}
         // Each door opens only where a host serves the agent; elsewhere it
         // says it is not available yet. The documents door is never open:
@@ -580,6 +604,12 @@ export function AgentColumn({
                       }
                     : undefined
                 }
+                onRename={
+                  renameHost
+                    ? (id, title) => rename(id, title, "history")
+                    : undefined
+                }
+                onMenu={onMenu}
               />
             </div>
           ) : (

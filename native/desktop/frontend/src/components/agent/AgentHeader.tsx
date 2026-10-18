@@ -1,7 +1,9 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useStrings } from "../../shell/strings";
+import type { OpenMenu } from "../ContextMenu";
 import { AgentIconAction } from "./AgentAction";
+import { TitleEditor } from "./TitleEditor";
 
 /** The largest count a badge spells out; beyond it, the count is capped. */
 const BADGE_MAX = 99;
@@ -11,11 +13,15 @@ const BADGE_MAX = 99;
  * new conversation, the history and the conversation's documents. History
  * and Documents are toggles; each reports whether its panel is open. The
  * shell's own column controls, such as maximize and close, go in `trailing`,
- * so the column keeps a single header bar.
+ * so the column keeps a single header bar. Where the conversation can be
+ * renamed, a double click on its title, or Rename in the title's menu, writes
+ * over it in place.
  */
 export function AgentHeader({
   title,
   subtitle,
+  onRename,
+  onMenu,
   onNewConversation,
   historyOpen = false,
   onToggleHistory,
@@ -29,6 +35,10 @@ export function AgentHeader({
 }: {
   title: string;
   subtitle?: string;
+  /** Renames the conversation shown; absent where it cannot be renamed. */
+  onRename?: (title: string) => void;
+  /** Opens a menu for the title. */
+  onMenu?: OpenMenu;
   onNewConversation?: () => void;
   historyOpen?: boolean;
   onToggleHistory?: () => void;
@@ -50,6 +60,8 @@ export function AgentHeader({
   const attached =
     count > 0 ? t("desktop.agent.documents_attached", { count }) : undefined;
   const shown = count > BADGE_MAX ? `${BADGE_MAX}+` : String(count);
+  const [editing, setEditing] = useState(false);
+  const renaming = editing && onRename !== undefined;
   return (
     <div
       className="flex min-h-control-lg shrink-0 items-center gap-1 border-b bg-chrome py-1 pr-1.5 pl-3"
@@ -61,9 +73,51 @@ export function AgentHeader({
       }}
     >
       <div className="grid min-w-0 flex-1">
-        <h2 className="truncate font-semibold text-foreground" title={title}>
-          {title}
-        </h2>
+        {renaming ? (
+          <TitleEditor
+            title={title}
+            onCommit={(named) => {
+              setEditing(false);
+              onRename(named);
+            }}
+            onCancel={() => setEditing(false)}
+          />
+        ) : (
+          <h2
+            className="truncate font-semibold text-foreground"
+            title={title}
+            onDoubleClick={
+              onRename
+                ? (event) => {
+                    // The title's double click renames; the bar's maximizes.
+                    event.stopPropagation();
+                    setEditing(true);
+                  }
+                : undefined
+            }
+            onContextMenu={
+              onRename && onMenu
+                ? (event) => {
+                    event.preventDefault();
+                    onMenu(
+                      [
+                        {
+                          id: "rename",
+                          label: t("desktop.agent.rename"),
+                          enabled: true,
+                          run: () => setEditing(true),
+                        },
+                      ],
+                      { x: event.clientX, y: event.clientY },
+                      true,
+                    );
+                  }
+                : undefined
+            }
+          >
+            {title}
+          </h2>
+        )}
         {subtitle && (
           <p
             className="truncate text-xs text-muted-foreground"
