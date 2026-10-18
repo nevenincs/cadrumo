@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Final
 
 from .errors.hierarchy import CoreValidationError
 from .product_identity import PRODUCT_IDENTITY
+from .storage_environment import TEMPORARY_FILES
 from .storage_taxonomy import (
     FingerprintParticipation,
     StorageCategory,
@@ -145,10 +146,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     ),
     _location(
         StorageCategory.TEMPORARY_FILES,
-        "tmp",
+        TEMPORARY_FILES.subpath,
         create_explicit_directory=True,
         consumer_module="adapters/persistence/storage/custody/_kdf_worker_supervision.py",
-        settings_field="cadrumo_temp_dir",
+        settings_field=TEMPORARY_FILES.settings_field,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,

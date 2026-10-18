@@ -95,6 +95,13 @@ PYTHON = Phase(
             argv=(*ENV, "install"),
             summary="Run the canonical locked uv project synchronization.",
         ),
+        # Validating the client metadata needs the project's dependencies,
+        # which exist only once the sync above has run.
+        Step(
+            name="google-client",
+            argv=("uv", "run", "--no-sync", "python", "-m", "dev.env", "google-client"),
+            summary="Stage the ignored Google Desktop client resource from env/.env.",
+        ),
     ),
     inputs=("uv.lock", "pyproject.toml", ".python-version"),
     artifacts=(".venv",),

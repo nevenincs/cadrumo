@@ -260,6 +260,24 @@ PROCESS_ENVIRONMENT: Final[ProcessEnvironmentDeclaration] = ProcessEnvironmentDe
 """The one declaration of child-process environment classes."""
 
 
+class TemporaryFilesDeclaration(NamedTuple):
+    """Where the temporary-files member sits beneath the root, and the setting that overrides it."""
+
+    subpath: str
+    settings_field: str
+
+
+TEMPORARY_FILES: Final[TemporaryFilesDeclaration] = TemporaryFilesDeclaration(
+    subpath="tmp",
+    settings_field="cadrumo_temp_dir",
+)
+"""The temporary-files member's location, declared here rather than in the taxonomy.
+
+Development bootstrap prepares the temporary root before any project
+dependency is installed, so this declaration must be readable without the
+taxonomy's models; the taxonomy member reads its subpath and setting from it."""
+
+
 def _refuse(refusal: StorageRootRefusal, message: str) -> NoReturn:
     from .errors.hierarchy import CoreValidationError
 
@@ -604,14 +622,11 @@ def storage_directory(environment_variable: str, default: str, *, root: Path | N
 
 def prepare_temporary_directory() -> Path:
     """Create the controlled scratch base for callers of tempfile APIs."""
-    from .storage_taxonomy import StorageCategory
-    from .storage_taxonomy_locations import storage_location
-
     root = configured_storage_root()
-    location = storage_location(StorageCategory.TEMPORARY_FILES)
-    value = location.relative_path().as_posix()
-    if location.settings_field is not None:
-        value = _environment_value(os.environ, location.settings_field.upper(), declared_platform()) or value
+    value = (
+        _environment_value(os.environ, TEMPORARY_FILES.settings_field.upper(), declared_platform())
+        or TEMPORARY_FILES.subpath
+    )
     temporary = resolve_storage_path(value, root=root, received=os.environ)
     ensure_storage_root(root)
     return ensure_storage_root(temporary)

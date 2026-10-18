@@ -145,7 +145,7 @@ def provision(root: Path, main: Path | None) -> int:
         print("Created env/.env from env/.env.example.", flush=True)
     if main is None or not (main / "env" / ".env").is_file():
         print("No separate main worktree with an env/.env - nothing to port.", flush=True)
-        return provision_google_client(root)
+        return 0
     source = main / "env" / ".env"
     try:
         result = port_values(
@@ -171,7 +171,7 @@ def provision(root: Path, main: Path | None) -> int:
     if result.skipped:
         skipped = ", ".join(result.skipped)
         print(f"Skipped {len(result.skipped)} multi-line value(s); copy by hand: {skipped}", flush=True)
-    return provision_google_client(root)
+    return 0
 
 
 def provision_google_client(root: Path) -> int:
@@ -181,6 +181,8 @@ def provision_google_client(root: Path) -> int:
     A source checkout therefore needs the same resource that release builds
     embed. Missing credentials leave a fresh checkout usable without Google;
     malformed supplied credentials stop setup without revealing their value.
+    The metadata is validated with the project's own models, so this runs in
+    the synchronized environment, after the stdlib-only preflight.
     """
     from dev.packaging.google_oauth import build_client_json, stage_build_client
 
@@ -200,6 +202,11 @@ def provision_google_client(root: Path) -> int:
 def env_setup() -> int:
     """Provision this checkout's `env/.env`, porting values from the main worktree."""
     return provision(REPO_ROOT, None)
+
+
+def google_client_setup() -> int:
+    """Materialize this checkout's ignored Google Desktop client resource from `env/.env`."""
+    return provision_google_client(REPO_ROOT)
 
 
 def _port_assignment(
