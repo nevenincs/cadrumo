@@ -43,6 +43,20 @@ pub const SETTLE_TIMEOUT: Duration = Duration::from_secs(3);
 /// Receives encoded frames in send order.
 pub type Sink = Arc<dyn Fn(Vec<u8>) -> Result<()> + Send + Sync>;
 
+/// Colour switches the desktop terminal decides for its children. It is a colour
+/// terminal whose palette it owns, so a switch inherited from whatever shell started
+/// the desktop would only strip that palette: Textual reads a mere presence of
+/// `NO_COLOR` as monochrome, even `NO_COLOR=false`.
+const TERMINAL_OWNED: [&str; 2] = ["NO_COLOR", "CADRUMO_FORCE_COLOR"];
+
+fn terminal_owned(key: &OsString) -> bool {
+    key.to_str().is_some_and(|key| {
+        TERMINAL_OWNED
+            .iter()
+            .any(|owned| key.eq_ignore_ascii_case(owned))
+    })
+}
+
 pub fn failure(code: ErrorCode) -> ApplicationError {
     ApplicationError::new(code, Operation::Terminal)
 }
@@ -209,7 +223,9 @@ impl Session {
         let mut command = CommandBuilder::new(&program.executable);
         command.env_clear();
         for (key, value) in &program.environment {
-            command.env(key, value);
+            if !terminal_owned(key) {
+                command.env(key, value);
+            }
         }
         command.env("TERM", "xterm-256color");
         command.env("COLORTERM", "truecolor");

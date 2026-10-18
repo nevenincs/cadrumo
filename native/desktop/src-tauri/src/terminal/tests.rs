@@ -579,6 +579,37 @@ fn chatty_program() -> Program {
     }
 }
 
+/// Runs `program` to its exit and returns what it printed, answering the cursor
+/// position queries a Windows pseudo console sends before it releases output.
+fn printed(program: Program) -> String {
+    let captured = Arc::new(Mutex::new(Vec::new()));
+    let output = captured.clone();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            output.lock().unwrap().extend_from_slice(&frame[1..]);
+        }
+        Ok(())
+    });
+    let mut session =
+        Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
+    let began = Instant::now();
+    let mut answered = 0;
+    while session.live() && began.elapsed() < Duration::from_secs(10) {
+        let bytes = captured.lock().unwrap();
+        let queries = bytes.windows(4).filter(|window| *window == b"[6n").count();
+        session.acknowledge(bytes.len() as u64).unwrap();
+        drop(bytes);
+        while answered < queries {
+            session.write(b"[1;1R").unwrap();
+            answered += 1;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert!(!session.live(), "terminal probe did not exit");
+    session.stop().unwrap();
+    String::from_utf8_lossy(&captured.lock().unwrap()).into_owned()
+}
+
 #[test]
 fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
     for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
@@ -599,36 +630,7 @@ fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
             vec!["-c", "printf '%s' \"$TERM_PROGRAM\""]
         };
         program.arguments = arguments.into_iter().map(OsString::from).collect();
-        let captured = Arc::new(Mutex::new(Vec::new()));
-        let output = captured.clone();
-        let sink: Sink = Arc::new(move |frame| {
-            if frame.first() == Some(&0) {
-                output.lock().unwrap().extend_from_slice(&frame[1..]);
-            }
-            Ok(())
-        });
-        let mut session =
-            Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
-        let began = Instant::now();
-        let mut answered = 0;
-        while session.live() && began.elapsed() < Duration::from_secs(10) {
-            let bytes = captured.lock().unwrap();
-            let queries = bytes
-                .windows(4)
-                .filter(|window| *window == b"\x1b[6n")
-                .count();
-            session.acknowledge(bytes.len() as u64).unwrap();
-            drop(bytes);
-            while answered < queries {
-                session.write(b"\x1b[1;1R").unwrap();
-                answered += 1;
-            }
-            std::thread::sleep(Duration::from_millis(20));
-        }
-        assert!(!session.live(), "terminal identity probe did not exit");
-        session.stop().unwrap();
-        let bytes = captured.lock().unwrap();
-        let text = String::from_utf8_lossy(&bytes);
+        let text = printed(program);
         if role == ProcessRole::Tui {
             assert!(!text.contains("cadrumo-shell"), "{text:?}");
         }
@@ -640,6 +642,39 @@ fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
             }),
             "{text:?}"
         );
+    }
+}
+
+#[test]
+fn an_inherited_colour_switch_never_reaches_a_terminal_child() {
+    for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
+        let mut program = chatty_program();
+        program.role = role;
+        program
+            .environment
+            .insert("NO_COLOR".into(), "false".into());
+        program
+            .environment
+            .insert("cadrumo_force_color".into(), "1".into());
+        program
+            .environment
+            .insert("CADRUMO_OUTPUT_LANGUAGE".into(), "es".into());
+        let arguments = if cfg!(windows) {
+            vec![
+                "/d",
+                "/c",
+                "if defined NO_COLOR (echo colour-inherited) else if defined CADRUMO_FORCE_COLOR (echo colour-inherited) else if defined CADRUMO_OUTPUT_LANGUAGE (echo colour-owned)",
+            ]
+        } else {
+            vec![
+                "-c",
+                "if [ -n \"${NO_COLOR+x}${cadrumo_force_color+x}\" ]; then echo colour-inherited; elif [ -n \"$CADRUMO_OUTPUT_LANGUAGE\" ]; then echo colour-owned; fi",
+            ]
+        };
+        program.arguments = arguments.into_iter().map(OsString::from).collect();
+        let text = printed(program);
+        assert!(text.contains("colour-owned"), "{role:?}: {text:?}");
+        assert!(!text.contains("colour-inherited"), "{role:?}: {text:?}");
     }
 }
 
