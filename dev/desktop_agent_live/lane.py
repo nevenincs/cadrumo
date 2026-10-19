@@ -32,10 +32,10 @@ and always ends incomplete. ``--served`` loads the shell from the development
 server (``just dev``) for iterating on it; the host, launcher and agent stay
 real.
 
-The provider is named on the command line with ``--provider ID``. The key comes
-only from this lane's own environment, under the name the provider-settings
-resolver reads in development, ``CADRUMO_LLM_<ID>_API_KEY`` with the provider id
-in upper case.
+The provider is named on the command line with ``--provider ID``, as the agent
+names it (``claude``). The key comes only from this lane's own environment, which
+the recipe loads from ``env/.env``, under the vendor's name that
+``env/.env.example`` declares for that provider (``CADRUMO_LLM_ANTHROPIC_API_KEY``).
 It crosses the desktop's raw credential channel once and never enters a command
 line, file, log or child environment.
 """
@@ -75,6 +75,7 @@ from ..runtime_lifecycle.caller_owned_root import (
 from .containment import LaneJob
 from .freshness import host_part, package_parts, stale_parts
 from .package import stage_lane_package
+from .provider_key import declared_key_variables, provider_key_variable
 from .scans import (
     ProcessRecord,
     ScanResult,
@@ -118,11 +119,6 @@ LANE_ATTACHMENTS: Final[Mapping[str, bytes]] = {
     "lane-mismatch.pdf": b"This is plain text, not a PDF.\n",
 }
 """The synthetic files the attach button picks. Nothing in them is anyone's."""
-
-
-def key_variable(provider_id: str) -> str:
-    """Name the environment variable this lane reads the developer's key for ``provider_id`` from."""
-    return "CADRUMO_LLM_" + provider_id.upper() + "_API_KEY"
 
 
 class UnavailableError(Exception):
@@ -273,10 +269,7 @@ def provision_provider_key(endpoint: str, shell_entry: str, provider_id: str) ->
     """Store a developer credential through the live desktop's service channel."""
     from playwright.sync_api import sync_playwright
 
-    variable = key_variable(provider_id)
-    secret = bytearray(os.environ.get(variable, ""), "utf-8")
-    if not secret:
-        raise UnavailableError(f"no provider key: set {variable} in this lane's own environment")
+    secret = bytearray()
     try:
         with sync_playwright() as driver:
             browser = driver.chromium.connect_over_cdp(endpoint)
@@ -309,6 +302,18 @@ def provision_provider_key(endpoint: str, shell_entry: str, provider_id: str) ->
             )
             if not isinstance(entry, dict):
                 raise AcceptanceError("provider catalogue entry unavailable")
+            template = _REPOSITORY / "env" / ".env.example"
+            default_base_url = entry.get("default_base_url")
+            variable = provider_key_variable(
+                provider_id,
+                default_base_url if isinstance(default_base_url, str) else None,
+                declared_key_variables(template),
+            )
+            if variable is None:
+                raise UnavailableError(f"{template} declares no key variable for provider {provider_id!r}")
+            secret[:] = os.environ.get(variable, "").encode("utf-8")
+            if not secret:
+                raise UnavailableError(f"no provider key: set {variable} in env/.env")
             changed = page.evaluate(
                 """async ({provider, revision, secret}) => {
                 const token = window.__CADRUMO_LANE_TOKEN__;
