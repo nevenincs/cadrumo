@@ -1,6 +1,8 @@
 import * as base from "playwright/test";
 import type { Browser, BrowserContext, Page } from "playwright/test";
 
+import { label } from "../support/strings";
+
 // The live project runs the shared agent specs against the packaged desktop.
 // Its tsconfig resolves "@playwright/test" to this module, so the specs and
 // their helpers import Playwright unchanged and receive the desktop's own
@@ -114,9 +116,21 @@ export const test = base.test.extend<object, { liveBrowser: Browser }>({
       configurable: true,
       writable: true,
     });
+    // The lane's fresh root has none of the optional components set up, so
+    // the shell offers setup once per load. The specs drive the agent, so the
+    // person answers "Not now" whenever the offer covers the window.
+    const setupOffer = page.getByRole("dialog", {
+      name: label("desktop.setup.title"),
+    });
+    await page.addLocatorHandler(setupOffer, (dialog) =>
+      dialog
+        .getByRole("button", { name: label("desktop.setup.not_now") })
+        .click(),
+    );
     try {
       await use(page);
     } finally {
+      await page.removeLocatorHandler(setupOffer);
       delete (page as { goto?: Goto }).goto;
     }
   },
