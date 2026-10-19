@@ -17,6 +17,7 @@ from .....application.auth.certificate_secret_backend import CertificateSecretBa
 from .....application.auth.operator_scope_ports import OperatorScopePorts
 from .....application.auth.protocols import BrowserSessionFactoryPort
 from .....application.live.errors import LiveApplicationError
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....application.live.filed_data_ports import (
     DeferredFiledObservation,
     DeferredFiledObservations,
@@ -43,7 +44,6 @@ from .declarations_capture import (
     capture_previous_filing_observations,
     capture_relation_source_observations,
 )
-from .declarations_schema import Declaracion
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
@@ -142,7 +142,7 @@ class _DeferredSedeObservations:
 
 
 async def capture_deferred_sede_observation(
-    register: DeclaracionesRegisterSession, declaration: Declaracion
+    register: DeclaracionesRegisterSession, declaration: ExpedientesDeclaration
 ) -> DeferredFiledObservation:
     """Stage one remote declaration without invoking a local persistence callback."""
     staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = []
@@ -189,7 +189,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         artefact_sink: FiledArtefactSink | None = None,
     ) -> FiledObservationProtocol:
         """Capture one register row through the concrete Sede reader."""
-        if not isinstance(declaration, Declaracion):
+        if not isinstance(declaration, ExpedientesDeclaration):
             raise TypeError("filed register port returned a non-Sede declaration")
         concrete_sink = _concrete_artefact_sink(artefact_sink)
         return await _call_adapter(
@@ -202,7 +202,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         self, declaration: FiledRegisterDeclarationProtocol
     ) -> DeferredFiledObservation:
         """Return captured bytes for a later guarded local persistence section."""
-        if not isinstance(declaration, Declaracion):
+        if not isinstance(declaration, ExpedientesDeclaration):
             raise TypeError("filed register port returned a non-Sede declaration")
         return await _call_adapter(
             "filed_declaration_capture", lambda: capture_deferred_sede_observation(self._register, declaration)

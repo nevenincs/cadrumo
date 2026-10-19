@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -42,7 +43,6 @@ from ._browser_constants import navigation_timeout_ms
 from .declarations_remote import assert_read_browser_action as _remote_assert_read_browser_action
 from .declarations_remote import assert_read_http as _remote_assert_read_http
 from .declarations_remote import extract_csv_from_url as _extract_csv_from_url
-from .declarations_schema import Declaracion
 from .errors import (
     JustificanteFetchError,
     SedeNavigationError,
@@ -219,7 +219,7 @@ async def capture_row_pdf_artefact(
     *,
     context: BrowserContext,
     row_locator: Locator,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     cell_index: int,
     kind: Literal["justificante_pdf", "declaration_pdf"],
     read_policy: RemoteStateGuardPolicy,
@@ -281,7 +281,7 @@ async def capture_submitted_file_artefact(
     context: BrowserContext,
     page: Page,
     row_locator: Locator,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     cell_index: int,
     read_policy: RemoteStateGuardPolicy,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:

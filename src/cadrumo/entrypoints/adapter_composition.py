@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
-    from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
@@ -1348,34 +1347,8 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
             objects=secure_object_repository_for_bucket(normalized),
         )
 
-    def translate_declaration(row: Declaracion) -> ExpedientesDeclaration:
-        """Translate the Sede row DTO before it enters application state."""
-        try:
-            return ExpedientesDeclaration(
-                modelo=row.modelo,
-                ejercicio=row.ejercicio,
-                period=row.period,
-                expediente_id=row.expediente_id,
-                estado=row.estado,
-                tipo_solicitud=row.tipo_solicitud,
-                observaciones=row.observaciones,
-                presented_at=row.presented_at,
-                justificante_link_text=row.justificante_link_text,
-                archive_link_text=row.archive_link_text,
-                declaration_copy_link_text=row.declaration_copy_link_text,
-                justificante_cell_index=row.justificante_cell_index,
-                archive_cell_index=row.archive_cell_index,
-                declaration_copy_cell_index=row.declaration_copy_cell_index,
-                mode=row.mode,
-            )
-        except Exception as exc:
-            raise LiveApplicationError(
-                translated_message="errors.error.error_application_live",
-                context={"surface": "expedientes", "stage": "declaration_translation"},
-            ) from exc
-
     class SedeExpedientesRegister(ExpedientesRegisterProtocol):
-        """Translate rows returned by the concrete Sede register session."""
+        """Expose the concrete Sede register session, which yields application rows."""
 
         def __init__(self, register: DeclaracionesRegisterSession) -> None:
             self._register = register
@@ -1383,8 +1356,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         @override
         async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
             try:
-                rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
-                return tuple(translate_declaration(row) for row in rows)
+                return await self._register.walk(modelo=modelo, ejercicio=ejercicio)
             except (LiveApplicationError, ProfileAccessRefusedError):
                 raise
             except Exception as exc:

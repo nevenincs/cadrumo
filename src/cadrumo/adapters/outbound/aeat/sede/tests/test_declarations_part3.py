@@ -308,13 +308,13 @@ def test_register_capture_empty_nif_carries_translated_message() -> None:
     import asyncio
     from typing import cast
 
+    from ......application.live.expedientes_ports import ExpedientesDeclaration
     from ..._playwright import BrowserContext, Page
     from ..declarations import DeclaracionesRegisterSession
-    from ..declarations_schema import Declaracion
     from ..errors import SedeNavigationError
 
     session = _whitespace_nif_session()
-    declaration = Declaracion(
+    declaration = ExpedientesDeclaration(
         modelo="130",
         ejercicio=2026,
         period=Period.from_year_and_code(2026, "1T"),

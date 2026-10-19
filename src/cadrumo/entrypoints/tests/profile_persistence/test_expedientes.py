@@ -274,5 +274,5 @@ class TestNoWriteSurface:
     def test_capture_mode_is_read_only_marker(self) -> None:
         cap = _capture(declarations=(_declaration(),))
         assert cap.mode == "read"
-        # The Declaracion adapter model also carries mode='read'.
+        # Each register row carries mode='read' too.
         assert cap.declarations[0].mode == "read"

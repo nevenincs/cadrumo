@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.observed_header_fact import ObservedHeaderFact
@@ -38,7 +39,6 @@ from .declarations_observations import (
     observed_casillas_from_submitted_file,
     observed_header_facts_from_submitted_file,
 )
-from .declarations_schema import Declaracion
 from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
@@ -60,7 +60,7 @@ async def _capture_declaration_copy_if_available(
     *,
     context: BrowserContext,
     row_locator: Locator,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     read_policy: RemoteStateGuardPolicy,
     observation_key: tuple[str, int, Period, str],
     artefact_sink: FiledDeclaracionArtefactSink | None,
@@ -93,7 +93,7 @@ async def _capture_submitted_file_if_available(
     context: BrowserContext,
     page: Page,
     row_locator: Locator,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     read_policy: RemoteStateGuardPolicy,
     snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
@@ -169,7 +169,7 @@ def _resolve_captured_casillas(
     *,
     casillas: tuple[ObservedCasillaValue, ...],
     declaration_pdf_body: bytes | None,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     snapshot: RegistrySnapshot,
     metadata: dict[str, str],
     extraction_coverage: dict[str, float],
@@ -197,7 +197,7 @@ def _resolve_captured_casillas(
 
 async def capture_filed_declaration_observation_from_row(
     session: AeatSession,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     *,
     row_locator: Locator,
     page: Page,
@@ -415,13 +415,13 @@ async def capture_relation_source_observations(
 
 
 def _select_authoritative_declaration(
-    declarations: tuple[Declaracion, ...],
+    declarations: tuple[ExpedientesDeclaration, ...],
     *,
     modelo: str,
     ejercicio: int,
     period_token: str,
     context: str,
-) -> Declaracion:
+) -> ExpedientesDeclaration:
     """Select the latest accepted register row for one filed period."""
     if not declarations:
         raise SedeParseError(f"{context} {modelo!r}/{ejercicio}/{period_token!r} found no filed declaration")

@@ -12,6 +12,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.config import Settings
 from ......core.period import Period
@@ -28,7 +29,6 @@ from ..declarations_observations import (
     registry_observation_from_filed_declaration,
 )
 from ..declarations_remote import extract_csv_from_url as _extract_csv_from_url
-from ..declarations_schema import Declaracion
 from ..errors import SedeParseError, SedeValidationError
 from ._declarations_support import (
     _COTEJO_QUERY_URL,
@@ -287,7 +287,7 @@ def test_registry_observation_from_filed_declaration_refuses_noncanonical_casill
 
 
 class TestParseListbox:
-    """Verify :func:`_parse_listbox` extracts typed Declaracion rows from the post-Buscar HTML."""
+    """Verify :func:`_parse_listbox` extracts typed ExpedientesDeclaration rows from the post-Buscar HTML."""
 
     def test_modelo_100_listbox_fixture_parses_one_row(self) -> None:
         """Assert the Modelo 100 listbox fixture parses to a single fully-populated row."""
@@ -319,7 +319,7 @@ class TestParseListbox:
 
     def test_declaration_row_refuses_period_year_mismatch(self) -> None:
         with pytest.raises(ValueError, match=r"period\.filing_year must match ejercicio"):
-            Declaracion(
+            ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2025, "1T"),
@@ -847,7 +847,7 @@ class TestSubmittedFileContext:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
             resolved = resolve_export_layout(snapshot)
             parsed = parse_export_payload(resolved.layout, _submitted_file_payload())
-            declaration = Declaracion(
+            declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
                 period=Period.from_year_and_code(2026, "2T"),

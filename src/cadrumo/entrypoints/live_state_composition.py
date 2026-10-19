@@ -27,7 +27,6 @@ from ..adapters.outbound.aeat.sede.declarations import (
     open_declarations_register,
     shared_playwright,
 )
-from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import (
     SedeFiledDataCapturePort,
@@ -90,6 +89,7 @@ from ..application.auth.sync_requirement_text import sync_requirement_reason
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
+from ..application.live.expedientes_ports import ExpedientesDeclaration
 from ..application.live.filed_data_capture import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
 from ..application.live.filed_history_events import FiledHistoryEventSink
@@ -579,7 +579,7 @@ class AppIvaRemoteStatePort:
                         )
                     declarations = await register.walk(modelo=Modelo("303").value, ejercicio=year)
                     for candidate in latest_declarations_by_period(declarations):
-                        if not isinstance(candidate, Declaracion):
+                        if not isinstance(candidate, ExpedientesDeclaration):
                             raise LiveApplicationError(
                                 translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
                                 context={
@@ -911,7 +911,7 @@ __all__ = [
 
 async def _capture_one_iva_history_declaration(
     register: DeclaracionesRegisterSession,
-    declaration: Declaracion,
+    declaration: ExpedientesDeclaration,
     store: FiledObservationPersistencePort,
     persist_artefact: Callable[
         [tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes], FiledDeclaracionArtefact
@@ -955,7 +955,7 @@ async def _capture_one_iva_history_declaration(
 
 
 def _stage_iva_history_declaration_progress(
-    progress_context: dict[str, object] | None, declaration: Declaracion
+    progress_context: dict[str, object] | None, declaration: ExpedientesDeclaration
 ) -> None:
     """Publish the current declaration immediately before its capture begins."""
     if progress_context is not None:

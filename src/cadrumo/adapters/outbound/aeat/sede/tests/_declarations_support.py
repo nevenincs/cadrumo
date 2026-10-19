@@ -13,6 +13,7 @@ from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
@@ -28,7 +29,6 @@ from ..declarations_capture import _select_authoritative_declaration as _select_
 from ..declarations_observations import (
     registry_observation_from_filed_declaration,
 )
-from ..declarations_schema import Declaracion
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 __all__ = [
@@ -182,13 +182,13 @@ def _period(ejercicio: int, period: str | Period) -> Period:
 
 
 def _select_authoritative_declaration(
-    declarations: tuple[Declaracion, ...],
+    declarations: tuple[ExpedientesDeclaration, ...],
     *,
     modelo: str,
     ejercicio: int,
     period: str | Period,
     context: str,
-) -> Declaracion:
+) -> ExpedientesDeclaration:
     return _select_authoritative_declaration_production(
         declarations,
         modelo=modelo,
@@ -205,8 +205,8 @@ def _declaration_row(
     estado: str = "ALTA",
     ejercicio: int = 2024,
     period: str = "3T",
-) -> Declaracion:
-    return Declaracion(
+) -> ExpedientesDeclaration:
+    return ExpedientesDeclaration(
         modelo="303",
         ejercicio=ejercicio,
         period=_period(ejercicio, period),

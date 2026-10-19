@@ -16,7 +16,7 @@ from ...core.json_contract import OutputSchema
 class ExpedienteDeclarationPayload(OutputSchema):
     """One declaration-register row inside an expedientes-view payload.
 
-    Mirrors :class:`Declaracion` rows persisted in a
+    Mirrors :class:`ExpedientesDeclaration` rows persisted in a
     :class:`PersistedExpedientesSnapshot`.
     Link-text and cell-index fields report what the read-only AEAT register
     exposed; they are not downloaded artefacts and do not imply a remote

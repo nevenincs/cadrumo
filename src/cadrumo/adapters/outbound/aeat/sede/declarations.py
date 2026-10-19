@@ -29,6 +29,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
 
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....core.config import Settings
 from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from .....core.i18n.render import tr
@@ -74,7 +75,6 @@ from .declarations_observations import (
     _read_guard_policy_from_snapshot,
     _registry_snapshot_for_declaration,
 )
-from .declarations_schema import Declaracion
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import (
     FiledDeclaracionArtefact,
@@ -199,7 +199,7 @@ def _register_rows_from_snapshot(
     *,
     modelo: str,
     ejercicio: int,
-) -> tuple[Declaracion, ...]:
+) -> tuple[ExpedientesDeclaration, ...]:
     """Parse one register snapshot into rows, refusing a page the grid says is partial.
 
     The register is read from a single ``Buscar`` result snapshot, and the walker
@@ -406,8 +406,8 @@ class DeclaracionesRegisterSession:
         self._context = context
         self._operation = operation
 
-    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
-        """Return :class:`Declaracion` rows for one ``(modelo, ejercicio)`` query.
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
+        """Return :class:`ExpedientesDeclaration` rows for one ``(modelo, ejercicio)`` query.
 
         Raises:
             SedeParseError: When the grid declares more records than it rendered,
@@ -429,7 +429,7 @@ class DeclaracionesRegisterSession:
         )
         return results
 
-    async def capture_justificante(self, declaration: Declaracion) -> tuple[FiledDeclaracionArtefact, bytes]:
+    async def capture_justificante(self, declaration: ExpedientesDeclaration) -> tuple[FiledDeclaracionArtefact, bytes]:
         """Read the selected register row's receipt without requiring calculation extraction."""
         snapshot = _registry_snapshot_for_declaration(declaration, operation=self._operation)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
@@ -463,7 +463,7 @@ class DeclaracionesRegisterSession:
 
     async def capture_observation(
         self,
-        declaration: Declaracion,
+        declaration: ExpedientesDeclaration,
         *,
         registry_snapshot: RegistrySnapshot | None = None,
         artefact_sink: FiledDeclaracionArtefactSink | None = None,
@@ -471,7 +471,7 @@ class DeclaracionesRegisterSession:
         """Capture a normalized :class:`FiledDeclaracionObservation` using the active page.
 
         Args:
-            declaration: The :class:`Declaracion` row to observe.
+            declaration: The :class:`ExpedientesDeclaration` row to observe.
             registry_snapshot: Optional pre-built :class:`RegistrySnapshot`. When
                 omitted, the snapshot is resolved from the declaration coordinates.
             artefact_sink: Optional callable storing each captured artefact.
@@ -606,7 +606,7 @@ async def walk_declarations_register(
     ejercicio: int,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
-) -> tuple[Declaracion, ...]:
+) -> tuple[ExpedientesDeclaration, ...]:
     """Drive the *Consultar declaraciones presentadas* form for one query.
 
     Args:
@@ -623,7 +623,7 @@ async def walk_declarations_register(
             and torn down per call.
 
     Returns:
-        Tuple of :class:`Declaracion` records, one per filing row.
+        Tuple of :class:`ExpedientesDeclaration` records, one per filing row.
         Empty when AEAT returns "No se han encontrado resultados".
 
     Raises:
@@ -959,7 +959,6 @@ def _row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
 
 
 __all__ = [
-    "Declaracion",
     "DeclaracionesRegisterSession",
     "_parse_presented_at",
     "open_declarations_register",

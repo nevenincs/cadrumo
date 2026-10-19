@@ -28,11 +28,11 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
+from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.aeat_csv import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
 from ..declarations import open_declarations_register, walk_declarations_register
 from ..declarations_remote import extract_csv_from_url
-from ..declarations_schema import Declaracion
 from ..errors import SedeError
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
@@ -99,7 +99,7 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
     # Ejercicio 2022 is the year operator's M100 fixture was captured;
     # the live account should still expose it.
     assert isinstance(declarations, tuple)
-    assert all(isinstance(d, Declaracion) for d in declarations)
+    assert all(isinstance(d, ExpedientesDeclaration) for d in declarations)
     assert declarations, "expected at least one Modelo 100 / 2022 declaration on the live account"
     first = declarations[0]
     assert first.modelo == "100"

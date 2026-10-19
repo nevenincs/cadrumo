@@ -9,13 +9,13 @@ from datetime import UTC, datetime
 from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel, Field
 
+from .....application.live.expedientes_ports import ExpedientesDeclaration
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.period import Period
 from .._html import parse_html
 from ._adapter_utils import cell_text, normalize_response_text
-from .declarations_schema import Declaracion
 from .errors import SedeFailureMode, SedeParseError, SedeValidationError
 
 __all__ = [
@@ -52,7 +52,7 @@ class DeclaracionesRegisterPage(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    rows: tuple[Declaracion, ...]
+    rows: tuple[ExpedientesDeclaration, ...]
     declared_total: int | None = Field(default=None, ge=0)
 
     @property
@@ -82,7 +82,7 @@ def _parse_listbox(
     """Parse the post-Buscar listbox into a typed register page.
 
     Returns:
-        The rendered :class:`Declaracion` rows together with the record total the
+        The rendered :class:`ExpedientesDeclaration` rows together with the record total the
         grid's own pager label declares, so a caller can tell a complete answer
         from a rendered-page-only one.
     """
@@ -130,9 +130,9 @@ def _parse_listbox_rows(
     modelo: str,
     ejercicio: int,
     action_indexes: _ResolvedListboxActionIndexes,
-) -> tuple[Declaracion, ...]:
+) -> tuple[ExpedientesDeclaration, ...]:
     """Decode listbox items in DOM order, preserving the empty sentinel."""
-    rows: list[Declaracion] = []
+    rows: list[ExpedientesDeclaration] = []
     for item in listbox.find_all(class_=_has_class("z-listitem")):
         cell_texts = [cell.get_text(" ", strip=True) for cell in item.find_all(class_=_has_class("z-listcell"))]
         if len(cell_texts) == 1 and cell_texts[0] == NO_RESULTS_TEXT:
@@ -154,7 +154,7 @@ def _parse_listbox_row(
     modelo: str,
     ejercicio: int,
     action_indexes: _ResolvedListboxActionIndexes,
-) -> Declaracion | None:
+) -> ExpedientesDeclaration | None:
     """Decode one row, skipping malformed shapes and wrapping bad timestamps."""
     if len(cell_texts) < 7:
         log.debug("_parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
@@ -171,7 +171,7 @@ def _parse_listbox_row(
             context={"modelo": modelo, "ejercicio": ejercicio, "cell_length": len(cell_texts[6])},
         ) from exc
 
-    return Declaracion(
+    return ExpedientesDeclaration(
         modelo=modelo,
         ejercicio=ejercicio,
         period=Period.from_year_and_code(ejercicio, cell_texts[4]),
