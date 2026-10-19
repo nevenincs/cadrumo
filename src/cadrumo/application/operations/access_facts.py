@@ -1,4 +1,16 @@
-"""Generic registered operation mutation and network authority facts."""
+"""Two facts about every registered operation: whether it changes records and whether it reaches the network.
+
+Access to an operation is refused when the admitted scope rules out what it can
+do, and a narrower MCP surface is derived from the same two facts. A definition
+declares its permitted effects and nothing about the network, so the first
+fact follows the declaration except where a definition permits more than its
+executor does, and the second is recorded from reading the executors. Where
+reading did not settle a fact, the operation is recorded under the wider
+answer.
+
+Operations are named by definition id text: importing each feature package's
+constants here would invert the dependency.
+"""
 
 from __future__ import annotations
 
@@ -128,7 +140,6 @@ _LOCAL_READS: Final = (
     "overview.prepare",
     "overview.status",
     "profile.history",
-    "provider-settings.status",
     "profile.history.timeline",
     "user-profile.censo-prepare",
     "user-profile.recovery.status",
@@ -266,9 +277,6 @@ _LOCAL_WRITES: Final = (
     # builds local objects only and opens no browser or session.
     "modelo.work.verify",
     "profile.archive.export",
-    "provider-settings.remove",
-    "provider-settings.reset",
-    "provider-settings.set",
     "user-profile.automation-approve",
     "user-profile.automation-decline",
     "user-profile.automation-inventory",
@@ -373,6 +381,9 @@ def _index() -> Mapping[str, OperationAccessFacts]:
 
 _BY_DEFINITION_ID: Final = _index()
 
+OPERATION_ACCESS_FACTS: Final[tuple[OperationAccessFacts, ...]] = tuple(_BY_DEFINITION_ID.values())
+"""The recorded facts of every operation, sorted by definition id."""
+
 
 def operation_access_facts(definition_id: str) -> OperationAccessFacts:
     """Return the recorded facts of one operation, or fail closed."""
@@ -382,4 +393,4 @@ def operation_access_facts(definition_id: str) -> OperationAccessFacts:
         raise KeyError(f"operation has no recorded access facts: {definition_id!r}") from None
 
 
-__all__ = ["OperationAccessFacts", "operation_access_facts"]
+__all__ = ["OPERATION_ACCESS_FACTS", "OperationAccessFacts", "operation_access_facts"]

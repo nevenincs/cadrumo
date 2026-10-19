@@ -1,8 +1,8 @@
 """Turn protocol surface policy into an explicit generic operation ceiling."""
 
+from cadrumo.application.operations.access_facts import OPERATION_ACCESS_FACTS
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 
-from .surface_facts import OPERATION_SURFACE_FACTS
 from .surfaces import McpSurface
 
 
@@ -10,7 +10,7 @@ def surface_scope(surface: McpSurface) -> AccessScope:
     """Return the surface's finite operation list and effect constraints."""
     return AccessScope(
         operations=frozenset(
-            facts.definition_id for facts in OPERATION_SURFACE_FACTS if surface.admits(facts.definition_id)
+            facts.definition_id for facts in OPERATION_ACCESS_FACTS if surface.admits(facts.definition_id)
         ),
         actions=frozenset(AccessAction) if surface.changes_records else frozenset(AccessAction) - {AccessAction.COMMIT},
         disclosures=frozenset(),

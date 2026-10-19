@@ -16,9 +16,9 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
+from cadrumo.application.operations.access_facts import operation_access_facts
 from cadrumo.domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
-from cadrumo_harness.mcp.surface_facts import operation_surface_facts
 from dev.operation_contract_manifest.tests.test_operation_catalogue import (
     production_operation_registry,
     production_operation_source_tree,
@@ -131,7 +131,7 @@ def test_no_operation_that_reaches_the_network_is_named_for_a_tax_agency_write()
     collisions: dict[str, list[str]] = {}
     for definition in production_operation_registry().definitions:
         verbs = _write_verbs((definition.definition_id, *definition.phase_codes))
-        if verbs and operation_surface_facts(definition.definition_id).reaches_network:
+        if verbs and operation_access_facts(definition.definition_id).reaches_network:
             collisions[definition.definition_id] = sorted(verbs)
     undeclared = {key: verbs for key, verbs in collisions.items() if key not in _NETWORK_READS_NAMED_LIKE_A_WRITE}
     assert not undeclared, f"operations that reach the network and are named for a tax agency write: {undeclared}"

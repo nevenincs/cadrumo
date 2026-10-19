@@ -1,4 +1,4 @@
-"""The recorded surface facts of every registered operation, held to the live registry.
+"""The recorded access facts of every registered operation, held to the live registry.
 
 A narrower external client surface is derived from two facts recorded for each operation:
 whether it can change the profile's records and whether it reaches the
@@ -22,14 +22,14 @@ from collections.abc import Mapping
 
 import pytest
 
+from cadrumo.application.operations.access_facts import (
+    OPERATION_ACCESS_FACTS,
+    OperationAccessFacts,
+    operation_access_facts,
+)
 from cadrumo.application.operations.capabilities import OperationOwnedResource
 from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1
 from cadrumo.core.operations import OperationEffect
-from cadrumo_harness.mcp.surface_facts import (
-    OPERATION_SURFACE_FACTS,
-    OperationSurfaceFacts,
-    operation_surface_facts,
-)
 
 from .test_operation_catalogue import production_operation_registry
 
@@ -75,16 +75,16 @@ def _registrations() -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
 def test_every_registered_operation_has_exactly_one_record_of_its_surface_facts() -> None:
     """The record and the registry name the same operations, both directions."""
     registered = {item.contract.definition_id for item in _registrations()}
-    recorded = [facts.definition_id for facts in OPERATION_SURFACE_FACTS]
+    recorded = [facts.definition_id for facts in OPERATION_ACCESS_FACTS]
     assert len(set(recorded)) == len(recorded)
     unrecorded = sorted(registered - set(recorded))
     unregistered = sorted(set(recorded) - registered)
-    assert not unrecorded, f"registered operations with no recorded surface facts: {unrecorded}"
-    assert not unregistered, f"recorded surface facts for operations that are not registered: {unregistered}"
+    assert not unrecorded, f"registered operations with no recorded access facts: {unrecorded}"
+    assert not unregistered, f"recorded access facts for operations that are not registered: {unregistered}"
 
 
 def _change_finding(
-    facts: OperationSurfaceFacts,
+    facts: OperationAccessFacts,
     *,
     permitted: frozenset[OperationEffect],
     permits_more: bool,
@@ -122,7 +122,7 @@ def test_the_recorded_change_fact_agrees_with_every_definitions_permitted_effect
         for item in _registrations()
         if (
             finding := _change_finding(
-                operation_surface_facts(item.contract.definition_id),
+                operation_access_facts(item.contract.definition_id),
                 permitted=item.contract.permitted_effects,
                 permits_more=item.contract.definition_id in _PERMITS_MORE_THAN_IT_DOES,
                 holds_a_commit_door=item.contract.definition_id in _HOLDS_A_COMMIT_DOOR_WITHOUT_A_DECLARED_EFFECT,
@@ -135,8 +135,8 @@ def test_the_recorded_change_fact_agrees_with_every_definitions_permitted_effect
 
 def test_the_change_rule_detects_each_contradiction() -> None:
     """The rule fails an unnamed over-declaration, a stale exception and an unbacked change."""
-    read = OperationSurfaceFacts(definition_id="domain.thing.list", changes_records=False, reaches_network=False)
-    write = OperationSurfaceFacts(definition_id="domain.thing.set", changes_records=True, reaches_network=False)
+    read = OperationAccessFacts(definition_id="domain.thing.list", changes_records=False, reaches_network=False)
+    write = OperationAccessFacts(definition_id="domain.thing.set", changes_records=True, reaches_network=False)
     reading = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     updating = reading | {OperationEffect.UPDATED}
     partial = reading | {OperationEffect.PARTIAL}
@@ -161,6 +161,6 @@ def test_every_definition_that_owns_a_process_is_recorded_as_reaching_the_networ
         item.contract.definition_id
         for item in _registrations()
         if OperationOwnedResource.PROCESS in item.contract.owned_resources
-        and not operation_surface_facts(item.contract.definition_id).reaches_network
+        and not operation_access_facts(item.contract.definition_id).reaches_network
     )
     assert not unrecorded, f"definitions that own a browser process but are recorded as local: {unrecorded}"

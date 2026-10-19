@@ -37,7 +37,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from .surface_facts import OPERATION_SURFACE_FACTS, operation_surface_facts
+from cadrumo.application.operations.access_facts import OPERATION_ACCESS_FACTS, operation_access_facts
 
 
 class McpSurfaceName(StrEnum):
@@ -92,7 +92,7 @@ class McpSurface:
 
     def _within_properties(self, definition_id: str) -> bool:
         try:
-            facts = operation_surface_facts(definition_id)
+            facts = operation_access_facts(definition_id)
         except KeyError:
             return False
         return (self.changes_records or not facts.changes_records) and (
@@ -127,7 +127,7 @@ def _local_reads() -> frozenset[str]:
     """Name every operation that changes no record and contacts no other host."""
     return frozenset(
         facts.definition_id
-        for facts in OPERATION_SURFACE_FACTS
+        for facts in OPERATION_ACCESS_FACTS
         if not facts.changes_records and not facts.reaches_network
     )
 

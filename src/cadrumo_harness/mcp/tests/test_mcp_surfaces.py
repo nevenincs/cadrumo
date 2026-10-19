@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..surface_facts import OPERATION_SURFACE_FACTS, operation_surface_facts
+from cadrumo.application.operations.access_facts import OPERATION_ACCESS_FACTS, operation_access_facts
+
 from ..surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface, McpSurfaceName, mcp_surface
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -16,7 +17,7 @@ def _recorded(*, changes_records: bool, reaches_network: bool) -> str:
     """Name one recorded operation with exactly these two facts."""
     return next(
         facts.definition_id
-        for facts in OPERATION_SURFACE_FACTS
+        for facts in OPERATION_ACCESS_FACTS
         if facts.changes_records is changes_records and facts.reaches_network is reaches_network
     )
 
@@ -52,7 +53,7 @@ def test_the_default_surface_narrows_nothing() -> None:
     assert surface.changes_records and surface.reaches_network
     assert surface.operations is None
     assert not surface.narrows
-    for facts in OPERATION_SURFACE_FACTS:
+    for facts in OPERATION_ACCESS_FACTS:
         assert surface.admits(facts.definition_id)
     assert surface.admits(_UNRECORDED)
 
@@ -61,7 +62,7 @@ def test_the_read_only_local_surface_declares_and_lists_exactly_the_local_reads(
     surface = MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL]
     local_reads = {
         facts.definition_id
-        for facts in OPERATION_SURFACE_FACTS
+        for facts in OPERATION_ACCESS_FACTS
         if not facts.changes_records and not facts.reaches_network
     }
 
@@ -70,7 +71,7 @@ def test_the_read_only_local_surface_declares_and_lists_exactly_the_local_reads(
     assert surface.operations is not None and surface.operations
     assert surface.operations == local_reads
     for definition_id in sorted(surface.operations):
-        facts = operation_surface_facts(definition_id)
+        facts = operation_access_facts(definition_id)
         assert not facts.changes_records, definition_id
         assert not facts.reaches_network, definition_id
         assert surface.admits(definition_id), definition_id
@@ -78,7 +79,7 @@ def test_the_read_only_local_surface_declares_and_lists_exactly_the_local_reads(
 
 def test_the_read_only_local_surface_admits_no_recorded_write_and_no_recorded_network_reach() -> None:
     surface = MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL]
-    barred = [facts for facts in OPERATION_SURFACE_FACTS if facts.changes_records or facts.reaches_network]
+    barred = [facts for facts in OPERATION_ACCESS_FACTS if facts.changes_records or facts.reaches_network]
 
     assert barred
     assert not [facts.definition_id for facts in barred if surface.admits(facts.definition_id)]
@@ -104,7 +105,7 @@ def test_an_operation_list_narrows_within_the_declared_properties() -> None:
     kept = _recorded(changes_records=False, reaches_network=False)
     other = next(
         facts.definition_id
-        for facts in OPERATION_SURFACE_FACTS
+        for facts in OPERATION_ACCESS_FACTS
         if not facts.changes_records and not facts.reaches_network and facts.definition_id != kept
     )
     listed = _surface(changes_records=True, reaches_network=True, operations=frozenset({kept}))

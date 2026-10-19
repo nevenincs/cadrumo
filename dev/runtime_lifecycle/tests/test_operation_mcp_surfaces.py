@@ -20,6 +20,7 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.operations.access_facts import operation_access_facts
 from cadrumo.application.operations.access_resolution import ResolvedOperationAccess
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -52,7 +53,6 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_harness.mcp.access_scope import surface_scope
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
-from cadrumo_harness.mcp.surface_facts import operation_surface_facts
 from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -362,7 +362,7 @@ def _answers(definition_id: str, surface: McpSurfaceName | None) -> set[str]:
 
 
 def _recorded_as_changing_or_reaching(definition_id: str) -> bool:
-    facts = operation_surface_facts(definition_id)
+    facts = operation_access_facts(definition_id)
     return facts.changes_records or facts.reaches_network
 
 
