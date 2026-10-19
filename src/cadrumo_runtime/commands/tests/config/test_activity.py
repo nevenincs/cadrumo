@@ -30,7 +30,7 @@ class _ActivityClient(FrontendClient):
         self.failure = failure
 
     @override
-    def resume_receipt(self, *, timeout: float = 5) -> ProfileStatus:
+    def resume_receipt(self, *, timeout: float = 5, hand_over: bool = False) -> ProfileStatus:
         self.calls.append("resume")
         if self.failure == "resume":
             raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.ABSENT)

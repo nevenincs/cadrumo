@@ -59,6 +59,12 @@ from cadrumo_client.contracts.profile_access import (
     SessionRequest,
     SessionsLocked,
 )
+from cadrumo_client.contracts.profile_selection import (
+    ActiveProfileReply,
+    ActiveProfileRequest,
+    LoginTargetReply,
+    LoginTargetRequest,
+)
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatus, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -102,6 +108,8 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         | SessionRequest
         | ProfileDisclosurePageRequest
         | SignInStatusRequest
+        | ActiveProfileRequest
+        | LoginTargetRequest
         | AttendanceAsk
         | AttendanceDecide,
     ) -> (
@@ -109,6 +117,8 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         | ProfileDisclosurePage
         | SessionsLocked
         | SignInStatusReply
+        | ActiveProfileReply
+        | LoginTargetReply
         | HumanSignedOut
         | AttendancePending
         | AttendanceInventory

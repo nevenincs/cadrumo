@@ -295,7 +295,7 @@ def credential_targets() -> frozenset[tuple[str, int]]:
     entries = ctypes.POINTER(ctypes.POINTER(_Credential))()
     advapi = ctypes.WinDLL("advapi32", use_last_error=True)
     if not advapi.CredEnumerateW(None, 0, ctypes.byref(count), ctypes.byref(entries)):
-        return frozenset()
+        return frozenset[tuple[str, int]]()
     try:
         found = {
             (str(entries[index].contents.TargetName), int(entries[index].contents.Type)) for index in range(count.value)

@@ -26,6 +26,7 @@ import pytest
 from pydantic import SecretBytes
 
 from cadrumo.adapters.outbound.model_runtime.process_control import spawn_runtime_server
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.provisioning_host import launch_runtime_server
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
@@ -41,6 +42,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessPolicy,
     OperationAccessRequest,
 )
+from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.operation_ids import (
     DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_DEFINITION_ID,
@@ -56,6 +58,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
     WorkerResponseScopeRequest,
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
@@ -175,6 +178,17 @@ class _SessionAuthority:
         self, request: WorkerAutomationInventoryRequest
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        # No observer is connected in these cases, so a progress cue has nobody to wake.
+        return
+
+    def model_run(
+        self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        # No agent service is admitted for this profile, as for a runtime without one.
+        body[:] = bytes(len(body))
+        return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)

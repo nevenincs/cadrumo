@@ -367,16 +367,9 @@ class HomeScreen(AccountChromeScreen):
         projection = self.projection
 
         def paint() -> None:
-            self._populate_actions(
-                cast("ContentDataTable[str]", self.query_one("#home-actions", ContentDataTable)), projection.actions
-            )
-            self._populate_declarations(
-                cast("ContentDataTable[str]", self.query_one("#home-declarations", ContentDataTable)),
-                projection.declarations,
-            )
-            self._populate_agenda(
-                cast("ContentDataTable[str]", self.query_one("#home-agenda", ContentDataTable)), projection.agenda
-            )
+            self._populate_actions(self.query_one("#home-actions", ContentDataTable), projection.actions)
+            self._populate_declarations(self.query_one("#home-declarations", ContentDataTable), projection.declarations)
+            self._populate_agenda(self.query_one("#home-agenda", ContentDataTable), projection.agenda)
             self._render_zone_summaries(projection)
 
         repaint_tables(self, paint)

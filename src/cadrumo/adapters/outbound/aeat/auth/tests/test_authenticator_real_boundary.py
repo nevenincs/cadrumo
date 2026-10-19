@@ -19,7 +19,7 @@ from ......core.errors.hierarchy import AeatLoginAssertionError
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
-from ...tests.process_support import wait_for_process_exit, wait_for_task_readiness
+from ...tests.process_support import playwright_driver_pid, wait_for_process_exit, wait_for_task_readiness
 from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
@@ -284,7 +284,7 @@ async def test_authenticator_context_exit_reaps_real_browser_under_body_cancella
                     await authenticator.authenticate()
                     browser = authenticator._browser_session
                     assert isinstance(browser, DefaultBrowserSession)
-                    driver_pid = browser._playwright._impl_obj._connection._transport._proc.pid
+                    driver_pid = playwright_driver_pid(browser._playwright)
                     authenticated.set()
                     await hold_body.wait()
 
@@ -337,7 +337,7 @@ async def test_authenticate_cancellation_retains_real_provider_owners_until_clos
                     browser = authenticator._browser_session
                     assert isinstance(browser, DefaultBrowserSession)
                     assert authenticator._context is not None
-                    driver_pid = browser._playwright._impl_obj._connection._transport._proc.pid
+                    driver_pid = playwright_driver_pid(browser._playwright)
 
                     authenticate_task.cancel()
                     with pytest.raises(asyncio.CancelledError):

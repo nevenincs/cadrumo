@@ -58,7 +58,7 @@ class _ObservationClient(FrontendClient):
         self.closed = 0
 
     @override
-    def sign_in_status(self, *, timeout: float = 5) -> SignInStatusReply:
+    def sign_in_status(self, *, timeout: float = 5, watch: bool = False) -> SignInStatusReply:
         self.observed += 1
         return SignInStatusReply(
             request_id=uuid4(),

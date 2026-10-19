@@ -34,7 +34,7 @@ class _UncomposedClient(FrontendClient):
         self._profile_id = uuid4()
 
     @override
-    def resume_receipt(self, *, timeout: float = 5) -> ProfileStatus:
+    def resume_receipt(self, *, timeout: float = 5, hand_over: bool = False) -> ProfileStatus:
         Context().run(profile_login_session_port)
         return cast(ProfileStatus, object())
 

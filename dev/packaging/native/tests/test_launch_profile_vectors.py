@@ -46,6 +46,8 @@ def _existing_installation_dirs(
     ambient: Mapping[str, str],
 ) -> list[str]:
     """Materialize only declared defaults that exist on this host for the vector's roots."""
+    # Read the vector's family before the host check below narrows it to this host's literal.
+    windows = family == "windows"
     host_family = "windows" if os.name == "nt" else "posix"
     if family != host_family:
         return []
@@ -53,12 +55,10 @@ def _existing_installation_dirs(
     if declaration.path_external not in {*selected["operator"], *selected["pass"]}:
         return []
     admitted_base = {name for group in selected["base_groups"] for name in declaration.base[family][group]}
-    path_type = PureWindowsPath if family == "windows" else PurePosixPath
+    path_type = PureWindowsPath if windows else PurePosixPath
     existing: list[str] = []
     for default in declaration.external_path_defaults:
-        if default.platform == "windows" and family != "windows":
-            continue
-        if default.platform == "posix" and family != "posix":
+        if default.platform in {"windows", "posix"} and default.platform != family:
             continue
         if default.platform == "macos" and sys.platform != "darwin":
             continue
@@ -71,7 +71,7 @@ def _existing_installation_dirs(
                 (
                     value
                     for name, value in ambient.items()
-                    if (name.upper() == default.variable.upper() if family == "windows" else name == default.variable)
+                    if (name.upper() == default.variable.upper() if windows else name == default.variable)
                 ),
                 None,
             )

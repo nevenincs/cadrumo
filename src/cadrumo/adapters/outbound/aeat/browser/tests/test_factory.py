@@ -13,7 +13,7 @@ from ......application.auth.protocols import BrowserSessionPort
 from ......application.provisioning_browser import required_browser_builds
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ...tests.process_support import wait_for_process_exit, wait_for_task_readiness
+from ...tests.process_support import playwright_driver_pid, wait_for_process_exit, wait_for_task_readiness
 from ..errors import BrowserError, BrowserPreconditionCondition
 from ..factory import (
     BrowserRuntimeResourceScope,
@@ -54,7 +54,7 @@ async def _wait_for_descendants(
 async def test_shared_playwright_runtime_reaps_its_real_driver() -> None:
     """The shared runtime context manager deterministically stops its owner."""
     async with shared_playwright_runtime() as playwright:
-        driver_pid = playwright._impl_obj._connection._transport._proc.pid
+        driver_pid = playwright_driver_pid(playwright)
         assert psutil.pid_exists(driver_pid)
 
     await wait_for_process_exit(driver_pid, after="session close")
@@ -66,7 +66,7 @@ async def test_operation_resource_scope_reaps_unclosed_real_browser_driver() -> 
     scope = BrowserRuntimeResourceScope()
     with scope.activate():
         session = await create_browser_session(Settings(), _profile("operation-resource"))
-        driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+        driver_pid = playwright_driver_pid(session._playwright)
         assert psutil.pid_exists(driver_pid)
 
     await scope.close()
@@ -80,7 +80,7 @@ async def test_operation_resource_scope_owns_shared_register_driver() -> None:
     scope = BrowserRuntimeResourceScope()
     with scope.activate():
         async with shared_playwright_runtime() as playwright:
-            driver_pid = playwright._impl_obj._connection._transport._proc.pid
+            driver_pid = playwright_driver_pid(playwright)
             assert psutil.pid_exists(driver_pid)
             await scope.close()
             await wait_for_process_exit(driver_pid, after="operation register cleanup")
@@ -96,7 +96,7 @@ async def test_shared_playwright_runtime_finishes_real_teardown_under_cancellati
     async def cancelled_owner() -> None:
         nonlocal driver_pid
         async with shared_playwright_runtime() as playwright:
-            driver_pid = playwright._impl_obj._connection._transport._proc.pid
+            driver_pid = playwright_driver_pid(playwright)
             entered.set()
             await hold_body.wait()
 
@@ -125,7 +125,7 @@ async def test_opened_browser_page_reaps_all_real_owners_under_repeated_cancella
     async def cancelled_owner() -> None:
         nonlocal driver_pid
         async with shared_playwright_runtime() as playwright:
-            driver_pid = playwright._impl_obj._connection._transport._proc.pid
+            driver_pid = playwright_driver_pid(playwright)
             async with opened_browser_page(
                 playwright,
                 Settings(),
@@ -190,7 +190,7 @@ async def test_default_browser_session_is_protocol_complete_and_reaps_runtime() 
     session = await create_browser_session(settings, _profile("protocol"))
     assert isinstance(session, BrowserSessionPort)
 
-    driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+    driver_pid = playwright_driver_pid(session._playwright)
     context = await session.create_context()
     page = await context.new_page()
     await page.goto("data:text/html,<title>browser-lifecycle</title>")
@@ -222,7 +222,7 @@ async def test_default_browser_session_is_protocol_complete_and_reaps_runtime() 
 async def test_default_browser_session_reaps_browser_after_real_context_failure() -> None:
     """A real Playwright context-construction failure must not leave Chromium alive."""
     session = await create_browser_session(Settings(), _profile("context-failure"))
-    driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+    driver_pid = playwright_driver_pid(session._playwright)
 
     with pytest.raises(BrowserError) as excinfo:
         await session.create_context(
@@ -295,7 +295,7 @@ async def test_context_creation_cancellation_reaps_browser_after_real_launch() -
     loop.set_exception_handler(capture_unhandled)
     try:
         session = await create_browser_session(Settings(), _profile("context-cancel"))
-        driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+        driver_pid = playwright_driver_pid(session._playwright)
         create_task = asyncio.create_task(session.create_context())
         try:
             deadline = time.monotonic() + 10
@@ -378,7 +378,7 @@ async def test_real_browser_process_count_returns_to_zero_across_repeated_cycles
 
     for index in range(3):
         session = await create_browser_session(settings, _profile(f"cycle-{index}"))
-        driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+        driver_pid = playwright_driver_pid(session._playwright)
         context = await session.create_context()
         page = await context.new_page()
         await page.goto(f"data:text/html,<title>cycle-{index}</title>")

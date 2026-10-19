@@ -189,7 +189,7 @@ async def test_explicit_preselected_profile_resumes_before_password_prompt() -> 
 
     class ResumeClient(_OwnedClient):
         @override
-        def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
+        def resume_receipt(self, *, timeout: float = 20, hand_over: bool = False) -> ProfileStatus:
             return super().login_password(bytearray(b"synthetic-proof"))
 
     client = ResumeClient(profile_id)
@@ -219,7 +219,7 @@ class _RefusedResumeClient(_OwnedClient):
         self.resumes = 0
 
     @override
-    def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
+    def resume_receipt(self, *, timeout: float = 20, hand_over: bool = False) -> ProfileStatus:
         self.resumes += 1
         raise self.refusal
 

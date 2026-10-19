@@ -9,7 +9,7 @@ import pytest
 
 from ......core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ......core.config import Settings
-from ...tests.process_support import wait_for_process_exit
+from ...tests.process_support import playwright_driver_pid, wait_for_process_exit
 from ..factory import DefaultBrowserSession, create_browser_session
 from ..profile import Profile
 
@@ -22,7 +22,7 @@ async def _opened_real_session(name: str) -> tuple[DefaultBrowserSession, int]:
         Settings(),
         Profile(name=name, locale="es-ES", timezone_id="Europe/Madrid"),
     )
-    driver_pid = int(session._playwright._impl_obj._connection._transport._proc.pid)
+    driver_pid = playwright_driver_pid(session._playwright)
     context = await session.create_context()
     page = await context.new_page()
     await page.goto(f"data:text/html,<title>{name}</title>")

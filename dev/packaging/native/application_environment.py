@@ -1475,7 +1475,7 @@ def reference_define(
                 entries.append(str(package_path))
             elif entry == "external" and declaration.path_external in {*profile["operator"], *profile["pass"]}:
                 directories = get(declaration.path_external)
-                if directories:
+                if directories is not None and directories != "":
                     separator = ";" if family == "windows" else ":"
                     entries.extend(
                         str(path_type(directory))

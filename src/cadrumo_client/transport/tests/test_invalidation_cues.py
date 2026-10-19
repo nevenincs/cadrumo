@@ -8,6 +8,7 @@ import pytest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 
 from ...contracts.contracts import RefusalError
+from ...contracts.model_runs import ModelRunRequested
 from ...contracts.session_events import AttendanceChanged, ServiceLeaseChanged, SignInChanged
 from ..framing import VerifiedConnection
 from ..frontend_client import FrontendClient
@@ -65,3 +66,14 @@ def test_a_frontend_refuses_a_service_lease_cue() -> None:
         client._session_retired(
             ServiceLeaseChanged(runtime_boot_id=uuid4(), connection_id=uuid4(), profile_id=profile_id)
         )
+
+
+def test_a_frontend_refuses_a_model_run_announcement_and_keeps_its_session() -> None:
+    profile_id, session_id = uuid4(), uuid4()
+    client = _client(profile_id)
+    client._session_id = session_id
+    with pytest.raises(RefusalError):
+        client._session_retired(
+            ModelRunRequested(runtime_boot_id=uuid4(), connection_id=uuid4(), profile_id=profile_id, run_id=uuid4())
+        )
+    assert client.session_id == session_id

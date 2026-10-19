@@ -29,12 +29,14 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessPolicy,
     OperationAccessRequest,
 )
+from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
     WorkerResponseScopeRequest,
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
@@ -113,6 +115,13 @@ class Authority:
         self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
     ) -> EnrollmentTransition | None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def model_run(
+        self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        # No agent service is admitted for this profile, as for a runtime without one.
+        body[:] = bytes(len(body))
+        return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
 
 
 def wait_file(path: Path, process_handle: int) -> None:

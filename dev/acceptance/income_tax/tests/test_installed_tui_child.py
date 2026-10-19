@@ -107,7 +107,7 @@ class _AdmissionClient(FrontendClient):
         self.closed = True
 
     @override
-    def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
+    def resume_receipt(self, *, timeout: float = 20, hand_over: bool = False) -> ProfileStatus:
         raise FrontendRefusedError("profile_session_absent")
 
 

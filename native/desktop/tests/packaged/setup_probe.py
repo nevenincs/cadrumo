@@ -15,6 +15,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import TypedDict
 
 
 def locations(root: Path) -> dict[str, object]:
@@ -50,8 +51,18 @@ class _Credential(ctypes.Structure):
     ]
 
 
-def credentials() -> list[dict[str, object]]:
+class CredentialEntry(TypedDict):
+    """One credential store entry, named without its secret."""
+
+    target: str
+    type: int
+    user: str
+
+
+def credentials() -> list[CredentialEntry]:
     """Return the Cadrumo credential entries by target, type and user name only."""
+    if sys.platform != "win32":
+        raise SystemExit("the credential store probe requires Windows")
     advapi = ctypes.WinDLL("advapi32", use_last_error=True)
     count = ctypes.c_uint32(0)
     entries = ctypes.POINTER(ctypes.POINTER(_Credential))()
@@ -59,27 +70,45 @@ def credentials() -> list[dict[str, object]]:
         return []
     try:
         found = [
-            {
-                "target": str(entries[index].contents.TargetName or ""),
-                "type": int(entries[index].contents.Type),
-                "user": str(entries[index].contents.UserName or ""),
-            }
+            CredentialEntry(
+                target=str(entries[index].contents.TargetName or ""),
+                type=int(entries[index].contents.Type),
+                user=str(entries[index].contents.UserName or ""),
+            )
             for index in range(count.value)
         ]
     finally:
         advapi.CredFree(entries)
     return sorted(
         (entry for entry in found if "cadrumo" in f"{entry['target']} {entry['user']}".lower()),
-        key=lambda entry: (str(entry["target"]), int(entry["type"]), str(entry["user"])),
+        key=lambda entry: (entry["target"], entry["type"], entry["user"]),
     )
 
 
-def delete(wanted: list[dict[str, object]]) -> list[dict[str, object]]:
-    """Delete exactly the named entries and return those still present."""
-    advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+def _wanted_pairs(wanted: object) -> set[tuple[str, int]]:
+    """Read the (target, type) pairs of a JSON entry list, refusing any other shape."""
+    if not isinstance(wanted, list):
+        raise SystemExit("delete expects a JSON list of credential entries")
+    pairs: set[tuple[str, int]] = set()
     for entry in wanted:
-        advapi.CredDeleteW(str(entry["target"]), int(entry["type"]), 0)
-    pairs = {(str(entry["target"]), int(entry["type"])) for entry in wanted}
+        if not isinstance(entry, dict):
+            raise SystemExit(f"delete expects credential entries, got {entry!r}")
+        target = entry.get("target")
+        kind = entry.get("type")
+        if not isinstance(target, str) or not isinstance(kind, int) or isinstance(kind, bool):
+            raise SystemExit(f"a credential entry needs a string target and an integer type, got {entry!r}")
+        pairs.add((target, kind))
+    return pairs
+
+
+def delete(wanted: object) -> list[CredentialEntry]:
+    """Delete exactly the named entries and return those still present."""
+    if sys.platform != "win32":
+        raise SystemExit("the credential store probe requires Windows")
+    pairs = _wanted_pairs(wanted)
+    advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+    for target, kind in sorted(pairs):
+        advapi.CredDeleteW(target, kind, 0)
     return [entry for entry in credentials() if (entry["target"], entry["type"]) in pairs]
 
 

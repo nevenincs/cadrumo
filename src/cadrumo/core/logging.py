@@ -514,7 +514,8 @@ def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
 
 def _scrub_record_exception(record: logging.LogRecord) -> None:
     """Scrub formatted exception text while retaining the exception tuple."""
-    if record.exc_info is not None:
+    # ``exc_info=False`` reaches the record unchanged; only an exception tuple names one to format.
+    if isinstance(record.exc_info, tuple):
         record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
     elif record.exc_text is not None and record.exc_text:
         record.exc_text = _scrub_text(record.exc_text)

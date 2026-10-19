@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretBytes, ValidationError
 
+from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
@@ -26,12 +27,14 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
+from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
@@ -74,6 +77,17 @@ class PhaseAuthority:
         self, request: WorkerAutomationInventoryRequest
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        # An approval phase commits no operation an observer waits on, so a cue has nobody to wake.
+        return
+
+    def model_run(
+        self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        # No agent service is admitted for this profile, as for a runtime without one.
+        body[:] = bytes(len(body))
+        return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
 
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         assert request.binding == self.seed.request.binding

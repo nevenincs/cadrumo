@@ -105,6 +105,8 @@ def _launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes]
 def _watch_worker(watcher: _ParentPoll, parent: int, worker: subprocess.Popen[bytes]) -> int:
     # The unreaped worker's pid cannot be reused, so its pidfd names exactly it;
     # both exits then arrive as kernel events. Without one, its exit is polled.
+    if sys.platform != "linux":
+        return 2
     try:
         descriptor: int | None = open_linux_pidfd(worker.pid)
     except RefusalError:

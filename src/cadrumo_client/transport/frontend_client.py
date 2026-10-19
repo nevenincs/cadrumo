@@ -58,6 +58,7 @@ from ..contracts.bootstrap_delete import (
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, deadline_after
 from ..contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared, EnrollmentReconcile, EnrollmentRecorded
+from ..contracts.model_runs import ModelRunRequested
 from ..contracts.operation_access import OperationAcknowledged, OperationSecret
 from ..contracts.profile_access import (
     PROFILE_ADMISSION_TIMEOUT_SECONDS,
@@ -167,8 +168,8 @@ class FrontendClient(ProfileViewFrontend):
             for receive_sign_in in receivers_sign_in:
                 receive_sign_in()
             return
-        if event.profile_id != self.profile_id or isinstance(event, ServiceLeaseChanged):
-            # A frontend never holds a service lease.
+        if event.profile_id != self.profile_id or isinstance(event, ServiceLeaseChanged | ModelRunRequested):
+            # A frontend never holds a service lease, so no model run is ever announced to it.
             raise RefusalError(RefusalCode.INVALID_FRAME)
         if isinstance(event, AttendanceAnswered):
             # The asker holds no session until its approved ask is read.

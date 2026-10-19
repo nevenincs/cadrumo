@@ -172,8 +172,10 @@ class _Endpoint(WindowsEndpoint):
             raise self.listen_failure
 
     @override
-    def accept(self, *, timeout: float = 5) -> WindowsChannel:
-        assert timeout > 0
+    def accept(self, *, timeout: float | None = 5.0, wakes: tuple[ChannelWake, ...] = ()) -> WindowsChannel:
+        # Worker startup always bounds its wait and passes no wake.
+        assert timeout is not None and timeout > 0
+        assert wakes == ()
         if self.before_accept is not None:
             self.before_accept()
         return self.channel

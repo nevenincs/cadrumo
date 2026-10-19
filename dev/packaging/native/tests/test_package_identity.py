@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from xml.etree.ElementTree import Element
 
 import pytest
 from defusedxml import ElementTree
@@ -18,19 +19,26 @@ UAP10 = "{http://schemas.microsoft.com/appx/manifest/uap/windows10/10}"
 RESCAP = "{http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities}"
 
 
+def _child(element: Element, path: str) -> Element:
+    """Return the manifest element at ``path``, failing when the manifest lacks it."""
+    found = element.find(path)
+    assert found is not None, f"manifest has no {path}"
+    return found
+
+
 @pytest.mark.parametrize("channel", ["stable", "preview"])
 def test_package_manifest_declares_the_channel_identity_with_external_content(channel: str) -> None:
     product = identity("windows-x86-64", channel)
     document = ElementTree.fromstring(
         package_manifest(product, publisher=product.windows_package_development_publisher, executable="cadrumo.exe")
     )
-    assert document.find(f"{FOUNDATION}Identity").attrib == {
+    assert _child(document, f"{FOUNDATION}Identity").attrib == {
         "Name": product.windows_package_name,
         "Publisher": "CN=Cadrumo Development",
         "Version": product.windows_package_version,
         "ProcessorArchitecture": "neutral",
     }
-    properties = document.find(f"{FOUNDATION}Properties")
+    properties = _child(document, f"{FOUNDATION}Properties")
     assert properties.findtext(f"{FOUNDATION}DisplayName") == product.name
     assert properties.findtext(f"{UAP10}AllowExternalContent") == "true"
     assert {item.get("Name") for item in document.iter(f"{RESCAP}Capability")} == {
@@ -44,16 +52,16 @@ def test_package_manifest_declares_the_channel_identity_with_external_content(ch
         f"{UAP10}TrustLevel": "mediumIL",
         f"{UAP10}RuntimeBehavior": "win32App",
     }
-    assert application.find(f"{UAP}VisualElements").get("AppListEntry") == "none"
+    assert _child(application, f"{UAP}VisualElements").get("AppListEntry") == "none"
 
 
 def test_package_manifest_escapes_projected_text() -> None:
     product = replace(identity("windows-x86-64"), name="A & <B>", description='Say "hi"')
     document = ElementTree.fromstring(package_manifest(product, publisher="CN=X", executable="dir/a&b.exe"))
-    assert document.find(f"{FOUNDATION}Properties").findtext(f"{FOUNDATION}DisplayName") == "A & <B>"
+    assert _child(document, f"{FOUNDATION}Properties").findtext(f"{FOUNDATION}DisplayName") == "A & <B>"
     (application,) = document.iter(f"{FOUNDATION}Application")
     assert application.get("Executable") == "dir/a&b.exe"
-    assert application.find(f"{UAP}VisualElements").get("Description") == 'Say "hi"'
+    assert _child(application, f"{UAP}VisualElements").get("Description") == 'Say "hi"'
 
 
 RENDERED = b"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

@@ -1093,7 +1093,7 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
 
     # Every icon the web head links is shipped at the size it declares.
     icons = {
-        (link.get("href"), " ".join(link.get("rel", [])), link.get("sizes"))
+        (link.get("href"), " ".join(link.get_attribute_list("rel")), link.get("sizes"))
         for link in rendered.find_all("link", rel=["icon", "apple-touch-icon", "manifest"])
     }
     assert icons >= {
@@ -1113,7 +1113,9 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
             assert f"{image.width}x{image.height}" == icon["sizes"]
     og_image = rendered.find("meta", property="og:image")
     assert og_image is not None
-    assert og_image.get("content", "").endswith("_static/cadrumo-icon-square-512.png")
+    og_content = og_image.get("content")
+    assert isinstance(og_content, str), og_content
+    assert og_content.endswith("_static/cadrumo-icon-square-512.png")
 
 
 def test_desktop_flavor_links_only_icons_the_package_serves(tmp_path: Path) -> None:

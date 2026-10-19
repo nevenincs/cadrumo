@@ -8,7 +8,7 @@ from typing import override
 
 import pytest
 
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ChannelWake, RefusalCode, RefusalError
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel
 
@@ -60,7 +60,10 @@ class _Endpoint(WindowsEndpoint):
         self.channel = _Channel()
 
     @override
-    def accept(self, *, timeout: float = 5.0) -> WindowsChannel:
+    def accept(self, *, timeout: float | None = 5.0, wakes: tuple[ChannelWake, ...] = ()) -> WindowsChannel:
+        # Worker startup always bounds its wait and passes no wake.
+        assert timeout is not None
+        assert wakes == ()
         self.accept_timeouts.append(timeout)
         event = self.events.popleft() if self.events else "deadline"
         if event == "accepted":

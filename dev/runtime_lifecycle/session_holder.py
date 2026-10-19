@@ -46,8 +46,12 @@ def _as_desktop_holder(executable: Path, arguments: tuple[str, ...]) -> tuple[Pa
         return executable, arguments
     entries = json.loads(descriptors.read_bytes(), object_pairs_hook=reject_duplicate_json_members)
     holder = next((entry for entry in entries if entry.get("service_id") == "desktop-session"), None)
-    require(holder is not None, "package declares no desktop session holder")
-    image = (package / holder["launch_image"]).resolve(strict=True)
+    if holder is None:
+        raise AcceptanceError("package declares no desktop session holder")
+    launch_image = holder.get("launch_image")
+    if not isinstance(launch_image, str):
+        raise AcceptanceError(f"desktop session holder names no launch image: {launch_image!r}")
+    image = (package / launch_image).resolve(strict=True)
     if image == executable:
         return executable, arguments
     return image, (*_RUNTIME_ROLE, *arguments)

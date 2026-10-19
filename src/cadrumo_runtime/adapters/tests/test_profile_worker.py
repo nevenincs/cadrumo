@@ -39,11 +39,13 @@ from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
     WorkerResponseScopeRequest,
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
@@ -85,6 +87,10 @@ class _AllowWorkerOperations:
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        # No observer is connected in these cases, so a progress cue has nobody to wake.
+        return
+
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
@@ -95,6 +101,13 @@ class _AllowWorkerOperations:
         self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
     ) -> EnrollmentTransition | None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def model_run(
+        self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        # No agent service is admitted for these profiles, as for a runtime without one.
+        body[:] = bytes(len(body))
+        return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
 
 
 def _login_human(profile_id: UUID) -> None:

@@ -94,9 +94,12 @@ def same_manifest(embedded: bytes, rendered: bytes) -> bool:
 
 
 def _powershell(script: str, **values: str) -> str:
-    import winreg
+    if sys.platform == "win32":
+        import winreg
 
-    system = Path(winreg.ExpandEnvironmentStrings("%SystemRoot%"))
+        system = Path(winreg.ExpandEnvironmentStrings("%SystemRoot%"))
+    else:
+        raise RuntimeError("Windows package identity registration requires Windows")
     executable = system / "System32/WindowsPowerShell/v1.0/powershell.exe"
     # Values travel as CADRUMO_PACKAGE_* environment variables, never interpolated into the script.
     environment = os.environ | {f"CADRUMO_PACKAGE_{name.upper()}": value for name, value in values.items()}
@@ -112,16 +115,19 @@ def _powershell(script: str, **values: str) -> str:
 
 
 def _developer_mode() -> bool:
-    import winreg
+    if sys.platform == "win32":
+        import winreg
 
-    try:
-        with winreg.OpenKey(
-            winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
-        ) as key:
-            value, _ = winreg.QueryValueEx(key, "AllowDevelopmentWithoutDevLicense")
-    except OSError:
-        return False
-    return value == 1
+        try:
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+            ) as key:
+                value, _ = winreg.QueryValueEx(key, "AllowDevelopmentWithoutDevLicense")
+        except OSError:
+            return False
+        # A REG_DWORD reads back as int; any other kind is not the switch being on.
+        return isinstance(value, int) and value == 1
+    raise RuntimeError("Windows developer mode is only readable on Windows")
 
 
 def _registration(build: Path) -> tuple[DistributionIdentity, Path, Path, Path, str]:

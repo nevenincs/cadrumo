@@ -64,6 +64,9 @@ no tax, so a field added later is placed in one or the other.
 class ClassificationOrigin(StrEnum):
     """Who decided the classification and tax figures a row carries now."""
 
+    _value_: str
+    """A historical provenance tag keeps its own text, not one of the members' values."""
+
     PERSON = "person"
     """The person set it, or accepted a proposal or ran a derivation on their own frontend."""
     AUTOMATION = "automation"

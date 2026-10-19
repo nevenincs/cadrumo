@@ -149,37 +149,37 @@ def resolve_registry_snapshot_for_work_unit(
     """
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
-    if operation is None:
+    if operation is not None:
         try:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return resolve_registry_snapshot_for_work_unit(
-                    work_unit,
-                    grade=grade,
-                    operation=indexed_operation,
-                )
-        except FileNotFoundError as exc:
+            snapshot = operation.snapshot(
+                work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+                grade=grade,
+            )
+        except RegistrySnapshotError as exc:
             raise CalculationRegistryUnavailableError(
-                translated_message="application.modelo.errors.calculation_registry_root_missing",
-                context={"missing_path": absent_authority_file(exc)},
+                translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
+                context={
+                    "modelo": work_unit.modelo,
+                    "filing_year": work_unit.filing_year,
+                    "period": work_unit.period.registry_token,
+                },
             ) from exc
+        assert_snapshot_matches_work_unit_revision(work_unit, snapshot)
+        return snapshot
     try:
-        snapshot = operation.snapshot(
-            work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-            grade=grade,
-        )
-    except RegistrySnapshotError as exc:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return resolve_registry_snapshot_for_work_unit(
+                work_unit,
+                grade=grade,
+                operation=indexed_operation,
+            )
+    except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
-            translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
-            context={
-                "modelo": work_unit.modelo,
-                "filing_year": work_unit.filing_year,
-                "period": work_unit.period.registry_token,
-            },
+            translated_message="application.modelo.errors.calculation_registry_root_missing",
+            context={"missing_path": absent_authority_file(exc)},
         ) from exc
-    assert_snapshot_matches_work_unit_revision(work_unit, snapshot)
-    return snapshot
 
 
 def build_typed_observations(

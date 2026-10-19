@@ -18,7 +18,7 @@ from ......core.config import Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ...browser.factory import create_browser_session
 from ...browser.profile import Profile
-from ...tests.process_support import wait_for_process_exit
+from ...tests.process_support import playwright_driver_pid, wait_for_process_exit
 from ..browser_lifecycle import (
     CloseIntentBarrier,
     close_owned_browser_context,
@@ -134,7 +134,7 @@ async def test_bounded_cleanup_retains_real_resources_for_retry() -> None:
         settings,
         Profile(name="bounded-cleanup"),
     )
-    driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+    driver_pid = playwright_driver_pid(session._playwright)
     context = await session.create_context()
     page = await context.new_page()
     await page.goto("data:text/html,<title>bounded-cleanup</title>")
@@ -175,7 +175,7 @@ async def test_timed_session_close_reports_success_after_runtime_settles_owner()
         settings,
         Profile(name="timed-runtime-settlement"),
     )
-    driver_pid = int(session._playwright._impl_obj._connection._transport._proc.pid)
+    driver_pid = playwright_driver_pid(session._playwright)
     context = await session.create_context()
     page = await context.new_page()
     await page.goto("data:text/html,<title>timed-runtime-settlement</title>")
@@ -217,7 +217,7 @@ async def test_profile_cleanup_failure_after_runtime_stop_remains_retryable(
         Settings(),
         Profile(name="retry-runtime-profile-cleanup"),
     )
-    driver_pid = int(session._playwright._impl_obj._connection._transport._proc.pid)
+    driver_pid = playwright_driver_pid(session._playwright)
     context = await session.create_context()
     page = await context.new_page()
     await page.goto("data:text/html,<title>retry-runtime-profile-cleanup</title>")
@@ -277,7 +277,7 @@ async def test_parent_cancellation_propagates_after_runtime_fallback_settles() -
         Settings(),
         Profile(name="cancelled-runtime-settlement"),
     )
-    driver_pid = int(session._playwright._impl_obj._connection._transport._proc.pid)
+    driver_pid = playwright_driver_pid(session._playwright)
     context = await session.create_context()
     page = await context.new_page()
     await page.goto("data:text/html,<title>cancelled-runtime-settlement</title>")

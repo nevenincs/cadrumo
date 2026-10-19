@@ -13,6 +13,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
+from typing import TypedDict
 from urllib.parse import quote_from_bytes
 from uuid import uuid4
 
@@ -110,7 +111,14 @@ def _data_url(artwork: bytes) -> str:
     return f"data:image/svg+xml,{quote_from_bytes(artwork, safe='')}"
 
 
-def provider_icon_document(wheel: Path) -> dict[str, object]:
+class ProviderIconDocument(TypedDict):
+    """The frontend's provider artwork: data-URL variants by provider ID, and the artwork's credit."""
+
+    providers: dict[str, dict[str, str]]
+    attribution: dict[str, str]
+
+
+def provider_icon_document(wheel: Path) -> ProviderIconDocument:
     """Project provider IDs, validated SVGs and license terms from *wheel*."""
     try:
         archive = zipfile.ZipFile(wheel)
@@ -166,13 +174,13 @@ def provider_icon_document(wheel: Path) -> dict[str, object]:
                 raise ProviderIconGenerationError("The provider catalog and bundled icon files differ")
 
             attribution = icons.ICON_ATTRIBUTION
-            credit = {
-                field: getattr(attribution, field)
-                for field in ("title", "url", "pin", "licence", "notice", "trademarks")
-            }
-            if any(not isinstance(value, str) or not value for value in credit.values()):
-                raise ProviderIconGenerationError("The agent icon attribution is incomplete")
-            return {"providers": dict(sorted(output.items())), "attribution": credit}
+            credit: dict[str, str] = {}
+            for field in ("title", "url", "pin", "licence", "notice", "trademarks"):
+                value = getattr(attribution, field)
+                if not isinstance(value, str) or not value:
+                    raise ProviderIconGenerationError("The agent icon attribution is incomplete")
+                credit[field] = value
+            return ProviderIconDocument(providers=dict(sorted(output.items())), attribution=credit)
 
 
 def generate(wheel: Path, output: Path) -> None:

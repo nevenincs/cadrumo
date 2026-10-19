@@ -25,7 +25,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.models import OperationId, OperationRequest
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
@@ -41,11 +41,13 @@ from cadrumo.entrypoints.operation_composition import build_production_operation
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
     WorkerResponseScopeRequest,
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
@@ -126,6 +128,7 @@ class BoundaryAuthority:
         self.deny_observe = False
         self.deny_resume = False
         self.calls: list[AccessAction] = []
+        self.advanced: list[tuple[OperationId, ...]] = []
         self.guard = RLock()
         self.attempted = Event()
 
@@ -153,6 +156,10 @@ class BoundaryAuthority:
     ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
+    def operations_advanced(self, operation_ids: tuple[OperationId, ...]) -> None:
+        with self.guard:
+            self.advanced.append(operation_ids)
+
     def approval_preflight(self, request: WorkerApprovalRequest) -> None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
@@ -163,6 +170,13 @@ class BoundaryAuthority:
         self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
     ) -> EnrollmentTransition | None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def model_run(
+        self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        # No agent service is admitted for these profiles, as for a runtime without one.
+        body[:] = bytes(len(body))
+        return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
 
 
 @pytest.mark.parametrize("deny_commit", [False, True])

@@ -18,7 +18,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Literal, Protocol, cast, runtime_checkable
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 
@@ -142,6 +142,18 @@ def run_command(
     )
 
 
+@runtime_checkable
+class _Descriptor(Protocol):
+    def fileno(self) -> int: ...
+
+
+def _descriptor(stream: object, name: str) -> int:
+    """Return a standard stream's descriptor, refusing a process that has no such stream."""
+    if not isinstance(stream, _Descriptor):
+        raise RuntimeError(f"this process has no {name} for a child to inherit")
+    return stream.fileno()
+
+
 async def _run_process(
     command: tuple[str, ...],
     *,
@@ -162,7 +174,10 @@ async def _run_process(
     stdout: int | None = asyncio.subprocess.PIPE
     stderr: int | None = asyncio.subprocess.PIPE
     if inherit_output:
-        stdout, stderr = (sys.stdout.fileno(), sys.stderr.fileno()) if windows else (None, None)
+        if windows:
+            stdout, stderr = _descriptor(sys.stdout, "stdout"), _descriptor(sys.stderr, "stderr")
+        else:
+            stdout, stderr = None, None
     process = await asyncio.create_subprocess_exec(
         *command,
         cwd=str(cwd),

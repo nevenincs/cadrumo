@@ -178,7 +178,7 @@ class _Client(FrontendClient):
         return self._login_fault(secret, api_key=True)
 
     @override
-    def resume_receipt(self, *, timeout: float = 20) -> ProfileStatus:
+    def resume_receipt(self, *, timeout: float = 20, hand_over: bool = False) -> ProfileStatus:
         """Model existing protected-receipt availability without an input secret."""
         self.receipt_calls += 1
         self.receipt_thread = get_ident()
