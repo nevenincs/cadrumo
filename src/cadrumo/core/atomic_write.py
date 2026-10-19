@@ -94,6 +94,8 @@ if sys.platform == "win32":
     import msvcrt
     from ctypes import wintypes
 
+    from .windows_file_handle import open_unfollowed_windows_descriptor
+
 __all__ = [
     "DurableWriteBatch",
     "StagedPublication",
@@ -114,22 +116,12 @@ _HARDENED_DEFAULT_MODE = 0o600
 if sys.platform == "win32":
     _WINDOWS_DELETE = 0x00010000
     _WINDOWS_FILE_READ_ATTRIBUTES = 0x00000080
-    _WINDOWS_FILE_SHARE_ALL = 0x00000007
-    _WINDOWS_OPEN_EXISTING = 3
-    _WINDOWS_FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
-    _WINDOWS_FILE_ATTRIBUTE_TAG_INFO = 9
-    _WINDOWS_FILE_ATTRIBUTE_DIRECTORY = 0x00000010
-    _WINDOWS_FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400
     _WINDOWS_FILE_RENAME_INFO_EX = 22
     _WINDOWS_FILE_RENAME_REPLACE_IF_EXISTS = 0x00000001
     _WINDOWS_FILE_RENAME_POSIX_SEMANTICS = 0x00000002
     _WINDOWS_FILE_RENAME_INFO_EX_MINIMUM_BUILD = 14393
     _WINDOWS_ERROR_INVALID_FUNCTION = 1
     _WINDOWS_ERROR_NOT_SUPPORTED = 50
-    _WINDOWS_INVALID_HANDLE = ctypes.c_void_p(-1).value
-
-    class _WindowsFileAttributeTagInfo(ctypes.Structure):
-        _fields_ = [("file_attributes", wintypes.DWORD), ("reparse_tag", wintypes.DWORD)]
 
     class _WindowsFileRenameInfoEx(ctypes.Structure):
         _fields_ = [
@@ -140,25 +132,6 @@ if sys.platform == "win32":
         ]
 
     _WINDOWS_KERNEL32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    _WINDOWS_CREATE_FILE = _WINDOWS_KERNEL32.CreateFileW
-    _WINDOWS_CREATE_FILE.argtypes = [
-        wintypes.LPCWSTR,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.LPVOID,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.HANDLE,
-    ]
-    _WINDOWS_CREATE_FILE.restype = wintypes.HANDLE
-    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX = _WINDOWS_KERNEL32.GetFileInformationByHandleEx
-    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX.argtypes = [
-        wintypes.HANDLE,
-        ctypes.c_int,
-        wintypes.LPVOID,
-        wintypes.DWORD,
-    ]
-    _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX.restype = wintypes.BOOL
     _WINDOWS_SET_FILE_INFORMATION_BY_HANDLE = _WINDOWS_KERNEL32.SetFileInformationByHandle
     _WINDOWS_SET_FILE_INFORMATION_BY_HANDLE.argtypes = [
         wintypes.HANDLE,
@@ -167,9 +140,6 @@ if sys.platform == "win32":
         wintypes.DWORD,
     ]
     _WINDOWS_SET_FILE_INFORMATION_BY_HANDLE.restype = wintypes.BOOL
-    _WINDOWS_CLOSE_HANDLE = _WINDOWS_KERNEL32.CloseHandle
-    _WINDOWS_CLOSE_HANDLE.argtypes = [wintypes.HANDLE]
-    _WINDOWS_CLOSE_HANDLE.restype = wintypes.BOOL
 
 
 def _file_identity(metadata: os.stat_result) -> tuple[int, int]:
@@ -213,38 +183,13 @@ if sys.platform == "win32":
 
     def _windows_replace_staged_file(staging_path: Path, target_path: Path, identity: tuple[int, int]) -> None:
         """Publish the exact reserved stage by handle, falling back only if unsupported."""
-        access = _WINDOWS_DELETE | _WINDOWS_FILE_READ_ATTRIBUTES
-        handle = _WINDOWS_CREATE_FILE(
-            str(staging_path),
-            access,
-            _WINDOWS_FILE_SHARE_ALL,
-            None,
-            _WINDOWS_OPEN_EXISTING,
-            _WINDOWS_FILE_FLAG_OPEN_REPARSE_POINT,
-            None,
+        descriptor = open_unfollowed_windows_descriptor(
+            staging_path,
+            _WINDOWS_DELETE | _WINDOWS_FILE_READ_ATTRIBUTES,
+            link_like_message="hardened staging file must not be link-like",
+            directory_message="hardened staging file must be a regular file",
         )
-        handle_value = getattr(handle, "value", handle)
-        if handle_value is None or handle_value == _WINDOWS_INVALID_HANDLE:
-            raise ctypes.WinError(ctypes.get_last_error())
-
-        descriptor: int | None = None
-        handle_owned_by_descriptor = False
         try:
-            attributes = _WindowsFileAttributeTagInfo()
-            if not _WINDOWS_GET_FILE_INFORMATION_BY_HANDLE_EX(
-                handle_value,
-                _WINDOWS_FILE_ATTRIBUTE_TAG_INFO,
-                ctypes.byref(attributes),
-                ctypes.sizeof(attributes),
-            ):
-                raise ctypes.WinError(ctypes.get_last_error())
-            if attributes.file_attributes & _WINDOWS_FILE_ATTRIBUTE_REPARSE_POINT:
-                raise OSError("hardened staging file must not be link-like")
-            if attributes.file_attributes & _WINDOWS_FILE_ATTRIBUTE_DIRECTORY:
-                raise OSError("hardened staging file must be a regular file")
-
-            descriptor = msvcrt.open_osfhandle(handle_value, os.O_RDONLY | os.O_BINARY)
-            handle_owned_by_descriptor = True
             metadata = os.fstat(descriptor)
             if not stat.S_ISREG(metadata.st_mode) or _file_identity(metadata) != identity:
                 raise InternalInvariantError("hardened staging file identity changed before publication")
@@ -268,10 +213,7 @@ if sys.platform == "win32":
             # file we opened before using the repository's canonical path replace.
             _replace_staged_path_after_identity_check(staging_path, target_path, identity)
         finally:
-            if descriptor is not None:
-                os.close(descriptor)
-            elif not handle_owned_by_descriptor:
-                _WINDOWS_CLOSE_HANDLE(handle_value)
+            os.close(descriptor)
 
 
 def _replace_staged_path_after_identity_check(

@@ -7,9 +7,10 @@ its first child only after reading the browser manifest, well after that. On
 other platforms the driver leads a new session, so its process group holds the
 children.
 
-The Job Object structures are laid out with :mod:`ctypes.wintypes`, which
-raises on import outside Windows, so they sit behind the module-level platform
-block every checker this project runs narrows on.
+The Job Object layout comes from :mod:`cadrumo.core.windows_job_object`. It
+uses :mod:`ctypes.wintypes`, which raises on import outside Windows, so it is
+imported behind the module-level platform block every checker this project runs
+narrows on.
 """
 
 from __future__ import annotations
@@ -20,52 +21,19 @@ import os
 import signal
 import subprocess
 import sys
-from typing import Any, Final, cast
+from typing import Any, cast
 
 __all__ = ["InstallerProcessTree"]
-
-_JOB_OBJECT_EXTENDED_LIMIT_INFORMATION: Final = 9
-_JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: Final = 0x00002000
 
 
 if sys.platform == "win32":
     from ctypes import wintypes
 
-    class _BasicLimitInformation(ctypes.Structure):
-        _fields_ = [
-            ("PerProcessUserTimeLimit", ctypes.c_int64),
-            ("PerJobUserTimeLimit", ctypes.c_int64),
-            ("LimitFlags", wintypes.DWORD),
-            ("MinimumWorkingSetSize", ctypes.c_size_t),
-            ("MaximumWorkingSetSize", ctypes.c_size_t),
-            ("ActiveProcessLimit", wintypes.DWORD),
-            ("Affinity", ctypes.c_size_t),
-            ("PriorityClass", wintypes.DWORD),
-            ("SchedulingClass", wintypes.DWORD),
-        ]
-
-    class _IoCounters(ctypes.Structure):
-        _fields_ = [
-            (name, ctypes.c_uint64)
-            for name in (
-                "ReadOperationCount",
-                "WriteOperationCount",
-                "OtherOperationCount",
-                "ReadTransferCount",
-                "WriteTransferCount",
-                "OtherTransferCount",
-            )
-        ]
-
-    class _ExtendedLimitInformation(ctypes.Structure):
-        _fields_ = [
-            ("BasicLimitInformation", _BasicLimitInformation),
-            ("IoInfo", _IoCounters),
-            ("ProcessMemoryLimit", ctypes.c_size_t),
-            ("JobMemoryLimit", ctypes.c_size_t),
-            ("PeakProcessMemoryUsed", ctypes.c_size_t),
-            ("PeakJobMemoryUsed", ctypes.c_size_t),
-        ]
+    from ....core.windows_job_object import (
+        JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        JobObjectExtendedLimitInformation,
+    )
 
     class InstallerProcessTree:
         """A kill-on-close Job Object holding the installer and its children."""
@@ -79,11 +47,11 @@ if sys.platform == "win32":
             self._job = int(handle) if handle else 0
             if not self._job:
                 return
-            information = _ExtendedLimitInformation()
-            information.BasicLimitInformation.LimitFlags = _JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            information = JobObjectExtendedLimitInformation()
+            information.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             configured = self._kernel32.SetInformationJobObject(
                 wintypes.HANDLE(self._job),
-                _JOB_OBJECT_EXTENDED_LIMIT_INFORMATION,
+                JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
                 ctypes.byref(information),
                 ctypes.sizeof(information),
             )
