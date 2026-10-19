@@ -42,6 +42,7 @@ class ProfileViewQuestionItem(BaseModel):
     kind: Literal["question"] = "question"
     question_id: str
     path: str
+    widget: WizardWidget
     prompt: str
     help: str | None
     saved_value: str | None
@@ -97,18 +98,28 @@ def _question_item(
     return ProfileViewQuestionItem(
         question_id=question.id,
         path=profile_path,
+        widget=question.widget,
         prompt=tr(question.prompt),
         help=None if question.help is None else tr(question.help),
         saved_value=answers.get(question.id),
         required_when_visible=question.required,
         visibility=visibility,
         visible_when_any=conditions,
-        choices=tuple(
-            ProfileQuestionChoice(
-                value=choice.value,
-                label=tr(choice.label),
-                description=None if choice.description is None else tr(choice.description),
-            )
-            for choice in question.choices
-        ),
+        choices=_choices(question),
+    )
+
+
+def _choices(question: WizardQuestion) -> tuple[ProfileQuestionChoice, ...]:
+    if question.widget is WizardWidget.CONFIRM:
+        return (
+            ProfileQuestionChoice(value="true", label=tr("flows.confirm.yes")),
+            ProfileQuestionChoice(value="false", label=tr("flows.confirm.no")),
+        )
+    return tuple(
+        ProfileQuestionChoice(
+            value=choice.value,
+            label=tr(choice.label),
+            description=None if choice.description is None else tr(choice.description),
+        )
+        for choice in question.choices
     )

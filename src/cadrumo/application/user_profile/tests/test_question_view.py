@@ -19,6 +19,9 @@ def test_missing_answers_never_inherit_setup_defaults_and_saved_false_is_preserv
         empty = profile_question_items(flow, {})
         assert empty and all(item.saved_value is None for item in empty)
         question = next(item for item in empty if item.question_id == "has-employees")
+        assert question.widget.value == "confirm"
+        assert [choice.value for choice in question.choices] == ["true", "false"]
+        assert all(choice.label and not choice.label.startswith("flows.") for choice in question.choices)
         saved = profile_question_items(flow, {question.path: "false"})
         assert next(item for item in saved if item.question_id == question.question_id).saved_value == "false"
         source = {question.id: question for section in flow.sections for question in section.questions}
