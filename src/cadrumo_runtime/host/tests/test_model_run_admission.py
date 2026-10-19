@@ -17,7 +17,17 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunOutcome, ModelRunRefusalCode, ModelRunRequested
+from cadrumo_client.contracts.model_runs import (
+    MODEL_RUN_MAX_DEADLINE_SECONDS,
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunLane,
+    ModelRunOutcome,
+    ModelRunRefusalCode,
+    ModelRunRequested,
+    decode_model_run_body,
+    encode_model_run_body,
+)
 from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
@@ -36,8 +46,13 @@ _LANE = ModelRunLane(provider_id="example", transport="cli", model="example-mode
 _ANNOUNCEMENT_SECONDS = 30
 
 
-def _admitted(runtime: ServiceRecordRuntime, service_id: str) -> tuple[InstalledServiceClient, Queue[UUID]]:
-    """Connect and admit one service, collecting the run ids announced to its connection."""
+def _admitted(
+    runtime: ServiceRecordRuntime, service_id: str, *, seen: Queue[tuple[UUID, UUID]] | None = None
+) -> tuple[InstalledServiceClient, Queue[UUID]]:
+    """Connect and admit one service, collecting the run ids announced to its connection.
+
+    ``seen``, when given, also receives each announcement as its connection id and run id.
+    """
     service = runtime.connect_service(service_id=service_id)
     assert isinstance(runtime.admit(service), ServiceConnected)
     assert service.claim() is not None
@@ -47,6 +62,8 @@ def _admitted(runtime: ServiceRecordRuntime, service_id: str) -> tuple[Installed
     def receive(event: ModelRunRequested) -> None:
         if event.connection_id == connection_id:
             announced.put(event.run_id)
+            if seen is not None:
+                seen.put((event.connection_id, event.run_id))
 
     service.subscribe_model_runs(receive)
     return service, announced
@@ -106,6 +123,67 @@ def test_another_connection_can_neither_fetch_nor_answer_a_run_announced_to_the_
 
             assert capable.model_run_fetch(run_id) is not None
             assert capable.model_run_complete(run_id, ModelRunOutcome(lane=_LANE), bytearray())
+            outcome, _ = waiting.result(timeout=_ANNOUNCEMENT_SECONDS)
+
+    assert outcome.lane == _LANE
+
+
+def _run(body: bytearray) -> WorkerModelRun:
+    # The longest deadline a run may carry: an answer that came by waiting it out would never arrive in the test.
+    header = ModelRunHeader(role="text_extraction", deadline_seconds=MODEL_RUN_MAX_DEADLINE_SECONDS)
+    return WorkerModelRun(
+        request_id=uuid4(),
+        permit_id=uuid4(),
+        command_id=uuid4(),
+        role=header.role,
+        header=header,
+        body_byte_count=len(body),
+    )
+
+
+def test_a_run_whose_service_connection_drops_after_fetching_it_settles_as_unavailable_at_once(
+    tmp_path: Path,
+) -> None:
+    body = encode_model_run_body(ModelRunBody(prompt="Factura 7", max_output_tokens=16))
+    with service_record_runtime(tmp_path, model_runs=True) as runtime:
+        service, announced = _admitted(runtime, SERVICE_ID)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            waiting = pool.submit(runtime.profiles._relay_model_run, runtime.profile_id, _run(body), body)
+            run_id = announced.get(timeout=_ANNOUNCEMENT_SECONDS)
+            fetched = service.model_run_fetch(run_id)
+            assert fetched is not None and decode_model_run_body(fetched[1]).prompt == "Factura 7"
+
+            service.connection.close()
+
+            outcome, text = waiting.result(timeout=_ANNOUNCEMENT_SECONDS)
+
+        assert outcome == ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
+        assert text == bytearray()
+        assert body == bytearray(len(body)), "the relayed body is wiped once nobody waits for it"
+        assert runtime.profiles._model_runs == {}
+
+
+def test_a_second_connection_of_the_same_service_can_neither_fetch_nor_answer_the_first_one_s_run(
+    tmp_path: Path,
+) -> None:
+    with service_record_runtime(tmp_path, model_runs=True) as runtime:
+        seen: Queue[tuple[UUID, UUID]] = Queue()
+        first, _ = _admitted(runtime, SERVICE_ID, seen=seen)
+        second, _ = _admitted(runtime, SERVICE_ID, seen=seen)
+        assert first.lease is not None and second.lease is not None
+        assert first.lease.connection_id != second.lease.connection_id
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            waiting = pool.submit(runtime.profiles._relay_model_run, runtime.profile_id, _lookup(), bytearray())
+            owner_connection, run_id = seen.get(timeout=_ANNOUNCEMENT_SECONDS)
+            owner, intruder = (first, second) if owner_connection == first.lease.connection_id else (second, first)
+
+            assert intruder.model_run_fetch(run_id) is None
+            assert not intruder.model_run_complete(
+                run_id, ModelRunOutcome(refusal=ModelRunRefusalCode.RUN_FAILED), bytearray()
+            )
+
+            assert owner.model_run_fetch(run_id) is not None
+            assert owner.model_run_complete(run_id, ModelRunOutcome(lane=_LANE), bytearray())
             outcome, _ = waiting.result(timeout=_ANNOUNCEMENT_SECONDS)
 
     assert outcome.lane == _LANE
