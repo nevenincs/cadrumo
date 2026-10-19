@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import warnings
 from collections.abc import Iterator
 from dataclasses import dataclass
 
@@ -69,10 +70,15 @@ def resolved_member_uses(
                 return item_type
             return expression(node.value, bindings, containers)
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            try:
-                parsed = ast.parse(node.value, mode="eval").body
-            except SyntaxError:
-                return ""
+            # Any string constant is probed here, regex patterns included; an
+            # invalid escape such as ``\d`` is prose, not a type expression,
+            # and must not print a SyntaxWarning into the gate's output.
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", SyntaxWarning)
+                try:
+                    parsed = ast.parse(node.value, mode="eval").body
+                except (SyntaxError, SyntaxWarning):
+                    return ""
             return expression(parsed, bindings, containers)
         return ""
 

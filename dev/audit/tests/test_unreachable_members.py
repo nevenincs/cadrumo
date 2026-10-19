@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import warnings
 from pathlib import Path
 
 import pytest
@@ -304,3 +305,25 @@ def iterable() -> typing.Iterable[Record]: ...
         "pkg.records.sequence": "pkg.records.Record",
         "pkg.records.iterable": "pkg.records.Record",
     }
+
+
+def test_a_quoted_regex_constant_is_prose_and_prints_no_syntax_warning() -> None:
+    records = ShippedModule("pkg.records", Path("records.py"), False, ast.parse("class Record: pass"))
+    caller = ShippedModule(
+        "dev.consumer",
+        Path("consumer.py"),
+        False,
+        ast.parse(r"""
+from pkg.records import Record
+def read(pattern: '"^\\d+$"', record: "Record"):
+    pattern.prose_unknown()
+    record.used()
+"""),
+    )
+    with warnings.catch_warnings(record=True) as emitted:
+        warnings.simplefilter("always")
+        uses = resolved_member_uses(
+            caller, frozenset({records.name}), receivers=receiver_types({records.name: records})
+        )
+    assert [str(warning.message) for warning in emitted if issubclass(warning.category, SyntaxWarning)] == []
+    assert {pair for pair in uses if pair[1].startswith("Record.")} == {(records.name, "Record.used")}
