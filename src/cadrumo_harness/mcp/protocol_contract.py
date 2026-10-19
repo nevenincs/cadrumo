@@ -287,9 +287,17 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "literal, or the work unit that owns the stored record its payload_path names. A contract that declares "
         "a transient_financial_operand is described with operator_input_json_schema, the typed input execute "
         "submits for it. A contract whose payload names values its schema cannot enumerate is described with "
-        "payload_vocabulary: for user-profile.patch, every question_id it may set, with its meaning and, where "
-        "the answer is a choice, the values it takes, as the command line lists them in its help",
-        _schema({"definition_id": _TEXT}),
+        "payload_vocabulary: for user-profile.patch, use user-profile.view page_kind=questions for saved answers, "
+        "question_id, prompts and choices. The default description omits the catalogue to keep the schema small. "
+        "For optional vocabulary pages set vocabulary_limit (1–20), then vocabulary_cursor to next_cursor; "
+        "pages are byte-bounded. Keep logical_generation unchanged across pages",
+        _schema(
+            {"definition_id": _TEXT},
+            {
+                "vocabulary_limit": {"type": "integer", "minimum": 0, "maximum": 20},
+                "vocabulary_cursor": {"type": "integer", "minimum": 0},
+            },
+        ),
         _reads("Describe an operation"),
     ),
     (

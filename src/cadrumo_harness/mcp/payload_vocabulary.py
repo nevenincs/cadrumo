@@ -4,8 +4,8 @@ A request schema states the shape of a payload. Some payloads also name things
 out of a vocabulary that is not a fixed list: the profile patch names its
 answers by question id, and the questions are built from the published tax
 authority. The command line offers each one as an option of its own, so a
-person reads them in its help. A described contract carries the same list here,
-built from the same flow the command is built from.
+person reads them in its help. A described contract points to saved profile
+questions, with optional bounded catalogue pages built from the same flow.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any, Final
 
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_PATCH_OPERATION_DEFINITION_ID
+from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.authority_store import AuthorityStoreError
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
@@ -59,7 +60,7 @@ def _profile_questions() -> dict[str, Any]:
     }
 
 
-def payload_vocabulary(definition_id: str) -> dict[str, Any] | None:
+def payload_vocabulary(definition_id: str, *, limit: int = 0, cursor: int = 0) -> dict[str, Any] | None:
     """Return the vocabulary one operation's payload names, or ``None`` where its schema says everything.
 
     A vocabulary that cannot be read does not withhold the contract: the
@@ -67,7 +68,27 @@ def payload_vocabulary(definition_id: str) -> dict[str, Any] | None:
     """
     if definition_id != PROFILE_PATCH_OPERATION_DEFINITION_ID:
         return None
+    # Most callers already have the relevant IDs from the saved profile questions.
+    # Do not bury the mutation schema beneath the entire setup catalogue.
+    source = {"definition_id": "user-profile.view", "page_kind": "questions"}
+    if limit == 0:
+        return {"path": _PROFILE_ANSWER_PATH, "saved_answers_source": source, "next_cursor": cursor}
     try:
-        return _profile_questions()
+        catalogue = _profile_questions()
+        questions = catalogue.pop("questions")
+        page: list[dict[str, Any]] = []
+        for question in questions[cursor : cursor + min(limit, 20)]:
+            if len(canonical_json_bytes([*page, question])) > 8_000:
+                break
+            page.append(question)
+        next_cursor = cursor + len(page)
+        return {
+            **catalogue,
+            "saved_answers_source": source,
+            "questions": page,
+            "total": len(questions),
+            "next_cursor": next_cursor if page and next_cursor < len(questions) else None,
+            **({"unavailable": "question_exceeds_page_limit"} if not page and cursor < len(questions) else {}),
+        }
     except (AuthorityStoreError, RegistryError) as error:
         return {"path": _PROFILE_ANSWER_PATH, "unavailable": refusal_code(error)}

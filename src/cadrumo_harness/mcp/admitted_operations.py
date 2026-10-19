@@ -170,10 +170,16 @@ def _describe(client: FrontendClient, binding: _Binding, args: dict[str, Any], d
     if not binding.surface.admits(definition_id):
         # The runtime refuses the operation itself; this only answers as it would.
         raise FrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
-    return described_reply(binding.contracts.description(client, definition_id, deadline=deadline, fresh=True))
+    return described_reply(
+        binding.contracts.description(client, definition_id, deadline=deadline, fresh=True),
+        vocabulary_limit=args.get("vocabulary_limit", 0),
+        vocabulary_cursor=args.get("vocabulary_cursor", 0),
+    )
 
 
-def described_reply(description: OperationPublicDefinitionDescriptionV1) -> dict[str, Any]:
+def described_reply(
+    description: OperationPublicDefinitionDescriptionV1, *, vocabulary_limit: int = 0, vocabulary_cursor: int = 0
+) -> dict[str, Any]:
     """Build the ``describe`` reply for one public description, wherever it was read from.
 
     The typed operator input of a financial operand and the vocabulary a
@@ -183,7 +189,9 @@ def described_reply(description: OperationPublicDefinitionDescriptionV1) -> dict
     reply: dict[str, Any] = {"outcome": "described", "description": public_value(description)}
     if description.contract.transient_financial_operand is not None:
         reply["operator_input_json_schema"] = _operator_input_json_schema()
-    vocabulary = payload_vocabulary(description.contract.definition_id)
+    vocabulary = payload_vocabulary(
+        description.contract.definition_id, limit=vocabulary_limit, cursor=vocabulary_cursor
+    )
     if vocabulary is not None:
         reply[PAYLOAD_VOCABULARY_MEMBER] = vocabulary
     return reply
