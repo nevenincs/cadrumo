@@ -24,6 +24,7 @@ from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, fi
 from ...adapters.agent_process import WindowsAgentProcessLauncher
 from ...adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from ...host.launcher_protocol import AgentLauncherRefusal
+from ...providers.application.contracts import ProviderSettingsRefusalCode
 from ...service import LIFECYCLE_ADMISSION_SECONDS, AgentService, _GatewayCredentials
 from ..controller import (
     AgentGenerations,
@@ -136,8 +137,11 @@ def test_a_settings_change_retires_the_running_agent_and_publishes_why_its_repla
 
 
 def test_administration_answers_busy_while_lifecycle_work_holds_the_tree_instead_of_waiting_for_its_deadline(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # Outside a package the catalogue cannot find an agent image, so a provider
+    # change that is admitted answers why it could not read the provider's lane.
+    monkeypatch.delenv(PACKAGE_AGENT_VARIABLE, raising=False)
     source = _CredentialSource()
     service, events, grandchild = _running_service(tmp_path, source)
     controller = service._controller
@@ -155,7 +159,10 @@ def test_administration_answers_busy_while_lifecycle_work_holds_the_tree_instead
     holder.start()
     try:
         assert held.wait(10)
-        for action in ("remove", "stop"):
+        # Each of these changes the tree or its settings, so each is admitted only
+        # under the lifecycle lock; stop is answered without it and is covered
+        # by its own exchange tests.
+        for action in ("remove", "turn_on", "sign_in"):
             started = time.monotonic()
             answer = service.admin(action, provider="example", expected_revision="0" * 64)
             elapsed = time.monotonic() - started
@@ -165,10 +172,20 @@ def test_administration_answers_busy_while_lifecycle_work_holds_the_tree_instead
         assert events == []
         release.set()
         holder.join(30)
-        assert service.admin("stop") == {"kind": "stopped"}
-        assert events == [{"event": "stopped", "code": "agent_retired"}]
-        assert not _alive(grandchild, within=5)
+        assert not holder.is_alive()
+
+        # Once the lock is free the same request is admitted and answered on its merits.
+        started = time.monotonic()
+        answer = service.admin("remove", provider="example", expected_revision="0" * 64)
+        assert time.monotonic() - started < LIFECYCLE_ADMISSION_SECONDS
+        assert answer == {"code": ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE.value}
+        assert controller.state is AgentHostState.READY
+        assert service._controller is controller
+        assert events == []
+        assert _alive(grandchild)
     finally:
         release.set()
         holder.join(30)
         controller.stop()
+        service._ownership.close()
+    assert not _alive(grandchild, within=5)
