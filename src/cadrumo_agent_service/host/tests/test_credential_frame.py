@@ -91,3 +91,37 @@ def test_the_gateway_bearer_rides_the_same_frame_under_the_same_rules() -> None:
         build_credential_frame({}, gateway_bearer=bytearray(b'bad"bearer'))
     assert refused.value.reason is CredentialFrameRefusal.BEARER_INVALID
     assert "bad" not in str(refused.value)
+
+
+def test_the_host_token_rides_beside_the_bearer_and_round_trips() -> None:
+    bearer = bytearray(b"bearer-test-NOT-A-REAL-TOKEN")
+    host_token = bytearray(b"host-test-NOT-A-REAL-TOKEN")
+    frame = build_credential_frame({}, gateway_bearer=bearer, host_token=host_token)
+    assert frame.endswith(b"\n") and frame.count(b"\n") == 1
+    assert json.loads(frame) == {
+        "version": 1,
+        "credentials": {},
+        "gateway_bearer": "bearer-test-NOT-A-REAL-TOKEN",
+        "host_token": "host-test-NOT-A-REAL-TOKEN",
+    }
+
+
+@pytest.mark.parametrize(
+    ("bearer", "host_token"),
+    (
+        (None, b"host-test-NOT-A-REAL-TOKEN"),
+        (b"bearer-test-NOT-A-REAL-TOKEN", b""),
+        (b"bearer-test-NOT-A-REAL-TOKEN", b'host"quoted'),
+        (b"bearer-test-NOT-A-REAL-TOKEN", b"host\nbreak"),
+        (b"bearer-test-NOT-A-REAL-TOKEN", b"bearer-test-NOT-A-REAL-TOKEN"),
+    ),
+)
+def test_a_host_token_without_a_bearer_malformed_or_equal_to_it_is_refused(
+    bearer: bytes | None, host_token: bytes
+) -> None:
+    with pytest.raises(CredentialFrameError) as refused:
+        build_credential_frame(
+            {}, gateway_bearer=None if bearer is None else bytearray(bearer), host_token=bytearray(host_token)
+        )
+    assert refused.value.reason is CredentialFrameRefusal.HOST_CREDENTIAL_INVALID
+    assert "NOT-A-REAL" not in str(refused.value)

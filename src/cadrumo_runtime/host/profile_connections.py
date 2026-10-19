@@ -54,6 +54,7 @@ from .profile_connection_admission import ProfileConnectionAdmissionMixin
 from .profile_connection_attendance import AttendedConnection, PendingAttendance, ProfileConnectionAttendanceMixin
 from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainRecord
 from .profile_connection_extension_records import ProfileConnectionExtensionRecordsMixin
+from .profile_connection_model_runs import PendingModelRun, ProfileConnectionModelRunsMixin
 from .profile_connection_operations import ProfileConnectionOperationMixin
 from .profile_connection_person_acts import ProfileConnectionPersonActMixin
 from .profile_connection_services import ProfileConnectionServicesMixin, ServiceConnection
@@ -80,6 +81,7 @@ class RuntimeProfileConnections(
     ProfileConnectionPersonActMixin,
     ProfileConnectionServicesMixin,
     ProfileConnectionExtensionRecordsMixin,
+    ProfileConnectionModelRunsMixin,
     ProfileConnectionAdmissionMixin,
     ProfileConnectionAccessMixin,
     ProfileConnectionAttendanceMixin,
@@ -147,6 +149,8 @@ class RuntimeProfileConnections(
         }
         self._service_verifier = InstalledNativeServiceVerifier() if service_verifier is None else service_verifier
         self._services: dict[UUID, ServiceConnection] = {}
+        # Worker model runs waiting for the service that was told about them, by run id.
+        self._model_runs: dict[UUID, PendingModelRun] = {}
         self._notice_connections: dict[UUID, tuple[ConnectionContext, LoginEvidence]] = {}
         self._notice_observation: NoticeObservation | None = None
         self._logins: dict[str, LoginEvidence] = {}

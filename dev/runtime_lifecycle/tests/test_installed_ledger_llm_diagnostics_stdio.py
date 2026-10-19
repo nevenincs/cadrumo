@@ -38,7 +38,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.core.config_support import LLMProvider
+from cadrumo.core.config_support import LLMProvider, RetiredLLMProvider
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
@@ -276,7 +276,7 @@ async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(
                     assert canonical.total_calls == 3
                     assert canonical.total_classified == 2
                     usage = {row.provider: row for row in canonical.usage_providers}
-                    assert usage[LLMProvider.AGENT.value].cost_estimate_usd == Decimal("0.0015")
+                    assert usage[RetiredLLMProvider.ANTHROPIC.value].cost_estimate_usd == Decimal("0.0015")
                     assert usage[LLMProvider.AGENT.value].cost_estimate_usd is None
                     assert usage[LLMProvider.AGENT.value].unpriced_calls == 1
                     assert canonical.confidence_providers[0].mean_confidence == Decimal("0.6250")

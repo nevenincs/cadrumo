@@ -63,6 +63,8 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
         "operation_scope": dict(ceiling, allow_delegation=True),
         "allow_descendants": True,
         "allowed_parent_images": [],
+        # Profile workers' model runs reach cadrumo-agent only through this service.
+        "model_runs": True,
     }
     parents = [
         {"launch_image": image.package_path, "image_digest": digest(root / image.package_path)}

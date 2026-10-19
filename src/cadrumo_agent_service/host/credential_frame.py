@@ -2,17 +2,20 @@
 
 The frame is a single JSON object on one line::
 
-    {"version":1,"credentials":{"<provider>":{"secret":"<value>","base_url":"<url>"}},"gateway_bearer":"<value>"}
+    {"version":1,"credentials":{"<provider>":{"secret":"<value>","base_url":"<url>"}},"gateway_bearer":"<value>","host_token":"<value>"}
 
 ``gateway_bearer`` is present only when the host was handed one: the bearer a
-client of the agent's gateway presents. It is a secret under the same rules as
-the provider credentials. The frame is assembled byte by byte into one mutable buffer so the caller can wipe it
+client of the agent's gateway presents. ``host_token`` is present only beside
+a bearer and never equals it: the host's own token, which alone admits a
+background request. Both are secrets under the same rules as the provider
+credentials. The frame is assembled byte by byte into one mutable buffer so the caller can wipe it
 after the write. Secrets are never decoded into ``str`` here; values that would
 need JSON escaping are refused rather than escaped.
 """
 
 from __future__ import annotations
 
+import hmac
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -33,6 +36,7 @@ class CredentialFrameRefusal(StrEnum):
     PROVIDER_ID_INVALID = "provider_id_invalid"
     VALUE_INVALID = "value_invalid"
     BEARER_INVALID = "bearer_invalid"
+    HOST_CREDENTIAL_INVALID = "host_credential_invalid"
     BASE_URL_INVALID = "base_url_invalid"
     TOO_LARGE = "too_large"
 
@@ -60,9 +64,12 @@ class AgentCredential:
 
 
 def build_credential_frame(
-    credentials: Mapping[str, AgentCredential], *, gateway_bearer: bytearray | None = None
+    credentials: Mapping[str, AgentCredential],
+    *,
+    gateway_bearer: bytearray | None = None,
+    host_token: bytearray | None = None,
 ) -> bytearray:
-    """Return the newline-terminated frame for these credentials, and any gateway bearer, in a fresh buffer.
+    """Return the newline-terminated frame, with any gateway bearer and host token, in a fresh buffer.
 
     On refusal no partial buffer survives: it is wiped before the error leaves.
     """
@@ -93,6 +100,17 @@ def build_credential_frame(
                 raise CredentialFrameError(CredentialFrameRefusal.BEARER_INVALID)
             frame += b',"gateway_bearer":"'
             frame += gateway_bearer
+            frame += b'"'
+        if host_token is not None:
+            if (
+                gateway_bearer is None
+                or not host_token
+                or any(byte not in _PLAIN_BYTES for byte in host_token)
+                or hmac.compare_digest(host_token, gateway_bearer)
+            ):
+                raise CredentialFrameError(CredentialFrameRefusal.HOST_CREDENTIAL_INVALID)
+            frame += b',"host_token":"'
+            frame += host_token
             frame += b'"'
         frame += b"}\n"
         if len(frame) > CREDENTIAL_FRAME_MAX_BYTES:

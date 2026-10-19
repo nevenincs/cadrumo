@@ -8,6 +8,14 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from ..contracts.extension_records import ExtensionRecordRequest
+from ..contracts.model_runs import (
+    ModelRunCompleted,
+    ModelRunCompleteRequest,
+    ModelRunFetched,
+    ModelRunFetchRequest,
+    ModelRunOutcome,
+    ModelRunRequested,
+)
 from ..contracts.profile_access import AccessRefusal, SessionRequest
 from ..contracts.service_access import ServiceConnect, ServiceConnected, ServiceLease
 from .framing import VerifiedConnection
@@ -31,7 +39,61 @@ class InstalledServiceClient:
         an issued or withdrawn lease, or a retired session. ``changed`` is only a
         reason to claim again, never evidence of a lease.
         """
-        return self.connection.subscribe_session_events(lambda _event: changed(), disconnected=changed)
+        return self.connection.subscribe_session_events(
+            lambda event: None if isinstance(event, ModelRunRequested) else changed(), disconnected=changed
+        )
+
+    def subscribe_model_runs(self, requested: Callable[[ModelRunRequested], None]) -> Callable[[], None]:
+        """Call ``requested`` for every model run the runtime announces on this connection.
+
+        It runs on the connection's event reader and must only hand the run on:
+        fetching or answering it from there would wait on the reader itself.
+        """
+
+        def receive(event: object) -> None:
+            if isinstance(event, ModelRunRequested) and event.profile_id == self.profile_id:
+                requested(event)
+
+        return self.connection.subscribe_session_events(receive)
+
+    def model_run_fetch(self, run_id: UUID) -> tuple[ModelRunFetched, bytearray] | None:
+        """Fetch an announced model run under the current lease, or ``None`` when it is no longer waiting."""
+        lease = self._lease()
+        reply, body = self.connection.model_run_fetch(
+            ModelRunFetchRequest(
+                request_id=uuid4(),
+                profile_id=self.profile_id,
+                session_id=lease.session_id,
+                lease_id=lease.lease_id,
+                run_id=run_id,
+            ),
+            deadline=time.monotonic() + 10,
+        )
+        if isinstance(reply, AccessRefusal):
+            return None
+        return reply, body
+
+    def model_run_complete(self, run_id: UUID, outcome: ModelRunOutcome, text: bytearray) -> bool:
+        """Answer a fetched model run; false when the runtime no longer waits for it."""
+        lease = self._lease()
+        reply = self.connection.model_run_complete(
+            ModelRunCompleteRequest(
+                request_id=uuid4(),
+                profile_id=self.profile_id,
+                session_id=lease.session_id,
+                lease_id=lease.lease_id,
+                run_id=run_id,
+                outcome=outcome,
+            ),
+            text,
+            deadline=time.monotonic() + 10,
+        )
+        return isinstance(reply, ModelRunCompleted) and reply.accepted
+
+    def _lease(self) -> ServiceLease:
+        if self.lease is None:
+            raise FrontendRefusedError("authentication_required")
+        return self.lease
 
     def claim(self) -> ServiceLease | None:
         """Request or refresh the service lease for this profile connection."""

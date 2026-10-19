@@ -17,6 +17,7 @@ from cadrumo.core.paths import effective_storage_root
 from .admin import AdminServer
 from .contracts import ServiceStartupFrame
 from .host.credential_frame import wipe
+from .host.model_run_relay import ModelRunRelay
 from .installed_client import SERVICE_ID, open_service_client
 from .service import AgentService, service_failure
 
@@ -63,6 +64,7 @@ def _serve() -> None:
     service = None
     server = None
     client = None
+    relay = None
     stop = Event()
     wake = Event()
     try:
@@ -96,6 +98,8 @@ def _serve() -> None:
             wake.set()
 
         client.subscribe_changes(runtime_changed)
+        relay = ModelRunRelay(client=client, runs=service.model_runs)
+        client.subscribe_model_runs(relay.announce)
 
         # Native keeps stdin open and owns the complete service/agent process tree.
         def lifetime_ended() -> None:
@@ -156,6 +160,8 @@ def _serve() -> None:
         _publish(service_failure(error))
     finally:
         cleanup_failed = False
+        if relay is not None:
+            relay.close()
         if service is not None:
             try:
                 service.request_close()

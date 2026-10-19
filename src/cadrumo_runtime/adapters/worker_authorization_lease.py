@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import time
 from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
@@ -19,10 +20,12 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
+from cadrumo_client.contracts.model_runs import ModelRunHeader, ModelRunOutcome
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_client.transport.posix_channel import PosixChannel
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
@@ -34,6 +37,8 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
+    WorkerModelRunResult,
     WorkerResponseScopePermit,
     WorkerResponseScopeRequest,
     WorkerServerStart,
@@ -75,6 +80,7 @@ class WorkerAuthorizationLease:
         )
         self._publication_sent = False
         self._runtime_server_start_sent = False
+        self._model_run_sent = False
 
     def _commit_phase(self, stage: str) -> None:
         if isinstance(self.request, WorkerAuthorizationRequest) and self.request.request.action is AccessAction.COMMIT:
@@ -196,6 +202,51 @@ class WorkerAuthorizationLease:
         ):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return reply.process_id
+
+    def model_run(
+        self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        """Ask the runtime, over this exact held START channel, to have the agent service answer.
+
+        A lookup sends no header and an empty body. ``answer_seconds`` bounds the
+        wait for the service's answer; the body is wiped once sent, and the
+        reply text belongs to the caller, who wipes it.
+        """
+        channel, permit, request = self._channel, self._permit, self.request
+        if (
+            channel is None
+            or not isinstance(permit, WorkerAuthorizationPermit)
+            or not isinstance(request, WorkerAuthorizationRequest)
+            or request.request.action is not AccessAction.START
+            or self._model_run_sent
+        ):
+            body[:] = bytes(len(body))
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        command = WorkerModelRun(
+            request_id=request.request_id,
+            permit_id=permit.permit_id,
+            command_id=uuid4(),
+            role=role,
+            header=header,
+            body_byte_count=len(body),
+        )
+        self._model_run_sent = True
+        try:
+            write_document(channel, command, deadline=exchange_deadline())
+        except BaseException:
+            body[:] = bytes(len(body))
+            raise
+        write_secret_chunks(channel, body, deadline=exchange_deadline())
+        reply = read_document(channel, WorkerModelRunResult, deadline=time.monotonic() + answer_seconds)
+        if (
+            reply.request_id != request.request_id
+            or reply.permit_id != permit.permit_id
+            or reply.command_id != command.command_id
+            or reply.runtime_boot_id != self.identity.runtime_boot_id
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        text = read_secret_chunks(channel, reply.outcome.text_byte_count, deadline=exchange_deadline())
+        return reply.outcome, text
 
     def release(self) -> None:
         """Acknowledge body completion on the exact channel, preserving uncertain failure."""

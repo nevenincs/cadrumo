@@ -33,6 +33,7 @@ from cadrumo_client.contracts.operation_ids import (
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, read_document, read_secret, write_document
+from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.worker_authorization import (
@@ -49,6 +50,8 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
+    WorkerModelRunResult,
     WorkerOperationsAdvanced,
     WorkerResponseScopePermit,
     WorkerResponseScopeRequest,
@@ -334,12 +337,51 @@ class WorkerAuthorizationServer:
             if command_seen or not isinstance(request, WorkerAuthorizationRequest) or self._owner is None:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             command_seen = True
+            if isinstance(instruction, WorkerModelRun):
+                self._model_run(channel, self._owner, request, instruction, permit_id)
+                continue
             reply: AccessRefusal | WorkerApprovalPublished | WorkerServerStarted
             if isinstance(instruction, WorkerServerStart):
                 reply = self._runtime_server_start_result(request, instruction, permit_id)
             else:
                 reply = self._publication_result(self._owner, request, instruction, permit_id)
             write_document(channel, reply, deadline=time.monotonic() + _FRAME_SECONDS)
+
+    def _model_run(
+        self,
+        channel: WorkerChannel,
+        owner: WorkerAuthorizationOwner,
+        request: WorkerAuthorizationRequest,
+        instruction: WorkerModelRun,
+        permit_id: UUID,
+    ) -> None:
+        """Answer one model-run instruction under a held START permit, from the profile's agent service.
+
+        Only a START permit admits it, so the runtime has already rechecked the
+        operation's authority for this stage. The body and the reply text are
+        relayed as secret frames and wiped once sent; the runtime reads neither.
+        """
+        if request.request.action is not AccessAction.START:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        body = read_secret_chunks(channel, instruction.body_byte_count, deadline=time.monotonic() + _FRAME_SECONDS)
+        text = bytearray()
+        try:
+            outcome, text = owner.model_run(request, instruction, body)
+            write_document(
+                channel,
+                WorkerModelRunResult(
+                    request_id=request.request_id,
+                    permit_id=permit_id,
+                    command_id=instruction.command_id,
+                    runtime_boot_id=self.identity.runtime_boot_id,
+                    outcome=outcome,
+                ),
+                deadline=time.monotonic() + _FRAME_SECONDS,
+            )
+            write_secret_chunks(channel, text, deadline=time.monotonic() + _FRAME_SECONDS)
+        finally:
+            body[:] = bytes(len(body))
+            text[:] = bytes(len(text))
 
     def _await_instruction(self, channel: WorkerChannel) -> None:
         """Wait for the worker's next frame for as long as its stage runs, ending only on stop or a dead channel."""

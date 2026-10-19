@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import replace
@@ -23,6 +24,7 @@ from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
+from .adapters.agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns
 from .adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from .adapters.agent_programs import (
     AGENT_COMMAND_LINE,
@@ -66,6 +68,7 @@ from .host.launcher_protocol import launcher_refusal_for
 from .host.store_lifecycle import AgentStoreLifecycle
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from .providers.application.contracts import ProviderSettingsRefusal
+from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
@@ -105,16 +108,23 @@ def _controller_is_ready(controller: AgentHostController) -> bool:
 
 
 class _GatewayCredentials(AgentCredentialSource):
-    def __init__(self, source: AgentCredentialSource, gateway_bearer: bytearray, closing: Event) -> None:
+    def __init__(
+        self, source: AgentCredentialSource, gateway_bearer: bytearray, host_token: bytearray, closing: Event
+    ) -> None:
         self._source = source
         self._gateway_bearer = gateway_bearer
+        self._host_token = host_token
         self._closing = closing
 
     @override
     def resolve_for_agent(self) -> ResolvedAgentCredentials:
         if self._closing.is_set():
             raise AgentHostError(AgentHostRefusal.SIGNED_OUT)
-        return replace(self._source.resolve_for_agent(), gateway_bearer=bytearray(self._gateway_bearer))
+        return replace(
+            self._source.resolve_for_agent(),
+            gateway_bearer=bytearray(self._gateway_bearer),
+            host_token=bytearray(self._host_token),
+        )
 
     @override
     def current_generations(self) -> AgentGenerations | None:
@@ -143,6 +153,9 @@ class AgentService:
         self._start_request_guard = Lock()
         self._start_thread: Thread | None = None
         self._gateway_bearer = gateway_bearer
+        # Minted here and handed only to the agent's start frame; it admits
+        # background requests, which the desktop's bearer alone cannot.
+        self._host_token = bytearray(secrets.token_urlsafe(32), "ascii")
         self._catalog = AgentProviderCatalogSource(agent_source=agent_source)
         self._store = SecureProviderSettingsStore(client=client)
         resolver = ProviderCredentialResolver(
@@ -151,7 +164,15 @@ class AgentService:
         self._credentials = _GatewayCredentials(
             ProviderSettingsAgentCredentialSource(store=self._store, resolver=resolver, catalog_source=self._catalog),
             gateway_bearer,
+            self._host_token,
             self._closing,
+        )
+        self._model_runs = ModelRunService(
+            resolver=resolver,
+            catalog_source=self._catalog,
+            gateway=HostedBackgroundRuns(
+                endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
+            ),
         )
         self._login_status = AgentProviderAuthStatusProbe(agent_source=agent_source, context=self._login_context)
         self._providers = ProviderSettingsService(
@@ -673,6 +694,21 @@ class AgentService:
         with self._hosted_certification_lock:
             self._hosted_certification_snapshot = None
 
+    def _background_endpoint(self) -> BackgroundRunEndpoint | None:
+        """Return the ready agent's gateway while this service holds a lease and is not closing."""
+        controller = self._controller
+        workspace = self._workspace
+        if self._closing.is_set() or self.client.lease is None or controller is None or workspace is None:
+            return None
+        ready = controller.published()
+        return None if ready is None else BackgroundRunEndpoint(port=ready.gateway_port, workspace_root=workspace)
+
+    def model_runs(self) -> ModelRunService | None:
+        """Return the profile's run service while this service holds a lease and is not closing."""
+        if self._closing.is_set() or self.client.lease is None:
+            return None
+        return self._model_runs
+
     def runtime_changed(self) -> None:
         """Forget observed generations: a pushed frame may mean a new lease or a retired session."""
         self._store.invalidate_generations()
@@ -715,6 +751,7 @@ class AgentService:
                 self._owned = False
             finally:
                 wipe(self._gateway_bearer)
+                wipe(self._host_token)
 
     def request_close(self) -> None:
         """Invalidate startup publication immediately without waiting on lifecycle work."""

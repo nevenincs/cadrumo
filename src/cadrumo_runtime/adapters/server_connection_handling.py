@@ -36,6 +36,7 @@ from cadrumo_client.contracts.enrollment_access import (
 )
 from cadrumo_client.contracts.extension_records import ExtensionRecordRequest
 from cadrumo_client.contracts.installation_requests import InstallationActRequest
+from cadrumo_client.contracts.model_runs import ModelRunCompleteRequest, ModelRunFetchRequest
 from cadrumo_client.contracts.operation_access import (
     OperationContract,
     OperationControl,
@@ -97,6 +98,8 @@ type _ProfileConnectionRequest = (
     | ServiceConnect
     | ServiceAdmission
     | ExtensionRecordRequest
+    | ModelRunFetchRequest
+    | ModelRunCompleteRequest
 )
 
 
@@ -273,6 +276,12 @@ class RuntimeConnectionHandling:
             return self.profiles.service(context, channel, request)
         if isinstance(request, ExtensionRecordRequest):
             self.profiles.extension_record(context, channel, request)
+            return None
+        if isinstance(request, ModelRunFetchRequest):
+            self.profiles.model_run_fetch(context, channel, request)
+            return None
+        if isinstance(request, ModelRunCompleteRequest):
+            self.profiles.model_run_complete(context, channel, request)
             return None
         if isinstance(request, PasswordResetPrepare | PasswordReset):
             self.profiles.bootstrap(context, channel, request)

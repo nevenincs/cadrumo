@@ -96,6 +96,9 @@ class FakeClient:
         self.changed = changed
         return lambda: None
 
+    def subscribe_model_runs(self, requested):
+        return lambda: None
+
     def claim(self):
         self.claims += 1
         if self.claims > 1:
@@ -125,6 +128,9 @@ class FakeService:
 
     def runtime_changed(self):
         pass
+
+    def model_runs(self):
+        return None
 
     def stop(self):
         pass

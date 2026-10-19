@@ -16,6 +16,7 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessAllowed, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy, OperationAccessRequest
+from cadrumo_client.contracts.model_runs import MODEL_RUN_MAX_BODY_BYTES, ModelRunHeader, ModelRunOutcome
 from cadrumo_client.contracts.profile_access import AccessRefusal
 
 from .worker_enrollment import (
@@ -209,15 +210,51 @@ class WorkerServerStarted(BaseModel):
     process_id: NonNegativeInt | None = None
 
 
+class WorkerModelRun(BaseModel):
+    """Ask the runtime to have the profile's agent service answer one lookup or run.
+
+    Sent under a held START permit. A lookup carries no header and no body; a
+    run's body follows on secret frames. Nothing here, and nothing in the
+    reply, is a credential.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["model_run"] = "model_run"
+    request_id: UUID
+    permit_id: UUID
+    command_id: UUID
+    role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+    header: ModelRunHeader | None = None
+    body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
+
+    @model_validator(mode="after")
+    def _run_carries_a_body(self) -> WorkerModelRun:
+        if (self.header is None) != (self.body_byte_count == 0):
+            raise ValueError("a run carries a body and a lookup carries none")
+        return self
+
+
+class WorkerModelRunResult(BaseModel):
+    """The service's answer to one model-run instruction; served reply text follows on secret frames."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["model_run_result"] = "model_run_result"
+    request_id: UUID
+    permit_id: UUID
+    command_id: UUID
+    runtime_boot_id: UUID
+    outcome: ModelRunOutcome
+
+
 class WorkerAuthorizationInstruction(
     RootModel[
         Annotated[
-            WorkerAuthorizationRelease | WorkerApprovalPublication | WorkerServerStart,
+            WorkerAuthorizationRelease | WorkerApprovalPublication | WorkerServerStart | WorkerModelRun,
             Field(discriminator="kind"),
         ]
     ]
 ):
-    """Only explicit release, an exact approval phase or a runtime server start may use a held fence."""
+    """Only explicit release, an approval phase, a runtime server start or a model run may use a held fence."""
 
 
 class WorkerAuthorizationAcknowledgement(BaseModel):
@@ -277,4 +314,10 @@ class WorkerAuthorizationOwner(Protocol):
         self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
     ) -> EnrollmentTransition | None:
         """Run one canonical phase on the thread already holding COMMIT authority."""
+        ...
+
+    def model_run(
+        self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        """Have the profile's admitted agent service answer one lookup or run; blocks until it does."""
         ...

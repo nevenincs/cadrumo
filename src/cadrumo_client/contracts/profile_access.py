@@ -48,6 +48,7 @@ from .contracts import RefusalCode
 from .enrollment_access import EnrollmentReply, EnrollmentRequest
 from .extension_records import ExtensionRecordReply, ExtensionRecordRequest
 from .installation_requests import InstallationActRequest, InstallationReply, InstallationReplyTransfer
+from .model_runs import ModelRunCompleted, ModelRunCompleteRequest, ModelRunFetched, ModelRunFetchRequest
 from .operation_access import OperationReply, OperationRequest
 from .profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
 from .service_access import ServiceAdmission, ServiceConnect, ServiceConnected
@@ -148,7 +149,9 @@ class Request(
             | InstallationActRequest
             | ServiceConnect
             | ServiceAdmission
-            | ExtensionRecordRequest,
+            | ExtensionRecordRequest
+            | ModelRunFetchRequest
+            | ModelRunCompleteRequest,
             Field(discriminator="action"),
         ]
     ]
@@ -316,6 +319,8 @@ class Reply(
             | InstallationReplyTransfer
             | ServiceConnected
             | ExtensionRecordReply
+            | ModelRunFetched
+            | ModelRunCompleted
             | AccessRefusal,
             Field(discriminator="kind"),
         ]

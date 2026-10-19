@@ -25,6 +25,7 @@ from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake
 from cadrumo_client.contracts.enrollment_access import EnrollmentRequest
 from cadrumo_client.contracts.extension_records import ExtensionRecordRequest
 from cadrumo_client.contracts.installation_requests import InstallationActRequest
+from cadrumo_client.contracts.model_runs import ModelRunCompleteRequest, ModelRunFetchRequest
 from cadrumo_client.contracts.operation_access import OperationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
@@ -162,6 +163,16 @@ class ProfileHandler(Protocol):
         self, context: ConnectionContext, channel: ByteChannel, request: ExtensionRecordRequest
     ) -> None:
         """Exchange admitted opaque extension records through protected frames."""
+        ...
+
+    def model_run_fetch(self, context: ConnectionContext, channel: ByteChannel, request: ModelRunFetchRequest) -> None:
+        """Hand a waiting worker model run to the admitted service it was announced to."""
+        ...
+
+    def model_run_complete(
+        self, context: ConnectionContext, channel: ByteChannel, request: ModelRunCompleteRequest
+    ) -> None:
+        """Take the admitted service's answer to a model run it fetched."""
         ...
 
     def poll(self) -> None:

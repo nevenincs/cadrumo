@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import base64
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Annotated, Final, Literal, Self
+from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -158,6 +159,117 @@ class ModelRunRefusal(BaseModel):
     code: ModelRunRefusalCode
 
 
+class ModelRunServed(BaseModel):
+    """The lane that ran a request; the reply text travels separately, on secret frames."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    transport: Annotated[str, Field(pattern=_TRANSPORT)]
+    model: Annotated[str, Field(pattern=_MODEL)]
+    agent_version: Annotated[str, Field(min_length=1, max_length=64)]
+
+
+class ModelRunOutcome(BaseModel):
+    """Exactly one answer to a lookup or a run: a lane, a served run, or a refusal.
+
+    ``text_byte_count`` is the length of the reply text that follows a served
+    run on secret frames, and zero otherwise.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    lane: ModelRunLane | None = None
+    served: ModelRunServed | None = None
+    refusal: ModelRunRefusalCode | None = None
+    text_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_OUTPUT_BYTES)] = 0
+
+    @model_validator(mode="after")
+    def _exactly_one_answer(self) -> Self:
+        if sum(value is not None for value in (self.lane, self.served, self.refusal)) != 1:
+            raise ValueError("a model run outcome carries exactly one of a lane, a served run or a refusal")
+        if (self.served is None) != (self.text_byte_count == 0):
+            raise ValueError("reply text follows a served run and nothing else")
+        return self
+
+
+class ModelRunRequested(BaseModel):
+    """Pushed by the runtime to a profile's admitted service: a lookup or a run waits under ``run_id``.
+
+    It carries nothing private. The service fetches the waiting request, and
+    answers it, with requests on its own connection.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["model_run_requested"] = "model_run_requested"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    run_id: UUID
+
+
+class ModelRunFetchRequest(BaseModel):
+    """The service asks for the waiting request ``run_id`` under its exact lease."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["model_run_fetch"] = "model_run_fetch"
+    request_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    lease_id: UUID
+    run_id: UUID
+
+
+class ModelRunFetched(BaseModel):
+    """The waiting request: a lookup when ``header`` is absent, otherwise a run whose body follows."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["model_run_fetched"] = "model_run_fetched"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    run_id: UUID
+    role: Annotated[str, Field(pattern=_ROLE)]
+    header: ModelRunHeader | None = None
+    body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
+
+    @model_validator(mode="after")
+    def _run_carries_a_body(self) -> Self:
+        if (self.header is None) != (self.body_byte_count == 0):
+            raise ValueError("a run carries a body and a lookup carries none")
+        return self
+
+
+class ModelRunCompleteRequest(BaseModel):
+    """The service answers the request ``run_id``; served reply text follows on secret frames."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["model_run_complete"] = "model_run_complete"
+    request_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    lease_id: UUID
+    run_id: UUID
+    outcome: ModelRunOutcome
+
+
+class ModelRunCompleted(BaseModel):
+    """The runtime took the answer; ``accepted`` is false when nobody waits for it any longer."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["model_run_completed"] = "model_run_completed"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    run_id: UUID
+    accepted: bool
+
+
 def encode_model_run_body(body: ModelRunBody) -> bytearray:
     """Return the body's bounded encoding, refusing one larger than :data:`MODEL_RUN_MAX_BODY_BYTES`."""
     encoded = bytearray(body.model_dump_json().encode("utf-8"))
@@ -182,13 +294,20 @@ __all__ = [
     "MODEL_RUN_MAX_OUTPUT_BYTES",
     "ModelRunAttachment",
     "ModelRunBody",
+    "ModelRunCompleteRequest",
+    "ModelRunCompleted",
     "ModelRunConsentBinding",
+    "ModelRunFetchRequest",
+    "ModelRunFetched",
     "ModelRunHeader",
     "ModelRunLane",
     "ModelRunMediaKind",
+    "ModelRunOutcome",
     "ModelRunOutput",
     "ModelRunRefusal",
     "ModelRunRefusalCode",
+    "ModelRunRequested",
+    "ModelRunServed",
     "decode_model_run_body",
     "encode_model_run_body",
     "model_run_media_kind",

@@ -104,6 +104,8 @@ class ResolvedAgentCredentials:
     credentials: Mapping[str, AgentCredential]
     gateway_bearer: bytearray | None = None
     """The bearer a client of the agent's gateway presents, carried on the same frame."""
+    host_token: bytearray | None = None
+    """The host's own token, which alone admits a background request; never the bearer."""
 
 
 class AgentCredentialSource(Protocol):
@@ -287,7 +289,9 @@ class AgentHostController:
     def _start(self) -> AgentReady:
         resolved = self._credentials.resolve_for_agent()
         try:
-            frame = build_credential_frame(resolved.credentials, gateway_bearer=resolved.gateway_bearer)
+            frame = build_credential_frame(
+                resolved.credentials, gateway_bearer=resolved.gateway_bearer, host_token=resolved.host_token
+            )
         except CredentialFrameError as error:
             raise AgentHostError(AgentHostRefusal.CREDENTIALS_INVALID) from error
         finally:
@@ -295,6 +299,8 @@ class AgentHostController:
                 wipe(credential.secret)
             if resolved.gateway_bearer is not None:
                 wipe(resolved.gateway_bearer)
+            if resolved.host_token is not None:
+                wipe(resolved.host_token)
         try:
             try:
                 process = self._launcher.launch(

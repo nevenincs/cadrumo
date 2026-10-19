@@ -14,7 +14,7 @@ from cadrumo.adapters.outbound.llm.models import LLMResponse
 from cadrumo.adapters.persistence.llm.usage import UsageRecorder
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-from cadrumo.core.config_support import LLMProvider
+from cadrumo.core.config_support import LLMProvider, RetiredLLMProvider
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.transactions.classification_origin import ClassificationOrigin
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -62,7 +62,7 @@ def seed_ledger_llm_usage_records() -> None:
     recorder = UsageRecorder()
     first = LLMResponse(
         text="ok",
-        provider=LLMProvider.AGENT,
+        provider=RetiredLLMProvider.ANTHROPIC,
         model="claude-sonnet-4-6",
         input_tokens=100,
         output_tokens=40,
@@ -73,7 +73,7 @@ def seed_ledger_llm_usage_records() -> None:
     )
     second = LLMResponse(
         text="ok",
-        provider=LLMProvider.AGENT,
+        provider=RetiredLLMProvider.ANTHROPIC,
         model="claude-sonnet-4-6",
         input_tokens=60,
         output_tokens=10,
@@ -85,7 +85,7 @@ def seed_ledger_llm_usage_records() -> None:
     unpriced = LLMResponse(
         text="ok",
         provider=LLMProvider.AGENT,
-        model="gpt-4.1-mini",
+        model="example/api/example-model-1",
         input_tokens=20,
         output_tokens=5,
         cost_estimate_usd=None,
@@ -172,10 +172,11 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(
     assert payload["has_data"] is True
     assert payload["low_confidence_threshold"] == "0.5"
 
-    # Usage/cost section: two ANTHROPIC calls, one a cache hit.
+    # Usage/cost section: two calls recorded under a retired vendor, one a cache hit,
+    # and one unpriced agent run.
     usage = {row["provider"]: row for row in payload["usage_providers"]}
-    assert set(usage) == {LLMProvider.AGENT.value, LLMProvider.AGENT.value}
-    anthropic = usage[LLMProvider.AGENT.value]
+    assert set(usage) == {RetiredLLMProvider.ANTHROPIC.value, LLMProvider.AGENT.value}
+    anthropic = usage[RetiredLLMProvider.ANTHROPIC.value]
     assert anthropic["calls"] == 2
     assert anthropic["cache_hits"] == 1
     assert anthropic["input_tokens"] == 160
@@ -183,10 +184,10 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(
     assert anthropic["total_tokens"] == 210
     assert Decimal(anthropic["cost_estimate_usd"]) == Decimal("0.0015")
     assert anthropic["unpriced_calls"] == 0
-    openai = usage[LLMProvider.AGENT.value]
-    assert openai["calls"] == 1
-    assert openai["cost_estimate_usd"] is None
-    assert openai["unpriced_calls"] == 1
+    agent = usage[LLMProvider.AGENT.value]
+    assert agent["calls"] == 1
+    assert agent["cost_estimate_usd"] is None
+    assert agent["unpriced_calls"] == 1
     assert payload["total_calls"] == 3
     assert payload["total_input_tokens"] == 180
     assert payload["total_output_tokens"] == 55
@@ -238,7 +239,7 @@ def test_llm_diagnostics_usage_window_and_threshold_keep_confidence_independent(
     assert payload["total_calls"] == 1
     only_usage = payload["usage_providers"]
     assert len(only_usage) == 1
-    assert only_usage[0]["provider"] == LLMProvider.AGENT.value
+    assert only_usage[0]["provider"] == RetiredLLMProvider.ANTHROPIC.value
     assert only_usage[0]["cache_hits"] == 1
     # Both 0.30 and 0.95 fall below 0.99 despite the usage date window.
     assert claude["low_confidence_count"] == 2

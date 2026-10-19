@@ -90,8 +90,10 @@ class _OperationBoundModelRuns:
         return await self._on_owner_loop(self._owner.model_run(self._identity, header, body))
 
     async def _on_owner_loop[T](self, call: Coroutine[None, None, T]) -> T:
+        # Always a task of its own: the authority holds one permit per task, and
+        # the caller's task may already hold another.
         if asyncio.get_running_loop() is self._loop:
-            return await call
+            return await asyncio.create_task(call)
         return await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(call, self._loop))
 
 

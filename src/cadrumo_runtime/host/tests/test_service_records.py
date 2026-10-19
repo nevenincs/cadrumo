@@ -153,7 +153,10 @@ def _retained_connections_for_cleanup(
 
 @contextmanager
 def service_record_runtime(
-    tmp_path: Path, *, record_capabilities: tuple[ExtensionRecordCapability, ...] | None = None
+    tmp_path: Path,
+    *,
+    record_capabilities: tuple[ExtensionRecordCapability, ...] | None = None,
+    model_runs: bool = False,
 ) -> Generator[ServiceRecordRuntime]:
     """Start real encrypted profiles and workers with two controlled authority ports."""
     with worker_profiles(tmp_path) as (root, targets):
@@ -183,6 +186,7 @@ def service_record_runtime(
                 allow_period_independent=True,
                 allow_delegation=False,
             ),
+            model_runs=model_runs,
         )
         stop, boot, native, verifier = Event(), uuid4(), MemoryNativePort(), ControlledServiceVerifier()
         profiles = RuntimeProfileConnections(

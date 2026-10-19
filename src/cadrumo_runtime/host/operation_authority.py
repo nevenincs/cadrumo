@@ -57,6 +57,16 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunLane,
+    ModelRunOutcome,
+    ModelRunOutput,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+    encode_model_run_body,
+)
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
@@ -71,6 +81,12 @@ from ..adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..application.approval_binding import RuntimeApprovalBinding
 
 _LOGGER = get_logger(__name__)
+
+_MODEL_RUN_LOOKUP_SECONDS = 30.0
+"""How long a lane lookup may wait for the service; it reads settings and runs nothing."""
+
+_MODEL_RUN_ANSWER_MARGIN_SECONDS = 30.0
+"""Time beyond a run's own deadline for the service to report the outcome it reached."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -541,6 +557,53 @@ class ProfileWorkerOperationAuthority:
                 asyncio.to_thread(lease.start_runtime_server), task_name="worker-runtime-server-start"
             )
 
+    async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
+        """Ask the profile's agent service which lane and model it would use for ``role``."""
+        outcome, text = await self._model_run(identity, role, None, bytearray(), _MODEL_RUN_LOOKUP_SECONDS)
+        text[:] = bytes(len(text))
+        if outcome.lane is not None:
+            return outcome.lane
+        return ModelRunRefusal(code=outcome.refusal or ModelRunRefusalCode.RUN_FAILED)
+
+    async def model_run(
+        self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
+    ) -> ModelRunOutput | ModelRunRefusal:
+        """Have the profile's agent service run one tool-less request for this running operation."""
+        answer_seconds = header.deadline_seconds + _MODEL_RUN_ANSWER_MARGIN_SECONDS
+        outcome, text = await self._model_run(
+            identity, header.role, header, encode_model_run_body(body), answer_seconds
+        )
+        try:
+            return _model_run_output(outcome, text)
+        finally:
+            text[:] = bytes(len(text))
+
+    async def _model_run(
+        self,
+        identity: OperationIdentity,
+        role: str,
+        header: ModelRunHeader | None,
+        body: bytearray,
+        answer_seconds: float,
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        """Relay one model-run instruction under this invocation's own START authority.
+
+        The authority is rechecked as the stage starts, like any other stage; the
+        runtime then routes the request to the profile's admitted agent service.
+        """
+        try:
+            async with self.guard(identity, AccessAction.START):
+                task = asyncio.current_task()
+                lease = None if task is None else self._held_leases.get(task)
+                if lease is None:
+                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+                return await await_cancellation_complete(
+                    asyncio.to_thread(lease.model_run, role, header, body, answer_seconds=answer_seconds),
+                    task_name="worker-model-run",
+                )
+        finally:
+            body[:] = bytes(len(body))
+
     def retire_password_successor(self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome) -> None:
         """Retire a proven replacement only within its original task's COMMIT.
 
@@ -599,3 +662,23 @@ class ProfileWorkerOperationAuthority:
         return OperationIdentity(
             operation_id=operation_id, definition_id=request.definition_id, subject_ref=request.subject_ref
         )
+
+
+def _model_run_output(outcome: ModelRunOutcome, text: bytearray) -> ModelRunOutput | ModelRunRefusal:
+    """Turn the service's answer to a run into its output, refusing an answer that is not a run's."""
+    if outcome.refusal is not None:
+        return ModelRunRefusal(code=outcome.refusal)
+    served = outcome.served
+    if served is None:
+        return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+    try:
+        reply = text.decode("utf-8")
+    except UnicodeDecodeError:
+        return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
+    return ModelRunOutput(
+        text=reply,
+        provider_id=served.provider_id,
+        transport=served.transport,
+        model=served.model,
+        agent_version=served.agent_version,
+    )

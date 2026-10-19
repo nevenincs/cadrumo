@@ -83,10 +83,14 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
     startup = ServiceStartupFrame(bearer="a" * 64, gateway_bearer="b" * 64)
     parent = bytearray(startup.bearer, "ascii")
     gateway = bytearray(startup.gateway_bearer, "ascii")
-    resolved = _GatewayCredentials(_CredentialSource(), gateway, Event()).resolve_for_agent()
-    agent_frame = build_credential_frame(resolved.credentials, gateway_bearer=resolved.gateway_bearer)
+    host_token = bytearray(b"c" * 43)
+    resolved = _GatewayCredentials(_CredentialSource(), gateway, host_token, Event()).resolve_for_agent()
+    agent_frame = build_credential_frame(
+        resolved.credentials, gateway_bearer=resolved.gateway_bearer, host_token=resolved.host_token
+    )
     agent_token = json.loads(agent_frame)["gateway_bearer"].encode("ascii")
     assert parent not in agent_frame
+    assert json.loads(agent_frame)["host_token"] == host_token.decode("ascii")
     target = _AdminRecorder()
     server = AdminServer(target, bearer=parent)
     request: dict[str, object] = {"version": 1, "request_id": str(uuid4()), "action": action}

@@ -9,6 +9,7 @@ from cadrumo.application.user_profile.session_retirement import SessionRetiremen
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .access_refusals import AccessDenialCode
+from .model_runs import ModelRunRequested
 
 
 class SessionEvent(BaseModel):
@@ -122,6 +123,7 @@ type ConnectionEvent = (
     | AttendanceChanged
     | AttendanceAnswered
     | OperationChanged
+    | ModelRunRequested
 )
 
 CONNECTION_EVENT_TYPES = (
@@ -133,6 +135,7 @@ CONNECTION_EVENT_TYPES = (
     AttendanceChanged,
     AttendanceAnswered,
     OperationChanged,
+    ModelRunRequested,
 )
 """Every frame the runtime may push between replies, for exhaustive transport checks."""
 

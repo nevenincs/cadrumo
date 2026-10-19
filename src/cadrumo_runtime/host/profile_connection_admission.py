@@ -94,6 +94,7 @@ class ProfileConnectionAdmissionMixin:
                         wall_clock=self._wall_clock,
                         retired=self._publish_retirement,
                         operations_advanced=partial(self._operations_advanced, profile_id),
+                        model_runs=partial(self._relay_model_run, profile_id),
                     )
                     if not self._admitting():
                         raise RefusalError(RefusalCode.DRAINING)

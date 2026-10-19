@@ -41,6 +41,8 @@ class InstalledServiceDescriptor(BaseModel):
     # The arguments the image must be started with, first after the image itself: the role
     # of an image that runs several. Empty for an image that runs one service.
     launch_arguments: tuple[Annotated[str, Field(min_length=1, max_length=256)], ...] = ()
+    # Whether the runtime may route a profile worker's model runs to this service.
+    model_runs: bool = False
 
 
 @dataclass(frozen=True, slots=True)

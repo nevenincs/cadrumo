@@ -80,7 +80,9 @@ def _running_service(tmp_path: Path, source: _CredentialSource) -> tuple[AgentSe
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=events.append,
     )
-    service._credentials = _GatewayCredentials(source, bytearray(b"synthetic-gateway-bearer"), service._closing)
+    service._credentials = _GatewayCredentials(
+        source, bytearray(b"synthetic-gateway-bearer"), bytearray(b"synthetic-host-token"), service._closing
+    )
     record = tmp_path / "tree"
     record.mkdir()
     controller = AgentHostController(

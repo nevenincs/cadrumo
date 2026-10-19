@@ -79,6 +79,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.login import LoginEvidence
+from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.profile_access import HumanProof
 from cadrumo_client.contracts.session_events import SessionEvent
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -88,6 +89,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
+    WorkerModelRun,
     WorkerResponseScopeRequest,
 )
 from cadrumo_runtime.contracts.worker_enrollment import (
@@ -221,6 +223,7 @@ class RuntimeProfileHost:
         wall_clock: Callable[[], datetime] = now,
         retired: Callable[[SessionEvent], None] | None = None,
         operations_advanced: Callable[[tuple[OperationId, ...]], None] | None = None,
+        model_runs: Callable[[WorkerModelRun, bytearray], tuple[ModelRunOutcome, bytearray]] | None = None,
     ) -> None:
         """Compose existing authorities without opening keys or selecting a profile."""
         self.store, self._registry = store, registry
@@ -235,6 +238,7 @@ class RuntimeProfileHost:
         self._locked_logins: set[str] = set()
         self._retired_event = retired
         self._operations_advanced = operations_advanced
+        self._model_runs = model_runs
         self._sign_in_generation: SignInGeneration | None = None
         self.issuer = CustodyAutomationKeyIssuer()
         self.owner = ProfileWorkerSessionOwner(
@@ -350,6 +354,19 @@ class RuntimeProfileHost:
         else:
             self.approvals.retire(request.binding)
         return None
+
+    def model_run(
+        self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        """Relay one model run of this profile's worker to the profile's admitted agent service.
+
+        The START permit it arrives under was authorized for this exact worker's
+        profile, so only the profile is rechecked here.
+        """
+        if authority.request.profile_id != self.store.binding.profile_id or self._model_runs is None:
+            body[:] = bytes(len(body))
+            return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
+        return self._model_runs(command, body)
 
     def approval_publication(
         self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
