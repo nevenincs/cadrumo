@@ -24,7 +24,7 @@ from .build_paths import build_paths
 from .hashing import digest
 from .layout import load_layout
 from .process_quiescence import quiesce
-from .stdlib import bytecode
+from .stdlib import bytecode, require_bytecode_compiler
 from .update_images import publish
 
 
@@ -84,8 +84,8 @@ def update(build: Path, config: str) -> None:
     receipt = json.loads((paths["agent"] / "agent-wheel.json").read_text(encoding="utf-8"))
     if manifest["layout"] != contract or manifest["distributions"]["cadrumo-agent"] != receipt["version"]:
         raise ValueError("Agent-only update requires the existing layout and distribution version")
-    if tuple(map(int, manifest["python"].split("."))) != sys.version_info[:3]:
-        raise ValueError("Agent bytecode requires the package's exact Python compiler")
+    # The same compiler the full payload assembly accepts produces the agent's bytecode.
+    require_bytecode_compiler(manifest["python"])
     wheel = agent_wheel(paths["agent"])
     resolved = validate_wheel_dependencies(wheel, target, manifest["python"], paths["agent"])
     for name, requirement in resolved.items():

@@ -164,3 +164,21 @@ def test_optimized_builder_preserves_the_runtime_debug_checks(tmp_path: Path, mo
     module = ModuleType("example")
     importlib.machinery.SourceFileLoader("example", str(source)).exec_module(module)
     assert module.runtime_checks is True
+
+
+@pytest.mark.parametrize(
+    ("runtime", "admitted"),
+    [
+        (f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}", True),
+        (f"{sys.version_info[0]}.{sys.version_info[1]}.0", True),
+        (f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2] + 1}", False),
+        (f"{sys.version_info[0]}.{sys.version_info[1] + 1}.0", False),
+        (f"{sys.version_info[0]}.{sys.version_info[1] - 1}.{sys.version_info[2]}", False),
+    ],
+)
+def test_one_compiler_policy_admits_the_runtime_minor_at_an_equal_or_newer_patch(runtime: str, admitted: bool) -> None:
+    if admitted:
+        stdlib.require_bytecode_compiler(runtime)
+    else:
+        with pytest.raises(ValueError, match="compatible development Python"):
+            stdlib.require_bytecode_compiler(runtime)

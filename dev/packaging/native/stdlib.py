@@ -24,6 +24,17 @@ def compiler_identity() -> str:
     return hashlib.sha256(Path(__file__).read_bytes() + sys.version.encode() + importlib.util.MAGIC_NUMBER).hexdigest()
 
 
+def require_bytecode_compiler(version: str) -> None:
+    """Refuse to compile bytecode for a ``version`` runtime unless this CPython may produce it.
+
+    Bytecode is portable within a CPython minor, so the producer must share the
+    runtime's minor and be at least as new as its patch.
+    """
+    required = tuple(map(int, version.split(".")))
+    if required[:2] != sys.version_info[:2] or sys.version_info[:3] < required:
+        raise ValueError("Bytecode assembly requires compatible development Python at least as new as the runtime")
+
+
 def compile_packages_bytecode(
     source: Path,
     *,
@@ -33,9 +44,7 @@ def compile_packages_bytecode(
     previous_files: Mapping[str, str] | None = None,
 ) -> None:
     """Publish caches with the same CPython minor and no older patch than the runtime."""
-    required = tuple(map(int, version.split(".")))
-    if required[:2] != sys.version_info[:2] or sys.version_info[:3] < required:
-        raise ValueError("Bytecode assembly requires compatible development Python at least as new as the runtime")
+    require_bytecode_compiler(version)
     for file in sorted(source.rglob("*.py")):
         # Developer tools redirect cache_from_source through sys.pycache_prefix;
         # published bytecode belongs beside its source in the immutable package.
