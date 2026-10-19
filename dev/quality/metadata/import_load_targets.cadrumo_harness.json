@@ -42,7 +42,6 @@
         "cadrumo_harness.mcp.runtime_admission",
         "cadrumo_harness.mcp.runtime_cleanup",
         "cadrumo_harness.mcp.server",
-        "cadrumo_harness.mcp.surface_facts",
         "cadrumo_harness.mcp.surfaces",
         "cadrumo_harness.resources"
       ]
