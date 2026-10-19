@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
-import json
 import os
+import sqlite3
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -34,9 +35,9 @@ def _settled(path: Path, content: bytes, *, at: int = _LONG_AGO) -> Path:
 
 
 def _entries(build: Path) -> dict[str, list[object]]:
-    entries = json.loads((build / "cache" / "digests.json").read_text(encoding="utf-8"))["entries"]
-    assert isinstance(entries, dict)
-    return {str(name): list(entry) for name, entry in entries.items()}
+    with contextlib.closing(sqlite3.connect(build / "cache" / "digests.sqlite")) as connection:
+        rows = connection.execute("SELECT path, size, mtime, ino, hashed, sha256 FROM entries").fetchall()
+    return {str(row[0]): list(row[1:]) for row in rows}
 
 
 def test_the_digest_is_the_files_sha256_with_or_without_the_cache(tmp_path: Path) -> None:
@@ -151,3 +152,34 @@ def test_a_child_started_inside_the_cache_uses_and_extends_it(tmp_path: Path) ->
     assert CACHE_VARIABLE not in os.environ
     entries = _entries(build)
     assert {os.path.normcase(os.path.abspath(path)) for path in files} <= set(entries)
+
+
+def test_a_process_that_hashed_nothing_new_writes_nothing(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    files = [_settled(tmp_path / f"kept{member}.py", f"{member}\n".encode()) for member in range(20)]
+    with digest_cache(build) as cache:
+        for path in files:
+            digest(path)
+    stored = {path: path.read_bytes() for path in cache.parent.iterdir() if not path.name.endswith("-shm")}
+    child = run_command(
+        [sys.executable, "-c", _WORKER, str(REPO_ROOT), str(build), *map(str, files)], cwd=tmp_path, timeout_seconds=120
+    )
+    assert child.returncode == 0
+    assert {path: path.read_bytes() for path in stored} == stored
+
+
+def test_rows_for_files_that_are_gone_are_pruned(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    gone = _settled(tmp_path / "gone.py", b"gone\n")
+    kept = _settled(tmp_path / "kept.py", b"kept\n")
+    with digest_cache(build) as cache:
+        digest(gone)
+        digest(kept)
+    gone.unlink()
+    with contextlib.closing(sqlite3.connect(cache)) as connection, connection:
+        connection.execute("UPDATE meta SET value = 0 WHERE name = 'pruned'")
+    with digest_cache(build):
+        digest(_settled(tmp_path / "new.py", b"new\n"))
+    names = set(_entries(build))
+    assert os.path.normcase(os.path.abspath(gone)) not in names
+    assert os.path.normcase(os.path.abspath(kept)) in names
