@@ -201,12 +201,25 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
     if digest(archive) != tools["cpython_sha256"]:
         raise ValueError("CPython SDK SHA256 mismatch")
     sdk = destination / Path(contract["sdk"]["root"]).parts[0]
-    if not sdk.exists():
-        with zipfile.ZipFile(archive) as package:
-            for member in package.namelist():
-                if not (sdk / member).resolve().is_relative_to(sdk):
-                    raise ValueError("SDK archive contains an escaping path")
-            package.extractall(sdk)
+    # Reprovisioning rewrites only files whose bytes differ, so the headers and libraries the
+    # native images compile against keep their timestamps and nothing recompiles needlessly.
+    expected: set[Path] = set()
+    with zipfile.ZipFile(archive) as package:
+        for member in package.infolist():
+            target = (sdk / member.filename).resolve()
+            if not target.is_relative_to(sdk.resolve()):
+                raise ValueError("SDK archive contains an escaping path")
+            if member.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            expected.add(target)
+            content = package.read(member)
+            if not target.is_file() or target.read_bytes() != content:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(content)
+    for path in sorted(sdk.rglob("*"), reverse=True):
+        if path.is_file() and path.resolve() not in expected:
+            path.unlink()
     return destination / str(contract["sdk"]["root"])
 
 
@@ -217,8 +230,15 @@ def resources(
     tools: Path,
     entrypoints: dict[str, str],
     product: DistributionIdentity,
+    *,
+    shared: Path | None = None,
 ) -> None:
-    """Render the icon, one PE version resource per native executable and the process manifests."""
+    """Render the icon, one PE version resource per native executable and the process manifests.
+
+    The version resources carry the build identity and go to ``destination``; the icon and
+    manifests carry none and go to ``shared`` (``destination`` when omitted).
+    """
+    shared = destination if shared is None else shared
     if not 0 <= stamp.build_sequence <= 65535:
         raise ValueError("Windows resource build sequence must be between 0 and 65535")
     for image, source in APPLICATION_MANIFESTS.items():
@@ -228,7 +248,7 @@ def resources(
             ("development", product.windows_package_development_publisher),
         ):
             write_bytes(
-                destination / application_manifest_name(image, build_kind),
+                shared / application_manifest_name(image, build_kind),
                 identity_manifest(
                     authored,
                     package_name=product.windows_package_name,
@@ -246,13 +266,13 @@ def resources(
     with Image.open(io.BytesIO(png)) as icon:
         output = io.BytesIO()
         icon.save(output, format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
-        write_bytes(destination / "cadrumo.ico", output.getvalue())
+        write_bytes(shared / "cadrumo.ico", output.getvalue())
     numeric = ",".join([*version.split(".")[:3], str(stamp.build_sequence)])
     descriptions = {"interpreter": "Cadrumo controlled Python interpreter"} | {
         f"entrypoint-{name}": description for name, description in entrypoints.items()
     }
     for stem, description in descriptions.items():
-        resource = _version_resource(destination, numeric, version, stamp, publisher, _rc_string(description))
+        resource = _version_resource(shared, numeric, version, stamp, publisher, _rc_string(description))
         write_text(destination / f"{stem}.rc", resource)
 
 

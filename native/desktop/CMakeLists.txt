@@ -50,6 +50,12 @@ set(desktop_host_contracts native_contract)
 # The desktop resolves its own build identity (with the manager, installer and interpreter
 # hosts it links) before Tauri compiles it; an unchanged fingerprint changes no variable.
 cadrumo_identity_command(desktop_identity desktop)
+# A desktop image built from the desktop's current fingerprint by the same command is current:
+# the fingerprint covers every input, so the Tauri driver would only confirm it.
+function(cadrumo_reuse_built output component artifact)
+  set(${output} "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}" ${CADRUMO_HELPER} run --build "${CMAKE_BINARY_DIR}"
+    --config "$<CONFIG>" --reuse-built "${component}" "${artifact}" -- PARENT_SCOPE)
+endfunction()
 if(WIN32)
   # Cargo embeds the generated Windows manifests, including the compatibility
   # claim required by the runtime role's native login observations.
@@ -65,6 +71,7 @@ endif()
 set(CADRUMO_DESKTOP_HOST_EXECUTABLE
   "${CADRUMO_PATH_DESKTOP_CARGO}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
 set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
+cadrumo_reuse_built(desktop_reuse desktop "${CADRUMO_DESKTOP_HOST_EXECUTABLE}")
 
 # The checkout's shared node_modules tree is an explicit developer prerequisite. A build
 # may validate it, but installation and removal belong to the operator outside CMake.
@@ -216,7 +223,7 @@ cadrumo_build_step(step_comment desktop-host-build GROUP desktop
   OUTPUTS "${CADRUMO_DESKTOP_HOST_EXECUTABLE}")
 add_custom_target(desktop-host-build
   ${desktop_identity}
-  COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
+  COMMAND ${desktop_reuse} "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
     ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_HOST_EXECUTABLE=${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
@@ -324,6 +331,8 @@ cadrumo_build_step(step_comment desktop-packaged-host GROUP verification
 # the build writes, with the image's digest.
 cadrumo_identity_command(desktop_test_host_identity desktop-test-host)
 set(desktop_test_host_record "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/host.json")
+cadrumo_reuse_built(desktop_test_host_reuse desktop-test-host
+  "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/cargo/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
 set(desktop_resource_environment)
 if(WIN32)
   get_directory_property(desktop_resource_compiler DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
@@ -332,7 +341,7 @@ if(WIN32)
 endif()
 add_custom_target(desktop-packaged-host
   ${desktop_test_host_identity}
-  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
+  COMMAND ${desktop_test_host_reuse} "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}" ${desktop_resource_environment}
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
   COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}" ${CADRUMO_HELPER} run --build "${CMAKE_BINARY_DIR}"

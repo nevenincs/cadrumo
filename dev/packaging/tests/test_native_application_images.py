@@ -347,3 +347,28 @@ def test_the_verifier_requires_a_successful_exact_version(tmp_path: Path, return
 
     with pytest.raises(AssertionError, match=f"cadrumo.exe did not report version {VERSION}"):
         verify_application_images(root, manifest, lambda argv: _result(argv, returncode, stdout))
+
+
+@pytest.mark.parametrize(
+    ("stdout", "accepted"),
+    [
+        (f"Cadrumo Manager {VERSION}+2026101903.debug\n", True),
+        (f"Cadrumo Manager {VERSION}+2026101903\n", True),
+        (f"Cadrumo Manager {VERSION}+2026101902.debug\n", False),
+        (f"Cadrumo Manager {VERSION}+20261019031\n", False),
+    ],
+)
+def test_an_image_reporting_a_display_version_must_report_its_recorded_build(
+    tmp_path: Path, stdout: str, accepted: bool
+) -> None:
+    root, manifest = _package(tmp_path, bundled=True)
+    manifest["components"] = [{"path": "cadrumo-manager.exe", "build_id": "2026101903"}]
+
+    def execute(argv: list[str]) -> CommandResult:
+        return _result(argv, 0, stdout if argv[0].endswith("cadrumo-manager.exe") else f"cadrumo {VERSION}\n")
+
+    if accepted:
+        assert verify_application_images(root, manifest, execute)["cadrumo-manager.exe"]["staged"] is True
+    else:
+        with pytest.raises(AssertionError, match=re.escape("cadrumo-manager.exe did not report build 2026101903")):
+            verify_application_images(root, manifest, execute)

@@ -5,7 +5,7 @@ set(python_distribution_inputs ${native_helper_inputs} ${contract_inputs}
   "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py")
 string(JSON python_bootstrap GET "${package_layout}" bootstrap)
 list(APPEND python_distribution_inputs "${PROJECT_SOURCE_DIR}/native/${python_bootstrap}"
-  "${CADRUMO_PATH_PYTHON_SDK}" "${CADRUMO_PATH_GENERATED}/build.json"
+  "${CADRUMO_PATH_PYTHON_SDK}" "${CADRUMO_PATH_GENERATED}/$<CONFIG>/build.json"
   "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
   "$<TARGET_FILE:cadrumo_python>" "$<TARGET_FILE:cadrumo_python_bridge>")
 foreach(target python python_d)

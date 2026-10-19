@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -28,9 +29,11 @@ from .build_stamp import (
     action_identity,
     begin_record,
     build_type,
+    built_current,
     image_environment,
     native_settled,
     read_record,
+    record_built,
     resolve,
     settle_record,
 )
@@ -80,6 +83,16 @@ def action_toolchain(configured: Mapping[str, object], action: str, target: str)
     # never produce their contents. CMake enrolls their declared sources/backend,
     # and the action caller hashes the admitted Python executable.
     return selected
+
+
+def owned(build: Path, relative: str) -> Path:
+    """Return a generated directory inside this CMake binary directory, creating it if missing."""
+    build = build.resolve(strict=True)
+    destination = (build / relative).resolve()
+    if build == REPO_ROOT or destination == build or not destination.is_relative_to(build):
+        raise ValueError("Refusing a generated-directory operation outside the CMake binary directory")
+    destination.mkdir(parents=True, exist_ok=True)
+    return destination
 
 
 def reset(build: Path, relative: str) -> Path:
@@ -151,7 +164,20 @@ def run_configured_command(
         if directory.is_symlink() or directory.is_junction():
             raise ValueError("Native Cargo target directory contains a linked member")
     directory = selected.resolve()
-    identity = native_toolchain_identity(configured)
+    # CMake's own C compile and link flags reach only the targets CMake compiles; Cargo never
+    # reads them, so a change to them must not clean the Cargo directory.
+    cmake_flags = re.compile(r"CMAKE_C_FLAGS(_.+)?|CMAKE_[A-Z]+_LINKER_FLAGS(_.+)?")
+    target_configuration = configured.get("target_configuration", {})
+    identity = native_toolchain_identity(
+        {
+            **configured,
+            "target_configuration": {
+                name: value
+                for name, value in (target_configuration.items() if isinstance(target_configuration, dict) else ())
+                if not cmake_flags.fullmatch(str(name))
+            },
+        }
+    )
     marker = paths["generated"] / f"rust-toolchain-{hashlib.sha256(str(directory).encode()).hexdigest()}.txt"
     # Cargo subcommands and their drivers must use the selected toolchain too.
     environment = dict(os.environ)
@@ -205,6 +231,9 @@ def main() -> None:
     # (CADRUMO_<COMPONENT>_BUILD_*). Crates linked into it as libraries consume none, so an
     # unchanged component, or another component's change, rebuilds nothing.
     parser.add_argument("--build-identity", metavar="COMPONENT")
+    # Skips the command when it last built ARTIFACT from COMPONENT's current fingerprint: the
+    # fingerprint covers every input of the image, so the driver would only confirm it.
+    parser.add_argument("--reuse-built", nargs=2, metavar=("COMPONENT", "ARTIFACT"))
     parser.add_argument("--development", action="store_true")
     parser.add_argument("--interpreter", action="store_true")
     parser.add_argument("--without-user-docs", action="store_true")
@@ -221,12 +250,21 @@ def main() -> None:
         environment.update(dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(temporary)))
         tempfile.tempdir = str(temporary)
     if arguments.build_identity is not None:
-        resolved = resolve(arguments.build, [arguments.build_identity])
+        resolved = resolve(arguments.build, [arguments.build_identity], configuration=arguments.config)
         environment.update(image_environment(resolved[arguments.build_identity]))
     os.environ.update(environment)
     if arguments.action == "run":
         if not command:
             parser.error("run requires -- followed by an executable and arguments")
+        reuse = arguments.reuse_built
+        if reuse is not None:
+            if arguments.config is None:
+                parser.error("--reuse-built requires --config")
+            if built_current(arguments.build, reuse[0], arguments.config, Path(reuse[1]), command):
+                BuildLog(_command_step(command)).status(
+                    f"up to date, reusing {display_path(Path(reuse[1]))}: built from the current {reuse[0]} fingerprint"
+                )
+                raise SystemExit(0)
         if arguments.build is not None:
             selected = build_paths(arguments.build)["generated"] / "build-toolchain.json"
             with measure_build(arguments.build, _command_step(command)) as timings:
@@ -244,7 +282,10 @@ def main() -> None:
         if result.returncode == 0 and arguments.build_identity is not None and command[1:2] in (["build"], ["rustc"]):
             # The component's images are compiled; staging adds what it ships of them.
             component = arguments.build_identity
-            settle_record(arguments.build, component, settled=native_settled(arguments.build, [component])[component])
+            settled = native_settled(arguments.build, [component], configuration=arguments.config)[component]
+            settle_record(arguments.build, component, settled=settled)
+        if result.returncode == 0 and reuse is not None:
+            record_built(arguments.build, reuse[0], str(arguments.config), Path(reuse[1]), command)
         raise SystemExit(result.returncode)
     if arguments.build is None:
         parser.error("--build is required")
@@ -479,7 +520,8 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             npm_cli=Path(tools["npm_cli"]),
         )
     elif arguments.action == "sdk":
-        destination = reset(build, str(sdk_root.relative_to(build)))
+        # The backend reconciles the SDK in place; the archive download is kept.
+        destination = owned(build, str(sdk_root.relative_to(build)))
         pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
         produced = backend(contract).provision_sdk(
             destination, pin, provisioning_tools(arguments.target, configured), contract
@@ -570,7 +612,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             None if arguments.interpreter else paths["product"] / "dependencies",
             paths["bin"] / arguments.config,
             destination / "app",
-            paths["generated"] / "build.json",
+            paths["generated"] / arguments.config / "build.json",
             None if arguments.without_user_docs else paths["user_docs_stage"],
             images=dict(image_artifact(item) for item in arguments.image),
             binary_dir=build,

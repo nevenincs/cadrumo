@@ -10,7 +10,13 @@
 // a real host. It has a directory of its own beside the first.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
 import { delimiter, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +25,7 @@ import {
   snapshotHostSources,
 } from "../../scripts/backend-snapshot.mjs";
 import { buildPath } from "../../scripts/build-paths.mjs";
+import { contentBuild } from "../../scripts/content-build.mjs";
 import {
   buildStamp,
   identity as readIdentity,
@@ -140,6 +147,9 @@ function build(variant) {
   const snapshot = snapshotHostSources(resolve(desktop, ".."), paths.snapshot, {
     incremental: true,
   });
+  // tauri-build watches this directory even when no capabilities are declared; without
+  // it Cargo reruns the build script and recompiles the host on every build.
+  mkdirSync(resolve(snapshot.crate, "capabilities"), { recursive: true });
   const config = tauriConfig(
     JSON.parse(
       readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
@@ -202,12 +212,34 @@ function build(variant) {
     if (result.error) throw result.error;
     if (result.status !== 0) process.exit(result.status ?? 1);
   };
-  run([
-    "icon",
-    resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
-    "--output",
-    paths.icons,
-  ]);
+  // Regenerating identical icons would still touch the files Tauri's build script watches,
+  // and recompile the host on every build; regenerate them only when their inputs change.
+  const icon = resolve(desktop, "../../docs/_static/cadrumo-icon.svg");
+  const tauriPackages = resolve(desktop, "frontend/node_modules/@tauri-apps");
+  contentBuild(
+    {
+      inputs: [
+        process.execPath,
+        fileURLToPath(import.meta.url),
+        icon,
+        ...readdirSync(tauriPackages)
+          .filter((name) => name === "cli" || name.startsWith("cli-"))
+          .map((name) => resolve(tauriPackages, name)),
+      ],
+      outputs: [
+        paths.icons,
+        resolve(paths.icons, "icon.ico"),
+        resolve(paths.icons, "icon.png"),
+      ],
+      record: resolve(paths.root, "icons-build.json"),
+      identity: {
+        node: process.version,
+        platform: process.platform,
+        arch: process.arch,
+      },
+    },
+    () => run(["icon", icon, "--output", paths.icons]),
+  );
   // `tauri build`, unlike a plain Cargo build, enables custom-protocol, so the
   // host is a packaged build: it serves the documentation from the package
   // and enforces the WebView2 environment check.

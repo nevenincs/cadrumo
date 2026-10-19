@@ -209,6 +209,8 @@ def resources(
     tools: Path,
     entrypoints: dict[str, str],
     product: DistributionIdentity,
+    *,
+    shared: Path | None = None,
 ) -> None:
     """Validate embedded identity; application bundle metadata belongs to the bundle assembler."""
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))

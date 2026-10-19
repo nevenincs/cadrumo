@@ -20,15 +20,27 @@ export function identity() {
 }
 
 // The desktop component's build identity, resolved by the identity step of each desktop
-// target (component-identity/desktop.json). Only the desktop crate reads it, through its own
+// target (component-identity/<Config>/desktop.json). Only the desktop crate reads it, through its own
 // CADRUMO_DESKTOP_BUILD_* variables; CADRUMO_IMAGE_COMPONENT tells the manager and installer
 // crates it links that they are libraries here and read no identity of their own. The Tauri
 // version carries the id as semantic-version build metadata, so an unchanged desktop changes
 // nothing Cargo or Vite sees.
-export function componentIdentity(component) {
+export function componentIdentity(
+  component,
+  configuration = process.env.CADRUMO_BUILD_CONFIG,
+) {
+  if (!configuration)
+    throw new Error(
+      "Select the CMake configuration whose build identity to read through CADRUMO_BUILD_CONFIG",
+    );
   const value = JSON.parse(
     readFileSync(
-      resolve(buildPath("generated"), "component-identity", `${component}.json`),
+      resolve(
+        buildPath("generated"),
+        "component-identity",
+        configuration,
+        `${component}.json`,
+      ),
       "utf8",
     ),
   );

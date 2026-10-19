@@ -76,6 +76,9 @@ endif()
 set(application_image_args)
 set(application_image_dependencies)
 set(staged_images)
+# The compile-time identity of each component the payload stages, in this configuration;
+# components it does not stage (the installer, the test host) never re-run the assembly.
+set(staged_identities "${CADRUMO_BUILD_IDENTITY_DIR}/$<CONFIG>/interpreter.json")
 string(JSON image_count LENGTH "${application_images}")
 if(image_count GREATER 0)
   math(EXPR image_last "${image_count} - 1")
@@ -93,6 +96,12 @@ if(image_count GREATER 0)
     list(APPEND application_image_args --image "${image_file}=${image_path}")
     list(APPEND application_image_dependencies "${image_target}" "${image_path}")
     list(APPEND staged_images "${image_file} from ${image_target}")
+    get_filename_component(image_component "${image_file}" NAME_WE)
+    string(REGEX REPLACE "^cadrumo-" "" image_component "${image_component}")
+    if(image_desktop)
+      set(image_component desktop)
+    endif()
+    list(APPEND staged_identities "${CADRUMO_BUILD_IDENTITY_DIR}/$<CONFIG>/${image_component}.json")
     if(BUILD_TESTING)
       set(image_arguments)
       string(JSON argument_count LENGTH "${application_images}" ${index} version_arguments)
@@ -131,8 +140,8 @@ cadrumo_package_bootstrap(package_bootstrap "${package_layout}" "${PROJECT_SOURC
 cadrumo_assembly_product_inputs(assembly_product_inputs "${CADRUMO_PATH_PRODUCT}")
 set(assembly_inputs "${CADRUMO_PATH_RUNTIME}/runtime-inputs.json" "${CADRUMO_PATH_PYTHON_SDK}" ${assembly_product_inputs}
   "${CADRUMO_PATH_AGENT}/runtime"
-  "${CADRUMO_PATH_GENERATED}/build.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
-  "${CADRUMO_BUILD_IDENTITY_DIR}" "${package_bootstrap}" ${contract_inputs})
+  "${CADRUMO_PATH_GENERATED}/$<CONFIG>/build.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
+  ${staged_identities} "${package_bootstrap}" ${contract_inputs})
 foreach(target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${development_target})
   list(APPEND assembly_inputs "$<TARGET_FILE:${target}>")
 endforeach()
@@ -191,7 +200,7 @@ add_custom_target(app-payload
     ${user_docs_args} ${application_image_args}
   DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
     python_product ${user_docs_dependencies}
-    ${development_target} native_metadata "${CADRUMO_PATH_GENERATED}/build.json"
+    ${development_target} native_metadata "${CADRUMO_PATH_GENERATED}/$<CONFIG>/build.json"
     "${CADRUMO_PATH_PRODUCT}/ready" "${PROJECT_SOURCE_DIR}/native/package-layout.json"
     "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py" "${PROJECT_SOURCE_DIR}/dev/packaging/native/assemble.py"
     "${PROJECT_SOURCE_DIR}/dev/packaging/native/stdlib.py"

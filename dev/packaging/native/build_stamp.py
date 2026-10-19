@@ -287,9 +287,18 @@ def read_freeze(build: Path) -> Freeze:
     )
 
 
-def identity_path(build: Path, component: str) -> Path:
-    """Locate the generated identity file of one component."""
-    return build_paths(build)["generated"] / IDENTITY_DIRECTORY / f"{component}.json"
+def identity_path(build: Path, component: str, configuration: str | None = None) -> Path:
+    """Locate the compile-time identity file of one component for one CMake configuration.
+
+    Each configuration has its own, so Debug and Release built at once from different
+    sources never compile each other's identity. ``None`` names the configuration-free
+    location a tool outside a CMake configuration uses.
+    """
+    directory = build_paths(build)["generated"] / IDENTITY_DIRECTORY
+    if configuration is not None:
+        build_type(configuration)
+        directory /= configuration
+    return directory / f"{component}.json"
 
 
 def _version(build: Path) -> str:
@@ -300,7 +309,12 @@ def _version(build: Path) -> str:
 
 
 def resolve(
-    build: Path, components: Iterable[str], *, now: datetime | None = None, root: Path = REPO_ROOT
+    build: Path,
+    components: Iterable[str],
+    *,
+    configuration: str | None = None,
+    now: datetime | None = None,
+    root: Path = REPO_ROOT,
 ) -> dict[str, ComponentIdentity]:
     """Fingerprint the requested components and those they embed, and publish their identities.
 
@@ -318,7 +332,7 @@ def resolve(
         fingerprints[name] = inventory_fingerprint(entries)
         stamp = allocate(generated, name, fingerprints[name], freeze=freeze, now=now)
         identity = ComponentIdentity(name, fingerprints[name], version, stamp)
-        path = identity_path(build, name)
+        path = identity_path(build, name, configuration)
         path.parent.mkdir(parents=True, exist_ok=True)
         write_text(path, json.dumps(identity.document(), indent=2) + "\n")
         begin_record(build, identity, entries)
@@ -440,14 +454,16 @@ def settle_record(
     return True
 
 
-def native_settled(build: Path, components: Iterable[str], *, root: Path = REPO_ROOT) -> dict[str, bool]:
+def native_settled(
+    build: Path, components: Iterable[str], *, configuration: str | None = None, root: Path = REPO_ROOT
+) -> dict[str, bool]:
     """Say, per native component, whether its inputs still give the fingerprint it was compiled from."""
     names = list(components)
     current = current_fingerprints(build, names, root=root)
     result: dict[str, bool] = {}
     for name in names:
         record = read_record(build, name)
-        path = identity_path(build, name)
+        path = identity_path(build, name, configuration)
         compiled = load_identity(path, name).fingerprint if path.is_file() else None
         result[name] = record is not None and record["fingerprint"] == compiled == current[name]
     return result
@@ -515,9 +531,49 @@ def load_identity(path: Path, component: str | None = None) -> ComponentIdentity
     return ComponentIdentity(name, document["fingerprint"], document["version"], stamp)
 
 
-def read_identity(build: Path, component: str) -> ComponentIdentity:
-    """Read the published identity of one component of a build directory."""
-    return load_identity(identity_path(build, component), component)
+def _built_path(build: Path, component: str, configuration: str) -> Path:
+    return identity_path(build, component, configuration).with_name(f"{component}.built.json")
+
+
+def _built_document(
+    build: Path, component: str, configuration: str, artifact: Path, command: Iterable[str]
+) -> dict[str, object] | None:
+    identity = identity_path(build, component, configuration)
+    if not identity.is_file() or not artifact.is_file():
+        return None
+    return {
+        "schema": RECORD_SCHEMA,
+        "fingerprint": load_identity(identity, component).fingerprint,
+        "artifact": digest(artifact),
+        "command": list(command),
+    }
+
+
+def built_current(build: Path, component: str, configuration: str, artifact: Path, command: Iterable[str]) -> bool:
+    """Say whether ``artifact`` is the image ``command`` last built from the component's current fingerprint.
+
+    The fingerprint covers every input of the image (sources, toolchain, settings and the
+    files its last build read), so a matching receipt lets a build skip a driver that would
+    only confirm the image is current.
+    """
+    document = _built_document(build, component, configuration, artifact, command)
+    try:
+        recorded = json.loads(_built_path(build, component, configuration).read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return False
+    return document is not None and bool(recorded == document)
+
+
+def record_built(build: Path, component: str, configuration: str, artifact: Path, command: Iterable[str]) -> None:
+    """Remember that ``command`` built ``artifact`` from the component's current fingerprint."""
+    document = _built_document(build, component, configuration, artifact, command)
+    if document is not None:
+        _publish(_built_path(build, component, configuration), document)
+
+
+def read_identity(build: Path, component: str, configuration: str | None = None) -> ComponentIdentity:
+    """Read the compile-time identity of one component for one configuration of a build directory."""
+    return load_identity(identity_path(build, component, configuration), component)
 
 
 def image_environment(identity: ComponentIdentity) -> dict[str, str]:
@@ -536,12 +592,13 @@ def settle_test_host(build: Path, host_record: Path) -> None:
     root = build.resolve()
     if not executable.is_relative_to(root) or digest(executable) != host["sha256"]:
         raise ValueError(f"The test host record {host_record} names an image this build did not produce")
-    settled = native_settled(build, ["desktop-test-host"])["desktop-test-host"]
+    configuration = str(host["configuration"])
+    settled = native_settled(build, ["desktop-test-host"], configuration=configuration)["desktop-test-host"]
     settle_record(
         build,
         "desktop-test-host",
         settled=settled,
-        configuration=str(host["configuration"]),
+        configuration=configuration,
         package=host_record.parent.resolve().relative_to(root).as_posix(),
         artifacts={executable.relative_to(host_record.parent.resolve()).as_posix(): host["sha256"]},
     )
@@ -552,10 +609,11 @@ if __name__ == "__main__":
     parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--component", action="append", default=[], help="a component whose identity to publish")
     parser.add_argument("--settle-test-host", type=Path, help="the host.json the packaged test host build wrote")
+    parser.add_argument("--config", choices=tuple(BUILD_TYPES), help="the CMake configuration being built")
     args = parser.parse_args()
     if args.settle_test_host is not None:
         settle_test_host(args.build, args.settle_test_host)
-    for name, resolved_identity in resolve(args.build, args.component).items():
+    for name, resolved_identity in resolve(args.build, args.component, configuration=args.config).items():
         BuildLog("build-stamp").status(
             f"{name}: build {resolved_identity.stamp.build_id}, sequence {resolved_identity.stamp.build_sequence}"
         )

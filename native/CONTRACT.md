@@ -843,7 +843,7 @@ Each component has its own identity:
 | `interpreter` | `python`, `python_d`, the console entrypoints, bundled images and the CPython bridge | `native/interpreter/` (less its staged Python), the `platform` and `launch_guard` crates with their path dependencies, `native/platforms/`, the layout, `CompilePolicy.cmake`, `LaunchGuard.cmake`, the icon and resource generators; the file-API settings of the host targets |
 | `installer` | MSI adapter DLL and maintenance runner | the `installer` crate closure, `manager/version_resource.rs`, `interpreter/windows/host.manifest`, `Installer.cmake` |
 | `manager` | `cadrumo-manager` | the `manager` crate closure (with the installer library on Windows), `interpreter/windows/host.manifest`, the embedded desktop dispatcher, `Manager.cmake` |
-| `desktop` | `cadrumo` | the `desktop/src-tauri` crate closure, the built frontend bundle, the frontend package and lock files, the desktop CMake and Tauri driver scripts, the C host sources its linked host compiles, the icon, and the interpreter fingerprint (its linked host carries that identity) |
+| `desktop` | `cadrumo` | the `desktop/src-tauri` crate closure, the built frontend bundle, the frontend package and lock files, the desktop CMake and Tauri driver scripts, the C host sources and `build_layout.h` its linked host compiles, and the icon |
 | `desktop-test-host` | the remote-debugging `cadrumo` the packaged tests drive | the desktop's inputs plus `tests/packaged/host.mjs`, the `webview2-remote-debugging` feature, and the desktop fingerprint |
 | `app-payload` | the product wheels | every input `inputs-product.txt` enrolls, with the selected builder tools |
 | `app-agent` | the bundled agent and its Node/ACP runtime | every input `inputs-agent.txt` enrolls from `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`, with the selected builder tools |
@@ -869,7 +869,9 @@ directory's registry (`generated/build-stamp.json`, shared by Debug and Release,
 every clean target): a known fingerprint returns the identity first allocated for it (the
 registry remembers the last 64 per component, so reverting an edit returns its earlier
 identity), and an unseen one allocates the next. The compile steps read
-`generated/component-identity/<component>.json`, rewritten only when that identity changes.
+`generated/component-identity/<Config>/<component>.json`, rewritten only when that identity
+changes; each configuration has its own, so Debug and Release built at once from different
+sources never compile each other's identity.
 The lookup and allocation run under one file lock, so builds that resolve the same inputs at
 once (parallel `cmake --build` runs, MSBuild nodes, Debug and Release together) share one
 identity. `native_metadata` resolves `interpreter`, the manager and installer Cargo commands
@@ -886,8 +888,12 @@ from the identity their completion receipt binds.
   `display_version` is `<version>+<build_id>`, with `.debug` appended for debug.
 
 Each image embeds only its own component's identity. The C hosts read it from
-`build_metadata.h` and their version resources (the desktop's linked interpreter host
-reads the same header). A Cargo command that builds a component's images sets
+`generated/<Config>/build_metadata.h` (over the identity-free `generated/build_layout.h`)
+and their version resources in the same directory; the desktop's linked interpreter host
+compiles a `build_metadata.h` its build script writes from the desktop's own identity, so
+a change to the interpreter hosts alone (the CPython bridge, for example) rebuilds no
+desktop. The mixed-build check is unaffected: the CPython bridge of the staged hosts sets
+`sys.cadrumo_build`, and the bootstrap compares it with `build.interpreter`. A Cargo command that builds a component's images sets
 `CADRUMO_IMAGE_COMPONENT=<component>` and `CADRUMO_<COMPONENT>_BUILD_ID`,
 `_BUILD_SEQUENCE` and `_BUILD_DATE` (`CADRUMO_MANAGER_*`, `CADRUMO_INSTALLER_*`,
 `CADRUMO_DESKTOP_*`) beside `CADRUMO_ID_VERSION`. The manager and installer build scripts

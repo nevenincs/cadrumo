@@ -171,7 +171,7 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
         inventory[descriptor_member] = digest(root / descriptor_member)
     # The staged record names the interpreter hosts' identity, which the interpreter checks at
     # start, and the package's own identity, keyed on the staged content and the components.
-    shared = json.loads((paths["generated"] / "build.json").read_text(encoding="utf-8"))
+    shared = json.loads((paths["generated"] / config / "build.json").read_text(encoding="utf-8"))
     staged = TypeAdapter(dict[str, JsonValue]).validate_python(manifest["build"], strict=True)
     for key in ("version", "target", "layout_abi", "python"):
         if shared[key] != staged[key]:

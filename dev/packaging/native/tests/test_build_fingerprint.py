@@ -28,10 +28,12 @@ from ..build_stamp import (
     UNSETTLED,
     BuildStamp,
     ComponentIdentity,
+    built_current,
     changed_inputs,
     identity_path,
     native_settled,
     read_record,
+    record_built,
     resolve,
     settle_record,
 )
@@ -99,7 +101,7 @@ def build(tmp_path: Path) -> Path:
 
 
 def _ids(build: Path, root: Path) -> dict[str, tuple[str, int]]:
-    resolved = resolve(build, ["manager", "installer", "desktop"], now=DAY, root=root)
+    resolved = resolve(build, ["interpreter", "manager", "installer", "desktop"], now=DAY, root=root)
     return {name: (identity.stamp.build_id, identity.stamp.build_sequence) for name, identity in resolved.items()}
 
 
@@ -113,9 +115,9 @@ def test_the_crate_closure_follows_path_dependencies_of_every_target_but_not_tes
 
 
 def test_embedded_components_resolve_first() -> None:
-    assert resolution_order(["desktop"]) == ["interpreter", "desktop"]
+    assert resolution_order(["desktop"]) == ["desktop"]
     assert resolution_order(["manager"]) == ["manager"]
-    assert resolution_order(["desktop-test-host"]) == ["interpreter", "desktop", "desktop-test-host"]
+    assert resolution_order(["desktop-test-host"]) == ["desktop", "desktop-test-host"]
     assert set(COMPONENTS) == {"interpreter", "installer", "manager", "desktop", "desktop-test-host"}
 
 
@@ -159,6 +161,18 @@ def test_an_interpreter_host_change_leaves_the_manager_and_installer(build: Path
     assert after["interpreter"] != before["interpreter"]
     # The desktop links the interpreter host, so its own identity follows.
     assert after["desktop"] != before["desktop"]
+
+
+def test_a_bridge_change_moves_the_interpreter_hosts_but_not_the_desktop(build: Path, checkout: Path) -> None:
+    # The desktop links the C host source, not the CPython bridge, and compiles its own identity.
+    _write(checkout / "native/interpreter/python.c", "/* bridge */\n")
+    before = _ids(build, checkout)
+    _write(checkout / "native/interpreter/python.c", "/* bridge, edited */\n")
+    after = _ids(build, checkout)
+    assert after["interpreter"] != before["interpreter"]
+    assert {name: after[name] for name in ("desktop", "manager", "installer")} == {
+        name: before[name] for name in ("desktop", "manager", "installer")
+    }
 
 
 def test_a_frontend_bundle_change_moves_only_the_desktop(build: Path, checkout: Path) -> None:
@@ -395,3 +409,21 @@ def test_a_build_record_opens_on_change_settles_and_names_what_changed(build: Pa
     _all(build, checkout)
     reopened = read_record(build, "manager")
     assert reopened is not None and reopened["state"] == BUILDING and reopened["staged"] == {}
+
+
+def test_a_reused_image_needs_the_same_fingerprint_command_and_bytes(build: Path, checkout: Path) -> None:
+    resolve(build, ["desktop"], configuration="Debug", now=DAY, root=checkout)
+    image = build / "cargo/desktop/debug/cadrumo.exe"
+    _write(image, "image\n")
+    command = ["node", "tauri.mjs"]
+    assert not built_current(build, "desktop", "Debug", image, command)
+    record_built(build, "desktop", "Debug", image, command)
+    assert built_current(build, "desktop", "Debug", image, command)
+    assert not built_current(build, "desktop", "Debug", image, [*command, "--release"])
+    assert not built_current(build, "desktop", "Release", image, command)
+    _write(image, "relinked\n")
+    assert not built_current(build, "desktop", "Debug", image, command)
+    record_built(build, "desktop", "Debug", image, command)
+    _write(checkout / "native/desktop/src-tauri/src/lib.rs", "// edited\n")
+    resolve(build, ["desktop"], configuration="Debug", now=DAY, root=checkout)
+    assert not built_current(build, "desktop", "Debug", image, command)

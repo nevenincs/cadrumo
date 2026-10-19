@@ -2,7 +2,11 @@
 //! console entrypoint role in its own process instead of starting a separate host image.
 //!
 //! The source and compile policy are the ones the standalone hosts use; the generated
-//! contract and build metadata headers sit beside the generated package contract.
+//! contract and layout headers sit beside the generated package contract. The build identity
+//! header is written here from the identity of the image that links this crate
+//! (`CADRUMO_IMAGE_COMPONENT`, normally the desktop), so a change to the interpreter hosts'
+//! identity alone rebuilds nothing that links this host. The interpreter's own identity
+//! still reaches every Python start through the CPython bridge, which the bootstrap checks.
 
 use std::{env, path::PathBuf};
 
@@ -31,12 +35,16 @@ fn main() {
         interpreter.join("launch_guard.h"),
         interpreter.join("launch_profile.h"),
         generated.join("contract.h"),
-        generated.join("build_metadata.h"),
+        generated.join("build_layout.h"),
     ] {
         println!("cargo:rerun-if-changed={}", input.display());
     }
+    let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("Cargo sets OUT_DIR"));
+    std::fs::write(out_dir.join("build_metadata.h"), identity_header())
+        .expect("write the linking image's build identity header");
     cc::Build::new()
         .file(&source)
+        .include(&out_dir)
         .include(&generated)
         .include(native.join("platform").join("include"))
         .include(native.join("launch_guard").join("include"))
@@ -60,4 +68,41 @@ fn main() {
         .flag("/guard:cf")
         .warnings_into_errors(true)
         .compile("cadrumo_interpreter_host");
+}
+
+fn projected(name: &str) -> String {
+    println!("cargo:rerun-if-env-changed={name}");
+    let value = env::var(name)
+        .unwrap_or_else(|_| panic!("{name} must come from the build's identity projection"));
+    assert!(
+        !value.is_empty() && !value.contains(['"', '\\', '\0']),
+        "{name} must be a non-empty string a C literal can hold"
+    );
+    value
+}
+
+/// The `build_metadata.h` the C host compiles: the linking image's identity over the shared
+/// layout header, selecting the display version of the compiler's build type.
+fn identity_header() -> String {
+    let component = projected("CADRUMO_IMAGE_COMPONENT").to_uppercase();
+    let version = projected("CADRUMO_ID_VERSION");
+    let build_id = projected(&format!("CADRUMO_{component}_BUILD_ID"));
+    let sequence = projected(&format!("CADRUMO_{component}_BUILD_SEQUENCE"));
+    let date = projected(&format!("CADRUMO_{component}_BUILD_DATE"));
+    format!(
+        "#include \"build_layout.h\"\n\
+         #define CADRUMO_BUILD_ID \"{build_id}\"\n\
+         #define CADRUMO_BUILD_SEQUENCE \"{sequence}\"\n\
+         #define CADRUMO_BUILD_NUMBER \"{sequence}\"\n\
+         #define CADRUMO_BUILD_DATE \"{date}\"\n\
+         #define CADRUMO_DISPLAY_VERSION_RELEASE \"{version}+{build_id}\"\n\
+         #define CADRUMO_DISPLAY_VERSION_DEBUG \"{version}+{build_id}.debug\"\n\
+         #if CADRUMO_BUILD_DEBUG\n\
+         #define CADRUMO_BUILD_TYPE \"debug\"\n\
+         #define CADRUMO_DISPLAY_VERSION CADRUMO_DISPLAY_VERSION_DEBUG\n\
+         #else\n\
+         #define CADRUMO_BUILD_TYPE \"release\"\n\
+         #define CADRUMO_DISPLAY_VERSION CADRUMO_DISPLAY_VERSION_RELEASE\n\
+         #endif\n"
+    )
 }

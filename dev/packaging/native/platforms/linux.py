@@ -92,6 +92,8 @@ def resources(
     tools: Path,
     entrypoints: dict[str, str],
     product: DistributionIdentity,
+    *,
+    shared: Path | None = None,
 ) -> None:
     """Validate embedded build identity; ELF hosts need no additional resource compiler."""
     metadata = json.loads((destination / "build.json").read_text(encoding="utf-8"))

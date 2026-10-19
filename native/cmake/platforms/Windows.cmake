@@ -11,7 +11,7 @@ if(entrypoint_count GREATER 0)
   foreach(index RANGE ${entrypoint_last})
     string(JSON entrypoint MEMBER "${package_layout}" entrypoints ${index})
     list(APPEND CADRUMO_ENTRYPOINTS "${entrypoint}")
-    list(APPEND entrypoint_resources "${CONTRACT_DIR}/entrypoint-${entrypoint}.rc")
+    list(APPEND entrypoint_resources "${CONTRACT_DIR}/$<CONFIG>/entrypoint-${entrypoint}.rc")
   endforeach()
 endif()
 # Images declared for a bundled distribution share the host source and the native directory.
@@ -25,30 +25,35 @@ if(NOT bundled_error AND bundled_count GREATER 0)
   endforeach()
 endif()
 foreach(bundled_image IN LISTS CADRUMO_BUNDLED_IMAGES)
-  list(APPEND entrypoint_resources "${CONTRACT_DIR}/entrypoint-${bundled_image}.rc")
+  list(APPEND entrypoint_resources "${CONTRACT_DIR}/$<CONFIG>/entrypoint-${bundled_image}.rc")
 endforeach()
 # Application images embed their authored manifest plus the package identity of their build kind.
 set(application_manifests "${CONTRACT_DIR}/process-release.manifest" "${CONTRACT_DIR}/process-development.manifest"
   "${CONTRACT_DIR}/desktop-release.manifest" "${CONTRACT_DIR}/desktop-development.manifest")
 set(process_manifest "${CONTRACT_DIR}/process-$<IF:$<CONFIG:Debug>,development,release>.manifest")
-cadrumo_cached_command(metadata_command native_metadata SHARED
-  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json" "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json"
+# The build identity outputs are per configuration (generated/<Config>/), so Debug and Release
+# built at once from different sources never compile each other's interpreter identity.
+set(metadata_identity "${CADRUMO_BUILD_IDENTITY_DIR}/$<CONFIG>/interpreter.json")
+set(metadata_directory "${CONTRACT_DIR}/$<CONFIG>")
+cadrumo_cached_command(metadata_command native_metadata
+  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json" "${metadata_identity}"
     "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-icon.svg" "${CADRUMO_PATH_TOOLS}/ready"
     "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"
     "${CMAKE_CURRENT_SOURCE_DIR}/desktop/src-tauri/windows/desktop.manifest"
-  OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources} ${application_manifests})
+  OUTPUTS "${CONTRACT_DIR}/build_layout.h" "${metadata_directory}/build_metadata.h" "${metadata_directory}/build.json"
+    "${metadata_directory}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources} ${application_manifests})
 cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
-  OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
+  OUTPUTS "${CONTRACT_DIR}/<config>/build.json" "${CONTRACT_DIR}/<config>/build_metadata.h")
 cadrumo_identity_command(interpreter_identity interpreter)
 add_custom_target(native_metadata
   ${interpreter_identity}
   COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
-    --identity "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" --tools "${CADRUMO_PATH_TOOLS}"
+    --identity "${metadata_identity}" --identity-destination "${metadata_directory}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
-  BYPRODUCTS "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
-    "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources} ${application_manifests}
+  BYPRODUCTS "${metadata_identity}" "${CONTRACT_DIR}/build_layout.h" "${metadata_directory}/build_metadata.h"
+    "${metadata_directory}/build.json" "${metadata_directory}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico"
+    ${entrypoint_resources} ${application_manifests}
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 # The interpreter fingerprint covers the generated contract the hosts compile in.
 add_dependencies(native_metadata native_build_tools native_contract)
@@ -129,15 +134,16 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CADRUMO_PATH_LIB}/$<CONFIG>")
 set(CMAKE_PDB_OUTPUT_DIRECTORY "${CADRUMO_PATH_SYMBOLS}/$<CONFIG>")
-add_executable(cadrumo_python interpreter/windows/host.c interpreter/windows/host.rc "${CONTRACT_DIR}/interpreter.rc")
+add_executable(cadrumo_python interpreter/windows/host.c interpreter/windows/host.rc "${metadata_directory}/interpreter.rc")
 set_target_properties(cadrumo_python PROPERTIES OUTPUT_NAME "${production_name}")
-add_executable(cadrumo_python_d EXCLUDE_FROM_ALL interpreter/windows/host.c interpreter/windows/host.rc "${CONTRACT_DIR}/interpreter.rc")
+add_executable(cadrumo_python_d EXCLUDE_FROM_ALL interpreter/windows/host.c interpreter/windows/host.rc
+  "${metadata_directory}/interpreter.rc")
 set_target_properties(cadrumo_python_d PROPERTIES OUTPUT_NAME "${development_name}")
 set(CADRUMO_ENTRYPOINT_TARGETS)
 foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
   string(MAKE_C_IDENTIFIER "cadrumo_entrypoint_${entrypoint}" target)
   add_executable(${target} interpreter/windows/host.c interpreter/windows/host.rc
-    "${CONTRACT_DIR}/entrypoint-${entrypoint}.rc")
+    "${metadata_directory}/entrypoint-${entrypoint}.rc")
   set_target_properties(${target} PROPERTIES OUTPUT_NAME "${entrypoint}")
   target_compile_definitions(${target} PRIVATE "$<$<COMPILE_LANGUAGE:C>:CADRUMO_ENTRYPOINT=\"${entrypoint}\">")
   if(entrypoint STREQUAL "cadrumo-agent-service")
@@ -148,7 +154,7 @@ endforeach()
 foreach(bundled_image IN LISTS CADRUMO_BUNDLED_IMAGES)
   string(MAKE_C_IDENTIFIER "cadrumo_bundled_${bundled_image}" target)
   add_executable(${target} interpreter/windows/host.c interpreter/windows/host.rc
-    "${CONTRACT_DIR}/entrypoint-${bundled_image}.rc")
+    "${metadata_directory}/entrypoint-${bundled_image}.rc")
   set_target_properties(${target} PROPERTIES OUTPUT_NAME "${bundled_image}")
   target_compile_definitions(${target} PRIVATE
     "$<$<COMPILE_LANGUAGE:C>:CADRUMO_BUNDLED_IMAGE=\"${bundled_image}\">")
@@ -202,7 +208,8 @@ cadrumo_describe_target(platform_dll_consumer GROUP verification
 include("${PROJECT_SOURCE_DIR}/native/cmake/CompilePolicy.cmake")
 foreach(target ${host_targets} cadrumo_python_bridge platform_static_consumer platform_dll_consumer)
   cadrumo_compile_policy(${target})
-  target_include_directories(${target} PRIVATE "${CONTRACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
+  target_include_directories(${target} PRIVATE "${metadata_directory}" "${CONTRACT_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
   add_dependencies(${target} native_contract)
 endforeach()
 foreach(target ${host_targets} platform_static_consumer)

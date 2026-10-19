@@ -237,9 +237,14 @@ def package_components(
     return entries
 
 
-def component_identities(binary_dir: Path, binaries: Iterable[tuple[str, str]]) -> dict[str, ComponentIdentity]:
-    """Read the published identity of every component the staged binaries belong to."""
-    return {name: read_identity(binary_dir, name) for name in sorted({component_of(role) for role, _ in binaries})}
+def component_identities(
+    binary_dir: Path, binaries: Iterable[tuple[str, str]], configuration: str
+) -> dict[str, ComponentIdentity]:
+    """Read the identity every component the staged binaries belong to was compiled with in ``configuration``."""
+    return {
+        name: read_identity(binary_dir, name, configuration)
+        for name in sorted({component_of(role) for role, _ in binaries})
+    }
 
 
 def _logical_descriptors(document: Any, tokens: Mapping[str, str]) -> Any:
@@ -408,7 +413,8 @@ def stamp_package(
     staged records are applied with :func:`record_staging` once the stage is published.
     """
     staged = list(binaries)
-    identities = component_identities(binary_dir, staged)
+    configuration = next(name for name, value in BUILD_TYPES.items() if value == build_type)
+    identities = component_identities(binary_dir, staged, configuration)
     content = logical_inventory(
         root,
         {member: value for member, value in files.items() if member != build_member},
@@ -424,13 +430,12 @@ def stamp_package(
     stamp = package_identity(
         binary_dir, package_fingerprint(content, identities, kind=kind, build_type=build_type, payload=payload)
     )
-    configuration = next(name for name, value in BUILD_TYPES.items() if value == build_type)
     package = (build_paths(binary_dir)["stage"] / configuration / "app").resolve()
     records = StagedRecords(
         configuration=configuration,
         package=package.relative_to(binary_dir.resolve()).as_posix(),
         artifacts=staged_artifacts(files, staged, packages=packages),
-        settled=native_settled(binary_dir, sorted(identities)),
+        settled=native_settled(binary_dir, sorted(identities), configuration=configuration),
     )
     return (
         package_build_record(shared, stamp, build_type),

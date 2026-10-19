@@ -65,13 +65,19 @@ def _bootstrap_package(
     bootstrap: types.ModuleType, root: Path, manifest: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Point the shipped bootstrap at a synthetic package root built for this interpreter."""
-    build = {"version": "1", "build_number": 1, "build_date": "d", "python": ".".join(map(str, sys.version_info[:3]))}
+    # The interpreter host compiles its own build in; the package record names it under interpreter.
+    host = {"version": "1", "build_number": 1, "build_id": "2026101901", "build_date": "d"}
+    build = {
+        "version": "1",
+        "python": ".".join(map(str, sys.version_info[:3])),
+        "interpreter": {key: host[key] for key in ("build_number", "build_id", "build_date")},
+    }
     manifest["build"] = build
     manifest["startup_files"] = ["python.exe"]
     (root / "data/build.json").write_text(json.dumps(build), encoding="utf-8")
     manifest["files"]["data/build.json"] = digest(root / "data/build.json")
     (root / "data/package-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-    monkeypatch.setattr(sys, "cadrumo_build", build, raising=False)
+    monkeypatch.setattr(sys, "cadrumo_build", host, raising=False)
     # An absolute package root replaces the executable-relative anchor when joined.
     layout = {
         "package_root_from_executable": str(root),

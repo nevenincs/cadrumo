@@ -15,19 +15,24 @@ if(entrypoint_count GREATER 0)
     list(APPEND CADRUMO_ENTRYPOINTS "${entrypoint}")
   endforeach()
 endif()
-cadrumo_cached_command(metadata_command native_metadata SHARED
-  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json" "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json"
-  OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json")
+# The build identity outputs are per configuration (generated/<Config>/), so configurations
+# built at once from different sources never compile each other's interpreter identity.
+set(metadata_identity "${CADRUMO_BUILD_IDENTITY_DIR}/$<CONFIG>/interpreter.json")
+set(metadata_directory "${CONTRACT_DIR}/$<CONFIG>")
+cadrumo_cached_command(metadata_command native_metadata
+  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json" "${metadata_identity}"
+  OUTPUTS "${CONTRACT_DIR}/build_layout.h" "${metadata_directory}/build_metadata.h" "${metadata_directory}/build.json")
 cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
-  OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
+  OUTPUTS "${CONTRACT_DIR}/<config>/build.json" "${CONTRACT_DIR}/<config>/build_metadata.h")
 cadrumo_identity_command(interpreter_identity interpreter)
 add_custom_target(native_metadata
   ${interpreter_identity}
   COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
-    --identity "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" --tools "${CADRUMO_PATH_TOOLS}"
+    --identity "${metadata_identity}" --identity-destination "${metadata_directory}" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
-  BYPRODUCTS "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
+  BYPRODUCTS "${metadata_identity}" "${CONTRACT_DIR}/build_layout.h" "${metadata_directory}/build_metadata.h"
+    "${metadata_directory}/build.json"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 # The interpreter fingerprint covers the generated contract the hosts compile in.
 add_dependencies(native_metadata native_contract)
@@ -151,7 +156,8 @@ add_dependencies(cadrumo_python_bridge python_sdk)
 include("${PROJECT_SOURCE_DIR}/native/cmake/CompilePolicy.cmake")
 foreach(target ${host_targets} cadrumo_python_bridge)
   cadrumo_compile_policy(${target})
-  target_include_directories(${target} PRIVATE "${CONTRACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
+  target_include_directories(${target} PRIVATE "${metadata_directory}" "${CONTRACT_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
   add_dependencies(${target} native_contract native_metadata)
   # Selects the build type in the shared build_metadata.h.
   target_compile_definitions(${target} PRIVATE "CADRUMO_BUILD_DEBUG=$<CONFIG:Debug>")

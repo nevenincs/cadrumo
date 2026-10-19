@@ -127,7 +127,13 @@ def _stage(
     startup: Iterable[str] = ("python.exe",),
 ) -> None:
     """Point the shipped bootstrap at a synthetic package root built for this interpreter."""
-    build = {"version": "1", "build_number": 1, "build_date": "d", "python": ".".join(map(str, sys.version_info[:3]))}
+    # The interpreter host compiles its own build in; the package record names it under interpreter.
+    host = {"version": "1", "build_number": 1, "build_id": "2026101901", "build_date": "d"}
+    build = {
+        "version": "1",
+        "python": ".".join(map(str, sys.version_info[:3])),
+        "interpreter": {key: host[key] for key in ("build_number", "build_id", "build_date")},
+    }
     (root / BUILD).parent.mkdir(parents=True, exist_ok=True)
     (root / BUILD).write_text(json.dumps(build), encoding="utf-8")
     manifest = {
@@ -139,7 +145,7 @@ def _stage(
     }
     (root / MANIFEST).parent.mkdir(parents=True, exist_ok=True)
     (root / MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
-    monkeypatch.setattr(sys, "cadrumo_build", build, raising=False)
+    monkeypatch.setattr(sys, "cadrumo_build", host, raising=False)
     # An absolute package root replaces the executable-relative anchor when joined.
     layout = {
         "package_root_from_executable": str(root),
@@ -245,7 +251,9 @@ def test_the_host_entry_refuses_a_mixed_build_before_preparing_native_code(
     bootstrap.install()
     assert prepared == [root, root]
     build = json.loads((root / BUILD).read_text(encoding="utf-8"))
-    (root / BUILD).write_text(json.dumps({**build, "build_number": 2}), encoding="utf-8")
+    (root / BUILD).write_text(
+        json.dumps({**build, "interpreter": {**build["interpreter"], "build_number": 2}}), encoding="utf-8"
+    )
     with pytest.raises(ImportError) as refused:
         bootstrap.install()
     assert str(refused.value) == "Incompatible CADRUMO package build: build_number"
