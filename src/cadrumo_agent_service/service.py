@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import secrets
@@ -509,6 +510,7 @@ class AgentService:
     def start(self) -> dict[str, Any]:
         """Prepare stores and launch one tree under an exclusive cross-process reservation."""
         with self._guard:
+            started = monotonic()
             if self._closing.is_set():
                 return {"event": "refused", "code": "service_stopping"}
             if self._auth_attempt is not None and self._auth_attempt.active:
@@ -530,6 +532,11 @@ class AgentService:
                 except LockAcquisitionError:
                     return {"event": "refused", "code": "already_running"}
                 self._owned = True
+            # The launch resolves credentials against the agent's own catalog,
+            # whose first read runs the agent once; it runs beside the stores'
+            # invocations instead of after them.
+            Thread(target=self._prefetch_catalog, name="agent-service-catalog-prefetch", daemon=True).start()
+            owned = monotonic()
             self._workspace = profile_agent_workspace(agent_root)
             image = agent_image(self._agent_source, agent_root=agent_root)
             launch = AgentLaunch(
@@ -553,6 +560,7 @@ class AgentService:
                 aside=HostedStoresAside(agent_root),
                 quiesced=lambda: self._owned and self._controller is None,
             ).prepare()
+            prepared = monotonic()
             controller = AgentHostController(
                 launcher=WindowsAgentProcessLauncher(), credentials=self._credentials, launch=launch
             )
@@ -564,10 +572,24 @@ class AgentService:
                 if controller.state is AgentHostState.DETACHED:
                     self._controller = None
                 return service_failure(error)
+            finished = monotonic()
+            _LOGGER.info(
+                "agent start timing owner_seconds=%.3f stores_seconds=%.3f launch_to_ready_seconds=%.3f "
+                "total_seconds=%.3f",
+                owned - started,
+                prepared - owned,
+                finished - prepared,
+                finished - started,
+            )
             self._forget_reads()
             event = self._ready_event(ready)
             self._emit(event)
             return event
+
+    def _prefetch_catalog(self) -> None:
+        """Read the agent's catalog once, so the launch finds it read; a failure is the launch's to report."""
+        with contextlib.suppress(ProviderCatalogUnavailableError):
+            self._catalog.catalog()
 
     def _schedule_start(self) -> bool:
         """Hand a start to the start thread unless one is running; ``False`` once the service is closing."""

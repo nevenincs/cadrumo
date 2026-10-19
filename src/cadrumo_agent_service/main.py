@@ -8,10 +8,11 @@ import json
 import os
 import sys
 from threading import Event, Lock, Thread
+from time import monotonic
 from uuid import UUID
 
 from cadrumo.core.diagnostic_log import diagnostic_process
-from cadrumo.core.logging import configure_logging, register_first_party_logger
+from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
 from cadrumo.core.paths import effective_storage_root
 
 from .admin import AdminServer
@@ -21,6 +22,7 @@ from .host.model_run_relay import ModelRunRelay
 from .installed_client import SERVICE_ID, open_service_client
 from .service import AgentService, service_failure
 
+_LOGGER = get_logger(__name__)
 _OUTPUT_GUARD = Lock()
 _MAX_STARTUP_FRAME_BYTES = 64 * 1024
 
@@ -54,6 +56,7 @@ def main() -> None:
 
 
 def _serve() -> None:
+    entered = monotonic()
     parser = argparse.ArgumentParser(prog=SERVICE_ID, description=__doc__)
     parser.add_argument("command", choices=("serve",))
     parser.add_argument("--profile-id", required=True, type=UUID)
@@ -79,7 +82,9 @@ def _serve() -> None:
             del frame
         finally:
             wipe(line)
+        connecting = monotonic()
         client = asyncio.run(open_service_client(profile_id=args.profile_id, storage_root=effective_storage_root()))
+        connected_at = monotonic()
         service = AgentService(
             client=client,
             storage_root=effective_storage_root(),
@@ -123,6 +128,12 @@ def _serve() -> None:
         connected = client.connected
         if connected is None:
             raise RuntimeError("service_connection_unavailable")
+        _LOGGER.info(
+            "agent service ready startup_frame_seconds=%.3f runtime_connection_seconds=%.3f since_entry_seconds=%.3f",
+            connecting - entered,
+            connected_at - connecting,
+            monotonic() - entered,
+        )
         _publish(
             {
                 "event": "service_ready",

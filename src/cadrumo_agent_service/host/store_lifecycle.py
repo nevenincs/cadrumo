@@ -32,6 +32,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from time import monotonic
 from typing import Final, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -273,6 +274,7 @@ class AgentStoreLifecycle:
         _require_step_success(StoreStep.MIGRATE, result, succeeded=frozenset({"succeeded"}))
 
     def _invoke(self, step: StoreStep, verb: tuple[str, ...], timeout: float) -> AgentInvocationResult:
+        started = monotonic()
         try:
             result = self._runner.run(
                 executable=self._launch.executable,
@@ -284,6 +286,9 @@ class AgentStoreLifecycle:
             )
         except Exception as error:
             raise _refused(step, StoreOutcome.RUN_FAILED) from error
+        # Each invocation starts the agent's interpreter afresh; on a loaded host
+        # that is seconds of every agent start.
+        _LOGGER.info("agent store step=%s took_seconds=%.3f", step.value, monotonic() - started)
         if result.status is None:
             raise _refused(step, StoreOutcome.TIMED_OUT)
         return result
