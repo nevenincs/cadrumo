@@ -330,6 +330,10 @@ pub(crate) async fn assemble<R: Runtime>(
     let origins = startup.origins.clone();
     tauri::WebviewWindowBuilder::from_config(&app, config)
         .and_then(|builder| {
+            let builder = match shell::webview_environment::workspace_browser_arguments() {
+                Some(arguments) => builder.additional_browser_args(&arguments),
+                None => builder,
+            };
             builder
                 .visible(false)
                 .data_directory(data_directory)

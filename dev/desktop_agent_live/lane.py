@@ -8,9 +8,9 @@ programs, and the desktop window through its WebView2 DevTools endpoint:
    sets its language to English, the language the shared specs read;
 3. starts the remote-debugging desktop test host, as the desktop image of a
    mirror of its configuration's staged package, in a kill-on-close Job, with
-   ``CADRUMO_LOCAL_STORAGE_ROOT`` and exactly one
-   ``--remote-debugging-port=<port>`` in ``WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS``,
-   and requires the DevTools endpoint to listen on loopback only; its attach
+   ``CADRUMO_LOCAL_STORAGE_ROOT`` and the workspace window's DevTools port in
+   ``CADRUMO_DEV_DESKTOP_DEVTOOLS_PORT``, and requires the DevTools endpoint to
+   listen on loopback only; its attach
    button takes the run's synthetic files from ``CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR``
    in place of its native dialog, a seam only the test host has;
 4. signs the profile in through the command line, the password on its standard
@@ -50,6 +50,7 @@ import shutil
 import sys
 import threading
 import time
+import traceback
 from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
@@ -72,6 +73,7 @@ from ..runtime_lifecycle.caller_owned_root import (
     run_runtime_cli,
 )
 from .containment import LaneJob
+from .freshness import host_sources, newer_source, package_sources
 from .package import stage_lane_package
 from .scans import (
     ProcessRecord,
@@ -97,6 +99,8 @@ _SETTLE_SECONDS: Final = 10.0
 _WATCH_SECONDS: Final = 1.0
 _DESKTOP_UNAVAILABLE: Final = 69
 """The desktop host's exit when the logon has no interactive desktop for its window."""
+_DEVTOOLS_PORT_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_DEVTOOLS_PORT"
+"""Where the packaged test host's workspace window, and only it, serves DevTools."""
 _ATTACH_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR"
 """Where the packaged test host's attach button takes its files from, in place of its dialog."""
 
@@ -130,6 +134,7 @@ class TestHost:
     executable: Path
     entry: str
     configuration: str
+    record: Path
 
     @property
     def package(self) -> Path:
@@ -199,7 +204,36 @@ def is_lane_root(root: Path) -> bool:
     return is_marked_lane_root(root)
 
 
-def provision_provider_key(endpoint: str, provider_id: str) -> None:
+def shell_page(browser: Any, entry: str, deadline: float) -> Any:
+    """The desktop's shell page, once it has published its shell token.
+
+    The workspace window opens after the loading window, and its token is set
+    by the page's own initialization script, so this waits for both: for the
+    page on the shell's origin to appear, then for the token in that page.
+    """
+    from urllib.parse import urlsplit
+
+    origin = urlsplit(entry)[:2]
+    contexts = browser.contexts
+    require(len(contexts) == 1, "the live desktop must expose one browser context")
+    context = contexts[0]
+    while True:
+        pages = [page for page in context.pages if urlsplit(page.url)[:2] == origin]
+        if pages:
+            break
+        remaining = deadline - time.monotonic()
+        require(remaining > 0, "the desktop's shell page did not open")
+        context.wait_for_event("page", timeout=remaining * 1000)
+    require(len(pages) == 1, "the live desktop must expose one shell page")
+    page = pages[0]
+    page.wait_for_function(
+        "() => Boolean(window.__CADRUMO_SHELL__?.token)",
+        timeout=max(deadline - time.monotonic(), 0) * 1000,
+    )
+    return page
+
+
+def provision_provider_key(endpoint: str, shell_entry: str, provider_id: str) -> None:
     """Store a developer credential through the live desktop's service channel."""
     from playwright.sync_api import sync_playwright
 
@@ -210,9 +244,7 @@ def provision_provider_key(endpoint: str, provider_id: str) -> None:
     try:
         with sync_playwright() as driver:
             browser = driver.chromium.connect_over_cdp(endpoint)
-            pages = [page for context in browser.contexts for page in context.pages]
-            require(len(pages) == 1, "the live desktop must expose one shell page")
-            page = pages[0]
+            page = shell_page(browser, shell_entry, time.monotonic() + _DEVTOOLS_SECONDS)
             status = page.evaluate("""async () => {
                 const token = window.__CADRUMO_SHELL__?.token;
                 if (!token) throw new Error('desktop token unavailable');
@@ -270,7 +302,29 @@ def test_host(served: bool) -> TestHost:
     configuration = value.get("configuration")
     if configuration not in ("Debug", "Release"):
         raise UnavailableError(f"the desktop host record names no build configuration; rebuild it with: {build}")
-    return TestHost(executable, f"{shell}index.html" if served and shell else _PACKAGED_ENTRY, configuration)
+    return TestHost(executable, f"{shell}index.html" if served and shell else _PACKAGED_ENTRY, configuration, record)
+
+
+def require_current(host: TestHost) -> None:
+    """Refuse a staged package or test host that is older than a source it is built from."""
+    configuration = host.configuration
+    stamp = host.package.parent / "ready"
+    if not stamp.is_file():
+        raise UnavailableError(
+            f"the {configuration} package was not staged to completion; "
+            f"stage it with: just build-native {configuration} bundle"
+        )
+    for artifact, sources, target in (
+        # The staged desktop image is built from the same crates as the test host.
+        (stamp, [*package_sources(_BUILD), *host_sources(_REPOSITORY)], "bundle"),
+        (host.record, host_sources(_REPOSITORY), "desktop-packaged-host"),
+    ):
+        stale = newer_source(artifact, sources)
+        if stale is not None:
+            raise UnavailableError(
+                f"{stale.artifact} is older than {stale.source}, which it is built from; "
+                f"rebuild it with: just build-native {configuration} {target}"
+            )
 
 
 def stage_package(host: TestHost, destination: Path) -> Path:
@@ -432,7 +486,7 @@ def lane_desktop(executable: Path, environment: Mapping[str, str], directory: Pa
             executable=executable,
             arguments=("--gui",),
             directory=directory,
-            environment={**environment, "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS": f"--remote-debugging-port={port}"},
+            environment={**environment, _DEVTOOLS_PORT_VARIABLE: str(port)},
         )
         yield scope, process
     finally:
@@ -452,6 +506,7 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
             f"no {host.configuration} package is staged at {host.package}; "
             f"stage it with: just build-native {host.configuration} bundle"
         )
+    require_current(host)
     package = host.lane_package
     desktop_image = stage_package(host, package)
     programs = Programs.of(package)
@@ -512,7 +567,7 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
                 unproven.append("agent specs: --attach-only ran only the attachment check")
                 arguments = [*arguments, "tests/live/attach.live.ts"]
             else:
-                provision_provider_key(endpoint, provider_id)
+                provision_provider_key(endpoint, host.entry, provider_id)
             status = playwright(host.entry, endpoint, results, arguments)
             print(json.dumps({"step": "playwright", "exit_code": status}), flush=True)
             if status != 0:
@@ -579,9 +634,13 @@ def _delete_stored_sign_in(root: Path) -> None:
 def main(argv: list[str] | None = None) -> int:
     """Run the lane in its own kill-on-close Job; a process that outlives the run fails it."""
     job = LaneJob() if sys.platform == "win32" else None
-    code = _main(argv)
     if job is None:
-        return code
+        return _main(argv)
+    try:
+        code = _main(argv)
+    except BaseException:  # The Job ends the lane, so nothing else would report an escaped error.
+        traceback.print_exc()
+        code = 1
     left = job.others()
     if left:
         reason = f"processes outlived the run and end with the lane: {sorted(left)}"

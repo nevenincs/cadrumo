@@ -67,6 +67,37 @@ export function packagedHost(variant = VARIANTS.embedded) {
   return value;
 }
 
+/**
+ * The test host as the installed desktop image of a mirror of the staged
+ * package, and that mirror's root. The desktop supervises its runtime only as
+ * the installed image of the package it is pointed at, which the host in its
+ * Cargo directory is not. The lane's own stager builds the mirror.
+ */
+export function installedHost(variant = VARIANTS.embedded) {
+  const host = packagedHost(variant);
+  const repository = fileURLToPath(new URL("../../../../", import.meta.url));
+  const args = [
+    "run",
+    "--no-sync",
+    "python",
+    "-m",
+    "dev.desktop_agent_live.stage_host",
+  ];
+  if (variant === VARIANTS.served) args.push("--served");
+  const staged = spawnSync("uv", args, {
+    cwd: repository,
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  const line = (staged.stdout ?? "").trim().split(/\r?\n/).pop() ?? "";
+  if (staged.status !== 0)
+    throw new Error(
+      `The test host package could not be staged: ${line || staged.stderr}`,
+    );
+  const { package: root, executable } = JSON.parse(line);
+  return { ...host, executable, package: root };
+}
+
 function sha256(file) {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
 }
