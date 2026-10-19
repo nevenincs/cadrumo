@@ -370,6 +370,80 @@ def status_until(page: Any, command: str, until: str, seconds: float) -> tuple[b
     return bool(answer["held"]), answer["status"]
 
 
+#: Resolves once the profile is signed in, or with the desktop's sign-in
+#: attempts that failed after ``afterSequence``, or with nothing once the bound
+#: passes. The desktop records each sign-in command it runs in its diagnostics;
+#: they are read on every thirtieth rendered frame.
+_SIGN_IN_OR_FAILURE: Final = """async ({boundMs, afterSequence}) => {
+    const token = window.__CADRUMO_LANE_TOKEN__;
+    if (!token) throw new Error('desktop token unavailable');
+    const invoke = (command, args) => window.__TAURI_INTERNALS__.invoke(command, {...args, token});
+    const bound = Date.now() + boundMs;
+    let status = null;
+    for (let frame = 0; ; frame++) {
+        try { status = await invoke('sign_in_status', {}); } catch (error) { status = {unreadable: error}; }
+        if (status && status.state === 'present') return {status, events: []};
+        if (frame % 30 === 0) {
+            let snapshot = null;
+            try { snapshot = await invoke('diagnostics_snapshot', {after: 0}); } catch (error) { snapshot = null; }
+            const events = ((snapshot && snapshot.events) || []).filter((event) => event.sequence > afterSequence);
+            if (sign_in_failed(events)) return {status, events};
+        }
+        if (Date.now() >= bound) return {status, events: []};
+        await new Promise((next) => requestAnimationFrame(next));
+    }
+    function sign_in_failed(events) {
+        return events.some((event) => event.kind === 'helper_result' && event.failure
+            && event.helperResult && event.helperResult.command === 'config.login');
+    }
+}"""
+
+
+def sign_in_failures(events: Iterable[Mapping[str, Any]]) -> list[tuple[int, str]]:
+    """Each failed sign-in the desktop's diagnostics record, by sequence, as ``code`` or ``code (reason)``."""
+    failures: list[tuple[int, str]] = []
+    for event in events:
+        result = event.get("helperResult")
+        failure = event.get("failure")
+        if event.get("kind") != "helper_result" or not isinstance(result, Mapping) or not isinstance(failure, Mapping):
+            continue
+        if result.get("command") != "config.login":
+            continue
+        code = str(failure.get("code") or "unknown")
+        reason = result.get("reason") or result.get("code") or failure.get("reason")
+        failures.append((int(event.get("sequence") or 0), f"{code} ({reason})" if reason else code))
+    return sorted(failures)
+
+
+def wait_for_person(page: Any) -> Mapping[str, Any]:
+    """Wait the person's time for their sign-in, saying each failed attempt as the desktop records it.
+
+    The person may try again after a failure, so the wait goes on; when it
+    ends without a sign-in, the refusal names the last failure seen, not a
+    silence that never happened.
+    """
+    deadline = time.monotonic() + _SIGN_IN_SECONDS
+    seen = 0
+    failed: list[str] = []
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            if failed:
+                raise UnavailableError(f"sign-in failed: {failed[-1]} ({len(failed)} attempts failed)")
+            raise UnavailableError(f"nobody signed in within {_SIGN_IN_SECONDS / 60:.0f} minutes")
+        answer = page.evaluate(_SIGN_IN_OR_FAILURE, {"boundMs": remaining * 1000, "afterSequence": seen})
+        status = answer.get("status") or {}
+        if status.get("state") == "present":
+            return status
+        for sequence, failure in sign_in_failures(answer.get("events") or ()):
+            seen = max(seen, sequence)
+            failed.append(failure)
+            print(
+                json.dumps({"step": "sign_in_failed", "failure": failure, "prompt": "Sign in again in the window."}),
+                flush=True,
+            )
+
+
 def wait_for_sign_in(page: Any) -> str:
     """Wait for the person's sign-in, prompting them once when the desktop has none to resume; return the profile."""
     settled, status = status_until(page, "sign_in_status", "sign_in_observed", _RUNTIME_SECONDS)
@@ -387,9 +461,7 @@ def wait_for_sign_in(page: Any) -> str:
             ),
             flush=True,
         )
-        signed_in, status = status_until(page, "sign_in_status", "signed_in", _SIGN_IN_SECONDS)
-        if not signed_in:
-            raise UnavailableError(f"nobody signed in within {_SIGN_IN_SECONDS / 60:.0f} minutes")
+        status = wait_for_person(page)
     print(json.dumps({"step": "signed_in"}), flush=True)
     return str(status.get("active_profile"))
 

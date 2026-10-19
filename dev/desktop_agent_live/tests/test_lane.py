@@ -13,6 +13,7 @@ from ..lane import (
     lane_problems,
     person_environment,
     ready_lanes,
+    sign_in_failures,
     write_lane_attachments,
 )
 
@@ -143,3 +144,36 @@ def test_the_desktop_runs_on_the_persons_root_with_the_accounts_credential_store
         "CADRUMO_LLM_ANTHROPIC_API_KEY",
         "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
     } & set(environment)
+
+
+def test_a_failed_sign_in_the_desktop_recorded_is_named_by_its_code() -> None:
+    # The events as the desktop's diagnostics recorded a sign-in that ran out of time.
+    timed_out = {
+        "sequence": 36,
+        "kind": "helper_result",
+        "role": "sign_in",
+        "failure": {"code": "timed_out", "operation": "cli", "message": "The child process exceeded its deadline"},
+        "helperResult": {"command": "config.login", "executable": "cli", "code": None, "reason": None},
+    }
+    refused = {
+        "sequence": 41,
+        "kind": "helper_result",
+        "role": "sign_in",
+        "failure": {"code": "child_failed", "operation": "cli"},
+        "helperResult": {"command": "config.login", "code": "wrong_password", "reason": None},
+    }
+    unrelated = [
+        {"sequence": 35, "kind": "failure", "failure": {"code": "timed_out"}, "role": "sign_in"},
+        {"sequence": 37, "kind": "helper_result", "failure": None, "helperResult": {"command": "config.login"}},
+        {
+            "sequence": 38,
+            "kind": "helper_result",
+            "failure": {"code": "x"},
+            "helperResult": {"command": "profile.list"},
+        },
+    ]
+    assert sign_in_failures([refused, *unrelated, timed_out]) == [
+        (36, "timed_out"),
+        (41, "child_failed (wrong_password)"),
+    ]
+    assert sign_in_failures(unrelated) == []
