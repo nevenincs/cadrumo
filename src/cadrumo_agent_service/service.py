@@ -162,6 +162,7 @@ class AgentService:
         self._closing = Event()
         self._start_request_guard = Lock()
         self._start_thread: Thread | None = None
+        self._stop_thread: Thread | None = None
         self._gateway_bearer = gateway_bearer
         # Minted here and handed only to the agent's start frame; it admits
         # background requests, which the desktop's bearer alone cannot.
@@ -256,6 +257,10 @@ class AgentService:
         if action == "start":
             # A start does not change the tree here: it is handed to its own thread.
             return self._admin(action, **arguments)
+        if action == "stop":
+            # Retiring a tree waits for its run to settle and its job to end;
+            # the request is answered once the retirement is admitted.
+            return self._admit_stop()
         # Retiring or launching a tree holds the lifecycle lock for as long as
         # the tree takes; a request answers that it is busy instead of waiting
         # for its caller's deadline.
@@ -302,18 +307,12 @@ class AgentService:
             return {"kind": "refused", "code": "service_stopping"}
         if self.client.lease is None:
             return {"kind": "refused", "code": "signed_out"}
-        if self._auth_attempt is not None and self._auth_attempt.active and action != "stop":
+        if self._auth_attempt is not None and self._auth_attempt.active:
             return {"kind": "refused", "code": "busy"}
         if action == "start":
             if not self._schedule_start():
                 return {"kind": "refused", "code": "service_stopping"}
             return {"kind": "starting"}
-        if action == "stop":
-            self._auth_resume_valid = None
-            if self._auth_attempt is not None:
-                self._auth_attempt.cancel()
-            self.stop()
-            return {"kind": "stopped"}
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
         if action == "sign_in":
@@ -436,12 +435,20 @@ class AgentService:
                 except LockAcquisitionError:
                     return {"kind": "refused", "code": "busy"}
                 self._owned = True
+            if not gui and self._controller is not None:
+                # A terminal login runs only once the tree is gone, and its
+                # retirement takes longer than a request may wait: it is begun
+                # here and announced by the stopped event, and the retry is
+                # prepared at once. Nothing is changed before then.
+                self._schedule_stop()
+                return {"kind": "refused", "code": "busy"}
             result = self._providers.set_assistant_auth(
                 provider, choice=AssistantAuthChoice.PROVIDER_SIGN_IN, expected_revision=expected_revision
             )
             if isinstance(result, ProviderSettingsRefusal):
                 return result.model_dump(mode="json")
-            self.stop()
+            # A browser or device login retires the tree on its own attempt,
+            # before its helper starts, so its request is answered at once.
             if self._closing.is_set() or self.client.lease != lease:
                 return {"kind": "refused", "code": "signed_out"}
             root.mkdir(parents=True, exist_ok=True)
@@ -501,6 +508,7 @@ class AgentService:
             environment=system_environment(os.environ) | launch["environment"],
             valid=valid,
             settled=self._wake,
+            prepare=self.stop,
         )
         self._auth_attempt = attempt
         self._auth_resume_valid = valid
@@ -601,6 +609,38 @@ class AgentService:
                 self._start_thread.start()
         return True
 
+    def _admit_stop(self) -> dict[str, Any]:
+        """Admit the tree's retirement and answer at once; the stopped event reports its end."""
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        if self.client.lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        self._auth_resume_valid = None
+        if self._auth_attempt is not None:
+            self._auth_attempt.cancel()
+        start = self._start_thread
+        if self._controller is None and (start is None or not start.is_alive()):
+            return {"kind": "stopped"}
+        if not self._schedule_stop():
+            return {"kind": "refused", "code": "busy"}
+        return {"kind": "accepted"}
+
+    def _schedule_stop(self) -> bool:
+        """Hand the tree's retirement to its own thread; ``False`` while one is already under way."""
+        with self._start_request_guard:
+            if self._stop_thread is not None and self._stop_thread.is_alive():
+                return False
+            self._stop_thread = Thread(target=self._background_stop, name="agent-service-stop")
+            self._stop_thread.start()
+        return True
+
+    def _background_stop(self) -> None:
+        try:
+            self.stop()
+        except Exception as error:
+            if not self._closing.is_set():
+                self._emit(service_failure(error))
+
     def _replace_superseded(self) -> bool:
         """Start a replacement for a ready tree whose generations moved on while the profile stays signed in.
 
@@ -610,6 +650,9 @@ class AgentService:
         """
         controller = self._controller
         if controller is None or not controller.superseded() or self._credentials.current_generations() is None:
+            return False
+        if self._auth_attempt is not None and self._auth_attempt.active:
+            # The sign-in retires this tree itself and resumes the agent once it settles.
             return False
         return self._schedule_start()
 
@@ -796,9 +839,9 @@ class AgentService:
                 self.stop()
                 if self._auth_attempt is not None:
                     self._auth_attempt.close()
-                thread = self._start_thread
-                if thread is not None:
-                    thread.join()
+                for thread in (self._start_thread, self._stop_thread):
+                    if thread is not None:
+                        thread.join()
                 self._ownership.close()
                 self._owned = False
             finally:

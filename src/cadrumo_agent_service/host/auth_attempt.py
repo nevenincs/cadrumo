@@ -40,8 +40,15 @@ class AuthAttempt:
         environment: Mapping[str, str],
         valid: Callable[[], bool],
         settled: Callable[[], None] | None = None,
+        prepare: Callable[[], None] | None = None,
     ) -> None:
-        """Launch one bounded worker with the caller's exact authority predicate."""
+        """Launch one bounded worker with the caller's exact authority predicate.
+
+        ``prepare`` runs on the attempt's own thread before the helper starts,
+        while the attempt reads ``starting``: work such as retiring the agent's
+        tree, which takes longer than the request that began the attempt may
+        wait. A failure in it ends the attempt as a failed cleanup.
+        """
         self.id = str(uuid4())
         self._lane = lane
         self._protocol = AuthProtocol(provider)
@@ -51,6 +58,7 @@ class AuthAttempt:
         self._environment = environment
         self._valid = valid
         self._settled = settled
+        self._prepare = prepare
         self._lock = Lock()
         self._cancel = Event()
         self._done = Event()
@@ -196,6 +204,15 @@ class AuthAttempt:
             if not self._valid() or self._cancel.is_set():
                 outcome, reason = "cancelled", None
                 return
+            if self._prepare is not None:
+                try:
+                    self._prepare()
+                except BaseException:
+                    outcome, reason = "failed", "cleanup_failed"
+                    return
+                if not self._valid() or self._cancel.is_set():
+                    outcome, reason = "cancelled", None
+                    return
             try:
                 self._scope = WindowsProcessScope()
             except BaseException as error:
