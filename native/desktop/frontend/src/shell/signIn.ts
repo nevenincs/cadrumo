@@ -49,6 +49,22 @@ function refusalFrom(error: unknown): SignInRefusal {
   };
 }
 
+/** Host failures that mean the sign-in ran out of time, not that it was refused. */
+const SUBMIT_TIMEOUTS = new Set(["timed_out", "cli_wait_timed_out"]);
+
+/**
+ * A failed submission, read as a refusal. A helper that ran out of time (or
+ * never got its turn) is named as a timed-out sign-in, so it is told apart
+ * from a status read that timed out and offered again rather than shown as a
+ * bare code.
+ */
+function submitRefusalFrom(error: unknown): SignInRefusal {
+  const refusal = refusalFrom(error);
+  return SUBMIT_TIMEOUTS.has(refusal.code)
+    ? { ...refusal, code: "SIGN_IN_TIMED_OUT" }
+    : refusal;
+}
+
 /**
  * The one reading of the account that every element shows: the sign-in
  * dialog, the TUI pane and its header, the account menu, the rail and the actions.
@@ -690,7 +706,7 @@ export function useSignIn(host: Host) {
       }
     } catch (error) {
       if (mounted.current && generation === request.current)
-        setRefusal(refusalFrom(error));
+        setRefusal(submitRefusalFrom(error));
     } finally {
       password.fill(0);
       if (!signedIn && mounted.current && generation === request.current)

@@ -997,6 +997,8 @@ desktop:
     profiles_unread: No se han podido leer los perfiles de este equipo.
     recovering_services: Recuperando los servicios en segundo plano…
     refused:
+      busy: Iniciar sesión ha tardado demasiado porque el ordenador está ocupado.
+        Vuelve a intentarlo en un momento.
       custody_changed: La contraseña o la configuración de recuperación de este perfil
         ha cambiado. Vuelve a iniciar sesión.
       generation_changed: Se ha cerrado tu sesión en otro lugar. Vuelve a iniciar

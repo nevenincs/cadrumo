@@ -6,6 +6,13 @@ import { useStrings } from "../../shell/strings";
 
 type Tone = "neutral" | "warning" | "danger";
 
+// A sign-in that could not finish in time, whichever layer ran out of it.
+const BUSY = {
+  key: "desktop.signin.refused.busy",
+  tone: "warning",
+  icon: "clock",
+} as const;
+
 // How each typed refusal is said: its text, its tone and its icon. A code the
 // shell does not name is still shown, with the code, never swallowed.
 const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
@@ -84,6 +91,13 @@ const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
     tone: "neutral",
     icon: "info",
   },
+  // The password proof could not finish in time: the key derivation's permit
+  // or child was late, or the sign-in helper itself ran out of time. Nothing
+  // was wrong with the password, so the person is told to try again.
+  UNAVAILABLE: BUSY,
+  KDF_RESOURCE_LIMIT: BUSY,
+  KDF_SUPERVISION_UNAVAILABLE: BUSY,
+  SIGN_IN_TIMED_OUT: BUSY,
 };
 
 const OTHER = {

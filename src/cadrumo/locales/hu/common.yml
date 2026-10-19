@@ -973,6 +973,8 @@ desktop:
     profiles_unread: A számítógépen lévő profilokat nem sikerült beolvasni.
     recovering_services: Háttérszolgáltatások helyreállítása…
     refused:
+      busy: A bejelentkezés túl sokáig tartott, mert a számítógép le van terhelve.
+        Próbáld újra egy kicsit később.
       custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
         Jelentkezz be újra.
       generation_changed: Máshol kijelentkeztettek. Jelentkezz be újra.

@@ -951,6 +951,8 @@ desktop:
     profiles_unread: The profiles on this computer could not be read.
     recovering_services: Recovering background services…
     refused:
+      busy: Signing in took too long because the computer is busy. Try again in a
+        moment.
       custody_changed: This profile's password or recovery settings changed. Sign
         in again.
       generation_changed: You were signed out elsewhere. Sign in again.

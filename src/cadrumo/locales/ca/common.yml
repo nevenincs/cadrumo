@@ -988,6 +988,8 @@ desktop:
     profiles_unread: No s'han pogut llegir els perfils d'aquest equip.
     recovering_services: S’estan recuperant els serveis en segon pla…
     refused:
+      busy: Iniciar la sessió ha trigat massa perquè l'ordinador està ocupat. Torna-ho
+        a provar d'aquí a un moment.
       custody_changed: La contrasenya o la configuració de recuperació d'aquest perfil
         ha canviat. Torna a iniciar la sessió.
       generation_changed: S'ha tancat la teva sessió en un altre lloc. Torna a iniciar

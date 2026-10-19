@@ -784,6 +784,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.signin.password",
         "desktop.signin.profile",
         "desktop.signin.profiles_unread",
+        "desktop.signin.refused.busy",
         "desktop.signin.refused.custody_changed",
         "desktop.signin.refused.generation_changed",
         "desktop.signin.refused.invalid",
