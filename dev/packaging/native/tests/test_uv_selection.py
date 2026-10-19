@@ -63,7 +63,9 @@ def test_configured_actions_use_selected_uv_despite_path_reordering(
     with pytest.raises(ObservedUvError):
         if action == "provision":
             monkeypatch.setattr(provision, "run_command", observe)
-            monkeypatch.setattr(provision, "plan_target_wheels", lambda *args, **kwargs: ())
+            # One pinned wheel, so provisioning has something to install with the selected uv.
+            wheel = SimpleNamespace(distribution="demo", url="https://example.invalid/demo.whl", sha256="0" * 64)
+            monkeypatch.setattr(provision, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
             monkeypatch.setattr(
                 provision,
                 "backend",

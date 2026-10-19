@@ -22,7 +22,7 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev._paths import AUTHORITY_ROOT_ENV, REPO_ROOT
 from dev.first_party_source import PYTEST_CONFTEST
-from dev.source_tree import content_digest, member_content_digest, normalised_content, repository_files, snapshot
+from dev.source_tree import content_digest, member_content_digest, normalised_contents, repository_files, snapshot
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
@@ -121,20 +121,12 @@ def _capture_product_source_snapshot(root: Path, destination: Path, inputs: Path
     root = root.resolve()
     source_roots = _product_source_roots(root)
     metadata = ("pyproject.toml", "uv.lock", "README.md", "LICENSE", "NOTICE", ".gitignore", ".gitattributes")
-    files = tuple(
-        sorted(
-            {
-                *(name for name in repository_files(root, under=source_roots) if not _excluded_product_input(name)),
-                *(name for name in metadata if (root / name).is_file()),
-            }
-        )
-    )
-    file_members = frozenset(files)
+    # One census names the package members; the snapshot adds the project's metadata files.
     package_members = frozenset(
         name for name in repository_files(root, under=source_roots) if not _excluded_product_input(name)
     )
-    if not package_members <= file_members:
-        raise _membership_changed("the package source census changed before snapshotting")
+    files = tuple(sorted({*package_members, *(name for name in metadata if (root / name).is_file())}))
+    file_members = frozenset(files)
 
     manifest_members = _input_manifest_members(root, inputs)
     if manifest_members is None:
@@ -201,9 +193,9 @@ def _sync_source_snapshot(root: Path, files: tuple[str, ...], destination: Path)
             continue
         if relative not in expected:
             path.unlink()
-    for relative in files:
+    # The line-ending rules are read once for every file, not once per file.
+    for relative, content in normalised_contents(root, files):
         path = destination / relative
-        content = normalised_content(root, relative)
         if path.is_file() and path.read_bytes() == content:
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
