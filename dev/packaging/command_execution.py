@@ -155,14 +155,22 @@ async def _run_process(
     on_spawn: Callable[[int], None] | None = None,
 ) -> tuple[int, str, str]:
     """Execute one explicit argv with bounded capture and optional input."""
-    output = None if inherit_output else asyncio.subprocess.PIPE
+    windows = sys.platform == "win32"
+    # A console child never opens a window of its own on the person's screen.
+    # Without a console it inherits no standard streams implicitly, so the
+    # ones it shares are handed to it by descriptor.
+    stdout: int | None = asyncio.subprocess.PIPE
+    stderr: int | None = asyncio.subprocess.PIPE
+    if inherit_output:
+        stdout, stderr = (sys.stdout.fileno(), sys.stderr.fileno()) if windows else (None, None)
     process = await asyncio.create_subprocess_exec(
         *command,
         cwd=str(cwd),
         env=dict(environment) if environment is not None else None,
         stdin=asyncio.subprocess.PIPE if input_text is not None else None,
-        stdout=output,
-        stderr=output,
+        stdout=stdout,
+        stderr=stderr,
+        creationflags=subprocess.CREATE_NO_WINDOW if windows else 0,
         **cast(Any, _inheritance_options(inherited_descriptors)),
     )
     encoded_input = None if input_text is None else input_text.encode(UTF_8_ENCODING)

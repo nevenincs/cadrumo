@@ -68,6 +68,7 @@ from ..runtime_lifecycle.caller_owned_root import (
     error_code,
     require,
     run_cli,
+    run_runtime_cli,
 )
 from .scans import (
     ProcessRecord,
@@ -341,7 +342,7 @@ def devtools_endpoint(port: int, host: Any, deadline: float) -> str:
 def wait_for_runtime(programs: Programs, environment: Mapping[str, str], deadline: float) -> None:
     """Wait until the desktop's runtime serves the lane root."""
     while True:
-        code, envelope = run_cli(programs, environment, "config", "sign-in-status")
+        code, envelope = run_runtime_cli(programs, environment, "config", "sign-in-status")
         if code == 0:
             return
         if time.monotonic() > deadline:

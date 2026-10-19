@@ -55,6 +55,8 @@ from dev._paths import REPO_ROOT
 _PROFILE_NAME = "caller-owned-acceptance"
 _READY_SECONDS = 180
 _COMMAND_SECONDS = 180
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+"""Every packaged program runs without a console window of its own: none appears on the person's screen."""
 _STOP_SECONDS = 120
 _SUPERVISOR_STOP = 64
 # A registered read-only operation over the signed-in profile; tool discovery alone proves no access.
@@ -118,9 +120,20 @@ def consumer_environment(root: Path, secret_store: Path) -> dict[str, str]:
 def run_cli(
     programs: Programs, environment: Mapping[str, str], *arguments: str, secret: Mapping[str, str] | None = None
 ) -> tuple[int, dict[str, Any]]:
-    """Run one JSON CLI command; a secret travels only on standard input."""
+    """Run one JSON ``aeat`` command; a secret travels only on standard input."""
+    return _run_json(programs.aeat, environment, arguments, secret)
+
+
+def run_runtime_cli(programs: Programs, environment: Mapping[str, str], *arguments: str) -> tuple[int, dict[str, Any]]:
+    """Run one JSON ``cadrumo-runtime`` command, such as ``config sign-in-status``, which ``aeat`` does not own."""
+    return _run_json(programs.runtime, environment, arguments, None)
+
+
+def _run_json(
+    program: Path, environment: Mapping[str, str], arguments: tuple[str, ...], secret: Mapping[str, str] | None
+) -> tuple[int, dict[str, Any]]:
     result = subprocess.run(  # noqa: S603 -- exact packaged executable; no shell; secrets only on stdin.
-        [str(programs.aeat), "--format", "json", *arguments],
+        [str(program), "--format", "json", *arguments],
         input=json.dumps(secret) if secret is not None else "",
         env=dict(environment),
         capture_output=True,
@@ -128,10 +141,13 @@ def run_cli(
         errors="replace",
         timeout=_COMMAND_SECONDS,
         check=False,
+        creationflags=_NO_WINDOW,
     )
+    # The envelope is the last line: a runtime command writes its startup
+    # diagnostics on standard error before it.
     text = result.stdout.strip() or result.stderr.strip()
     try:
-        envelope = json.loads(text or "{}")
+        envelope = json.loads(text.splitlines()[-1] if text else "{}")
     except ValueError:
         envelope = {"unparsed_output": True}
     return result.returncode, envelope if isinstance(envelope, dict) else {}
@@ -162,6 +178,7 @@ def caller_owned_runtime(programs: Programs, environment: Mapping[str, str], log
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=errors,
+            creationflags=_NO_WINDOW,
         )
         owned = RuntimeProcess(process)
         try:
@@ -341,7 +358,7 @@ def run(package: Path, scratch: Path) -> Receipt:
             storage_identity=announcement.get("storage_identity"),
         )
 
-        code, envelope = run_cli(programs, environment, "config", "sign-in-status")
+        code, envelope = run_runtime_cli(programs, environment, "config", "sign-in-status")
         require(code == 0, f"sign-in-status against the served root: {code} {envelope}")
         receipt.record("runtime_discovered", presence=envelope.get("result", {}).get("status", {}).get("presence"))
 
