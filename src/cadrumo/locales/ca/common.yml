@@ -547,6 +547,38 @@ core:
       output_language_type: L'idioma de sortida del perfil ha de ser un codi d'idioma
         admès en forma de text.
 desktop:
+  about:
+    agent: Agent
+    agent_version: 'Versió de l''agent'
+    application: Aplicació
+    build_date: Data de compilació
+    build_id: Compilació
+    build_type: Tipus de compilació
+    build_type_debug: Depuració
+    build_type_release: Publicació
+    channel: Canal
+    close: Tanca
+    copy: Copia
+    debug_badge: Depuració
+    dependencies: Dependències ({count})
+    description: 'Versió i detalls de compilació d''aquesta instal·lació.'
+    desktop_host: Escriptori
+    interpreter: Intèrpret
+    load_failed: 'No s''han pogut llegir els detalls de la versió ({code}).'
+    loading: Llegint els detalls de la versió…
+    manager: Gestor
+    managers: Gestors
+    open: Quant a Cadrumo
+    packages: Paquets inclosos ({count})
+    python: Python
+    runtime: 'Entorn d''execució'
+    settings_hint: Versió i detalls de compilació
+    target: Plataforma
+    title: Quant a Cadrumo
+    tools: Eines
+    unavailable: No disponible
+    version: Versió
+    version_row: Cadrumo {version}
   account:
     create:
       back: Torna a l'inici de sessió

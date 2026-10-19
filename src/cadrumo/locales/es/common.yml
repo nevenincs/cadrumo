@@ -555,6 +555,38 @@ core:
       output_language_type: El idioma de salida del perfil debe ser un código de idioma
         admitido en formato texto.
 desktop:
+  about:
+    agent: Agente
+    agent_version: Versión del agente
+    application: Aplicación
+    build_date: Fecha de compilación
+    build_id: Compilación
+    build_type: Tipo de compilación
+    build_type_debug: Depuración
+    build_type_release: Publicación
+    channel: Canal
+    close: Cerrar
+    copy: Copiar
+    debug_badge: Depuración
+    dependencies: Dependencias ({count})
+    description: Versión y detalles de compilación de esta instalación.
+    desktop_host: Escritorio
+    interpreter: Intérprete
+    load_failed: No se pudieron leer los detalles de la versión ({code}).
+    loading: Leyendo los detalles de la versión…
+    manager: Gestor
+    managers: Gestores
+    open: Acerca de Cadrumo
+    packages: Paquetes incluidos ({count})
+    python: Python
+    runtime: Entorno de ejecución
+    settings_hint: Versión y detalles de compilación
+    target: Plataforma
+    title: Acerca de Cadrumo
+    tools: Herramientas
+    unavailable: No disponible
+    version: Versión
+    version_row: Cadrumo {version}
   account:
     create:
       back: Volver a iniciar sesión

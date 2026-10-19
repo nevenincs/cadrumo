@@ -536,6 +536,38 @@ core:
       output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
         lennie szöveges formában.
 desktop:
+  about:
+    agent: Ügynök
+    agent_version: Az ügynök verziója
+    application: Alkalmazás
+    build_date: Fordítás dátuma
+    build_id: Fordítás
+    build_type: Fordítás típusa
+    build_type_debug: Hibakereső
+    build_type_release: Kiadás
+    channel: Csatorna
+    close: Bezárás
+    copy: Másolás
+    debug_badge: Hibakereső
+    dependencies: Függőségek ({count})
+    description: A telepítés verzió- és fordítási adatai.
+    desktop_host: Asztali alkalmazás
+    interpreter: Értelmező
+    load_failed: A verzióadatok nem olvashatók ({code}).
+    loading: Verzióadatok beolvasása…
+    manager: Kezelő
+    managers: Kezelők
+    open: A Cadrumo névjegye
+    packages: Mellékelt csomagok ({count})
+    python: Python
+    runtime: Futtatókörnyezet
+    settings_hint: Verzió- és fordítási adatok
+    target: Platform
+    title: A Cadrumo névjegye
+    tools: Eszközök
+    unavailable: Nem érhető el
+    version: Verzió
+    version_row: Cadrumo {version}
   account:
     create:
       back: Vissza a bejelentkezéshez

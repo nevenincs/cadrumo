@@ -526,6 +526,38 @@ core:
       output_language_type: The profile output language must be a supported language
         code in text form.
 desktop:
+  about:
+    agent: Agent
+    agent_version: Agent version
+    application: Application
+    build_date: Build date
+    build_id: Build
+    build_type: Build type
+    build_type_debug: Debug
+    build_type_release: Release
+    channel: Channel
+    close: Close
+    copy: Copy
+    debug_badge: Debug
+    dependencies: Dependencies ({count})
+    description: Version and build details of this installation.
+    desktop_host: Desktop
+    interpreter: Interpreter
+    load_failed: The version details could not be read ({code}).
+    loading: Reading version details…
+    manager: Manager
+    managers: Managers
+    open: About Cadrumo
+    packages: Bundled packages ({count})
+    python: Python
+    runtime: Runtime
+    settings_hint: Version and build details
+    target: Platform
+    title: About Cadrumo
+    tools: Tools
+    unavailable: Unavailable
+    version: Version
+    version_row: Cadrumo {version}
   account:
     create:
       back: Back to sign in
