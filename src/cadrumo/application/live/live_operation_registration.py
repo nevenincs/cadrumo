@@ -51,6 +51,9 @@ def build_live_operation_definition[ExecutorT](
         interaction_kinds=frozenset(),
         action_reference=action_reference,
         capabilities=capabilities,
+        # Preserve scrubbed readiness/provider reasons in encrypted result custody;
+        # a generic authentication refusal cannot identify the appropriate remedy.
+        public_error_detail=True,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
     )
 

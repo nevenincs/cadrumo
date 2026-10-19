@@ -57,12 +57,14 @@ latest shows the most recent snapshot in the active profile.
 
 ## 2. Read documents from notifications you already opened
 
-Read a notification document only after you have personally opened that
-notification in the AEAT sede. Opening an unread electronic notification is a
-legally consequential act: it serves the notification and starts its appeal and
-payment periods. The tool therefore refuses to pull a document unless AEAT
-already reports its notification as read. Open an unread notification yourself
-when you decide that those periods should begin.
+Read a notification document only after AEAT records it as read. Opening an
+electronic notification can constitute legal service, so Cadrumo does not open
+unread notifications on your behalf. Check them yourself in **Mis notificaciones**.
+Leaving a notification unopened does not reliably postpone its legal effects:
+AEAT explains that electronic notifications can take effect after ten calendar
+days from being made available without access. Check the notification's actual
+service details and applicable response period; its issue date alone does not
+establish your deadline. See [AEAT's notification questions and answers](https://sede.agenciatributaria.gob.es/Sede/otros-servicios/notificaciones/notificaciones/preguntas-frecuentes.html).
 
 Identify a document by the `certificado` number AEAT gives its notification.
 Pull one eligible document into encrypted local custody, view a stored document
