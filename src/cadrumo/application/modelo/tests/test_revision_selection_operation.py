@@ -61,6 +61,27 @@ _REVISION_ID = "a" * 64
 _REPORT_ID = "b" * 64
 
 
+@pytest.mark.parametrize(
+    "coordinates",
+    [{}, {"modelo": "130"}, {"modelo": "130", "period": {"filing_year": 2026, "code": "1T"}}],
+)
+def test_incomplete_saved_return_address_explains_how_to_read_it(coordinates: dict[str, object]) -> None:
+    with pytest.raises(ValidationError, match=r"period\.filing_year does not replace year"):
+        ModeloWorkRevisionRequest.model_validate({"profile_id": _PROFILE, **coordinates})
+
+
+@pytest.mark.parametrize(
+    "coordinates",
+    [
+        {"work_unit_id": "a" * 64},
+        {"calculation_revision_id": "b" * 64},
+        {"modelo": "130", "year": 2026, "period": {"filing_year": 2026, "code": "1T"}},
+    ],
+)
+def test_saved_return_address_accepts_existing_exact_and_natural_routes(coordinates: dict[str, object]) -> None:
+    ModeloWorkRevisionRequest.model_validate({"profile_id": _PROFILE, **coordinates})
+
+
 def _unit() -> WorkUnit:
     period = Period.from_year_and_code(2026, "1T")
     instant = datetime(2026, 3, 10, 12, tzinfo=UTC)

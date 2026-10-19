@@ -28,6 +28,7 @@ from .commands import ProfileValidationIssue, ProfileValidationReport
 from .overview import build_profile_overview
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
+from .question_view import profile_question_items
 from .validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 from .view_operation import (
     PROFILE_VIEW_MAX_RESULT_BYTES,
@@ -252,6 +253,8 @@ def _build_page_source(
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
     if request.page_kind is ProfileViewPageKind.FACTS:
         return _build_fact_source(record)
+    if request.page_kind is ProfileViewPageKind.QUESTIONS:
+        return profile_question_items(build_setup_flow(authority_operation), record_to_path_values(record))
     if request.page_kind in {ProfileViewPageKind.ISSUES, ProfileViewPageKind.READINESS_ISSUES}:
         return _build_issue_source(request, record, report)
     if request.page_kind is ProfileViewPageKind.STATUS:

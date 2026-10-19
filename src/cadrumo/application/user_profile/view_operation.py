@@ -26,6 +26,7 @@ from ..operations.models import CredentialFreeOperationRequest
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..workflow.profile_health import ProfileHealthStatus
 from .overview import ProfileFieldView
+from .question_view import ProfileViewQuestionItem
 
 PROFILE_VIEW_OPERATION_DEFINITION_ID = "user-profile.view"
 PROFILE_VIEW_PHASES = ("user-profile.view.read", "user-profile.view.project")
@@ -46,6 +47,7 @@ class ProfileViewPageKind(StrEnum):
     READINESS_ISSUES = "readiness_issues"
     OVERVIEW = "overview"
     STATUS = "status"
+    QUESTIONS = "questions"
 
 
 class ProfileViewOperationRequest(CredentialFreeOperationRequest):
@@ -54,7 +56,11 @@ class ProfileViewOperationRequest(CredentialFreeOperationRequest):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
-    page_kind: ProfileViewPageKind
+    page_kind: ProfileViewPageKind = Field(
+        description="facts reads saved taxpayer values; questions pairs saved setup answers with canonical prompts, "
+        "help and choices (no defaults). questions covers scalar setup fields, not all profile facts or tax duties. "
+        "status describes basic setup readiness only. Read actual facts before asking the user."
+    )
     cursor: NonNegativeInt = 0
     limit: int = Field(default=PROFILE_VIEW_MAX_ITEMS, ge=1, le=PROFILE_VIEW_MAX_ITEMS)
     expected_revision: int | None = Field(default=None, ge=1)
@@ -308,6 +314,7 @@ type ProfileViewItem = Annotated[
     | ProfileViewSectionItem
     | ProfileViewFieldItem
     | ProfileViewMissingItem
+    | ProfileViewQuestionItem
     | ProfileViewNoticeItem,
     Field(discriminator="kind"),
 ]
@@ -329,6 +336,7 @@ def _validate_refused_page(result: ProfileViewOperationResult) -> None:
 def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
     allowed = {
         ProfileViewPageKind.FACTS: {"fact"},
+        ProfileViewPageKind.QUESTIONS: {"question"},
         ProfileViewPageKind.ISSUES: {"issue"},
         ProfileViewPageKind.READINESS_ISSUES: {"issue"},
         ProfileViewPageKind.OVERVIEW: {"section", "field", "missing", "notice"},

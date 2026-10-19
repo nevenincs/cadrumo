@@ -357,6 +357,8 @@ async def test_a_connection_is_attended_once_and_then_held(tmp_path: Path, runti
         assert adapter.profile_id == profile_id
         assert status == {
             "outcome": "status",
+            "authenticated": True,
+            "grant_required": False,
             "session": "attended",
             "surface": "full",
             "status": held.status().status.model_dump(mode="json"),

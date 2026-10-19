@@ -11,6 +11,7 @@ import anyio
 
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
+from .operation_guidance import operation_guidance
 from .progress_relay import relayed_progress
 from .protocol_contract import (
     MCP_TOOL_CATALOGUE,
@@ -63,6 +64,7 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
         instruction = unknown_outcome_instruction(result)
         if instruction is not None:
             result = {**result, UNKNOWN_OUTCOME_MEMBER: instruction}
+        result = operation_guidance(params.name, result, compact=(params.arguments or {}).get("compact") is True)
         # The text block repeats the document for a client that reads no structured content.
         return CallToolResult(
             content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False, separators=(",", ":")))],

@@ -53,7 +53,11 @@ def _without_identities(document: Any) -> Any:
     """Drop the identifiers the runtime mints for each submission, which no two calls share."""
     receipt = dict(document["receipt"]) | {"operation_id": None}
     start = {key: value for key, value in document["start"].items() if not key.endswith("_id")}
-    return dict(document) | {"receipt": receipt, "start": start}
+    next_call = document["next_call"]
+    assert next_call["arguments"]["observation"]["operation_id"] == document["receipt"]["operation_id"]
+    observation = {**next_call["arguments"]["observation"], "operation_id": None}
+    normalized_call = {**next_call, "arguments": {**next_call["arguments"], "observation": observation}}
+    return dict(document) | {"receipt": receipt, "start": start, "next_call": normalized_call}
 
 
 @pytest.mark.anyio

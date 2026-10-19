@@ -7,13 +7,14 @@ Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevi
 from __future__ import annotations
 
 from functools import partial
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -83,6 +84,21 @@ class ModeloWorkRevisionRequest(CredentialFreeOperationRequest):
     revision: RevisionId | None = None
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT
     default_for: ModeloCalculationRevisionDefault | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_work_address(self) -> Self:
+        if self.work_unit_id is not None:
+            return self
+        if self.calculation_revision_id is not None and _selects_exact_calculation(self):
+            return self
+        if self.modelo is None or self.year is None or self.period is None:
+            raise ValueError(
+                "Select a saved return with work_unit_id from modelo.work.list, or supply modelo, year and period "
+                "together. period.filing_year does not replace year. An exact calculation_revision_id alone is "
+                "also supported."
+            )
+        return self
 
 
 class ModeloWorkRevisionProjection(BaseModel):

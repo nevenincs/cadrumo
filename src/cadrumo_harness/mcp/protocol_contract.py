@@ -68,7 +68,7 @@ def _observation_arguments_schema() -> _ToolSchema:
     """Expose the request fields and keep their JSON Schema references rooted at the tool."""
     observation = OperationObservationRequestV1.model_json_schema()
     definitions = observation.pop("$defs", {})
-    schema = _schema({"observation": cast(_FieldSchema, observation)})
+    schema = _schema({"observation": cast(_FieldSchema, observation)}, {"compact": {"type": "boolean"}})
     return cast(_ToolSchema, {**schema, "$defs": definitions})
 
 
@@ -329,7 +329,10 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "observe",
         "Read a currently authorized operation observation. A read that a registered error stops, here or in "
         "result, result_page, review or respond with action inspect, is answered refused with code invalid, and "
-        "faults carries that error's code as its type and the message the command line prints for it",
+        "faults carries that error's code as its type and the message the command line prints for it. "
+        "Use compact=true for routine progress: it omits the repeated definition, result_ref and historical "
+        "event page, retaining current state, effect, failures and pending interaction. next_call gives the "
+        "exact read to make next; operation_id always comes from the submission receipt, never result_ref",
         _observation_arguments_schema(),
         _reads("Observe an operation"),
     ),

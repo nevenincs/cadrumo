@@ -37,7 +37,9 @@ def _profile_questions() -> dict[str, Any]:
     questions = [
         {
             "question_id": question.id,
+            "profile_path": question.profile_key,
             "meaning": tr(question.prompt),
+            **({"help": tr(question.help)} if question.help is not None else {}),
             "required": question.required,
             **(
                 {"choices": [{"value": choice.value, "meaning": tr(choice.label)} for choice in question.choices]}

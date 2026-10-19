@@ -259,7 +259,11 @@ async def test_result_page_refuses_malformed_continuation_before_dispatch() -> N
         refusal = await adapter.call(
             "result_page", {"result": _result().model_dump(mode="json"), "page": {"offset": PROJECTION_PAGE_BYTES}}
         )
-        assert refusal == {"outcome": "refused", "code": "invalid_request"}
+        assert refusal == {
+            "outcome": "refused",
+            "code": "invalid_request",
+            "faults": [{"field": "request", "reason": "invalid_value"}],
+        }
         assert client.calls == []
     finally:
         await adapter.close()
@@ -466,7 +470,10 @@ async def test_result_refuses_a_malformed_operation_id_before_observing() -> Non
         missing = await adapter.call("result", {"result": {"terminal_revision": 4}})
     finally:
         await adapter.close()
-    assert refused == missing == {"outcome": "refused", "code": "invalid_request"}
+    for reply in (refused, missing):
+        assert reply["outcome"] == "refused" and reply["code"] == "invalid_request"
+        assert reply["faults"] and all(fault["field"] == "request" for fault in reply["faults"])
+        assert "not-an-operation" not in json.dumps(reply)
     assert client.observations == []
 
 

@@ -181,6 +181,8 @@ async def test_a_configured_key_the_runtime_refused_admits_the_server_once_the_r
             assert current.is_error is False
             assert current.structured_content == {
                 "outcome": "status",
+                "authenticated": True,
+                "grant_required": True,
                 "session": "key",
                 "surface": "full",
                 "status": candidate.status().status.model_dump(mode="json"),

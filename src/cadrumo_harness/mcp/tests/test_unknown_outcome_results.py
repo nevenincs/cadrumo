@@ -97,11 +97,39 @@ async def test_an_observation_of_an_unsettled_or_unknown_effect_says_so_and_is_n
 
     document = _document(observed)
     assert observed.is_error is False and document["outcome"] == "reply"
+    next_call = cast("dict[str, object]", document["next_call"])
+    assert next_call["tool"] == ("result" if lifecycle is OperationLifecycle.TERMINAL else "observe")
+    assert _observed_operation_id() in json.dumps(next_call)
     if told is None:
         assert UNKNOWN_OUTCOME_MEMBER not in document
     else:
         instruction = str(document[UNKNOWN_OUTCOME_MEMBER])
         assert told in instruction and "Do not submit it again" in instruction
+
+
+@pytest.mark.anyio
+async def test_compact_observation_keeps_terminal_truth_and_returns_an_executable_result_read() -> None:
+    profile_id = uuid4()
+    client = _UnsettledClient(profile_id, _auth_registry())
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
+    request = OperationObservationRequestV1(operation_id=_observed_operation_id(), after_cursor=0, page_limit=1)
+    try:
+        async with connected_server_and_client_session(build_server(adapter)) as sdk:
+            full = _document(await sdk.call_tool("observe", {"observation": request.model_dump(mode="json")}))
+            compact = _document(
+                await sdk.call_tool("observe", {"observation": request.model_dump(mode="json"), "compact": True})
+            )
+            next_call = cast("dict[str, object]", compact["next_call"])
+            result = await sdk.call_tool(str(next_call["tool"]), cast("dict[str, object]", next_call["arguments"]))
+    finally:
+        await adapter.close()
+    assert not result.is_error
+    assert len(json.dumps(compact)) < len(json.dumps(full))
+    compact_json = json.dumps(compact)
+    assert 'definition_contract"' not in compact_json and "event_page" not in compact_json
+    assert "result_ref" not in compact_json
+    for field in ("terminal_condition", "pending_interaction", "effect", "failure_error_code"):
+        assert field in compact_json
 
 
 @pytest.mark.parametrize(
