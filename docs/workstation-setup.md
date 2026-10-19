@@ -59,9 +59,6 @@ The core install is lean. Each optional extra adds one capability:
 
 - `google` - Google Drive and Sheets export.
 - `browser` - live AEAT reads through browser automation.
-- `anthropic` - the Anthropic API as a hosted provider for
-  `aeat app ledger evidence extract --off-host-provider`, which sends a document
-  off your machine only when you acknowledge it for that one read.
 - `ofx` - OFX and QFX bank-statement import.
 - `llm` - on-host document reading with a local model runtime.
 - `pdf` - writing the calculation-summary PDF. Reading and verifying a summary

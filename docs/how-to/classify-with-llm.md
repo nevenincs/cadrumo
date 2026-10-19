@@ -254,13 +254,14 @@ This holds for the default endpoint: if you point `CADRUMO_LLM_OLLAMA_CHAT_URL`
 at a runtime on another host, reads go to that host.
 
 One command can send a document off your machine:
-`aeat app ledger evidence extract --off-host-provider <provider>`. It reads
-invoice fields, not classifications, and it is off by default. It runs only
-when the deployment permits off-host reads, the profile's
-`cloud_evidence_upload` capability is on, and you pass
-`--acknowledge-off-host` for that one read. Gestor deployments never allow it.
-Reading with the Anthropic API also needs the `anthropic` extra. Treat the
-document as taxpayer data before you use it. The settings that govern it are
+`aeat app ledger evidence extract --off-host-provider AGENT`. It reads
+invoice fields, not classifications, and it is off by default. The agent
+service reads the document with a provider you set up for the signed-in
+profile, and `aeat` holds no model key for it. It runs only when the
+deployment permits off-host reads, the profile's `cloud_evidence_upload`
+capability is on, and you pass `--acknowledge-off-host` for that one read.
+Gestor deployments never allow it. Treat the document as taxpayer data before
+you use it. The settings that govern it are
 in the [environment overrides reference](../reference/environment-overrides.md).
 
 ## Next steps

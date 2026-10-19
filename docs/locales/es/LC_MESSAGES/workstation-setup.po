@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"POT-Creation-Date: 2026-10-19 12:18+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -149,26 +149,16 @@ msgstr ""
 "navegador."
 
 #: ../../workstation-setup.md:62
-msgid ""
-"`anthropic` - the Anthropic API as a hosted provider for `aeat app ledger"
-" evidence extract --off-host-provider`, which sends a document off your "
-"machine only when you acknowledge it for that one read."
-msgstr ""
-"`anthropic`: la API de Anthropic como proveedor alojado para `aeat app "
-"ledger evidence extract --off-host-provider`, que envía un documento "
-"fuera de tu máquina solo cuando lo confirmas para esa lectura concreta."
-
-#: ../../workstation-setup.md:65
 msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx`: importación de extractos bancarios OFX y QFX."
 
-#: ../../workstation-setup.md:66
+#: ../../workstation-setup.md:63
 msgid "`llm` - on-host document reading with a local model runtime."
 msgstr ""
 "`llm`: lectura de documentos en el propio equipo con un entorno de "
 "ejecución de modelos local."
 
-#: ../../workstation-setup.md:67
+#: ../../workstation-setup.md:64
 msgid ""
 "`pdf` - writing the calculation-summary PDF. Reading and verifying a "
 "summary needs no extra."
@@ -176,11 +166,11 @@ msgstr ""
 "`pdf`: generación del PDF del resumen del cálculo. Leer y verificar un "
 "resumen no requiere ningún extra."
 
-#: ../../workstation-setup.md:69
+#: ../../workstation-setup.md:66
 msgid "`all` - every extra in this list."
 msgstr "`all`: todos los extras de esta lista."
 
-#: ../../workstation-setup.md:71
+#: ../../workstation-setup.md:68
 msgid ""
 "Name the extras you need when you install: in your channel's install "
 "command, write the package as `cadrumo[google,browser]` instead of "
@@ -194,7 +184,7 @@ msgstr ""
 " que usa el canal con el que lo instalaste. En una copia del código "
 "fuente, añade extras con `uv sync --extra google --extra browser`."
 
-#: ../../workstation-setup.md:76
+#: ../../workstation-setup.md:73
 msgid ""
 "`aeat config check` reports each extra as `extra:<name>` available or "
 "missing. Install a missing one by repeating your channel's install "
@@ -204,13 +194,13 @@ msgstr ""
 "disponible o falta. Instala el que falte repitiendo el comando de "
 "instalación de tu canal con ese extra indicado."
 
-#: ../../workstation-setup.md:80
+#: ../../workstation-setup.md:77
 msgid "Two extras need a further provisioning step after the install:"
 msgstr ""
 "Dos extras necesitan un paso de aprovisionamiento adicional después de la"
 " instalación:"
 
-#: ../../workstation-setup.md:82
+#: ../../workstation-setup.md:79
 msgid ""
 "The `browser` extra drives a Chromium build for live AEAT reads. Download"
 " the exact build the installed extra launches with:"
@@ -219,7 +209,7 @@ msgstr ""
 "directo de la AEAT. Descarga la compilación exacta que lanza el extra "
 "instalado con:"
 
-#: ../../workstation-setup.md:88
+#: ../../workstation-setup.md:85
 msgid ""
 "It does nothing when that build is already present. With the browser "
 "channel set to `chromium`, a browser read that finds the build missing "
@@ -229,7 +219,7 @@ msgstr ""
 "navegador fijado en `chromium`, una lectura de navegador que no encuentre"
 " la compilación se rechaza y nombra este comando."
 
-#: ../../workstation-setup.md:92
+#: ../../workstation-setup.md:89
 msgid ""
 "On-host invoice reading uses a local model runtime (Ollama) with one "
 "model for each reader role: vision transcription, text extraction, "
@@ -245,7 +235,7 @@ msgstr ""
 "ejecución está instalado, si responde y qué modelos de lectura están "
 "presentes."
 
-#: ../../workstation-setup.md:98
+#: ../../workstation-setup.md:95
 msgid ""
 "To close every gap in one run, use `aeat config provision setup`. It "
 "installs the runtime, starts it, downloads every role's model, loads the "
@@ -260,33 +250,32 @@ msgstr ""
 "la ejecución. La configuración solo instala el entorno de ejecución "
 "cuando pasas `--confirm`."
 
-#: ../../workstation-setup.md:104
+#: ../../workstation-setup.md:101
 msgid ""
-"To go step by step, run the commands one at a time. `aeat config "
-"provision install` installs the runtime through `winget` on Windows or "
-"Homebrew on macOS, and only with `--confirm`; it does nothing when the "
-"runtime is already installed. On Linux, install Ollama with its upstream "
-"installer, which needs root. `aeat config provision start` starts an "
-"installed runtime that is not answering, and does nothing when it already"
-" answers. `aeat config provision pull` downloads every reader role's "
-"model, a few GB in total. Narrow it with `--role` to one of "
-"`vision_transcription`, `text_extraction`, `column_role_mapping`, or "
-"`supply_nature_proposal`. `aeat config provision verify` confirms each "
-"model loads and answers."
+"To set up only the local AI, run `aeat config provision pull`. The local "
+"AI is one component: the runtime and every reader role's model. The "
+"command installs the runtime when it is missing, through `winget` on "
+"Windows or Homebrew on macOS, starts it, and downloads the models that "
+"are not ready yet, a few GB in total. `--model` names one catalogue model"
+" to use instead of the ones Cadrumo chooses. On Linux, install Ollama "
+"with its upstream installer, which needs root. `aeat config provision "
+"start` starts an installed runtime that is not answering, and does "
+"nothing when it already answers. `aeat config provision verify --item "
+"local_ai` confirms the runtime answers and each model loads and answers."
 msgstr ""
-"Para ir paso a paso, ejecuta los comandos uno a uno. `aeat config "
-"provision install` instala el entorno de ejecución mediante `winget` en "
-"Windows o Homebrew en macOS, y solo con `--confirm`; no hace nada cuando "
-"el entorno de ejecución ya está instalado. En Linux, instala Ollama con "
-"su instalador oficial, que necesita privilegios de root. `aeat config "
-"provision start` inicia un entorno de ejecución instalado que no "
-"responde, y no hace nada cuando ya responde. `aeat config provision pull`"
-" descarga el modelo de cada rol de lectura, unos pocos GB en total. "
-"Acótalo con `--role` a uno de `vision_transcription`, `text_extraction`, "
-"`column_role_mapping` o `supply_nature_proposal`. `aeat config provision "
-"verify` confirma que cada modelo se carga y responde."
+"Para configurar solo la IA local, ejecuta `aeat config provision pull`. "
+"La IA local es un componente: el entorno de ejecución y el modelo de cada"
+" función de lectura. El comando instala el entorno de ejecución cuando "
+"falta, mediante `winget` en Windows o Homebrew en macOS, lo inicia y "
+"descarga los modelos que aún no están listos, unos pocos GB en total. "
+"`--model` indica un modelo del catálogo que se usará en lugar de los que "
+"elige Cadrumo. En Linux, instala Ollama con su instalador oficial, que "
+"necesita permisos de root. `aeat config provision start` inicia un "
+"entorno de ejecución instalado que no responde y no hace nada si ya "
+"responde. `aeat config provision verify --item local_ai` confirma que el "
+"entorno de ejecución responde y que cada modelo se carga y responde."
 
-#: ../../workstation-setup.md:116
+#: ../../workstation-setup.md:112
 msgid ""
 "The commands work with or without a signed-in profile and with or without"
 " a running Cadrumo. The same work is also available as the registered "
@@ -302,7 +291,7 @@ msgstr ""
 "`browser-runtime.provision`. La aplicación a pantalla completa las "
 "enumera en **Operaciones** y un agente las ejecuta con `execute`."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:118
 msgid ""
 "LLM classification runs only on this local reader; no cloud provider is "
 "involved. See [Classify transactions with an LLM](how-to/classify-with-"
@@ -312,7 +301,7 @@ msgstr ""
 "interviene ningún proveedor en la nube. Consulta [Clasificar movimientos "
 "con un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
 
-#: ../../workstation-setup.md:126
+#: ../../workstation-setup.md:122
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -320,11 +309,11 @@ msgstr ""
 "Ejecuta `aeat config check` de nuevo tras cada cambio para confirmar que "
 "la carencia se ha resuelto."
 
-#: ../../workstation-setup.md:128
+#: ../../workstation-setup.md:124
 msgid "Connect an AI assistant"
 msgstr "Conectar un asistente de IA"
 
-#: ../../workstation-setup.md:130
+#: ../../workstation-setup.md:126
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -339,7 +328,7 @@ msgstr ""
 "que está en tu ruta de búsqueda. En una copia de trabajo del código "
 "fuente, comprueba el punto de entrada instalado con:"
 
-#: ../../workstation-setup.md:141
+#: ../../workstation-setup.md:137
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -347,11 +336,11 @@ msgstr ""
 "[Conectar un agente](how-to/connect-an-agent.md) muestra las dos formas "
 "de conectarse y el flujo de solicitud de autorizaciones."
 
-#: ../../workstation-setup.md:144
+#: ../../workstation-setup.md:140
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../workstation-setup.md:146
+#: ../../workstation-setup.md:142
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -359,7 +348,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:148
+#: ../../workstation-setup.md:144
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -368,10 +357,10 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:150
+#: ../../workstation-setup.md:146
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:151
+#: ../../workstation-setup.md:147
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"
