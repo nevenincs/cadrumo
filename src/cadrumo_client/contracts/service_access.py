@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Annotated, Literal, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -14,7 +15,15 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .access_vocabulary import AccessScope
 from .contracts import ByteChannel
 from .extension_records import ExtensionRecordCapability
+from .model_runs import MODEL_RUN_CAPABILITY
 from .transport import ConnectionContext
+
+
+class ServiceCapability(StrEnum):
+    """Runtime-routed work an installed service descriptor may admit its service for."""
+
+    MODEL_RUN = MODEL_RUN_CAPABILITY
+    """The runtime may route a profile worker's model runs to the service."""
 
 
 class InstalledParentImage(BaseModel):
@@ -41,8 +50,19 @@ class InstalledServiceDescriptor(BaseModel):
     # The arguments the image must be started with, first after the image itself: the role
     # of an image that runs several. Empty for an image that runs one service.
     launch_arguments: tuple[Annotated[str, Field(min_length=1, max_length=256)], ...] = ()
-    # Whether the runtime may route a profile worker's model runs to this service.
-    model_runs: bool = False
+    # Runtime-routed work this installed service is admitted for, beyond its records.
+    service_capabilities: tuple[ServiceCapability, ...] = ()
+
+    @field_validator("service_capabilities")
+    @classmethod
+    def _capabilities_are_distinct(cls, value: tuple[ServiceCapability, ...]) -> tuple[ServiceCapability, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("a service capability is declared once")
+        return value
+
+    def declares(self, capability: ServiceCapability) -> bool:
+        """Whether this installed descriptor admits the service for ``capability``."""
+        return capability in self.service_capabilities
 
 
 @dataclass(frozen=True, slots=True)

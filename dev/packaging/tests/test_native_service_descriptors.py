@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, ServiceCapability
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.layout import application_images, entrypoint_files, load_layout
 from dev.packaging.native.service_descriptors import stage_service_descriptors
@@ -51,3 +52,25 @@ def test_holder_admission_binds_the_platform_launcher(
     assert holder["operation_scope"]["operations"] == []
     expected_digest = holder.pop("descriptor_digest")
     assert expected_digest == sha256_hex(canonical_json_bytes(holder))
+
+
+def test_only_the_agent_service_is_admitted_for_model_runs_through_the_runtime_contract(tmp_path: Path) -> None:
+    layout = load_layout("windows-x64")
+    images = application_images(layout)
+    for relative in [*entrypoint_files(layout).values(), *(image.package_path for image in images)]:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(relative.encode())
+
+    relative = stage_service_descriptors(tmp_path, layout, images)
+
+    descriptors = {
+        descriptor.service_id: descriptor
+        for descriptor in (
+            InstalledServiceDescriptor.model_validate_json(json.dumps(item))
+            for item in json.loads((tmp_path / relative).read_bytes())
+        )
+    }
+    assert {service_id for service_id, item in descriptors.items() if item.declares(ServiceCapability.MODEL_RUN)} == {
+        "cadrumo-agent-service"
+    }

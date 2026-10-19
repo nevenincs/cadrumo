@@ -31,6 +31,7 @@ from cadrumo_client.contracts.profile_access import ProfileStatus, SessionReques
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,
     ServiceAdmission,
+    ServiceCapability,
     ServiceConnected,
     VerifiedServicePeer,
 )
@@ -56,6 +57,7 @@ pytestmark = [
 
 RECORD_CAPABILITY = "synthetic_records"
 SERVICE_ID = "synthetic-record-service"
+OTHER_SERVICE_ID = "synthetic-other-service"
 
 
 class ControlledServiceVerifier:
@@ -118,11 +120,13 @@ class ServiceRecordRuntime:
     profiles: RuntimeProfileConnections
     clients: list[VerifiedConnection] = field(default_factory=list)
 
-    def connect_service(self, *, profile_id: UUID | None = None) -> InstalledServiceClient:
+    def connect_service(
+        self, *, profile_id: UUID | None = None, service_id: str = SERVICE_ID
+    ) -> InstalledServiceClient:
         connection = connect(self.endpoint)
         self.clients.append(connection)
         self.verifier.accept_next = True
-        service = InstalledServiceClient(connection, profile_id=profile_id or self.profile_id, service_id=SERVICE_ID)
+        service = InstalledServiceClient(connection, profile_id=profile_id or self.profile_id, service_id=service_id)
         assert service.claim() is None
         assert service.connected is not None and service.connected.lease is None
         return service
@@ -135,7 +139,7 @@ class ServiceRecordRuntime:
                 profile_id=self.profile_id,
                 session_id=self.person_session_id,
                 recipient_connection_id=service.connected.connection_id,
-                service_id=SERVICE_ID,
+                service_id=service.service_id,
             ),
             deadline=time.monotonic() + 10,
         )
@@ -151,14 +155,46 @@ def _retained_connections_for_cleanup(
     return clients
 
 
+def _descriptor(
+    service_id: str,
+    record_capabilities: tuple[ExtensionRecordCapability, ...],
+    *,
+    model_runs: bool,
+    digest: str,
+) -> InstalledServiceDescriptor:
+    return InstalledServiceDescriptor(
+        service_id=service_id,
+        launch_image=sys.executable,
+        launch_module="synthetic.service",
+        image_digest="1" * 64,
+        descriptor_digest=digest * 64,
+        record_capabilities=record_capabilities,
+        operation_scope=AccessScope(
+            operations=frozenset(),
+            actions=frozenset(),
+            disclosures=frozenset(),
+            periods=None,
+            allow_period_independent=True,
+            allow_delegation=False,
+        ),
+        service_capabilities=(ServiceCapability.MODEL_RUN,) if model_runs else (),
+    )
+
+
 @contextmanager
 def service_record_runtime(
     tmp_path: Path,
     *,
     record_capabilities: tuple[ExtensionRecordCapability, ...] | None = None,
     model_runs: bool = False,
+    other_service_model_runs: bool | None = None,
 ) -> Generator[ServiceRecordRuntime]:
-    """Start real encrypted profiles and workers with two controlled authority ports."""
+    """Start real encrypted profiles and workers with two controlled authority ports.
+
+    ``model_runs`` says whether the installed descriptor of :data:`SERVICE_ID`
+    admits model runs. ``other_service_model_runs``, when given, installs a
+    second descriptor, :data:`OTHER_SERVICE_ID`, that does or does not.
+    """
     with worker_profiles(tmp_path) as (root, targets):
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
@@ -171,23 +207,16 @@ def service_record_runtime(
             key_pattern=r"synthetic-[a-z]+",
             actions=frozenset({"read", "write", "delete", "generation"}),
         )
-        descriptor = InstalledServiceDescriptor(
-            service_id=SERVICE_ID,
-            launch_image=sys.executable,
-            launch_module="synthetic.service",
-            image_digest="1" * 64,
-            descriptor_digest="2" * 64,
-            record_capabilities=(policy,) if record_capabilities is None else record_capabilities,
-            operation_scope=AccessScope(
-                operations=frozenset(),
-                actions=frozenset(),
-                disclosures=frozenset(),
-                periods=None,
-                allow_period_independent=True,
-                allow_delegation=False,
-            ),
-            model_runs=model_runs,
-        )
+        descriptors = [
+            _descriptor(
+                SERVICE_ID,
+                (policy,) if record_capabilities is None else record_capabilities,
+                model_runs=model_runs,
+                digest="2",
+            )
+        ]
+        if other_service_model_runs is not None:
+            descriptors.append(_descriptor(OTHER_SERVICE_ID, (), model_runs=other_service_model_runs, digest="3"))
         stop, boot, native, verifier = Event(), uuid4(), MemoryNativePort(), ControlledServiceVerifier()
         profiles = RuntimeProfileConnections(
             storage_root=root,
@@ -196,7 +225,7 @@ def service_record_runtime(
             stop=stop,
             capture_login=lambda _channel: LoginObservation(owner_id()),
             secret_store=lambda: native,
-            service_descriptors=(descriptor,),
+            service_descriptors=tuple(descriptors),
             service_verifier=verifier,
         )
         profiles.prepare_registry()

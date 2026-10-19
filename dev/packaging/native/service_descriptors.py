@@ -10,6 +10,7 @@ from typing import Any
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.model_runs import MODEL_RUN_CAPABILITY
 
 from .hashing import digest
 from .layout import ApplicationImage, entrypoint_files
@@ -64,7 +65,7 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
         "allow_descendants": True,
         "allowed_parent_images": [],
         # Profile workers' model runs reach cadrumo-agent only through this service.
-        "model_runs": True,
+        "service_capabilities": [MODEL_RUN_CAPABILITY],
     }
     parents = [
         {"launch_image": image.package_path, "image_digest": digest(root / image.package_path)}

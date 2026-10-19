@@ -27,6 +27,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRequested,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SecretReady
+from cadrumo_client.contracts.service_access import ServiceCapability
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
@@ -195,14 +196,19 @@ class ProfileConnectionModelRunsMixin:
 
 
 def _model_run_service(connections: RuntimeProfileConnections, profile_id: UUID) -> ServiceConnection | None:
-    """Return the admitted service connection of ``profile_id`` that declares model runs, if any."""
+    """Return the admitted service connection of ``profile_id`` whose installed descriptor admits model runs.
+
+    The descriptor is the runtime's installed one, retained with the natively
+    verified peer of that exact connection; nothing the service sends can
+    declare the capability, and no other connection's descriptor lends it.
+    """
     for service in connections._services.values():
         lease = service.lease
         if (
             lease is not None
             and lease.profile_id == profile_id
             and lease.runtime_boot_id == connections.boot
-            and service.descriptor.model_runs
+            and service.descriptor.declares(ServiceCapability.MODEL_RUN)
         ):
             return service
     return None
@@ -216,7 +222,12 @@ def _admitted_lease(
     """Whether ``request`` names the exact live lease of the service on this connection."""
     service = connections._services.get(context.connection_id)
     connection = connections._connections.get(context.connection_id)
-    if service is None or connection is None or service.lease is None or not service.descriptor.model_runs:
+    if (
+        service is None
+        or connection is None
+        or service.lease is None
+        or not service.descriptor.declares(ServiceCapability.MODEL_RUN)
+    ):
         return False
     lease = service.lease
     return (
