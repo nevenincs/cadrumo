@@ -1,4 +1,4 @@
-"""A process the lane starts, at any depth, ends when the lane ends, and is seen while it runs."""
+"""A process the lane starts, at any depth, ends when the lane ends, and the lane keeps its exit code."""
 
 from __future__ import annotations
 
@@ -28,6 +28,8 @@ print(child.pid, flush=True)
 if contained:
     print(sorted(job.others()), flush=True)
 sys.stdin.readline()
+if contained:
+    job.end(7)
 """
 
 
@@ -46,21 +48,21 @@ def _lane(scope: Any, mode: str) -> tuple[Any, int, list[str]]:
     return (_process, stdin), grandchild, reported
 
 
-def _end(lane: Any) -> None:
+def _end(lane: Any, code: int) -> None:
     process, stdin = lane
     stdin.write(b"done\n")
     stdin.close()
-    assert process.wait(timeout=60) == 0
+    assert process.wait(timeout=60) == code
 
 
-def test_a_grandchild_ends_with_the_lane_and_is_listed_while_it_runs() -> None:
+def test_a_grandchild_ends_with_the_lane_which_keeps_its_exit_code() -> None:
     from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     try:
         lane, grandchild, reported = _lane(scope, "contained")
         survivor = psutil.Process(grandchild)
-        _end(lane)
+        _end(lane, 7)
         # Its only ending is the lane Job closing; the scope has not been terminated yet.
         survivor.wait(timeout=60)
     finally:
@@ -75,7 +77,7 @@ def test_without_the_job_the_same_grandchild_survives_its_lane() -> None:
     try:
         lane, grandchild, _ = _lane(scope, "uncontained")
         survivor = psutil.Process(grandchild)
-        _end(lane)
+        _end(lane, 0)
         assert survivor.is_running()
     finally:
         scope.terminate(timeout=30)

@@ -580,12 +580,14 @@ def main(argv: list[str] | None = None) -> int:
     """Run the lane in its own kill-on-close Job; a process that outlives the run fails it."""
     job = LaneJob() if sys.platform == "win32" else None
     code = _main(argv)
-    left = job.others() if job is not None else ()
+    if job is None:
+        return code
+    left = job.others()
     if left:
         reason = f"processes outlived the run and end with the lane: {sorted(left)}"
         print(json.dumps({"step": "failed", "reason": reason}), flush=True)
-        return 1
-    return code
+        code = 1
+    job.end(code)
 
 
 def _main(argv: list[str] | None) -> int:

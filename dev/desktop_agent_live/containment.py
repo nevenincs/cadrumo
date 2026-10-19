@@ -3,13 +3,16 @@
 The Job's only handle is this process's and is not inherited, so however the
 lane ends, normally, by an exception, Ctrl-C or being killed, Windows ends
 every process still in the Job with it. The product starts nothing with
-breakaway, and the Job allows none.
+breakaway, and the Job allows none. Closing that handle as the process exits
+would end the process itself with code 0, so the lane ends through
+:meth:`LaneJob.end`, which ends the Job with the lane's own exit code.
 """
 
 from __future__ import annotations
 
 import os
-from typing import Any
+import sys
+from typing import Any, NoReturn
 
 
 class LaneJob:
@@ -35,3 +38,12 @@ class LaneJob:
 
         members = win32job.QueryInformationJobObject(self._job, win32job.JobObjectBasicProcessIdList)
         return tuple(int(pid) for pid in members if int(pid) != os.getpid())
+
+    def end(self, code: int) -> NoReturn:
+        """End this process, and anything still in the Job, with exit ``code``."""
+        import win32job
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+        win32job.TerminateJobObject(self._job, code)
+        raise SystemExit(code)
