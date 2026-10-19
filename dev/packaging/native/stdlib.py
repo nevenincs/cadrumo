@@ -10,7 +10,11 @@ import struct
 import sys
 import zipfile
 from collections.abc import Mapping
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+
+BYTECODE_WORKERS = 12
+"""Threads publishing package bytecode; the work is mostly reading, hashing and linking files."""
 
 
 def bytecode(source: bytes, name: str, *, prefix: str = "python.zip") -> bytes:
@@ -45,11 +49,15 @@ def compile_packages_bytecode(
 ) -> None:
     """Publish caches with the same CPython minor and no older patch than the runtime."""
     require_bytecode_compiler(version)
-    for file in sorted(source.rglob("*.py")):
-        # Developer tools redirect cache_from_source through sys.pycache_prefix;
-        # published bytecode belongs beside its source in the immutable package.
-        destination = file.parent / "__pycache__" / f"{file.stem}.{sys.implementation.cache_tag}.pyc"
-        destination.parent.mkdir(parents=True, exist_ok=True)
+    tag = sys.implementation.cache_tag
+    files = sorted(source.rglob("*.py"))
+    # Developer tools redirect cache_from_source through sys.pycache_prefix;
+    # published bytecode belongs beside its source in the immutable package.
+    for directory in sorted({file.parent / "__pycache__" for file in files}):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    def publish(file: Path) -> None:
+        destination = file.parent / "__pycache__" / f"{file.stem}.{tag}.pyc"
         destination.unlink(missing_ok=True)
         content = file.read_bytes()
         relative = destination.relative_to(source)
@@ -68,8 +76,14 @@ def compile_packages_bytecode(
                     os.link(old, destination)
                 except OSError:
                     destination.write_bytes(cached)
-                continue
+                return
         destination.write_bytes(bytecode(content, file.relative_to(source).as_posix(), prefix=prefix))
+
+    # Each file's cache is decided and written on its own, and most of the work
+    # is reading and linking, so the files are taken by a pool of threads.
+    with ThreadPoolExecutor(max_workers=BYTECODE_WORKERS, thread_name_prefix="bytecode") as pool:
+        for future in [pool.submit(publish, file) for file in files]:
+            future.result()
 
 
 def bundle_identity(source: Path, excluded: list[str], bootstrap: dict[str, bytes], version: str) -> str:
