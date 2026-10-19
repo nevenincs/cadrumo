@@ -42,6 +42,7 @@ from .adapters.agent_provider_catalog import AgentProviderCatalogSource
 from .adapters.provider_catalog_metadata import declared_provider_catalog_response
 from .contracts import HostedCertificationStatus
 from .host.auth_attempt import AuthAttempt
+from .host.bounded_read import BoundedRead, Identity
 from .host.controller import (
     AgentCredentialSource,
     AgentGenerations,
@@ -79,6 +80,14 @@ _LOGGER = get_logger(__name__)
 HOSTED_CERTIFICATION_CACHE_SECONDS = 5.0
 LIFECYCLE_ADMISSION_SECONDS = 2.0
 """How long a request waits for tree lifecycle work, well inside the desktop's shortest exchange bound."""
+ADMIN_READ_SECONDS = 1.5
+"""How long a catalog or status request waits for its work before it is told the service is busy.
+
+The work goes on, and a request in the next few seconds is served its result:
+a cold catalog or a provider's sign-in probe can take longer than an
+administration exchange may hold one of the service's few slots."""
+ADMIN_READ_FRESH_SECONDS = 5.0
+"""How long a finished catalog or status read is served to the requests that follow it."""
 
 
 def service_failure(error: Exception) -> dict[str, Any]:
@@ -191,6 +200,8 @@ class AgentService:
             tuple[AgentHostController, AgentReady, tuple[HostedCertificationStatus, ...], float] | None
         ) = None
         self._workspace: Path | None = None
+        self._catalog_read = BoundedRead(self._catalog_document, name="catalog", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
+        self._status_read = BoundedRead(self._provider_status, name="status", fresh_seconds=ADMIN_READ_FRESH_SECONDS)
         self._ownership = ExitStack()
         self._owned = False
         self._emit = emit
@@ -224,8 +235,14 @@ class AgentService:
         """Apply one bounded masked administration request under the live lease."""
         if action in {"connect_status", "connect_cancel"}:
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
-        if action == "status":
-            return self._provider_status()
+        if action in {"catalog", "status"}:
+            if self._closing.is_set():
+                return {"kind": "refused", "code": "service_stopping"}
+            # Each reads what the profile and the tree are now; a result is
+            # served only for the lease and tree it was read under.
+            key = (Identity(self.client.lease), Identity(self._controller))
+            read = self._catalog_read if action == "catalog" else self._status_read
+            return read.answer(key, within=ADMIN_READ_SECONDS)
         arguments: dict[str, Any] = {
             "provider": provider,
             "expected_revision": expected_revision,
@@ -235,9 +252,8 @@ class AgentService:
             "attempt_id": attempt_id,
             "secret": secret,
         }
-        if action in {"catalog", "start"}:
-            # Neither changes the tree here: the catalogue reads the published
-            # agent or the declared one, and a start is handed to its own thread.
+        if action == "start":
+            # A start does not change the tree here: it is handed to its own thread.
             return self._admin(action, **arguments)
         # Retiring or launching a tree holds the lifecycle lock for as long as
         # the tree takes; a request answers that it is busy instead of waiting
@@ -283,21 +299,6 @@ class AgentService:
     ) -> Any:
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
-        if action == "catalog":
-            self._clear_hosted_certifications()
-            controller = self._controller
-            if controller is not None and controller.state is AgentHostState.READY:
-                ready = controller.published()
-                if ready is not None:
-                    try:
-                        document = self._served_catalog(ready)
-                    except Exception:
-                        self._clear_hosted_certifications()
-                        raise
-                    self._remember_hosted_certifications(controller, ready, document)
-                    return self._picker_catalog(document)
-            self._clear_hosted_certifications()
-            return self._picker_catalog(declared_provider_catalog_response(agent_source=self._agent_source))
         if self.client.lease is None:
             return {"kind": "refused", "code": "signed_out"}
         if self._auth_attempt is not None and self._auth_attempt.active and action != "stop":
@@ -341,10 +342,35 @@ class AgentService:
             )
         else:
             return {"kind": "refused", "code": "invalid_request"}
+        self._forget_reads()
         # A tree started under the settings this change superseded is replaced
         # on the start thread, which retires it and publishes what follows.
         self._replace_superseded()
         return result.model_dump(mode="json")
+
+    def _catalog_document(self) -> dict[str, Any]:
+        """The published agent's catalog, or the declared one while none is ready."""
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        self._clear_hosted_certifications()
+        controller = self._controller
+        if controller is not None and controller.state is AgentHostState.READY:
+            ready = controller.published()
+            if ready is not None:
+                try:
+                    document = self._served_catalog(ready)
+                except Exception:
+                    self._clear_hosted_certifications()
+                    raise
+                self._remember_hosted_certifications(controller, ready, document)
+                return self._picker_catalog(document)
+        self._clear_hosted_certifications()
+        return self._picker_catalog(declared_provider_catalog_response(agent_source=self._agent_source))
+
+    def _forget_reads(self) -> None:
+        """Serve no kept catalog or status once what they were read from has changed."""
+        self._catalog_read.forget()
+        self._status_read.forget()
 
     def _provider_status(self) -> dict[str, Any]:
         """Observe settings without waiting for gateway startup after sign-in.
@@ -477,6 +503,7 @@ class AgentService:
         )
         self._auth_attempt = attempt
         self._auth_resume_valid = valid
+        self._forget_reads()
         return attempt.observe()
 
     def start(self) -> dict[str, Any]:
@@ -537,6 +564,7 @@ class AgentService:
                 if controller.state is AgentHostState.DETACHED:
                     self._controller = None
                 return service_failure(error)
+            self._forget_reads()
             event = self._ready_event(ready)
             self._emit(event)
             return event
@@ -712,6 +740,7 @@ class AgentService:
     def runtime_changed(self) -> None:
         """Forget observed generations: a pushed frame may mean a new lease or a retired session."""
         self._store.invalidate_generations()
+        self._forget_reads()
 
     def observe(self) -> bool:
         """Revalidate exact generations: replace a superseded tree, or answer ``False`` for the caller to retire it."""
@@ -733,6 +762,7 @@ class AgentService:
                 self._clear_hosted_certifications()
                 controller.stop()
                 self._controller = None
+                self._forget_reads()
                 self._emit({"event": "stopped", "code": "agent_retired"})
 
     def close(self) -> None:

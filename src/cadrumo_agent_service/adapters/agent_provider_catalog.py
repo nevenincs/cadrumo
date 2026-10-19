@@ -79,7 +79,11 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         self._runner: AgentInvocationRunner = WindowsAgentInvocationRunner() if runner is None else runner
         self._agent_source = agent_source
         self._received = os.environ if received is None else received
+        # One lock per document: a first sign-in capability read runs the
+        # agent, and the catalog, already read at start, must not wait for it.
         self._lock = Lock()
+        self._sign_in_lock = Lock()
+        self._gui_sign_in_lock = Lock()
         self._catalog: ProviderCatalog | None = None
         self._sign_ins: tuple[str, ...] | None = None
         self._gui_sign_ins: dict[str, tuple[Literal["browser", "device"], ...]] | None = None
@@ -105,7 +109,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
 
     def sign_in_providers(self) -> tuple[str, ...]:
         """Read the agent's supported operator login actions, separate from credential kinds."""
-        with self._lock:
+        with self._sign_in_lock:
             if self._sign_ins is None:
                 try:
                     result = _SignInCapabilities.model_validate_json(self._invoke(AUTH_CAPABILITIES_ARGUMENTS))
@@ -122,7 +126,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
 
     def gui_sign_in_methods(self) -> dict[str, tuple[Literal["browser", "device"], ...]]:
         """Return the provider-owned methods; the service invents no login capability."""
-        with self._lock:
+        with self._gui_sign_in_lock:
             if self._gui_sign_ins is None:
                 try:
                     result = _GuiSignInCapabilities.model_validate_json(self._invoke(GUI_AUTH_CAPABILITIES_ARGUMENTS))

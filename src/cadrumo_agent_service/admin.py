@@ -21,6 +21,12 @@ from .providers.application.ports import ProviderCatalogUnavailableError
 ADMIN_DOCUMENT_MAX_BYTES = 4096
 ADMIN_RESPONSE_MAX_BYTES = 256 * 1024
 ADMIN_SECRET_MAX_BYTES = 16 * 1024
+ADMIN_EXCHANGES = 4
+"""Exchanges served at once; each is bounded, so a slot frees within seconds."""
+ADMIN_BUSY_ANSWERS = 16
+"""Connections past the served exchanges that are still answered ``busy`` rather than closed."""
+ADMIN_BUSY_READ_SECONDS = 1.0
+"""How long a connection answered ``busy`` has to send its two frames."""
 
 type AdminAction = Literal[
     "catalog",
@@ -121,11 +127,14 @@ class AdminServer:
         self._stop = Event()
         self._active_guard = Lock()
         self._active: set[socket.socket] = set()
-        self._capacity = BoundedSemaphore(4)
-        self._workers = ThreadPoolExecutor(max_workers=4, thread_name_prefix="agent-service-admin-request")
+        self._capacity = BoundedSemaphore(ADMIN_EXCHANGES)
+        self._busy_capacity = BoundedSemaphore(ADMIN_BUSY_ANSWERS)
+        self._workers = ThreadPoolExecutor(
+            max_workers=ADMIN_EXCHANGES, thread_name_prefix="agent-service-admin-request"
+        )
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind(("127.0.0.1", 0))
-        self._socket.listen(4)
+        self._socket.listen(ADMIN_EXCHANGES + ADMIN_BUSY_ANSWERS)
         self.port = self._socket.getsockname()[1]
         self._thread = Thread(target=self._serve, name="agent-service-admin", daemon=True)
         self._thread.start()
@@ -137,7 +146,18 @@ class AdminServer:
             except OSError:
                 return
             if not self._capacity.acquire(blocking=False):
-                stream.close()
+                # A caller is told it is early, never left with a reset it
+                # cannot tell from a crashed service.
+                if not self._busy_capacity.acquire(blocking=False):
+                    stream.close()
+                    continue
+                with self._active_guard:
+                    if self._stop.is_set():
+                        self._busy_capacity.release()
+                        stream.close()
+                        return
+                    self._active.add(stream)
+                Thread(target=self._answer_busy, args=(stream,), name="agent-service-admin-busy", daemon=True).start()
                 continue
             with self._active_guard:
                 if self._stop.is_set():
@@ -146,6 +166,36 @@ class AdminServer:
                     return
                 self._active.add(stream)
             self._workers.submit(self._handle, stream)
+
+    def _answer_busy(self, stream: socket.socket) -> None:
+        """Answer an exchange past the served ones ``busy``, under its own request identity."""
+        try:
+            with stream, contextlib.suppress(EOFError, OSError, ValueError, ValidationError):
+                deadline = time.monotonic() + ADMIN_BUSY_READ_SECONDS
+                authorization = _read_frame(stream, ADMIN_SECRET_MAX_BYTES, deadline=deadline)
+                try:
+                    authenticated = hmac.compare_digest(authorization, self._bearer)
+                finally:
+                    wipe(authorization)
+                if not authenticated:
+                    _write_document(stream, {"kind": "refused", "code": "unauthenticated"})
+                    return
+                request = AdminRequest.model_validate_json(
+                    _read_frame(stream, ADMIN_DOCUMENT_MAX_BYTES, deadline=deadline)
+                )
+                # Nothing was done: a secret is never asked for, and the caller may retry.
+                _write_document(
+                    stream,
+                    {
+                        "version": 1,
+                        "request_id": str(request.request_id),
+                        "result": {"kind": "refused", "code": "busy"},
+                    },
+                )
+        finally:
+            with self._active_guard:
+                self._active.discard(stream)
+            self._busy_capacity.release()
 
     def _handle(self, stream: socket.socket) -> None:
         try:
