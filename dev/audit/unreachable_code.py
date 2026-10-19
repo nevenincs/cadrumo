@@ -86,7 +86,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     declared_values = _declared_data_values(spec)
     shipped_importers = _shipped_importers(full_edges)
     module_findings = _module_findings(
-        spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers
+        spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers, full_edges
     )
     symbol_findings, data_cleared, dev_cleared = _symbol_findings(
         spec, modules, runtime_reach, full_reach, outside, data_tokens, declared_values

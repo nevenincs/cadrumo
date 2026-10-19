@@ -14,10 +14,10 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from mcp import ClientSession
+from mcp import ClientSession, MCPError
 from mcp.client import Client
 from mcp.client.stdio import StdioServerParameters, stdio_client
-from mcp.types import LATEST_PROTOCOL_VERSION
+from mcp.types import INVALID_REQUEST, LATEST_PROTOCOL_VERSION
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.core.external_constants import OutputLanguage
@@ -52,6 +52,7 @@ _UNADMITTED: tuple[tuple[str, dict[str, object]], ...] = (
     _PROFILE_CALL,
     ("authority", {"query": "auth_providers"}),
     ("corpus_search", {"query": "iva"}),
+    ("harness_load", {}),
     ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID, "limit": 3}),
     ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
 )
@@ -104,7 +105,12 @@ async def test_installed_stdio_serves_a_client_that_never_sends_the_handshake(tm
             tools = (await client.list_tools()).tools
             status = await client.call_tool("status", {})
             refused = [await client.call_tool(name, arguments) for name, arguments in _UNADMITTED]
+            # A resource is bundled text, and still only the tool list and status answer before admission.
+            with pytest.raises(MCPError) as unread:
+                await client.read_resource("cadrumo://rule/cadrumo-operator-grounding")
 
+    assert unread.value.code == INVALID_REQUEST
+    _assert_runtime_unavailable(unread.value.data, outcome="refused", code="runtime_unavailable")
     names = {tool.name for tool in tools}
     assert {"status", "execute", "authority", "search"} <= names
     assert not names & _REMOVED_TOOLS

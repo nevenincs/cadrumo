@@ -8,11 +8,27 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.entrypoints.cli.command_schema import profile_authentication_contract
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo_client.commands import windows_secret_channels
 
+from .....commands.command_specs import RUNTIME_COMMAND_GRAPH
+from .... import windows_secret_bootstrap as runtime_windows_secret_bootstrap
 from ....frontend.cli import bootstrap, windows_secret_bootstrap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def test_each_root_declares_its_own_windows_handle_bootstrap() -> None:
+    """The ``aeat`` root names this wrapper and the runtime root names its own, so neither is undeclared."""
+    aeat_secret = COMMAND_GRAPH.root().profile_secret
+    runtime_secret = RUNTIME_COMMAND_GRAPH.root().profile_secret
+    assert aeat_secret is not None
+    assert runtime_secret is not None
+
+    assert aeat_secret.windows_handle_bootstrap == windows_secret_bootstrap.__name__
+    assert profile_authentication_contract().windows_handle_bootstrap == windows_secret_bootstrap.__name__
+    assert runtime_secret.windows_handle_bootstrap == runtime_windows_secret_bootstrap.__name__
 
 
 @pytest.mark.parametrize(

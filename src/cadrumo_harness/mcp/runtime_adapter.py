@@ -32,6 +32,7 @@ from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
 from .corpus_query import corpus_query
 from .lifecycle_notices import LifecycleNoticeBoard
+from .operating_layer import harness_load
 from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
@@ -418,40 +419,65 @@ class RuntimeMcpAdapter:
                 return await self._wire(lambda: authority_query(args))
             if name == "corpus_search":
                 return await self._wire(lambda: corpus_query(args))
+            if name == "harness_load":
+                return await self._wire(lambda: harness_load(args))
             return await self._wire(lambda: call_admitted_operation(self, name, args))
         except Exception as error:
-            code = refusal_code(error)
-            # A sign-in refusal keeps its reason, binding and wait, as the command line reports them.
-            reply: dict[str, Any] = {"outcome": "refused", "code": code, **refusal_facts(error)}
-            if isinstance(error, ValidationError):
-                faults = request_faults(name, error)
-                reply["faults"] = faults
-                _LOGGER.warning(
-                    "MCP request validation failed: tool=%s errors=%s faults=%s",
-                    name,
-                    error.error_count(),
-                    faults,
-                )
-            if isinstance(error, FrontendRefusedError) and error.request_faults:
-                # The runtime said why, in a registered error's code and message; every tool passes that on.
-                reply["faults"] = [public_value(fault) for fault in error.request_faults]
-            if self.client is not None and code in _SESSION_ENDED:
-                if self.admission is McpAdmission.ATTENDED:
-                    # An attended lease is short; the next call asks again on this approved connection.
-                    self._retired.set()
-                else:
-                    # The runtime has ended the held session, whether or not its notice has arrived yet: let it
-                    # go, so this answer sends the agent to the person and the next call asks the runtime again.
-                    await self._release_lease(task_name="mcp-ended-session-close")
-            if code == AccessDenialCode.PERSON_ACT_REQUIRED.value:
-                # The runtime refused the person's own act; the agent is told to ask the person.
-                reply["remedy"] = PERSON_ACT_REMEDY
-            elif (remedy := connection_unavailable_remedy(code)) is not None and remedy:
-                reply["remedy"] = remedy
-            elif self.client is None and (told := sign_in_remedy(code, reply)) is not None:
-                # Nothing admits this server: no live sign-in and no configured key.
-                reply["remedy"] = told
-            return reply
+            return await self._refusal(name, error)
+
+    async def admit_resource_request(self, method: str) -> dict[str, Any] | None:
+        """Admit one resource request as every tool but ``status`` is admitted, under the same session.
+
+        The operating layer's resources are bundled public text, and still
+        nothing but the handshake, the tool list and ``status`` answers a
+        connection no live sign-in or configured key admits. Returns ``None``
+        when a session admits the request, else the refusal a tool would answer.
+        """
+        async with self._lock:
+            try:
+                await self._hold_or_restore_session()
+                self._admitted()
+            except Exception as error:
+                reply = await self._refusal(method, error)
+            else:
+                return None
+        _LOGGER.warning("MCP resource request refused: method=%s reason=%s", method, reply["code"])
+        return reply
+
+    async def _refusal(self, name: str, error: Exception) -> dict[str, Any]:
+        """Turn one failure into its stable refusal, with the remedy that says what the agent does next."""
+        code = refusal_code(error)
+        # A sign-in refusal keeps its reason, binding and wait, as the command line reports them.
+        reply: dict[str, Any] = {"outcome": "refused", "code": code, **refusal_facts(error)}
+        if isinstance(error, ValidationError):
+            faults = request_faults(name, error)
+            reply["faults"] = faults
+            _LOGGER.warning(
+                "MCP request validation failed: tool=%s errors=%s faults=%s",
+                name,
+                error.error_count(),
+                faults,
+            )
+        if isinstance(error, FrontendRefusedError) and error.request_faults:
+            # The runtime said why, in a registered error's code and message; every tool passes that on.
+            reply["faults"] = [public_value(fault) for fault in error.request_faults]
+        if self.client is not None and code in _SESSION_ENDED:
+            if self.admission is McpAdmission.ATTENDED:
+                # An attended lease is short; the next call asks again on this approved connection.
+                self._retired.set()
+            else:
+                # The runtime has ended the held session, whether or not its notice has arrived yet: let it
+                # go, so this answer sends the agent to the person and the next call asks the runtime again.
+                await self._release_lease(task_name="mcp-ended-session-close")
+        if code == AccessDenialCode.PERSON_ACT_REQUIRED.value:
+            # The runtime refused the person's own act; the agent is told to ask the person.
+            reply["remedy"] = PERSON_ACT_REMEDY
+        elif (remedy := connection_unavailable_remedy(code)) is not None and remedy:
+            reply["remedy"] = remedy
+        elif self.client is None and (told := sign_in_remedy(code, reply)) is not None:
+            # Nothing admits this server: no live sign-in and no configured key.
+            reply["remedy"] = told
+        return reply
 
     async def _hold_or_restore_session(self) -> None:
         if self._requests_attendance:

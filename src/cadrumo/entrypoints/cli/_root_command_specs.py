@@ -172,6 +172,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cadrumo_client.commands.profile_authentication",
                 "ProfileAuthenticationSecrets",
             ),
+            windows_handle_bootstrap="cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap",
         ),
     ),
     CommandSpec(

@@ -16,7 +16,7 @@ from dev.quality.source_import_analysis import (
 from .unreachable_dataclasses import dataclass_member_uses
 from .unreachable_definitions import _collection_uses, _definitions
 from .unreachable_frameworks import framework_contracts
-from .unreachable_graph import _collapse_packages, _importers_of_span, resolved_symbol_uses
+from .unreachable_graph import _collapse_packages, _importers_of_span, reachable_closure, resolved_symbol_uses
 from .unreachable_memo import _walked, parse_module
 from .unreachable_models import (
     _CONFIDENCE_BY_ORDER,
@@ -49,9 +49,20 @@ def _module_findings(
     full_reach: frozenset[str],
     outside: _OutsideUse,
     importers: Mapping[str, frozenset[str]],
+    edges: Mapping[str, frozenset[str]],
 ) -> tuple[ModuleFinding, ...]:
+    """Report audited modules no product command reaches and no ``dev/`` tool uses.
+
+    A module ``dev/`` imports is in use, and so is everything it imports in
+    turn: deleting it breaks a repository gate rather than shrinking what an
+    installed user reaches. The clear rests on the same resolved ``dev`` corpus
+    label that clears a symbol; a ``tests`` label, including ``dev/`` tests,
+    only annotates the finding.
+    """
     findings: list[ModuleFinding] = []
-    audited = frozenset(name for name in modules if spec.audits(name))
+    dev_roots = [name for name in modules if _DEV_LABEL in outside.labels_for_module(name)]
+    dev_reach = reachable_closure(dev_roots, modules, dict(edges))
+    audited = frozenset(name for name in modules if spec.audits(name)) - dev_reach
     unreachable = audited - full_reach
     for name, spanned in _collapse_packages(unreachable, modules):
         findings.append(_unreachable_module_finding(name, spanned, spec, modules, outside, importers))

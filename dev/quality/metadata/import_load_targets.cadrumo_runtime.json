@@ -207,6 +207,7 @@
         "cadrumo_runtime.host.profile_connection_attendance",
         "cadrumo_runtime.host.profile_connection_drain",
         "cadrumo_runtime.host.profile_connection_extension_records",
+        "cadrumo_runtime.host.profile_connection_model_runs",
         "cadrumo_runtime.host.profile_connection_operations",
         "cadrumo_runtime.host.profile_connection_person_acts",
         "cadrumo_runtime.host.profile_connection_services",

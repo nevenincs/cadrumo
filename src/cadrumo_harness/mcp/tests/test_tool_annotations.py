@@ -45,6 +45,7 @@ _READ_ONLY = {
     "describe",
     "authority",
     "corpus_search",
+    "harness_load",
     "observe",
     "result",
     "result_page",
@@ -178,8 +179,8 @@ async def test_the_server_advertises_each_tools_hints_as_the_protocols_annotatio
 @pytest.mark.anyio
 async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads() -> None:
     calls = _read_only_calls()
-    # The two reference tools are served with no session at all, so they have nothing to send.
-    assert set(calls) == _READ_ONLY - {"authority", "corpus_search"}
+    # The bundled reference tools are served with no session at all, so they have nothing to send.
+    assert set(calls) == _READ_ONLY - {"authority", "corpus_search", "harness_load"}
     lease = _WatchedLease(uuid4())
     adapter = RuntimeMcpAdapter(profile_id=lease.profile_id, client=cast(FrontendClient, lease))
     sent_by: dict[str, list[type]] = {}
@@ -202,7 +203,7 @@ async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads() -> 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
     ("name", "arguments"),
-    [("authority", {"query": "auth_providers"}), ("corpus_search", {"query": "synthetic"})],
+    [("authority", {"query": "auth_providers"}), ("corpus_search", {"query": "synthetic"}), ("harness_load", {})],
 )
 async def test_the_reference_tools_marked_read_only_are_served_without_any_session(
     name: str, arguments: dict[str, object]

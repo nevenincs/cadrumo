@@ -273,6 +273,7 @@ def profile_authentication_contract(
         descriptors_must_differ_across_scopes=True,
         duplicate_keys_forbidden=True,
         extra_fields_forbidden=True,
+        windows_handle_bootstrap=root_profile_secret.windows_handle_bootstrap,
     )
 
 

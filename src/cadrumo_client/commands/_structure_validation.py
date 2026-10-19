@@ -104,12 +104,12 @@ def validate_recovery_reserved_descriptors(reserved_descriptors: tuple[int, ...]
     )
 
 
-def validate_recovery_bootstrap(windows_handle_bootstrap: str) -> None:
+def validate_windows_handle_bootstrap(windows_handle_bootstrap: str) -> None:
     _raise_first(
         (
             (
                 not windows_handle_bootstrap or any(character.isspace() for character in windows_handle_bootstrap),
-                "recovery handoff Windows bootstrap must be a non-empty token",
+                "Windows handle bootstrap must be a non-empty token",
             ),
         )
     )
@@ -466,7 +466,6 @@ __all__ = [
     "validate_command_spec",
     "validate_graph",
     "validate_leaf_execution",
-    "validate_recovery_bootstrap",
     "validate_recovery_directions",
     "validate_recovery_handoff_contract",
     "validate_recovery_integer_options",
@@ -478,4 +477,5 @@ __all__ = [
     "validate_recovery_shape",
     "validate_result_schema",
     "validate_terminal_execution",
+    "validate_windows_handle_bootstrap",
 ]

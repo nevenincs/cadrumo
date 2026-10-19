@@ -176,7 +176,6 @@ def test_run():
 """
 
 _DEV = """
-import pkg.dead.b
 from pkg.used import UNUSED_CONST
 
 
@@ -315,14 +314,14 @@ def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(
 
 
 def test_wholly_unreachable_package_collapses_to_one_labelled_folder(result: UnreachableCodeResult) -> None:
-    """``pkg.dead`` is reported once, spanning three modules, with its dev/test use as a label."""
+    """``pkg.dead`` is reported once, spanning three modules, with its test use as a label."""
     dead = next(finding for finding in result.modules if finding.module == "pkg.dead")
 
     assert dead.reach is ModuleReach.UNREACHABLE
     assert dead.is_package
     assert dead.path == "src/pkg/dead/"
     assert dead.spanned_modules == 3
-    assert dead.used_by == ("dev", "tests")
+    assert dead.used_by == ("tests",)
     assert not any(finding.module in {"pkg.dead.a", "pkg.dead.b"} for finding in result.modules)
 
 
@@ -800,7 +799,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
     )
     assert "roots: pkg.cli:main" in report
     assert "4 data-shaped member(s) cleared" in report
-    assert "package  src/pkg/dead/  (3 modules)  [used by: dev, tests]" in report
+    assert "package  src/pkg/dead/  (3 modules)  [used by: tests]" in report
     assert "module   src/pkg/loner.py  [used by: tests]" in report
     assert f"{orphan_line}  [exact]" in report
     assert "method      Widget.hidden  [no use anywhere]  [name-match]" in report

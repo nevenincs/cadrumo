@@ -36,6 +36,7 @@ from .recovery_specs import RUNTIME_RECOVERY_COMMAND_SPECS
 _PROFILE_SECRET = ProfileSecretSpec(
     fields=(MachineSecretFieldSpec("profile_passphrase"), MachineSecretFieldSpec("api_key")),
     model=DeferredTarget("cadrumo_client.commands.profile_authentication", "ProfileAuthenticationSecrets"),
+    windows_handle_bootstrap="cadrumo_runtime.host.windows_secret_bootstrap",
 )
 
 _ROOT_PARAMETERS = (

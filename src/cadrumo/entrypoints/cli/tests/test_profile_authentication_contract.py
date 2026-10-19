@@ -204,6 +204,7 @@ def test_profile_authentication_metadata_is_public_bounded_and_value_free() -> N
     assert contract.descriptors_must_differ_across_scopes is True
     assert contract.duplicate_keys_forbidden is True
     assert contract.extra_fields_forbidden is True
+    assert contract.windows_handle_bootstrap == "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap"
     assert "passphrase" not in repr(contract).replace("profile_passphrase", "")
 
 

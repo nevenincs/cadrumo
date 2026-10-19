@@ -368,7 +368,7 @@ check-import-boundaries:
 check-dependency-declarations:
     @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_client src/cadrumo_runtime src/cadrumo_harness src/cadrumo_agent_service dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party cadrumo_agent_service --known-first-party cadrumo_client --known-first-party cadrumo_runtime --known-first-party dev --non-dev-dependency-groups registry --extend-exclude '(?:^|[\\/])test_.*[.]py$' --extend-exclude '(?:^|[\\/])_test_.*[.]py$' --extend-exclude '.*[\\/]tests[\\/].*' --extend-exclude '(?:^|[\\/])_data[\\/]' --extend-exclude '(?:^|[\\/])conftest[.]py$'
 
-[doc('Verify every src/ package module is reachable from a shipped entrypoint; read-only and blocking.')]
+[doc('Verify every src/ package module is reachable from a shipped entrypoint or used by dev/; read-only and blocking.')]
 [group('check')]
 check-module-reachability:
     @uv run --no-sync python -m dev.quality.unreachable_module_coverage

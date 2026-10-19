@@ -16,7 +16,6 @@ from cadrumo_client.commands._policy_validation import (
     validate_machine_secret_variant as _validate_machine_secret_variant,
 )
 from cadrumo_client.commands._policy_validation import validate_profile_secret as _validate_profile_secret
-from cadrumo_client.commands._structure_validation import validate_recovery_bootstrap as _validate_recovery_bootstrap
 from cadrumo_client.commands._structure_validation import validate_recovery_directions as _validate_recovery_directions
 from cadrumo_client.commands._structure_validation import (
     validate_recovery_json_fields as _validate_recovery_json_fields,
@@ -25,6 +24,9 @@ from cadrumo_client.commands._structure_validation import validate_recovery_limi
 from cadrumo_client.commands._structure_validation import validate_recovery_parameters as _validate_recovery_parameters
 from cadrumo_client.commands._structure_validation import (
     validate_recovery_reserved_descriptors as _validate_recovery_reserved_descriptors,
+)
+from cadrumo_client.commands._structure_validation import (
+    validate_windows_handle_bootstrap as _validate_windows_handle_bootstrap,
 )
 from cadrumo_client.commands.shared_contracts import DeferredTarget
 from cadrumo_client.contracts.command_ports import (
@@ -101,10 +103,13 @@ class ProfileSecretSpec:
 
     fields: tuple[MachineSecretFieldSpec, ...]
     model: DeferredTarget
+    windows_handle_bootstrap: str
+    """Module a Windows caller runs with ``python -I -m`` to pass inherited HANDLEs to this program."""
 
     def __post_init__(self) -> None:
-        """Validate that fields are declared and their names are unique, or raise."""
+        """Validate the declared fields, their unique names and the Windows bootstrap token, or raise."""
         _validate_profile_secret(self.fields)
+        _validate_windows_handle_bootstrap(self.windows_handle_bootstrap)
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,4 +150,4 @@ class RecoveryHandoffSpec:
             self.descriptors_must_differ,
         )
         _validate_recovery_reserved_descriptors(self.reserved_descriptors)
-        _validate_recovery_bootstrap(self.windows_handle_bootstrap)
+        _validate_windows_handle_bootstrap(self.windows_handle_bootstrap)

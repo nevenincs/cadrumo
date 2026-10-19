@@ -183,6 +183,7 @@ class ProfileAuthenticationContractMetadata:
     descriptors_must_differ_across_scopes: bool
     duplicate_keys_forbidden: bool
     extra_fields_forbidden: bool
+    windows_handle_bootstrap: str
 
 
 @dataclass(frozen=True, slots=True)
