@@ -39,7 +39,6 @@ __all__ = [
     "build_local_reader_load_request",
     "build_local_reader_remove_request",
     "build_local_reader_start_request",
-    "build_local_reader_verify_request",
     "local_reader_fact_mapping",
     "local_reader_public_facts",
     "local_reader_public_result",
@@ -148,16 +147,6 @@ def build_local_reader_load_request(
 ) -> OperationRequest[LocalReaderProvisionRequest]:
     """Build the request that loads ``role``'s model, a named model, or every role's model."""
     return _request(LocalReaderProvisionAction.LOAD, role=role, model=model, output_language=output_language)
-
-
-def build_local_reader_verify_request(
-    role: ModelRole | None = None,
-    model: str | None = None,
-    *,
-    output_language: OutputLanguage | None = None,
-) -> OperationRequest[LocalReaderProvisionRequest]:
-    """Build the request that verifies ``role``'s model, a named model, or every role's model."""
-    return _request(LocalReaderProvisionAction.VERIFY, role=role, model=model, output_language=output_language)
 
 
 def build_local_reader_remove_request(

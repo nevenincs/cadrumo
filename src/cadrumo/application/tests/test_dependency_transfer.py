@@ -28,7 +28,6 @@ from ..dependency_transfer import (
     dependency_item_lock,
     dependency_retry_delay,
     measure_free_bytes,
-    require_free_space,
     run_with_retry,
 )
 
@@ -246,12 +245,6 @@ def test_free_space_is_measured_on_the_volume_a_new_install_lands_on(tmp_path: P
     future = tmp_path / "not-yet" / "created"
     free = measure_free_bytes(future)
     assert free is not None and free > 0
-    assert require_free_space(future, download_bytes=0) > 0
-    with pytest.raises(DependencyTransferError) as caught:
-        require_free_space(future, download_bytes=free * 10)
-    assert caught.value.category is DependencyFailureCategory.DISK_FULL
-    assert caught.value.facts["free_space_measured"] is True
-    assert int(caught.value.facts["required_bytes"]) > free
 
 
 def test_the_item_lock_refuses_a_second_writer_without_waiting(tmp_path: Path) -> None:

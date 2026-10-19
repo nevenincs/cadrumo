@@ -164,7 +164,7 @@ def _parameter(parameter: ParameterSpec, resolver: TargetResolver) -> CommandPar
         isinstance(parameter, OptionSpec) and parameter.multiple,
         _choices(parameter, resolver),
         cast(
-            "CommandParameterDefault",
+            CommandParameterDefault,
             parameter.default.literal if parameter.default.kind is DefaultKind.LITERAL else None,
         ),
         "" if parameter.help_key is None else tr(parameter.help_key.value),

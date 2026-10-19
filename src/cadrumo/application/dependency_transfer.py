@@ -38,7 +38,7 @@ from cadrumo_client.contracts.failure_categories import DependencyFailureCategor
 from ..core.errors.hierarchy import CadrumoError
 from ..core.locks import exclusive_file_lock
 from ..core.locks_errors import LockAcquisitionError
-from .dependency_contracts import DependencySetupEvents, dependency_item_kind, required_free_bytes
+from .dependency_contracts import DependencySetupEvents, dependency_item_kind
 from .provisioning_contracts import ProvisioningFactValue
 
 __all__ = [
@@ -51,7 +51,6 @@ __all__ = [
     "dependency_item_lock",
     "dependency_retry_delay",
     "measure_free_bytes",
-    "require_free_space",
     "run_with_retry",
 ]
 
@@ -307,23 +306,6 @@ def measure_free_bytes(path: Path) -> int | None:
         return shutil.disk_usage(candidate).free
     except OSError:
         return None
-
-
-def require_free_space(path: Path, *, download_bytes: int) -> int:
-    """Refuse with ``disk_full`` unless the volume holding ``path`` has room for ``download_bytes``.
-
-    The room needed is the size plus 20 % plus 1 GiB. An unmeasurable volume
-    is refused as well, because "could not tell" is not room. Returns the
-    measured free bytes.
-    """
-    required = required_free_bytes(download_bytes)
-    free = measure_free_bytes(path)
-    if free is None or free < required:
-        facts: dict[str, ProvisioningFactValue] = {"required_bytes": required, "free_space_measured": free is not None}
-        if free is not None:
-            facts["free_bytes"] = free
-        raise DependencyTransferError(DependencyFailureCategory.DISK_FULL, transient=False, facts=facts)
-    return free
 
 
 class DependencyItemLockedError(CadrumoError):

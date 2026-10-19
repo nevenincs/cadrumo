@@ -10,7 +10,11 @@ import pytest
 
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 
-from ..custody.acceleration_receipt import ProfileSessionResumeOutcome, profile_session_path
+from ..custody.acceleration_receipt import (
+    ProfileSessionResumeOutcome,
+    borrow_profile_session_key,
+    profile_session_path,
+)
 from ..custody.acceleration_receipt_crypto import PersistedProfileSession
 from ..custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody
 from ..errors import KeyringUnavailableError
@@ -93,7 +97,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
         assert minted.idle_deadline == _NOW + timedelta(minutes=15)
         assert minted.absolute_deadline == _NOW + timedelta(hours=4)
 
-        borrowed, proof = port.borrow_acceleration_receipt_key(storage_root=tmp_path, profile_id=_PROFILE_ID)
+        borrowed, proof = borrow_profile_session_key(storage_root=tmp_path, profile_id=_PROFILE_ID)
         assert borrowed.resumed and proof is not None
         resumed, key_buffer = port.resume_acceleration_receipt_with_key(
             storage_root=tmp_path,
@@ -116,7 +120,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
         assert key_buffer == bytearray(32)
 
         # Reading a receipt cannot extend its lifetime; the original expiry wins.
-        borrowed, proof = port.borrow_acceleration_receipt_key(storage_root=tmp_path, profile_id=_PROFILE_ID)
+        borrowed, proof = borrow_profile_session_key(storage_root=tmp_path, profile_id=_PROFILE_ID)
         assert borrowed.resumed and proof is not None
         expired, expired_key = port.resume_acceleration_receipt_with_key(
             storage_root=tmp_path,

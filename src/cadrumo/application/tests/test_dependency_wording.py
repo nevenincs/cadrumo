@@ -11,22 +11,27 @@ from cadrumo_client.contracts.failure_categories import DependencyFailureCategor
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n.render import lookup_translation
 from ..dependency_contracts import (
+    DependencyBlockedReason,
     DependencyCheckMode,
     DependencyItemKind,
     DependencyNote,
     DependencyRecoveryAction,
+    DependencyStaleReason,
     DependencyState,
     DependencyStatusRow,
 )
 from ..dependency_registry import BROWSER_DECLARATION, LOCAL_AI_DECLARATION, dependency_item_declarations
 from ..dependency_wording import (
+    DEPENDENCY_WORDING_ROOT,
+    dependency_action_key,
     dependency_copy_details,
+    dependency_failure_key,
     dependency_name_key,
+    dependency_note_key,
     dependency_part_name,
     dependency_retry_sentence,
     dependency_row_wording,
     dependency_space_sentence,
-    dependency_wording_keys,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -35,7 +40,21 @@ _INTERNAL = re.compile(r"(?i)\b(runtime|provision\w*|playwright|headless|digest|
 
 
 def _all_keys() -> tuple[str, ...]:
-    return (*dependency_wording_keys(), *(dependency_name_key(d) for d in dependency_item_declarations()))
+    """Every key the wording renders; a key spelled differently here fails the lookup below."""
+    root = DEPENDENCY_WORDING_ROOT
+    return (
+        *(f"{root}.state.{state.value}" for state in DependencyState),
+        *(f"{root}.stale.{reason.value}" for reason in DependencyStaleReason),
+        *(f"{root}.blocked.{reason.value}" for reason in DependencyBlockedReason),
+        *(dependency_failure_key(category) for category in DependencyFailureCategory),
+        *(dependency_action_key(action) for action in DependencyRecoveryAction),
+        *(dependency_note_key(note) for note in DependencyNote),
+        f"{root}.dependency.local_ai.program",
+        f"{root}.dependency.local_ai.model",
+        f"{root}.retry",
+        f"{root}.space_needed",
+        *(dependency_name_key(d) for d in dependency_item_declarations()),
+    )
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)

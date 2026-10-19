@@ -233,36 +233,6 @@ def parse_provider_response[ProviderResponse: BaseModel](
         ) from exc
 
 
-def require_provider_response_item[ProviderResponseItem](
-    items: tuple[ProviderResponseItem, ...],
-    *,
-    provider_name: str,
-    item_name: str,
-) -> ProviderResponseItem:
-    """Return the first required response item or raise a declared provider error.
-
-    Args:
-        items: Provider response collection expected to contain a primary item.
-        provider_name: Human-readable provider label for the public error.
-        item_name: Plural provider-specific item name used in diagnostics.
-
-    Returns:
-        The first response item.
-
-    Raises:
-        LLMProviderError: When a successful provider response has no primary item.
-    """
-    if not items:
-        raise LLMProviderError(
-            context={
-                "provider_name": provider_name,
-                "provider_response_item_present": False,
-                "provider_response_item_kind": item_name,
-            },
-        )
-    return items[0]
-
-
 async def post_provider_request(
     client: httpx.AsyncClient,
     url: str,

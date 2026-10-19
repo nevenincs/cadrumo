@@ -18,6 +18,14 @@ consumed in the body:
 * ``prop`` — the parameter of ``append`` on the ``_CustomDocumentProperties``
   Protocol stub (:mod:`cadrumo.adapters.outbound.workbook.calc_sheets_xlsx`).
   The stub body is ``...``; the parameter is part of the structural type.
+* ``cmd_name`` — the parameter of ``get_command`` on the ``_CommandGroup``
+  Protocol stub (:mod:`cadrumo.entrypoints.cli.common`), which mirrors Click's
+  ``Group.get_command(ctx, cmd_name)``. The stub body is a docstring.
+* ``report_change`` — the positional-only parameter of ``__call__`` on the
+  ``InstallationAreaFactory`` Protocol
+  (:mod:`cadrumo.entrypoints.tui.installation.area_factory`). The stub body is
+  ``...``; the runtime's installed-session implementation calls it.
+
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears all findings with that name across the scan,
 including unrelated definitions. These entries therefore cannot establish
@@ -47,3 +55,13 @@ def _set_language_field(source_citation: object) -> object:
 def _custom_document_properties_append(prop: object) -> object:
     """Mirror ``_CustomDocumentProperties.append`` structural signature."""
     return prop
+
+
+def _command_group_get_command(cmd_name: object) -> object:
+    """Mirror ``_CommandGroup.get_command`` structural signature."""
+    return cmd_name
+
+
+def _installation_area_factory_call(report_change: object) -> object:
+    """Mirror ``InstallationAreaFactory.__call__`` structural signature."""
+    return report_change

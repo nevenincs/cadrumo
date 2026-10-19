@@ -144,7 +144,6 @@ __all__ = [
     "DEPENDENCIES_OPERATION_SUBJECT",
     "DEPENDENCIES_SETUP_PLAN_PHASE",
     "DEPENDENCIES_SETUP_RESPONSE_SCHEMA",
-    "DEPENDENCIES_SETUP_RETRY_NOTICE_PREFIX",
     "DEPENDENCIES_SETUP_REVIEW_SCHEMA",
     "DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID",
     "DEPENDENCIES_VERIFY_OPERATION_DEFINITION_ID",
@@ -172,9 +171,6 @@ DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID: Final = "dependencies.status"
 DEPENDENCIES_VERIFY_OPERATION_DEFINITION_ID: Final = "dependencies.verify"
 DEPENDENCIES_OPERATION_SUBJECT: Final = "dependencies:installation"
 DEPENDENCIES_SETUP_PLAN_PHASE: Final = "dependencies.setup.plan"
-DEPENDENCIES_SETUP_RETRY_NOTICE_PREFIX: Final = "dependencies.setup."
-"""Retry notices are ``dependencies.setup.<item>.retry.<attempt>.<seconds>``; parse them with the contracts helper."""
-
 DEPENDENCY_PROGRESS_INTERVAL_S: Final = 0.5
 _PROGRESS_MIN_PERCENT_CHANGE: Final = 1.0
 _REVIEW_LIFETIME: Final = timedelta(hours=1)

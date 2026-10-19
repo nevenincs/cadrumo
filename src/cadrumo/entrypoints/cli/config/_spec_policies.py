@@ -79,17 +79,6 @@ GOOGLE_WRITE = _policy(
     write_route=CommandWriteRoute.PROFILE_BOUND,
 )
 CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
-# Reads a network endpoint and changes nothing, locally or at the endpoint.
-NETWORK_READ = _policy(frozenset({"network"}), frozenset({"none"}), "external-io")
-# Changes state at a network endpoint and records nothing locally.
-NETWORK_REMOTE_EFFECT = _policy(frozenset({"network"}), frozenset({"network"}), "external-io")
-NETWORK_WRITE = _policy(frozenset({"network"}), frozenset({"network", "local-state"}), "external-io")
-NETWORK_DESTRUCTIVE = _policy(
-    frozenset({"network"}),
-    frozenset({"network", "local-state"}),
-    "external-io",
-    destructive=True,
-)
 LIVE_PROFILE_WRITE = _policy(
     frozenset({"aeat", "network", "encrypted-facts", "profile-custody"}),
     frozenset({"network", "local-state"}),
@@ -111,10 +100,6 @@ __all__ = [
     "GOOGLE_WRITE",
     "LIVE_PROFILE_WRITE",
     "LOCAL_READ",
-    "NETWORK_DESTRUCTIVE",
-    "NETWORK_READ",
-    "NETWORK_REMOTE_EFFECT",
-    "NETWORK_WRITE",
     "PROFILE_DESTRUCTIVE",
     "PROFILE_READ",
     "STATE_FREE",

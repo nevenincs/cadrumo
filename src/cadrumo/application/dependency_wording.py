@@ -58,7 +58,6 @@ __all__ = [
     "dependency_row_wording",
     "dependency_sentence_key",
     "dependency_space_sentence",
-    "dependency_wording_keys",
     "dependency_wording_view",
 ]
 
@@ -119,22 +118,6 @@ def dependency_sentence_key(row: DependencyStatusRow) -> str:
     if row.state is DependencyState.FAILED and row.failure_category is not None:
         return dependency_failure_key(row.failure_category)
     return _key(_STATE_KEYS[row.state])
-
-
-def dependency_wording_keys() -> tuple[str, ...]:
-    """Return every catalogue key the wording can render, for coverage checks."""
-    return (
-        *(_key(suffix) for suffix in _STATE_KEYS.values()),
-        *(_stale_key(reason) for reason in DependencyStaleReason),
-        *(_blocked_key(reason) for reason in DependencyBlockedReason),
-        *(dependency_failure_key(category) for category in DependencyFailureCategory),
-        *(dependency_action_key(action) for action in DependencyRecoveryAction),
-        *(dependency_note_key(note) for note in DependencyNote),
-        _key("dependency.local_ai.program"),
-        _key("dependency.local_ai.model"),
-        _key("retry"),
-        _key("space_needed"),
-    )
 
 
 @dataclass(frozen=True, slots=True)

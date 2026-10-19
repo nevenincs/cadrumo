@@ -30,7 +30,6 @@ from .....application.local_reader_contracts import (
     build_local_reader_load_request,
     build_local_reader_remove_request,
     build_local_reader_start_request,
-    build_local_reader_verify_request,
     local_reader_fact_mapping,
     local_reader_public_verdict,
 )
@@ -42,6 +41,7 @@ from .....application.local_reader_provisioning import provision_local_reader
 from .....application.operations.models import OperationIdentity, OperationRequest
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....application.provisioning_runtime import forget_runtime_unreachable
+from .....application.tests.local_reader_operation_requests import build_local_reader_verify_request
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.model_catalogue import ModelRole, candidates_for_role

@@ -16,7 +16,6 @@ from __future__ import annotations
 import asyncio
 import errno
 import hashlib
-import shutil
 import socket
 import ssl
 import struct
@@ -41,14 +40,11 @@ from cryptography.x509.oid import NameOID
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
-from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_location
 from ..dependency_contracts import DependencySetupStep
 from ..dependency_transfer import (
     DEPENDENCY_RETRY_POLICY,
     DependencyRetryPolicy,
     DependencyTransferError,
-    require_free_space,
     run_with_retry,
 )
 
@@ -665,19 +661,6 @@ def test_cancelling_during_the_backoff_wait_stops_without_another_request(tmp_pa
         requests = len(server.observed)
     assert failure.value.category is DependencyFailureCategory.CANCELLED
     assert requests == 1
-
-
-def test_a_full_disk_refuses_before_the_transfer_and_names_both_sizes(tmp_path: Path) -> None:
-    """Too little room is the disk-full refusal with the required and the measured size, before any byte moves."""
-    free = shutil.disk_usage(tmp_path).free
-    with pytest.raises(DependencyTransferError) as refused:
-        require_free_space(
-            tmp_path / storage_location(StorageCategory.PLAYWRIGHT_BROWSERS).relative_path(), download_bytes=free
-        )
-    assert refused.value.category is DependencyFailureCategory.DISK_FULL
-    assert refused.value.facts["required_bytes"] == -(-free * 6 // 5) + 1024**3
-    assert isinstance(refused.value.facts["free_bytes"], int)
-    assert require_free_space(tmp_path, download_bytes=0) >= 0
 
 
 def test_running_out_of_space_mid_transfer_is_final(tmp_path: Path) -> None:

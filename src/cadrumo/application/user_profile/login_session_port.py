@@ -251,15 +251,6 @@ class ProfileLoginSessionPort(Protocol):
         """
         ...
 
-    def borrow_acceleration_receipt_key(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Read only the keychain proof the receipt locator names; never unwrap or delete."""
-        ...
-
     def resume_acceleration_receipt_with_key(
         self,
         *,
@@ -283,10 +274,6 @@ class ProfileLoginSessionPort(Protocol):
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         """Revoke one profile's split-knowledge acceleration receipt."""
-        ...
-
-    def probe_keychain(self) -> KeychainUnavailability | None:
-        """Return why this process cannot use the keychain, or ``None``; read-only."""
         ...
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:
