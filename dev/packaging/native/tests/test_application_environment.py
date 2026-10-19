@@ -77,11 +77,13 @@ def test_publisher_identity_is_compiled_for_every_profile_and_ignores_ambient_ov
         assert defined[name] == payload
         assert "ambient-override" not in defined.values()
         assert "case-folded-override" not in defined.values()
-    for admitted in (
-        'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]',
-        'slots = [{ name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", required = false }]',
+    # Each admission is planted into a profile that declares no list of that kind yet.
+    for profile, admitted in (
+        ("aeat", 'pass = ["CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"]'),
+        ("cadrumo-runtime", 'slots = [{ name = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", required = false }]'),
     ):
-        planted = _SOURCE.replace("[profiles.python]\n", "[profiles.python]\n" + admitted + "\n", 1)
+        header = f"[profiles.{profile}]\n"
+        planted = _SOURCE.replace(header, header + admitted + "\n", 1)
         with pytest.raises(ApplicationEnvironmentError, match="package_fixed"):
             parse(planted)
 

@@ -31,9 +31,12 @@ from collections.abc import Mapping
 from enum import StrEnum
 from functools import cache
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
-from typing import Final, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
 
 from .product_identity import PRODUCT_IDENTITY
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 class StorageMode(StrEnum):
@@ -600,6 +603,7 @@ def child_environment(
     received: Mapping[str, str] | None = None,
     base: Mapping[str, str] | None = None,
     sys_platform: str | None = None,
+    profile_id: str | UUID | None = None,
 ) -> dict[str, str]:
     """Build the environment of a child this command line starts, inheriting ``root`` instead of re-resolving it.
 
@@ -607,7 +611,9 @@ def child_environment(
     received). Every setting this command line reads, and every other name
     under its environment prefix, is removed from it. The child then takes the
     settings its profile relays from ``received``, the root and the temporary
-    variables are pinned, and the temporary directory is created.
+    variables are pinned, and the temporary directory is created. A launcher
+    that starts the child for one profile passes ``profile_id``, and the child
+    is told that profile's folder; a received folder is never relayed.
     """
     from .storage_taxonomy import StorageCategory
     from .storage_taxonomy_locations import storage_location
@@ -650,6 +656,9 @@ def child_environment(
     ensure_storage_root(temporary_root)
     environment[STORAGE_ROOT.variable] = str(resolved_root)
     environment.update({name: str(temporary_root) for name in TEMPORARY_VARIABLES})
+    from .profile_root_environment import profile_root_environment
+
+    environment.update(profile_root_environment(resolved_root, profile_id))
     return environment
 
 

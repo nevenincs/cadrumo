@@ -22,6 +22,7 @@ import os
 import sys
 import types
 import typing
+import uuid
 from collections.abc import Callable, Generator, Mapping
 from pathlib import Path, PurePath
 from typing import Any
@@ -88,6 +89,7 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
     """Collect the command line's settings, built-in storage root and diagnostic-log placement."""
     from cadrumo.core.config import AuthorityRootSettings, Settings
     from cadrumo.core.errors.hierarchy import CoreValidationError
+    from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
     from cadrumo.core.storage_environment import (
         STORAGE_PATH_RULES,
         STORAGE_ROOT,
@@ -155,6 +157,7 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
         "default_root": default_root,
         "authority_variables": sorted(name.upper() for name in AuthorityRootSettings.model_fields),
         "temporary_variables": list(TEMPORARY_VARIABLES),
+        "profile_variables": [PROFILE_ROOT_VARIABLE],
         "log": {
             "default": _relative(default_logs, log_root),
             "relocated": _relative(relocated_logs, log_root),
@@ -193,6 +196,8 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
         aeat=programs["aeat"],
         python=programs["python"],
         received=request["received"],
+        # Any profile: the gateway is always started inside one, and its folder is a slot.
+        profile_id=uuid.UUID("00000000-0000-4000-8000-000000000000"),
     )
     return {
         "agent_variable": PACKAGE_AGENT_VARIABLE,

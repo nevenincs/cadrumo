@@ -15,6 +15,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Final
+from uuid import UUID
 
 import pytest
 
@@ -69,13 +70,15 @@ def _worker_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, image: 
     else:
         monkeypatch.setenv(_PACKAGE_AGENT_VARIABLE, str(image))
     root = tmp_path / "worker-storage"
-    environment = profile_worker._worker_launch_environment(storage_root=root)
+    profile_id = UUID("8a6c2b7e-1d0f-4e9a-8b4c-3d2e1f0a9b8c")
+    environment = profile_worker._worker_launch_environment(storage_root=root, profile_id=profile_id)
     # The worker delegates environment filtering to the declared shared policy.
     expected = child_environment(
         ChildEnvironmentProfile.OPERATOR,
         root,
         base=None if sys.platform == "win32" else {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"},
         sys_platform=sys.platform,
+        profile_id=profile_id,
     )
     assert environment == expected
     assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(root.resolve())

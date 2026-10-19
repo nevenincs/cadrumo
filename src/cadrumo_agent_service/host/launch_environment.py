@@ -25,8 +25,9 @@ import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
+from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
 from cadrumo.core.storage_environment import (
     STORAGE_ROOT,
     ChildEnvironmentProfile,
@@ -34,6 +35,9 @@ from cadrumo.core.storage_environment import (
     normalize_storage_path,
 )
 from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 HOSTED_ROOT_VARIABLE: Final = "CADRUMO_AGENT_HOSTED_ROOT"
 GATEWAY_PORT_VARIABLE: Final = "CADRUMO_AGENT_PORT"
@@ -46,7 +50,7 @@ DIAGNOSTIC_VARIABLES: Final = frozenset({AGENT_LOG_LEVEL_VARIABLE})
 
 AGENT_SLOTS: Final = frozenset({HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE})
 """The agent's own launch parameters the service fills."""
-GATEWAY_SLOTS: Final = AGENT_SLOTS | {STORAGE_ROOT.variable}
+GATEWAY_SLOTS: Final = AGENT_SLOTS | {STORAGE_ROOT.variable, PROFILE_ROOT_VARIABLE}
 """Every launch slot the service fills for the gateway."""
 
 PROGRAM_AEAT_VARIABLE: Final = "CADRUMO_AGENT_PROGRAM_AEAT"
@@ -196,20 +200,29 @@ def agent_launch_environment(
     python: Path | None,
     received: Mapping[str, str],
     sys_platform: str | None = None,
+    profile_id: UUID | None = None,
 ) -> dict[str, str]:
     """Return the gateway's whole environment: allow-listed system values, the pinned root and the gateway slots.
 
     ``agent_root`` is the profile's opaque agent directory that Cadrumo derived;
-    the agent receives that one path and no profile identity. ``relay`` is the
+    the agent holds no session, password or settings of the profile. ``relay`` is the
     ``cadrumo-mcp`` tool server a hosted run mounts, ``aeat`` the command line and
     ``python`` the interpreter the agent may run. Either is ``None`` when only a
     virtual environment holds it, because the agent refuses to run a program there. The pinned storage root reaches
     the gateway, and the agent forwards it to the programs and tool servers it starts.
+    ``profile_id`` is the profile the agent is started inside; the gateway and the
+    tools it starts are told that profile's folder, derived here and forwarded
+    with the root, and never a folder of another profile.
     """
     platform = sys.platform if sys_platform is None else sys_platform
     base = system_environment(received, sys_platform=platform)
     environment = child_environment(
-        ChildEnvironmentProfile.STRICT, storage_root, received=received, base=base, sys_platform=platform
+        ChildEnvironmentProfile.STRICT,
+        storage_root,
+        received=received,
+        base=base,
+        sys_platform=platform,
+        profile_id=profile_id,
     )
     environment[STORAGE_ROOT.variable] = str(normalize_storage_path(storage_root))
     external = agent_binary_directories(python=python, received=received, sys_platform=platform)
@@ -233,5 +246,8 @@ def agent_launch_environment(
         environment[PROGRAM_PYTHON_VARIABLE] = str(python)
     environment[TOOL_SERVER_VARIABLE] = str(relay)
     environment[TOOL_SERVER_ARGUMENTS_VARIABLE] = json.dumps(["--surface", DEFAULT_MCP_SURFACE.value])
-    environment[FORWARD_VARIABLE] = ",".join([STORAGE_ROOT.variable])
+    forwarded = [STORAGE_ROOT.variable]
+    if PROFILE_ROOT_VARIABLE in environment:
+        forwarded.append(PROFILE_ROOT_VARIABLE)
+    environment[FORWARD_VARIABLE] = ",".join(forwarded)
     return environment

@@ -20,6 +20,7 @@ from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
 from typing import override
+from uuid import UUID
 
 import pytest
 from click.testing import Result
@@ -189,12 +190,12 @@ def native_review(
             environment.setenv("CADRUMO_LLM_CONTENTION_SAFETY_MARGIN_BYTES", "0")
             launch_environment = profile_worker._worker_launch_environment
 
-            def review_worker_environment(*, storage_root: Path) -> dict[str, str]:
+            def review_worker_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
                 # Production clears ambient integration settings. This owned
                 # process fixture explicitly connects its real HTTP provider;
                 # it does not widen the installed launch environment contract.
                 return {
-                    **launch_environment(storage_root=storage_root),
+                    **launch_environment(storage_root=storage_root, profile_id=profile_id),
                     "CADRUMO_LLM_OLLAMA_CHAT_URL": endpoint,
                     "CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE": "true",
                     "CADRUMO_LLM_CONTENTION_SAFETY_MARGIN_BYTES": "0",

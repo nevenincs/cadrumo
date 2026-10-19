@@ -121,7 +121,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         try:
             endpoint.listen()
             operation_endpoint.listen()
-            environment = _worker_launch_environment(storage_root=storage_root)
+            environment = _worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
             environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
             product_version = version("cadrumo")
             worker_entrypoint = (
@@ -269,11 +269,12 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
-def _worker_launch_environment(*, storage_root: Path) -> dict[str, str]:
+def _worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
     """Pin the storage root and keep operator storage controls across the isolated worker boundary.
 
     POSIX workers start from a fixed noncredential environment; Windows workers
-    keep the ambient environment minus the declared cleared classes.
+    keep the ambient environment minus the declared cleared classes. A worker
+    serves exactly one profile, and is told that profile's folder.
     """
     posix_base = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
     environment = child_environment(
@@ -281,5 +282,6 @@ def _worker_launch_environment(*, storage_root: Path) -> dict[str, str]:
         storage_root,
         base=None if sys.platform == "win32" else posix_base,
         sys_platform=sys.platform,
+        profile_id=profile_id,
     )
     return environment

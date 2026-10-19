@@ -6,6 +6,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
@@ -319,12 +320,13 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
         python=python,
         received=received,
         sys_platform=platform,
+        profile_id=UUID("6e4a0f5c-9b8d-4c7e-8f2a-1b0c9d8e7f6a"),
     )
     assert {
         name for name in environment if name.startswith("CADRUMO_AGENT_")
     } == AGENT_SLOTS | ADVERTISED_VARIABLES | DIAGNOSTIC_VARIABLES
     assert {HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE} == AGENT_SLOTS
-    assert AGENT_SLOTS | {"CADRUMO_LOCAL_STORAGE_ROOT"} == GATEWAY_SLOTS
+    assert AGENT_SLOTS | {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_PROFILE_ROOT"} == GATEWAY_SLOTS
     assert set(environment) >= GATEWAY_SLOTS
     assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
     assert not _RETIRED_INSTRUCTION_VARIABLES & set(environment)

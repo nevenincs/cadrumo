@@ -216,6 +216,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
@@ -233,6 +234,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
@@ -242,6 +244,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
@@ -269,7 +272,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** `-m cadrumo_agent.cli.main serve`; `-m cadrumo_agent.cli.main stores-state`; `-m cadrumo_agent.cli.main setup`; `-m cadrumo_agent.cli.main migrate [--expect-from <expected_from:revision>] [--expect-head <expected_head:revision>]`; `-m cadrumo_agent.cli.main version --json`
 - **Starts from:** only the operating-system group `system`
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS` and every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
-- **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
+- **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_PROFILE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
@@ -279,14 +282,14 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Started with:** `-m cadrumo_agent.worker`; `-m cadrumo_agent.providers._tool_bridge_stdio <scope:revision>`
 - **Starts from:** only the operating-system group `system`
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS` and every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
-- **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
+- **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_PROFILE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `agent-providers`
 
 - **Program:** `cadrumo-agent`
-- **Started with:** `-m cadrumo_agent.cli.main providers --declared --json`; `-m cadrumo_agent.cli.main auth providers --json`
+- **Started with:** `-m cadrumo_agent.cli.main providers --declared --json`; `-m cadrumo_agent.cli.main auth providers --json`; `-m cadrumo_agent.cli.main auth providers --interface gui --json`
 - **Starts from:** only the operating-system group `system`
 - **Passes from its caller:** nothing beyond its operating-system groups
 - **Sets itself:** nothing
@@ -295,7 +298,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `agent-auth`
 
 - **Program:** `cadrumo-agent`
-- **Started with:** `-m cadrumo_agent.cli.main auth login --provider <provider:identifier>`
+- **Started with:** `-m cadrumo_agent.cli.main auth login --provider <provider:identifier>`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method browser --timeout 300`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method device --timeout 300`
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS`
 - **Accepts from its parent:** `CADRUMO_AGENT_HOSTED_ROOT` (directory, required)
@@ -317,6 +320,7 @@ The settings table above does not list these names.
 | `CADRUMO_PACKAGE_AGENT_EXECUTABLE` | executable | a package fact the host sets |
 | `CADRUMO_PACKAGE_PYTHON_EXECUTABLE` | executable | a package fact the host sets |
 | `CADRUMO_PACKAGE_RELAY_EXECUTABLE` | executable | a package fact the host sets |
+| `CADRUMO_PROFILE_ROOT` | directory | a launch parameter its parent supplies |
 | `TEMP` | directory | set by the program's host from its resolution |
 | `TMP` | directory | set by the program's host from its resolution |
 | `TMPDIR` | directory | set by the program's host from its resolution |

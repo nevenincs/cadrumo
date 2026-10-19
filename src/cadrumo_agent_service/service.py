@@ -425,6 +425,7 @@ class AgentService:
                     aeat=hosted_aeat(),
                     python=hosted_python(),
                     received=os.environ,
+                    profile_id=lease.profile_id,
                 ),
             )
             AgentStoreLifecycle(

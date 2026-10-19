@@ -166,6 +166,9 @@ def check_command_line_names(reference: Reference, cli: Mapping[str, Any]) -> li
                 findings += _reads(check, reader, name, kind, settings)
                 if name not in cli["authority_variables"]:
                     findings.append(Finding(check, name, "is not the setting that names the command line's authority"))
+        elif role == "slot" and name in cli.get("profile_variables", ()):
+            # The command line derives it for the children it starts for one profile, and reads it back for nothing.
+            continue
         elif not name.startswith(reference.agent["prefix"]):
             findings.append(Finding(check, name, f"role {role} is read by no installed component"))
     if set(declaration.temporary) != set(cli["temporary_variables"]):

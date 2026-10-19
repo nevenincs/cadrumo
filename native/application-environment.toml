@@ -116,6 +116,11 @@ CADRUMO_AGENT_HOSTED_ROOT = { kind = "directory", role = "slot" }
 CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }
 CADRUMO_AGENT_WORKER_PORT = { kind = "port", role = "slot" }
 
+# The folder of the one profile a process is started for. Its launcher derives it from
+# that exact profile, never relays a received value, and no process reads it back to
+# select a profile: selection stays with the active-profile pointer.
+CADRUMO_PROFILE_ROOT = { kind = "directory", role = "slot" }
+
 # The agent's environment prefix. A profile with agent_names = true admits every name
 # under it, except the names listed here, which no profile admits: the agent's
 # settings file and the retired hosted program paths.
@@ -413,6 +418,7 @@ base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["locations", "presentation", "remote", "package"]
+slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
 [profiles.kdf-child]
@@ -427,6 +433,7 @@ base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["locations", "presentation", "remote", "package"]
+slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
 [profiles.cadrumo-mcp]
@@ -435,6 +442,7 @@ base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["locations", "presentation", "remote", "package"]
+slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
 [profiles.cadrumo-runtime]
@@ -479,6 +487,7 @@ pins = ["temporary", "authority"]
 agent_names = true
 slots = [
   { name = "CADRUMO_LOCAL_STORAGE_ROOT", required = false },
+  { name = "CADRUMO_PROFILE_ROOT", required = false },
   { name = "CADRUMO_AGENT_HOSTED_ROOT", required = false },
   { name = "CADRUMO_AGENT_PORT", required = false },
   { name = "CADRUMO_AGENT_WORKER_PORT", required = false },
@@ -494,6 +503,7 @@ pins = ["temporary", "authority"]
 agent_names = true
 slots = [
   { name = "CADRUMO_LOCAL_STORAGE_ROOT", required = false },
+  { name = "CADRUMO_PROFILE_ROOT", required = false },
   { name = "CADRUMO_AGENT_HOSTED_ROOT", required = false },
   { name = "CADRUMO_AGENT_PORT", required = false },
   { name = "CADRUMO_AGENT_WORKER_PORT", required = false },
