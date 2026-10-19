@@ -49,6 +49,27 @@ fn service_refusal(code: &str) -> Refusal {
     }
 }
 
+/// What the service answered a start request.
+#[derive(Debug, PartialEq, Eq)]
+enum StartReply {
+    Starting,
+    /// Other tree work holds the service; the agent it serves is unchanged.
+    Busy,
+    Refused(Refusal),
+}
+
+fn start_reply(reply: &serde_json::Value) -> Result<StartReply> {
+    match (reply["kind"].as_str(), reply["code"].as_str()) {
+        (Some("starting"), _) => Ok(StartReply::Starting),
+        (Some("refused"), Some("busy")) => Ok(StartReply::Busy),
+        (Some("refused"), code) => Ok(StartReply::Refused(service_refusal(
+            code.unwrap_or("service_failed"),
+        ))),
+        _ => Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+            .with_reason("agent_start_reply_unexpected")),
+    }
+}
+
 /// Where the agent service of the signed-in profile is.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "state", rename_all = "snake_case")]
@@ -282,16 +303,18 @@ impl Supervisor {
         if lock(&self.shared.admin).is_some() {
             self.person_request(serde_json::json!({"action":"status"}))?;
             let reply = self.administer(serde_json::json!({"action":"start"}), None)?;
-            if reply["kind"] == "refused" {
-                publish(
-                    &self.shared,
-                    State::Refused {
-                        code: service_refusal(reply["code"].as_str().unwrap_or("service_failed")),
-                    },
-                );
-            } else if reply["kind"] != "starting" {
-                return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                    .with_reason("agent_start_reply_unexpected"));
+            match start_reply(&reply)? {
+                StartReply::Starting => {}
+                // The service is busy with other tree work, such as a provider
+                // sign-in, and keeps the agent as it is: nothing it serves changed.
+                StartReply::Busy => {
+                    return Err(ApplicationError::new(
+                        ErrorCode::SessionUnavailable,
+                        Operation::Cli,
+                    )
+                    .with_reason("agent_service_busy"));
+                }
+                StartReply::Refused(code) => publish(&self.shared, State::Refused { code }),
             }
         } else {
             self.retry();
@@ -829,6 +852,9 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             publish(shared, State::Ready { agent_version });
             false
         }
+        // A start the service declined because other tree work, such as a
+        // provider sign-in, holds it: the agent it serves, if any, is unchanged.
+        Signal::Event(Event::Refused { code }) if code == "busy" => false,
         Signal::Event(Event::Refused { code }) => {
             publish(
                 shared,
@@ -992,6 +1018,34 @@ mod tests {
         assert_eq!(first.len(), 64);
         assert!(first.bytes().all(|b| b.is_ascii_hexdigit()));
         assert_ne!(*first, *second);
+    }
+
+    #[test]
+    fn a_busy_start_is_not_a_refusal_of_the_agent() {
+        use serde_json::json;
+        assert_eq!(
+            start_reply(&json!({"kind": "starting"})).unwrap(),
+            StartReply::Starting
+        );
+        assert_eq!(
+            start_reply(&json!({"kind": "refused", "code": "busy"})).unwrap(),
+            StartReply::Busy
+        );
+        assert_eq!(
+            start_reply(&json!({"kind": "refused", "code": "signed_out"})).unwrap(),
+            StartReply::Refused(Refusal::SignedOut)
+        );
+        assert_eq!(
+            start_reply(&json!({"kind": "refused"})).unwrap(),
+            StartReply::Refused(Refusal::ServiceFailed)
+        );
+        for reply in [json!({}), json!({"kind": "ready"}), json!({"code": "busy"})] {
+            let error = start_reply(&reply).unwrap_err();
+            assert_eq!(
+                error.reason.as_deref(),
+                Some("agent_start_reply_unexpected")
+            );
+        }
     }
 
     #[tokio::test]

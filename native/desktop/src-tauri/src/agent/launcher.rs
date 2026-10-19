@@ -209,6 +209,31 @@ mod tests {
     }
 
     #[test]
+    fn the_services_replacement_lines_are_read() {
+        // A superseded tree is retired, then its replacement reports ready,
+        // or the refusal that kept it from starting; a start other tree work
+        // holds back is refused as busy.
+        assert_eq!(
+            decode(br#"{"event": "stopped", "code": "agent_retired"}"#),
+            Ok(Event::Stopped {
+                reason: "agent_retired".into()
+            })
+        );
+        assert_eq!(
+            decode(br#"{"event": "refused", "code": "busy"}"#),
+            Ok(Event::Refused {
+                code: "busy".into()
+            })
+        );
+        assert_eq!(
+            decode(br#"{"event": "refused", "code": "credentials_unavailable"}"#),
+            Ok(Event::Refused {
+                code: "credentials_unavailable".into()
+            })
+        );
+    }
+
+    #[test]
     fn anything_else_is_a_violation() {
         let long = format!(
             r#"{{"event":"agent_refused","code":"{}"}}"#,
