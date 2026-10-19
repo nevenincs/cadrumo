@@ -10,7 +10,6 @@ import json
 from typing import Any, Final, override
 
 from ...domain.catalog import ProviderCatalog, parse_provider_catalog
-from ..catalog_source import ProvidedProviderCatalogSource
 from ..ports import ProviderCatalogSource, ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 
 KEY_LANE: Final = "example_api"
@@ -89,6 +88,19 @@ def development_variable(lane_id: str) -> str:
     entry = synthetic_catalog().entry(lane_id)
     assert entry is not None, lane_id
     return entry.development_variable
+
+
+class ProvidedProviderCatalogSource(ProviderCatalogSource):
+    """Serve a catalog the test already parsed, unchanged."""
+
+    def __init__(self, catalog: ProviderCatalog) -> None:
+        """Keep the parsed catalog."""
+        self._catalog = catalog
+
+    @override
+    def catalog(self) -> ProviderCatalog:
+        """Return the parsed catalog."""
+        return self._catalog
 
 
 class StaticCatalogSource(ProvidedProviderCatalogSource):

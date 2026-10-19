@@ -23,14 +23,19 @@ from cadrumo_client.contracts.model_runs import (
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
 from ...domain.catalog import parse_provider_catalog
-from ..catalog_source import ProvidedProviderCatalogSource
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
 from ..model_runs import ModelRunService
 from ..ports import StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
 from ..service import ProviderSettingsService
 from .memory_store import MemoryProviderSettingsStore
-from .synthetic_catalog import KEY_LANE, OTHER_KEY_LANE, SIGN_IN_ONLY_LANE, synthetic_document
+from .synthetic_catalog import (
+    KEY_LANE,
+    OTHER_KEY_LANE,
+    SIGN_IN_ONLY_LANE,
+    ProvidedProviderCatalogSource,
+    synthetic_document,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

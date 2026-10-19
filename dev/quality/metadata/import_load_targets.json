@@ -3168,7 +3168,6 @@
         "cadrumo_agent_service.providers",
         "cadrumo_agent_service.providers.application",
         "cadrumo_agent_service.providers.application.agent_credentials",
-        "cadrumo_agent_service.providers.application.catalog_source",
         "cadrumo_agent_service.providers.application.contracts",
         "cadrumo_agent_service.providers.application.ports",
         "cadrumo_agent_service.providers.application.resolution",
