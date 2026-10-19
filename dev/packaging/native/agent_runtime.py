@@ -24,6 +24,7 @@ import httpx
 from ..command_execution import run_command
 from ..runtime_wheelhouse_contract import SUPPORTED_TARGETS, target_platform
 from .hashing import digest
+from .tree_copy import copy_tree
 
 RUNTIME_DECLARATION = PurePosixPath("runtime/node.json")
 """The agent-owned Node distribution pin, relative to the agent project folder."""
@@ -236,12 +237,7 @@ def stage_agent_runtime(
 
     source = source.resolve(strict=True)
     for name in ("node", "node_modules"):
-        shutil.copytree(
-            source / name,
-            destination / name,
-            symlinks=False,
-            copy_function=lambda src, dst: copy_function(Path(src), Path(dst)),
-        )
+        copy_tree(source / name, destination / name, copy_function=copy_function)
     for name in _RUNTIME_FILES:
         copy_function(source / name, destination / name)
     copy_function(source / _RECEIPT_NAME, destination / _STAGED_RECEIPT_NAME)

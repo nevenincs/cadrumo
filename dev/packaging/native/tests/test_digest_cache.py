@@ -36,7 +36,7 @@ def _settled(path: Path, content: bytes, *, at: int = _LONG_AGO) -> Path:
 
 def _entries(build: Path) -> dict[str, list[object]]:
     with contextlib.closing(sqlite3.connect(build / "cache" / "digests.sqlite")) as connection:
-        rows = connection.execute("SELECT path, size, mtime, ino, hashed, sha256 FROM entries").fetchall()
+        rows = connection.execute("SELECT path, size, mtime, ino, hashed, sha256 FROM digests").fetchall()
     return {str(row[0]): list(row[1:]) for row in rows}
 
 
@@ -183,3 +183,16 @@ def test_rows_for_files_that_are_gone_are_pruned(tmp_path: Path) -> None:
     names = set(_entries(build))
     assert os.path.normcase(os.path.abspath(gone)) not in names
     assert os.path.normcase(os.path.abspath(kept)) in names
+
+
+def test_a_file_replaced_by_another_of_the_same_size_and_time_is_hashed_again(tmp_path: Path) -> None:
+    # Only the file identity tells these apart; a cache keyed on a zero inode, as
+    # a directory listing reports on Windows, would answer with the old digest.
+    build = tmp_path / "build"
+    target = _settled(tmp_path / "module.py", b"first\n")
+    with digest_cache(build):
+        first = digest(target)
+    replacement = _settled(tmp_path / "replacement.py", b"other\n")
+    os.replace(replacement, target)
+    with digest_cache(build):
+        assert digest(target) == _sha256(target) != first

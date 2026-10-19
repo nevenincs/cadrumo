@@ -44,11 +44,12 @@ PRUNE_INTERVAL_NS: Final = 24 * 3600 * 1_000_000_000
 """How often rows for files that no longer exist are removed."""
 _BUSY_MS: Final = 60_000
 _SCHEMA = """
-CREATE TABLE IF NOT EXISTS entries (
+CREATE TABLE IF NOT EXISTS digests (
     path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL,
-    ino INTEGER NOT NULL, hashed INTEGER NOT NULL, sha256 TEXT NOT NULL
+    ino TEXT NOT NULL, hashed INTEGER NOT NULL, sha256 TEXT NOT NULL
 ) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS meta (name TEXT PRIMARY KEY, value INTEGER NOT NULL) WITHOUT ROWID;
+DROP TABLE IF EXISTS entries;
 """
 
 
@@ -62,7 +63,7 @@ class _Cache:
 
     def __init__(self, file: Path) -> None:
         self.file = file
-        self.recorded: dict[str, tuple[int, int, int, int, str]] = {}
+        self.recorded: dict[str, tuple[int, int, str, int, str]] = {}
         self.guard = threading.Lock()
         self._connection: sqlite3.Connection | None = None
 
@@ -77,24 +78,25 @@ class _Cache:
             self._connection = connection
         return self._connection
 
-    def _lookup(self, name: str) -> tuple[int, int, int, int, str] | None:
+    def _lookup(self, name: str) -> tuple[int, int, str, int, str] | None:
         recorded = self.recorded.get(name)
         if recorded is not None:
             return recorded
         try:
             row = (
                 self._connect()
-                .execute("SELECT size, mtime, ino, hashed, sha256 FROM entries WHERE path = ?", (name,))
+                .execute("SELECT size, mtime, ino, hashed, sha256 FROM digests WHERE path = ?", (name,))
                 .fetchone()
             )
         except sqlite3.Error:
             return None
-        return None if row is None else (int(row[0]), int(row[1]), int(row[2]), int(row[3]), str(row[4]))
+        return None if row is None else (int(row[0]), int(row[1]), str(row[2]), int(row[3]), str(row[4]))
 
     def digest(self, path: Path) -> str:
         name = os.path.normcase(os.path.abspath(path))
         status = os.stat(path)
-        key = (status.st_size, status.st_mtime_ns, status.st_ino)
+        # A file identity can exceed SQLite's integers (NTFS and ReFS use up to 128 bits).
+        key = (status.st_size, status.st_mtime_ns, str(status.st_ino))
         with self.guard:
             entry = self._lookup(name)
         if entry is not None and entry[:3] == key and entry[1] < entry[3] - SETTLED_NS:
@@ -103,7 +105,7 @@ class _Cache:
         value = _hash(path)
         after = os.stat(path)
         # Written while it was read: the digest names no single version of the file.
-        if (after.st_size, after.st_mtime_ns, after.st_ino) == key:
+        if (after.st_size, after.st_mtime_ns, str(after.st_ino)) == key:
             with self.guard:
                 self.recorded[name] = (*key, hashed, value)
         return value
@@ -117,10 +119,10 @@ class _Cache:
             connection = self._connect()
             with connection:
                 connection.executemany(
-                    "INSERT INTO entries (path, size, mtime, ino, hashed, sha256) VALUES (?, ?, ?, ?, ?, ?) "
+                    "INSERT INTO digests (path, size, mtime, ino, hashed, sha256) VALUES (?, ?, ?, ?, ?, ?) "
                     "ON CONFLICT(path) DO UPDATE SET size = excluded.size, mtime = excluded.mtime, "
                     "ino = excluded.ino, hashed = excluded.hashed, sha256 = excluded.sha256 "
-                    "WHERE excluded.hashed >= entries.hashed",
+                    "WHERE excluded.hashed >= digests.hashed",
                     [(name, *entry) for name, entry in recorded.items()],
                 )
             self._prune(connection)
@@ -130,9 +132,9 @@ class _Cache:
         row = connection.execute("SELECT value FROM meta WHERE name = 'pruned'").fetchone()
         if row is not None and now - int(row[0]) < PRUNE_INTERVAL_NS:
             return
-        gone = [(name,) for (name,) in connection.execute("SELECT path FROM entries") if not os.path.isfile(name)]
+        gone = [(name,) for (name,) in connection.execute("SELECT path FROM digests") if not os.path.isfile(name)]
         with connection:
-            connection.executemany("DELETE FROM entries WHERE path = ?", gone)
+            connection.executemany("DELETE FROM digests WHERE path = ?", gone)
             connection.execute(
                 "INSERT INTO meta (name, value) VALUES ('pruned', ?) "
                 "ON CONFLICT(name) DO UPDATE SET value = excluded.value",

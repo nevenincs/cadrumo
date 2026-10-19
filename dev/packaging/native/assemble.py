@@ -43,6 +43,7 @@ from .product import BUNDLED_EXTRAS
 from .service_descriptors import stage_service_descriptors
 from .stdlib import bundle as bundle_stdlib
 from .stdlib import bundle_identity, compile_packages_bytecode, compiler_identity
+from .tree_copy import copy_tree
 
 
 def image_artifact(argument: str) -> tuple[str, Path]:
@@ -374,7 +375,7 @@ def _assemble_candidate(
         if dependencies is None:
             packages.mkdir(parents=True)
         else:
-            shutil.copytree(dependencies, packages, ignore=omit_development, copy_function=reuse.copy)
+            copy_tree(dependencies, packages, ignore=omit_development, copy_function=reuse.copy)
     if agent_runtime is not None:
         with timings.phase("agent-runtime-copy") if timings is not None else nullcontext():
             source = agent_metadata.get("source")

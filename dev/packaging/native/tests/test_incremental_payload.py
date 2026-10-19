@@ -80,3 +80,25 @@ def test_the_cached_inventory_equals_a_full_one(tmp_path: Path) -> None:
         rehashed = inventory(paths)
     assert full == cold == warm
     assert rehashed == changed != full
+
+
+def test_the_parallel_copy_makes_the_tree_copytree_makes(tmp_path: Path) -> None:
+    from ..tree_copy import copy_tree
+
+    source = tmp_path / "site-packages"
+    for name in ("a/one.py", "a/__pycache__/one.pyc", "b/tests/test_b.py", "b/two.py", "bin/tool", "top.py"):
+        _write(source / name, name.encode())
+    (source / "empty").mkdir()
+
+    def ignore(directory: str, names: list[str]) -> set[str]:
+        excluded = {"__pycache__", "tests"} | ({"bin"} if Path(directory) == source else set())
+        return set(names) & excluded
+
+    shutil.copytree(source, tmp_path / "expected", ignore=ignore)
+    copy_tree(source, tmp_path / "parallel", ignore=ignore, copy_function=shutil.copy2)
+    listing = lambda root: sorted(path.relative_to(root).as_posix() for path in root.rglob("*"))  # noqa: E731
+    assert listing(tmp_path / "parallel") == listing(tmp_path / "expected")
+    assert (
+        inventory([str(tmp_path / "parallel")])[str(tmp_path / "parallel")]["files"]
+        == inventory([str(tmp_path / "expected")])[str(tmp_path / "expected")]["files"]
+    )
