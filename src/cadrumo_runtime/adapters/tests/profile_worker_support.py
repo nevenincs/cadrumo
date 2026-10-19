@@ -27,8 +27,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
     AccessSession,
     ProfileAccessBinding,
     SessionKind,
@@ -42,6 +40,7 @@ from cadrumo.core.async_cleanup import (
     close_async_resources,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.transport_cleanup import TransportCleanup

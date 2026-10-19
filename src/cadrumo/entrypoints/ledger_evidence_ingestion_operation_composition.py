@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 from ..adapters.persistence.profile.purchase_invoice_evidence import (
@@ -16,7 +18,6 @@ from ..adapters.persistence.storage.runtime_repository import secure_object_repo
 from ..application.ledger.evidence_ingestion_operation_ports import LedgerEvidenceIngestionPorts
 from ..application.ledger.evidence_ports import LedgerEvidencePorts
 from ..application.ledger.extraction_draft_repository import ExtractionDraftRepositoryProtocol
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings

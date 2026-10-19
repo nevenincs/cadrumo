@@ -11,6 +11,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -48,9 +50,6 @@ from ..operations.registry import (
     OperationResultProjector,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ratios_contracts import (
     LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,

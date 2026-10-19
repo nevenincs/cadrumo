@@ -70,15 +70,11 @@ from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.tests.authority_lease_support import private_authority_lease
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

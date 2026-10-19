@@ -16,6 +16,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import AnyHttpUrl, BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ...adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
@@ -51,13 +54,7 @@ from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.subject_reference import OperationSubjectReferenceV1
-from ...application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    SessionKind,
-)
+from ...application.user_profile.access_contracts import SessionKind
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.workflow.persistence import workflow_state_repository
 from ...application.workflow.state_models import WorkflowState

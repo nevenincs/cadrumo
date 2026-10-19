@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -31,9 +33,6 @@ from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .work_addressing import (

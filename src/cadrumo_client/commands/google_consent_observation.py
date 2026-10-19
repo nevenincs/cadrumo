@@ -16,7 +16,8 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.person_acts import is_persons_frontend
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.user_profile.google_configuration_operation_contracts import (
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
@@ -168,7 +169,7 @@ def read_google_consent_result(
         or success.projection.profile_id != profile_id
         or client.profile_id != profile_id
         or client.session_id != session_id
-        or client.frontend is not OperationFrontendProjection.CLI
+        or not is_persons_frontend(client.frontend)
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return success.projection

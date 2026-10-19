@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 import pytest
@@ -37,12 +39,57 @@ def _normal(family: str, value: str) -> str:
     return value.replace("\\", "/") if family == "windows" else value
 
 
+def _existing_installation_dirs(
+    declaration: ApplicationEnvironment,
+    family: str,
+    profile: str,
+    ambient: Mapping[str, str],
+) -> list[str]:
+    """Materialize only declared defaults that exist on this host for the vector's roots."""
+    host_family = "windows" if os.name == "nt" else "posix"
+    if family != host_family:
+        return []
+    selected = declaration.profiles[profile]
+    if declaration.path_external not in {*selected["operator"], *selected["pass"]}:
+        return []
+    admitted_base = {name for group in selected["base_groups"] for name in declaration.base[family][group]}
+    path_type = PureWindowsPath if family == "windows" else PurePosixPath
+    existing: list[str] = []
+    for default in declaration.external_path_defaults:
+        if default.platform == "windows" and family != "windows":
+            continue
+        if default.platform == "posix" and family != "posix":
+            continue
+        if default.platform == "macos" and sys.platform != "darwin":
+            continue
+        if default.variable is None:
+            candidate = path_type(default.path)
+        else:
+            if default.variable not in admitted_base:
+                continue
+            value = next(
+                (
+                    value
+                    for name, value in ambient.items()
+                    if (name.upper() == default.variable.upper() if family == "windows" else name == default.variable)
+                ),
+                None,
+            )
+            if value is None or not path_type(value).is_absolute():
+                continue
+            candidate = path_type(value).joinpath(*default.subpaths)
+        if candidate.is_absolute() and Path(str(candidate)).is_dir():
+            existing.append(str(candidate))
+    return existing
+
+
 def _replay(declaration: ApplicationEnvironment, vector: Mapping[str, Any]) -> list[str]:
     """Return every disagreement between a vector and the reference reading."""
     family = vector["platform"]
     package, root, target = _PLACES[family]
     try:
         profile = reference_select(declaration, family, vector["image"], vector["arguments"])
+        existing_dirs = _existing_installation_dirs(declaration, family, profile, vector["ambient"])
         defined = reference_define(
             declaration,
             family,
@@ -52,6 +99,7 @@ def _replay(declaration: ApplicationEnvironment, vector: Mapping[str, Any]) -> l
             root=root,
             layout_paths=load_layout(target)["paths"],
             suffix=load_layout(target)["entrypoint_suffix"],
+            existing_dirs=existing_dirs,
         )
     except LaunchRefusedError as refused:
         expected = vector["refusal"]
@@ -64,8 +112,12 @@ def _replay(declaration: ApplicationEnvironment, vector: Mapping[str, Any]) -> l
     actual = dict(defined)
     if vector["path"] is not None:
         path = [_normal(family, entry) for entry in actual.pop("PATH", "").split(separator)]
-        if path != [_normal(family, entry) for entry in vector["path"]]:
-            problems.append(f"PATH {path} != {vector['path']}")
+        expected_path = list(vector["path"])
+        system_count = 1 if family == "windows" else len(declaration.posix_system)
+        insertion = max(0, len(expected_path) - system_count)
+        expected_path[insertion:insertion] = existing_dirs
+        if path != [_normal(family, entry) for entry in expected_path]:
+            problems.append(f"PATH {path} != {expected_path}")
     expected = {name: _normal(family, value) for name, value in vector["environment"].items()}
     actual = {name: _normal(family, value) for name, value in actual.items()}
     if actual != expected:
@@ -187,6 +239,30 @@ def test_vectors_give_the_declared_provider_catalog_the_system_base_only_on_both
             and candidate["arguments"][2:3] == ["providers"]
         ]
         assert refused, family
+
+
+def test_browser_handoff_executable_is_scoped_to_gui_auth_and_dropped_from_provider_catalog() -> None:
+    variable = "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE"
+    auth_slots = _DECLARATION.profiles["agent-auth"]["slots"]
+    assert any(slot.name == variable and slot.kind == "executable" and not slot.required for slot in auth_slots)
+    assert all(slot.name != variable for slot in _DECLARATION.profiles["agent-providers"]["slots"])
+
+    auth_vectors = [
+        vector
+        for vector in _DECLARATION.launch_vectors
+        if vector["profile"] == "agent-auth" and variable in vector["ambient"]
+    ]
+    assert len(auth_vectors) == 2
+    for vector in auth_vectors:
+        assert vector["environment"].get(variable) == vector["ambient"][variable]
+
+    catalog_vectors = [
+        vector
+        for vector in _DECLARATION.launch_vectors
+        if vector["profile"] == "agent-providers" and variable in vector["ambient"]
+    ]
+    assert len(catalog_vectors) == 4
+    assert all(variable not in vector["environment"] for vector in catalog_vectors)
 
 
 def test_vectors_refuse_each_other_arrangement_of_the_agent_invocations_on_both_families() -> None:

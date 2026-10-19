@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -11,15 +12,17 @@ from typing import Any, Final
 from uuid import UUID
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, ProfileAccessStatus
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
-from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.attendance import AttendancePending
 from cadrumo_client.contracts.profile_access import status_admits_session
+from cadrumo_client.contracts.profile_selection import ActiveProfileReply
+from cadrumo_client.contracts.sign_in import SignInPresence
+from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.installation_client import open_installed_installation_client
 
 from .protocol_contract import refusal_code, sign_in_refusal_facts
 from .surfaces import McpSurface
@@ -64,24 +67,30 @@ class AdmissionDenial:
         return FrontendRefusedError(self.code, sign_in=self.sign_in)
 
 
+def _runtime_selection() -> ActiveProfileReply:
+    """Ask the running runtime which profile is selected, on a connection that holds no session."""
+    client = asyncio.run(open_installed_installation_client())
+    try:
+        return client.active_profile()
+    finally:
+        client.close()
+
+
 def selected_profile_id(*, expected: UUID | None) -> UUID:
-    """Return the installation's selected profile, as a profile-bound command resolves it.
+    """Return the installation's selected profile, as the runtime answers it to every frontend.
 
     ``expected`` selects nothing. It refuses a selection that differs from it,
     so a connection started for one profile is never moved to another one's
-    sign-in by a later selection.
+    sign-in by a later selection. A selection the runtime could not read is
+    refused as storage unavailable, never as nothing selected.
     """
-    try:
-        selected = resolve_active_bucket_id()
-    except ActiveProfilePointerError:
-        raise FrontendRefusedError(AccessDenialCode.STORAGE_UNAVAILABLE.value) from None
-    if selected is None:
+    answer = _runtime_selection()
+    profile_id = answer.selected_profile_id
+    if profile_id is None:
+        if answer.presence is SignInPresence.UNKNOWN:
+            raise FrontendRefusedError(AccessDenialCode.STORAGE_UNAVAILABLE.value)
         # No selected profile can have an attendance request from this connection.
         raise FrontendRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED.value)
-    try:
-        profile_id = UUID(selected)
-    except ValueError:
-        raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value) from None
     if expected is not None and profile_id != expected:
         raise FrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     return profile_id

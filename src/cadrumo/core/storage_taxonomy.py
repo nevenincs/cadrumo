@@ -223,6 +223,7 @@ class StorageCategory(StrEnum):
     PLAYWRIGHT_BROWSERS = "playwright-browsers"
     OLLAMA_MODELS = "ollama-models"
     OLLAMA_HOME = "ollama-home"
+    DEPENDENCY_RECEIPTS = "dependency-receipts"
     GNOME_EXTENSIONS = "gnome-extensions"
     SECRETS = "secrets"
     BLOBS = "blobs"
@@ -342,6 +343,15 @@ class StorageLocation(BaseModel):
 
     This narrow exception does not authorize creating other explicit members.
     New directories use the root's private mode; existing modes remain unchanged.
+    """
+
+    runtime_owned: bool = False
+    """Only the installed runtime creates this member; its clients never materialise it.
+
+    The connection namespace and the ``.runtime/`` coordination records belong
+    to the runtime that owns the storage root. A command-line, terminal or MCP
+    client only observes them, so a missing member reads as no runtime rather
+    than being created on the runtime's behalf.
     """
 
     environment_variable: str | None = None

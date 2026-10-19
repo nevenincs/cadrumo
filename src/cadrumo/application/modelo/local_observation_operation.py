@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
@@ -26,9 +27,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import ModeloLocalObservationError
 from .calculation_action_ports import CalculationActionPortsFactory

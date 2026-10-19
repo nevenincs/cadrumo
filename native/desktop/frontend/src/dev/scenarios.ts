@@ -4,6 +4,7 @@
 // summaries are tool text for developers, not product chrome, so they are not
 // in the locale catalogues.
 
+import type { SetupShape } from "./setupFixture";
 import type {
   HostErrorCode,
   HostFailure,
@@ -114,6 +115,9 @@ export type Scenario = {
    * are refused, or a host that offers no views at all, as the desktop host
    * does today. */
   views: "fixture" | "empty" | "refused" | "none";
+  /** The component setup of the made-up computer; left out, the host
+   * offers no setup. The `setup` parameter chooses another shape. */
+  setup?: SetupShape;
 };
 
 const signedOut: Scenario["signIn"]["status"] = {
@@ -902,6 +906,42 @@ export const SCENARIOS: readonly Scenario[] = [
       submit: { kind: "accept" },
     },
     views: "refused",
+  },
+  {
+    ...base,
+    id: "setup-first-run",
+    title: "Components not set up",
+    summary:
+      "Signed in on a computer where nothing is set up yet: the setup dialog opens once with one summary and one action, the browser and the local AI run one after the other with one overall progress bar, and Settings shows one line that leads back into setup.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    setup: "fresh",
+  },
+  {
+    ...base,
+    id: "setup-partial",
+    title: "One component needs attention",
+    summary:
+      "Signed in; the browser is ready but the local AI's download arrived damaged and can be tried again. The Google account is signed in, on its own line in Settings.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    setup: "partial",
+  },
+  {
+    ...base,
+    id: "google-account",
+    title: "Google account not signed in",
+    summary:
+      "Signed in with everything set up, so Settings shows no setup line; the profile's Google account is not signed in, and Settings and Cmd+K offer to sign in to Google.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    setup: "google_signed_out",
   },
   {
     ...base,

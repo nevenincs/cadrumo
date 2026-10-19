@@ -55,7 +55,9 @@ if (!contract || !isAbsolute(contract))
 const environment = {
   ...process.env,
   ...selectedProfile.environment,
-  CARGO_TARGET_DIR: buildPath("desktop_cargo"),
+  CARGO_TARGET_DIR: backendOnly
+    ? resolve(buildPath("desktop_testing"), "backend-cargo")
+    : buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
   // The linked manager crate embeds the process manifest of this build kind on Windows.
@@ -81,7 +83,9 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
 // Preserve Cargo's input timestamps while synchronizing additions and removals.
 const snapshot = snapshotHostSources(
   resolve(desktop, ".."),
-  buildPath("desktop_host"),
+  backendOnly
+    ? resolve(buildPath("desktop_testing"), "backend-host")
+    : buildPath("desktop_host"),
   { incremental: true },
 );
 function run(args) {

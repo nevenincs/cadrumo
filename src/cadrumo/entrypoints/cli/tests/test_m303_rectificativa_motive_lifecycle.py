@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -38,7 +39,6 @@ from ....application.modelo.action_errors import AmendmentM303RectificativaMotiv
 from ....application.modelo.amendment_actions import amend_modelo_revision
 from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
 from ....application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
-from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo

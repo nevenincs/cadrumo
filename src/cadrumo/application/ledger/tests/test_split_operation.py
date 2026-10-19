@@ -14,6 +14,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -35,7 +37,6 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts

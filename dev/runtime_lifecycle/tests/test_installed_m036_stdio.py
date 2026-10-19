@@ -49,12 +49,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
@@ -70,6 +64,12 @@ from cadrumo.domain.calculations.registry.censo_modelos import (
     active_036_ownership_from_registry,
 )
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 from .test_installed_authenticated_stdio import (

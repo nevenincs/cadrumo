@@ -18,8 +18,8 @@ from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from cadrumo_client.commands.secure_input import MachineSecretSelection, ProfileSecretSelection
+    from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
-    from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.user_profile.session_admission import ProfileCredentialRequestV1
     from .common import RequestedCliLeaf
 

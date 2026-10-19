@@ -64,9 +64,9 @@ const meta = {
   parameters: { surface: "chrome" },
   args: {
     providers: PROVIDERS,
-    development: false,
     onSave: NOOP,
     onTurnOff: NOOP,
+    onTurnOn: NOOP,
     onReset: NOOP,
     onRefresh: NOOP,
   },
@@ -81,11 +81,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Installed: Story = {};
 
-export const Development: Story = {
-  name: "Development build",
+export const EnvironmentKey: Story = {
+  name: "Key from the environment",
   args: {
-    development: true,
-    // Where no key is set, the development environment's is used.
+    // A key found outside the profile reads as any other ready key.
     providers: PROVIDERS.map((provider) =>
       provider.mode === "unset" && provider.authKind !== "provider_sign_in_only"
         ? { ...provider, readiness: "ready", source: "environment" }

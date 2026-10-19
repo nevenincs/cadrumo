@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.session_events import SessionEvent, SignInChanged
 from cadrumo_client.contracts.transport import ConnectionContext

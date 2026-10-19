@@ -9,11 +9,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.usage_ratios.model import UsageRatioProfile
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import PurchaseInvoiceEvidence
 from .protocols import (

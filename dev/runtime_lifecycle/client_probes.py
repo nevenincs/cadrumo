@@ -24,11 +24,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    DisclosureCategory,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
@@ -42,6 +37,9 @@ from cadrumo.application.user_profile.view_operation import (
 )
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import DisclosureCategory
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
@@ -78,7 +76,7 @@ from cadrumo_runtime.host.frontend.tui.profile.overview_client import read_profi
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo.application.operations.models import OperationId
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 async def read():
     client = await open_installed_client(profile_id=UUID(sys.argv[1]), frontend=OperationFrontendProjection.TUI)
     try:
@@ -107,7 +105,8 @@ from pathlib import Path
 from uuid import UUID
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentProposal, EnrollmentStage
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
 from cadrumo_client.transport.automation_requester import AutomationRequesterJourney

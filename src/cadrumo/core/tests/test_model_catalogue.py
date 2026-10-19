@@ -29,6 +29,7 @@ from ..model_catalogue import (
     ModelLicence,
     ModelRole,
     ModelRuntime,
+    ModelWeightsPin,
     candidates_for_role,
     default_model_runtime_id,
     model_candidate,
@@ -72,14 +73,11 @@ def test_shipped_settings_defaults_are_the_catalogued_commercial_defaults() -> N
     operator's own model choice cannot stand in for the shipped default.
     """
     settings = _shipped_defaults()
-    local, cloud = ModelRuntime.LOCAL_OLLAMA, ModelRuntime.CLOUD_ANTHROPIC
+    local = ModelRuntime.LOCAL_OLLAMA
     for field_value, role, runtime in (
         (settings.cadrumo_llm_ollama_vision_model, ModelRole.VISION_TRANSCRIPTION, local),
         (settings.cadrumo_llm_ollama_text_model, ModelRole.TEXT_EXTRACTION, local),
         (settings.cadrumo_llm_ollama_mapping_model, ModelRole.COLUMN_ROLE_MAPPING, local),
-        (settings.cadrumo_llm_cloud_vision_model, ModelRole.VISION_TRANSCRIPTION, cloud),
-        (settings.cadrumo_llm_cloud_text_model, ModelRole.TEXT_EXTRACTION, cloud),
-        (settings.cadrumo_llm_cloud_mapping_model, ModelRole.COLUMN_ROLE_MAPPING, cloud),
     ):
         candidate = model_candidate(field_value)
         assert candidate is not None, f"settings default {field_value!r} is not in the catalogue"
@@ -88,23 +86,6 @@ def test_shipped_settings_defaults_are_the_catalogued_commercial_defaults() -> N
         assert candidate.licence.commercial_use_permitted, (
             f"settings default {field_value!r} carries a commercial-use bar"
         )
-
-
-def test_the_global_model_floor_is_the_weakest_catalogued_cloud_candidate() -> None:
-    """The last-resort fallback must not be where a frontier tier sneaks in.
-
-    ``cadrumo_llm_model`` is what every request naming no model and belonging to
-    no declared role falls through to. It previously carried a hand-typed
-    frontier-tier identifier, which made adding a consumer and forgetting to
-    route it the cheapest way to reach the most expensive model in the product.
-    """
-    settings = _shipped_defaults()
-    candidate = model_candidate(settings.cadrumo_llm_model)
-    assert candidate is not None, f"the global model floor {settings.cadrumo_llm_model!r} is not catalogued"
-    assert candidate.runtime is ModelRuntime.CLOUD_ANTHROPIC
-    assert candidate.licence.commercial_use_permitted
-    weakest = candidates_for_role(ModelRole.TEXT_EXTRACTION, ModelRuntime.CLOUD_ANTHROPIC)[0]
-    assert candidate.runtime_id == weakest.runtime_id
 
 
 def test_every_runtime_default_is_the_weakest_candidate_for_its_role() -> None:
@@ -317,3 +298,33 @@ def test_model_candidate_returns_none_for_an_uncatalogued_id() -> None:
 def _shipped_defaults() -> Settings:
     with isolated_aeat_env():
         return settings_without_env_file()
+
+
+def test_every_local_candidate_pins_its_tested_weights_and_no_hosted_one_does() -> None:
+    """A downloaded model is compared against the digest Cadrumo was tested with; a hosted one downloads nothing."""
+    for candidate in MODEL_CATALOGUE:
+        if candidate.runtime is ModelRuntime.LOCAL_OLLAMA:
+            assert candidate.weights_pin is not None, candidate.runtime_id
+        else:
+            assert candidate.weights_pin is None, candidate.runtime_id
+    digests = [c.weights_pin.digest for c in MODEL_CATALOGUE if c.weights_pin is not None]
+    assert len(digests) == len(set(digests)), "two catalogued tags pin the same weights"
+
+
+def test_a_local_candidate_without_a_weights_pin_is_refused() -> None:
+    local = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.LOCAL_OLLAMA)
+    with pytest.raises(ValueError, match="pins no tested weights digest"):
+        ModelCandidate.model_validate(local.model_dump() | {"weights_pin": None})
+
+
+def test_a_hosted_candidate_with_a_weights_pin_is_refused() -> None:
+    local = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.LOCAL_OLLAMA)
+    hosted = next(c for c in MODEL_CATALOGUE if c.runtime is ModelRuntime.CLOUD_ANTHROPIC)
+    with pytest.raises(ValueError, match="nothing is downloaded for it"):
+        ModelCandidate.model_validate(hosted.model_dump() | {"weights_pin": local.model_dump()["weights_pin"]})
+
+
+def test_a_weights_pin_is_a_bare_sha256() -> None:
+    with pytest.raises(ValueError, match="digest"):
+        ModelWeightsPin(digest="sha256:" + "a" * 64, download_bytes=1)
+    assert ModelWeightsPin(digest="a" * 64, download_bytes=1).digest == "a" * 64

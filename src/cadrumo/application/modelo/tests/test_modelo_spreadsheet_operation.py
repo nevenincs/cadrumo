@@ -15,6 +15,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -30,11 +33,6 @@ from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...storage.calc_sheets.engine import build_export_plan
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..export_sink import LocalFileExportReceipt, LocalFileExportSink, ModeloExportOutputPathError
 from ..modelo_spreadsheet_executor import ModeloSpreadsheetExecutor

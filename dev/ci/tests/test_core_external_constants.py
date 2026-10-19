@@ -354,7 +354,7 @@ def test_missing_pre303_block_does_not_poison_registry_or_settings() -> None:
     assert "{target}" in section.clave_movil.selector_access_url_template
 
     settings = Settings()
-    assert settings.aeat_base_url.startswith("https://")
+    assert settings.site_health_probe_url.startswith("https://")
 
 
 def test_malformed_pre303_block_surfaces_clean_translated_error() -> None:
@@ -595,23 +595,14 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_log_file_level": "DEBUG",
         "cadrumo_log_root_level": "DEBUG",
         "cadrumo_google_drive_vault_folder_name": "cadrumo-vault",
-        "cadrumo_calc_sheets_recalc_delay_s": 2.0,
         "cadrumo_llm_default_max_tokens": 1024,
         "cadrumo_llm_default_temperature": 0.0,
-        "cadrumo_manuals_http_timeout_s": 60.0,
     }
 
     for field_name, expected_value in expected_defaults.items():
         assert getattr(settings, field_name) == expected_value, field_name
 
     assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
-    # Host compared exactly rather than by URL prefix: a prefix check also
-    # accepts ``https://api.openai.com.attacker.invalid/...``, which is a
-    # different origin entirely.
-    openai_url = urlsplit(settings.cadrumo_llm_openai_chat_completions_url)
-    assert openai_url.scheme == "https"
-    assert openai_url.hostname == "api.openai.com"
-    assert "{model}" in settings.cadrumo_llm_gemini_generate_content_template
     ollama_url = urlsplit(settings.cadrumo_llm_ollama_chat_url)
     assert ollama_url.scheme == "http"
     assert ollama_url.hostname in {"localhost", "127.0.0.1"}

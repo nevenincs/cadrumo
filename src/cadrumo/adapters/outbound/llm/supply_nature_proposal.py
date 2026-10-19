@@ -61,6 +61,7 @@ from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.iva.supply_nature import SupplyNature
 from .client import LLMClient
+from .consent import EvidenceConsentToken
 from .errors import LLMConfigError
 from .models import LLMRequest
 from .response_json import first_json_object as _first_json_object
@@ -265,11 +266,14 @@ class SupplyNatureProposer:
     the same selection job over a smaller vocabulary.
 
     Args:
-        model: Optional runtime id, honoured over the role resolution.
-        provider: Optional provider override. ``None`` pairs a role-resolved
-            model with LOCAL, since a role-resolved id is an on-host runtime id.
+        model: Optional on-host runtime id, honoured over the role resolution.
+        provider: The transport. ``None`` means LOCAL. AGENT asks the agent
+            service, which picks the lane and model for the role, so it takes
+            no model and needs a consent token, because the descriptions are
+            document content.
         client: Injected client; default-constructed otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
+        consent_token: The per-invocation off-host consent an AGENT read needs.
     """
 
     def __init__(
@@ -279,13 +283,18 @@ class SupplyNatureProposer:
         provider: LLMProvider | None = None,
         client: LLMClient | None = None,
         settings: Settings | None = None,
+        consent_token: EvidenceConsentToken | None = None,
     ) -> None:
         """Build the proposer against a model and settings."""
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
-        self._model = model if model is not None else self._role_model(resolved_settings)
-        self._provider = provider if provider is not None else (None if model is not None else LLMProvider.LOCAL)
-        self._stamp_provider = self._provider or LLMProvider(resolved_settings.cadrumo_llm_provider)
+        self._provider = provider if provider is not None else LLMProvider.LOCAL
+        self._model: str | None = (
+            (model if model is not None else self._role_model(resolved_settings))
+            if self._provider is LLMProvider.LOCAL
+            else None
+        )
+        self._consent_token = consent_token
         self._client = (
             client
             if client is not None
@@ -321,9 +330,9 @@ class SupplyNatureProposer:
     def decided_by(self) -> str:
         """Provenance stamp naming the transport and model a proposal was reached with."""
         return build_provenance_stamp(
-            provider=self._stamp_provider,
+            provider=self._provider,
             reader="supply-nature-proposal",
-            model=self._model,
+            model=self._model or "configured",
         )
 
     def propose(self, descriptions: Sequence[str]) -> SupplyNatureProposal:
@@ -370,4 +379,7 @@ class SupplyNatureProposer:
             provider_override=self._provider,
             model_override=self._model,
             evidence_derived=True,
+            consent_token=self._consent_token,
+            model_role=ModelRole.SUPPLY_NATURE_PROPOSAL,
+            expects_json=True,
         )

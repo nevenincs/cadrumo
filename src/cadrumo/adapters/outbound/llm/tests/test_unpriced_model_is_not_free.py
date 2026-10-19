@@ -42,14 +42,14 @@ def test_a_priced_model_still_returns_its_figure() -> None:
     Without it, "unpriced returns None" cannot be told apart from "the
     estimator stopped pricing anything", and the two call for opposite fixes.
     """
-    assert estimate_cost_usd(LLMProvider.ANTHROPIC, "claude-sonnet-4-6", _MILLION, _MILLION) == Decimal("18.000000")
-    assert estimate_cost_usd(LLMProvider.OPENAI, "gpt-4o", _MILLION, _MILLION) == Decimal("12.500000")
+    assert estimate_cost_usd(LLMProvider.AGENT, "claude-sonnet-4-6", _MILLION, _MILLION) == Decimal("18.000000")
+    assert estimate_cost_usd(LLMProvider.AGENT, "gpt-4o", _MILLION, _MILLION) == Decimal("12.500000")
 
 
 def test_a_versioned_variant_still_inherits_its_family_rate() -> None:
     """Prefix matching survives the change, so a dated release is not now unpriced."""
     assert estimate_cost_usd(
-        LLMProvider.ANTHROPIC,
+        LLMProvider.AGENT,
         "claude-sonnet-4-6-20260101",
         _MILLION,
         _MILLION,
@@ -59,9 +59,9 @@ def test_a_versioned_variant_still_inherits_its_family_rate() -> None:
 @pytest.mark.parametrize(
     ("provider", "model"),
     [
-        (LLMProvider.ANTHROPIC, "claude-haiku-4-5"),
-        (LLMProvider.ANTHROPIC, "claude-opus-4-1"),
-        (LLMProvider.OPENAI, "a-model-nobody-has-priced"),
+        (LLMProvider.AGENT, "claude-haiku-4-5"),
+        (LLMProvider.AGENT, "claude-opus-4-1"),
+        (LLMProvider.AGENT, "a-model-nobody-has-priced"),
     ],
 )
 def test_a_model_the_table_does_not_carry_refuses_rather_than_pricing_it_free(

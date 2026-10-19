@@ -44,7 +44,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessScope, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.core.casilla_id import validated_casilla_id
@@ -57,6 +56,8 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_calculation_revision,
     seeded_modelo_verification_report,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 
 from ..adapter_composition import build_calculation_action_ports, build_verification_repository_bundle
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime

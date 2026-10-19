@@ -14,13 +14,25 @@ import { label } from "../support/strings";
 // shown on its own. The fixture host keeps the keys and answers as the
 // product's command line does.
 
-/** The first eight characters of each seeded key's id, which is its name. */
-const USED = "3f9a1c2e";
-const UNUSED = "b7c4e2d9";
-const CLEANUP = "e5b1d0c2";
-const SUSPENDED = "9d2f6a41";
-const EXPIRED = "2a8e5c70";
-const REVOKED = "6c0b9e83";
+/** How many days before today each seeded key was created, which is what
+ * its heading tells it apart by. */
+const USED = -90;
+const UNUSED = -12;
+const CLEANUP = -30;
+const SUSPENDED = -60;
+const EXPIRED = -400;
+const REVOKED = -120;
+
+/** The id the host is asked to revoke for the unused key. */
+const UNUSED_ID = "b7c4e2d9-0a13-4f6b-8e75-1c9d3a5f2b60";
+
+const DAY = 24 * 60 * 60 * 1000;
+
+/** The date `days` from today as the section writes it in English. */
+const dated = (days: number) =>
+  new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
+    new Date(Date.now() + days * DAY),
+  );
 
 const column = (target: Page) => target.locator(".pane-agent");
 
@@ -39,12 +51,15 @@ async function open(target: Page, scenario = "signed-in") {
   await expect(section(target)).toBeVisible();
 }
 
-const key = (target: Page, id: string) =>
+const key = (target: Page, days: number) =>
   section(target)
-    .getByRole("listitem")
+    .locator(".agent-key")
     .filter({
       has: target.getByRole("heading", {
-        name: label("desktop.automation_access.key_title", { id }),
+        name: label("desktop.automation_access.key_title", {
+          date: dated(days),
+        }),
+        exact: true,
       }),
     });
 
@@ -112,7 +127,15 @@ test("each key says what it may do, when it was issued and last used, and where 
   await expect(used).toContainText(
     label("desktop.automation_access.scope_all_operations"),
   );
-  await expect(used).toContainText(/Issued .+ · Expires .+ · Last used .+/);
+  await expect(used.getByRole("heading")).toHaveText(
+    label("desktop.automation_access.key_title", { date: dated(USED) }),
+  );
+  await expect(used).toContainText(
+    label("desktop.automation_access.expires_on", { date: dated(275) }),
+  );
+  await expect(used).toContainText(/Last used .+/);
+  // Every key is told apart by its own date, never by its id.
+  await expect(section(target)).not.toContainText(UNUSED_ID.slice(0, 8));
 
   // A key that never let an agent in says so, and does not read tax values.
   const unused = key(target, UNUSED);
@@ -283,7 +306,7 @@ test("a key is revoked only after the person confirms, and then has nothing left
   );
   await expect(unused.getByRole("button")).toHaveCount(0);
   expect((await calls(target)).filter((call) => /Revoke/.test(call))).toEqual([
-    `agentAccessRevoke ${UNUSED}`,
+    `agentAccessRevoke ${UNUSED_ID.slice(0, 8)}`,
   ]);
 });
 

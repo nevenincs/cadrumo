@@ -14,9 +14,11 @@ import { failureCode } from "../errors";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
 import {
   catalogChoices,
-  offeredSelection,
+  ranSelection,
+  restoredSelection,
   selectionRecord,
 } from "../shell/agentCatalog";
+import { useRememberedChoice } from "../shell/agentChoice";
 import { DocumentLister, documentRefs } from "../shell/agentDocuments";
 import { useStagedDocuments } from "../shell/agentStaging";
 import {
@@ -31,9 +33,11 @@ import type {
   AgentSendRequest,
   AgentServiceStatus,
   AgentSession,
+  AgentToolRefusal,
 } from "../shell/agentSession";
 import {
   archivedCount,
+  newestRanWith,
   replyFacts,
   transcriptItems,
   useAgentRead,
@@ -120,7 +124,7 @@ function refusalWords(t: Translate, code: string): string {
     case "agent_gateway_conversation_id_taken":
       return t("desktop.agent.conversation_id_taken");
     default:
-      return t("desktop.messages.failed", { code });
+      return t("desktop.agent.request_failed");
   }
 }
 
@@ -148,6 +152,8 @@ export function AgentColumn({
   trailing,
   onToggleMaximize,
   onMenu,
+  onToolRefused,
+  onOpenLink,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -173,6 +179,11 @@ export function AgentColumn({
   onToggleMaximize: () => void;
   /** Opens a context menu, drawn by the operating system where it can be. */
   onMenu?: OpenMenu;
+  /** Told when the conversation shown has a tool call the product refused,
+   * keyed by its reply and call. */
+  onToolRefused?: (key: string, refusal: AgentToolRefusal) => void;
+  /** Opens an address a reply links to, in the system browser. */
+  onOpenLink?: (url: string) => void;
 }) {
   const t = useStrings();
   const currentReader = useRef(reader);
@@ -241,6 +252,7 @@ export function AgentColumn({
     conversationId,
     enabled: readable && conversationShown,
     onSettled,
+    onToolRefused,
   });
   const history = useMemo((): AgentRead<ReturnType<typeof transcriptItems>> => {
     if (live.read.kind !== "ready") return live.read;
@@ -283,12 +295,31 @@ export function AgentColumn({
     () => (ready && session ? () => session.providerCatalog() : null),
     [ready, session],
   );
-  const catalog = useAgentRead(readCatalog);
+  // Read again after each saved change to the provider settings, so a
+  // provider turned off leaves the list and one turned on comes back.
+  const [catalogAgain, setCatalogAgain] = useState(0);
+  const catalog = useAgentRead(readCatalog, catalogAgain);
   const offer = useMemo(
     () => (catalog.kind === "ready" ? catalogChoices(t, catalog.value) : null),
     [catalog, t],
   );
-  const selection = offer ? offeredSelection(offer, view.chosen) : null;
+  // What the next message runs with: what the person chose while this
+  // conversation is shown, else what the conversation last ran with, else the
+  // profile's last choice, each only where the catalog still offers it.
+  const { remembered, remember } = useRememberedChoice(reader);
+  const ranWith =
+    conversationId !== null && live.read.kind === "ready"
+      ? newestRanWith(live.read.value)
+      : undefined;
+  const selection = offer
+    ? restoredSelection(offer, [
+        view.chosen,
+        ranWith && catalog.kind === "ready"
+          ? ranSelection(catalog.value, ranWith)
+          : null,
+        remembered,
+      ])
+    : null;
 
   const current =
     conversations.kind === "ready" && conversationId !== null
@@ -317,6 +348,21 @@ export function AgentColumn({
         ...held,
         panel: "none",
         conversationId: id,
+        // A conversation opened runs with its own choice, not the last one's.
+        chosen: held.conversationId === id ? held.chosen : null,
+        sendFailure: null,
+        archiveFailure: null,
+      })),
+    [],
+  );
+  // The conversation a first message starts keeps the choice it was sent
+  // with.
+  const started = useCallback(
+    (id: string) =>
+      setView((held) => ({
+        ...held,
+        panel: "none",
+        conversationId: id,
         sendFailure: null,
         archiveFailure: null,
       })),
@@ -324,18 +370,67 @@ export function AgentColumn({
   );
   const toggle = (next: Panel) =>
     change({ panel: panel === next ? "none" : next });
-  // The agent's settings belong to the signed-in profile, and are read
-  // only while they are open.
+  // The agent's settings belong to the signed-in profile, and are read only
+  // while they are open: the first time behind one loader, and after that
+  // again behind what was read last, each time they open.
   const settingsOpen = panel === "settings";
+  const [opens, setOpens] = useState({ open: false, count: 0 });
+  if (opens.open !== settingsOpen)
+    setOpens({
+      open: settingsOpen,
+      count: settingsOpen ? opens.count + 1 : opens.count,
+    });
+  const opened =
+    opens.open !== settingsOpen && settingsOpen ? opens.count + 1 : opens.count;
   const settings = useProviderSettings(
     providerSettings,
     reader,
     settingsOpen && shown,
+    opened,
   );
-  const access = useAgentAccess(agentAccess, reader, settingsOpen && shown);
-  const refreshProviderAfterSignIn = () => {
-    if (currentReader.current === reader) settings.refresh();
+  if (catalogAgain !== settings.changes) setCatalogAgain(settings.changes);
+  const access = useAgentAccess(
+    agentAccess,
+    reader,
+    settingsOpen && shown,
+    opened,
+  );
+  const refreshProviderAfterSignIn = async (
+    providerId: string,
+    identity: string | null,
+  ) => {
+    if (
+      identity === null ||
+      identity !== reader ||
+      currentReader.current !== reader ||
+      !providerSettings
+    )
+      return undefined;
+    let revision: string | undefined;
+    try {
+      const answer = await providerSettings.status();
+      if (currentReader.current !== reader || identity !== reader)
+        return undefined;
+      revision = answer.providers.find(
+        (record) => record.id === providerId,
+      )?.revision;
+      // The settings show this read rather than asking for another.
+      settings.accept(answer);
+    } catch {
+      // A failed direct read must never make retry available with the old
+      // revision; the settings are read again instead.
+      if (currentReader.current === reader && identity === reader)
+        settings.refresh();
+    }
+    if (currentReader.current !== reader || identity !== reader)
+      return undefined;
+    return typeof revision === "string" && /^[0-9a-f]{64}$/.test(revision)
+      ? revision
+      : undefined;
   };
+  const settingsLoading =
+    (providerSettings !== undefined && settings.read.kind === "loading") ||
+    (agentAccess !== undefined && access.read.kind === "loading");
   const openSettings =
     (providerSettings || agentAccess) && reader !== null
       ? () => change({ panel: "settings" })
@@ -377,7 +472,7 @@ export function AgentColumn({
           try {
             if (id === null) {
               id = (await session.startConversation()).id;
-              open(id);
+              started(id);
             }
           } catch (error) {
             change({ sendFailure: failureCode(error) });
@@ -442,7 +537,7 @@ export function AgentColumn({
       let id = conversationId;
       if (id === null) {
         id = (await session.startConversation()).id;
-        open(id);
+        started(id);
       }
       // Watched before anything is sent, so the reply is followed from its
       // first word.
@@ -569,6 +664,7 @@ export function AgentColumn({
                 change({
                   panel: "none",
                   conversationId: null,
+                  chosen: null,
                   sendFailure: null,
                 })
             : undefined
@@ -596,49 +692,68 @@ export function AgentColumn({
         className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
       >
         {settingsOpen ? (
-          // Each section the host offers is read, and shown or said, on its
-          // own: provider settings and sign-in, plus keys for agents outside Cadrumo.
-          <div className="grid gap-6 p-3">
-            {providerSettings &&
-              (settings.read.kind === "ready" ? (
-                <ProviderSettingsSection
-                  providers={settings.read.value.providers}
-                  development={settings.read.value.development}
-                  signIn={providerSettings.signIn}
-                  signInProviders={settings.read.value.signInProviders}
-                  revisions={settings.read.value.revisions}
-                  identity={reader}
-                  busyId={settings.busyId}
-                  outcomes={settings.outcomes}
-                  onSave={settings.save}
-                  onTurnOff={settings.turnOff}
-                  onReset={settings.reset}
-                  onRefresh={settings.refresh}
-                  onSignInTerminal={refreshProviderAfterSignIn}
-                />
-              ) : (
-                <ReadState read={settings.read} icon="settings" />
-              ))}
-            {agentAccess &&
-              (access.read.kind === "ready" ? (
-                <AgentAccessSection
-                  credentials={access.read.value.credentials}
-                  locale={locale}
-                  busyId={access.busyId}
-                  outcomes={access.outcomes}
-                  issuing={access.issuing}
-                  issueRefusal={access.issueRefusal}
-                  issued={access.issued}
-                  onIssue={access.issue}
-                  onCloseIssue={access.closeIssue}
-                  onRevoke={access.revoke}
-                  onRefresh={access.refresh}
-                  onCopy={writeClipboard}
-                />
-              ) : (
-                <ReadState read={access.read} icon="settings" />
-              ))}
-          </div>
+          settingsLoading ? (
+            // One loader for the whole panel, and only until its sections
+            // have first been read: after that the last answers stay on screen
+            // while they are read again.
+            <ReadState read={{ kind: "loading" }} icon="settings" />
+          ) : (
+            // Each section the host offers is shown, or says it failed, on its
+            // own: provider settings and sign-in, plus keys for agents outside
+            // Cadrumo.
+            <div className="grid gap-6 p-3">
+              {providerSettings &&
+                (settings.read.kind === "ready" ? (
+                  <ProviderSettingsSection
+                    providers={settings.read.value.providers}
+                    signIn={providerSettings.signIn}
+                    signInProviders={settings.read.value.signInProviders}
+                    signInMethods={settings.read.value.signInMethods}
+                    revisions={settings.read.value.revisions}
+                    identity={reader}
+                    busyId={settings.busyId}
+                    outcomes={settings.outcomes}
+                    onSave={settings.save}
+                    onTurnOff={settings.turnOff}
+                    onTurnOn={settings.turnOn}
+                    onReset={settings.reset}
+                    onRefresh={settings.refresh}
+                    onSignInTerminal={refreshProviderAfterSignIn}
+                  />
+                ) : settings.read.kind === "failed" ? (
+                  <SectionFailure
+                    words={t("desktop.providers.load_failed")}
+                    onRetry={settings.refresh}
+                  />
+                ) : (
+                  <ReadState read={settings.read} icon="settings" />
+                ))}
+              {agentAccess &&
+                (access.read.kind === "ready" ? (
+                  <AgentAccessSection
+                    credentials={access.read.value.credentials}
+                    locale={locale}
+                    busyId={access.busyId}
+                    outcomes={access.outcomes}
+                    issuing={access.issuing}
+                    issueRefusal={access.issueRefusal}
+                    issued={access.issued}
+                    onIssue={access.issue}
+                    onCloseIssue={access.closeIssue}
+                    onRevoke={access.revoke}
+                    onRefresh={access.refresh}
+                    onCopy={writeClipboard}
+                  />
+                ) : access.read.kind === "failed" ? (
+                  <SectionFailure
+                    words={t("desktop.agent.read_failed")}
+                    onRetry={access.refresh}
+                  />
+                ) : (
+                  <ReadState read={access.read} icon="settings" />
+                ))}
+            </div>
+          )
         ) : historyOpen ? (
           groups ? (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -693,7 +808,12 @@ export function AgentColumn({
         ) : history.kind === "ready" ? (
           // Replying again to a failed turn is the agent's to offer; until
           // a host can, Retry says it is not available.
-          <Transcript items={history.value} locale={locale} />
+          <Transcript
+            items={history.value}
+            locale={locale}
+            onOpenProviderSettings={openSettings}
+            onOpenLink={onOpenLink}
+          />
         ) : (
           <ReadState read={history} icon="agent" />
         )}
@@ -805,7 +925,12 @@ export function AgentColumn({
               reviewSkill || verifySkill ? setSkillShown : undefined
             }
             onSelectionChange={
-              offer ? (chosen) => change({ chosen }) : undefined
+              offer
+                ? (chosen) => {
+                    change({ chosen });
+                    remember(chosen);
+                  }
+                : undefined
             }
           />
         </div>
@@ -868,6 +993,25 @@ function ReplyFacts({
   );
 }
 
+/** A settings section that could not be read, and the way to read it again. */
+function SectionFailure({
+  words,
+  onRetry,
+}: {
+  words: string;
+  onRetry: () => void;
+}) {
+  const t = useStrings();
+  return (
+    <div role="alert" className="grid justify-items-start gap-2">
+      <p className="text-sm text-foreground">{words}</p>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        {t("desktop.providers.refresh")}
+      </Button>
+    </div>
+  );
+}
+
 /** A read that has no answer to show: not offered, on its way, or refused.
  * None of them is shown as empty. */
 function ReadState({
@@ -891,7 +1035,7 @@ function ReadState({
       </EmptyMedia>
       <EmptyTitle>
         {read.kind === "failed"
-          ? t("desktop.messages.failed", { code: read.code })
+          ? t("desktop.agent.read_failed")
           : t("desktop.agent.unavailable")}
       </EmptyTitle>
     </Empty>

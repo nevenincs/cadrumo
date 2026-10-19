@@ -10,6 +10,8 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -27,7 +29,6 @@ from ...domain.modelos.calculation_revision_identity import (
     outputs_for_hash_from_observations,
 )
 from ...domain.modelos.filing_record import ModeloRecord
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_projection import ModeloCalculationDetailSnapshot
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection

@@ -5,9 +5,7 @@ from __future__ import annotations
 import time
 from uuid import UUID
 
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-)
+from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationReply,
@@ -32,19 +30,11 @@ def google_consent_exchange(
     deadline: float,
 ) -> OperationReply:
     """Correlate each exchange before and after the exact-profile client call."""
-    if (
-        client.profile_id != profile_id
-        or client.session_id != session_id
-        or client.frontend is not OperationFrontendProjection.CLI
-    ):
+    if client.profile_id != profile_id or client.session_id != session_id or not is_persons_frontend(client.frontend):
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)
     google_consent_remaining(deadline)
     reply = client.operation(request, deadline=deadline)
-    if (
-        client.profile_id != profile_id
-        or client.session_id != session_id
-        or client.frontend is not OperationFrontendProjection.CLI
-    ):
+    if client.profile_id != profile_id or client.session_id != session_id or not is_persons_frontend(client.frontend):
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)
     if reply.request_id != request.request_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)

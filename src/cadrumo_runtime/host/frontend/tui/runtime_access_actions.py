@@ -9,11 +9,11 @@ from uuid import UUID
 from textual.widget import Widget
 from textual.widgets import Input, Static
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.i18n.render import tr
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

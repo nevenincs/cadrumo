@@ -11,15 +11,20 @@ active-profile pointer file.
 
 There is no global Google session, no shared cross-profile token, and no
 multi-account binding within a single profile. A missing profile is raised as
-:exc:`adapters.outbound.google.errors.GoogleAuthProfileUnboundError` so the CLI
+:exc:`cadrumo_client.contracts.google_auth.GoogleAuthProfileUnboundError` so the CLI
 and storage factory render the same localised repair guidance.
 """
 
 from __future__ import annotations
 
+from cadrumo_client.contracts.google_auth import (
+    GoogleAuthPreconditionCondition,
+    GoogleAuthProfileUnboundError,
+    google_auth_no_action_verdict,
+)
+
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from .errors import GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError, google_auth_no_action_verdict
 
 
 def resolve_active_profile() -> str:
@@ -30,7 +35,7 @@ def resolve_active_profile() -> str:
         non-empty string.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthProfileUnboundError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthProfileUnboundError`:
             When the :func:`core.bucket_pointer.resolve_active_bucket_id` precedence
             chain resolves to no profile. The error carries factual context
             naming the failed resolution attempt for renderers.

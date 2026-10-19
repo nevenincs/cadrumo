@@ -43,17 +43,17 @@ from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULA
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from .cli_runner import semantic_cli_output
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session

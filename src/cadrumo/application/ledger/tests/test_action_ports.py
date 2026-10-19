@@ -7,7 +7,8 @@ from typing import Any, cast
 
 import pytest
 
-from ...user_profile.access_contracts import AccessDenialCode
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts, require_exact_ledger_action_ports
 

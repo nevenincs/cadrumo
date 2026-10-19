@@ -6,7 +6,8 @@ import sys
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..windows_login import WindowsLoginBinding, capture_windows_login, observe_windows_login

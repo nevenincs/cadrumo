@@ -17,13 +17,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.modelos.work_unit import WorkUnit
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1, build_casilla_help_card
 from .edit_admission import admit_modelo_edit_baseline

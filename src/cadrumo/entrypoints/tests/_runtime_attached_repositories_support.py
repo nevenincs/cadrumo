@@ -573,7 +573,7 @@ def _llm_request() -> LLMRequest:
 def _llm_response(label: str) -> LLMResponse:
     return LLMResponse(
         text=f"runtime attached response {label}",
-        provider=LLMProvider.OPENAI,
+        provider=LLMProvider.AGENT,
         model="gpt-test",
         input_tokens=10,
         output_tokens=5,

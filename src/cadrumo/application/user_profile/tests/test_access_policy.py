@@ -27,23 +27,11 @@ from cadrumo.application.user_profile.access_administration import (
 )
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessAction,
-    AccessAllowed,
-    AccessDecision,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
-    OperationAccessPolicy,
-    OperationAccessRequest,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
@@ -65,6 +53,17 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.core.period import Period
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 NOW = datetime(2026, 9, 26, 12, tzinfo=UTC)

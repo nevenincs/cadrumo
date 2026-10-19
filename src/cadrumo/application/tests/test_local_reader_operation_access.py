@@ -1,4 +1,4 @@
-"""The reader and browser provisioning operations resolve to one access whichever frontend submits them."""
+"""The local-reader operations resolve to one access whichever frontend submits them."""
 
 from __future__ import annotations
 
@@ -9,19 +9,15 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
+
 from ...core.config import Settings
 from ...core.model_catalogue import ModelRole
 from ...core.operations import profile_operation_subject
-from ..browser_runtime_operation import (
-    BROWSER_RUNTIME_OPERATION_DEFINITION_ID,
-    BROWSER_RUNTIME_OPERATION_SUBJECT,
-    BrowserRuntimeProvisionRequest,
-    build_browser_runtime_operation_definition,
-    build_browser_runtime_operation_registration,
-)
 from ..local_reader import RoleFitnessOutcome
 from ..local_reader_contracts import (
-    LOCAL_READER_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_SUBJECT,
     LocalReaderProvisionAction,
     LocalReaderProvisionRequest,
@@ -46,15 +42,6 @@ from ..modelo.tests.m036_operation_support import PROFILE_ID, policy_decision
 from ..operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ..operations.models import OperationRequest
 from ..operations.registry import OperationFrontendProjection, OperationRegistry
-from ..provisioning_host import RuntimeInstaller
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -82,15 +69,12 @@ def _provision(action: LocalReaderProvisionAction, **values: object) -> _Case:
 
 
 _CASES = {
-    "install": _provision(LocalReaderProvisionAction.INSTALL, consent=True),
     "start": _provision(LocalReaderProvisionAction.START),
-    "pull": _provision(LocalReaderProvisionAction.PULL),
-    "pull-model": _provision(LocalReaderProvisionAction.PULL, model="qwen3:4b"),
     "load": _provision(LocalReaderProvisionAction.LOAD, role=ModelRole.TEXT_EXTRACTION),
+    "load-model": _provision(LocalReaderProvisionAction.LOAD, model="qwen3:4b"),
     "verify": _provision(LocalReaderProvisionAction.VERIFY, role=ModelRole.TEXT_EXTRACTION),
     "verify-model": _provision(LocalReaderProvisionAction.VERIFY, model="qwen3:4b"),
     "remove": _provision(LocalReaderProvisionAction.REMOVE, role=ModelRole.TEXT_EXTRACTION),
-    "setup": _provision(LocalReaderProvisionAction.SETUP, consent=True),
     "status": _Case(
         LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
         LOCAL_READER_OPERATION_SUBJECT,
@@ -109,12 +93,6 @@ _CASES = {
         LocalReaderReportRequest(),
         commits=False,
     ),
-    "browser": _Case(
-        BROWSER_RUNTIME_OPERATION_DEFINITION_ID,
-        BROWSER_RUNTIME_OPERATION_SUBJECT,
-        BrowserRuntimeProvisionRequest(),
-        commits=True,
-    ),
 }
 
 
@@ -122,27 +100,17 @@ def _spawn(executable: Path, environment: object) -> int:
     raise AssertionError(f"access resolution started {executable} with {environment}")
 
 
-def _install(installer: RuntimeInstaller, executable: Path, timeout_s: float) -> int:
-    raise AssertionError(f"access resolution ran {installer} for {executable} within {timeout_s}")
-
-
 def _probe(model: str, settings: Settings) -> RoleFitnessOutcome:
     raise AssertionError(f"access resolution probed {model} under {settings}")
 
 
-def _install_browser(timeout_s: float) -> int:
-    raise AssertionError(f"access resolution downloaded a browser within {timeout_s}")
-
-
 def _registry() -> OperationRegistry:
-    provision = build_local_reader_operation_definition(spawn=_spawn, run_installer=_install, text_probe=_probe)
+    provision = build_local_reader_operation_definition(spawn=_spawn, text_probe=_probe)
     status = build_local_reader_status_definition(text_probe=_probe)
     report = build_local_reader_report_definition()
-    browser = build_browser_runtime_operation_definition(run_installer=_install_browser)
     return OperationRegistry(
-        definitions=(browser, provision, report, status),
+        definitions=(provision, report, status),
         public_registrations=(
-            build_browser_runtime_operation_registration(browser),
             build_local_reader_operation_registration(provision),
             build_local_reader_report_registration(report),
             build_local_reader_status_registration(status),
@@ -217,7 +185,7 @@ def test_a_scope_that_holds_no_commit_submits_the_reads_and_no_request_that_can_
         assert isinstance(decision, AccessAllowed)
 
 
-@pytest.mark.parametrize("name", ["verify", "status", "report", "browser"])
+@pytest.mark.parametrize("name", ["verify", "status", "report"])
 def test_the_result_discloses_profile_values_to_the_requesting_destination_alone(name: str) -> None:
     case = _CASES[name]
     registry = _registry()
@@ -229,7 +197,7 @@ def test_the_result_discloses_profile_values_to_the_requesting_destination_alone
     assert {item.destination_id for item in resolved.policy.disclosures} == {_DESTINATION}
 
 
-@pytest.mark.parametrize("name", ["verify", "status", "report", "browser"])
+@pytest.mark.parametrize("name", ["verify", "status", "report"])
 @pytest.mark.parametrize(
     "subject_ref",
     [profile_operation_subject(str(PROFILE_ID)), str(PROFILE_ID), "9b0c2f4e-5a1d-4c3b-8e7f-0a1b2c3d4e5f"],
@@ -244,16 +212,3 @@ def test_a_subject_other_than_the_machines_own_is_refused(name: str, subject_ref
         )
 
     assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
-
-
-def test_the_readers_subject_does_not_open_the_browsers_operation_nor_the_reverse() -> None:
-    registry = _registry()
-    crossed = {"status": BROWSER_RUNTIME_OPERATION_SUBJECT, "browser": LOCAL_READER_OPERATION_SUBJECT}
-
-    for name, subject_ref in crossed.items():
-        case = _CASES[name]
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_operation_access(
-                registry=registry, request=_request(case, subject_ref=subject_ref), context=_context(registry, case)
-            )
-        assert refused.value.reason is AccessDenialCode.OPERATION_DENIED

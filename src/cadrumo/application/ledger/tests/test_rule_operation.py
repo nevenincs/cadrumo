@@ -13,6 +13,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.actions_common import save_transaction_catalogue_and_events
 from ....application.ledger.commit_fence import (
@@ -37,7 +40,6 @@ from ....application.operations.registry import (
     OperationRegistry,
 )
 from ....application.operations.registry_schema_validation import strict_model_json_schema
-from ....application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite

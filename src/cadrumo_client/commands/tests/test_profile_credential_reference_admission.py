@@ -13,17 +13,26 @@ import typer
 
 from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
-from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_admission as admission
+from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod, ProfileSecretSourceOptions
+from cadrumo_client.commands.profile_selection import LoginTarget
 from cadrumo_client.commands.secure_input import ProfileSecretChannel, ProfileSecretSelection
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
+from .runtime_target_double import answer_login_targets_locally
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _runtime_answers_login_targets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime client here is a double, so the runtime's login-target answer is given as it would give it."""
+    answer_login_targets_locally(monkeypatch)
 
 
 def _context(source: ProfileSecretSourceOptions) -> typer.Context:
@@ -133,15 +142,15 @@ def test_missing_receipt_login_remedy_preserves_the_public_profile_label(
         assert profile_id == client.profile_id and frontend is OperationFrontendProjection.CLI
         return cast(FrontendClient, client)
 
-    def public_pointer(bucket_id: str) -> ProfileBucketPointer:
+    def public_target(bucket_id: str) -> LoginTarget:
         observed.append(bucket_id)
         assert bucket_id == str(profile_id)
-        return ProfileBucketPointer(bucket_id=bucket_id, label="ambient operator")
+        return LoginTarget(bucket_id, "ambient operator")
 
-    monkeypatch.setattr(admission, "resolve_active_bucket_id", lambda: str(profile_id))
+    monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: str(profile_id))
     monkeypatch.setattr(admission, "open_installed_client", open_client)
     monkeypatch.setattr(admission, "subscribe_profile_notices", lambda *_args: None)
-    monkeypatch.setattr("cadrumo.application.workflow.profile_bucket_scan.read_profile_bucket_by_id", public_pointer)
+    monkeypatch.setattr(profile_selection, "runtime_login_target", public_target)
     with pytest.raises(CliRefusedBoundaryError) as caught:
         admission.activate_profile(
             _context(ProfileSecretSourceOptions()),

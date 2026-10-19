@@ -13,6 +13,7 @@ never reclassifies lifecycle truth beyond what
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import timedelta
 from typing import ClassVar, Literal, override
@@ -69,11 +70,31 @@ from .logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
 from .refusal_explanation import operation_error_explanation, public_refusal_explanation
 
-# Only for a controller whose runtime sends no operation cue.
-_POLL_INTERVAL = timedelta(milliseconds=200)
 # A refused observation is not watched, so no cue follows it: retry with backoff.
 _REFUSED_RETRY_FIRST = timedelta(milliseconds=200)
 _REFUSED_RETRY_MAX = timedelta(seconds=5)
+
+
+class _NoOperationCues:
+    """The waiter for a controller whose runtime sends no operation cue.
+
+    It never wakes, so the modal holds what it last observed until the person
+    acts or closes it. Nothing re-reads on a timer: the runtime's cue is the
+    only signal that an operation advanced.
+    """
+
+    armed = True
+
+    def arm(self) -> None:
+        """Nothing to subscribe to."""
+
+    async def wait(self, timeout: float) -> None:
+        """Wait until the observer is cancelled; no cue will ever arrive."""
+        del timeout
+        await asyncio.Event().wait()
+
+    def close(self) -> None:
+        """Nothing to release."""
 
 
 class OperationModalSettledOutcomeV1(BaseModel):
@@ -139,10 +160,18 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
     """)
     BINDINGS: ClassVar = [Binding("escape", "request_close", "", show=False)]
 
-    def __init__(self, controller: OperationControllerPort) -> None:
-        """Bind the modal to exactly one already-submitted operation."""
+    def __init__(
+        self, controller: OperationControllerPort, *, review_text: Callable[[BaseModel], str] | None = None
+    ) -> None:
+        """Bind the modal to exactly one already-submitted operation.
+
+        ``review_text`` words a REVIEW projection for a person, for a caller
+        that knows its operation's projection type; without it the modal shows
+        the projection's own document.
+        """
         super().__init__()
         self._controller = controller
+        self._review_text = review_text
         self._view_model: OperationModalViewModelV1 | None = None
         # The last operator action this modal refused, held on the screen rather
         # than written straight to the widget because the poll worker re-renders
@@ -200,7 +229,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 )
 
     def on_mount(self) -> None:
-        """Start the bounded observation poll loop as an exclusive worker."""
+        """Start observing, on each runtime cue, as an exclusive worker."""
         self._poll_worker = self.run_worker(self._poll_loop(), name="operation-modal-poll", exclusive=True)
 
     async def refresh_language(self) -> None:
@@ -217,18 +246,19 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
 
     async def _observe_until_stopped(self) -> None:
         controller = self._controller
-        changes = controller.operation_changes() if isinstance(controller, OperationChangeSourcePort) else None
+        changes: OperationChangeWaiterPort = (
+            controller.operation_changes() if isinstance(controller, OperationChangeSourcePort) else _NoOperationCues()
+        )
         try:
             await self._observe_with(changes)
         finally:
-            if changes is not None:
-                changes.close()
+            changes.close()
 
-    async def _observe_with(self, changes: OperationChangeWaiterPort | None) -> None:
+    async def _observe_with(self, changes: OperationChangeWaiterPort) -> None:
         cursor = self._log_view.next_cursor
         refused_retry = _REFUSED_RETRY_FIRST
         while self._observing():
-            if changes is not None and changes.armed:
+            if changes.armed:
                 changes.arm()
             observed = await self._controller.observe(cursor)
             if not self._observing():
@@ -260,9 +290,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 explanation = await self._settled_error_explanation(observed.projection)
                 self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model, error_explanation=explanation))
                 return
-            if changes is None:
-                await asyncio.sleep(_POLL_INTERVAL.total_seconds())
-            elif not changes.armed:
+            if not changes.armed:
                 # Subscribed only now; observe once more so nothing between the two reads is missed.
                 changes.arm()
             else:
@@ -324,7 +352,8 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         review = self.query_one("#operation-modal-review", Static)
         interaction = self._interaction
         if isinstance(interaction, OperationModalReviewInteractionV1):
-            review.update(interaction.projection.model_dump_json())
+            projection = interaction.projection
+            review.update(projection.model_dump_json() if self._review_text is None else self._review_text(projection))
         elif isinstance(interaction, OperationModalUnsupportedInteractionV1):
             review.update(unanswerable_interaction_text(interaction.interaction))
         else:

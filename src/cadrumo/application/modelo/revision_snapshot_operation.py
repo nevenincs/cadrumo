@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_port import OperationAccessResolver
@@ -16,7 +18,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from .calculate_input import modelo_202_modality_for_record

@@ -42,6 +42,7 @@ from dev.packaging.native.application_environment import (
     BASE_GROUPS,
     NAME_ROLES,
     ApplicationEnvironment,
+    ExternalPathDefault,
     Invocation,
     InvocationArgument,
     load,
@@ -210,6 +211,20 @@ def _sets_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]) 
     return sets
 
 
+_DEFAULT_PLATFORMS: Final = {"windows": "Windows", "posix": "Linux and macOS", "macos": "macOS"}
+
+
+def _external_default_text(default: ExternalPathDefault) -> str:
+    """Name one declared installation directory as its platform spells it."""
+    if default.variable is None:
+        where = default.path
+    elif default.platform == "windows":
+        where = "\\".join([f"%{default.variable}%", *default.subpaths])
+    else:
+        where = "/".join([f"${default.variable}", *default.subpaths])
+    return f"`{where}` on {_DEFAULT_PLATFORMS[default.platform]}"
+
+
 def _search_path_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]) -> str:
     """Say how a profile's ``PATH`` is composed: the declared entries, in order."""
     if not profile["package_path"]:
@@ -228,6 +243,11 @@ def _search_path_text(declaration: ApplicationEnvironment, profile: Mapping[str,
         if entry == "external":
             if declaration.path_external in admitted:
                 parts.append(f"the existing absolute directories `{declaration.path_external}` names")
+        elif entry == "external_defaults":
+            # Considered under the same admission as the external directories.
+            if declaration.path_external in admitted and declaration.external_path_defaults:
+                directories = [_external_default_text(default) for default in declaration.external_path_defaults]
+                parts.append(f"those of the usual installation directories that exist ({_list_in_words(directories)})")
         else:
             parts.append(entries[entry])
     return "set by the package to " + "; ".join(parts) + ", in that order"

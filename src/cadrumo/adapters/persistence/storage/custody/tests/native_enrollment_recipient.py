@@ -13,13 +13,9 @@ from pydantic import SecretBytes
 
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentRecord, EnrollmentRequester
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from ..automation_client_credentials import NativeClientCredentialStore
 

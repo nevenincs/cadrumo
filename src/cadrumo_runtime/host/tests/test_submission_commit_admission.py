@@ -33,16 +33,10 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -52,7 +46,6 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
@@ -64,6 +57,9 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.core.operations import OperationLifecycle, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 

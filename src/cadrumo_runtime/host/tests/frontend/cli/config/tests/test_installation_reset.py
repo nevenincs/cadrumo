@@ -34,7 +34,6 @@ from cadrumo.application.config_reset_models import (
     ConfigResetTargetPhase,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyTransactionReceipt,
@@ -44,9 +43,10 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.async_cleanup import has_async_cleanup_failure
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
-from cadrumo.entrypoints.cli.operation_installation import run_installation_act_if_runtime
+from cadrumo.entrypoints.cli.operation_installation import run_installation_act
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo_client.commands.errors import CliOperationStillRunningError, CliRefusedBoundaryError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import (
     ClientHello as RuntimeClientHello,
 )
@@ -56,6 +56,7 @@ from cadrumo_client.contracts.contracts import (
 from cadrumo_client.contracts.contracts import (
     RefusalCode as RuntimeRefusalCode,
 )
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.installation_requests import (
     InstallationAct,
 )
@@ -292,7 +293,7 @@ def _forbid_the_in_process_reset(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fail any reset the command line would do in its own process, leaving the runtime's own handlers alone."""
 
     def refuse(*_arguments: object, **_keywords: object) -> ConfigResetOperation:
-        raise AssertionError("the command line must not reset in its own process beside a running runtime")
+        raise AssertionError("the command line must never reset in its own process; the reset is the runtime's act")
 
     monkeypatch.setattr(config_reset, "start_config_reset", refuse)
     monkeypatch.setattr(config_reset, "resume_config_reset", refuse)
@@ -636,22 +637,33 @@ def _not_reached(refused: pytest.ExceptionInfo[CliRefusedBoundaryError], *, endp
 
 
 @pytest.mark.parametrize("metadata", ["installed", "missing"])
-def test_with_no_endpoint_for_the_root_the_command_resets_in_process_as_it_always_did(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, metadata: str
+@pytest.mark.parametrize("verb", ["start", "resume"])
+def test_with_no_runtime_for_the_root_the_command_is_refused_as_unavailable_and_resets_nothing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, metadata: str, verb: str
 ) -> None:
+    _forbid_the_in_process_reset(monkeypatch)
     if metadata == "missing":
         # A client that cannot name its own cohort can still see that nothing is listening.
         monkeypatch.setattr(installation_client, "version", _no_package_metadata)
-    root = tmp_path / "cadrumo-storage"
-    root.mkdir()
+    root, profile = _profile_under_another_root(tmp_path)
+    arguments = ("start", "--yes") if verb == "start" else ("resume", "--operation-id", "0" * 64, "--yes")
     with derived_storage_settings(root):
         observed = asyncio.run(installation_client.installed_connection_presence())
-        answered = run_installation_act_if_runtime(_status(), RuntimeResetStatusReply)
-        started = _command("start", "--yes")
+        with pytest.raises(RefusalError) as refused:
+            run_installation_act(
+                _start() if verb == "start" else _resume(operation_id="0" * 64), RuntimeInstallationCompleted
+            )
+        printed = _invoke(*arguments)
+        journal = _command("status")
 
     assert observed is RuntimeEndpointPresence.ABSENT
-    assert answered is None
-    assert started["operation"]["status"] == "complete"
+    assert refused.value.reason is RuntimeRefusalCode.UNAVAILABLE
+    assert printed.exit_code != 0
+    error = json.loads(printed.output)["error"]
+    assert error["context"]["reason"] == RuntimeRefusalCode.UNAVAILABLE.value
+    assert error["context"]["remedy"]
+    assert journal == {"operation": None}
+    assert load_committed_profile_password_material(profile, root=root).capsule_path.exists()
 
 
 def test_a_root_that_does_not_exist_has_no_endpoint(tmp_path: Path) -> None:
@@ -676,7 +688,7 @@ def test_a_runtime_whose_endpoint_is_busy_is_reported_with_the_retry_and_nothing
             observed = asyncio.run(installation_client.installed_connection_presence())
             printed = _invoke("start", "--yes")
             with pytest.raises(CliRefusedBoundaryError) as refused:
-                run_installation_act_if_runtime(_start(), RuntimeResetStartReply)
+                run_installation_act(_start(), RuntimeResetStartReply)
         finally:
             occupant.close()
             owner.close()
@@ -697,7 +709,7 @@ def test_a_client_that_cannot_name_its_cohort_beside_a_running_runtime_never_res
 
         printed = _invoke("start", "--yes")
         with pytest.raises(CliRefusedBoundaryError) as refused:
-            run_installation_act_if_runtime(_start(), RuntimeResetStartReply)
+            run_installation_act(_start(), RuntimeResetStartReply)
 
     assert printed.exit_code != 0
     assert "run the command again" in printed.output
@@ -733,7 +745,7 @@ def test_a_connection_whose_endpoint_could_not_be_released_is_reported_and_nothi
 
         printed = _invoke("start", "--yes")
         with pytest.raises(CliRefusedBoundaryError) as refused:
-            run_installation_act_if_runtime(_start(), RuntimeResetStartReply)
+            run_installation_act(_start(), RuntimeResetStartReply)
         monkeypatch.undo()
         journal = _command("status")
 
@@ -752,7 +764,7 @@ def test_a_client_that_stops_waiting_for_a_reset_is_told_the_outcome_is_unknown_
         capsules = [_capsule(installation, profile) for profile in installation.profiles]
 
         with pytest.raises(CliOperationStillRunningError) as unsettled:
-            run_installation_act_if_runtime(_start(), RuntimeResetStartReply, timeout=0.05)
+            run_installation_act(_start(), RuntimeResetStartReply, timeout=0.05)
         deadline = time.monotonic() + _SETTLE_SECONDS
         reading = client.perform(_status(), RuntimeResetStatusReply)
         while not (isinstance(reading, RuntimeResetStatusReply) and _is_complete(reading)):

@@ -23,8 +23,8 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
-from collections.abc import Mapping
-from typing import TypedDict
+from collections.abc import Iterable, Mapping
+from typing import Final, TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
@@ -44,6 +44,7 @@ from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.optional_extras import LLM_EXTRA, OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
 
 __all__ = [
+    "LICENCE_ADVISORIES",
     "LOCAL_MODEL_PROVISIONING_SERVICE",
     "OPTIONAL_EXTRAS",
     "AcceleratorDevice",
@@ -67,13 +68,13 @@ __all__ = [
     "assess_model_load_contention",
     "binding_free_bytes",
     "cadrumo_selected_models",
+    "model_licence_notice",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
     "probe_model_runtime_hardware_floor",
     "probe_optional_extra",
     "probe_optional_extras",
-    "pull_runtime_model",
     "read_accelerator",
     "read_installed_models",
     "read_runtime_residents",
@@ -81,7 +82,6 @@ __all__ = [
     "remove_runtime_model",
     "select_model_for_role",
     "unload_runtime_model",
-    "verify_model_ready",
 ]
 
 from ..core.errors.hierarchy import pydantic_validation_boundary
@@ -104,12 +104,10 @@ from .provisioning_runtime import (
     assess_model_load_contention,
     cadrumo_selected_models,
     matches_selected_model,
-    pull_runtime_model,
     read_installed_models,
     read_runtime_residents,
     remove_runtime_model,
     unload_runtime_model,
-    verify_model_ready,
 )
 
 
@@ -692,6 +690,36 @@ class ModelSelection(ProvisioningOutcome):
             model=candidate.runtime_id,
             licence=candidate.licence.name,
         )
+
+
+#: The selection advisories that are about a model's licence, which a person
+#: must see before that model is downloaded.
+LICENCE_ADVISORIES: Final = frozenset(
+    {ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED, ModelSelectionAdvisory.LICENCE_UNVERIFIED}
+)
+
+
+def model_licence_notice(
+    target: str | None, advisories: Iterable[ModelSelectionAdvisory], *, locale: str | None = None
+) -> str | None:
+    """Return the licence notice for a planned model in ``locale``, or ``None`` when it needs none.
+
+    ``target`` is the model a setup plan names, optionally followed by
+    ``@`` and its pinned digest. Only a catalogued model whose licence bars
+    commercial use has a notice: its publisher's text is the evidence the
+    notice repeats.
+    """
+    if target is None or ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in set(advisories):
+        return None
+    candidate = model_candidate(target.split("@", 1)[0])
+    if candidate is None:
+        return None
+    return tr(
+        "provisioning.model.licence.non_commercial_advisory",
+        model=candidate.runtime_id,
+        licence=candidate.licence.name,
+        locale=locale,
+    )
 
 
 class _SelectionContext(TypedDict):

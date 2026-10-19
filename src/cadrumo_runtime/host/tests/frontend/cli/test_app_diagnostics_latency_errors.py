@@ -19,8 +19,8 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
-from cadrumo_runtime.commands.tests.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_unbound_cli
 
 pytestmark = [

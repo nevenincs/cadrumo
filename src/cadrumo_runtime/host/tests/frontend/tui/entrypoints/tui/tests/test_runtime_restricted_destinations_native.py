@@ -34,17 +34,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipi
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    SessionKind,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import CadrumoError
@@ -59,6 +49,13 @@ from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
 from cadrumo.entrypoints.tui.reference.destination import ReferenceScreen
 from cadrumo.entrypoints.tui.reference.read_screen import ReferenceReadScreen
 from cadrumo.entrypoints.tui.reference.reads import ReferenceQuery, ReferenceRead, read_reference
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.installation_requests import InstallationAct, StorageCheckRequest
 from cadrumo_client.transport.framing import VerifiedConnection

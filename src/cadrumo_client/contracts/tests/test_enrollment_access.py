@@ -11,8 +11,8 @@ from pydantic import ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 
 from ..enrollment_access import (
     EnrollmentClientReply,

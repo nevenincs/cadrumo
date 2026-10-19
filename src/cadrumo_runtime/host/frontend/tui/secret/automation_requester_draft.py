@@ -9,9 +9,9 @@ from uuid import UUID
 from textual.widgets import Checkbox, Input, Select, SelectionList
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, DisclosureCategory
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind
 from cadrumo.core.period import Period
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from . import automation_requester_contracts as _contracts

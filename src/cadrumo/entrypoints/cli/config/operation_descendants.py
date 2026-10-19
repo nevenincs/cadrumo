@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
 
-from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.descendant_rows import encode_descendant_rows
 from ....application.user_profile.profile_operation_contracts import (

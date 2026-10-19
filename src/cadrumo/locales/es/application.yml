@@ -1,9 +1,5 @@
 application:
   auth:
-    sync:
-      errors:
-        requirements_missing: 'La sincronización AEAT requiere: {required_fields}. Abre los ajustes de autenticación
-          junto a la sincronización para completar o editar estos datos. {reasons}'
     acquisition_lock:
       errors:
         acquire_failed: No se pudo adquirir el bloqueo de autenticación AEAT tras
@@ -170,6 +166,11 @@ application:
         session_identity_profile_mismatch: La identidad de la sesión AEAT no coincide
           con la identidad fiscal del perfil activo; borra las sesiones de autenticación
           y autentica el perfil que coincida antes de las lecturas AEAT en directo.
+    sync:
+      errors:
+        requirements_missing: 'La sincronización AEAT requiere: {required_fields}.
+          Abre los ajustes de autenticación junto a la sincronización para completar
+          o editar estos datos. {reasons}'
   calculations:
     bienes_inversion_regularizacion:
       register_advisory: '%{count} bien(es) de inversión en periodo de regularización
@@ -1925,6 +1926,64 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+  provisioning:
+    action:
+      check_again: Volver a comprobar
+      resume: Reanudar
+      set_up: Configurar
+      try_again: Volver a intentarlo
+      update: Actualizar
+    blocked:
+      hardware: Este ordenador no tiene memoria suficiente para esto.
+      needs_person: Espera a que lo apruebes o lo instales tú.
+      not_in_this_build: Esta versión de Cadrumo no lo incluye.
+      offline: No tienes conexión. Conéctate a internet para configurarlo.
+    dependency:
+      browser:
+        name: Navegador para la web de la Agencia Tributaria
+      local_ai:
+        model: Modelo %{role}
+        name: IA local
+        program: El programa que ejecuta los modelos
+    failure:
+      blocked_by_network: Tu red ha bloqueado la descarga.
+      cancelled: Has cancelado la configuración.
+      damaged_download: La descarga estaba dañada y no se ha podido usar.
+      disk_full: No hay suficiente espacio libre en el disco.
+      host_unreachable: No se ha podido contactar con el servidor de descarga.
+      interrupted: La configuración se interrumpió antes de terminar.
+      memory_busy: Hay demasiada memoria en uso ahora mismo. Cierra otros programas
+        y vuelve a intentarlo.
+      needs_sign_in: Tienes que iniciar sesión en Google.
+      no_permission: Cadrumo no ha tenido permiso para escribir los archivos.
+      not_enough_memory: Este ordenador no tiene memoria suficiente para esto.
+      not_in_this_build: Esta versión de Cadrumo no lo incluye.
+      offline: No tienes conexión.
+      program_missing: El programa de IA local no está instalado.
+      program_not_running: El programa de IA local no está en marcha.
+      secure_connection_failed: No se ha podido establecer una conexión segura. Puede
+        que un filtro de red lo impida.
+      unexpected: Algo ha salido mal.
+    note:
+      downloaded_not_loaded: Descargado, aún sin cargar.
+      own_network_settings: Usa su propia configuración de red.
+    retry: Problema de conexión. Se volverá a intentar en %{seconds} segundos (intento
+      %{attempt}).
+    space_needed: La configuración necesita %{required} libres y hay %{free} disponibles.
+    stale:
+      different_model_version: Funciona, pero es una versión distinta de la que se
+        probó con Cadrumo.
+      older_revision: Funciona, pero hace falta una versión más reciente.
+      program_too_old: Funciona, pero esta versión es demasiado antigua para Cadrumo.
+    state:
+      absent: Aún no está configurado.
+      blocked: Ahora mismo no se puede configurar.
+      failed: La configuración no ha terminado.
+      provisioning: Configurándose ahora.
+      ready: Listo.
+      stale: Funciona, pero necesita una actualización.
+      unknown: Cadrumo no ha podido comprobarlo ahora.
+      verifying: Comprobando que funciona.
   reconciliation_export:
     actor: Responsable
     advisory: Aviso

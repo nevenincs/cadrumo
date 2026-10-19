@@ -7,12 +7,13 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AuthorityState
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_projections import PublicApiKey
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_runtime.contracts.worker_authorization import WORKER_AUTOMATION_INVENTORY_MAX_BYTES
 
 from ..worker_authorization import _require_inventory_ipc_budget

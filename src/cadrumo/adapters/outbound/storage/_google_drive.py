@@ -1261,7 +1261,7 @@ class GoogleDriveProvider:
         Every storage failure mode is encoded in the returned
         :class:`ProviderProbeReport`. A stored sign-in that Google no longer
         honours is not a storage condition and is raised as
-        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`.
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`.
 
         Args:
             read_only: When ``True``, skip the sentinel write round-trip and

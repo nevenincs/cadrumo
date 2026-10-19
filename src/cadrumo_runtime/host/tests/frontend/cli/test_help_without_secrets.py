@@ -42,7 +42,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from .cli_runner import invoke_unbound_cli
 from .profile_password_cli import invoke_with_profile_password, refused_for_want_of_an_operator

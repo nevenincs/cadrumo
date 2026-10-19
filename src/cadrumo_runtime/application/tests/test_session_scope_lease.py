@@ -21,19 +21,11 @@ from pydantic import SecretBytes
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
     LoginEligibility,
-    OperationAccessPolicy,
-    OperationAccessRequest,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
@@ -43,7 +35,6 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyPort, AutomationCustodySnapshot
 from cadrumo.application.user_profile.automation_enrollment import AutomationKeyIssuer
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -51,6 +42,16 @@ from cadrumo.application.user_profile.operations import (
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 from ..session_authority import ProfileSessionAuthority
 from ..session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner

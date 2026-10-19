@@ -13,15 +13,10 @@ import pytest
 from textual.app import App
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 

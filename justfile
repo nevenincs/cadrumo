@@ -147,10 +147,11 @@ doctor-python:
 setup-browser:
     uv run --no-sync python -m dev.env.playwright_setup
 
-# Verify the local environment is correctly provisioned with Playwright's
-# bundled Chromium and its dependencies. Performs a real headless
-# launch-and-close and prints the exact remediation command on failure.
-[doc('Probe the bundled Chromium with a real read-only launch.')]
+# Verify the managed browser with the browser setup item's own full check,
+# the one `dependencies.verify` runs: required builds, receipt digests and a
+# headless launch whose version must match the bundled Playwright manifest.
+# Prints the exact remediation command on failure.
+[doc('Run the browser setup item full check, with a real read-only launch.')]
 [group('doctor')]
 doctor-browser:
     uv run --no-sync python -m dev.env.playwright_doctor

@@ -11,14 +11,12 @@ import pytest
 import typer
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.application.user_profile.access_contracts import disclosure_digest
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationProposalProjection,
     AutomationReceiptProjection,
     AutomationReviewProjection,
     AutomationScopeProjection,
-    EnrollmentKind,
     EnrollmentStage,
 )
 from cadrumo.core.operations import OperationEffect
@@ -31,6 +29,8 @@ from cadrumo_client.commands.secure_input import (
     clear_staged_machine_secret_payloads,
     stage_machine_secret_payload,
 )
+from cadrumo_client.contracts.access_vocabulary import disclosure_digest
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.transport.automation_decision import (
     AutomationDecisionCompletion,
     AutomationDecisionRunError,

@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -29,7 +31,6 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal

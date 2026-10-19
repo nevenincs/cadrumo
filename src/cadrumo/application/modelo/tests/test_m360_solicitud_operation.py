@@ -13,6 +13,8 @@ from uuid import UUID
 import pydantic
 import pytest
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ....domain.transactions.own_accounts import (
@@ -43,7 +45,6 @@ from ...operations.access_resolution import (
 )
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability
 from ..m360_solicitud_operation import (
     Modelo360RepresentanteAccountInput,
     Modelo360SolicitudAction,

@@ -64,6 +64,7 @@ def _serve() -> None:
     server = None
     client = None
     stop = Event()
+    wake = Event()
     try:
         stdin_fd = sys.stdin.fileno()
         line = _read_startup_frame(stdin_fd)
@@ -83,13 +84,12 @@ def _serve() -> None:
             agent_source=args.agent_source,
             gateway_bearer=gateway_bearer,
             emit=_publish,
+            wake=wake.set,
         )
         server = AdminServer(service, bearer=bearer)
         # The runtime pushes a frame on this connection for every lease issue or
-        # withdrawal and every retired session; nothing else changes what a claim
-        # answers, so each push, or the connection's loss, is the only reason to
-        # claim again.
-        wake = Event()
+        # withdrawal and every retired session. Auth-helper settlement also wakes
+        # this owner, which reclaims authority before resuming the hosted agent.
 
         def runtime_changed() -> None:
             service.runtime_changed()

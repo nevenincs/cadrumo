@@ -9,6 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.bucket_pointer import require_active_bucket_id
@@ -36,9 +37,6 @@ from ..operations.capabilities import (
 )
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.owner import OperationExecutorContext
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .evidence_ports import LedgerEvidencePorts

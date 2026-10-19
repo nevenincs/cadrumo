@@ -28,7 +28,7 @@ from cadrumo.application.user_profile.preflight import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from ._overview_native_support import invoke_native_overview
 

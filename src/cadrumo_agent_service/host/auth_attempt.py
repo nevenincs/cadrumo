@@ -13,6 +13,7 @@ from uuid import uuid4
 
 from pydantic import JsonValue
 
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_runtime.adapters.windows_process import (
     WindowsOwnedProcess,
@@ -21,6 +22,8 @@ from cadrumo_runtime.adapters.windows_process import (
 )
 
 from .auth_protocol import MAX_AUTH_LINE, TERMINAL_EVENTS, AuthProtocol, snapshot
+
+_LOGGER = get_logger(__name__)
 
 
 class AuthAttempt:
@@ -36,6 +39,7 @@ class AuthAttempt:
         directory: Path,
         environment: Mapping[str, str],
         valid: Callable[[], bool],
+        settled: Callable[[], None] | None = None,
     ) -> None:
         """Launch one bounded worker with the caller's exact authority predicate."""
         self.id = str(uuid4())
@@ -46,6 +50,7 @@ class AuthAttempt:
         self._directory = directory
         self._environment = environment
         self._valid = valid
+        self._settled = settled
         self._lock = Lock()
         self._cancel = Event()
         self._done = Event()
@@ -236,3 +241,12 @@ class AuthAttempt:
                 outcome, reason = "failed", "cleanup_failed"
             self._publish(snapshot(self.id, self._lane, outcome, reason=reason))
             self._done.set()
+            _LOGGER.info(
+                "provider sign-in settled provider=%s event=%s reason=%s cleanup_confirmed=%s",
+                self._lane,
+                outcome,
+                reason or "none",
+                self._clean,
+            )
+            if self._settled is not None:
+                self._settled()

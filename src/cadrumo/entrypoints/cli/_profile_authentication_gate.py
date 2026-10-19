@@ -41,7 +41,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
     from uuid import UUID
 
-    from ...application.user_profile.login_session import ProfileLoginOutcome
+    from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
+
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer
     from ._profile_session_gate import RootAuthenticator
 
@@ -50,6 +51,16 @@ _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 _PROFILE_CONNECTION_KEYS = frozenset(
     {
         "config_check",
+        "config_provision_browser",
+        "config_provision_load",
+        "config_provision_probe",
+        "config_provision_pull",
+        "config_provision_remove",
+        "config_provision_report",
+        "config_provision_setup",
+        "config_provision_start",
+        "config_provision_status",
+        "config_provision_verify",
         "config_google_folder_view",
         "config_google_folder_organize",
         "config_google_probe",
@@ -70,6 +81,9 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_modelo_m036_modificacion",
         "app_modelo_m036_list",
         "app_modelo_m036_view",
+        "app_modelo_m360_declare",
+        "app_modelo_m360_list",
+        "app_modelo_m360_remove",
         "app_modelo_audit_check",
         "app_modelo_audit_export",
         "app_modelo_audit_view",

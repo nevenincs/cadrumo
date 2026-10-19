@@ -13,6 +13,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -40,7 +42,6 @@ from ...application.operations.persistence.journal import OperationPersistedSnap
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.user_profile.access_contracts import AccessAction, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.operations import (

@@ -12,7 +12,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.config import override_settings
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 from .profile_password_cli import invoke_with_profile_password
 

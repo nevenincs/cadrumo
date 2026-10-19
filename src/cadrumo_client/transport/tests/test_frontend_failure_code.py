@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from ..frontend_client_contracts import FrontendRefusedError, frontend_failure_code

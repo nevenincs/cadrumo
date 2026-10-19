@@ -9,11 +9,11 @@ from importlib.metadata import PackageNotFoundError, version
 from uuid import UUID
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 
+from ..contracts.access_vocabulary import AccessScope
 from ..contracts.contracts import ClientHello, RefusalCode, RefusalError
 from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from .frontend_client import FrontendClient
@@ -73,7 +73,11 @@ async def open_installed_client(
         product_version = version("cadrumo")
     except (OSError, PackageNotFoundError):
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
-    endpoint = WindowsEndpoint(storage_root=root) if sys.platform == "win32" else PosixEndpoint(storage_root=root)
+    endpoint = (
+        WindowsEndpoint(storage_root=root)
+        if sys.platform == "win32"
+        else PosixEndpoint(storage_root=root, create_namespace=False)
+    )
     endpoint_cleanup = _InstalledClientCleanup(endpoint.close)
     try:
         launch = LaunchDoor(

@@ -13,6 +13,8 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....application.ledger.evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
@@ -38,7 +40,7 @@ from ....application.operations.execution_actor import OperationExecutionCaller,
 from ....application.operations.models import OperationIdentity, OperationRequest
 from ....application.operations.owner import OperationExecutorContext
 from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ....application.user_profile.access_contracts import AccessAction, Availability, SessionKind
+from ....application.user_profile.access_contracts import SessionKind
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
 from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor

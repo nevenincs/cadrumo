@@ -13,8 +13,9 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.frontend_requests import OperationObservationRequestV1
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessBinding
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity

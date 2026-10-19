@@ -22,8 +22,8 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationManage,

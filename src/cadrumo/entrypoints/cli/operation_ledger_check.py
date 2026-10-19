@@ -10,6 +10,7 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...application.ledger.check_operation import (
     LEDGER_CHECK_OPERATION_DEFINITION_ID,
@@ -17,7 +18,6 @@ from ...application.ledger.check_operation import (
     LedgerCheckRequest,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period

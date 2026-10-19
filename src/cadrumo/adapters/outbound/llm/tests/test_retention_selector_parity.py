@@ -36,7 +36,7 @@ from ..retention import select_retention_removal_keys
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _CUTOFF = datetime(2026, 6, 1, tzinfo=UTC)
-_PROVIDER = LLMProvider.ANTHROPIC
+_PROVIDER = LLMProvider.AGENT
 _MODEL = "claude-sonnet-4-6"
 
 

@@ -18,6 +18,8 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.frontend_requests import (
     OperationObservationSuccessV1,
@@ -26,7 +28,6 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.models import OperationRequest
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
-from ...application.user_profile.access_contracts import AccessAction, Availability
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject

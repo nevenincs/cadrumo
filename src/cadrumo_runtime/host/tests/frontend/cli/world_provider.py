@@ -33,7 +33,7 @@ class RuntimeCliWorldProvider:
     @contextmanager
     def native_profile(self, tmp_path: Path) -> Generator[RegisteredCliProfile]:
         """Retain the native runtime fixture until its tax assertions finish."""
-        from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+        from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
         with native_cli_profile_scope(tmp_path) as profile:
             yield profile
@@ -41,7 +41,7 @@ class RuntimeCliWorldProvider:
     @contextmanager
     def profile_server(self, storage_root: Path) -> Generator[None]:
         """Retain the existing native profile server for caller-owned storage."""
-        from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+        from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
         with native_cli_profile_server(storage_root):
             yield

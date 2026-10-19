@@ -15,14 +15,13 @@ from uuid import UUID
 
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import (
-    GRANT_DEFAULT_VALIDITY,
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     DisclosureCategory,
     DisclosureCategoryGrant,
 )
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal
+from cadrumo_client.contracts.enrollment_proposal import GRANT_DEFAULT_VALIDITY, EnrollmentKind, EnrollmentProposal
 
 
 class AutomationKeyUse(StrEnum):

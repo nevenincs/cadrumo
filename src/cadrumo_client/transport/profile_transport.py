@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
+from pydantic import BaseModel
+
 from ..contracts.access_management import (
     AutomationDenied,
     AutomationDeny,
@@ -46,6 +50,7 @@ from ..contracts.profile_access import (
     SessionRequest,
     SessionsLocked,
 )
+from ..contracts.profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
 from ..contracts.service_access import ServiceAdmission, ServiceConnect, ServiceConnected
 from ..contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .frame_io import read_secret, write_document, write_secret
@@ -157,6 +162,31 @@ class ProfileTransport(VerifiedTransport):
                 if isinstance(result, SignInStatusReply) and result.profile_id != request.profile_id:
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 return result
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
+
+    def active_profile(self, request: ActiveProfileRequest, *, deadline: float) -> ActiveProfileReply | AccessRefusal:
+        """Ask which profile is selected and signed in, through a correlated, credential-free exchange."""
+        result = self._sessionless(request, request.request_id, deadline=deadline)
+        if not isinstance(result, ActiveProfileReply | AccessRefusal):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return result
+
+    def login_target(self, request: LoginTargetRequest, *, deadline: float) -> LoginTargetReply | AccessRefusal:
+        """Ask which profile the operator's text names, through a correlated, credential-free exchange."""
+        result = self._sessionless(request, request.request_id, deadline=deadline)
+        if not isinstance(result, LoginTargetReply | AccessRefusal):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return result
+
+    def _sessionless(self, request: BaseModel, request_id: UUID, *, deadline: float) -> object:
+        with self._exchange(deadline=deadline):
+            try:
+                if self._closed:
+                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+                write_document(self._channel, request, deadline=deadline)
+                return self._reply(request_id, deadline=deadline).root
             except BaseException as error:
                 self._close_after_failure(error)
                 raise

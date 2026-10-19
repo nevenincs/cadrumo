@@ -277,7 +277,9 @@ def build_config_repair_report(
     fails, the report still emits profile and auth rows from the redacted health
     verdict so repair remains usable on a cold or degraded storage root.
     Each emitted warning/failure row is validated by :class:`DiagnosticCheck` so
-    the caller never receives a silent repair finding.
+    the caller never receives a silent repair finding. Setup state is not
+    part of this report: repair runs without a profile session, and the setup
+    rows are read through the runtime only in a signed-in session.
     """
     _ensure_models_rebuilt()
     checks = _initial_config_repair_checks()

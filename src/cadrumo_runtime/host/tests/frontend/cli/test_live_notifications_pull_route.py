@@ -17,8 +17,8 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import LiveAeatProfile, live_clave_movil_profile
 from cadrumo.tests.live_gate import requires_live_enabled
-from cadrumo_runtime.commands.tests.diagnostics_native_support import invoke_diagnostics_cli
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.tests.native_commands.diagnostics_native_support import invoke_diagnostics_cli
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     native_cli_profile_server,
 )

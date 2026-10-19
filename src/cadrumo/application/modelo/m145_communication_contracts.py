@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
@@ -17,7 +19,6 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.fixed_width_codec import ExportEncoding
 from ...domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .m145_communication_period import M145CommunicationPeriod
 from .m145_communication_records import (

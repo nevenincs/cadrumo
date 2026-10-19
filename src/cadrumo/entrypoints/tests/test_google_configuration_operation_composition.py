@@ -11,11 +11,9 @@ from uuid import UUID, uuid4
 import pytest
 from google.oauth2.credentials import Credentials as OAuthCredentials
 
-from ...adapters.outbound.google.errors import (
-    GoogleAuthClientMetadataUnavailableError,
-    GoogleAuthSignInRequiredError,
-)
-from ...adapters.outbound.google.google_configuration_refusal import google_configuration_refusal_error
+from cadrumo_client.commands.google_refusal_reconstruction import google_configuration_refusal_error
+from cadrumo_client.contracts.google_auth import GoogleAuthClientMetadataUnavailableError, GoogleAuthSignInRequiredError
+
 from ...adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 from ...adapters.outbound.google.session_store import load_drive_config, load_metadata, load_token
 from ...adapters.outbound.google.tests.installation_client_support import (
@@ -146,6 +144,59 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
         assert commits == [True, False]
         with pytest.raises(ProfileAccessRefusedError):
             composition.build_google_configuration_operation_ports(profile_id=uuid4(), operation=authority_operation)
+
+
+@pytest.mark.parametrize("stored_client_id", (None, "development-client.apps.googleusercontent.com"))
+def test_status_reports_a_sign_in_only_with_a_token_this_installation_minted(
+    stored_client_id: str | None,
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A sign-in record whose token is gone is not signed in; another client's token needs a new sign-in."""
+
+    def forbidden_commit[T](save: Callable[[], T], *, changed: Callable[[T], bool]) -> T:
+        pytest.fail("status wrote a record")
+
+    def forbidden_handoff(action: str, *, writes: bool = False) -> None:
+        pytest.fail("status crossed the provider boundary")
+
+    use_installation_client(monkeypatch, tmp_path / "installation")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)):
+        save_metadata(
+            str(_PROFILE),
+            OAuthMetadata(
+                account_email="synthetic@example.invalid", granted_scopes=REQUIRED_SCOPES, issued_at=datetime.now(UTC)
+            ),
+        )
+        if stored_client_id is not None:
+            save_token(
+                str(_PROFILE),
+                OAuthToken(refresh_token=_REFRESH_CREDENTIAL, client_id=stored_client_id, token_uri=_OAUTH_ENDPOINT),
+            )
+        ports = composition.build_google_configuration_operation_ports(
+            profile_id=_PROFILE, operation=authority_operation
+        )
+
+        def status() -> contracts.GoogleConfigurationProjection:
+            return ports.run(
+                contracts.GoogleStatusRequest(profile_id=_PROFILE),
+                commit=forbidden_commit,
+                before_handoff=forbidden_handoff,
+                acknowledged=forbidden_handoff,
+                terminal_admission=None,
+            )
+
+        if stored_client_id is None:
+            reported = status()
+            assert isinstance(reported, contracts.GoogleStatusProjection)
+            assert not reported.session_present
+            assert reported.account_email is None and reported.issued_at is None and reported.granted_scopes == ()
+        else:
+            with pytest.raises(GoogleConfigurationRefusedError) as refused:
+                status()
+            assert refused.value.projection.provider_code == "REFUSED_GOOGLE_SIGN_IN_REQUIRED"
+            assert _REFRESH_CREDENTIAL not in refused.value.projection.model_dump_json()
 
 
 @pytest.mark.parametrize(

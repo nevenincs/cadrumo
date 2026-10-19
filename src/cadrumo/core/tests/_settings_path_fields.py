@@ -4,9 +4,9 @@ Selection is by **annotation**, never by name suffix, so a field cannot hide
 from a gate merely by being named inconveniently.
 
 The selector reads annotations for the converse reason too.
-``aeat_sede_expedientes_path`` and ``aeat_status_notificaciones_path`` are
-``str`` AEAT URL segments, not filesystem paths; a name-only selector would
-over-select both and demand a storage classification for a URL.
+``aeat_sede_expedientes_path`` is a ``str`` AEAT URL segment, not a filesystem
+path; a name-only selector would over-select it and demand a storage
+classification for a URL.
 
 Both directions are pinned as positive controls in
 :mod:`~core.tests.test_storage_binding_gate`, so a future narrowing back to

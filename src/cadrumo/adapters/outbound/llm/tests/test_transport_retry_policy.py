@@ -124,7 +124,6 @@ def _serve_scripted(script: _Script) -> Generator[str]:
 def _client(tmp_path: Path, *, policy: LLMRetryPolicy | None = None) -> LLMClient:
     settings = EnvFileFreeSettings(
         cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -276,7 +275,7 @@ def test_a_consent_refusal_never_reaches_the_transport_at_all(tmp_path: Path) ->
     "refused before dispatch" from "dispatched, then refused".
     """
     script = _Script(responses=[(HTTPStatus.OK, _OK_BODY)])
-    request = LLMRequest(prompt="read this invoice", evidence_derived=True, provider_override=LLMProvider.OPENAI)
+    request = LLMRequest(prompt="read this invoice", evidence_derived=True, provider_override=LLMProvider.AGENT)
     with (
         _serve_scripted(script) as endpoint,
         override_settings(cadrumo_llm_ollama_chat_url=endpoint),

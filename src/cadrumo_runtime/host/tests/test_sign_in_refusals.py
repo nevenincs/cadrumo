@@ -5,17 +5,17 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
+from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.frontend_operation_client import OperationFrontend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-@pytest.mark.parametrize("reason", [*ProfileSessionRefusalReason, "throttled"])
+@pytest.mark.parametrize("reason", [*ProfileSessionRefusalReason, "throttled", "credential_rejected"])
 def test_sign_in_detail_survives_wire_and_frontend(reason: ProfileSessionRefusalReason | str) -> None:
     detail = SignInRefusal.model_validate(
         {"reason": reason, "remaining_seconds": 19 if reason == "throttled" else None}

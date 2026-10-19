@@ -4,23 +4,21 @@ desktop:
     agent_replied: Az ügynök válasza
     approval_allow_always: Engedélyezem
     approval_allow_once: Egyszer engedélyezem
+    approval_allow_session: Engedélyezés erre a munkamenetre
     approval_reject_always: Nem engedélyezem
     approval_reject_once: Nem engedélyezem
     approval_review_title: Nézd át, mielőtt a Cadrumo elvégzi
-    approval_tool_title: Az ügynök egy eszközt szeretne használni
+    approval_tool_title: Az ügynök engedélyt kér
     archive: Archiválás
     archived_empty: Nincs archivált beszélgetés
     archived_toggle: Archivált ({count})
     attach_filter: Dokumentumok
     attachments: Fájlok a következő üzenethez
-    attachments_refused: 'Elutasítva: {count}'
+    attachments_refused: 'Nem elfogadva: {count}'
     attachments_uploading: 'Feltöltés alatt: {count}'
     can_read_images: képeket olvasni
     can_read_pdfs: PDF-eket olvasni
-    can_run_subagents: alügynököket indítani
     can_search_web: a weben keresni
-    can_stop_subagent: egy alügynököt leállítani
-    can_use_tools: eszközöket használni
     can_write: fájlokat írni
     cancel: Mégse
     capabilities: 'Képes: {list}'
@@ -33,10 +31,11 @@ desktop:
     condition_invalid_request: A szolgáltató elutasította a kérést
     condition_network_unreachable: A szolgáltató nem érhető el
     condition_provider_overloaded: A szolgáltató túlterhelt
-    condition_throttled: A szolgáltató korlátozza a kéréseket
-    condition_unauthenticated: Nincs hitelesítve a szolgáltatónál
+    condition_throttled: Elérted a szolgáltató használati korlátját. Ellenőrizd a
+      szolgáltatói fiókodat, vagy válassz másik szolgáltatót.
     condition_unknown: Ismeretlen ok
-    condition_usage_exhausted: Használati korlát elérve
+    condition_usage_exhausted: Elérted a szolgáltató használati korlátját. Ellenőrizd
+      a szolgáltatói fiókodat, vagy válassz másik szolgáltatót.
     consent_allow: 'Küldés ide: {provider}'
     consent_decline: Ne küldd el
     consent_items: Ezt küldenénk el
@@ -77,13 +76,12 @@ desktop:
     history: Előzmények
     history_empty: Még nincs beszélgetés
     history_no_match: 'Egy beszélgetés sem felel meg ennek: „{query}”.'
-    lane_no_catalog: A modelleket nem sikerült lekérni
-    lane_not_admitted: Itt nem engedélyezett
-    lane_not_configured: Nincs beállítva
-    lane_notice: 'Fejlesztői környezet: a beszélgetések titkosítás nélkül maradnak
-      ezen a teszttárhelyen. Csak kitalált adatokat használj.'
-    lane_signed_out: Nincs bejelentkezve
-    lane_unreachable: Nem érhető el
+    lane_no_catalog: Nem sikerült betölteni a modelleket. Próbáld újra.
+    lane_not_admitted: Ezen a gépen nem érhető el. Válassz másikat.
+    lane_not_configured: Állítsd be ezt a szolgáltatót a beállításokban.
+    lane_notice: Ebben a verzióban a beszélgetések nincsenek titkosítva.
+    lane_signed_out: Jelentkezz be ehhez a szolgáltatóhoz a beállításokban.
+    lane_unreachable: Nem lehet kapcsolódni. Ellenőrizd ezt a szolgáltatót a beállításokban.
     members_multiple: '{count} fájl'
     members_single: 1 fájl
     mention_empty: Nincs egyező tárolt dokumentum
@@ -95,16 +93,15 @@ desktop:
     message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
     model: Modell
     model_written: Ez a szolgáltató nem sorolja fel a modelljeit. Írd be a modell
-      azonosítóját úgy, ahogy a szolgáltató nevezi.
+      nevét pontosan úgy, ahogy a szolgáltató írja.
     more_files: +{count} további
     new_conversation: Új beszélgetés
     no_models: Nincs választható modell
-    no_provider: Az ügynöknek még nincs használható szolgáltatója.
+    no_provider: A kezdéshez állíts be egy MI-szolgáltatót.
     provider: Szolgáltató
     questions_answer: Válaszolok
     questions_clear: Válasz törlése
-    questions_control: 'A válasz egy sor: nem tartalmazhat sortörést, tabulátort vagy
-      más vezérlőkaraktert'
+    questions_control: Minden válasz egy sorban legyen.
     questions_decline: Nem válaszolok
     questions_invalid: Előbb javítsd a megjelölt válaszokat
     questions_lead: Válaszolj lent, vagy írj inkább üzenetet, hogy a saját szavaiddal
@@ -115,6 +112,7 @@ desktop:
     questions_too_long: Ez a válasz {count} karakter hosszú; legfeljebb {max} lehet
     queued: Feltöltésre vár
     ran_with: 'Ezzel futott: {selection}'
+    read_failed: Nem sikerült betölteni az adatokat. Próbáld újra.
     ready: Kész
     reference_changed: Az egyik megnevezett dokumentum megváltozott, mióta kiválasztottad.
       Válaszd ki újra a @ jellel.
@@ -123,7 +121,7 @@ desktop:
     reference_refused: Az egyik megnevezett dokumentumot nem lehet megosztani az ügynökkel.
     references_unavailable: Ennek a beszélgetésnek a tárolt dokumentumai most nem
       érhetők el.
-    refused: Elutasítva
+    refused: Nem elfogadva
     remove_all: Az összes eltávolítása
     remove_document: 'Eltávolítás: {name}'
     remove_file: 'Eltávolítás: {name}'
@@ -133,9 +131,10 @@ desktop:
     reply_failed: Ez a válasz nem készült el.
     reply_in_progress: Még folyamatban van egy válasz.
     reply_queued: 'Várakozó üzenetek: {count}'
-    reply_reconciling: Egyeztetés…
-    reply_repair_needed: Javításra szorul
+    reply_reconciling: Ellenőrzés…
+    reply_repair_needed: Megszakadt
     reply_stopping: Leállítás…
+    request_failed: Nem sikerült végrehajtani a műveletet. Próbáld újra.
     resize: Ügynök átméretezése
     restore: Visszaállítás
     retry: Próbáld újra
@@ -152,20 +151,22 @@ desktop:
     send_waiting: Várd meg, amíg minden fájl feltöltődik
     sent_files: Az üzenettel küldött fájlok
     sent_skills: Betöltött készségek
-    service_absent: Az ügynök nincs telepítve.
-    service_credential_missing: Ehhez a szolgáltatóhoz nincs beállítva kulcs.
+    service_absent: Az ügynök nincs telepítve. Telepítsd újra a Cadrumót a hozzáadásához.
+    service_credential_missing: A kezdéshez állíts be egy szolgáltatót a beállításokban.
     service_failed: Az ügynök leállt.
-    service_incompatible: Az ügynök ezen verziója nem működik ezzel a Cadrumóval.
-    service_root_unmarked: Ez a teszttárhely nincs megjelölve az ügynök fejlesztői
-      környezeteként.
-    service_runtime_unavailable: A Cadrumo háttérszolgáltatása nem fut.
+    service_incompatible: Az ügynök ezen verziója nem működik a Cadrumo ezen verziójával.
+      Telepítsd újra a Cadrumót.
+    service_root_unmarked: Nem sikerült megnyitni a beszélgetéseidet. Indítsd újra
+      a Cadrumót, és próbáld újra.
+    service_runtime_unavailable: A Cadrumo még nem áll készen. Indítsd újra, és próbáld
+      újra.
     service_signed_out: Jelentkezz be, hogy beszélhess az ügynökkel.
     service_starting: Az ügynök indul…
     service_stopped: Az ügynök nem fut.
     set_up_providers: MI-szolgáltatók beállítása
     settings: Ügynök beállításai
-    settings_label: 'Modell és ráfordítás: {current}'
-    settings_title: Modellbeállítások
+    settings_label: 'Modell: {current}'
+    settings_title: A beszélgetés modellje
     show: Ügynök megjelenítése
     show_active: Aktívak megjelenítése
     sign_in_first: Jelentkezz be az ügynök használatához
@@ -206,6 +207,9 @@ desktop:
     status_uploading: Feltöltés
     stop: Leállítás
     stopped: Leállítva
+    thinking: Gondolatmenet
+    thoughts: Az ügynök gondolatai
+    tool_details: A hívás részletei
     tool_done: Kész
     tool_failed: Sikertelen
     tool_kind_delete: Töröl
@@ -231,7 +235,7 @@ desktop:
     upload_unreadable: Nem sikerült beolvasni
     uploading: Feltöltés
     uploading_name: 'Feltöltés: {name}'
-    usage: 'Tokenek: {input} bemenet, {output} kimenet'
+    usage: 'Felhasznált tokenek: {input} elküldve, {output} fogadva'
     waiting_on_you: Rád vár
     welcome_lead: Adózási kérdésed van? Kérdezz egy Modelóról vagy egy határidőről,
       vagy adj hozzá nyugtákat, számlákat és banki kivonatokat a + gombbal.
@@ -242,91 +246,102 @@ desktop:
     agent: Ügynök
     maximize_agent: Ügynök teljes méretben
   providers:
-    add_key: Kulcs hozzáadása
+    add_key: API-kulcs hozzáadása
+    address: 'Cím: {url}'
     base_url_default: 'Hagyd üresen, és ezt használjuk: {url}.'
-    base_url_label: Alap-URL
-    base_url_required: 'Kötelező: ennek a szolgáltatónak nincs alapértelmezett címe.'
+    base_url_label: Kiszolgáló címe
+    base_url_required: Add meg a szolgáltatótól kapott címet.
     cancel: Mégse
-    cli_installed_signed_in: Telepítve, bejelentkezve
-    cli_installed_signed_out: Telepítve, nincs bejelentkezve
-    cli_not_installed: Nincs telepítve
-    cli_unknown: Még nincs ellenőrizve
-    development_note: Ebben a fejlesztői változatban a saját kulcs nélküli szolgáltató
-      a fejlesztői környezet kulcsát használja.
-    disable: Letiltás
-    disable_note: A letiltás megakadályozza, hogy a Cadrumo használja a szolgáltatót,
-      máshol talált kulccsal sem.
-    disabled: 'Letiltva: a Cadrumo nem használja, amíg nem adsz hozzá kulcsot, vagy
-      vissza nem állítod.'
+    change_failed: Nem sikerült menteni. Frissíts, és próbáld újra.
+    connection_api: API-kulcs
+    connection_app: Telepített alkalmazás
+    detail_app_missing: Telepítsd a(z) {provider} alkalmazást, majd jelentkezz be.
+    detail_off: 'Kikapcsolva: az ügynök nem ajánlja fel és nem használja.'
+    detail_off_kept: 'Kikapcsolva: az ügynök nem ajánlja fel és nem használja. Az
+      API-kulcsát megőrizzük, amíg újra bekapcsolod.'
+    detail_sign_in: Jelentkezz be a(z) {provider}-fiókoddal.
+    group_intro: Válassz szolgáltatót a beállításhoz.
+    icon_credits: Ikonok forrása
     key_label: API-kulcs ({provider})
-    key_note: Illeszd be ide. Titkosítva mentjük, és soha többé nem jelenik meg.
-    lead: A kulcsok titkosítva maradnak ebben a profilban, és soha többé nem jelennek
-      meg. Csak te adhatod hozzá, cserélheted le vagy távolíthatod el őket.
-    mode_provider_sign_in: 'Bejelentkezve ezen keresztül: {provider}'
-    mode_token: OAuth-token mentve ebben a profilban
-    readiness_disabled: Letiltva
-    readiness_missing: Nincs kulcs
-    readiness_not_verified: Mentve, még nincs használva
-    readiness_ready: Kész
-    readiness_sign_in_required: Bejelentkezés szükséges
-    readiness_unusable: Nem használható
-    reason_not_configured: Még nincs beállítva.
-    reason_record_unreadable: A mentett beállításai nem olvashatók. Add hozzá újra
-      a kulcsot.
-    reason_sign_in_with_provider_tool: Előbb jelentkezz be a szolgáltató ({provider})
-      saját alkalmazásával.
-    refresh: Frissítés
-    refused_base_url_rejected: Ez az alap-URL nem használható.
-    refused_catalog_unavailable: A Cadrumo nem tudta beolvasni az ügynök szolgáltatóit.
+    key_note: Titkosítva mentjük ezen a gépen, és többé nem jelenik meg.
+    load_failed: Nem sikerült betölteni a szolgáltatókat. Próbáld újra.
+    reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
+    reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
+    refresh: Újrapróbálkozás
+    refused_base_url_rejected: Ellenőrizd a kiszolgáló címét, és próbáld újra.
     refused_invalid_key_format: Ez nem tűnik ennek a szolgáltatónak a kulcsának.
-    refused_not_signed_in: Jelentkezz be a kulcsok módosításához.
-    refused_person_act_required: A kulcsokat csak te módosíthatod, itt.
-    refused_profile_locked: Ez a profil zárolva van.
-    refused_revision_conflict: Ez máshol megváltozott. A legfrissebb látható; próbáld
-      újra.
-    refused_runtime_unavailable: A háttérszolgáltatás nem fut, így semmit sem olvastunk
-      be, és semmi sem változott. Ellenőrizd a háttérszolgáltatás-kezelőt, majd próbáld
-      újra.
-    replace_key: Kulcs cseréje
-    reset: Visszaállítás
-    reset_note: A visszaállítás elfelejti, amit beállítottál, mintha soha nem lett
-      volna beállítva.
-    reset_note_development: A visszaállítás elfelejti, amit beállítottál; ebben a
-      fejlesztői változatban újra a fejlesztői környezet kulcsa lesz használva.
+    refused_not_signed_in: Jelentkezz be a beállítások módosításához.
+    refused_person_act_required: Ezeket a beállításokat csak te módosíthatod, ebből
+      az ablakból.
+    refused_profile_locked: Oldd fel a profilodat a beállítások módosításához.
+    refused_revision_conflict: A beállítások közben megváltoztak. A legfrissebbek
+      láthatók; próbáld újra.
+    refused_runtime_unavailable: Indítsd újra a Cadrumót, és próbáld újra.
+    remove_key: API-kulcs eltávolítása
+    replace_key: API-kulcs cseréje
     save: Mentés
-    saved_unread: Mentve, de az állapotát nem sikerült beolvasni.
+    saved_unread: Mentve, de az állapota nem olvasható. Próbáld újra.
     saving: Mentés…
+    search_empty: Nincs találat. Próbálj más keresést.
+    search_label: Szolgáltatók keresése
+    search_placeholder: Szolgáltatók keresése
     sign_in_action: Bejelentkezés
+    sign_in_busy: Egy másik {provider}-bejelentkezés még folyamatban van. Várj egy
+      kicsit, majd próbáld újra.
     sign_in_cancel: Bejelentkezés megszakítása
     sign_in_cancel_failed: A Cadrumo még nem tudta megszakítani a bejelentkezést.
       Hagyd nyitva ezt az ablakot, amíg ellenőrzi.
     sign_in_cancelled: A bejelentkezés megszakadt.
+    sign_in_cleanup_failed: Indítsd újra a Cadrumót, mielőtt ismét bejelentkezel.
     sign_in_close: Bejelentkezés bezárása
     sign_in_continue_browser: Folytatás a böngészőben
     sign_in_description: 'Folytasd a bejelentkezést itt: {provider}. A jelszavadat
       csak a szolgáltató oldalán add meg.'
+    sign_in_done: Kész
     sign_in_failure: Nem sikerült befejezni a bejelentkezést. Próbáld meg később újra.
-    sign_in_only: A szolgáltató ({provider}) saját bejelentkezését használja.
+    sign_in_host_disconnected: A Cadrumo elvesztette a kapcsolatot ezzel a bejelentkezéssel,
+      és megszakította. A folytatáshoz indítsd újra.
+    sign_in_invalid_request: Zárd be ezt az ablakot, és próbálj újra bejelentkezni.
     sign_in_open_failed: A Cadrumo nem tudta megnyitni a szolgáltató bejelentkezési
       oldalát.
+    sign_in_profile_required: A {provider} használatához előbb jelentkezz be a Cadrumóba.
+    sign_in_provider_error: 'Nem sikerült bejelentkezni ide: {provider}. Próbáld újra.'
+    sign_in_provider_unavailable: Telepítsd a(z) {provider} alkalmazást, és próbáld
+      újra.
+    sign_in_retry: Bejelentkezés újra
+    sign_in_retry_checking: Újrapróbálkozás előkészítése…
+    sign_in_retry_refresh_failed: Zárd be, majd nyisd meg a szolgáltató beállításait,
+      és próbáld újra.
     sign_in_security: A Cadrumo soha nem kéri el a szolgáltatói jelszavadat.
-    sign_in_start_browser: Bejelentkezés böngészőben
+    sign_in_start_browser: Bejelentkezés böngészővel
     sign_in_start_device: Eszközkód használata
     sign_in_starting: Bejelentkezés indítása…
-    sign_in_success: 'Sikeresen bejelentkeztél ide: {provider}. A Cadrumónak még igazolnia
-      kell, hogy ez a sáv képes ügynököt futtatni.'
+    sign_in_success: 'Bejelentkeztél ide: {provider}.'
+    sign_in_success_description: Sikeres bejelentkezés. A Kész gombbal visszatérhetsz
+      a beállításokhoz.
+    sign_in_success_title: 'Sikeres bejelentkezés: {provider}'
     sign_in_timeout: A bejelentkezés túl sokáig tartott, ezért megszakadt.
     sign_in_title: 'Bejelentkezés: {provider}'
-    sign_in_unavailable: Ebből a Cadrumo-verzióból még nem lehet bejelentkezni ehhez
-      a szolgáltatóhoz.
+    sign_in_unavailable: A(z) {provider} szolgáltatásba még nem lehet bejelentkezni
+      a Cadrumóból.
+    sign_in_unsupported_browser: A {provider} böngészős bejelentkezése nem folytatható
+      a Cadrumón keresztül. Próbáld az eszközkódos bejelentkezést, ha a {provider}
+      támogatja.
+    sign_in_unsupported_device: A Cadrumo nem támogatja a {provider} eszközkódos bejelentkezését.
+      Próbálj böngészőben bejelentkezni.
     sign_in_user_code: Eszközkód
     sign_in_waiting: Fejezd be a bejelentkezést a szolgáltató oldalán, majd térj vissza
       ide.
     sign_in_waiting_device: A bejelentkezés befejezéséhez írd be ezt a kódot a szolgáltató
       oldalán.
-    source_environment: A fejlesztői környezet kulcsát használja
-    source_profile: A kulcs ebben a profilban van mentve
-    through: 'Ezen keresztül: {url}'
+    status_not_checked: Nincs ellenőrizve
+    status_off: Kikapcsolva
+    status_ready: Kész
+    status_saved: Mentve
+    status_setup_needed: Nincs beállítva
+    status_sign_in_needed: Nincs bejelentkezve
+    summary: '{connection}: {status}'
     title: MI-szolgáltatók
+    use_in_agent: '{provider} ({connection}) használata az ügynökben'
   rail:
     agent: Ügynök

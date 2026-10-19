@@ -17,7 +17,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, new_operation_id
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import (
@@ -31,6 +31,7 @@ from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicationPhase

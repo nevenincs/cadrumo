@@ -607,61 +607,63 @@ desktop:
     zoom_reset: Restablecer el zoom de la documentación
   automation_access:
     cancel: Cancelar
-    cleanup_pending: Revocada. Su clave guardada aún se está eliminando de este equipo.
-    copied: Copiada
-    copy: Copiar referencia
-    copy_failed: No se ha podido copiar. Selecciona la referencia y cópiala tú.
+    cleanup_pending: Eliminada. Cadrumo aún está borrando la clave guardada de este
+      equipo.
+    copied: Copiado
+    copy: Copiar código
+    copy_failed: No se ha podido copiar. Selecciona el código y cópialo tú.
     done: Hecho
-    empty: Todavía no se han emitido claves de acceso para este perfil.
+    empty: Todavía no hay claves de acceso.
     expired_on: Caducó el {date}
     expires_on: Caduca el {date}
-    issue: Emitir una clave
-    issue_lead: Esta clave permite que una aplicación externa lea información del
-      perfil y detalles de las operaciones, y ejecute todas las operaciones disponibles
-      para aplicaciones externas. Puedes permitir por separado que lea los valores
-      fiscales.
-    issue_submit: Emitir clave
-    issued_lead: Usa esta referencia al configurar la aplicación externa. La clave
-      permanece en el almacén seguro de este equipo y nunca se muestra.
-    issued_on: Emitida el {date}
-    issued_once: Se muestra una sola vez. Cuando la cierres, no se podrá volver a
-      mostrar.
-    issued_title: Clave emitida
-    issuing: Emitiendo…
-    key_title: Clave {id}
+    issue: Crear una clave de acceso
+    issue_lead: La aplicación puede leer los datos de tu perfil, ver las acciones
+      que realiza y usar todas las acciones de Cadrumo disponibles para aplicaciones
+      conectadas.
+    issue_submit: Crear clave de acceso
+    issued_lead: Pega este código de conexión en la otra aplicación al configurarla.
+      La clave queda guardada de forma segura en este equipo.
+    issued_once: Solo se muestra una vez. Cuando cierres esto, no podrás volver a
+      verlo.
+    issued_title: Clave de acceso creada
+    issuing: Creando…
+    key_title: Clave de acceso creada el {date}
+    key_title_undated: Clave de acceso
     last_used: 'Último uso: {date}'
-    lead: Las claves de acceso permiten que aplicaciones externas utilicen este perfil.
-      Solo tú puedes emitirlas o revocarlas.
+    lead: Las claves de acceso permiten que otras aplicaciones de IA de este equipo
+      trabajen con este perfil. Solo tú puedes crearlas o eliminarlas.
     never_used: Aún sin usar
-    reference_label: Referencia de credencial
+    reference_label: Código de conexión
     refresh: Actualizar
+    refused_failed: No se ha podido completar. Inténtalo de nuevo.
     refused_not_found: Esa clave ya no está en la lista.
-    refused_not_signed_in: Inicia sesión para gestionar las claves.
-    refused_outcome_unknown: Cadrumo no ha recibido respuesta. Puede que la clave
-      se haya emitido o no; actualiza para comprobarlo.
-    refused_person_act_required: Solo tú puedes gestionar las claves, aquí.
-    refused_profile_locked: Este perfil está bloqueado.
-    revoke: Revocar
-    revoke_confirm: ¿Revocas esta clave? Las aplicaciones que la utilicen perderán
-      el acceso de inmediato. No se puede deshacer.
-    revoke_confirm_action: Revocar clave
-    revoking: Revocando…
-    scope_all_operations: Puede ejecutar todas las operaciones disponibles para aplicaciones
-      externas
-    scope_no_tax_values: No lee valores fiscales
-    scope_operations_seen: Ve las operaciones que ejecuta
-    scope_profile_values: Lee los valores del perfil
-    scope_some_operations: Ejecuta solo algunas operaciones
-    scope_tax_values: Lee valores fiscales
+    refused_not_signed_in: Inicia sesión para cambiar esta configuración.
+    refused_outcome_unknown: Cadrumo no ha podido confirmar si se ha creado la clave.
+      Actualiza para comprobarlo.
+    refused_person_act_required: Solo tú puedes cambiar esta configuración, desde
+      esta ventana.
+    refused_profile_locked: Desbloquea tu perfil para cambiar esta configuración.
+    revoke: Eliminar
+    revoke_confirm: ¿Eliminas esta clave? Las aplicaciones que la usen perderán el
+      acceso de inmediato. No se puede deshacer.
+    revoke_confirm_action: Eliminar clave
+    revoking: Eliminando…
+    scope_all_operations: Puede usar todas las acciones de Cadrumo disponibles para
+      aplicaciones conectadas
+    scope_no_tax_values: No lee importes fiscales
+    scope_operations_seen: Ve las acciones que realiza
+    scope_profile_values: Lee los datos del perfil
+    scope_some_operations: Solo puede usar algunas acciones
+    scope_tax_values: Lee importes fiscales
     standing_active: Activa
     standing_expired: Caducada
     standing_pending: Pendiente de aprobación
-    standing_revoked: Revocada
+    standing_revoked: Eliminada
     standing_suspended: En pausa
-    tax_values: Permitirle también leer valores fiscales
-    tax_values_note: Incluye importes fiscales calculados y datos de las declaraciones.
-      Déjalo desactivado para que la aplicación no pueda leerlos.
-    title: Claves de acceso para aplicaciones externas
+    tax_values: Permitirle también leer importes fiscales
+    tax_values_note: Incluye los impuestos calculados y los datos de las declaraciones.
+      Déjalo desactivado para que la aplicación no los vea.
+    title: Claves de acceso para otras aplicaciones de IA
   calendar:
     aeat:
       accepted: Aceptada
@@ -719,6 +721,21 @@ desktop:
     show: Mostrar la documentación
     unavailable: No se ha podido abrir la documentación. Todo lo demás funciona con
       normalidad.
+  google:
+    checking: Comprobando el acceso a Google…
+    not_in_this_build: Esta versión de Cadrumo no puede iniciar sesión en Google.
+    palette_sign_in: Autenticarse con Google
+    sign_in: Iniciar sesión
+    sign_in_label: Iniciar sesión en Google
+    sign_out: Cerrar sesión
+    sign_out_label: Cerrar sesión de Google
+    signed_in: Sesión iniciada como {email}.
+    signed_in_plain: Sesión iniciada.
+    signed_out: No has iniciado sesión.
+    signing_out: Cerrando la sesión de Google…
+    title: Cuenta de Google
+    unknown: Ahora no se ha podido leer el acceso a Google.
+    waiting: Termina de iniciar sesión en Google en tu navegador.
   host:
     failed: Esta parte no se ha podido cargar.
     unavailable: Esta parte necesita la aplicación de escritorio.
@@ -839,6 +856,100 @@ desktop:
     terminals: Terminales
     title: Ajustes
     window: Ventana
+  setup:
+    advisory_incomplete: La configuración de Cadrumo no está completa. Haz clic aquí
+      para completarla.
+    advisory_running: La configuración de Cadrumo está en curso. Haz clic aquí para
+      ver cómo va.
+    approve: Descargar y configurar
+    approve_at_least: Descargar al menos {size} y configurar
+    approve_size: Descargar {size} y configurar
+    cancel: Cancelar la configuración
+    cancelling: Se detendrá tras el paso actual…
+    checking: Comprobando los componentes…
+    close: Cerrar
+    copy_details: Copiar detalles
+    details: Detalles
+    hide: Ocultar
+    lead: Cadrumo necesita estos componentes para funcionar.
+    lead_review: Revisa qué se va a descargar y dónde se guarda, y después apruébalo.
+    lead_running: Puedes cerrar esto; la configuración sigue y Ajustes muestra cómo
+      va.
+    not_now: Ahora no
+    open: Abrir la configuración
+    outcome_cancelled: Se ha cancelado la configuración. Lo ya descargado se conserva.
+    outcome_completed: Todo está configurado.
+    outcome_failed: La configuración no ha terminado.
+    outcome_interrupted: La configuración se detuvo antes de terminar. Reanúdala para
+      seguir donde se quedó.
+    outcome_not_enough_space: No había suficiente espacio libre, así que no se ha
+      descargado nada.
+    outcome_nothing_to_do: Todo estaba ya configurado.
+    outcome_plan_changed: Lo necesario cambió antes de empezar. Revisa el nuevo plan
+      y apruébalo.
+    outcome_rejected: No se ha descargado nada.
+    overall_progress: Progreso de la configuración
+    palette_browser: Configurar el navegador
+    palette_cancel: Cancelar la configuración
+    palette_check: Comprobar los componentes
+    palette_local_ai: Configurar la IA local
+    palette_open: Configurar los componentes
+    palette_retry: Reintentar la configuración
+    plan_destination: 'Se guarda en: {folder}'
+    plan_from: 'Desde: {hosts}'
+    plan_nothing: No hay nada que descargar.
+    plan_outside_program: Esto instala un programa aparte en este ordenador, que puede
+      pedirte permiso.
+    plan_shared: Se descarga junto con {name}.
+    plan_size: Se descargarán {size}.
+    plan_size_at_least: Se descargarán al menos {size}.
+    planning: Calculando qué hay que descargar…
+    progress_bytes: '{done} de {total}'
+    progress_item: '{index} de {count}: {name} — {step}'
+    progress_label: Progreso de {name}
+    rail_busy: Configurando los componentes
+    rail_incomplete: La configuración no ha terminado
+    refused_busy: Ya hay una configuración en curso en otro sitio. Espera a que termine.
+    refused_not_cancellable: Ahora no se puede detener la configuración. Terminará
+      en breve.
+    refused_not_pending: Ese plan ya no espera respuesta.
+    refused_not_signed_in: Primero inicia sesión en tu perfil.
+    refused_other: No se ha podido contactar con la configuración. Inténtalo de nuevo
+      en un momento.
+    refused_plan_changed: Lo necesario ha cambiado. Revisa el nuevo plan y después
+      apruébalo.
+    refused_unavailable: Los servicios de Cadrumo no responden. Inténtalo de nuevo
+      en un momento.
+    reject: No descargar
+    result_already: Ya estaba configurado
+    result_done: Configurado
+    result_not_finished: No ha terminado
+    resume: Reanudar
+    show_new_plan: Ver el nuevo plan
+    size_unknown: Tamaño conocido al empezar
+    space: Necesita {required} de espacio libre; hay {free} libres.
+    space_short: No hay suficiente espacio libre. Libera algo y vuelve a intentarlo.
+    space_unread: Necesita {required} de espacio libre; no se ha podido leer el espacio
+      libre.
+    start: Configurar
+    step_checking: Comprobando
+    step_connecting: Conectando
+    step_downloading: Descargando
+    step_installing: Instalando
+    step_tidying: Ordenando
+    step_waiting: Esperando para empezar
+    summary_complete: Todo lo que Cadrumo necesita está configurado.
+    summary_hardware: Este ordenador no puede ejecutar todo lo que Cadrumo necesita;
+      el resto está configurado.
+    summary_incomplete: Parte de lo que Cadrumo necesita aún no está configurado.
+    summary_running: La configuración está en curso.
+    title: Configurar Cadrumo
+    toast_cancelled: Configuración cancelada
+    toast_done: Los componentes están configurados
+    toast_not_finished: La configuración no ha terminado
+    try_again: Reintentar
+    unavailable: Ahora no se pueden comprobar los componentes. Inténtalo de nuevo
+      en un momento.
   signin:
     checking: Comprobando tu sesión…
     choose_profile: Elige un perfil
@@ -1289,22 +1400,17 @@ overview:
     del Impuesto sobre Sociedades (modelo 200/202); consúltelo directamente en la
     sede electrónica de la AEAT.
 provisioning:
-  condition:
-    role_model_fit_for_role: '%{model} respondió al documento de prueba, pero su respuesta
-      no sirve para leer una factura. Elige otro modelo de texto.'
-    role_model_fitness_verified: 'No hay ninguna comprobación de aptitud registrada
-      para los pesos actuales de %{model}. Esto no significa que el modelo no sea
-      apto: ejecuta `aeat config provision verify` para comprobarlo.'
-    role_model_fitness_within_timeout: '%{model} no terminó su respuesta de prueba
-      antes de agotarse el tiempo límite. Puede ser demasiado lento para este equipo;
-      elige un modelo más pequeño o aumenta el tiempo de espera del LLM y vuelve a
-      ejecutar `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El modelo %{model} está sujeto a la %{licence}, que
         no permite el uso comercial. Lo has indicado tú de forma explícita, así que
         Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia aparte
         del editor.
+  role:
+    column_role_mapping: para columnas de tablas
+    supply_nature_proposal: para el tipo de venta o compra
+    text_extraction: para el texto de documentos
+    vision_transcription: para páginas escaneadas
 review:
   adapters:
     errors:
@@ -2208,6 +2314,7 @@ tui:
     operations: Operaciones
     profile: Perfil
     reference: Referencia
+    setup: Componentes
     withholding: Retenciones
   home:
     account_fallback: Cuenta
@@ -3977,6 +4084,7 @@ tui:
       operations: Abrir Operaciones
       profile: Abrir Perfil
       reference: Abrir Referencia
+      setup: Abrir Componentes
       unknown: Abrir área
       withholding: Abrir Retenciones
     destination_help:
@@ -3991,6 +4099,7 @@ tui:
         rellenarlas y ejecutarlas
       profile: Los datos de este perfil y los orígenes que los completan
       reference: Modelos, casillas, categorías, portales y métodos de acceso
+      setup: El navegador y la IA local
       withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
     refusal:
       not_composed: Todavía no se han podido leer todas las áreas.
@@ -4044,3 +4153,48 @@ tui:
         reconciliation_resolved: Resuelta
         revision_current: Vigente
         revision_superseded: Sustituida
+  setup:
+    check_again: Comprobar de nuevo
+    checking: Comprobando…
+    column:
+      action: Acción
+      item: Componente
+      state: Estado
+    complete: Cadrumo está preparado.
+    hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
+    hint: Intro ejecuta la acción de la fila elegida. Al preparar, se muestra el plan
+      y se te pregunta antes de descargar nada.
+    incomplete: Algunos componentes aún no están listos.
+    intro: 'Lo que Cadrumo necesita en este ordenador: el navegador para la web de
+      la Agencia Tributaria y la IA local. Elige una fila para ejecutar su acción.'
+    outcome:
+      cancelled: Has cancelado la preparación.
+      completed: La preparación ha terminado.
+      interrupted: La preparación se interrumpió antes de terminar. Elige Reanudar
+        para continuar.
+      not_enough_space: No hay espacio libre suficiente en el disco, así que no se
+        ha descargado nada.
+      nothing_to_do: Todo está ya preparado.
+      plan_changed: El plan cambió después de que lo aprobaras, así que no se ha descargado
+        nada. Empieza de nuevo para ver el plan nuevo.
+      rejected: No se ha descargado nada.
+    plan:
+      destination: '  Se guarda en %{path}'
+      entry: '%{name}: %{size} desde %{hosts}'
+      heading: 'Cadrumo va a preparar:'
+      installs_program: '  Esto instala un programa en este ordenador. Su instalador
+        puede pedirte permiso.'
+      part: '    %{name}: %{size}'
+      shared: '  Usa la misma descarga que %{name}.'
+      size_unknown: tamaño aún desconocido
+      total: 'Descarga total: %{size}.'
+      total_unknown: 'Descarga total: al menos %{size}. Algunos tamaños solo se conocen
+        al empezar la descarga.'
+    set_up_all: Preparar todo
+    size:
+      gigabytes: '%{value} GB'
+      megabytes: '%{value} MB'
+    title: Componentes
+    unavailable: No se ha podido contactar con el servicio en segundo plano de Cadrumo,
+      así que ahora no se pueden comprobar ni preparar los componentes.
+    working: Preparando el plan…

@@ -22,6 +22,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -46,7 +49,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1, OperationReconciliationPolicy
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .censal_access import bind_whole_profile_censal_access
 from .censal_file_import_operation import (

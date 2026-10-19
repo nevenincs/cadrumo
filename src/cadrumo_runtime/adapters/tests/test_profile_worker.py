@@ -24,15 +24,8 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId, OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAllowed,
-    AccessDenialCode,
-    AccessSession,
-    SessionKind,
-    SessionState,
-)
+from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind, SessionState
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
@@ -44,6 +37,8 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
@@ -290,8 +285,10 @@ def test_password_candidate_does_not_replace_agents_or_select_another_profile(pr
         worker.retire(human.session_id)
         assert worker.status().sessions == (api.session_id,)
         wrong = bytearray(b"wrong-synthetic-worker-input")
-        with pytest.raises(AutomationCustodyError), worker.authenticate_human(wrong):
+        with pytest.raises(ProfileAccessRefusedError) as rejected, worker.authenticate_human(wrong):
             pytest.fail("incorrect password must not create a candidate")
+        # A wrong password is the sign-in refusal set's own reason, not a generic custody code.
+        assert rejected.value.sign_in is not None and rejected.value.sign_in.reason == "credential_rejected"
         assert not any(wrong)
         assert worker.status().sessions == (api.session_id,)
         assert read_pointer(root) == selected

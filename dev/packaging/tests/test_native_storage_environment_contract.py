@@ -90,7 +90,6 @@ def test_native_contract_names_the_declared_locations_and_no_allowlist(tmp_path:
     expected = sorted({declaration.root["variable"], *declaration.groups["locations"]})
     assert contract["application_environment"]["location_names"] == expected
     assert not set(expected) & _DEVELOPMENT_VARIABLES
-    assert "CADRUMO_STRICT_SECURITY" not in expected
     for retired in ("PRODUCT_ENV_ALLOWLIST", "PACKAGE_ENV_ALLOWLIST", "RESERVED_ENV"):
         assert f"pub const {retired}:" not in generated
     assert "storage_environment_allowlist" not in contract

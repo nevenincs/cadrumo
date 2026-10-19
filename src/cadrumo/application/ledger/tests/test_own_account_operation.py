@@ -19,6 +19,8 @@ from uuid import UUID
 import pydantic
 import pytest
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -38,7 +40,6 @@ from ...operations.access_resolution import (
 )
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability
 from ..own_account_operation import (
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,

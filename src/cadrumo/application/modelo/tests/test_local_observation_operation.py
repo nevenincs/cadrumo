@@ -10,6 +10,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ...calculations.observations_repository import ObservationSourceKind
 from ...operations.access_resolution import OperationAccessContext
@@ -17,7 +20,6 @@ from ...operations.capabilities import OperationRequestStoragePolicy, OperationS
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..calculation_action_ports import CalculationActionPortsFactory
 from ..filing_record_view_operation import (

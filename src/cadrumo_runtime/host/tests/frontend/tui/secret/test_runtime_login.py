@@ -16,23 +16,18 @@ from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Input, Select
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 

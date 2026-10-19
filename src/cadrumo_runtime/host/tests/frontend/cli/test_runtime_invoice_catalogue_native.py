@@ -22,12 +22,6 @@ from cadrumo.application.invoices.catalogue_read_operation import (
 )
 from cadrumo.application.invoices.catalogue_remove_operation import INVOICE_REMOVE_OPERATION_DEFINITION_ID
 from cadrumo.application.invoices.catalogue_update_operation import INVOICE_UPDATE_OPERATION_DEFINITION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
@@ -38,6 +32,12 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 pytestmark = [

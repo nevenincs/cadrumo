@@ -34,14 +34,14 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
 )
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 
 from ...contracts.operation_access import (
     OperationAcknowledged,

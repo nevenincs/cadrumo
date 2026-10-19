@@ -15,7 +15,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 pytestmark = [

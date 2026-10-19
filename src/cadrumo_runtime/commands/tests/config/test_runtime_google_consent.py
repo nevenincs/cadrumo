@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import TypedDict, cast
+from typing import TypedDict, cast, override
 from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.outbound.google.errors import GoogleAuthNonInteractiveError
+from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -47,6 +48,8 @@ from cadrumo.application.user_profile.google_configuration_operation_contracts i
     GoogleLoginRequest,
 )
 from cadrumo.application.user_profile.google_configuration_operation_ports import GoogleConfigurationOperationPorts
+from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -56,6 +59,8 @@ from cadrumo.core.operations import (
 from cadrumo_client.commands import google_consent_review
 from cadrumo_client.commands import runtime_google_consent as bridge
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.google_configuration_receipt_correlation import correlate_google_completion
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
@@ -114,6 +119,10 @@ class _Client:
     def contract(self, definition_id: str, *, deadline: float):
         assert definition_id == GOOGLE_LOGIN_OPERATION_DEFINITION_ID and deadline > 0
         return self.public_contract
+
+    def subscribe_operation_changes(self, receive: Callable[[], None]) -> Callable[[], None]:
+        # Every reply is settled when it is sent, so the fixture never cues a re-observation.
+        return lambda: None
 
     def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
         assert deadline > 0 and request.profile_id == _PROFILE and request.session_id == _SESSION
@@ -323,12 +332,13 @@ def test_noninteractive_terminal_preserves_canonical_verdict_and_rejects_exact_p
 
     monkeypatch.setattr(sys, "stdin", NonInteractive())
     client = _Client()
-    with pytest.raises(GoogleAuthNonInteractiveError) as caught:
+    with pytest.raises(CadrumoError) as caught:
         bridge.login_google_with_runtime(_as_runtime(client), GoogleLoginRequest(profile_id=_PROFILE))
-    assert caught.value.terminal_precondition_verdict is not None
-    assert (
-        caught.value.terminal_precondition_verdict.failed_condition_id == "google.auth.interactive_terminal.available"
-    )
+    # The refusal is the registered non-interactive one, by its public code.
+    assert get_registered_error_code(caught.value).code == "REFUSED_GOOGLE_NON_INTERACTIVE"
+    verdict = nested_terminal_precondition_verdict(caught.value)
+    assert verdict is not None
+    assert verdict.failed_condition_id == "google.auth.interactive_terminal.available"
     assert client.rejected and not client.applied
     assert caught.value.context is not None and caught.value.context["operation_id"] == _OPERATION
 
@@ -339,3 +349,137 @@ def test_substituted_review_or_changed_session_never_gets_human_apply(kwargs: di
     with pytest.raises(CliRefusedBoundaryError):
         bridge.login_google_with_runtime(_as_runtime(client), GoogleLoginRequest(profile_id=_PROFILE))
     assert not client.applied and not client.rejected
+
+
+_PERSON_FRONTENDS = (
+    OperationFrontendProjection.CLI,
+    OperationFrontendProjection.TUI,
+    OperationFrontendProjection.DESKTOP,
+)
+# ``external-client`` is every delegated client, the MCP harness among them;
+# ``installed-service`` is the agent service and automation.
+_NON_PERSON_FRONTENDS = (
+    OperationFrontendProjection.EXTERNAL_CLIENT,
+    OperationFrontendProjection.INSTALLED_SERVICE,
+)
+
+
+class _FrontendClient(_Client):
+    """The same closed wire fixture, bound to a chosen frontend that may change at one step."""
+
+    def __init__(
+        self,
+        frontend: OperationFrontendProjection,
+        *,
+        after_submit: OperationFrontendProjection | None = None,
+        at_result: OperationFrontendProjection | None = None,
+    ) -> None:
+        super().__init__()
+        self.frontend = frontend
+        self.after_submit = after_submit
+        self.at_result = at_result
+
+    @override
+    def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
+        reply = super().operation(request, deadline=deadline)
+        if isinstance(request, OperationSubmit) and self.after_submit is not None:
+            self.frontend = self.after_submit
+        return reply
+
+    @override
+    def read_result_document(self, request: OperationResultProjectionRequestV1, *, timeout: float):
+        document = super().read_result_document(request, timeout=timeout)
+        if self.at_result is not None:
+            self.frontend = self.at_result
+        return document
+
+
+def test_the_frontend_sets_partition_every_frontend() -> None:
+    assert set(_PERSON_FRONTENDS) | set(_NON_PERSON_FRONTENDS) == set(OperationFrontendProjection)
+    assert not set(_PERSON_FRONTENDS) & set(_NON_PERSON_FRONTENDS)
+
+
+@pytest.mark.parametrize("frontend", _PERSON_FRONTENDS)
+def test_every_person_frontend_signs_in_through_the_one_consent_exchange(
+    frontend: OperationFrontendProjection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(google_consent_review, "require_interactive_terminal", lambda: None)
+    client = _FrontendClient(frontend)
+    request = GoogleLoginRequest(profile_id=_PROFILE)
+
+    completed = bridge.login_google_with_runtime(_as_runtime(client), request)
+    correlate_google_completion(
+        _as_runtime(client),
+        request,
+        completed,
+        definition_id=GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
+        expected_projection_type=GoogleLoginProjection,
+    )
+
+    assert client.applied and not client.rejected
+    assert isinstance(completed.projection.result, GoogleLoginProjection)
+
+
+@pytest.mark.parametrize("frontend", _NON_PERSON_FRONTENDS)
+def test_a_non_person_frontend_is_refused_before_anything_is_submitted(frontend: OperationFrontendProjection) -> None:
+    client = _FrontendClient(frontend)
+
+    with pytest.raises(RefusalError) as refused:
+        bridge.login_google_with_runtime(_as_runtime(client), GoogleLoginRequest(profile_id=_PROFILE))
+
+    assert type(refused.value) is RefusalError and refused.value.reason is RefusalCode.INVALID_FRAME
+    assert client.requests == [] and not client.applied
+
+
+@pytest.mark.parametrize("frontend", _NON_PERSON_FRONTENDS)
+def test_a_connection_that_stops_being_a_persons_during_an_exchange_is_closed(
+    frontend: OperationFrontendProjection,
+) -> None:
+    """The exchange checks the connection again once the reply arrives, before the reply is used."""
+    client = _FrontendClient(OperationFrontendProjection.DESKTOP, after_submit=frontend)
+
+    with pytest.raises(RefusalError) as refused:
+        bridge.login_google_with_runtime(_as_runtime(client), GoogleLoginRequest(profile_id=_PROFILE))
+
+    assert type(refused.value) is RefusalError and refused.value.reason is RefusalCode.CONNECTION_CLOSED
+    assert [type(item) for item in client.requests] == [OperationSubmit]
+    assert not client.applied
+
+
+@pytest.mark.parametrize("frontend", _NON_PERSON_FRONTENDS)
+def test_a_result_read_by_a_non_person_connection_is_an_invalid_frame(
+    frontend: OperationFrontendProjection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(google_consent_review, "require_interactive_terminal", lambda: None)
+    client = _FrontendClient(OperationFrontendProjection.TUI, at_result=frontend)
+
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        bridge.login_google_with_runtime(_as_runtime(client), GoogleLoginRequest(profile_id=_PROFILE))
+
+    assert refused.value.context is not None
+    assert refused.value.context["reason"] == RefusalCode.INVALID_FRAME.value
+    assert refused.value.context["operation_id"] == _OPERATION
+
+
+@pytest.mark.parametrize("frontend", _NON_PERSON_FRONTENDS)
+def test_a_completion_correlated_on_a_non_person_connection_is_an_invalid_frame(
+    frontend: OperationFrontendProjection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(google_consent_review, "require_interactive_terminal", lambda: None)
+    client = _FrontendClient(OperationFrontendProjection.DESKTOP)
+    request = GoogleLoginRequest(profile_id=_PROFILE)
+    completed = bridge.login_google_with_runtime(_as_runtime(client), request)
+    client.frontend = frontend
+
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        correlate_google_completion(
+            _as_runtime(client),
+            request,
+            completed,
+            definition_id=GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
+            expected_projection_type=GoogleLoginProjection,
+        )
+
+    assert refused.value.context is not None
+    assert refused.value.context["reason"] == RefusalCode.INVALID_FRAME.value
+    assert refused.value.context["operation_id"] == _OPERATION

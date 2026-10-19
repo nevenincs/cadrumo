@@ -17,13 +17,13 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
+from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import deadline_after, exchange_deadline, remaining_budget
 from ..contracts.operation_access import (

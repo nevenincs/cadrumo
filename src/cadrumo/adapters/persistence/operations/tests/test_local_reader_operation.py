@@ -1,9 +1,9 @@
-"""The supervised local-reader operation: every action, the one-shot setup and request coherence.
+"""The supervised local-reader operation: start, load, verify, remove and request coherence.
 
 Every run goes through the real registry, supervisor, journal and encrypted
 operand store. The model runtime is a real loopback endpoint speaking the
-Ollama wire shapes; only the process spawner, the installer and the text
-fitness probe are injected ports, as production composition injects them.
+Ollama wire shapes; only the process spawner and the text fitness probe are
+injected ports, as production composition injects them.
 """
 
 from __future__ import annotations
@@ -19,25 +19,20 @@ from threading import Thread
 import pytest
 from pydantic import ValidationError
 
+from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
+
 from .....application.local_reader import role_model_targets
 from .....application.local_reader_contracts import (
-    LOCAL_READER_OPERATION_DEFINITION_ID,
     LocalReaderProvisionAction,
     LocalReaderProvisionOutcome,
-    LocalReaderProvisionPublicResultV2,
+    LocalReaderProvisionPublicResultV3,
     LocalReaderProvisionRequest,
-    LocalReaderSetupStep,
-    LocalReaderSetupStepState,
-    build_local_reader_install_request,
     build_local_reader_load_request,
-    build_local_reader_pull_request,
     build_local_reader_remove_request,
-    build_local_reader_setup_request,
     build_local_reader_start_request,
     build_local_reader_verify_request,
     local_reader_fact_mapping,
     local_reader_public_verdict,
-    local_reader_setup_phase,
 )
 from .....application.local_reader_operation import (
     LOCAL_READER_REQUEST_SCHEMA_VERSION,
@@ -52,7 +47,6 @@ from .....core.external_constants import OutputLanguage
 from .....core.model_catalogue import ModelRole, candidates_for_role
 from .....core.operations import OperationEffect
 from .local_reader_operation_support import (
-    MAPPING_MODEL,
     TEXT_MODEL,
     VISION_MODEL,
     LoopbackModelRuntime,
@@ -75,16 +69,8 @@ def _target_models() -> set[str]:
 
 def _run(
     tmp_path: Path, ports: ProvisioningPorts, request: OperationRequest[LocalReaderProvisionRequest]
-) -> SupervisedRun[LocalReaderProvisionPublicResultV2]:
-    return run_supervised(tmp_path, ports, request, LocalReaderProvisionPublicResultV2)
-
-
-def _states(result: LocalReaderProvisionPublicResultV2) -> dict[LocalReaderSetupStep, LocalReaderSetupStepState]:
-    return {step.step: step.state for step in result.steps}
-
-
-def _pulls() -> list[str]:
-    return [str(body["model"]) for path, body in LoopbackModelRuntime.requests if path == "/api/pull"]
+) -> SupervisedRun[LocalReaderProvisionPublicResultV3]:
+    return run_supervised(tmp_path, ports, request, LocalReaderProvisionPublicResultV3)
 
 
 def test_load_brings_a_pulled_model_into_memory_and_reports_it_resident(tmp_path: Path) -> None:
@@ -132,49 +118,17 @@ def test_load_refuses_a_model_that_was_never_pulled_instead_of_fetching_it(tmp_p
     assert run.effect is OperationEffect.NONE
 
 
-def test_pull_fetches_every_roles_model_once_by_default(tmp_path: Path) -> None:
+def test_a_load_the_host_cannot_admit_sends_nothing_and_carries_its_measured_verdict(tmp_path: Path) -> None:
     ports = ProvisioningPorts()
-    with loopback_model_runtime(installed=set(), residents=set()):
-        models = _target_models()
-        run = _run(tmp_path, ports, build_local_reader_pull_request())
-        pulls = _pulls()
-
-    assert run.result.action is LocalReaderProvisionAction.PULL
-    assert run.result.succeeded is True
-    assert sorted(pulls) == sorted(models), "each distinct model is fetched exactly once"
-    assert {role for item in run.result.models for role in item.roles} == set(ModelRole)
-    assert all(item.contention is None and item.bytes_fetched == 512 for item in run.result.models), (
-        "the runtime's last progress report is the fetched figure"
-    )
-    assert run.effect is OperationEffect.UPDATED
-
-
-def test_pull_of_a_named_model_fetches_that_model_for_the_named_role(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
-    with loopback_model_runtime(installed=set(), residents=set()):
-        run = _run(tmp_path, ports, build_local_reader_pull_request(ModelRole.TEXT_EXTRACTION, VISION_MODEL))
-        pulls = _pulls()
-
-    (item,) = run.result.models
-    assert item.model == VISION_MODEL
-    assert item.roles == (ModelRole.TEXT_EXTRACTION,)
-    assert item.succeeded is True
-    assert pulls == [VISION_MODEL]
-
-
-def test_a_pull_the_host_cannot_admit_is_refused_before_any_bytes_move_with_its_measured_verdict(
-    tmp_path: Path,
-) -> None:
-    ports = ProvisioningPorts()
-    with loopback_model_runtime(installed=set(), residents=set(), required_headroom_bytes=_BEYOND_ANY_HOST_BYTES):
-        # Naming the model is what reaches admission: a role resolved by
-        # selection is already refused there for the same headroom.
-        run = _run(tmp_path, ports, build_local_reader_pull_request(ModelRole.TEXT_EXTRACTION, TEXT_MODEL))
-        pulls = _pulls()
+    with loopback_model_runtime(
+        installed={TEXT_MODEL}, residents=set(), required_headroom_bytes=_BEYOND_ANY_HOST_BYTES
+    ):
+        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION, TEXT_MODEL))
+        loads = [body for path, body in LoopbackModelRuntime.requests if path == "/api/generate"]
 
     (item,) = run.result.models
     assert run.result.succeeded is False
-    assert pulls == [], "an inadmissible load is never fetched"
+    assert loads == [], "an inadmissible load is never sent"
     contention = item.contention
     assert contention is not None
     assert contention.model == TEXT_MODEL
@@ -312,27 +266,6 @@ def test_start_is_refused_when_the_owning_process_started_nothing(
     assert run.effect is OperationEffect.NONE
 
 
-def test_install_without_consent_never_runs_the_installer(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
-    with loopback_model_runtime(installed=set(), residents=set()):
-        run = _run(tmp_path, ports, build_local_reader_install_request(consent=False))
-
-    install = run.result.install
-    assert install is not None
-    assert install.consented is False
-    assert install.installer_exit_code is None
-    assert ports.installers == []
-    assert run.effect is OperationEffect.NONE
-    if install.installed:
-        # This host already has the runtime; the action reports it and runs nothing.
-        assert install.already_installed is True and run.result.succeeded is True
-    else:
-        assert run.result.failed_condition_id in {
-            ProvisioningPreconditionCondition.RUNTIME_INSTALL_CONSENTED,
-            ProvisioningPreconditionCondition.RUNTIME_INSTALLER_AVAILABLE,
-        }
-
-
 def test_remove_deletes_the_roles_model_and_reports_the_bytes_freed(tmp_path: Path) -> None:
     ports = ProvisioningPorts()
     with loopback_model_runtime(installed={TEXT_MODEL, VISION_MODEL}, residents=set()):
@@ -385,82 +318,14 @@ def test_a_licence_advisory_is_written_in_the_language_the_request_names(tmp_pat
     assert advisories[OutputLanguage.EN] != advisories[OutputLanguage.HU]
 
 
-def test_setup_pulls_loads_and_verifies_every_role_in_order(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
-    with loopback_model_runtime(installed=set(), residents=set()):
-        models = _target_models()
-        run = _run(tmp_path, ports, build_local_reader_setup_request(consent=False))
-        installed_after = set(LoopbackModelRuntime.installed)
-        residents_after = set(LoopbackModelRuntime.residents)
-
-    assert run.result.succeeded is True, run.result
-    assert run.result.stopped_step is None
-    assert _states(run.result) == {
-        LocalReaderSetupStep.INSTALL: LocalReaderSetupStepState.UNCHANGED,
-        LocalReaderSetupStep.START: LocalReaderSetupStepState.UNCHANGED,
-        LocalReaderSetupStep.PULL: LocalReaderSetupStepState.CHANGED,
-        LocalReaderSetupStep.LOAD: LocalReaderSetupStepState.CHANGED,
-        LocalReaderSetupStep.VERIFY: LocalReaderSetupStepState.UNCHANGED,
-    }
-    assert [step.step for step in run.result.steps] == list(LocalReaderSetupStep)
-    assert installed_after == models
-    assert residents_after == models
-    step_phases = tuple(phase for phase in run.phases if ".step." in phase)
-    assert step_phases == tuple(local_reader_setup_phase(step) for step in LocalReaderSetupStep)
-    assert run.effect is OperationEffect.UPDATED
-    assert ports.spawned == []
-    assert ports.installers == []
-    assert TEXT_MODEL in ports.probed
-
-
-def test_setup_over_a_ready_reader_redoes_nothing(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
-    with override_settings(
-        cadrumo_llm_ollama_vision_model=VISION_MODEL,
-        cadrumo_llm_ollama_text_model=TEXT_MODEL,
-        cadrumo_llm_ollama_mapping_model=MAPPING_MODEL,
-    ):
-        models = _target_models()
-    with loopback_model_runtime(installed=models, residents=models):
-        run = _run(tmp_path, ports, build_local_reader_setup_request(consent=False))
-        pulls = _pulls()
-        loads = [
-            body for path, body in LoopbackModelRuntime.requests if path == "/api/generate" and "prompt" not in body
-        ]
-
-    assert run.result.succeeded is True
-    assert set(_states(run.result).values()) == {LocalReaderSetupStepState.UNCHANGED}
-    assert pulls == []
-    assert loads == []
-    assert run.effect is OperationEffect.NONE
-    assert all(item.already_satisfied for item in run.result.models if item.step is LocalReaderSetupStep.PULL)
-
-
-def test_setup_stops_at_the_failing_step_and_names_why(tmp_path: Path) -> None:
-    ports = ProvisioningPorts()
-    with loopback_model_runtime(installed=set(), residents=set(), pull_fails=True):
-        run = _run(tmp_path, ports, build_local_reader_setup_request(consent=False))
-        loads = [path for path, body in LoopbackModelRuntime.requests if path == "/api/generate"]
-
-    assert run.result.succeeded is False
-    assert run.result.stopped_step is LocalReaderSetupStep.PULL
-    states = _states(run.result)
-    assert states[LocalReaderSetupStep.PULL] is LocalReaderSetupStepState.FAILED
-    assert states[LocalReaderSetupStep.LOAD] is LocalReaderSetupStepState.NOT_REACHED
-    assert states[LocalReaderSetupStep.VERIFY] is LocalReaderSetupStepState.NOT_REACHED
-    failed = next(step for step in run.result.steps if step.step is LocalReaderSetupStep.PULL)
-    assert failed.failed_condition_id == ProvisioningPreconditionCondition.MODEL_PULL_SUCCEEDED
-    assert run.result.failed_condition_id == ProvisioningPreconditionCondition.MODEL_PULL_SUCCEEDED
-    assert loads == [], "no step after the failure may run"
-    assert local_reader_setup_phase(LocalReaderSetupStep.LOAD) not in run.phases
-
-
 @pytest.mark.parametrize(
     ("values", "message"),
     [
-        ({"action": LocalReaderProvisionAction.PULL, "consent": True}, "consent"),
         ({"action": LocalReaderProvisionAction.START, "model": "qwen3:1.7b"}, "explicit model"),
-        ({"action": LocalReaderProvisionAction.SETUP, "model": "qwen3:1.7b"}, "explicit model"),
+        ({"action": LocalReaderProvisionAction.LOAD, "consent": True}, "consent"),
+        ({"action": "pull"}, "action"),
+        ({"action": "install"}, "action"),
+        ({"action": "setup"}, "action"),
         ({"action": LocalReaderProvisionAction.REMOVE}, "role or a model"),
         ({"action": LocalReaderProvisionAction.START, "role": ModelRole.TEXT_EXTRACTION}, "not on a role"),
     ],
@@ -473,7 +338,6 @@ def test_incoherent_requests_are_refused_at_the_boundary(values: dict[str, objec
 @pytest.mark.parametrize(
     "action",
     [
-        LocalReaderProvisionAction.PULL,
         LocalReaderProvisionAction.LOAD,
         LocalReaderProvisionAction.VERIFY,
         LocalReaderProvisionAction.REMOVE,
@@ -489,42 +353,37 @@ def test_the_published_schemas_are_immutable_versioned_and_register() -> None:
     registry = provisioning_registry(ProvisioningPorts())
     contract = registry.lookup_public_contract(LOCAL_READER_OPERATION_DEFINITION_ID)
 
-    assert contract.request_schema.schema_version == LOCAL_READER_REQUEST_SCHEMA_VERSION == 2
+    assert contract.request_schema.schema_version == LOCAL_READER_REQUEST_SCHEMA_VERSION == 3
     assert contract.result_schema is not None
-    assert contract.result_schema.schema_version == LOCAL_READER_RESULT_SCHEMA_VERSION == 2
-    schema = json.dumps(LocalReaderProvisionPublicResultV2.model_json_schema(mode="validation"))
+    assert contract.result_schema.schema_version == LOCAL_READER_RESULT_SCHEMA_VERSION == 3
+    schema = json.dumps(LocalReaderProvisionPublicResultV3.model_json_schema(mode="validation"))
     assert '"additionalProperties": {' not in schema, "a published mapping would be mutable"
 
 
-def _essence(result: LocalReaderProvisionPublicResultV2 | LocalReaderProvisionOutcome) -> tuple[object, ...]:
+def _essence(result: LocalReaderProvisionPublicResultV3 | LocalReaderProvisionOutcome) -> tuple[object, ...]:
     return (
         result.action,
         result.succeeded,
-        result.stopped_step,
         result.failed_condition_id,
-        tuple((step.step, step.state, step.failed_condition_id) for step in result.steps),
         tuple(
-            (item.step, item.model, item.roles, item.succeeded, item.already_satisfied, item.failed_condition_id)
+            (item.model, item.roles, item.succeeded, item.already_satisfied, item.failed_condition_id)
             for item in result.models
         ),
     )
 
 
-@pytest.mark.parametrize("pull_fails", [False, True])
-def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_path: Path, pull_fails: bool) -> None:
-    request = build_local_reader_setup_request(consent=False)
-    with loopback_model_runtime(installed=set(), residents=set(), pull_fails=pull_fails):
+@pytest.mark.parametrize("installed", [False, True])
+def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_path: Path, installed: bool) -> None:
+    request = build_local_reader_load_request(ModelRole.TEXT_EXTRACTION)
+    models = {TEXT_MODEL} if installed else set()
+    with loopback_model_runtime(installed=models, residents=set()):
         supervised = _run(tmp_path, ProvisioningPorts(), request)
     ports = ProvisioningPorts()
-    with loopback_model_runtime(installed=set(), residents=set(), pull_fails=pull_fails):
-        direct = asyncio.run(
-            provision_local_reader(
-                request.payload, spawn=ports.spawn, run_installer=ports.install, text_probe=ports.probe
-            )
-        )
+    with loopback_model_runtime(installed=models, residents=set()):
+        direct = asyncio.run(provision_local_reader(request.payload, spawn=ports.spawn, text_probe=ports.probe))
 
     assert _essence(direct) == _essence(supervised.result)
-    assert direct.succeeded is not pull_fails
+    assert direct.succeeded is installed
 
 
 def test_a_resident_model_of_another_size_does_not_count_as_loaded(tmp_path: Path) -> None:

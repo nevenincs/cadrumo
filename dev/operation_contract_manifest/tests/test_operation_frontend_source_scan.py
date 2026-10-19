@@ -39,13 +39,6 @@ _SCANNED_TIERS = (
 
 _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
     (
-        "src/cadrumo_runtime/commands/profile_admission.py",
-        "_password",
-    ): (
-        "alias propagation carries CLI from the client into the admission reply; this password door checks "
-        "whether the human login was persisted, without comparing the submitting frontend"
-    ),
-    (
         "src/cadrumo_runtime/commands/runtime_automation_request.py",
         "AutomationCreateInput._decode_proposal",
     ): (

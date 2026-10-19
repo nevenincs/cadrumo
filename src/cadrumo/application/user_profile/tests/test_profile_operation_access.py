@@ -19,13 +19,6 @@ from cadrumo.application.operations.access_resolution import (
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    OperationAccessRequest,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from cadrumo.application.user_profile.operations import (
@@ -55,6 +48,13 @@ from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    OperationAccessRequest,
+)
 
 from .foreign_operation_payload import ForeignProfilePayload
 

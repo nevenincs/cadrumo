@@ -245,8 +245,8 @@ def test_only_an_image_that_does_not_pin_its_root_may_take_it_as_a_slot() -> Non
 
 def test_the_declaration_refuses_an_agent_name_outside_the_agent_image() -> None:
     planted = _SOURCE.replace(
-        '[profiles.python]\nimage = "python"\n',
-        '[profiles.python]\nimage = "python"\npass = ["CADRUMO_AGENT_PORT"]\n',
+        '[profiles.aeat]\nimage = "aeat"\n',
+        '[profiles.aeat]\nimage = "aeat"\npass = ["CADRUMO_AGENT_PORT"]\n',
         1,
     )
     assert planted != _SOURCE

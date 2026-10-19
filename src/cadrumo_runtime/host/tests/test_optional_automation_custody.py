@@ -23,12 +23,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, Availability
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
 from cadrumo_client.transport.framing import VerifiedConnection

@@ -7,20 +7,14 @@ import hmac
 import time
 from collections.abc import Callable
 from threading import RLock
-from typing import TYPE_CHECKING, Final, Literal, Self, override
+from typing import Final, Literal, Self, override
 from uuid import UUID, uuid4
 
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    AccessScope,
-    DisclosurePage,
-    DisclosurePageRequest,
-)
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationSecretStore
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.async_cleanup import await_cancellation_complete
@@ -36,6 +30,8 @@ from ..contracts.access_management import (
     SessionInventory,
     SessionInventoryReply,
 )
+from ..contracts.access_refusals import AccessDenialCode
+from ..contracts.access_vocabulary import AccessScope, DisclosurePage, DisclosurePageRequest
 from ..contracts.attendance import (
     AttendanceAsk,
     AttendanceDecide,
@@ -43,6 +39,7 @@ from ..contracts.attendance import (
     AttendanceInventory,
     AttendancePending,
 )
+from ..contracts.automation_codes import AutomationCustodyCode
 from ..contracts.automation_lifecycle import AutomationResumeReceipt
 from ..contracts.bootstrap import (
     PasswordReset,
@@ -71,6 +68,7 @@ from ..contracts.profile_access import (
     SessionRequest,
     SessionsLocked,
 )
+from ..contracts.profile_selection import ActiveProfileReply, ActiveProfileRequest
 from ..contracts.service_access import ServiceAdmission, ServiceConnected
 from ..contracts.session_events import (
     AttendanceAnswered,
@@ -83,15 +81,13 @@ from ..contracts.session_events import (
     SignInChanged,
 )
 from ..contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
+from ..contracts.sign_in_outcomes import ProfileLoginThrottledError, ProfileReceiptRefusedError
 from .enrollment_client import NativeEnrollmentClient
 from .framing import VerifiedConnection
 from .frontend_client_contracts import FrontendRefusedError
 from .frontend_profile_view_client import ProfileViewFrontend
 from .startup import LaunchDoor
 from .transport_cleanup import TransportCleanup
-
-if TYPE_CHECKING:
-    from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 
 _CONNECTION_RECEIPT_REFUSALS: Final[dict[str, ProfileSessionRefusalReason]] = {
     # The runtime deleted a receipt that no longer signs this login in.
@@ -109,8 +105,6 @@ _RECEIPT_PROOF_ATTEMPTS: Final = 3
 
 def _receipt_refusal(error: FrontendRefusedError) -> ProfileReceiptRefusedError | None:
     """Translate a runtime denial of a presented receipt into the receipt refusal callers handle, if it is one."""
-    from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
-
     reason = (
         error.sign_in.reason
         if error.sign_in is not None and isinstance(error.sign_in.reason, ProfileSessionRefusalReason)
@@ -414,7 +408,7 @@ class FrontendClient(ProfileViewFrontend):
         a bounded number of times and only while the borrowed proof differs
         from the one refused.
         """
-        from cadrumo.application.user_profile.login_session import borrow_profile_receipt_key
+        from .receipt_proof import borrow_receipt_proof
 
         deadline = time.monotonic() + timeout
         attempts = 0
@@ -422,7 +416,7 @@ class FrontendClient(ProfileViewFrontend):
         stale: ProfileReceiptRefusedError | None = None
         try:
             while True:
-                with borrow_profile_receipt_key(bucket_id=self.profile_id) as proof:
+                with borrow_receipt_proof(profile_id=self.profile_id) as proof:
                     if stale is not None and hmac.compare_digest(proof, presented):
                         # No sign-in replaced the receipt: the proof was refused for itself.
                         raise stale
@@ -648,6 +642,29 @@ class FrontendClient(ProfileViewFrontend):
             SignInStatusReply,
         )
 
+    def active_profile(
+        self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, watch: bool = False
+    ) -> ActiveProfileReply:
+        """Ask which profile is selected and which holds the live sign-in, without authenticating this connection."""
+        return self._reply(
+            self._connection.active_profile(
+                ActiveProfileRequest(request_id=uuid4(), watch=watch), deadline=deadline_after(timeout)
+            ),
+            ActiveProfileReply,
+        )
+
+    def watch_active_profile(
+        self, receive: Callable[[], None], *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+    ) -> ActiveProfileReply:
+        """Read the selection, then cue ``receive`` whenever a sign-in or the selection may have changed.
+
+        A cue is only a reason to ask again; it carries no state.
+        """
+        self._observe_events()
+        with self._event_guard:
+            self._sign_in_receivers.append(receive)
+        return self.active_profile(timeout=timeout, watch=True)
+
     def watch_sign_in(
         self, receive: Callable[[], None], *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
     ) -> SignInStatusReply:
@@ -872,7 +889,6 @@ class FrontendClient(ProfileViewFrontend):
         timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
     ) -> PasswordResetCompleted:
         """Use recovery proof without local DEK custody or a live human session."""
-        from cadrumo.application.user_profile.login_session import ProfileLoginThrottledError
         from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryError
         from cadrumo.core.hashing import canonical_json_bytes
 

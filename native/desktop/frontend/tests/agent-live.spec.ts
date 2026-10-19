@@ -264,7 +264,8 @@ test.describe("a run, in words", () => {
       id: "reply:r1",
       text: "",
       state: "failed",
-      failureReason: "The provider is limiting requests: Rate limit reached.",
+      failureReason:
+        "Provider usage limit reached. Check your provider account or choose another provider.",
     });
   });
 
@@ -354,9 +355,11 @@ test.describe("a run, in words", () => {
     const words = {
       network_unreachable: "The provider can't be reached",
       provider_overloaded: "The provider is overloaded",
-      unauthenticated: "Not authenticated with the provider",
-      throttled: "The provider is limiting requests",
-      usage_exhausted: "Usage limit reached",
+      unauthenticated: "Sign in to this provider in settings.",
+      throttled:
+        "Provider usage limit reached. Check your provider account or choose another provider.",
+      usage_exhausted:
+        "Provider usage limit reached. Check your provider account or choose another provider.",
       credits_exhausted: "Out of credits",
       budget_exhausted: "Budget used up",
       invalid_request: "The provider rejected the request",
@@ -616,7 +619,7 @@ test.describe("what a conversation's replies served about themselves", () => {
     );
     expect(facts).toEqual({
       ranWith: "Ran with: Example Alpha, Fixture Deep, High",
-      usage: "Tokens: 3,500 in, 500 out",
+      usage: "Tokens used: 3,500 sent, 500 received",
     });
   });
 
@@ -680,5 +683,157 @@ test.describe("the conversations the history lists", () => {
     expect(rows.find((row) => row.id === "b")?.current).toBe(true);
     // Cadrumo's custody serves no documents, so none is counted.
     expect(rows.every((row) => row.documentCount === 0)).toBe(true);
+  });
+});
+
+test.describe("what the agent thought, as the stream sends it", () => {
+  const thought = (
+    reply_id: string,
+    message_id: string,
+    sequence: number,
+    delta: string,
+  ): AgentStreamEvent => ({
+    type: "thought",
+    reply_id,
+    message_id,
+    sequence,
+    delta,
+  });
+  const thinkingOf = (live: LiveTurns) =>
+    transcriptItems(live.turns, "en", t, NOW).flatMap((item) =>
+      item.kind === "agent" ? [item.thinking ?? null] : [],
+    );
+
+  test("is applied in the order of the run's sequence, beside the text", () => {
+    const live = play([
+      thought("r1", "th1", 1, "Leo "),
+      thought("r1", "th1", 2, "el libro."),
+      // Applied already: the same sequence the text shares.
+      thought("r1", "th1", 2, "el libro."),
+    ]);
+    // Nothing written yet: the thinking goes with the reply's Working.
+    expect(
+      transcriptItems(live.turns, "en", t, NOW).filter(
+        (item) => item.kind === "agent",
+      ),
+    ).toEqual([
+      {
+        kind: "agent",
+        id: "reply:r1",
+        text: "",
+        state: "working",
+        thinking: "Leo el libro.",
+      },
+    ]);
+    const written = play(
+      [
+        text("r1", "m1", 3, "Antes."),
+        thought("r1", "th2", 4, "Ahora sumo."),
+        text("r1", "m1", 5, " Después."),
+      ],
+      live,
+    );
+    // Each thought apart, on the message the reply's state is drawn on.
+    expect(thinkingOf(written)).toEqual(["Leo el libro.\n\nAhora sumo."]);
+    expect(agentTexts(written)).toEqual(["Antes. Después."]);
+  });
+
+  test("stays when the history, which keeps no thought, is read again", () => {
+    const live = play([
+      thought("r1", "th1", 1, "Pienso."),
+      text("r1", "m1", 2, "Hecho."),
+    ]);
+    const read = withHistory(
+      live,
+      [
+        person("r1", "Hola"),
+        { kind: "agent", id: "m1", reply_id: "r1", text: "Hecho." },
+        reply("r1", "completed"),
+      ],
+      nothingPending,
+    );
+    expect(kinds(read.turns)).toEqual(["person", "agent", "thought", "reply"]);
+    expect(transcriptItems(read.turns, "en", t, NOW).at(-1)).toEqual({
+      kind: "agent",
+      id: "agent:r1:m1",
+      text: "Hecho.",
+      state: "complete",
+      thinking: "Pienso.",
+    });
+  });
+
+  test("of a lost stream is taken again from the replay, not doubled", () => {
+    const live = play([thought("r1", "th1", 1, "Uno.")]);
+    const lost = applyStreamEvent(live, { type: "lost", reply_id: "r1" }).live;
+    const replayed = play([thought("r1", "th1", 1, "Uno.")], lost);
+    expect(thinkingOf(replayed)).toEqual(["Uno."]);
+  });
+
+  test("that is blank is no thinking", () => {
+    expect(thinkingOf(play([thought("r1", "th1", 1, "  ")]))).toEqual([null]);
+  });
+});
+
+test.describe("what a tool call took and gave", () => {
+  const history: AgentTurnRecord[] = [
+    person("r1", "Hola"),
+    {
+      kind: "tool",
+      reply_id: "r1",
+      id: "t1",
+      title: "ledger_list",
+      tool_kind: "read",
+      status: "in_progress",
+      details: ['{"year":2026}', "libro.csv:3"],
+    },
+    reply("r1", "running"),
+  ];
+
+  test("is the history's, shown as the call's internals", () => {
+    expect(
+      transcriptItems(history, "en", t, NOW).find(
+        (item) => item.kind === "tool",
+      ),
+    ).toEqual({
+      kind: "tool",
+      id: "tool:r1:t1",
+      label: "ledger_list",
+      state: "in_progress",
+      detail: "Reads",
+      internals: ['{"year":2026}', "libro.csv:3"],
+    });
+  });
+
+  test("stays when the stream, which carries none, moves the call on", () => {
+    const read = withHistory(NO_TURNS, history, nothingPending);
+    const live = play(
+      [
+        {
+          type: "tool",
+          reply_id: "r1",
+          tool: {
+            id: "t1",
+            title: "ledger_list",
+            tool_kind: "read",
+            status: "completed",
+          },
+        },
+      ],
+      read,
+    );
+    expect(live.turns.find((record) => record.kind === "tool")).toMatchObject({
+      status: "completed",
+      details: ['{"year":2026}', "libro.csv:3"],
+    });
+  });
+
+  test("is nothing where the history said nothing", () => {
+    const item = transcriptItems(
+      [{ ...history[1]!, details: [] } as AgentTurnRecord],
+      "en",
+      t,
+      NOW,
+    ).find((entry) => entry.kind === "tool");
+    expect(item).not.toHaveProperty("internals");
   });
 });

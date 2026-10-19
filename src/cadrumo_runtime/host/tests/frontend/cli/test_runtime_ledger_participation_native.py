@@ -31,12 +31,6 @@ from cadrumo.application.ledger.participation_rebuild_operation import (
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.period import Period
@@ -50,6 +44,12 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 pytestmark = [

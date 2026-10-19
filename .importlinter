@@ -226,6 +226,52 @@ forbidden_modules =
     cadrumo_runtime
 allow_indirect_imports = False
 
+[importlinter:contract:harness-never-reaches-runtime-host]
+type = forbidden
+name = The MCP harness is a runtime client and cannot import the runtime host
+source_modules =
+    cadrumo_harness
+forbidden_modules =
+    cadrumo_runtime
+allow_indirect_imports = False
+
+[importlinter:contract:person-bridge-knows-no-product-setup]
+type = forbidden
+name = The held person bridge relays registered operations without importing product setup code
+source_modules =
+    cadrumo_runtime.host.session_hold
+    cadrumo_runtime.host.session_hold_operations
+forbidden_modules =
+    cadrumo.application.dependency_activity
+    cadrumo.application.dependency_contracts
+    cadrumo.application.dependency_network
+    cadrumo.application.dependency_receipts
+    cadrumo.application.dependency_registry
+    cadrumo.application.dependency_setup_operation
+    cadrumo.application.dependency_transfer
+    cadrumo.application.dependency_wording
+    cadrumo.application.provisioning
+    cadrumo.adapters.outbound.google
+    cadrumo.entrypoints
+allow_indirect_imports = False
+
+[importlinter:contract:runtime-commands-know-no-product-setup]
+type = forbidden
+name = The runtime's commands run no product setup or Google sign-in code; the product's registered operations do
+source_modules =
+    cadrumo_runtime.commands
+forbidden_modules =
+    cadrumo.application.dependency_activity
+    cadrumo.application.dependency_contracts
+    cadrumo.application.dependency_network
+    cadrumo.application.dependency_receipts
+    cadrumo.application.dependency_registry
+    cadrumo.application.dependency_setup_operation
+    cadrumo.application.dependency_transfer
+    cadrumo.application.dependency_wording
+    cadrumo.adapters.outbound.google
+allow_indirect_imports = False
+
 [importlinter:contract:shared-client-never-reaches-runtime-host]
 type = forbidden
 name = Shared client contracts and transports cannot import the runtime host

@@ -13,11 +13,7 @@ from pydantic import Field, field_validator
 
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-)
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo_client.commands.access_management_payloads import (
@@ -34,6 +30,7 @@ from cadrumo_client.commands.secure_input import (
     stage_machine_secret_payload,
 )
 from cadrumo_client.contracts.deadline_budget import remaining_budget
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

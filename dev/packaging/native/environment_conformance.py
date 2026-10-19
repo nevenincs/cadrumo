@@ -166,6 +166,9 @@ def check_command_line_names(reference: Reference, cli: Mapping[str, Any]) -> li
                 findings += _reads(check, reader, name, kind, settings)
                 if name not in cli["authority_variables"]:
                     findings.append(Finding(check, name, "is not the setting that names the command line's authority"))
+        elif role == "pass" and name in settings:
+            # A command-line setting the runtime passes on to its workers unchanged.
+            findings += _reads(check, reader, name, kind, settings)
         elif role == "slot" and name in cli.get("profile_variables", ()):
             # The command line derives it for the children it starts for one profile, and reads it back for nothing.
             continue

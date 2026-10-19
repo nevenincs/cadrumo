@@ -16,6 +16,7 @@ import {
   type CalendarShape,
 } from "./scenarioHost";
 import { findScenario, type Scenario } from "./scenarios";
+import { SETUP_SHAPES } from "./setupFixture";
 
 import "virtual:desktop-palette.css";
 
@@ -80,6 +81,8 @@ function readParams() {
     agentSkills: (["bundled", "many", "failed", "unavailable"] as const).find(
       (skills) => skills === params.get("skills"),
     ),
+    // The shape of the component setup.
+    setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
   };
 }
 
@@ -131,6 +134,7 @@ function Scenarios() {
       agentAsks: initial.agentAsks,
       agentDocuments: initial.agentDocuments,
       agentSkills: initial.agentSkills,
+      setup: initial.setup,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {

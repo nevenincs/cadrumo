@@ -189,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
         "fresh uv virtualenv install",
         "installed bundled data resources",
         "attachment storage round-trip",
-        "core LLM missing-extra boundary",
+        "core LLM agent dispatch refuses without a service",
         "installed CLI config/profile smoke",
         "installed grounded Modelo 200 tax-work oracle",
     ]

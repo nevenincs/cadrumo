@@ -78,7 +78,7 @@ command exists, and no code path contacts AEAT to file on your behalf. You
 upload the exported file to AEAT yourself through the official channel.
 
 External AEAT write paths are guarded behind an explicit opt-in
-(`AEAT_LIVE_TESTS_ENABLED`) and default to dry-run. This keeps automated runs
+(`CADRUMO_LIVE_TESTS_ENABLED`) and default to dry-run. This keeps automated runs
 from touching the live tax authority by accident.
 
 ### Sensitive financial data stays in encrypted storage

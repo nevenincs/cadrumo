@@ -22,21 +22,18 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
 )
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentReconcile
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
 from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
 from cadrumo_client.transport.framing import VerifiedConnection

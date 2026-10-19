@@ -8,20 +8,19 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import (
-    GRANT_DEFAULT_VALIDITY,
+from cadrumo.application.user_profile.access_policy import intersect_scopes, scope_is_subset
+from cadrumo.application.user_profile.operations import (
+    build_user_profile_operation_definitions,
+    build_user_profile_operation_registrations,
+)
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     DisclosureCategory,
     DisclosureCategoryGrant,
     DisclosurePermission,
 )
-from cadrumo.application.user_profile.access_policy import intersect_scopes, scope_is_subset
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind
-from cadrumo.application.user_profile.operations import (
-    build_user_profile_operation_definitions,
-    build_user_profile_operation_registrations,
-)
+from cadrumo_client.contracts.enrollment_proposal import GRANT_DEFAULT_VALIDITY, EnrollmentKind
 from cadrumo_harness.access.automation_key import agent_key_proposal, agent_key_scope, agent_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

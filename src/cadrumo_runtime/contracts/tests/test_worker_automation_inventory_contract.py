@@ -9,16 +9,16 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
+from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
+from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     Availability,
     OperationAccessPolicy,
     OperationAccessRequest,
 )
-from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
-from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
-from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.time.clock import now
 
 from ..worker_authorization import (
     WorkerAuthorityEnvelope,

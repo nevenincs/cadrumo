@@ -12,10 +12,10 @@ import typer
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationProgress
 from cadrumo_client.commands.registered_operation_errors import map_registered_transport_failure
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ....application.user_profile.automation_custody_port import AutomationCustodyCode
 from ....core.config import override_settings
 from ....core.request_faults import RequestFault
 from ..errors import emit_error_and_exit

@@ -11,6 +11,15 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    OperationAccessRequest,
+)
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
@@ -20,14 +29,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    OperationAccessRequest,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import reconciliation_list_operation as operation_module
 from ..reconciliation_evidence_kind import ModeloReconciliationEvidenceKind

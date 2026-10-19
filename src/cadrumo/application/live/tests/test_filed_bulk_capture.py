@@ -12,6 +12,9 @@ from typing import cast
 
 import pytest
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
@@ -19,9 +22,7 @@ from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...storage.sync_runs.records import SyncRunRecord
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
 from ..filed_data_capture import (
     FiledCaptureAccumulator,

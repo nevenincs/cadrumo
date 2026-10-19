@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from .access_contracts import (
-    AccessScope,
-)
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 
 
 def scope_is_subset(child: AccessScope, parent: AccessScope) -> bool:

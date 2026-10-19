@@ -11,10 +11,8 @@ from typing import Annotated, Protocol
 
 from pydantic import BaseModel, Field, SecretBytes
 
-from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.request_faults import RequestFault
 from ...core.time.utc import UtcInstant
 from .access_contracts import ApiKeyRecord, AutomationGrant, ProfileAccessBinding
 
@@ -73,35 +71,6 @@ class AutomationCustodyPort(Protocol):
     def unlocked(self, *, credential: SecretBytes, now: UtcInstant) -> AbstractContextManager[bytearray]:
         """Lend verified material to a trusted owner and wipe it on every exit."""
         ...
-
-
-class AutomationCustodyCode(StrEnum):
-    """Credential-free automation custody failures."""
-
-    UNAVAILABLE = "unavailable"
-    NEEDS_USER = "needs_user"
-    UNSUPPORTED = "unsupported"
-    MISSING = "missing"
-    INVALID = "invalid"
-    CONFLICT = "conflict"
-    CREDENTIAL_REJECTED = "credential_rejected"
-    REQUESTER_DISCONNECTED = "requester_disconnected"
-
-
-class AutomationCustodyError(CadrumoError):
-    """Safe failure code with no native error or secret-bearing input."""
-
-    def __init__(self, code: AutomationCustodyCode, *, request_faults: tuple[RequestFault, ...] = ()) -> None:
-        """Retain only a safe code and, for a request refused as invalid, the faults that say why.
-
-        Raises:
-            ValueError: Faults are given for a code other than ``INVALID``.
-        """
-        if request_faults and code is not AutomationCustodyCode.INVALID:
-            raise ValueError("only an invalid request carries request faults")
-        self.reason = code
-        self.request_faults = request_faults
-        super().__init__(code.value)
 
 
 class NativeSecretBackend(StrEnum):

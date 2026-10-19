@@ -14,6 +14,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -44,9 +46,6 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .recipient_encryption import RecipientEncryptedPackage
 from .review_package import ReviewPackageActor

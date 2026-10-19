@@ -26,8 +26,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
@@ -37,6 +35,8 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 
+from ..contracts.access_refusals import AccessDenialCode
+from ..contracts.automation_codes import AutomationCustodyCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import bounded_deadline_after, exchange_timeout, remaining_budget
 from ..contracts.operation_access import (

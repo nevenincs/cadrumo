@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -17,7 +19,6 @@ from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .id_resolution import resolve_lineage_transaction_id

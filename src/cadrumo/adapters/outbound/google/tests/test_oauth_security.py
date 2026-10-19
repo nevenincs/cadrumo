@@ -22,8 +22,13 @@ from google.auth import crypt, jwt
 from google.auth.transport import requests as auth_requests
 from google.oauth2.credentials import Credentials
 
+from cadrumo_client.contracts.google_auth import (
+    GoogleAuthNetworkError,
+    GoogleAuthScopeInsufficientError,
+    GoogleAuthValidationError,
+)
+
 from .. import oauth_callback, oauth_flow
-from ..errors import GoogleAuthNetworkError, GoogleAuthScopeInsufficientError, GoogleAuthValidationError
 from ..oauth_callback import OAuthCallbackRefusedError, receive_authorization_code, validate_callback
 from ..records import REQUIRED_SCOPES, OAuthToken
 from .test_oauth_flow import _BrowserStandIn, _valid_oauth_client

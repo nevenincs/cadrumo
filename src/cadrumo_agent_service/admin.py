@@ -27,6 +27,7 @@ type AdminAction = Literal[
     "status",
     "set",
     "remove",
+    "turn_on",
     "reset",
     "auth",
     "sign_in",

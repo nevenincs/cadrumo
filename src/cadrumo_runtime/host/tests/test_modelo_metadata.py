@@ -42,22 +42,20 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (

@@ -2,7 +2,7 @@
 
 from pydantic import SecretBytes
 
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from ..enrollment_client import NativeEnrollmentClient
 

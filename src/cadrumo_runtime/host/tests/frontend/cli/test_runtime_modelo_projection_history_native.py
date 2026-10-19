@@ -27,7 +27,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from .cli_runner import invoke_cached_cli
 

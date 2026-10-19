@@ -14,11 +14,11 @@ from uuid import UUID
 
 from textual.widgets import Button, Static
 
-from cadrumo.application.user_profile.access_contracts import DisclosurePage, DisclosurePageRequest
 from cadrumo.application.user_profile.disclosure_paging import DisclosurePager
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.i18n.render import tr
 from cadrumo.entrypoints.tui.disclosure_pages import disclosure_page_text
+from cadrumo_client.contracts.access_vocabulary import DisclosurePage, DisclosurePageRequest
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.frontend_client import FrontendClient
 

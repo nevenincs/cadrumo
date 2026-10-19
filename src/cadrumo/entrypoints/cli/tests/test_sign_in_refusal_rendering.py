@@ -9,12 +9,12 @@ import pytest
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_refusal
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
+from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.frontend_operation_client import OperationFrontend
 
-from ....application.user_profile.access_contracts import AccessDenialCode
-from ....application.user_profile.sign_in_refusals import SignInRefusal
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr

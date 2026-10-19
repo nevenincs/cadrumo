@@ -35,6 +35,7 @@ from .adapters.agent_programs import (
     profile_agent_root,
     profile_agent_workspace,
 )
+from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
 from .adapters.provider_catalog_metadata import declared_provider_catalog_response
 from .contracts import HostedCertificationStatus
@@ -53,10 +54,12 @@ from .host.controller import (
 from .host.credential_frame import wipe
 from .host.lane_root import is_marked_lane_root
 from .host.launch_environment import (
+    AUTH_BROWSER_EXECUTABLE_VARIABLE,
     EXTERNAL_BIN_DIRECTORIES_VARIABLE,
     HOSTED_ROOT_VARIABLE,
     agent_binary_directories,
     agent_launch_environment,
+    auth_browser_executable,
     system_environment,
 )
 from .host.launcher_protocol import launcher_refusal_for
@@ -129,6 +132,7 @@ class AgentService:
         agent_source: str | None,
         gateway_bearer: bytearray,
         emit: Callable[[dict[str, Any]], None],
+        wake: Callable[[], None] | None = None,
     ) -> None:
         """Bind provider custody and process ownership to the verified service connection."""
         self.client = client
@@ -149,11 +153,18 @@ class AgentService:
             gateway_bearer,
             self._closing,
         )
+        self._login_status = AgentProviderAuthStatusProbe(agent_source=agent_source, context=self._login_context)
         self._providers = ProviderSettingsService(
-            store=self._store, catalog_source=self._catalog, environment=os.environ, storage_mode=storage_mode().mode
+            store=self._store,
+            catalog_source=self._catalog,
+            environment=os.environ,
+            storage_mode=storage_mode().mode,
+            cli_state_probe=self._login_status.probe,
         )
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
+        self._auth_resume_valid: Callable[[], bool] | None = None
+        self._wake = wake
         self._hosted_certification_lock = Lock()
         self._hosted_certification_snapshot: (
             tuple[AgentHostController, AgentReady, tuple[HostedCertificationStatus, ...], float] | None
@@ -162,6 +173,20 @@ class AgentService:
         self._ownership = ExitStack()
         self._owned = False
         self._emit = emit
+
+    def _login_context(self) -> tuple[Path, str] | None:
+        """Bind a login observation to current profile, settings and completed attempt."""
+        lease = self.client.lease
+        if self._closing.is_set() or lease is None:
+            return None
+        attempt = self._auth_attempt
+        if attempt is not None and attempt.active:
+            return None
+        generations = self._credentials.current_generations()
+        if generations is None or self.client.lease != lease:
+            return None
+        key = f"{lease.lease_id}:{generations.sign_in}:{generations.provider_settings}:{attempt.id if attempt else ''}"
+        return profile_agent_root(self._root, lease.profile_id), key
 
     def admin(
         self,
@@ -176,6 +201,10 @@ class AgentService:
         secret: bytearray | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
+        if action in {"connect_status", "connect_cancel"}:
+            return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
+        if action == "status":
+            return self._provider_status()
         arguments: dict[str, Any] = {
             "provider": provider,
             "expected_revision": expected_revision,
@@ -198,6 +227,26 @@ class AgentService:
             return self._admin(action, **arguments)
         finally:
             self._guard.release()
+
+    def _observe_sign_in(self, attempt_id: str | None, *, cancel: bool) -> dict[str, Any]:
+        """Observe the existing owner without waiting for gateway startup or reaping.
+
+        The lifecycle guard protects tree changes and can be held for longer
+        than an administration request. An attempt has its own snapshot lock
+        and exact lease/generation predicate, so observing it needs no tree
+        lock. Capture its owner once: cancellation must never reach a newer
+        attempt that replaced the requested one.
+        """
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        if self.client.lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        attempt = self._auth_attempt
+        if attempt is None or attempt.id != attempt_id:
+            return {"kind": "refused", "code": "invalid_request"}
+        if cancel:
+            attempt.cancel()
+        return attempt.observe()
 
     def _admin(
         self,
@@ -225,35 +274,11 @@ class AgentService:
                         self._clear_hosted_certifications()
                         raise
                     self._remember_hosted_certifications(controller, ready, document)
-                    return document
+                    return self._picker_catalog(document)
             self._clear_hosted_certifications()
-            return declared_provider_catalog_response(agent_source=self._agent_source)
+            return self._picker_catalog(declared_provider_catalog_response(agent_source=self._agent_source))
         if self.client.lease is None:
             return {"kind": "refused", "code": "signed_out"}
-        if action == "status":
-            observed = self._providers.status()
-            if isinstance(observed, ProviderSettingsRefusal):
-                return observed.model_dump(mode="json")
-            status = observed.model_dump(mode="json")
-            status["hosted_certifications"] = self._hosted_certifications()
-            try:
-                status["sign_in_providers"] = (
-                    []
-                    if self._agent_source is not None and not is_marked_lane_root(self._root)
-                    else list(self._catalog.gui_sign_in_providers())
-                )
-            except ProviderCatalogUnavailableError:
-                # Missing GUI capability disables login, not existing key management.
-                # A later request retries; the source never caches a failed lookup.
-                status["sign_in_providers"] = []
-            return status
-        if action in {"connect_status", "connect_cancel"}:
-            attempt = self._auth_attempt
-            if attempt is None or attempt.id != attempt_id:
-                return {"kind": "refused", "code": "invalid_request"}
-            if action == "connect_cancel":
-                attempt.cancel()
-            return attempt.observe()
         if self._auth_attempt is not None and self._auth_attempt.active and action != "stop":
             return {"kind": "refused", "code": "busy"}
         if action == "start":
@@ -261,6 +286,7 @@ class AgentService:
                 return {"kind": "refused", "code": "service_stopping"}
             return {"kind": "starting"}
         if action == "stop":
+            self._auth_resume_valid = None
             if self._auth_attempt is not None:
                 self._auth_attempt.cancel()
             self.stop()
@@ -283,7 +309,9 @@ class AgentService:
                 else base_url,
             )
         elif action == "remove":
-            result = self._providers.remove_credential(provider, expected_revision=expected_revision)
+            result = self._providers.turn_off(provider, expected_revision=expected_revision)
+        elif action == "turn_on":
+            result = self._providers.turn_on(provider, expected_revision=expected_revision)
         elif action == "reset":
             result = self._providers.reset(provider, expected_revision=expected_revision)
         elif action == "auth" and choice is not None:
@@ -296,6 +324,41 @@ class AgentService:
         # on the start thread, which retires it and publishes what follows.
         self._replace_superseded()
         return result.model_dump(mode="json")
+
+    def _provider_status(self) -> dict[str, Any]:
+        """Observe settings without waiting for gateway startup after sign-in.
+
+        Store reads and login observations carry their own profile authority.
+        The controller snapshot has its own lock; the lifecycle lock only
+        serializes changes to the process tree, not these independent reads.
+        """
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        lease = self.client.lease
+        if lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        observed = self._providers.status()
+        if isinstance(observed, ProviderSettingsRefusal):
+            return observed.model_dump(mode="json")
+        status = observed.model_dump(mode="json")
+        status["hosted_certifications"] = self._hosted_certifications()
+        try:
+            methods = (
+                {}
+                if self._agent_source is not None and not is_marked_lane_root(self._root)
+                else self._catalog.gui_sign_in_methods()
+            )
+            status["sign_in_providers"] = list(methods)
+            status["sign_in_methods"] = {provider: list(choices) for provider, choices in methods.items()}
+        except ProviderCatalogUnavailableError:
+            # Missing GUI capability disables login, not existing key management.
+            status["sign_in_providers"] = []
+            status["sign_in_methods"] = {}
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        if self.client.lease != lease:
+            return {"kind": "refused", "code": "signed_out"}
+        return status
 
     def _prepare_sign_in(self, provider: str, *, expected_revision: str, gui: bool = False) -> dict[str, Any]:
         """Prepare a person-terminal launch without observing provider credentials.
@@ -338,6 +401,10 @@ class AgentService:
             external = agent_binary_directories(python=hosted_python(), received=os.environ)
             if external is not None and external != "":
                 environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
+            if gui:
+                browser = auth_browser_executable(hosted_python())
+                if browser is not None:
+                    environment[AUTH_BROWSER_EXECUTABLE_VARIABLE] = str(browser)
             return {
                 "kind": "sign_in_prepared",
                 "entry": result.entry.model_dump(mode="json"),
@@ -351,6 +418,7 @@ class AgentService:
 
     def _connect(self, provider: str, *, expected_revision: str, method: str) -> dict[str, Any]:
         """Start a profile-bound helper; its provider owns OAuth and credential storage."""
+        self._auth_resume_valid = None
         lease = self.client.lease
         prepared = self._prepare_sign_in(provider, expected_revision=expected_revision, gui=True)
         if prepared.get("kind") != "sign_in_prepared":
@@ -384,8 +452,10 @@ class AgentService:
             ),
             environment=system_environment(os.environ) | launch["environment"],
             valid=valid,
+            settled=self._wake,
         )
         self._auth_attempt = attempt
+        self._auth_resume_valid = valid
         return attempt.observe()
 
     def start(self) -> dict[str, Any]:
@@ -489,6 +559,26 @@ class AgentService:
             "workspace_root": str(self._workspace),
         }
 
+    def _picker_catalog(self, document: dict[str, Any]) -> dict[str, Any]:
+        """Drop the lanes the signed-in profile turned off, so the picker never offers them.
+
+        Only stored settings are read; no provider program is probed. Without a
+        lease, or when the settings cannot be read, the catalog is returned
+        unchanged: an off lane still resolves no credential for the agent.
+        """
+        if self.client.lease is None:
+            return document
+        turned_off = self._providers.turned_off_lanes()
+        lanes = document.get("providers")
+        if turned_off is None or not turned_off or not isinstance(lanes, list):
+            return document
+        kept = [
+            lane
+            for lane in lanes
+            if not (isinstance(lane, dict) and (lane.get("provider_id"), lane.get("transport")) in turned_off)
+        ]
+        return {**document, "providers": kept}
+
     def _served_catalog(self, ready: AgentReady) -> dict[str, Any]:
         """Relay the admitted agent's actual bounded catalogue without projecting fields."""
         connection = HTTPConnection("127.0.0.1", ready.gateway_port, timeout=5)
@@ -590,6 +680,11 @@ class AgentService:
     def observe(self) -> bool:
         """Revalidate exact generations: replace a superseded tree, or answer ``False`` for the caller to retire it."""
         with self._guard:
+            if self._auth_attempt is not None and not self._auth_attempt.active:
+                resume_valid = self._auth_resume_valid
+                self._auth_resume_valid = None
+                if resume_valid is not None and resume_valid():
+                    self._background_start()
             if self._controller is None:
                 return self._store.observe_generations() is not None
             return self._controller.published() is not None or self._replace_superseded()

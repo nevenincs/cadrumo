@@ -18,7 +18,7 @@ from cadrumo_client.contracts.profile_access import SessionRequest
 from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_runtime.adapters.tests.test_enrollment_framing import MemoryChannel
+from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 
 from ..runtime_adapter import RuntimeMcpAdapter
 

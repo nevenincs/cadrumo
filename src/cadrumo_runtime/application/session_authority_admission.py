@@ -20,9 +20,6 @@ from pydantic import SecretBytes
 
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessDenialCode,
-    AccessDenied,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
     AutomationGrant,
@@ -32,10 +29,11 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_policy import intersect_scopes
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodySnapshot
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, SignInRefusal
 
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
 from .session_authority_core import SessionAuthorityCore

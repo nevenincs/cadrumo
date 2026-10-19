@@ -16,19 +16,21 @@ from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.profile_language import ProfileLanguage, read_profile_language, set_profile_language
 
+from .session_hold_operations import RELAY_ACTION_KEYS, OperationRelay, RelayRefusedError, relay_reply
+
 _MAXIMUM_REQUEST_LINE_BYTES = 16_384
 _MAXIMUM_RESPONSE_LINE_BYTES = MAXIMUM_FRAME_BYTES + 1
 _MAXIMUM_PASSWORD_BYTES = 4_096
 
-type _Arrival = Literal["line", "retired", "profile_language_changed", "attendance_changed"]
+type _Arrival = Literal["line", "retired", "profile_language_changed", "attendance_changed", "operation_changed"]
 
 
 def _read_stdin_bytes(fd: int, size: int) -> bytearray:
@@ -178,6 +180,10 @@ async def _hold(
         client.subscribe_profile_language_changes(language_changed)
         client.subscribe_attendance_changes(lambda: inbox.put(("attendance_changed", b"")))
 
+        relay = OperationRelay(client)
+        # The cue names no operation; it matters here only while an operation this session relayed is unsettled.
+        client.subscribe_operation_changes(lambda: inbox.put(("operation_changed", b"")))
+
         def read_lines() -> None:
             while not retired.is_set():
                 line_slot.acquire()
@@ -195,6 +201,8 @@ async def _hold(
                 _emit({"kind": "session_retired", "profile_id": str(profile_id)})
                 return 0
             if arrival != "line":
+                if arrival == "operation_changed" and not relay.watching():
+                    continue
                 if observing:
                     # Only a reason to read again through a request; the line carries no state.
                     _emit({"kind": "runtime_event", "event": arrival})
@@ -228,6 +236,7 @@ async def _hold(
                 "service_admission": {"recipient_connection_id", "service_id"},
                 "attendance_decision": {"attendance_id", "approve"},
                 "language_set": {"language"},
+                **RELAY_ACTION_KEYS,
             }
             if set(request) != {"request_id", "action"} | action_keys.get(action, set()):
                 _emit_refusal("invalid", request_id)
@@ -285,6 +294,22 @@ async def _hold(
                         _emit_refusal("unavailable", request_id)
                         continue
                     _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+                elif action in RELAY_ACTION_KEYS:
+                    try:
+                        fields, refusal = relay.handle(action, request), None
+                    except RelayRefusedError as refused:
+                        fields, refusal = None, refused
+                    _emit(
+                        relay_reply(
+                            request_id=request_id,
+                            profile_id=profile_id,
+                            session_id=client.session_id,
+                            runtime_boot_id=status.runtime_boot_id,
+                            connection_id=status.connection_id,
+                            fields=fields,
+                            refusal=refusal,
+                        )
+                    )
                 elif action in {"language_read", "language_set", "language_observe"}:
                     if action != "language_observe" or language_cache is None or language_dirty.is_set():
                         # Clear before reading so a concurrent notification remains dirty.
@@ -338,7 +363,11 @@ def main(arguments: list[str] | None = None) -> int:
     try:
         with composed_profile_persistence_ports():
             return asyncio.run(
-                _hold(options.profile_id, password_stdin=options.password_stdin, frontend=options.frontend)
+                _hold(
+                    options.profile_id,
+                    password_stdin=options.password_stdin,
+                    frontend=options.frontend,
+                )
             )
     except Exception as error:
         _emit_refusal("unavailable", uuid4(), _report_failure(error))

@@ -18,13 +18,14 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import recovery_custody
-from cadrumo.application.user_profile.access_contracts import Availability, OsLockState, OsLoginContext
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext
 from cadrumo.application.user_profile.custody_ports import (
     ProfileCustodyRecoveryMaterialPort,
     ProfileCustodyRecoveryUnlockPort,
 )
 from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryError, enroll_profile_recovery
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.bootstrap import PasswordReset
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin
 from cadrumo_client.transport.frontend_client import FrontendClient

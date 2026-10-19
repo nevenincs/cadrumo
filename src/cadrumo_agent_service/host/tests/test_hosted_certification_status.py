@@ -99,6 +99,7 @@ def test_status_projects_only_valid_certification_from_the_current_served_catalo
         "development": False,
         "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
         "sign_in_providers": [],
+        "sign_in_methods": {},
         "hosted_certifications": [
             {
                 "provider": "example",
@@ -242,6 +243,7 @@ def test_live_certification_does_not_hide_provider_status_catalog_refusal(
     assert result == {
         "code": "catalog_unavailable",
         "sign_in_providers": [],
+        "sign_in_methods": {},
         "hosted_certifications": [
             {
                 "provider": "example",

@@ -11,6 +11,9 @@ import asyncio
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import DisclosureCategory
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -24,7 +27,6 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.preconditions import PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..state_projection import ModeloProfileRefusalCause, ProjectionModeloReadiness
-from ..user_profile.access_contracts import AccessDenialCode, DisclosureCategory
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .query_read_contracts import (
     ModeloBindingsResolveRequest,

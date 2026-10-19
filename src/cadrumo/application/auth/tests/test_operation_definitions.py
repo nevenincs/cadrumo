@@ -24,10 +24,11 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ._operator_probe_fakes import fake_operator_probe_ports
 from ._operator_scope_fakes import build_inward_operator_scope_ports

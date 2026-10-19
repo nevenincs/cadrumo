@@ -25,12 +25,6 @@ from cadrumo.application.modelo.revision_snapshot_operation import (
     MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.config import load_settings
 from cadrumo.core.period import Period
@@ -38,6 +32,12 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m130_work_unit, operator_profile_facts
 from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
 from .cli_runner import invoke_unbound_cli

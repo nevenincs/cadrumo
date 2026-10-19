@@ -14,7 +14,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.entrypoints.cli.modelo_results import WorkPreviewMaritimeExemptionResult
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from .cli_runner import invoke_cached_cli
 

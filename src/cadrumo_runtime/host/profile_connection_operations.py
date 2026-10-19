@@ -12,11 +12,12 @@ from uuid import UUID
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.person_acts import operation_is_persons_act
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessDenied
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationLifecycle
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,

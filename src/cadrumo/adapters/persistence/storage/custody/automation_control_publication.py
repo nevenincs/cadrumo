@@ -8,15 +8,10 @@ from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
-from .....application.user_profile.access_contracts import (
-    AuthorityState,
-)
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationCustodySnapshot,
-    AutomationGrantMaterial,
-)
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
+from .....application.user_profile.automation_custody_port import AutomationCustodySnapshot, AutomationGrantMaterial
 from .....application.user_profile.automation_enrollment import (
     EnrollmentRecord,
 )

@@ -12,7 +12,7 @@ from stat import S_ISDIR
 from .config import Settings, load_settings
 from .errors.hierarchy import CoreValidationError
 from .storage_environment import ensure_storage_root
-from .storage_taxonomy import StorageCategory, StorageGrouping
+from .storage_taxonomy import StorageGrouping
 
 
 def ensure_storage_tree(
@@ -27,28 +27,15 @@ def ensure_storage_tree(
     overrides must already exist; the application-owned root and derived
     defaults are provisioned idempotently. ``derived_groupings`` narrows which
     defaults are provisioned; every explicit dependency is still validated.
+    Runtime-owned members, the connection namespace among them, are neither
+    created nor required here: the installed runtime creates them itself.
     """
-    from .storage_taxonomy_locations import (
-        storage_location,
-        storage_path,
-        storage_tree_targets,
-        uses_external_transport,
-    )
+    from .storage_taxonomy_locations import storage_tree_targets
 
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
     explicit_targets = storage_tree_targets(resolved, include_derived=False)
     derived_targets = storage_tree_targets(resolved, include_explicit=False, derived_groupings=derived_groupings)
-    runtime_namespace = (
-        None
-        if uses_external_transport(storage_location(StorageCategory.CONNECTION_SOCKETS), resolved)
-        else storage_path(StorageCategory.CONNECTION_SOCKETS, settings=resolved)
-    )
-    # Create an owned namespace before another derived target can create it
-    # incidentally as a parent. Existing and operator-selected namespaces are
-    # left intact for the endpoint's ownership/permission admission checks.
-    if runtime_namespace in derived_targets:
-        derived_targets = (runtime_namespace, *(target for target in derived_targets if target != runtime_namespace))
 
     for target in explicit_targets:
         _require_directory(target, explicit_override=True)
@@ -59,8 +46,6 @@ def ensure_storage_tree(
         try:
             if target == root:
                 ensure_storage_root(target)
-            elif target == runtime_namespace:
-                target.mkdir(parents=True, exist_ok=True, mode=0o700)
             else:
                 target.mkdir(parents=True, exist_ok=True)
         except OSError as exc:

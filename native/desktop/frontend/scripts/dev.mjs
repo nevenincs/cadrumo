@@ -16,7 +16,11 @@ if (!binaryDir || !isAbsolute(binaryDir))
     "Run just dev, or set CADRUMO_CMAKE_BINARY_DIR to the absolute build/<preset> directory of a configured repository build.",
   );
 const generated = buildPath("desktop_frontend_generated");
-for (const name of ["chrome-strings.json", "palette.css"])
+for (const name of [
+  "chrome-strings.json",
+  "palette.css",
+  "provider-icons.json",
+])
   if (!existsSync(resolve(generated, name)))
     throw new Error(
       `${name} has not been generated in ${generated}. Build the desktop-frontend-generated target of ${binaryDir}, or run just dev.`,

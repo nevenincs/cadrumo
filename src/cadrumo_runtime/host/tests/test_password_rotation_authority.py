@@ -35,14 +35,7 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    Availability,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    SessionKind,
-)
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.core.config import override_settings
@@ -50,6 +43,13 @@ from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_auth_operation_ports
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 

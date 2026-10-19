@@ -2054,6 +2054,8 @@ cli:
       missing: hiányzik
       preflight_label: Előzetes ellenőrzés
       profile_label: profil
+      setup_unavailable: Az előkészítés nem ellenőrizhető, mert a Cadrumo háttérszolgáltatása
+        nem válaszolt.
     collab:
       help: Bizalmi címzettek kezelése az ellenőrző csomag együttműködéshez.
       recipient:
@@ -2653,67 +2655,95 @@ cli:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     provision:
+      approval_needed: Ehhez a jóváhagyásodra van szükség. Futtasd újra a parancsot
+        a --yes kapcsolóval a fenti terv jóváhagyásához.
+      approve_prompt: Letöltöd és előkészíted ezeket most?
       browser:
-        help: Letölti az AEAT-automatizálás által indított böngészőváltozatot. Ha
-          már telepítve van, nem tesz semmit.
-      help: 'Az ezen a gépen futó összetevők kezelése: az AEAT-automatizálás böngészője,
-        valamint a helyi dokumentumolvasó (futtatókörnyezet állapota, telepítés, indítás,
-        modellletöltés, -betöltés, -ellenőrzés és -eltávolítás, vagy az egész beállítása
-        egy lépésben).'
-      install:
-        confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához.
-          Enélkül semmi sem települ.
-        help: A helyi futtatókörnyezet telepítése a platform csomagkezelőjével (Windowson
-          winget, macOS-en Homebrew). Ha már telepítve van, nem tesz semmit; Linuxon
-          neked kell telepítened.
+        help: Előkészíti a böngészőt, amelyet a Cadrumo az adóhivatal webhelyéhez
+          használ. Előbb megmutatja a tervet és megkérdez.
+      complete: A Cadrumo elő van készítve.
+      fix: 'A javításhoz futtasd: %{command}'
+      hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
+      help: 'Előkészíti és ellenőrzi, amire a Cadrumónak szüksége van ezen a számítógépen:
+        az adóhivatal webhelyéhez használt böngészőt és a helyi MI-t, a programjával
+        és a modelljeivel. Minden parancs a bejelentkezett profilodban fut.'
+      incomplete: Néhány összetevő még nem áll készen.
       load:
-        help: Modellek betöltése a helyi futtatókörnyezet memóriájába, hogy az első
-          beolvasásnak ne kelljen hidegindításra várnia; minden olvasói szerepkör
-          modelljét, hacsak a --role vagy a --model nem szűkíti. Betöltés előtt elutasítja,
-          ha kevés a memória; a már betöltött modellt nem módosítja.
-        model_help: A betöltendő modell azonosítója a futtatókörnyezetben. Már letöltöttnek
-          kell lennie. Alapértelmezés szerint a szerepkörhöz kiválasztott modell.
+        help: Betölti a modelleket a memóriába, hogy az első olvasásnak ne kelljen
+          várnia; minden szerep modelljét, hacsak a --role vagy a --model nem szűkíti.
+          Betöltés előtt elutasítja, ha kevés a memória.
+        model_help: A betöltendő modell neve. Már letöltöttnek kell lennie. Alapértelmezés
+          szerint a szerephez választott modell.
+      outcome:
+        cancelled: Megszakítottad az előkészítést.
+        completed: Az előkészítés befejeződött.
+        interrupted: Az előkészítés befejezés előtt megszakadt. Futtasd újra a parancsot
+          a folytatáshoz.
+        not_enough_space: Nincs elég szabad hely a lemezen, ezért semmi sem töltődött
+          le.
+        nothing_to_do: Már minden elő van készítve.
+        plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
+          le. Futtasd újra a parancsot az új terv megtekintéséhez.
+        rejected: Semmi sem töltődött le.
+      plan:
+        destination: '  Helye: %{path}'
+        entry: '%{name}: %{size}, innen: %{hosts}'
+        heading: 'A Cadrumo ezeket készíti elő:'
+        installs_program: '  Ez egy programot telepít erre a számítógépre. A telepítője
+          engedélyt kérhet tőled.'
+        part: '    %{name}: %{size}'
+        shared: '  Ugyanazt a letöltést használja, mint: %{name}.'
+        size_unknown: a méret még nem ismert
+        total: 'Teljes letöltés: %{size}.'
+        total_unknown: 'Teljes letöltés: legalább %{size}. Néhány méret csak a letöltés
+          kezdetekor derül ki.'
       probe:
-        help: Most ellenőrzi a szövegmodell alkalmasságát ahelyett, hogy az `aeat
-          config provision verify` által rögzített ítéletet olvasná, és ezzel az eredménnyel
-          jelenti a helyi olvasó állapotát. Betölti a modellt; semmit sem rögzít.
+        help: 'Alaposan ellenőriz minden összetevőt: eléri a letöltési kiszolgálókat,
+          megnyitja a böngészőt és kipróbálja a modelleket. Semmit sem tölt le.'
+      progress: '%{name}: %{step}'
+      progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
       pull:
-        help: Modellek letöltése a helyi futtatókörnyezetbe, alapértelmezés szerint
-          minden olvasószerepkör modelljéé, hacsak a --role vagy a --model nem szűkíti.
-          Letöltés előtt elutasít, ha egy modell nem lenne betölthető.
-        model_help: A letöltendő modell futtatókörnyezeti azonosítója. Alapértelmezés
-          a szerepkörhöz választott modell.
+        help: 'Előkészíti a helyi MI-t: ha hiányzik, telepíti a programját, majd letölti
+          minden szerep modelljét. Előbb megmutatja a tervet és megkérdez; a program
+          telepítője is engedélyt kérhet.'
+        model_help: Egy katalógusbeli modell neve, amelyet a Cadrumo által választott
+          helyett használsz.
       remove:
-        help: Egy Cadrumo által kiválasztott modell törlése a helyi futtatókörnyezet
-          tárolójából, a felszabadított hely jelentésével.
-        model_help: A törlendő modell futtatókörnyezeti azonosítója. Csak a Cadrumo
-          által kiválasztott modellek törölhetők.
+        help: Töröl erről a számítógépről egy modellt, amelyet a Cadrumo választott,
+          és jelzi a felszabadult helyet.
+        model_help: A törlendő modell neve. Csak a Cadrumo által választott modellek
+          törölhetők.
       report:
-        help: Jelentés a mért hardverről, a szerepkörhöz választott modellről és a
-          betölthetőségről.
-      role_help: 'A kezelendő modellszerepkör (képátírás, szövegkinyerés, táblázatos
-        leképezés, teljesítés jellegére tett javaslat). Alapértelmezés: minden szerepkör.'
+        help: Jelzi a számítógép memóriáját, az egyes szerepekhez választott modellt,
+          és hogy most betölthető-e.
+      role_help: A modell szerepe, amelyre a művelet vonatkozik (képek átírása, szöveg
+        kinyerése, táblázatoszlopok megfeleltetése, ügylettípus javaslata). Alapértelmezés
+        szerint minden szerep.
       setup:
-        confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához,
-          ha hiányzik a futtatókörnyezet. Enélkül a beállítás a telepítési lépésnél
-          leáll, és nem telepít.
-        help: 'A helyi olvasó beállítása egy lépésben: a futtatókörnyezet telepítése
-          (csak --confirm esetén), indítása, minden szerepkör modelljének letöltése,
-          betöltése és ellenőrzése. A már elvégzett lépéseket változatlanként jelzi;
-          az első sikertelen lépés leállítja a futást.'
+        help: Előkészít minden összetevőt, amely még nem áll készen. Megmutatja, mi
+          töltődik le, mekkora és hová kerül, és megkérdez, mielőtt bármit letöltene.
+      size:
+        gigabytes: '%{value} GB'
+        megabytes: '%{value} MB'
       start:
-        help: Elindítja a telepített helyi futtatókörnyezetet, ha a beállított helyi
-          végpont nem válaszol. Ha már válaszol, nem tesz semmit.
+        help: Elindítja a telepített helyi MI-programot, ha nem válaszol. Nem csinál
+          semmit, ha már válaszol.
       status:
-        help: Jelenti, hogy a helyi futtatókörnyezet telepítve van-e és válaszol-e,
-          valamint hogy az egyes olvasószerepkörök modelljei telepítve vannak-e. Csak
-          olvas.
+        help: Megmutatja, hogy az egyes összetevők készen állnak-e, abból, ami már
+          megvan ezen a számítógépen. Gyors, semmit sem tölt le.
+      step:
+        cleanup: rendrakás
+        download: letöltés
+        install: telepítés
+        plan: tervezés
+        preflight: a kapcsolat ellenőrzése
+        verify: működés ellenőrzése
       verify:
-        help: Ellenőrzi, hogy a modellek betöltődnek és időkorláton belül válaszolnak
-          egy egyszerű kérésre, alapértelmezés szerint minden olvasószerepkör modelljére,
-          hacsak a --role vagy a --model nem szűkíti.
-        model_help: Az ellenőrizendő modell futtatókörnyezeti azonosítója. Alapértelmezés
-          a szerepkörhöz választott modell.
+        help: Alaposan ellenőriz egy összetevőt, vagy mindet, ha nem adsz meg egyet
+          sem. Semmit sem tölt le.
+        item_help: 'Az ellenőrzendő összetevő: browser vagy local_ai. Alapértelmezés
+          szerint mind.'
+      yes_help: Kérdés nélkül jóváhagyja a parancs által megmutatott tervet.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       help: Helyi konfiguráció, nyomtatványdefiníciók, profil, hitelesítés és naplók
@@ -2749,6 +2779,8 @@ cli:
         mi törlődne.
       reset_progress_yes_help: Megszakított parancs mentett folyamatainak törlésének
         megerősítése.
+      setup_status_hint: Az előkészítés állapotát az alábbi állapotparancs mutatja
+        meg, miután bejelentkeztél.
       yes_help: Javítás megerősítése.
     reset:
       help: Elindítja, megjeleníti vagy folytatja az összes helyben tárolt profil

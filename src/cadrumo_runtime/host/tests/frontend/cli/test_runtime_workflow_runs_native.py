@@ -19,12 +19,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.workflow.persistence import load_run, save_run
 from cadrumo.application.workflow.run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
@@ -42,12 +36,21 @@ from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    native_cli_profile_scope,
+)
 
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session

@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, NonNegativeInt, StringConstraints, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.identity.bucket import BucketId
@@ -23,7 +25,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .live_operation_execution import (
     publish_live_read_report,

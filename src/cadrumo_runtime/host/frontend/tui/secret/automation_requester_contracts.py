@@ -7,14 +7,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
+from cadrumo.core.period import Period
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
-from cadrumo.core.period import Period
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 type RequesterClientOpener = Callable[[UUID], Awaitable[FrontendClient]]

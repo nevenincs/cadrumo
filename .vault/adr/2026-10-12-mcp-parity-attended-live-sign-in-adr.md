@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-17'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef9f82179bd7864050c5423d6f04b42a37b9fc3b3e0c10dab365397ce9a671cd'
+body_hash: 'sha256:bc036b63a6931f2021e8b48a9e31645aac50f70b3f6a417e85dd62c844c7f9d6'
 related:
   - "[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -123,3 +123,9 @@ Amended 2026-10-14 under the operator's runtime separation directive: held sign-
 ## Active human lifetime refinement 2026-10-15
 
 The authorized active-use amendment in `2026-10-04-application-sign-in-adr` replaces this record's fixed human idle/absolute lifetime wording only when actual person input renews a still-live human sign-in. The original-login absolute cap does not interrupt active work. Agent, polling and service traffic never renew it; idle expiry and explicit revocation still apply. Live human siblings on the same originating login follow that renewal, while attended children retain their existing bounded deadlines and approval-based reissue. This does not turn agent activity into human activity, expand scopes, or restore expired authority. Earlier observations that no human extension exists describe the pre-repair implementation.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "Direct `aeat config login`, `aeat config logout` and profile creation remain tax commands." above is kept as accepted history. It now reads together with this ruling: They remain tax doors that present the secret to the runtime and render its typed outcome; they perform no authentication themselves.

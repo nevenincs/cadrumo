@@ -28,9 +28,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessAllowed, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
@@ -40,6 +38,9 @@ from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,

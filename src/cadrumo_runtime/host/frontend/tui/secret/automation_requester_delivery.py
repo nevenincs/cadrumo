@@ -13,10 +13,11 @@ from uuid import UUID
 from textual.widgets import Button, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentKind
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.i18n.render import tr
 from cadrumo_client.contracts.deadline_budget import remaining_budget
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.transport.automation_requester import (
     AutomationRequesterCompletion,
     AutomationRequesterJourney,

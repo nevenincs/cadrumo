@@ -16,6 +16,7 @@ import type {
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
+  AgentToolRefusal,
 } from "../shell/agentSession";
 import {
   isLiveStatus,
@@ -305,7 +306,58 @@ function requested(approval: AgentApproval): AgentApproval {
 /** The messages the fixture's triggers are written in, as an agent would be
  * asked: each makes the reply do something the real one can. */
 const FAILS_FIRST = /falla antes de escribir/i;
+const AUTHENTICATION_REQUIRED = /requiere iniciar sesión/i;
+const UNEXPECTED_PROVIDER_CONDITION = /condición desconocida/i;
 const TOOL_FAILS = /herramienta falla/i;
+// A reply that thinks aloud, records what its tool call took and gave, and
+// answers in the Markdown a real agent writes.
+const RICH = /con formato/i;
+const RICH_THOUGHTS = [
+  "Busco los apuntes del tercer trimestre.",
+  "Sumo el IVA repercutido de las facturas emitidas.",
+];
+const RICH_TOOL_DETAILS = [
+  '{"trimestre":"3T","ejercicio":2026}',
+  "Tool result:\n42 apuntes",
+];
+const RICH_REPLY = [
+  "## Resumen del trimestre",
+  "El IVA **repercutido** es de *3.150,00 €*.",
+  "- 42 apuntes leídos\n- 1 factura por revisar: `2026-031`",
+  "| Casilla | Importe |\n|:--|--:|\n| 27 | 3.150,00 |",
+  "Más en [la sede electrónica](https://sede.agenciatributaria.gob.es).",
+].join("\n\n");
+// A tool the product refuses, as the host passes the refusal on: for a
+// component that is not set up, for something setup does not recover, and
+// one whose recovery is not an action the window knows, as though it got
+// past the host's own check.
+const TOOL_REFUSALS: readonly (readonly [RegExp, string, AgentToolRefusal])[] =
+  [
+    [
+      /falta el navegador/i,
+      "aeat_capture_censo",
+      {
+        code: "operation_not_successful",
+        recovery_action_id: "operator.provision.browser",
+      },
+    ],
+    [
+      /rechazo ajeno/i,
+      "ledger_import",
+      {
+        code: "operation_not_successful",
+        recovery_action_id: "operator.ledger.review",
+      },
+    ],
+    [
+      /rechazo malformado/i,
+      "aeat_capture_censo",
+      {
+        code: "OPERATION_NOT_SUCCESSFUL",
+        recovery_action_id: "OPERATOR.PROVISION.BROWSER",
+      },
+    ],
+  ];
 const BUSY_ELSEWHERE = /ocupado/i;
 
 /** How long a reply takes to stop, once the person asks, in milliseconds. */
@@ -349,6 +401,7 @@ export function fixtureAgent({
   stream,
   asks,
   refused,
+  turnedOff = () => new Set<string>(),
   documents = "stored",
   skills = "bundled",
 }: {
@@ -362,6 +415,8 @@ export function fixtureAgent({
   asks: FixtureAsks | null;
   /** Thrown by a read while nobody is signed in. */
   refused: () => unknown;
+  /** The lanes the profile turned off, as `<provider>_<transport>`. */
+  turnedOff?: () => ReadonlySet<string>;
   documents?: FixtureDocuments;
   /** How the agent serves its skills to `/`. */
   skills?: FixtureSkills;
@@ -482,12 +537,15 @@ export function fixtureAgent({
           listener(event);
     });
 
-  /** The steps of a tool the agent calls, through `states`. */
+  /** The steps of a tool the agent calls, through `states`. What it took and
+   * gave, `details`, only the history serves, as the agent records it. */
   const tool = (
     held: Reply,
     title: string,
     tool_kind: AgentToolCall["tool_kind"],
     states: readonly AgentToolStatus[],
+    refusal?: AgentToolRefusal,
+    details?: string[],
   ) => {
     const call: AgentToolCall = {
       id: id("t"),
@@ -498,12 +556,29 @@ export function fixtureAgent({
     return states.map((state) => () => {
       const now: AgentToolCall = { ...call, status: state };
       const at = held.run.tools.findIndex((held) => held.id === call.id);
-      if (at < 0) held.run.tools.push(now);
-      else held.run.tools[at] = now;
+      const recorded = details ? { ...now, details } : now;
+      if (at < 0) held.run.tools.push(recorded);
+      else held.run.tools[at] = recorded;
       held.sequence += 1;
-      emit(held, { type: "tool", reply_id: held.run.id, tool: now });
+      emit(held, {
+        type: "tool",
+        reply_id: held.run.id,
+        // Only the update that ends the call failed carries the refusal.
+        tool: refusal && state === "failed" ? { ...now, refusal } : now,
+      });
     });
   };
+
+  /** The step of a thought the agent shares on the way: only the stream
+   * carries it, and the history keeps none. */
+  const think = (held: Reply, words: string) => () =>
+    emit(held, {
+      type: "thought",
+      reply_id: held.run.id,
+      message_id: `${held.run.id}:thought`,
+      sequence: ++held.sequence,
+      delta: words,
+    });
 
   /** A step that parks the reply until the person decides `on`. */
   const park = (held: Reply, on: Waiting) => () => {
@@ -534,16 +609,33 @@ export function fixtureAgent({
    * stop for what this run asks of the person. */
   const play = (held: Reply, text: string) => {
     const goOn = (steps: (() => void)[]) => schedule(held, steps);
-    if (FAILS_FIRST.test(text)) {
+    if (
+      FAILS_FIRST.test(text) ||
+      AUTHENTICATION_REQUIRED.test(text) ||
+      UNEXPECTED_PROVIDER_CONDITION.test(text)
+    ) {
       // It fails before the agent wrote anything.
-      schedule(held, [
-        started(held),
-        () =>
-          settle(held.run.id, "failed", {
-            provider_condition: "provider_overloaded",
-            failure_reason: "The provider answered 529 overloaded_error.",
-          }),
-      ]);
+      const why = AUTHENTICATION_REQUIRED.test(text)
+        ? {
+            provider_condition: "unauthenticated" as const,
+            failure_reason: "Internal provider error: auth_required.",
+          }
+        : UNEXPECTED_PROVIDER_CONDITION.test(text)
+          ? {
+              // The fixture deliberately sends a value outside the declared
+              // union to prove unknown conditions stay safe at the UI edge.
+              provider_condition:
+                "unexpected_internal_condition" as NonNullable<
+                  FixtureRun["provider_condition"]
+                >,
+              failure_reason:
+                "Internal provider error: permission_requests.subagent_id missing.",
+            }
+          : {
+              provider_condition: "provider_overloaded" as const,
+              failure_reason: "The provider answered 529 overloaded_error.",
+            };
+      schedule(held, [started(held), () => settle(held.run.id, "failed", why)]);
       return;
     }
     if (asks === "questions") {
@@ -650,6 +742,43 @@ export function fixtureAgent({
                   ],
             ),
         }),
+      ]);
+      return;
+    }
+    const refused = TOOL_REFUSALS.find(([asked]) => asked.test(text));
+    if (refused) {
+      const [, title, refusal] = refused;
+      schedule(held, [
+        started(held),
+        ...write(held, "Lo intento con la herramienta."),
+        ...tool(
+          held,
+          title,
+          "fetch",
+          ["pending", "in_progress", "failed"],
+          refusal,
+        ),
+        ...write(held, "La herramienta no ha podido seguir."),
+        finish(held),
+      ]);
+      return;
+    }
+    if (RICH.test(text)) {
+      schedule(held, [
+        started(held),
+        think(held, RICH_THOUGHTS[0] ?? ""),
+        ...write(held, "Lo miro en tus apuntes."),
+        ...tool(
+          held,
+          "ledger_list",
+          "read",
+          ["pending", "in_progress", "completed"],
+          undefined,
+          RICH_TOOL_DETAILS,
+        ),
+        think(held, ` ${RICH_THOUGHTS[1] ?? ""}`),
+        ...write(held, RICH_REPLY),
+        finish(held),
       ]);
       return;
     }
@@ -811,7 +940,9 @@ export function fixtureAgent({
     async status() {
       say("agentStatus");
       await wait();
-      return status();
+      const answer = status();
+      say("agentStatusResolved");
+      return answer;
     },
     observeStatus() {
       say("agentObserveStatus");
@@ -820,7 +951,16 @@ export function fixtureAgent({
     async providerCatalog() {
       say("agentProviderCatalog");
       await check();
-      return FIXTURE_CATALOG;
+      say("agentProviderCatalogResolved");
+      // A lane turned off in the settings is not offered, as the service
+      // leaves it out of the catalog it serves.
+      const off = turnedOff();
+      return {
+        ...FIXTURE_CATALOG,
+        providers: (FIXTURE_CATALOG.providers ?? []).filter(
+          (lane) => !off.has(`${lane.provider_id}_${lane.transport}`),
+        ),
+      };
     },
     ...(skills === "unavailable"
       ? {}

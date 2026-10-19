@@ -25,7 +25,7 @@ from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from .....commands.tests.config.runtime_cli import invoke_runtime_cli
-from .....commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 from .cli_runner import (
     bind_public_cli_runner,
     cadrumo_click_command,

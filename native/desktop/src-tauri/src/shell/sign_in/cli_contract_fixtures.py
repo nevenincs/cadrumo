@@ -10,11 +10,7 @@ import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.login_session import ProfileLoginThrottledError
 from cadrumo.application.user_profile.registration import ProfileRegistrationError
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.application.wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import render_error_json
@@ -28,8 +24,11 @@ from cadrumo_client.commands.custody_payloads import (
     ConfigSignInStatusResult,
 )
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError, SignInRefusal
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 
@@ -47,7 +46,11 @@ def documents() -> dict[str, object]:
         # config.custody._login_through_the_prompt forwards this exact context.
         failure(name, "login", CliRefusedBoundaryError(error.reason, context=error.context))
 
-    frontend_failure("credential-rejected", AutomationCustodyCode.CREDENTIAL_REJECTED.value)
+    frontend_failure(
+        "credential-rejected",
+        AutomationCustodyCode.CREDENTIAL_REJECTED.value,
+        SignInRefusal(reason="credential_rejected"),
+    )
     frontend_failure(
         "runtime-throttled",
         AccessDenialCode.AUTHENTICATION_REQUIRED.value,

@@ -5,7 +5,9 @@ It reads every provider in one answer and performs the person's acts:
 
 * set or replace a direct credential (and any base URL);
 * choose how the assistant authenticates, without touching a stored key;
-* remove, which persists ``disabled`` and so blocks the development fallback;
+* turn the lane off, which persists ``disabled`` for the assistant (so the
+  development fallback is blocked too) and keeps any stored key;
+* turn an off lane back on, restoring the way it authenticates;
 * reset, which deletes the record and returns the provider to ``unset``.
 
 Every action carries the revision the caller read as its guard and is
@@ -27,7 +29,7 @@ from pydantic import SecretStr
 from cadrumo.core.storage_environment import StorageMode
 from cadrumo.core.time.clock import now
 
-from ..domain.catalog import CliProgram, ProviderCatalogEntry, ProviderConsumer, validate_https_base_url
+from ..domain.catalog import ProviderCatalogEntry, ProviderConsumer, validate_https_base_url
 from ..domain.record import (
     PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION,
     AssistantAuth,
@@ -42,6 +44,7 @@ from .contracts import (
     CliState,
     ProviderSettingsActionAccepted,
     ProviderSettingsActionResult,
+    ProviderSettingsMode,
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
     ProviderSettingsStatus,
@@ -57,7 +60,7 @@ from .ports import (
     StoreRefusalCode,
     UnreadableProviderRecord,
 )
-from .resolution import read_revision, status_entry
+from .resolution import provider_mode, read_revision, status_entry
 
 
 class AssistantAuthChoice(StrEnum):
@@ -85,7 +88,7 @@ class ProviderSettingsService:
         environment: Mapping[str, str],
         storage_mode: StorageMode,
         clock: Callable[[], datetime] = now,
-        cli_state_probe: Callable[[CliProgram], CliState] | None = None,
+        cli_state_probe: Callable[[ProviderCatalogEntry], CliState] | None = None,
     ) -> None:
         """Bind the service to one profile's store and the process's storage mode."""
         self._store = store
@@ -193,21 +196,88 @@ class ProviderSettingsService:
         )
         return self._commit(entry, record, expected_revision)
 
-    def remove_credential(self, provider_id: str, *, expected_revision: str) -> ProviderSettingsActionResult:
-        """Persist ``disabled``: the stored credential is dropped and no fallback applies."""
+    def turn_off(self, provider_id: str, *, expected_revision: str) -> ProviderSettingsActionResult:
+        """Persist the lane as off for the assistant, keeping whatever is stored.
+
+        Only the assistant axis becomes ``disabled``: a stored key, its base URL
+        and the credential state stay as they were, so turning the lane back on
+        needs no new key. With no record, the off record stores no credential.
+        An unreadable record is refused, since only a guarded reset may replace it.
+        """
         entry = self._lane(provider_id)
         if isinstance(entry, ProviderSettingsRefusal):
             return entry
         current = self._current(entry, expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
             return current
+        if isinstance(current, UnreadableProviderRecord):
+            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        previous = current.record if isinstance(current, StoredProviderRecord) else None
         record = self._record(
             entry,
             assistant_auth=AssistantAuth.DISABLED,
-            credential_state=CredentialState.DISABLED,
-            credential=None,
+            credential_state=previous.credential_state if previous is not None else CredentialState.UNSET,
+            credential=previous.credential if previous is not None else None,
         )
         return self._commit(entry, record, expected_revision)
+
+    def turn_on(self, provider_id: str, *, expected_revision: str) -> ProviderSettingsActionResult:
+        """Turn an off lane back on, restoring how it authenticated.
+
+        A lane takes either a direct credential or only its provider's own
+        sign-in, never both, so the way back follows from the lane and from
+        what is stored:
+
+        * a stored credential is used directly again (``direct_api``);
+        * a lane that takes only provider sign-in selects that sign-in again;
+        * otherwise nothing is left to restore, so the record is deleted and
+          the lane is ``unset`` again, which in development re-enables the
+          environment fallback.
+
+        A lane that is not off is refused with ``unknown``.
+        """
+        entry = self._lane(provider_id)
+        if isinstance(entry, ProviderSettingsRefusal):
+            return entry
+        current = self._current(entry, expected_revision)
+        if isinstance(current, ProviderSettingsRefusal):
+            return current
+        if not isinstance(current, StoredProviderRecord) or provider_mode(current) is not ProviderSettingsMode.DISABLED:
+            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        previous = current.record
+        if previous.credential is not None and entry.auth_kind.accepts_direct_credential:
+            assistant_auth = AssistantAuth.DIRECT_API
+        elif entry.auth_kind.accepts_provider_sign_in:
+            assistant_auth = AssistantAuth.PROVIDER_SIGN_IN
+        else:
+            return self.reset(provider_id, expected_revision=expected_revision)
+        record = self._record(
+            entry,
+            assistant_auth=assistant_auth,
+            credential_state=previous.credential_state,
+            credential=previous.credential,
+        )
+        return self._commit(entry, record, expected_revision)
+
+    def turned_off_lanes(self) -> frozenset[tuple[str, str]] | None:
+        """Return the ``(provider, transport)`` of every lane turned off, from the store alone.
+
+        This reads the cached catalog and the encrypted records only; it never
+        probes a provider program. ``None`` means the answer is not known
+        because the catalog or the store refused, never that no lane is off.
+        """
+        try:
+            catalog = self._catalog_source.catalog()
+        except ProviderCatalogUnavailableError:
+            return None
+        reads = self._store.read(catalog.provider_ids)
+        if isinstance(reads, StoreRefusal):
+            return None
+        return frozenset(
+            (entry.provider, entry.transport.value)
+            for entry, read in zip(catalog.providers, reads, strict=True)
+            if isinstance(read, StoredProviderRecord) and provider_mode(read) is ProviderSettingsMode.DISABLED
+        )
 
     def reset(self, provider_id: str, *, expected_revision: str) -> ProviderSettingsActionResult:
         """Delete the provider's record, returning it to ``unset``.
@@ -294,7 +364,7 @@ class ProviderSettingsService:
         if self._cli_state_probe is None:
             return CliState.UNKNOWN
         # The lane's primary program is the first the agent lists.
-        return self._cli_state_probe(entry.cli_programs[0])
+        return self._cli_state_probe(entry)
 
     def _accepted(self, entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderSettingsActionAccepted:
         return ProviderSettingsActionAccepted(

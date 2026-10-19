@@ -19,7 +19,7 @@ from cadrumo.adapters.inbound.financial.providers.csv import CsvProvider
 from cadrumo.domain.transactions.models import derive_transaction_id
 from cadrumo.entrypoints.tests.ledger_corpus_support import match_corpus_rule
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from .ledger_ux_support import _invoke_exact_profile
 

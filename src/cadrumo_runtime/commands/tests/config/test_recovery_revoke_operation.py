@@ -22,7 +22,6 @@ from cadrumo.application.operations.access_resolution import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.recovery_custody import (
@@ -40,6 +39,8 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.tests.command_line_rendering import Printed, assert_prints, command_result, json_document
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]

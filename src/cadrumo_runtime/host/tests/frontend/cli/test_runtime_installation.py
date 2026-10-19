@@ -18,12 +18,13 @@ from cadrumo.application.storage_management.errors import StorageReclaimUnconfir
 from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.storage_taxonomy import StorageArea
-from cadrumo.entrypoints.cli.operation_installation import run_installation_act_if_runtime
+from cadrumo.entrypoints.cli.operation_installation import run_installation_act
 from cadrumo_client.commands.errors import (
     CliRecordedOperationError,
     CliRefusedBoundaryError,
     CliUnexpectedBoundaryError,
 )
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import (
     StorageCheckReply,
     StorageCheckRequest,
@@ -63,9 +64,7 @@ def _installed_runtime(tmp_path: Path, login: InstallationLogin) -> Generator[Pa
 
 def test_a_command_gets_the_acts_reply_from_the_running_runtime(tmp_path: Path) -> None:
     with _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())) as root:
-        reply = run_installation_act_if_runtime(
-            StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply
-        )
+        reply = run_installation_act(StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply)
 
     assert isinstance(reply, StorageCheckReply)
     assert reply.storage_root == str(root)
@@ -77,7 +76,7 @@ def test_a_refused_act_raises_the_error_its_handler_raised(tmp_path: Path) -> No
         _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())),
         pytest.raises(CliRecordedOperationError) as refused,
     ):
-        run_installation_act_if_runtime(
+        run_installation_act(
             StorageReclaimRequest(request_id=uuid4(), frontend=_CLI, area=StorageArea.LOGS),
             StorageReclaimReply,
         )
@@ -97,7 +96,7 @@ def test_a_failed_act_is_reported_as_unexpected_with_an_unknown_effect_and_witho
         _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())),
         pytest.raises(CliRecordedOperationError) as failed,
     ):
-        run_installation_act_if_runtime(StorageInitRequest(request_id=uuid4(), frontend=_CLI), StorageInitReply)
+        run_installation_act(StorageInitRequest(request_id=uuid4(), frontend=_CLI), StorageInitReply)
 
     assert failed.value.recorded_code == get_registered_error_code(CliUnexpectedBoundaryError).code
     assert failed.value.context == {"installation_act": "storage_init", "effect": "unknown"}
@@ -114,7 +113,7 @@ def test_an_admission_refusal_is_raised_with_its_code(tmp_path: Path, fault: str
     )
 
     with _installed_runtime(tmp_path, login), pytest.raises(CliRefusedBoundaryError) as refused:
-        run_installation_act_if_runtime(StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply)
+        run_installation_act(StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply)
 
     assert (refused.value.context or {})["reason"] == "needs_user"
 
@@ -124,17 +123,15 @@ def test_an_act_the_runtime_does_not_serve_is_refused_as_unavailable(tmp_path: P
         _installed_runtime(tmp_path, InstallationLogin(owner=owner_id())),
         pytest.raises(CliRefusedBoundaryError) as refused,
     ):
-        run_installation_act_if_runtime(
-            StorageInventoryRequest(request_id=uuid4(), frontend=_CLI), StorageInventoryReply
-        )
+        run_installation_act(StorageInventoryRequest(request_id=uuid4(), frontend=_CLI), StorageInventoryReply)
 
     assert (refused.value.context or {})["reason"] == "operation_unavailable"
 
 
-def test_a_command_never_starts_the_runtime_it_cannot_reach(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        reply = run_installation_act_if_runtime(
-            StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply
-        )
+def test_a_command_with_no_runtime_is_refused_as_unavailable_and_neither_starts_nor_stands_in_for_one(
+    tmp_path: Path,
+) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path), pytest.raises(RefusalError) as refused:
+        run_installation_act(StorageCheckRequest(request_id=uuid4(), frontend=_CLI), StorageCheckReply)
 
-    assert reply is None
+    assert refused.value.reason is RefusalCode.UNAVAILABLE

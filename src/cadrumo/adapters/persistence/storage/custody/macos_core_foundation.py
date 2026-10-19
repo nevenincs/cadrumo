@@ -7,9 +7,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import cast
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
+
 from .macos_keychain_contracts import CORE_FOUNDATION, MAX_SECRET_BYTES, UTF8, NativeKeychainFunction
 from .macos_keychain_policy import keychain_refusal
 from .zeroise import zeroise

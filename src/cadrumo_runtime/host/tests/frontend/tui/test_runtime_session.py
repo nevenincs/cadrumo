@@ -14,22 +14,6 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, OptionList, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    DISCLOSURE_PAGE_ENTRIES,
-    AccessAction,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    DisclosureCategory,
-    DisclosurePage,
-    DisclosurePageRequest,
-    DisclosurePermission,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-    disclosure_digest,
-    ordered_disclosures,
-    summarize_disclosures,
-)
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.application.user_profile.automation_operations import (
@@ -43,6 +27,22 @@ from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo.entrypoints.tui.operations.destination import OperationsCatalogueScreen
 from cadrumo.entrypoints.tui.reference.destination import ReferenceScreen
 from cadrumo.entrypoints.tui.reference.reads import ReferenceRead
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    DISCLOSURE_PAGE_ENTRIES,
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePage,
+    DisclosurePageRequest,
+    DisclosurePermission,
+    EffectiveScopeSummary,
+    disclosure_digest,
+    ordered_disclosures,
+    summarize_disclosures,
+)
 from cadrumo_client.contracts.installation_requests import InstallationAct
 from cadrumo_client.contracts.profile_access import ProfileStatus, SessionsLocked
 from cadrumo_client.contracts.session_events import LifecycleNotice

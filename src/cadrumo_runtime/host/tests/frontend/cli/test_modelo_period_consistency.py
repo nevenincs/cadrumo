@@ -24,7 +24,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.core.config import override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 from .profile_password_cli import invoke_with_profile_password
 

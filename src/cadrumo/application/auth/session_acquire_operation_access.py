@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.access_resolution import (
     HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
@@ -15,9 +17,6 @@ from ..operations.access_resolution import (
     require_declared_action,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operation_definitions import AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID, AuthSessionAcquireOperationRequest
 from .operator_results import AuthLoginResult

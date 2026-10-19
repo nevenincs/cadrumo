@@ -10,8 +10,8 @@ from cadrumo.adapters.persistence.storage.custody.linux_secret_contracts import 
     secret_object_path,
     secret_reply_body,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

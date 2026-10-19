@@ -300,10 +300,11 @@ test.describe("the options a permission offers", () => {
       offeredOptions([
         option("allow_always"),
         option("allow_once"),
+        option("allow_session"),
         option("reject_always"),
         option("reject_once"),
       ]).map(({ kind }) => kind),
-    ).toEqual(["allow_once", "reject_once"]);
+    ).toEqual(["allow_once", "allow_session", "reject_once"]);
     expect(
       offeredOptions([option("allow_once")]).map(({ kind }) => kind),
     ).toEqual(["allow_once"]);

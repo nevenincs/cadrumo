@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 import pytest
@@ -11,7 +10,9 @@ import typer
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.output_rendering import OutputFormat
+from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.profile_selection import LoginTarget
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 from cadrumo_runtime.commands import profile_admission as admission
 from cadrumo_runtime.commands.access_management_specs import RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS
@@ -104,9 +105,9 @@ def test_resume_binds_the_explicit_profile_through_runtime_admission(monkeypatch
     profile_id = uuid4()
     events: list[tuple[str, UUID]] = []
     monkeypatch.setattr(
-        admission,
-        "resolve_login_target",
-        lambda label: SimpleNamespace(bucket_id=profile_id, label=label),
+        profile_selection,
+        "runtime_login_target",
+        lambda label: LoginTarget(str(profile_id), label),
     )
     monkeypatch.setattr(
         admission,

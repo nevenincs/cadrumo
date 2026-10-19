@@ -47,15 +47,12 @@ from .config_storage_route import classify_storage_route_for_settings, settings_
 from .config_support import (
     JustificanteParserBackendSetting,
 )
-from .config_support import default_aeat_sede_origin as _default_aeat_sede_origin
 from .config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
 from .config_support import (
     default_clave_permanente_sede_access_url_template as _default_clave_permanente_sede_access_url_template,
 )
 from .config_support import default_clave_sede_access_url_template as _default_clave_sede_access_url_template
 from .config_support import default_sede_expedientes_path as _default_sede_expedientes_path
-from .config_support import default_status_detail_url_template as _default_status_detail_url_template
-from .config_support import default_status_notificaciones_path as _default_status_notificaciones_path
 from .errors.hierarchy import pydantic_validation_boundary
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
@@ -182,7 +179,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     """Application settings populated from process environment variables.
 
     Field names map directly to env var names (uppercased). For example,
-    ``aeat_base_url`` reads ``AEAT_BASE_URL``. There is no ``.env`` file
+    ``cadrumo_log_level`` reads ``CADRUMO_LOG_LEVEL``. There is no ``.env`` file
     support: the process environment is the sole external override channel,
     alongside the in-process ``init_settings`` source that ``--profile`` and
     :func:`override_settings` write through. The model is declarative: it
@@ -255,25 +252,12 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         ),
     )
 
-    # ── AEAT ────────────────────────────────────────────────────────────────
-    aeat_base_url: str = Field(
-        default_factory=_default_aeat_sede_origin,
-        description="AEAT sede electrónica base URL",
-    )
     cadrumo_log_level: str = Field(
         default="",
         description=(
             "Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. "
             "The desktop Logs view defaults to INFO and uses this as its initial minimum level. "
             "CLI verbosity names quiet, default, verbose, and debug remain supported."
-        ),
-    )
-    cadrumo_tui_appearance: _config_support.TuiAppearance = Field(
-        default=_config_support.TuiAppearance.AUTO,
-        description=(
-            "Appearance for the full-screen terminal surfaces. "
-            "auto = follow the host terminal. light = the warm-paper appearance. "
-            "dark = the low-light appearance."
         ),
     )
     # ── Multilingual i18n ───────────────────────────────────────────────────
@@ -286,18 +270,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
             "Target ISO 639-1 language code for user-facing content. Invalid values coerce to None "
             "and fall back to the default."
         ),
-    )
-    aeat_authoritative_language_aeat_terms: str = Field(
-        default="es",
-        description=("Authoritative language for domain terminology (modelos, registry definitions, references)."),
-    )
-    cadrumo_authoritative_language_project_docs: str = Field(
-        default="en",
-        description="Authoritative language for internal code and documentation",
-    )
-    cadrumo_fallback_languages: str = Field(
-        default="es,en",
-        description=("Comma-separated fallback chain consulted when the target language is missing."),
     )
 
     # ── Storage ─────────────────────────────────────────────────────────────
@@ -567,7 +539,10 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
     cadrumo_proxy_url: str = Field(
         default="",
-        description="Proxy URL (e.g., 'http://proxy.example.com:8080')",
+        description=(
+            "Proxy URL (e.g., 'http://proxy.example.com:8080'); it may carry 'user:password@', "
+            "and is then treated as a credential"
+        ),
     )
     cadrumo_proxy_username: str = Field(
         default="",
@@ -580,10 +555,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_proxy_bypass: str = Field(
         default="",
         description="Comma-separated list of domains to bypass the proxy",
-    )
-    cadrumo_rate_limit_delay_seconds: float = Field(
-        default=2.0,
-        description="Minimum delay between AEAT requests in seconds",
     )
 
     # ── Site-health detection ───────────────────────────────────────────────
@@ -609,15 +580,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_certificate_friendly_name: str | None = Field(
         default=None,
         description="Optional human-readable label for the certificate",
-    )
-    cadrumo_auth_timeout_ms: int = Field(
-        default=30_000,
-        ge=1,
-        description="Playwright navigation timeout for protected AEAT authentication in milliseconds",
-    )
-    cadrumo_strict_security: bool = Field(
-        default=False,
-        description="Raise instead of warn when AEAT credential artifact permission hardening fails",
     )
     cadrumo_cert_warn_days: int = Field(
         default=60,
@@ -783,27 +745,10 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         ),
     )
 
-    # ── Filing-deadline engine ──────────────────────────────────────────────
-    cadrumo_deadline_due_soon_days: int = Field(
-        default=14,
-        description=(
-            "Days before an obligation's closes_on date that flag ObligationStatus.DUE_SOON in the deadline engine"
-        ),
-    )
-
     # ── Submission engine ───────────────────────────────────────────────────
     cadrumo_submissions_dir: Path = Field(
         default=Path("submissions"),
         description="Directory where ModeloPresentado JSON audit records are persisted",
-    )
-
-    # ── Notifications inbox ─────────────────────────────────────────────────
-    cadrumo_inbox_alert_lead_days: int = Field(
-        default=7,
-        description=(
-            "Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH "
-            "notifications whose appeal_deadline falls within the next N days"
-        ),
     )
 
     # ── Workflow engine ─────────────────────────────────────────────────────
@@ -815,29 +760,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     cadrumo_drafts_dir: Path = Field(
         default=Path("drafts"),
         description="Directory where filing drafts are written as JSON files",
-    )
-    cadrumo_draft_fail_on_warning: bool = Field(
-        default=False,
-        description=(
-            "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
-        ),
-    )
-    # ── Status reader ───────────────────────────────────────────────────────
-    aeat_status_detail_url_template: str = Field(
-        default_factory=_default_status_detail_url_template,
-        description=(
-            "URL path template for an expediente detail page. "
-            "Must contain '{expediente_id}'. Override only when AEAT changes "
-            "the corresponding route."
-        ),
-    )
-    aeat_status_notificaciones_path: str = Field(
-        default_factory=_default_status_notificaciones_path,
-        description=(
-            "URL path for the 'Mis notificaciones' listing page. "
-            "Joined against aeat_base_url. Override only when AEAT changes "
-            "the corresponding route."
-        ),
     )
 
     # ── Observability ──────────────────────────────────────────────────────
@@ -894,14 +816,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         default=Path("filing-history"),
         description="Directory where the persisted ModeloHistory JSON file lives",
     )
-    cadrumo_filing_history_cache_ttl_s: int = Field(
-        default=900,
-        description="TTL in seconds for per-expediente filing-history cache entries (default 15 min)",
-    )
-    cadrumo_filing_history_archive_html: bool = Field(
-        default=False,
-        description="If true, archive fetched detail-page HTML under <cadrumo_filing_history_dir>/pages/",
-    )
 
     # ── Introspection ───────────────────────────────────────────────────────
 
@@ -930,20 +844,11 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
 
     @field_validator(
         "cadrumo_certificate_password_secret",
-        "cadrumo_llm_anthropic_api_key",
-        "cadrumo_llm_openai_api_key",
-        "cadrumo_llm_gemini_api_key",
         mode="before",
     )
     @classmethod
     def _empty_optional_secrets_are_none(cls, value: object) -> object:
         return _config_validation.empty_optional_secrets_are_none(value)
-
-    @field_validator("aeat_status_detail_url_template")
-    @classmethod
-    @pydantic_validation_boundary
-    def _detail_url_template_has_expediente_id(cls, value: str) -> str:
-        return _config_validation.detail_url_template_has_expediente_id(value)
 
     @field_validator(
         "cadrumo_clave_movil_dni_nie",
@@ -1024,6 +929,22 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
             )
         )
         return frozenset(names)
+
+    @classmethod
+    def proxy_env_var_names(cls, *, secret_fields: bool = True) -> frozenset[str]:
+        """Return the proxy settings Cadrumo-started downloads follow.
+
+        The address and the password can carry credentials, so a process that
+        holds them keeps them out of the environment its own children inherit.
+        ``secret_fields=False`` leaves out the password setting, which no
+        process boundary relays: across one, the password travels in the address.
+        """
+        return frozenset(
+            environment_name
+            for field_name in cls.model_fields
+            if field_name.startswith("cadrumo_proxy_") and (secret_fields or not field_name.endswith("_secret"))
+            for environment_name in cls._environment_names_for_field(field_name)
+        )
 
     @staticmethod
     def external_constants() -> ExternalConstants:

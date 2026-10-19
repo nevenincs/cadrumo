@@ -40,15 +40,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
@@ -63,6 +55,8 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability, DisclosureCategory, DisclosurePermission
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
@@ -225,6 +219,8 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
                     deadline=time.monotonic() + 3,
                 )
                 assert isinstance(refreshed, ProfileStatus) and refreshed.status.denial is None
+                assert refreshed.status.provider is Availability.NOT_REQUIRED
+                assert refreshed.status.published_authority is Availability.NOT_REQUIRED
                 locked = api.session(
                     SessionRequest(action="session_lock", request_id=uuid4(), profile_id=profile, session_id=api_id),
                     deadline=time.monotonic() + 3,

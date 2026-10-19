@@ -8,13 +8,13 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.request_faults import RequestFault, request_faults_text
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
 from ..contracts.contracts import RefusalCode, RefusalError
+from ..contracts.sign_in_outcomes import SignInRefusal
 
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.view_operation import (

@@ -5,9 +5,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel, model_validator
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+from .access_refusals import AccessDenialCode
 
 
 class SessionEvent(BaseModel):

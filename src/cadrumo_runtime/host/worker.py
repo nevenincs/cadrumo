@@ -16,13 +16,14 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.core.async_cleanup import AsyncCloseable, AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
 from cadrumo.core.logging import configure_logging, get_logger
+from cadrumo.core.storage_environment import withheld_child_settings
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
@@ -159,6 +160,8 @@ def _serve_connected_worker(
                 cadrumo_active_profile=str(identity.binding.profile_id),
             )
         )
+        # The worker's settings now hold the relayed proxy; no child it starts inherits it.
+        composition.enter_context(withheld_child_settings())
         configure_logging()
         diagnostic_event(_LOGGER, "profile_worker_admitted", fields={"parent_process_id": options.parent_pid}, level=10)
         composition.enter_context((composition_factory or installed_profile_worker_composition)())

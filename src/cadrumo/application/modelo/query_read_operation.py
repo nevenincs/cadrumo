@@ -13,6 +13,16 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ...core.operations import (
@@ -57,15 +67,6 @@ from ..state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
     build_modelo_readiness_reports,
-)
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .binding_readiness import profile_resolvable_binding_ids

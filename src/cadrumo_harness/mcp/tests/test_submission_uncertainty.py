@@ -16,8 +16,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationSubmit, OperationSubmitted
 from cadrumo_client.contracts.profile_access import AccessRefusal

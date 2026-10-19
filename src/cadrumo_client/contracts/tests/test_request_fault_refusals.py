@@ -8,9 +8,9 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.request_faults import RequestFault
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from ..contracts import RefusalCode
 from ..profile_access import AccessRefusal

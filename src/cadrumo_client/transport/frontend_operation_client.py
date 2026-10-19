@@ -16,10 +16,10 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionDescriptionV1,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from cadrumo.core.identity.digest import ContentDigest
 
+from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import deadline_after, remaining_budget
 from ..contracts.operation_access import (

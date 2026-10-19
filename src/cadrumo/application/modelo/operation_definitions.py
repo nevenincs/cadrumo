@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.errors.hierarchy import CadrumoError
@@ -56,7 +58,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ._edit_execution import apply_modelo_edit
 from .action_errors import (

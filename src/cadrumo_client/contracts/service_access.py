@@ -8,10 +8,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from cadrumo.application.user_profile.access_contracts import AccessScope
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
+from .access_vocabulary import AccessScope
 from .contracts import ByteChannel
 from .extension_records import ExtensionRecordCapability
 from .transport import ConnectionContext

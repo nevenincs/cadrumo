@@ -262,16 +262,17 @@ def test_namespace_permission_and_symlink_substitution_refused(tmp_path: Path, n
         PosixEndpoint(storage_root=tmp_path, namespace=namespace)
 
 
-def test_materialized_storage_admits_a_real_private_endpoint(namespace: Path) -> None:
-    """Fresh public storage materialization produces a usable native namespace."""
+def test_the_runtime_endpoint_creates_its_own_private_namespace_over_materialized_storage(namespace: Path) -> None:
+    """Client storage materialization leaves the namespace to the runtime, whose endpoint creates it private."""
     root = namespace.parent / "state"
     assert not root.exists()
     with derived_storage_settings(root):
         settings = load_settings()
         ensure_storage_tree(settings)
         runtime_namespace = settings.cadrumo_connection_socket_dir
-        assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o700
+        assert not runtime_namespace.exists()
         endpoint = PosixEndpoint(storage_root=root, namespace=runtime_namespace)
+        assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o700
         try:
             endpoint.listen()
             client = endpoint.connect()

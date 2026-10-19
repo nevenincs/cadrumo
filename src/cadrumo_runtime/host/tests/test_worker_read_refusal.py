@@ -27,15 +27,15 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationManagementRequest
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest

@@ -20,14 +20,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AuthorityState,
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo_client.contracts.access_management import (
     AutomationDenied,
@@ -39,6 +32,8 @@ from cadrumo_client.contracts.access_management import (
     SessionInventory,
     SessionInventoryReply,
 )
+from cadrumo_client.contracts.access_vocabulary import AuthorityState, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin, ProfileStatus, SessionRequest

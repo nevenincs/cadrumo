@@ -6,10 +6,11 @@
 //! the launch parameters a parent may supply, the package facts it sets, and its `PATH`.
 
 use crate::{
-    EXECUTABLE, LAUNCH_AUTHORITY_PATH, LAUNCH_AUTHORITY_PIN, LAUNCH_IMAGES, LAUNCH_INVOCATIONS,
-    LAUNCH_PACKAGE_FIXED, LAUNCH_PATH_ENTRIES, LAUNCH_POSIX_SYSTEM_PATH, LAUNCH_PROFILES, LAUNCH_REFUSALS,
-    LAUNCH_TEMPORARY_PINS, LAUNCH_WINDOWS_SYSTEM_SUBPATHS, LAUNCH_WINDOWS_SYSTEM_VARIABLE,
-    LaunchInvocation, LaunchProfile, NATIVE, ROOT_VARIABLE, TEMPORARY_ENV, storage,
+    EXECUTABLE, LAUNCH_AUTHORITY_PATH, LAUNCH_AUTHORITY_PIN, LAUNCH_EXTERNAL_PATH_DEFAULTS,
+    LAUNCH_IMAGES, LAUNCH_INVOCATIONS, LAUNCH_PACKAGE_FIXED, LAUNCH_PATH_ENTRIES,
+    LAUNCH_POSIX_SYSTEM_PATH, LAUNCH_PROFILES, LAUNCH_REFUSALS, LAUNCH_TEMPORARY_PINS,
+    LAUNCH_WINDOWS_SYSTEM_SUBPATHS, LAUNCH_WINDOWS_SYSTEM_VARIABLE, LaunchInvocation,
+    LaunchProfile, NATIVE, ROOT_VARIABLE, TEMPORARY_ENV, storage,
 };
 use std::{
     collections::BTreeMap,
@@ -337,6 +338,40 @@ fn search_path(
                                 entry.value
                             )));
                         }
+                        search.push(directory);
+                    }
+                }
+            }
+            "external_defaults" => {
+                if !admits(profile, entry.value) {
+                    continue;
+                }
+                for default in LAUNCH_EXTERNAL_PATH_DEFAULTS {
+                    let applies = match default.platform {
+                        "windows" => cfg!(windows),
+                        "posix" => !cfg!(windows),
+                        "macos" => cfg!(target_os = "macos"),
+                        _ => false,
+                    };
+                    if !applies {
+                        continue;
+                    }
+                    let mut directory = if let Some(variable) = default.variable {
+                        if !profile.base.contains(&variable) {
+                            continue;
+                        }
+                        let Some(root) = lookup(ambient, variable) else {
+                            continue;
+                        };
+                        PathBuf::from(root)
+                    } else {
+                        PathBuf::from(default.path)
+                    };
+                    if !directory.is_absolute() {
+                        continue;
+                    }
+                    directory.extend(default.subpaths);
+                    if directory.is_dir() && !search.contains(&directory) {
                         search.push(directory);
                     }
                 }
@@ -950,6 +985,109 @@ mod tests {
     }
 
     #[test]
+    fn admitted_profiles_add_only_existing_declared_installation_directories_after_package_paths() {
+        let scratch = Scratch::new("agent-install-path");
+        let external = scratch.0.join("explicit-bin");
+        std::fs::create_dir_all(&external).unwrap();
+        let home = scratch.0.join("home");
+        let appdata = scratch.0.join("appdata");
+        let (home_bin, external_roots) = if cfg!(windows) {
+            let local = home.join(".local").join("bin");
+            let scoop = home.join("scoop").join("shims");
+            let npm = appdata.join("npm");
+            std::fs::create_dir_all(&local).unwrap();
+            std::fs::create_dir_all(&scoop).unwrap();
+            std::fs::create_dir_all(&npm).unwrap();
+            (local, vec![scoop, npm])
+        } else {
+            let local = home.join(".local").join("bin");
+            std::fs::create_dir_all(&local).unwrap();
+            (local, Vec::new())
+        };
+        let external_name = LAUNCH_PATH_ENTRIES
+            .iter()
+            .find(|entry| entry.kind == "external")
+            .unwrap()
+            .value;
+        let mut extra = vec![
+            (external_name.to_owned(), external.to_str().unwrap()),
+            ("PATH".to_owned(), "/poison"),
+            (
+                if cfg!(windows) { "USERPROFILE" } else { "HOME" }.to_owned(),
+                home.to_str().unwrap(),
+            ),
+        ];
+        if cfg!(windows) {
+            extra.push(("APPDATA".to_owned(), appdata.to_str().unwrap()));
+        }
+        let gateway = select("cadrumo-agent", &agent_arguments(&["serve"])).unwrap();
+        let ambient = agent_ambient(gateway.prefix, &extra);
+        let defined = define_environment(
+            gateway,
+            &ambient,
+            &scratch.0,
+            &fixed_root(scratch.0.clone()),
+        )
+        .unwrap();
+        let path: Vec<PathBuf> =
+            env::split_paths(get(&defined.environment, "PATH").unwrap()).collect();
+        let native = scratch.0.join(NATIVE);
+        let explicit_index = path.iter().position(|entry| entry == &external).unwrap();
+        let native_index = path.iter().position(|entry| entry == &native).unwrap();
+        let default_index = path.iter().position(|entry| entry == &home_bin).unwrap();
+        assert!(explicit_index < default_index);
+        assert!(native_index < default_index);
+        let mut previous_default_index = default_index;
+        for root in external_roots {
+            let index = path.iter().position(|entry| entry == &root).unwrap();
+            assert!(previous_default_index < index);
+            previous_default_index = index;
+        }
+        let system = if cfg!(windows) {
+            PathBuf::from(r"C:\Windows\System32")
+        } else {
+            PathBuf::from("/usr/bin")
+        };
+        let system_index = path.iter().position(|entry| entry == &system).unwrap();
+        assert!(default_index < system_index);
+        assert!(!path.contains(&PathBuf::from("/poison")));
+
+        let providers = select(
+            "cadrumo-agent",
+            &agent_arguments(&["providers", "--declared", "--json"]),
+        )
+        .unwrap();
+        let provider_ambient = agent_ambient(providers.prefix, &extra);
+        let provider_environment = define_environment(
+            providers,
+            &provider_ambient,
+            &scratch.0,
+            &fixed_root(scratch.0.clone()),
+        )
+        .unwrap();
+        let provider_path: Vec<PathBuf> =
+            env::split_paths(get(&provider_environment.environment, "PATH").unwrap()).collect();
+        assert!(!provider_path.contains(&home_bin));
+
+        let absent_home = scratch.0.join("absent-home");
+        let home_name = if cfg!(windows) { "USERPROFILE" } else { "HOME" };
+        let absent_ambient = agent_ambient(
+            gateway.prefix,
+            &[(home_name.to_owned(), absent_home.to_str().unwrap())],
+        );
+        let absent_environment = define_environment(
+            gateway,
+            &absent_ambient,
+            &scratch.0,
+            &fixed_root(scratch.0.clone()),
+        )
+        .unwrap();
+        let absent_path: Vec<PathBuf> =
+            env::split_paths(get(&absent_environment.environment, "PATH").unwrap()).collect();
+        assert!(!absent_path.contains(&absent_home.join(".local").join("bin")));
+    }
+
+    #[test]
     fn a_prefixed_launch_parameter_keeps_its_kind_check_and_its_refusal_names_no_value() {
         let scratch = Scratch::new("agent-prefix-slot");
         let gateway = select("cadrumo-agent", &agent_arguments(&["serve"])).unwrap();
@@ -1000,7 +1138,11 @@ mod tests {
             .map(|(name, _)| name.to_string_lossy().to_uppercase())
             .collect();
         let mut expected_names = vec![system_name().to_owned(), "PATH".to_owned()];
-        expected_names.extend(LAUNCH_PACKAGE_FIXED.iter().map(|(name, _)| (*name).to_owned()));
+        expected_names.extend(
+            LAUNCH_PACKAGE_FIXED
+                .iter()
+                .map(|(name, _)| (*name).to_owned()),
+        );
         assert_eq!(names, expected_names);
         assert!(defined.directories.is_empty());
         for near in [
@@ -1100,6 +1242,25 @@ mod tests {
             .name,
             "agent-providers"
         );
+    }
+
+    #[test]
+    fn provider_status_uses_the_profile_bound_auth_environment() {
+        assert_eq!(
+            select(
+                "cadrumo-agent",
+                &agent_arguments(&["auth", "status", "--json"])
+            )
+            .unwrap()
+            .name,
+            "agent-auth"
+        );
+        for arguments in [
+            vec!["auth", "status"],
+            vec!["auth", "status", "--json", "--provider", "codex"],
+        ] {
+            assert!(select("cadrumo-agent", &agent_arguments(&arguments)).is_err());
+        }
     }
 
     #[test]

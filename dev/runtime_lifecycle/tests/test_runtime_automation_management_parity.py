@@ -30,10 +30,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
@@ -44,6 +40,8 @@ from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.contracts.access_management import AccessManagementRequest
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.credentials import open_installed_credential_client
@@ -58,17 +56,17 @@ from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransp
 from cadrumo_runtime.commands import runtime_automation_request
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
-    RuntimeFailureObservation,
-    observe_native_runtime_failures,
-    runtime_failure_observation,
-)
 from cadrumo_runtime.host.frontend.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
 from cadrumo_runtime.host.frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
 from cadrumo_runtime.host.frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from cadrumo_runtime.host.frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 from cadrumo_runtime.host.frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    RuntimeFailureObservation,
+    observe_native_runtime_failures,
+    runtime_failure_observation,
+)
 from cadrumo_runtime.host.tests.test_profile_connections import LoginObservation
 
 pytestmark = [

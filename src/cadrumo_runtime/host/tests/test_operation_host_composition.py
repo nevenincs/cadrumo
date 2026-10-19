@@ -20,7 +20,7 @@ import pytest
 
 from cadrumo.application.operations.composition import OperationComposedServices
 from cadrumo.application.operations.drain import OperationDrainResult
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 
 from ..operation_host import ProfileWorkerOperationHost
 

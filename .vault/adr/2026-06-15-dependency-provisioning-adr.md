@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-06-15'
-modified: '2026-07-17'
-body_hash: 'sha256:84457e02e71fda22ea0b3f0d4006e863ed2042ddd8d94c1cc07228bb41c7f67a'
+modified: '2026-10-18'
+body_hash: 'sha256:a07e59980eaa359fe2eb16286063b7962be4c889d6326fe2eb0d6aefaca5878d'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
   - "[[2026-06-15-service-capabilities-adr]]"
@@ -163,4 +163,12 @@ one doctor row. A single `aeat config check` replaces the dissolved
   probe + remediation string and a `config doctor` row. Deferred until the doctor
   surface ships and a review confirms the ungraceful paths are closed.
 
-## Codification candidates
+## Amendment 2026-10-18: one setup system
+
+Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr`, which governs the provisioning acts this record left to "opt-in provisioning". The probe contract stands: probes stay read-only, never raise on absence and return a typed status. What changes:
+
+- Every download or install runs through the registered `dependencies.setup` operation with a plan-bound approval, and every probe enrols in that record's dependency registry. Before: provisioning was "opt-in" through CLI recipes and verbs that ran in the CLI's own process.
+- A missing dependency shown to a person is one plain sentence and one action, and its recovery names an `operator.provision.*` action. The exact command remains in CLI text output and in JSON. Before: "a typed refusal / `Notice` that names the exact provisioning command" on every surface.
+- `aeat config check` and the health report read the same registry rows as every other surface.
+
+A duplicated, empty "Codification candidates" heading that ended this record was removed in the same edit.

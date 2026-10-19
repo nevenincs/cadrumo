@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.core.async_cleanup import (
     AsyncResourceCleanupError,
     async_cleanup_failures,
@@ -26,6 +25,7 @@ from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.account import RuntimeUpgradePending
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus, status_admits_session
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 

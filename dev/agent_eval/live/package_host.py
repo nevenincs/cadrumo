@@ -243,10 +243,10 @@ def request_key(profile_id: UUID, categories: list[str], request_out: Path) -> i
         installed_automation_secret_store,
     )
     from cadrumo.application.operations.registry import OperationFrontendProjection
-    from cadrumo.application.user_profile.access_contracts import DisclosureCategory
     from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
     from cadrumo.core.time.clock import now
     from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+    from cadrumo_client.contracts.access_vocabulary import DisclosureCategory
     from cadrumo_client.transport.automation_requester import AutomationRequesterJourney
     from cadrumo_client.transport.installed_client import open_installed_client
     from cadrumo_harness.access.automation_key import agent_key_proposal, agent_key_scope

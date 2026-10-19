@@ -28,8 +28,8 @@ from cadrumo.entrypoints.cli.ledger_rule_results import (
 )
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json_result
-from cadrumo_runtime.commands.tests.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .cli_runner import invoke_cached_cli
 
@@ -59,7 +59,7 @@ def seed_ledger_llm_usage_records() -> None:
     recorder = UsageRecorder()
     first = LLMResponse(
         text="ok",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=100,
         output_tokens=40,
@@ -70,7 +70,7 @@ def seed_ledger_llm_usage_records() -> None:
     )
     second = LLMResponse(
         text="ok",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=60,
         output_tokens=10,
@@ -81,7 +81,7 @@ def seed_ledger_llm_usage_records() -> None:
     )
     unpriced = LLMResponse(
         text="ok",
-        provider=LLMProvider.OPENAI,
+        provider=LLMProvider.AGENT,
         model="gpt-4.1-mini",
         input_tokens=20,
         output_tokens=5,
@@ -171,8 +171,8 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(
 
     # Usage/cost section: two ANTHROPIC calls, one a cache hit.
     usage = {row["provider"]: row for row in payload["usage_providers"]}
-    assert set(usage) == {LLMProvider.ANTHROPIC.value, LLMProvider.OPENAI.value}
-    anthropic = usage[LLMProvider.ANTHROPIC.value]
+    assert set(usage) == {LLMProvider.AGENT.value, LLMProvider.AGENT.value}
+    anthropic = usage[LLMProvider.AGENT.value]
     assert anthropic["calls"] == 2
     assert anthropic["cache_hits"] == 1
     assert anthropic["input_tokens"] == 160
@@ -180,7 +180,7 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(
     assert anthropic["total_tokens"] == 210
     assert Decimal(anthropic["cost_estimate_usd"]) == Decimal("0.0015")
     assert anthropic["unpriced_calls"] == 0
-    openai = usage[LLMProvider.OPENAI.value]
+    openai = usage[LLMProvider.AGENT.value]
     assert openai["calls"] == 1
     assert openai["cost_estimate_usd"] is None
     assert openai["unpriced_calls"] == 1
@@ -235,7 +235,7 @@ def test_llm_diagnostics_usage_window_and_threshold_keep_confidence_independent(
     assert payload["total_calls"] == 1
     only_usage = payload["usage_providers"]
     assert len(only_usage) == 1
-    assert only_usage[0]["provider"] == LLMProvider.ANTHROPIC.value
+    assert only_usage[0]["provider"] == LLMProvider.AGENT.value
     assert only_usage[0]["cache_hits"] == 1
     # Both 0.30 and 0.95 fall below 0.99 despite the usage date window.
     assert claude["low_confidence_count"] == 2

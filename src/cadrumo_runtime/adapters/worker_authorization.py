@@ -8,6 +8,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, suppress
 from datetime import datetime
+from functools import cache
 from importlib.metadata import version
 from pathlib import Path
 from threading import BoundedSemaphore, Event, Thread
@@ -15,20 +16,20 @@ from uuid import UUID, uuid4, uuid5
 
 from pydantic import SecretBytes
 
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    OperationResponseScopeAllowed,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.operation_ids import (
+    DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
+    LOCAL_READER_OPERATION_DEFINITION_ID,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES, read_document, read_secret, write_document
@@ -63,6 +64,17 @@ from cadrumo_runtime.contracts.worker_enrollment import (
 )
 
 from .worker_transport import WorkerChannel, worker_endpoint
+
+
+@cache
+def runtime_server_start_definitions() -> frozenset[str]:
+    """Return the operations whose held COMMIT fence may ask the runtime to start the model program's server.
+
+    The local reader's provisioning and the dependency setup both set up the
+    local model program. Their ids are client contracts, so the runtime names
+    them without loading the product's provisioning code.
+    """
+    return frozenset({LOCAL_READER_OPERATION_DEFINITION_ID, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID})
 
 
 def worker_authorization_namespace(worker_id: UUID) -> UUID:
@@ -430,17 +442,14 @@ class WorkerAuthorizationServer:
     ) -> WorkerServerStarted:
         """Start the model runtime's server from this process for the worker that may not own one.
 
-        Only the held COMMIT fence of the local reader's provisioning
-        operation admits the instruction. The worker sends no program and no
-        environment, so its containment still bounds everything it can run.
+        Only the held COMMIT fence of an operation named by
+        :func:`runtime_server_start_definitions` admits the instruction. The
+        worker sends no program and no environment, so its containment still
+        bounds everything it can run.
         """
-        # The provisioning contracts reach the model installer; the profile
-        # worker shares this module and must not import them to start.
-        from cadrumo.application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
-
         if (
             request.request.action is not AccessAction.COMMIT
-            or request.request.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID
+            or request.request.definition_id not in runtime_server_start_definitions()
         ):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         starter = self._runtime_server_starter

@@ -17,8 +17,8 @@ a lock stamped by a dead process is reclaimed at once, a peer that outlasts the
 wait ceiling is left to it, and locks stranded under keys nothing asks for again
 are swept. The store follows the development
 cache convention:
-an explicit ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise the
-checkout's own ``.cache`` holds it, outside the application's storage root.
+an explicit ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise the shared
+development cache root holds it (see :mod:`dev.cache_root`).
 """
 
 from __future__ import annotations

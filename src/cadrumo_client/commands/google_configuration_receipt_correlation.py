@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.user_profile.google_configuration_operation_contracts import (
     GoogleConfigurationOutcome,
     GoogleFolderViewRequest,
@@ -80,7 +80,7 @@ def correlate_google_completion(
     if (
         completed.terminal_condition not in {OperationTerminalCondition.SUCCEEDED, OperationTerminalCondition.REFUSED}
         or outcome.profile_id != client.profile_id
-        or client.frontend is not OperationFrontendProjection.CLI
+        or not is_persons_frontend(client.frontend)
     ):
         google_invalid_frame(operation_id=definition_id, completed=completed)
     if outcome.outcome == "refused":

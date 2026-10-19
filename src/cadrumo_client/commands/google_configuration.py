@@ -7,12 +7,12 @@ from typing import cast
 import typer
 from pydantic import BaseModel
 
-from cadrumo.adapters.outbound.google.errors import GoogleAuthError
 from cadrumo.application.user_profile.google_configuration_operation_contracts import (
     GoogleConfigurationOutcome,
     GoogleLoginRequest,
 )
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.google_auth import GoogleAuthError
 
 from .google_configuration_contract_map import GOOGLE_REQUEST_OPERATIONS
 from .google_configuration_projection import google_success_projection

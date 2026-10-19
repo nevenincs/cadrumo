@@ -181,6 +181,8 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     will propagate the error with full context rather than a silent empty set.
     """
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
+    from cadrumo.application.dependency_contracts import DependencySetupStep
+    from cadrumo.application.dependency_setup_operation import DependencySetupOutcome
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.operations.frontend_requests import (
         OperationCancellationRefusalCode,
@@ -196,6 +198,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.core.model_catalogue import ModelRole
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
@@ -290,6 +293,28 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
                     + [code.value for code in OperationDetachRefusalCode]
                 )
             ),
+        ),
+        FStringKeyRegistration(
+            # The setup surfaces name a local model by its catalogue role
+            # (entrypoints/cli/config/provision_cli.py, entrypoints/tui/setup/screen.py).
+            description="provisioning.role.* (ModelRole)",
+            key_factory=lambda v: f"provisioning.role.{v}",
+            values=_enum_values(ModelRole),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.provision.step.* (DependencySetupStep)",
+            key_factory=lambda v: f"cli.config.provision.step.{v}",
+            values=_enum_values(DependencySetupStep),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.provision.outcome.* (DependencySetupOutcome)",
+            key_factory=lambda v: f"cli.config.provision.outcome.{v}",
+            values=_enum_values(DependencySetupOutcome),
+        ),
+        FStringKeyRegistration(
+            description="tui.setup.outcome.* (DependencySetupOutcome)",
+            key_factory=lambda v: f"tui.setup.outcome.{v}",
+            values=_enum_values(DependencySetupOutcome),
         ),
         FStringKeyRegistration(
             # Bounded enumeration: LedgerReviewStatus is a closed catalogue of

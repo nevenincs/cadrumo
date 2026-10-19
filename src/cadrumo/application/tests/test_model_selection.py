@@ -29,6 +29,7 @@ from ...core.model_catalogue import (
     ModelRuntime,
     ModelSelectionAdvisory,
     candidates_for_role,
+    default_model_runtime_id,
     model_candidate,
 )
 from ...tests.env_scope import settings_without_env_file
@@ -379,13 +380,12 @@ def test_the_shipped_settings_defaults_are_what_selection_resolves_to(monkeypatc
 
 
 def test_the_cloud_runtime_resolves_every_role_to_the_shipped_cloud_default(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A hosted route must land on a role-named model, not the global fallback."""
-    settings = _shipped_settings(monkeypatch)
+    """A hosted route must land on the catalogue's role-named default."""
+    _shipped_settings(monkeypatch)
     profile = _cuda_profile(14 * _GIB)
     for role, configured in (
-        (ModelRole.VISION_TRANSCRIPTION, settings.cadrumo_llm_cloud_vision_model),
-        (ModelRole.TEXT_EXTRACTION, settings.cadrumo_llm_cloud_text_model),
-        (ModelRole.COLUMN_ROLE_MAPPING, settings.cadrumo_llm_cloud_mapping_model),
+        (role, default_model_runtime_id(role, ModelRuntime.CLOUD_ANTHROPIC))
+        for role in (ModelRole.VISION_TRANSCRIPTION, ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING)
     ):
         selection = select_model_for_role(role, profile=profile, runtime=ModelRuntime.CLOUD_ANTHROPIC)
         assert selection.selected

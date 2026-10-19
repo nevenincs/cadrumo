@@ -13,7 +13,7 @@ from click.testing import Result
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from ._ledger_validation_support import open_bucket_session
 from .cli_runner import invoke_cached_cli

@@ -8,14 +8,14 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
+from cadrumo_client.commands import profile_selection
 from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport import installed_client
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_runtime.commands import activity
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 
 from .runtime_cli import invoke_runtime_cli, unwrap_cli_result
@@ -56,7 +56,7 @@ def test_activity_command_uses_existing_proof_and_closes(monkeypatch: pytest.Mon
         if failure == "unselected"
         else BucketPointer.selected(bucket_id=str(client.profile_id), transition_revision=1)
     )
-    monkeypatch.setattr(activity, "observe_active_profile_pointer", lambda: pointer)
+    monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: pointer.bucket_id)
 
     async def open_client(*, profile_id: object, frontend: OperationFrontendProjection) -> FrontendClient:
         assert profile_id == client.profile_id and frontend is OperationFrontendProjection.CLI

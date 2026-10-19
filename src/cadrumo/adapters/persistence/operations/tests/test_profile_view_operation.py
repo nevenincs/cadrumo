@@ -19,12 +19,6 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
@@ -54,6 +48,8 @@ from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ass
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from .supervision_support import run_to_settlement
 

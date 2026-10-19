@@ -24,18 +24,10 @@ from cadrumo.application.operations.registry import (
 from cadrumo.application.user_profile import google_configuration_operation as worker
 from cadrumo.application.user_profile import google_configuration_operation_contracts as contracts
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDecision,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -57,6 +49,8 @@ from cadrumo.application.user_profile.google_configuration_result_projection imp
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_harness.mcp.access_scope import surface_scope
 from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 

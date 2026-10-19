@@ -26,7 +26,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from .cli_runner import invoke_cached_cli
 

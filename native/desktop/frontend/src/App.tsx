@@ -35,7 +35,13 @@ import {
   type DocsFrameApi,
   type DocsMenuRequest,
 } from "./components/DocsFrame";
-import type { ContextMenuItem, DocsTheme, HostFailure } from "./ipc/contract";
+import type {
+  ContextMenuItem,
+  DocsTheme,
+  HostFailure,
+  SetupItemId,
+  SetupRow,
+} from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn } from "./components/AgentColumn";
@@ -50,6 +56,12 @@ import {
   type RecordFilters,
 } from "./shell/records";
 import { Settings } from "./components/Settings";
+import { GoogleAccount } from "./components/GoogleAccount";
+import { SetupAdvisory } from "./components/setup/SetupAdvisory";
+import { SetupDialog } from "./components/setup/SetupDialog";
+import { SetupPrompt } from "./components/setup/SetupPrompt";
+import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
+import { liveRun, needsSetup, setupTargetOf, useSetup } from "./shell/setup";
 import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
 import { AccountMenu } from "./components/AccountMenu";
@@ -79,6 +91,7 @@ import {
   type FocusArea,
 } from "./shell/actions";
 import type { Host, TerminalKind } from "./shell/host";
+import type { AgentToolRefusal } from "./shell/agentSession";
 import {
   DEFAULT_LAYOUT,
   DEFAULT_PREFS,
@@ -164,6 +177,14 @@ const activeTerminal = (): TerminalKind | null => {
     ? kind
     : null;
 };
+
+/** Whether keystrokes now go into text the person is writing, a terminal's
+ * included. */
+const typingInto = (element: Element | null): boolean =>
+  element instanceof HTMLElement &&
+  (element.isContentEditable ||
+    element.matches("input, textarea, select") ||
+    element.closest("[data-terminal]") !== null);
 
 export function App({ host }: { host: Host }) {
   const account = useSignIn(host);
@@ -499,6 +520,113 @@ export function App({ host }: { host: Host }) {
       );
     },
     [host, say, t],
+  );
+
+  // Component setup, for the signed-in profile only. Setup incomplete is
+  // never treated as optional, but it never holds the window either: the
+  // dialog opens once per launch and closes at any time.
+  const setup = useSetup(host.setup, reader, signedIn);
+  const setupOffered = setup.offered;
+  const setupSnapshot = setup.snapshot;
+  const setupRun = setupSnapshot?.setup ?? null;
+  const setupLive = liveRun(setupSnapshot);
+  const setupIncomplete = setupOffered && setupSnapshot?.complete === false;
+  const [setupDialog, setSetupDialog] = useState<{
+    open: boolean;
+    focus: SetupItemId | null;
+  }>({ open: false, focus: null });
+  const [setupPrompt, setSetupPrompt] = useState<SetupRow | null>(null);
+  // A prompt raised by the agent while the person types leaves the keyboard
+  // where it is.
+  const [setupPromptFocus, setSetupPromptFocus] = useState(true);
+  const openSetup = useCallback((focus: SetupItemId | null) => {
+    setSettingsOpen(false);
+    setSetupPrompt(null);
+    setSetupDialog({ open: true, focus });
+  }, []);
+  const setupShown = useRef(false);
+  useEffect(() => {
+    if (!setupIncomplete || setupShown.current) return;
+    setupShown.current = true;
+    setSetupDialog({ open: true, focus: null });
+  }, [setupIncomplete]);
+  // One toast for a setup this window watched run, once it settles.
+  const setupWatched = useRef<string | null>(null);
+  useEffect(() => {
+    if (!setupRun) return;
+    if (setupRun.stage !== "settled") {
+      setupWatched.current = setupRun.operation_id;
+      return;
+    }
+    if (setupWatched.current !== setupRun.operation_id || !setupRun.outcome)
+      return;
+    setupWatched.current = null;
+    const text = outcomeToast(t, setupRun.outcome);
+    if (text) say(text);
+  }, [setupRun, say, t]);
+  /** A row's own button: check again, or set it up in the dialog. */
+  const actOnSetupRow = useCallback(
+    (row: SetupRow) => {
+      setSetupPrompt(null);
+      switch (row.recovery) {
+        case null:
+          return;
+        case "check_again":
+          setup.verify([row.item]);
+          return;
+        default:
+          openSetup(row.item);
+          setup.start([row.item], { resume: row.recovery === "resume" });
+      }
+    },
+    [setup, openSetup],
+  );
+  /** Sets up these rows where they can be; where none can, says why. */
+  const setUpRows = useCallback(
+    (rows: SetupRow[]) => {
+      const wanted = rows.filter(needsSetup);
+      if (wanted.length > 0) {
+        openSetup(wanted.length === 1 ? (wanted[0]?.item ?? null) : null);
+        setup.start(
+          wanted.map((row) => row.item),
+          { resume: wanted.every((row) => row.recovery === "resume") },
+        );
+        return;
+      }
+      const held = rows.find(
+        (row) => row.state !== "ready" && row.state !== "stale",
+      );
+      if (held) {
+        setSetupPromptFocus(true);
+        setSetupPrompt(held);
+      } else openSetup(null);
+    },
+    [setup, openSetup],
+  );
+  // A tool call the product refused for a component that is not set up
+  // opens that component's prompt, once per refusal; an action that is not
+  // about setup opens nothing. The refusal's code is never shown.
+  const toolRefusalsSeen = useRef(new Set<string>());
+  const setupRowsRef = useRef<readonly SetupRow[]>([]);
+  setupRowsRef.current = setupSnapshot?.rows ?? [];
+  const setupOfferedRef = useRef(setupOffered);
+  setupOfferedRef.current = setupOffered;
+  const onToolRefused = useCallback(
+    (key: string, refusal: AgentToolRefusal) => {
+      if (toolRefusalsSeen.current.has(key)) return;
+      toolRefusalsSeen.current.add(key);
+      const action = refusal.recovery_action_id;
+      if (action === undefined || !setupOfferedRef.current) return;
+      const target = setupTargetOf(action, setupRowsRef.current);
+      if (target === null) return;
+      if (target === "general") {
+        openSetup(null);
+        return;
+      }
+      setSetupPromptFocus(!typingInto(document.activeElement));
+      setSetupPrompt(target);
+    },
+    [openSetup],
   );
 
   const copyLogs = useCallback(
@@ -1149,6 +1277,89 @@ export function App({ host }: { host: Host }) {
         run: () => setSettingsOpen((open) => !open),
       },
       {
+        id: "setup.open",
+        label: t("desktop.setup.palette_open"),
+        group: "setup",
+        icon: "download",
+        keywords: "components install download",
+        enabled: () => setupOffered,
+        run: () => openSetup(null),
+      },
+      {
+        id: "setup.check",
+        label: t("desktop.setup.palette_check"),
+        group: "setup",
+        icon: "check",
+        keywords: "components verify status",
+        enabled: () => setupOffered && setupLive === null,
+        run: () => {
+          openSetup(null);
+          setup.check("full");
+        },
+      },
+      {
+        id: "setup.browser",
+        label: t("desktop.setup.palette_browser"),
+        group: "setup",
+        icon: "download",
+        enabled: () =>
+          setupOffered &&
+          setupLive === null &&
+          (setupSnapshot?.rows.some((row) => row.kind === "browser") ?? false),
+        run: () =>
+          setUpRows(
+            (setupSnapshot?.rows ?? []).filter((row) => row.kind === "browser"),
+          ),
+      },
+      {
+        id: "setup.local_ai",
+        label: t("desktop.setup.palette_local_ai"),
+        group: "setup",
+        icon: "download",
+        enabled: () =>
+          setupOffered &&
+          setupLive === null &&
+          (setupSnapshot?.rows.some((row) => row.kind === "local_ai") ?? false),
+        run: () =>
+          setUpRows(
+            (setupSnapshot?.rows ?? []).filter(
+              (row) => row.kind === "local_ai",
+            ),
+          ),
+      },
+      {
+        id: "setup.retry",
+        label: t("desktop.setup.palette_retry"),
+        group: "setup",
+        icon: "reset",
+        enabled: () =>
+          setupOffered &&
+          setupLive === null &&
+          (setupRun?.outcome === "failed" ||
+            setupRun?.outcome === "interrupted" ||
+            setupRun?.outcome === "cancelled" ||
+            setupRun?.outcome === "not_enough_space" ||
+            setupRun?.outcome === "plan_changed" ||
+            (setupSnapshot?.rows.some((row) => row.state === "failed") ??
+              false)),
+        run: () => {
+          openSetup(null);
+          setup.start(null, { resume: setupRun?.outcome === "interrupted" });
+        },
+      },
+      {
+        id: "setup.cancel",
+        label: t("desktop.setup.palette_cancel"),
+        group: "setup",
+        icon: "stop",
+        enabled: () =>
+          setupOffered &&
+          setupLive !== null &&
+          setupLive.cancellable &&
+          !setupLive.cancel_requested,
+        run: () => setup.cancel(),
+      },
+      {
         id: "view.calendar",
         label: t("desktop.calendar.title"),
         group: "views",
@@ -1238,6 +1449,17 @@ export function App({ host }: { host: Host }) {
         keywords: "logout",
         enabled: () => signedIn,
         run: signOut,
+      },
+      {
+        // The profile's own Google sign-in; not part of setup.
+        id: "account.google",
+        label: t("desktop.google.palette_sign_in"),
+        group: "account",
+        icon: "user",
+        keywords: "google drive sign in login connect",
+        enabled: () =>
+          setupOffered && canSignInGoogle(setupSnapshot?.google ?? null),
+        run: () => setup.signInGoogle(),
       },
       {
         id: "account.switchProfile",
@@ -1332,6 +1554,13 @@ export function App({ host }: { host: Host }) {
       copy,
       paste,
       setFilters,
+      setup,
+      setupOffered,
+      setupSnapshot,
+      setupRun,
+      setupLive,
+      openSetup,
+      setUpRows,
     ],
   );
   const actionsRef = useRef(actions);
@@ -1868,6 +2097,11 @@ export function App({ host }: { host: Host }) {
       label: t("desktop.rail.settings"),
       shortcut: primaryChord(byId("settings.open")),
       expanded: settingsOpen,
+      ...(setupLive
+        ? { pin: "busy", hint: t("desktop.setup.rail_busy") }
+        : setupIncomplete
+          ? { pin: "attention", hint: t("desktop.setup.rail_incomplete") }
+          : {}),
       onClick: () => setSettingsOpen((open) => !open),
     },
   ];
@@ -2101,6 +2335,8 @@ export function App({ host }: { host: Host }) {
         body={agentBody}
         onToggleMaximize={() => toggleMaximize("agent")}
         onMenu={openMenu}
+        onToolRefused={onToolRefused}
+        onOpenLink={openLink}
         trailing={[
           maximizeControl("agent", "desktop.pane.maximize_agent"),
           {
@@ -2441,6 +2677,24 @@ export function App({ host }: { host: Host }) {
                   setMaximized(null);
                   say(t("desktop.settings.layout_reset"));
                 }}
+                advisory={
+                  setupOffered ? (
+                    <SetupAdvisory
+                      control={setup}
+                      onOpen={() => openSetup(null)}
+                    />
+                  ) : undefined
+                }
+                account={
+                  setupOffered && setupSnapshot ? (
+                    <GoogleAccount
+                      google={setupSnapshot.google}
+                      disabled={setup.pending}
+                      onSignIn={setup.signInGoogle}
+                      onSignOut={setup.signOutGoogle}
+                    />
+                  ) : undefined
+                }
               />
             )}
             {paletteOpen && (
@@ -2481,6 +2735,27 @@ export function App({ host }: { host: Host }) {
               />
             )}
             <Toast>{toast}</Toast>
+            {setupOffered && (
+              <>
+                <SetupDialog
+                  open={setupDialog.open}
+                  onOpenChange={(open) =>
+                    setSetupDialog((held) => ({ ...held, open }))
+                  }
+                  control={setup}
+                  focus={setupDialog.focus}
+                  locale={locale}
+                  onAct={actOnSetupRow}
+                  onCopyDetails={copy}
+                />
+                <SetupPrompt
+                  row={setupPrompt}
+                  takeFocus={setupPromptFocus}
+                  onClose={() => setSetupPrompt(null)}
+                  onSetUp={actOnSetupRow}
+                />
+              </>
+            )}
             <SignInDialog
               account={account}
               open={account.gated && !signInDismissed}

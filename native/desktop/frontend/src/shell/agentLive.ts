@@ -7,6 +7,7 @@ import type {
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
+  AgentToolRefusal,
 } from "./agentSession";
 import {
   isLiveStatus,
@@ -266,6 +267,36 @@ export function applyStreamEvent(
               }),
       });
     }
+    case "thought": {
+      const reply = event.reply_id;
+      if (event.sequence <= (live.applied[reply] ?? 0)) return quiet(live);
+      const applied = { ...live.applied, [reply]: event.sequence };
+      const turns = withReply(live.turns, reply);
+      const at = turns.findIndex(
+        (record) =>
+          record.kind === "thought" &&
+          record.reply_id === reply &&
+          record.id === event.message_id,
+      );
+      const held = turns[at];
+      return quiet({
+        ...live,
+        applied,
+        turns:
+          held?.kind === "thought"
+            ? turns.map((record, index) =>
+                index === at
+                  ? { ...held, text: held.text + event.delta }
+                  : record,
+              )
+            : inserted(turns, placesOf(turns, reply).end, {
+                kind: "thought",
+                id: event.message_id,
+                reply_id: reply,
+                text: event.delta,
+              }),
+      });
+    }
     case "tool": {
       const reply = event.reply_id;
       const turns = withReply(live.turns, reply);
@@ -281,9 +312,13 @@ export function applyStreamEvent(
         // A call does not go back to an earlier state.
         if (held?.kind === "tool" && RANK[call.status] < RANK[held.status])
           return quiet(live);
+        // What the history said of the call stays: the stream says none.
+        const details = held?.kind === "tool" ? held.details : undefined;
         return quiet({
           ...live,
-          turns: turns.map((record, index) => (index === at ? call : record)),
+          turns: turns.map((record, index) =>
+            index === at ? (details ? { ...call, details } : call) : record,
+          ),
         });
       }
       return quiet({
@@ -346,9 +381,14 @@ export function applyStreamEvent(
       };
     }
     case "lost":
-      // The reply's text so far is taken again from the replay.
+      // The reply's text and thoughts so far are taken again from the
+      // replay.
       return {
-        live: { ...live, applied: {} },
+        live: {
+          ...live,
+          applied: {},
+          turns: live.turns.filter((record) => record.kind !== "thought"),
+        },
         reread: true,
         resubscribe: true,
       };
@@ -400,7 +440,8 @@ export function withSent(
 }
 
 /** `live` with the history read again: the history's records, with what the
- * person sent that it does not have yet, and what the reply waits on. */
+ * person sent that it does not have yet, the thoughts the stream gave, and
+ * what the reply waits on. */
 export function withHistory(
   live: LiveTurns,
   records: AgentTurnRecord[],
@@ -430,6 +471,12 @@ export function withHistory(
     taken = new Set(
       [...taken].map((index) => (index >= where ? index + 1 : index)),
     );
+  }
+  // The history keeps no thought: what the stream gave stays with its reply.
+  for (const thought of live.turns) {
+    if (thought.kind !== "thought") continue;
+    turns = withReply(turns, thought.reply_id);
+    turns = inserted(turns, placesOf(turns, thought.reply_id).end, thought);
   }
   return {
     ...live,
@@ -476,7 +523,9 @@ export const resubscribeDelay = (losses: number): number =>
 /**
  * The conversation `conversationId` while `enabled`: read from `views`, and
  * kept up to date from `session` where the host offers one. `onSettled` is
- * told whenever a reply finishes.
+ * told whenever a reply finishes, and `onToolRefused` whenever the stream says
+ * a tool call failed because the product refused it, keyed by its reply and
+ * call; the same refusal may be told again when a stream is replayed.
  */
 export function useLiveConversation({
   views,
@@ -484,12 +533,14 @@ export function useLiveConversation({
   conversationId,
   enabled,
   onSettled,
+  onToolRefused,
 }: {
   views: AgentViews | undefined;
   session: AgentSession | undefined;
   conversationId: string | null;
   enabled: boolean;
   onSettled?: () => void;
+  onToolRefused?: (key: string, refusal: AgentToolRefusal) => void;
 }): LiveConversation {
   const key = enabled && views ? conversationId : null;
   const [state, setState] = useState<{
@@ -499,6 +550,8 @@ export function useLiveConversation({
   }>({ for: null, live: null, failed: null });
   const settled = useRef(onSettled);
   settled.current = onSettled;
+  const refused = useRef(onToolRefused);
+  refused.current = onToolRefused;
   // How the current watch takes a change of the person's making, and which
   // conversation it watches.
   const take = useRef<
@@ -542,6 +595,15 @@ export function useLiveConversation({
         reread ||= step.reread;
         resubscribe ||= step.resubscribe;
         if (event.type === "settled") settled.current?.();
+        if (
+          event.type === "tool" &&
+          event.tool.status === "failed" &&
+          event.tool.refusal
+        )
+          refused.current?.(
+            `${event.reply_id}/${event.tool.id}`,
+            event.tool.refusal,
+          );
         if (event.type === "lost") losses += 1;
         else if (event.type !== "reply_started") losses = 0;
       }
@@ -713,12 +775,21 @@ export function useAgentStatus(
   session: AgentSession | undefined,
   enabled: boolean,
 ): AgentServiceStatus | null {
+  const disabledSinceObservation = useRef(false);
   const [state, setState] = useState<{
     for: AgentSession | null;
     status: AgentServiceStatus | null;
   }>({ for: null, status: null });
   useEffect(() => {
-    if (!session || !enabled) return;
+    if (!session || !enabled) {
+      // A status belongs to one continuous observation of one session. In
+      // particular, Ready from before sign-out cannot be reused when the same
+      // window becomes readable again while the supervisor restarts.
+      disabledSinceObservation.current = true;
+      setState({ for: null, status: null });
+      return;
+    }
+    disabledSinceObservation.current = false;
     let alive = true;
     let heard = false;
     let stop: (() => void) | null = null;
@@ -746,5 +817,10 @@ export function useAgentStatus(
       stop?.();
     };
   }, [session, enabled]);
-  return session && enabled && state.for === session ? state.status : null;
+  return session &&
+    enabled &&
+    !disabledSinceObservation.current &&
+    state.for === session
+    ? state.status
+    : null;
 }

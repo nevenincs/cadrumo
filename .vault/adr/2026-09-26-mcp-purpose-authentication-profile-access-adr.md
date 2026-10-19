@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-17'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:045001b1141428678d02a3098e299c84146211d71094e34cb28e7e1e766aa0f9'
+body_hash: 'sha256:af359b26e40e7cc1c4d39822186ef004b87b5ab60b322be7ff2aba3d5e591feb'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -222,3 +222,9 @@ Amended 2026-10-14 under the operator's runtime separation directive: session au
 ## Active human lifetime refinement 2026-10-15
 
 The authorized active-use amendment in `2026-10-04-application-sign-in-adr` replaces this record's fixed human idle/absolute lifetime wording only when actual person input renews a still-live human sign-in. The original-login absolute cap does not interrupt active work. Agent, polling and service traffic never renew it; idle expiry and explicit revocation still apply. Live human siblings on the same originating login follow that renewal, while attended children retain their existing bounded deadlines and approval-based reissue. This does not turn agent activity into human activity, expand scopes, or restore expired authority. Earlier observations that no human extension exists describe the pre-repair implementation.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "AEAT retains direct human profile login, logout and creation" above is kept as accepted history. It now reads together with this ruling: AEAT retains those doors as presentation only. Their authentication, custody and session effects run in `src/cadrumo_runtime`, reached through the client contract. The "one serialized application owner" of automation control updates is the runtime's.

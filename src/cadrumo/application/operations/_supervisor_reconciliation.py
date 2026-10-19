@@ -7,14 +7,16 @@ from typing import TYPE_CHECKING, TypeIs, override
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ..user_profile.access_contracts import AccessAction
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
 from .authorization import invoke_authorized
 from .errors import OperationDeclarationError
 from .interactions import OperationConsumedInteraction, OperationPendingInteraction
+from .model_runs import operation_model_run_port, run_with_model_runs
 from .models import (
     OperationId,
     OperationReconciliationOutcome,
@@ -363,7 +365,10 @@ class SupervisorReconciliationMixin(SupervisorHost):
                     identity=snapshot.identity,
                     request=request,
                     action=AccessAction.RESUME,
-                    executor=lambda: resumable_executor.resume(request, checkpoint, executor_context),
+                    executor=lambda: run_with_model_runs(
+                        operation_model_run_port(self._execution_authority, snapshot.identity),
+                        resumable_executor.resume(request, checkpoint, executor_context),
+                    ),
                 ),
             )
         except OperationDeclarationError:

@@ -45,6 +45,8 @@ pub fn request_id() -> Result<String> {
 pub enum PersonEvent {
     LanguageChanged,
     AttendanceChanged,
+    /// A registered operation this session relayed may have advanced.
+    OperationChanged,
     Retired,
 }
 
@@ -56,6 +58,7 @@ fn pushed(value: &Value) -> Option<Option<PersonEvent>> {
         Some("runtime_event") => Some(match value["event"].as_str() {
             Some("profile_language_changed") => Some(PersonEvent::LanguageChanged),
             Some("attendance_changed") => Some(PersonEvent::AttendanceChanged),
+            Some("operation_changed") => Some(PersonEvent::OperationChanged),
             _ => None,
         }),
         Some("session_retired") => Some(Some(PersonEvent::Retired)),
@@ -371,6 +374,8 @@ impl Person {
                 language_reply(&self.identity, &reply)
             }
             Some("observe_events") => reply["kind"] == "events_observed",
+            // The caller parses a relayed document itself; here only its kind and session are checked.
+            Some(action) => relay_reply(&self.identity, action, &reply),
             _ => false,
         };
         if !valid {
@@ -397,6 +402,30 @@ impl Drop for Person {
 
 pub type HeldPerson = std::sync::Arc<Mutex<Person>>;
 
+/// The generic relay actions of the held session and the reply each answers with.
+const RELAY_REPLIES: [(&str, &str); 6] = [
+    ("operation_submit", "operation_submitted"),
+    ("operation_observe", "operation_observed"),
+    ("operation_result", "operation_result"),
+    ("operation_review", "operation_review"),
+    ("operation_respond", "operation_responded"),
+    ("operation_cancel", "operation_cancel_requested"),
+];
+
+/// Whether `reply` answers relay `action` for the held profile and session:
+/// its own reply kind, or a closed refusal that keeps the session held.
+fn relay_reply(identity: &Value, action: &str, reply: &Value) -> bool {
+    RELAY_REPLIES
+        .iter()
+        .find(|(relayed, _)| *relayed == action)
+        .is_some_and(|(_, kind)| {
+            (reply["kind"] == *kind
+                || (reply["kind"] == "operation_refused" && reply["code"].is_string()))
+                && reply["profile_id"] == identity["profile_id"]
+                && reply["session_id"] == identity["session_id"]
+        })
+}
+
 fn language_reply(identity: &Value, reply: &Value) -> bool {
     reply["kind"] == "profile_language"
         && reply["profile_id"] == identity["profile_id"]
@@ -422,6 +451,20 @@ mod language_tests {
             pushed(&json!({"kind":"runtime_event","event":"attendance_changed"})),
             Some(Some(PersonEvent::AttendanceChanged))
         );
+        assert_eq!(
+            pushed(&json!({"kind":"runtime_event","event":"operation_changed"})),
+            Some(Some(PersonEvent::OperationChanged))
+        );
+        // The bridge names no sign-in of its own: a sign-in is an operation like any other.
+        assert_eq!(
+            pushed(&json!({"kind":"runtime_event","event":"authentication_changed"})),
+            Some(None)
+        );
+        // A relayed answer is a reply, never a push.
+        assert_eq!(
+            pushed(&json!({"kind":"operation_observed","request_id":"id"})),
+            None
+        );
         // A push this window does not know is still never taken for a reply.
         assert_eq!(
             pushed(&json!({"kind":"runtime_event","event":"later"})),
@@ -435,6 +478,30 @@ mod language_tests {
             pushed(&json!({"kind":"profile_language","request_id":"id"})),
             None
         );
+    }
+
+    #[test]
+    fn relay_replies_bind_their_action_profile_and_session() {
+        let identity = json!({"profile_id":"profile", "session_id":"session"});
+        let reply =
+            json!({"kind":"operation_submitted", "profile_id":"profile", "session_id":"session"});
+        assert!(relay_reply(&identity, "operation_submit", &reply));
+        assert!(!relay_reply(&identity, "operation_observe", &reply));
+        assert!(!relay_reply(&identity, "setup_start", &reply));
+        let refused = json!({"kind":"operation_refused", "profile_id":"profile", "session_id":"session", "code":"subject_busy"});
+        assert!(relay_reply(&identity, "operation_cancel", &refused));
+        for (key, value) in [
+            ("profile_id", json!("other")),
+            ("session_id", json!("other")),
+            ("code", json!(null)),
+        ] {
+            let mut invalid = refused.clone();
+            invalid[key] = value;
+            assert!(
+                !relay_reply(&identity, "operation_cancel", &invalid),
+                "{key}"
+            );
+        }
     }
 
     #[test]

@@ -1,10 +1,9 @@
 import { cn } from "@/components/ui/cn";
+import artwork from "virtual:desktop-provider-icons";
 
-// A provider's mark is a neutral dashed ring and nothing else: no letters and
-// no shape that could be taken for a logo. Cadrumo keeps no artwork of any
-// provider; if the agent's catalog ever serves some, it is drawn from there.
-// The provider's name always stands beside the mark, so the mark is
-// decoration.
+// Artwork comes from the same bundled agent that declares the providers.
+// A mask lets monochrome marks follow the current theme without inserting SVG
+// markup into the document. The adjacent provider name supplies the label.
 
 const SIZES = { sm: "size-icon-md", md: "size-icon-lg" } as const;
 
@@ -25,14 +24,21 @@ export function ProviderMark({
   size?: keyof typeof SIZES;
   className?: string;
 }) {
+  const icon = Object.hasOwn(artwork.providers, provider)
+    ? artwork.providers[provider]
+    : undefined;
   return (
     <span
       aria-hidden="true"
       data-slot="provider-mark"
       data-provider={provider}
-      data-mark="none"
+      data-mark={icon ? "mono" : "none"}
+      style={icon ? { maskImage: `url("${icon.mono}")` } : undefined}
       className={cn(
-        "inline-block shrink-0 rounded-full border border-dashed border-border-strong",
+        "inline-block shrink-0",
+        icon
+          ? "bg-current mask-contain mask-center mask-no-repeat"
+          : "rounded-full border border-dashed border-border-strong",
         SIZES[size],
         className,
       )}

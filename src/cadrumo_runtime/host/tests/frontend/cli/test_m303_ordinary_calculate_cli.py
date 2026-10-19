@@ -31,12 +31,6 @@ from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -55,6 +49,12 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import OrdinaryM303SecureEvidence, joint_return_options
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from .test_runtime_invoice_add import password_profile_session

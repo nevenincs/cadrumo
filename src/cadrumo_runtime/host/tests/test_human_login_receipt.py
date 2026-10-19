@@ -17,26 +17,18 @@ from cadrumo.adapters.persistence.storage.custody.sign_in_generation import Sign
 from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    AccessSession,
-    SessionKind,
-    SessionState,
-)
+from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind, SessionState
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
-from cadrumo.application.user_profile.login_session import (
-    ProfileLoginOutcome,
-    ProfileLoginThrottledError,
-    borrow_profile_receipt_key,
-)
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, ProfileLoginThrottledError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, worker_profiles
 from .. import profile_login
@@ -196,7 +188,7 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                 assert check.record is not None and check.record.sign_in == captured
                 assert path.is_file() and store.writes == 1
                 original = path.read_bytes()
-                with borrow_profile_receipt_key(bucket_id=identity.binding.profile_id) as receipt_key:
+                with borrow_receipt_proof(profile_id=identity.binding.profile_id) as receipt_key:
                     resumed_id, resumed_outcome = human.resume(receipt_key, login_id=lease.originating_login_id)
                 successor = _human_lease(identity, resumed_outcome)
                 resumed_ack, resumed_pending = human.bind(resumed_id, successor, persist_receipt=True)

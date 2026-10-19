@@ -26,23 +26,25 @@ import pytest
 from pydantic import SecretBytes
 
 from cadrumo.adapters.outbound.model_runtime.process_control import spawn_runtime_server
-from cadrumo.application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.provisioning_host import launch_runtime_server
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    Availability,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    ProfileAccessBinding,
-)
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+from cadrumo_client.contracts.operation_ids import (
+    DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
+    LOCAL_READER_OPERATION_DEFINITION_ID,
+)
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
@@ -225,8 +227,11 @@ def _seed(definition_id: str) -> Seed:
     return Seed(identity=identity, request=request, parent_pid=os.getpid())
 
 
+@pytest.mark.parametrize(
+    "definition_id", [LOCAL_READER_OPERATION_DEFINITION_ID, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID]
+)
 def test_a_contained_worker_that_asks_its_owner_gets_a_server_outside_its_scope_that_outlives_it(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    definition_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     if sys.platform != "win32":
         pytest.skip("requires a native Windows job")
@@ -236,7 +241,7 @@ def test_a_contained_worker_that_asks_its_owner_gets_a_server_outside_its_scope_
     _workspace(tmp_path)
     # The owner starts ``<executable> serve`` from its own working directory.
     monkeypatch.chdir(tmp_path)
-    seed = _seed(LOCAL_READER_OPERATION_DEFINITION_ID)
+    seed = _seed(definition_id)
     (tmp_path / "seed.json").write_text(seed.model_dump_json(), encoding="utf-8")
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "storage", cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"
@@ -337,6 +342,52 @@ def test_the_owner_starts_nothing_for_a_fence_held_by_another_operation(tmp_path
         assert (tmp_path / "failure").read_text(encoding="ascii") == "RefusalError"
         assert started_by_owner == []
         assert not (tmp_path / "started.json").exists()
+    finally:
+        for server in servers:
+            server.close()
+        scope.terminate()
+        for server in servers:
+            server.settle(timeout=6)
+
+
+def test_the_owner_refuses_a_start_another_operation_sends_past_its_own_lease(tmp_path: Path) -> None:
+    """A worker that skips its lease's check is still refused by its owner, and contained, starting nothing."""
+    if sys.platform != "win32":
+        pytest.skip("requires a native Windows job")
+    seed = _seed("ledger.list")
+    (tmp_path / "seed.json").write_text(seed.model_dump_json(), encoding="utf-8")
+    started_by_owner: list[int] = []
+
+    def start_from_owner() -> int | None:
+        started_by_owner.append(1)
+        return None
+
+    scope = WindowsProcessScope()
+    servers: list[WorkerAuthorizationServer] = []
+    try:
+        worker = scope.launch(
+            executable=Path(sys.executable),
+            arguments=("-I", "-m", _OWNER_START_FIXTURE, str(tmp_path), "unchecked"),
+            directory=tmp_path,
+            environment=os.environ.copy(),
+        )
+        wait_file(tmp_path / "worker.pid", worker)
+        worker_pid = int((tmp_path / "worker.pid").read_text(encoding="ascii"))
+        server = WorkerAuthorizationServer(
+            identity=seed.identity,
+            root=tmp_path,
+            process_id=worker_pid,
+            owns_process=lambda pid: pid in scope.active_process_ids(),
+            contain=scope.terminate,
+            owner=_SessionAuthority(seed),
+            runtime_server_starter=start_from_owner,
+        )
+        servers.append(server)
+        (tmp_path / "listening").write_text("1", encoding="ascii")
+        assert wait_process(worker) != 0, "the owner contains a worker whose stage sent a start it does not admit"
+        assert started_by_owner == []
+        assert not (tmp_path / "started.json").exists()
+        server.require_healthy()
     finally:
         for server in servers:
             server.close()

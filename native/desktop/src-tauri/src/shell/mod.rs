@@ -1,3 +1,4 @@
+pub mod about;
 pub mod agent_access;
 pub mod channel;
 mod clipboard;
@@ -7,6 +8,7 @@ pub mod language;
 mod menu;
 pub mod navigation;
 pub mod provider_settings;
+pub mod setup;
 pub mod sign_in;
 pub mod single_instance;
 pub mod token;
@@ -154,6 +156,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let log_level = launch.log_level;
     #[cfg(windows)]
     let diagnostics = launch.diagnostics.clone();
+    let about = Arc::new(about::About::new(launch));
     let popups = Arc::new(menu::Popups::default());
     let recorder = popups.clone();
     let activation = launch.diagnostics.clone();
@@ -176,6 +179,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             )));
             app.manage(sign_in);
             app.manage(popups);
+            app.manage(about.clone());
             app.manage(channel::Deliveries::default());
             app.manage(window_controls::Controls::default());
             Ok(())

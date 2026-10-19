@@ -6,6 +6,8 @@ from collections.abc import Callable
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.outbound.storage.factory import get_storage_provider, resolve_required_drive_root_folder_id
 from ..adapters.outbound.storage.mirror_push import (
     AdmittedMirrorStorageProvider,
@@ -15,7 +17,6 @@ from ..adapters.outbound.storage.mirror_push import (
 from ..adapters.outbound.storage.protocol import StorageProvider
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.archive_operation_ports import (
     ArchiveLocalWriter,

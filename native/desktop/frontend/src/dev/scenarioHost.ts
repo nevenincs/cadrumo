@@ -26,6 +26,7 @@ import {
   type FixtureStream,
 } from "./agentFixtureHost";
 import { agentAccessFixture } from "./agentAccessFixture";
+import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
@@ -53,6 +54,7 @@ import {
   UNREADABLE,
 } from "./fixtures/logs";
 import { openFixtureTerminal } from "./fixtures/terminal";
+import { setupFixture, type SetupShape } from "./setupFixture";
 import { SCENARIO_HOST_MARKER } from "./marker";
 import type { Scenario } from "./scenarios";
 
@@ -87,6 +89,9 @@ export type ScenarioHostOptions = {
   agentDocuments?: FixtureDocuments;
   /** How the agent serves its skills to `/`. */
   agentSkills?: FixtureSkills;
+  /** The shape of the made-up computer's component setup; where neither
+   * this nor the scenario names one, the host offers no setup. */
+  setup?: SetupShape | null;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -268,6 +273,12 @@ export function scenarioHost(
     },
   };
 
+  const providerFixture = providerSettingsFixture({
+    say,
+    wait: () => wait(options.latencyMs),
+    readable,
+  });
+
   // The agent goes with the profile's views: offered, empty, refused or not
   // offered together. Its conversations are read as the signed-in
   // profile's too.
@@ -279,15 +290,11 @@ export function scenarioHost(
     stream: options.agentStream ?? "steady",
     asks: options.agentAsks ?? null,
     refused: () => failure("timed_out", "cli"),
+    turnedOff: providerFixture.turnedOffLanes,
     documents: options.agentDocuments ?? "stored",
     skills: options.agentSkills ?? "bundled",
   });
 
-  const providerFixture = providerSettingsFixture({
-    say,
-    wait: () => wait(options.latencyMs),
-    readable,
-  });
   const providerSettings = providerFixture.settings;
   window.__scenarioProviderSignIn = providerFixture.signInControls;
 
@@ -296,6 +303,16 @@ export function scenarioHost(
     wait: () => wait(options.latencyMs),
     readable,
   });
+
+  const setupShape = options.setup ?? scenario.setup ?? null;
+  const setup = setupShape
+    ? setupFixture({
+        shape: setupShape,
+        latencyMs: options.latencyMs,
+        say,
+        readable: () => presence === "present",
+      })
+    : undefined;
 
   let languageRevision = 0;
   let outputLanguage = options.language;
@@ -402,6 +419,7 @@ export function scenarioHost(
     ...(scenario.views === "none"
       ? {}
       : { views, agent, agentSession, providerSettings, agentAccess }),
+    ...(setup ? { setup } : {}),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
     ...(supervision
@@ -469,6 +487,13 @@ export function scenarioHost(
       : {}),
     // The shell draws its own menu here; the native popup is not simulated.
     nativeMenus: false,
+
+    about() {
+      say("about");
+      return scenario.services === "refused"
+        ? Promise.reject(failure("package_unavailable", "package"))
+        : Promise.resolve(ABOUT_FIXTURE);
+    },
 
     environment() {
       say("environment");

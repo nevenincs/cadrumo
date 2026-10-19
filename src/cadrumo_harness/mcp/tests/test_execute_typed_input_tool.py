@@ -29,12 +29,12 @@ from cadrumo.application.modelo.operation_definitions import (
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.models import new_operation_id
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,

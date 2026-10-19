@@ -9,6 +9,8 @@ from typing import override
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_error_fields
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
@@ -23,7 +25,6 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ...core.operator_progress import OperatorProgress, operator_progress_sink
-from ..user_profile.access_contracts import AccessAction
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import _supervisor_snapshot
 from . import supervisor_context as _supervisor_context
@@ -41,6 +42,7 @@ from .interactions import (
     OperationPendingInteraction,
     OperationRejectResponse,
 )
+from .model_runs import operation_model_run_port, run_with_model_runs
 from .models import (
     OperationId,
     OperationIdentity,
@@ -224,7 +226,10 @@ class SupervisorExecutionMixin(SupervisorHost):
                     identity=running.identity,
                     request=request,
                     action=AccessAction.START,
-                    executor=lambda: executor.execute(request, executor_context),
+                    executor=lambda: run_with_model_runs(
+                        operation_model_run_port(self._execution_authority, running.identity),
+                        executor.execute(request, executor_context),
+                    ),
                 ),
             ),
             name=f"operation-settlement-{operation_id}",

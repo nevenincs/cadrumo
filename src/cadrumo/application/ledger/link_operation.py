@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.errors.hierarchy import CoreValidationError
@@ -45,7 +46,6 @@ from ..operations.refusal_evidence import OperationExecutorResult, OperationRefu
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_common import build_manual_ledger_result, resolve_revision_guarded_transaction_repository

@@ -47,12 +47,6 @@ from cadrumo.application.modelo.operation_definitions import (
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -60,6 +54,12 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from .test_runtime_invoice_add import password_profile_session

@@ -133,13 +133,28 @@ set(desktop_palette_inputs "${CADRUMO_SOURCE_ROOT}/docs/conf.py" "${CADRUMO_SOUR
   "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
+set(desktop_icons_inputs
+  "${CADRUMO_PATH_AGENT}/agent-wheel.json" "${CADRUMO_PATH_AGENT}/wheels"
+  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/provider_icon_assets.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/agent.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/hashing.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py")
 set(desktop_chrome_output chrome-strings.json)
 set(desktop_palette_output palette.css)
+set(desktop_icons_output provider-icons.json)
 set(desktop_chrome_module dev.locales.desktop_chrome)
 set(desktop_palette_module dev.docs.desktop_palette)
+set(desktop_icons_module dev.packaging.native.provider_icon_assets)
 set(desktop_chrome_description "chrome strings from the locale catalogues")
 set(desktop_palette_description "palette from the documentation theme")
-foreach(generator IN ITEMS chrome palette)
+set(desktop_icons_description "pinned provider marks from the admitted agent wheel")
+set(desktop_icons_arguments --build "${PROJECT_BINARY_DIR}")
+set(desktop_icons_dependencies agent_project)
+foreach(generator IN ITEMS chrome palette icons)
   set(generator_input_json "[]")
   set(generator_inputs ${desktop_${generator}_inputs}
     "${CADRUMO_DEV_PYTHON}" "${CADRUMO_SOURCE_ROOT}/uv.lock"
@@ -159,14 +174,16 @@ foreach(generator IN ITEMS chrome palette)
       --record "${CADRUMO_PATH_DESKTOP_CACHE}/${generator}-build.json"
       --output "${desktop_generated}/${desktop_${generator}_output}" --inputs-file "${generator_input_file}"
       -- ${desktop_generator} ${desktop_${generator}_module} --output "${desktop_generated}/${desktop_${generator}_output}"
+        ${desktop_${generator}_arguments}
     BYPRODUCTS "${desktop_generated}/${desktop_${generator}_output}"
+    DEPENDS ${desktop_${generator}_dependencies}
     WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
 endforeach()
 cadrumo_build_step(step_comment desktop-frontend-generated GROUP desktop
   SUMMARY "every generated shell input"
   OUTPUTS "${desktop_generated}")
 add_custom_target(desktop-frontend-generated
-  DEPENDS desktop-frontend-chrome desktop-frontend-palette COMMENT "${step_comment}")
+  DEPENDS desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons COMMENT "${step_comment}")
 foreach(action IN ITEMS build test)
   add_dependencies(desktop-frontend-${action} desktop-frontend-generated)
 endforeach()
@@ -313,6 +330,19 @@ add_custom_target(desktop-packaged-test
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged.test.mjs"
   DEPENDS desktop-packaged-host
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+# The setup acceptance downloads the browser into one throwaway root under the testing
+# directory, interrupts and resumes it, and removes the root when it ends.
+cadrumo_build_step(step_comment desktop-packaged-setup-test GROUP verification
+  SUMMARY "set the browser up through the packaged window in a throwaway root (downloads; needs an interactive desktop)")
+add_custom_target(desktop-packaged-setup-test
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
+    "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+    "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
+    "CADRUMO_STORAGE_ROOT_VARIABLE=${CADRUMO_STORAGE_ROOT_VARIABLE}"
+    "CADRUMO_PACKAGED_SETUP=1"
+    "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged.test.mjs"
+  DEPENDS desktop-packaged-host
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 cadrumo_build_step(step_comment desktop-startup-test GROUP verification
   SUMMARY "verify loading, runtime readiness, workspace handoff and startup cancellation")
 add_custom_target(desktop-startup-test
@@ -334,13 +364,13 @@ add_custom_target(desktop-packaged-harness-test
 # caches unless the operator explicitly selects their own clean target.
 cadrumo_register_clean(TARGET desktop-frontend-build PATHS
   "${CADRUMO_PATH_DESKTOP_FRONTEND}" "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-build.json")
-foreach(generator IN ITEMS chrome palette)
+foreach(generator IN ITEMS chrome palette icons)
   cadrumo_register_clean(TARGET desktop-frontend-${generator} PATHS
     "${desktop_generated}/${desktop_${generator}_output}"
     "${CADRUMO_PATH_DESKTOP_CACHE}/${generator}-build.json")
 endforeach()
 cadrumo_register_clean(TARGET desktop-frontend-generated DEPENDS
-  desktop-frontend-chrome desktop-frontend-palette)
+  desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons)
 cadrumo_register_clean(TARGET desktop-host-prepare PATHS
   "${CADRUMO_PATH_DESKTOP_HOST}" "${CADRUMO_PATH_DESKTOP_ICONS}"
   "${CADRUMO_PATH_DESKTOP_CACHE}/icons-build.json")

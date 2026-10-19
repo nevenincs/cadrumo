@@ -35,12 +35,6 @@ from cadrumo.application.ledger.readiness_query import read_ledger_readiness
 from cadrumo.application.ledger.stale_filing_query import read_stale_ledger_filings
 from cadrumo.application.ledger.status_operation import LEDGER_STATUS_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.config import override_settings
@@ -52,7 +46,16 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    native_cli_profile_scope,
+)
 
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session

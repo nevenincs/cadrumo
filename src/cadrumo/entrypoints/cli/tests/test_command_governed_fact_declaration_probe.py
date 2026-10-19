@@ -84,13 +84,13 @@ from cadrumo_client.commands.tests.command_drive_support import (
     is_runnable,
     synthetic_argv,
 )
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 from ....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from ....adapters.persistence.storage.custody.tests.enrollment_support import changed
 from ....application.user_profile import automation_administration_service
-from ....application.user_profile.access_contracts import AccessAction, AccessScope
-from ....application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal
 from ....domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     require_governed_fact_authority,

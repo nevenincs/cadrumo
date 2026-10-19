@@ -54,14 +54,6 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.operations.subject_reference import expected_operation_subject
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.core.capabilities import ServiceCapability
@@ -79,6 +71,13 @@ from cadrumo.entrypoints.tests.registered_executor_case_support import (
 from cadrumo.entrypoints.tests.test_operation_subject_binding import (
     OPERATION_REVIEW_DIGEST,
     REVIEWED_OPERATION_DECISIONS,
+)
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    OperationAccessPolicy,
+    OperationAccessRequest,
 )
 from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (

@@ -7,6 +7,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ....application.operations.registry import (
@@ -14,7 +16,6 @@ from ....application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ....application.user_profile.access_contracts import AccessAction, Availability
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now

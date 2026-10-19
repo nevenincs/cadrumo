@@ -1,0 +1,614 @@
+"""The held person bridge's generic relay: submit, observe, result, review answered by digest, and cancel.
+
+The fake runtime serves real registered contracts so every document the relay
+passes on validates as the runtime would publish it; the relay itself is given
+only a definition id, a subject and a request object.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import UTC, datetime, timedelta
+from typing import cast
+from uuid import UUID, uuid4
+
+import pytest
+from pydantic import BaseModel, JsonValue, TypeAdapter
+
+from cadrumo.application.dependency_contracts import (
+    DependencyCheckMode,
+    DependencyPlanEntry,
+    DependencySetupPlan,
+    DependencySpaceCheck,
+    dependency_plan_digest,
+    required_free_bytes,
+)
+from cadrumo.application.dependency_setup_operation import (
+    DEPENDENCIES_OPERATION_SUBJECT,
+    DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
+    DependencyPlanEntryViewV1,
+    DependencyRegistryFactory,
+    DependencySetupReviewV2,
+    DependencyStatusResultV1,
+    build_dependency_operation_definitions,
+    build_dependency_operation_registrations,
+)
+from cadrumo.application.operations.frontend_projection import (
+    OperationNoPendingInteractionV1,
+    OperationPublicProjectionV1,
+    OperationReviewAvailableInteractionV1,
+    OperationReviewProjectionReferenceV1,
+)
+from cadrumo.application.operations.frontend_requests import (
+    OperationCancellationRefusalCode,
+    OperationCancellationRefusalV1,
+    OperationCancellationRequestV1,
+    OperationCancellationSuccessV1,
+    OperationObservationSuccessV1,
+    OperationPublicEventPageV1,
+    OperationPublicPhaseEventV1,
+    OperationResponseApplyRequestV1,
+    OperationResponseControlRequestV1,
+    OperationResponseControlSuccessV1,
+    OperationResponseMutationSuccessV1,
+    OperationResponseRejectRequestV1,
+    OperationResultProjectionRequestV1,
+    OperationReviewProjectionSuccessV1,
+    OperationSubmissionReceiptV1,
+)
+from cadrumo.application.operations.models import OperationIdentity
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
+from cadrumo.application.user_profile.google_configuration_operation import (
+    build_google_configuration_definitions,
+    build_google_configuration_registration,
+)
+from cadrumo.application.user_profile.google_configuration_operation_contracts import (
+    GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
+    GoogleConfigurationOutcome,
+)
+from cadrumo.application.user_profile.google_configuration_operation_ports import (
+    GoogleConfigurationOperationPortsFactory,
+)
+from cadrumo.application.user_profile.google_configuration_operation_refusal import (
+    GOOGLE_CONFIGURATION_REFUSAL_CODE,
+    GoogleConfigurationPresentationFacts,
+    GoogleConfigurationRefusalProjection,
+)
+from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationControl,
+    OperationManage,
+    OperationManaged,
+    OperationObserve,
+    OperationObserved,
+    OperationProjected,
+    OperationReply,
+    OperationRequest,
+    OperationReview,
+    OperationSubmit,
+    OperationSubmitted,
+)
+from cadrumo_client.contracts.operation_ids import DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_runtime.host.session_hold_operations import (
+    RELAY_ACTION_KEYS,
+    OperationRelay,
+    RelayRefusedError,
+    relay_reply,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_NOW = datetime(2026, 10, 18, 9, tzinfo=UTC)
+_PROFILE = UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+_SESSION = UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")
+_BOOT = UUID("cccccccc-cccc-4ccc-8ccc-cccccccccccc")
+_CONNECTION = UUID("dddddddd-dddd-4ddd-8ddd-dddddddddddd")
+_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+
+
+def _unbuilt_registry(*_arguments: object) -> object:
+    raise AssertionError("the hold never runs an operation itself")
+
+
+_DEFINITIONS = build_dependency_operation_definitions(cast(DependencyRegistryFactory, _unbuilt_registry))
+_GOOGLE_DEFINITIONS = build_google_configuration_definitions(
+    cast(GoogleConfigurationOperationPortsFactory, _unbuilt_registry)
+)
+_ALL_DEFINITIONS = tuple(sorted((*_DEFINITIONS, *_GOOGLE_DEFINITIONS), key=lambda definition: definition.definition_id))
+_REGISTRY = OperationRegistry(
+    definitions=_ALL_DEFINITIONS,
+    public_registrations=tuple(
+        sorted(
+            (
+                *build_dependency_operation_registrations(_DEFINITIONS),
+                *(build_google_configuration_registration(definition) for definition in _GOOGLE_DEFINITIONS),
+            ),
+            key=lambda registration: registration.contract.definition_id,
+        )
+    ),
+)
+
+
+def _contract(definition_id: str) -> OperationPublicDefinitionContractV1:
+    return _REGISTRY.lookup_public_contract(definition_id)
+
+
+def _json(model: BaseModel) -> dict[str, JsonValue]:
+    return _DOCUMENT.validate_python(model.model_dump(mode="json"))
+
+
+def _review(operation_id: str, revision: int, download_bytes: int) -> DependencySetupReviewV2:
+    entry = DependencyPlanEntry(
+        item_id="browser",
+        download_bytes=download_bytes,
+        source_hosts=("cdn.playwright.dev",),
+        destination=StorageCategory.PLAYWRIGHT_BROWSERS,
+    )
+    plan = DependencySetupPlan(
+        entries=(entry,),
+        space=DependencySpaceCheck(free_bytes=10**12, required_bytes=required_free_bytes(download_bytes)),
+    )
+    return DependencySetupReviewV2(
+        identity=OperationIdentity(
+            operation_id=operation_id,
+            definition_id=DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID,
+            subject_ref=DEPENDENCIES_OPERATION_SUBJECT,
+        ),
+        revision=revision,
+        plan_digest=dependency_plan_digest(plan),
+        entries=(DependencyPlanEntryViewV1(entry=entry, destination_path="components/playwright"),),
+        known_download_bytes=plan.known_download_bytes,
+        has_unknown_size=plan.has_unknown_size,
+        installs_outside_program=plan.installs_outside_program,
+        space=plan.space,
+        space_sufficient=plan.space.sufficient,
+        reviewed_proposal_digest="e" * 64,
+    )
+
+
+class _Operation:
+    def __init__(self, operation_id: str, definition_id: str, subject_ref: str) -> None:
+        self.operation_id = operation_id
+        self.definition_id = definition_id
+        self.subject_ref = subject_ref
+        self.contract = _contract(definition_id)
+        self.revision = 1
+        self.lifecycle = OperationLifecycle.RUNNING
+        self.condition: OperationTerminalCondition | None = None
+        self.events: list[OperationPublicPhaseEventV1] = []
+        self.review: DependencySetupReviewV2 | None = None
+        self.interaction_id = "1" * 64
+        self.result: BaseModel | None = None
+        self.refusal_ref: str | None = None
+        self.cancellable = definition_id == DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID
+
+    def await_review(self, review: DependencySetupReviewV2) -> None:
+        self.review = review
+        self.lifecycle = OperationLifecycle.WAITING_FOR_INTERACTION
+        self.revision = review.revision
+
+    def settle(self, result: BaseModel | None) -> None:
+        self.lifecycle = OperationLifecycle.TERMINAL
+        self.condition = OperationTerminalCondition.SUCCEEDED
+        self.result = result
+        self.review = None
+        self.revision += 1
+
+    def refuse(self, code: str, detail: BaseModel) -> None:
+        self.settle(detail)
+        self.condition = OperationTerminalCondition.REFUSED
+        self.refusal_ref = code
+
+    def _pending(self) -> OperationNoPendingInteractionV1 | OperationReviewAvailableInteractionV1:
+        if self.review is None:
+            return OperationNoPendingInteractionV1()
+        schema = self.contract.review_projection_schema
+        response = self.contract.interaction_response_schema
+        assert schema is not None and response is not None
+        expires = _NOW + timedelta(minutes=30)
+        return OperationReviewAvailableInteractionV1(
+            operation_id=self.operation_id,
+            interaction_id=self.interaction_id,
+            revision=self.revision,
+            presentation_code="dependencies.setup.review",
+            response_schema=response,
+            expires_at=expires,
+            review_reference=OperationReviewProjectionReferenceV1(
+                operation_id=self.operation_id,
+                interaction_id=self.interaction_id,
+                revision=self.revision,
+                review_projection_schema=schema,
+                definition_contract_digest=self.contract.definition_contract_digest,
+                expires_at=expires,
+            ),
+        )
+
+    def projection(self) -> OperationPublicProjectionV1:
+        terminal = self.lifecycle is OperationLifecycle.TERMINAL
+        return OperationPublicProjectionV1(
+            operation_id=self.operation_id,
+            definition_id=self.definition_id,
+            subject_ref=self.subject_ref,
+            revision=self.revision,
+            anchor_cursor=len(self.events),
+            definition_contract=self.contract,
+            contract_set_digest=_REGISTRY.public_contract_set.contract_set_digest,
+            lifecycle=self.lifecycle,
+            terminal_condition=self.condition,
+            effect=OperationEffect.NONE,
+            phase_code=None,
+            started_at=_NOW,
+            updated_at=_NOW,
+            progress=None,
+            close_policy=self.contract.close_policy,
+            cancellation=self.contract.cancellation,
+            cancellable_now=self.cancellable and not terminal,
+            cancellation_requested=False,
+            cancellation_acknowledged=False,
+            execution_deadline_at=None,
+            cleanup_deadline_at=None,
+            pending_interaction=self._pending(),
+            result_ref="f" * 64 if self.condition is OperationTerminalCondition.SUCCEEDED and self.result else None,
+            refusal_ref=self.refusal_ref,
+            failure_error_code=None,
+            diagnostic_ref=None,
+        )
+
+
+class _Runtime:
+    """The hold's verified connection, answering each exchange from its operations."""
+
+    frontend = OperationFrontendProjection.DESKTOP
+    profile_id = _PROFILE
+    session_id = _SESSION
+
+    def __init__(self) -> None:
+        self.operations: dict[str, _Operation] = {}
+        self.submitted: list[OperationSubmit] = []
+        self.managed: list[object] = []
+        self.busy_holder: str | None = None
+        self.stale_cancellation = False
+
+    def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
+        assert (request.profile_id, request.session_id) == (_PROFILE, _SESSION)
+        rid = request.request_id
+        if isinstance(request, OperationSubmit):
+            if self.busy_holder is not None:
+                raise FrontendRefusedError(AccessDenialCode.SUBJECT_BUSY.value, holder_operation_id=self.busy_holder)
+            self.submitted.append(request)
+            operation = _Operation(f"{len(self.submitted):064x}", request.definition_id, request.subject_ref)
+            self.operations[operation.operation_id] = operation
+            receipt = OperationSubmissionReceiptV1(operation_id=operation.operation_id, secret_requirement=None)
+            return OperationSubmitted(request_id=rid, runtime_boot_id=_BOOT, connection_id=_CONNECTION, receipt=receipt)
+        if isinstance(request, OperationControl):
+            return OperationAcknowledged(
+                request_id=rid, runtime_boot_id=_BOOT, connection_id=_CONNECTION, operation_id=request.operation_id
+            )
+        if isinstance(request, OperationObserve):
+            operation = self.operations.get(request.observation.operation_id)
+            if operation is None:
+                raise FrontendRefusedError(AccessDenialCode.OPERATION_DENIED.value)
+            after = request.observation.after_cursor
+            events = tuple(operation.events[after:])
+            page = OperationPublicEventPageV1(
+                operation_id=operation.operation_id,
+                anchor_cursor=len(operation.events),
+                requested_cursor=after,
+                status=OperationReplayStatus.PAGE if events else OperationReplayStatus.CAUGHT_UP,
+                events=events,
+                next_cursor=len(operation.events),
+                restart_cursor=None,
+            )
+            observation = OperationObservationSuccessV1(projection=operation.projection(), event_page=page)
+            return OperationObserved(
+                request_id=rid, runtime_boot_id=_BOOT, connection_id=_CONNECTION, observation=observation
+            )
+        if isinstance(request, OperationReview):
+            operation = self.operations[request.review.reference.operation_id]
+            assert operation.review is not None
+            schema = operation.contract.review_projection_schema
+            assert schema is not None
+            document = OperationReviewProjectionSuccessV1[DependencySetupReviewV2](
+                projection_schema=schema,
+                definition_contract_digest=operation.contract.definition_contract_digest,
+                projection=operation.review,
+            ).model_dump(mode="json")
+            return OperationProjected(
+                request_id=rid,
+                runtime_boot_id=_BOOT,
+                connection_id=_CONNECTION,
+                operation_id=operation.operation_id,
+                projection_kind="review",
+                document=document,
+            )
+        if isinstance(request, OperationManage):
+            return self._manage(request)
+        raise AssertionError(f"unexpected exchange {request!r}")
+
+    def _manage(self, request: OperationManage) -> OperationReply:
+        management = request.management
+        self.managed.append(management)
+        operation = self.operations[management.operation_id]
+        if isinstance(management, OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1):
+            document = _json(
+                OperationResponseMutationSuccessV1(
+                    operation_id=operation.operation_id,
+                    interaction_id=management.interaction_id,
+                    revision=management.revision,
+                    response_action=management.response_action,
+                )
+            )
+            operation.review = None
+            operation.lifecycle = OperationLifecycle.RUNNING
+        elif isinstance(management, OperationResponseControlRequestV1):
+            document = _json(
+                OperationResponseControlSuccessV1(
+                    operation_id=operation.operation_id,
+                    interaction_id=management.interaction_id,
+                    revision=management.revision,
+                    available=True,
+                    permitted_intents=frozenset({"apply", "reject"}),
+                )
+            )
+        elif isinstance(management, OperationCancellationRequestV1):
+            if self.stale_cancellation:
+                document = _json(
+                    OperationCancellationRefusalV1(
+                        code=OperationCancellationRefusalCode.STALE_OPERATION_REVISION,
+                        requested_version=None,
+                        diagnostic_ref=None,
+                    )
+                )
+            else:
+                document = _json(
+                    OperationCancellationSuccessV1(
+                        operation_id=operation.operation_id,
+                        revision=operation.revision,
+                        cancellation_acknowledged=False,
+                    )
+                )
+        else:
+            raise AssertionError(f"unexpected management {management!r}")
+        return OperationManaged(
+            request_id=request.request_id,
+            runtime_boot_id=_BOOT,
+            connection_id=_CONNECTION,
+            operation_id=operation.operation_id,
+            document=document,
+        )
+
+    def read_result_document(
+        self, result: OperationResultProjectionRequestV1, *, timeout: float = 60, deadline: float | None = None
+    ) -> dict[str, JsonValue]:
+        operation = self.operations[result.operation_id]
+        assert operation.result is not None and result.terminal_revision == operation.revision
+        return {
+            "outcome": "success",
+            "result_projection_version": 1,
+            "result_schema": result.result_schema.model_dump(mode="json"),
+            "definition_contract_digest": operation.contract.definition_contract_digest,
+            "projection": operation.result.model_dump(mode="json"),
+        }
+
+
+def _relay(runtime: _Runtime) -> OperationRelay:
+    return OperationRelay(cast(FrontendClient, runtime))
+
+
+def _submit(relay: OperationRelay, definition_id: str, payload: dict[str, object]) -> str:
+    reply = relay.handle(
+        "operation_submit",
+        {"definition_id": definition_id, "subject_ref": DEPENDENCIES_OPERATION_SUBJECT, "payload": payload},
+    )
+    assert reply["kind"] == "operation_submitted"
+    return cast(str, reply["operation_id"])
+
+
+def _reviewing(runtime: _Runtime, relay: OperationRelay) -> tuple[_Operation, dict[str, object]]:
+    operation_id = _submit(relay, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, {"item_ids": ["browser"]})
+    operation = runtime.operations[operation_id]
+    operation.await_review(_review(operation_id, 2, 100))
+    return operation, relay.handle("operation_review", {"operation_id": operation_id})
+
+
+def _answer(review: dict[str, object], decision: str = "apply") -> dict[str, object]:
+    return {
+        "operation_id": review["operation_id"],
+        "interaction_id": review["interaction_id"],
+        "revision": review["revision"],
+        "review_digest": review["review_digest"],
+        "decision": decision,
+    }
+
+
+def test_a_submitted_operation_is_relayed_unchanged_and_watched_until_it_settles() -> None:
+    runtime = _Runtime()
+    relay = _relay(runtime)
+    assert not relay.watching()
+    operation_id = _submit(relay, DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "full", "locale": "ca"})
+    (submitted,) = runtime.submitted
+    assert (submitted.definition_id, submitted.subject_ref) == (
+        DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID,
+        DEPENDENCIES_OPERATION_SUBJECT,
+    )
+    assert submitted.payload_json == '{"mode":"full","locale":"ca"}'
+    assert relay.watching()
+    with pytest.raises(RelayRefusedError) as unsettled:
+        relay.handle("operation_result", {"operation_id": operation_id})
+    assert unsettled.value.code == "no_result"
+    result = DependencyStatusResultV1(mode=DependencyCheckMode.FULL, rows=(), complete=True, hardware_limited=False)
+    runtime.operations[operation_id].settle(result)
+    observed = relay.handle("operation_observe", {"operation_id": operation_id, "after_cursor": 0})
+    assert observed["kind"] == "operation_observed"
+    observation = OperationObservationSuccessV1.model_validate_json(json.dumps(observed["observation"]))
+    assert observation.projection.lifecycle is OperationLifecycle.TERMINAL
+    assert not relay.watching()
+    read = relay.handle("operation_result", {"operation_id": operation_id})
+    assert read["definition_id"] == DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID
+    assert cast(dict[str, object], read["document"])["projection"] == result.model_dump(mode="json")
+
+
+def test_a_busy_subject_names_the_operation_that_holds_it() -> None:
+    runtime = _Runtime()
+    runtime.busy_holder = "7" * 64
+    with pytest.raises(RelayRefusedError) as refused:
+        _submit(_relay(runtime), DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, {})
+    assert (refused.value.code, refused.value.holder_operation_id) == (AccessDenialCode.SUBJECT_BUSY.value, "7" * 64)
+    assert runtime.submitted == []
+
+
+def test_an_answer_applies_exactly_the_review_it_read_and_a_changed_review_is_refused_unanswered() -> None:
+    runtime = _Runtime()
+    relay = _relay(runtime)
+    operation, review = _reviewing(runtime, relay)
+    assert review["review_digest"] == content_hash_hex(cast(dict[str, JsonValue], review["document"]))
+    operation.review = _review(operation.operation_id, operation.revision, 200)
+    with pytest.raises(RelayRefusedError) as changed:
+        relay.handle("operation_respond", _answer(review))
+    assert changed.value.code == "review_changed"
+    assert runtime.managed == []
+    current = relay.handle("operation_review", {"operation_id": operation.operation_id})
+    answered = relay.handle("operation_respond", _answer(current))
+    assert answered == {"kind": "operation_responded", "operation_id": operation.operation_id, "decision": "apply"}
+    control, applied = runtime.managed
+    assert isinstance(control, OperationResponseControlRequestV1)
+    assert isinstance(applied, OperationResponseApplyRequestV1)
+    assert (applied.interaction_id, applied.revision, applied.actor_ref) == ("1" * 64, 2, f"session:{_SESSION}")
+
+
+def test_a_rejection_answers_without_applying_and_another_interaction_is_not_pending() -> None:
+    runtime = _Runtime()
+    relay = _relay(runtime)
+    operation, review = _reviewing(runtime, relay)
+    with pytest.raises(RelayRefusedError) as other:
+        relay.handle("operation_respond", {**_answer(review), "interaction_id": "2" * 64})
+    assert other.value.code == "not_pending"
+    with pytest.raises(ValueError):
+        relay.handle("operation_respond", _answer(review, "maybe"))
+    relay.handle("operation_respond", _answer(review, "reject"))
+    assert [type(item) for item in runtime.managed] == [
+        OperationResponseControlRequestV1,
+        OperationResponseRejectRequestV1,
+    ]
+    with pytest.raises(RelayRefusedError) as gone:
+        relay.handle("operation_review", {"operation_id": operation.operation_id})
+    assert gone.value.code == "not_pending"
+
+
+def test_cancel_is_sent_at_the_observed_revision_and_a_stale_one_is_a_closed_refusal() -> None:
+    runtime = _Runtime()
+    relay = _relay(runtime)
+    operation_id = _submit(relay, DEPENDENCIES_SETUP_OPERATION_DEFINITION_ID, {})
+    runtime.stale_cancellation = True
+    with pytest.raises(RelayRefusedError) as stale:
+        relay.handle("operation_cancel", {"operation_id": operation_id, "expected_revision": 1})
+    assert stale.value.code == OperationCancellationRefusalCode.STALE_OPERATION_REVISION.value
+    runtime.stale_cancellation = False
+    requested = relay.handle("operation_cancel", {"operation_id": operation_id, "expected_revision": 1})
+    assert requested == {"kind": "operation_cancel_requested", "operation_id": operation_id}
+    cancelled = runtime.managed[-1]
+    assert isinstance(cancelled, OperationCancellationRequestV1) and cancelled.expected_revision == 1
+
+
+@pytest.mark.parametrize(
+    ("action", "request_fields"),
+    [
+        ("operation_submit", {"definition_id": "", "subject_ref": "s", "payload": {}}),
+        ("operation_submit", {"definition_id": "d", "subject_ref": "s", "payload": []}),
+        ("operation_observe", {"operation_id": "a" * 64, "after_cursor": -1}),
+        ("operation_cancel", {"operation_id": "a" * 64, "expected_revision": True}),
+    ],
+)
+def test_a_malformed_request_is_invalid_and_reaches_no_runtime(action: str, request_fields: dict[str, object]) -> None:
+    runtime = _Runtime()
+    with pytest.raises((TypeError, ValueError)):
+        _relay(runtime).handle(action, request_fields)
+    assert runtime.submitted == [] and runtime.managed == []
+
+
+def test_a_reply_carries_the_held_identity_with_its_fields_or_a_closed_refusal() -> None:
+    request_id = uuid4()
+    identity = {
+        "request_id": str(request_id),
+        "profile_id": str(_PROFILE),
+        "session_id": str(_SESSION),
+        "runtime_boot_id": str(_BOOT),
+        "connection_id": str(_CONNECTION),
+    }
+
+    def reply(
+        *, fields: dict[str, object] | None = None, refusal: RelayRefusedError | None = None
+    ) -> dict[str, object]:
+        return relay_reply(
+            request_id=request_id,
+            profile_id=_PROFILE,
+            session_id=_SESSION,
+            runtime_boot_id=_BOOT,
+            connection_id=_CONNECTION,
+            fields=fields,
+            refusal=refusal,
+        )
+
+    fields: dict[str, object] = {"kind": "operation_submitted", "operation_id": "a" * 64}
+    assert reply(fields=fields) == {**identity, **fields}
+    refused = reply(refusal=RelayRefusedError("subject_busy", holder_operation_id="b" * 64))
+    assert refused == {"kind": "operation_refused", **identity, "code": "subject_busy", "holder_operation_id": "b" * 64}
+    with pytest.raises(ValueError):
+        reply()
+    assert RELAY_ACTION_KEYS["operation_respond"] == {
+        "operation_id",
+        "interaction_id",
+        "revision",
+        "review_digest",
+        "decision",
+    }
+
+
+def _declined_google_sign_in() -> GoogleConfigurationOutcome:
+    refusal = GoogleConfigurationRefusalProjection(
+        profile_id=_PROFILE,
+        provider_code="REFUSED_GOOGLE_SIGN_IN_REQUIRED",
+        message_key="adapters.google.oauth_flow.errors.consent_declined",
+        facts=GoogleConfigurationPresentationFacts(profile=_PROFILE),
+        failure_category=DependencyFailureCategory.CANCELLED,
+    )
+    return GoogleConfigurationOutcome(profile_id=_PROFILE, outcome="refused", refusal=refusal)
+
+
+def test_a_refusal_its_definition_details_is_read_like_a_result_and_any_other_refusal_has_none() -> None:
+    runtime = _Runtime()
+    relay = _relay(runtime)
+    subject = f"profile:{_PROFILE}"
+    submitted = relay.handle(
+        "operation_submit",
+        {
+            "definition_id": GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
+            "subject_ref": subject,
+            "payload": {"profile_id": str(_PROFILE)},
+        },
+    )
+    operation_id = cast(str, submitted["operation_id"])
+    detail = _declined_google_sign_in()
+    runtime.operations[operation_id].refuse(GOOGLE_CONFIGURATION_REFUSAL_CODE, detail)
+
+    read = relay.handle("operation_result", {"operation_id": operation_id})
+
+    assert read["definition_id"] == GOOGLE_LOGIN_OPERATION_DEFINITION_ID
+    assert cast(dict[str, object], read["document"])["projection"] == detail.model_dump(mode="json")
+    other = _submit(relay, DEPENDENCIES_STATUS_OPERATION_DEFINITION_ID, {"mode": "quick", "locale": None})
+    runtime.operations[other].refuse(AccessDenialCode.OPERATION_DENIED.value, detail)
+    with pytest.raises(RelayRefusedError) as undocumented:
+        relay.handle("operation_result", {"operation_id": other})
+    assert undocumented.value.code == "no_result"

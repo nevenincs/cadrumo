@@ -8,16 +8,13 @@ from uuid import UUID, uuid4
 from pydantic import SecretBytes
 
 from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationInventory,
-    EnrollmentProposal,
-    EnrollmentTransition,
-)
+from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_execution import AutomationApprovalExecution
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalRequest
 
 from ..application.approval_binding import RuntimeApprovalBinding

@@ -18,13 +18,14 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.request_faults import registered_error_fault
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import operation_management_action
 from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, project_document_page

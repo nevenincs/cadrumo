@@ -3,7 +3,7 @@
 use crate::shell::sign_in::wire::Outcome;
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 const NAME_LIMIT: usize = 100;
 const URL_LIMIT: usize = 2048;
@@ -148,6 +148,9 @@ pub struct Entry {
     pub auth_kind: AuthKind,
     pub consumers: Vec<Consumer>,
     pub mode: Mode,
+    /// Whether a key is stored for the lane, whatever its mode: an off lane
+    /// keeps its key. Never the key itself.
+    pub credential_saved: bool,
     pub available: bool,
     pub source: Source,
     pub readiness: Readiness,
@@ -167,6 +170,30 @@ pub struct Status {
     pub providers: Vec<Entry>,
     #[serde(default)]
     pub sign_in_providers: Vec<String>,
+    #[serde(default)]
+    pub sign_in_methods: BTreeMap<String, Vec<SignInMethod>>,
+}
+
+impl Status {
+    /// Admission uses the exact provider and transport, independently of the
+    /// catalog's model support and completed-turn evidence.
+    pub fn permits_agent(&self, provider: &str, transport: &str) -> bool {
+        let transport = match transport {
+            "api" => Transport::Api,
+            "cli" => Transport::Cli,
+            _ => return false,
+        };
+        self.providers.iter().any(|entry| {
+            let login_required = entry.auth_kind == AuthKind::ProviderSignInOnly
+                || entry.mode == Mode::ProviderSignIn;
+            entry.provider == provider
+                && entry.transport == transport
+                && entry.consumers.contains(&Consumer::Assistant)
+                && entry.available
+                && entry.mode != Mode::Disabled
+                && (!login_required || entry.cli_state == Some(CliState::InstalledSignedIn))
+        })
+    }
 }
 
 /// The attended sign-in route the person selected.
@@ -273,6 +300,7 @@ fn is_https_url(text: &str) -> bool {
     let Ok(url) = tauri::Url::parse(text) else {
         return false;
     };
+    let mut code_seen = false;
     url.scheme() == "https"
         && url.host_str().is_some_and(|host| !host.is_empty())
         && url.username().is_empty()
@@ -281,14 +309,15 @@ fn is_https_url(text: &str) -> bool {
         && url.fragment().is_none()
         && url
             .query_pairs()
-            .all(|(key, _)| !is_sensitive_auth_query_key(&key))
-}
-
-fn is_sensitive_auth_query_key(key: &str) -> bool {
-    matches!(
-        key.to_ascii_lowercase().as_str(),
-        "access_token" | "refresh_token" | "id_token" | "code"
-    )
+            .all(|(key, value)| match key.to_ascii_lowercase().as_str() {
+                "access_token" | "refresh_token" | "id_token" => false,
+                "code" => {
+                    let allowed = !code_seen && value == "true";
+                    code_seen = true;
+                    allowed
+                }
+                _ => true,
+            })
 }
 
 fn valid_user_code(text: &str) -> bool {
@@ -366,7 +395,10 @@ impl Entry {
                 .all(|url| is_plain_text(url, URL_LIMIT))
             // A provider's own app has a state; a web API has none.
             && (self.transport == Transport::Cli) == self.cli_state.is_some()
-            && self.consumers.len() <= 1;
+            && self.consumers.len() <= 1
+            // Only a lane that takes a key can hold one, and a key mode has one.
+            && (!self.credential_saved || self.auth_kind != AuthKind::ProviderSignInOnly)
+            && (self.credential_saved || !matches!(self.mode, Mode::Key | Mode::OauthToken));
         if ok { Ok(self) } else { Err(protocol()) }
     }
 }
@@ -407,6 +439,13 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
             .sign_in_providers
             .iter()
             .all(|provider| is_provider_id(provider) && seen_sign_in.insert(provider.clone()))
+        && status.sign_in_methods.len() <= PROVIDER_LIMIT
+        && status.sign_in_methods.iter().all(|(provider, methods)| {
+            seen_sign_in.contains(provider)
+                && !methods.is_empty()
+                && methods.len() <= 2
+                && (methods.len() == 1 || methods[0] != methods[1])
+        })
         && status
             .providers
             .iter()
@@ -429,6 +468,7 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
         development: status.development,
         providers,
         sign_in_providers: status.sign_in_providers,
+        sign_in_methods: status.sign_in_methods,
     })
 }
 
@@ -445,12 +485,27 @@ pub fn changed(outcome: Outcome, provider: &str) -> Result<Entry, CommandFailure
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn browser_urls_allow_only_a_single_boolean_code_flag() {
+        assert!(is_https_url("https://example.org/login?code=true"));
+        for query in [
+            "code=secret",
+            "code=",
+            "code=false",
+            "code=true&Code=true",
+            "Access_Token=",
+        ] {
+            assert!(!is_https_url(&format!("https://example.org/login?{query}")));
+        }
+    }
     use serde_json::{Value, json};
 
     fn api() -> Value {
         json!({
             "id": "alpha_api", "provider": "alpha", "display_name": "Alpha API", "transport": "api",
             "auth_kind": "api_key", "consumers": ["assistant"], "mode": "key",
+            "credential_saved": true,
             "available": true, "source": "profile", "readiness": "not_verified",
             "reason": null, "base_url": null, "default_base_url": null,
             "revision": "00ff"
@@ -461,7 +516,8 @@ mod tests {
         json!({
             "id": "beta_cli", "provider": "beta", "display_name": "Beta CLI", "transport": "cli",
             "auth_kind": "provider_sign_in_only", "consumers": ["assistant"],
-            "mode": "provider_sign_in", "available": false, "source": "none",
+            "mode": "provider_sign_in", "credential_saved": false,
+            "available": false, "source": "none",
             "readiness": "sign_in_required", "reason": "sign_in_with_provider_tool",
             "cli_state": "installed_signed_out", "revision": "absent"
         })
@@ -487,6 +543,43 @@ mod tests {
             Err(error) => serde_json::to_value(error).unwrap(),
             Ok(_) => panic!("expected sign-in protocol failure"),
         }
+    }
+
+    #[test]
+    fn agent_admission_requires_current_settings_for_the_exact_transport() {
+        let mut observed = status(success(envelope(&[api(), cli()]))).unwrap();
+        assert!(observed.permits_agent("alpha", "api"));
+        assert!(!observed.permits_agent("alpha", "cli"));
+        assert!(!observed.permits_agent("missing", "api"));
+        assert!(!observed.permits_agent("beta", "cli"));
+
+        let cli = &mut observed.providers[1];
+        cli.available = true;
+        // A stale availability flag cannot authorize a missing login.
+        for login in [
+            CliState::Unknown,
+            CliState::NotInstalled,
+            CliState::InstalledSignedOut,
+        ] {
+            observed.providers[1].cli_state = Some(login);
+            assert!(!observed.permits_agent("beta", "cli"));
+        }
+        observed.providers[1].cli_state = Some(CliState::InstalledSignedIn);
+        assert!(observed.permits_agent("beta", "cli"));
+        observed.providers[1].mode = Mode::Disabled;
+        assert!(!observed.permits_agent("beta", "cli"));
+        observed.providers[0].available = false;
+        assert!(!observed.permits_agent("alpha", "api"));
+    }
+
+    #[test]
+    fn configured_cli_api_keys_do_not_require_provider_owned_login() {
+        let mut observed = status(success(envelope(&[api()]))).unwrap();
+        observed.providers[0].transport = Transport::Cli;
+        observed.providers[0].cli_state = Some(CliState::Unknown);
+        assert!(observed.permits_agent("alpha", "cli"));
+        observed.providers[0].consumers.clear();
+        assert!(!observed.permits_agent("alpha", "cli"));
     }
 
     #[test]
@@ -525,6 +618,36 @@ mod tests {
     }
 
     #[test]
+    fn an_off_lane_keeps_its_saved_key_and_a_saved_key_needs_a_lane_that_takes_one() {
+        let mut off = api();
+        off["mode"] = json!("disabled");
+        off["available"] = json!(false);
+        off["source"] = json!("none");
+        off["readiness"] = json!("disabled");
+        off["reason"] = json!("turned_off");
+        let read = status_of(&[off.clone()]);
+        assert!(read.providers[0].credential_saved);
+        assert_eq!(read.providers[0].reason, Some(Reason::TurnedOff));
+        assert!(!read.permits_agent("alpha", "api"));
+        let sent = serde_json::to_value(&read).unwrap();
+        assert_eq!(sent["providers"][0]["credential_saved"], true);
+        assert_eq!(sent["providers"][0]["mode"], "disabled");
+        off["credential_saved"] = json!(false);
+        assert!(!status_of(&[off]).providers[0].credential_saved);
+
+        let mut sign_in_with_key = cli();
+        sign_in_with_key["credential_saved"] = json!(true);
+        let mut key_without_key = api();
+        key_without_key["credential_saved"] = json!(false);
+        for entry in [sign_in_with_key, key_without_key] {
+            assert_eq!(
+                failed(status(success(envelope(&[entry]))))["code"],
+                "read_failed"
+            );
+        }
+    }
+
+    #[test]
     fn a_stored_base_url_and_a_default_come_through_as_text() {
         let mut gateway = api();
         gateway["base_url"] = json!("https://gateway.example/v1");
@@ -553,6 +676,8 @@ mod tests {
             ("readiness", json!("healthy")),
             ("reason", json!("because")),
             ("available", json!("yes")),
+            ("credential_saved", json!("yes")),
+            ("credential_saved", json!(null)),
             ("id", json!("Alpha_api")),
             ("id", json!("-x")),
             ("provider", json!("Alpha")),
@@ -578,6 +703,7 @@ mod tests {
             "auth_kind",
             "consumers",
             "mode",
+            "credential_saved",
             "available",
             "source",
             "readiness",
@@ -649,7 +775,12 @@ mod tests {
     fn gui_sign_in_capabilities_are_a_bounded_unique_provider_slug_list() {
         let mut read = envelope(&[cli()]);
         read["sign_in_providers"] = json!(["codex", "claude"]);
+        read["sign_in_methods"] = json!({"codex": ["browser", "device"], "claude": ["browser"]});
         let parsed = status(success(read)).unwrap();
+        assert_eq!(
+            parsed.sign_in_methods["claude"],
+            vec![SignInMethod::Browser]
+        );
         assert_eq!(
             parsed.sign_in_providers,
             vec!["codex".to_owned(), "claude".to_owned()]
@@ -673,6 +804,21 @@ mod tests {
         let mut read = envelope(&[]);
         read["sign_in_providers"] = json!(too_many);
         assert_eq!(failed(status(success(read)))["code"], "read_failed");
+    }
+
+    #[test]
+    fn gui_methods_must_belong_to_advertised_providers_and_be_unique() {
+        for methods in [
+            json!({"example": []}),
+            json!({"example": ["browser", "browser"]}),
+            json!({"example": ["password"]}),
+            json!({"other": ["browser"]}),
+        ] {
+            let mut read = envelope(&[]);
+            read["sign_in_providers"] = json!(["example"]);
+            read["sign_in_methods"] = methods;
+            assert_eq!(failed(status(success(read)))["code"], "read_failed");
+        }
     }
 
     #[test]

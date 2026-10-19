@@ -19,9 +19,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.user_profile.access_contracts import AccessDenied, AccessSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenied
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.profile_access import HumanProof
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 

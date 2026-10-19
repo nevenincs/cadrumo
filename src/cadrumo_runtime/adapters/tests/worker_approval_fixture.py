@@ -10,10 +10,10 @@ from uuid import uuid4
 
 from pydantic import BaseModel
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationRequest

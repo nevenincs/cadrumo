@@ -9,6 +9,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, OperationAccessRequest
+
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
@@ -17,13 +20,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...operations.schema_identity import OperationSchemaIdentityV1
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    OperationAccessRequest,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ...user_profile.operation_access_policy import operation_scope_refusal
 from ..pipeline_operation import (

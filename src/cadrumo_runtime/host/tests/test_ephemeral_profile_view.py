@@ -26,7 +26,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId, OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession
+from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
@@ -40,6 +40,7 @@ from cadrumo.core.operations import OperationTerminalCondition, profile_operatio
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...adapters.profile_worker import ProfileWorkerProcess

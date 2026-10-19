@@ -31,18 +31,18 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
+)
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
 )
 from cadrumo_client.transport import credentials
 from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY

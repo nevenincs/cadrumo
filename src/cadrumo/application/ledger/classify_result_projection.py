@@ -6,10 +6,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_manual import ledger_transaction_result_payload
 from .classify_requests import (

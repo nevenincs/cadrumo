@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-17'
+modified: '2026-10-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:8a5755591b8a409daa2b0f09ba1124c069fe736bfb4b908155af7b34af7a0f85'
+body_hash: 'sha256:aa451e3f94a02e45de023ba4af93abc187d0d3b3786aa79128babe49b955fdf2'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -324,3 +324,19 @@ Acceptance (user, 2026-10-04) doesn't mean that any part of this is implemented.
 Authorized by the user's request for one sidebar toggle instead of Console, Python and Logs buttons, retained notification counts, and a collapsed panel at application startup. The three rail buttons become one panel toggle using the existing panel-toggle action and shortcut. The existing log error count moves to this button, while the message notification count stays on Messages. Console, Python and Logs remain tabs in the panel, with their existing keyboard and palette actions. The active tab and panel size are remembered; open/closed state is local to the running window and is no longer restored or saved. Opening and collapsing preserve mounted terminal sessions within the same window. This refines frontend layout only and adds no host or runtime authority. Implementation: `native/desktop/frontend/src/App.tsx`, `src/shell/layout.ts`; browser assertions cover legacy saved-open startup, one toggle, both counts, tab retention and terminal reuse.
 
 Amended 2026-10-16 under `2026-10-16-idle-churn-adr`: the shell no longer polls `sign-in-status`. It learns sign-in changes from one long-lived `cadrumo-runtime session watch` child, which re-reads only on a runtime cue, a pointer change or a status deadline. The sign-in view, language and agent hosts share that one observation. The shell process itself still holds no runtime connection, session, receipt or credential.
+
+### Amendment 2026-10-18: component setup
+
+Amended 2026-10-19 by the setup-experience amendment below; the paragraph that follows is the prior wording.
+
+Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` (D10). The exceptions to "The shell holds no runtime connection and no runtime authority" gain one: while a profile is signed in, the host may read setup status and may start setup, answer its plan review, cancel it, and start Google sign-in, each through a closed, token-checked action of the held person bridge. The bridge pushes a cue when an observed setup operation changes, and the host re-reads it before pushing a typed snapshot to the shell. The frontend names items and choices only, never a command, path or host. Setup acts keep their registered-operation validation, and Google sign-in stays the runtime's authentication act. Noted 2026-10-18 under the owner's runtime-boundary ruling recorded in `2026-10-18-dependency-provisioning-unified-setup-adr`: the bridge carries these acts through its generic registered-operation relay and a generic authentication act, names no setup item, wording or definition, and the host keeps the window's own setup state; the host's commands stay closed. Noted again 2026-10-18 under the same ruling: the generic authentication act is removed, and Google sign-in is the product's registered `config.google.login` operation, which the host submits over the same relay and whose consent review it answers on the person's click. The shell still holds no session, receipt, credential, token or DEK, and stores no setup state beyond the per-launch dismissal of the first-run dialog. For setup only, this also amends "Shell settings are frontend preferences only. They never write product Settings or reach the backend": Settings gains a Components section whose buttons reach the backend through these actions, and the palette gains the setup actions of that record. Before this amendment, setup had no desktop surface and the exceptions named sign-in, profiles, manager start, named read-only views and language only.
+
+### Amendment 2026-10-19: setup experience and the Google account
+
+Basis: operator review 2026-10-19, recorded with its full commitments in `2026-10-18-dependency-provisioning-unified-setup-adr` (operator-review amendment). For this record:
+
+- Setup covers software only: the browser and the local AI, which the window shows as one item. Google sign-in is not setup. The host's setup commands keep their shape; Google sign-in is carried by `desktop_google_sign_in` and sign-out by `desktop_google_sign_out`, both closed, token-checked commands over the same held person bridge's generic relay, submitting the product's `config.google.login` and `config.google.logout`. The host also reads the profile's stored sign-in through `config.google.status` and pushes it in the same snapshot, beside the setup rows and never among them. `desktop_setup_google_sign_in` is removed.
+- Settings no longer embeds a Components section. While setup is unfinished or running it shows one top-level line that opens the setup flow, and nothing once setup is complete. Settings gains its own "Google account" row with the profile's signed-in state and one Sign in or Sign out button. Both are the only setup and account elements Settings carries; the exception to "Shell settings are frontend preferences only" covers exactly these two.
+- The palette's setup group offers Set up components, Check components, Set up the browser, Set up the local AI, Retry setup and Cancel setup. The account group gains "Authenticate with Google". No setup action names Google.
+- The setup dialog leads with one summary and one primary action, keeps per-component detail in a closed "Details" disclosure, and shows one overall progress bar while setup runs. Every row states its state once, by the product's sentence.
+- Unchanged: the shell holds no session, receipt, credential, token or DEK, and stores no setup or account state beyond the per-launch dismissal of the first-run dialog. Where Google tokens are stored is not the shell's concern and is unchanged.

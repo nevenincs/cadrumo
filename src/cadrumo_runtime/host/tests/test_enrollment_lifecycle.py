@@ -22,17 +22,13 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import AdministrationFacts
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest, HumanSignInRevocationResult
 from cadrumo_client.contracts.contracts import Peer
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepared

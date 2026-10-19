@@ -7,8 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from ....application.user_profile.access_contracts import ProfileAccessBinding
-from ....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ....application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,

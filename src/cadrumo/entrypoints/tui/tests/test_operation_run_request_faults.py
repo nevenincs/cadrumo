@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ....application.user_profile.automation_custody_port import AutomationCustodyCode
 from ....core.config import override_settings
 from ....core.i18n.render import tr
 from ....core.request_faults import RequestFault

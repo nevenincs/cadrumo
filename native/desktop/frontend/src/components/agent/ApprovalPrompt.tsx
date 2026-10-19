@@ -16,18 +16,18 @@ const ORDER: readonly AgentApprovalOption["kind"][] = [
   "reject_always",
   "reject_once",
   "allow_always",
+  "allow_session",
   "allow_once",
 ];
 
-/** What an option does, in our words, for an option that has no name. The
- * words for an "always" option promise no persistence: cadrumo-agent applies a
- * decision to the call it was asked about and keeps nothing (it answers an
- * "always" with the once-only option, `_narrowed_to_one_use`), so an option
- * that persists a grant is worded by the name whoever serves it gives it. */
+/** Fallback labels. Named options describe their exact scope, including a
+ * server-wide session grant. Session grants end with the current run. */
 function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
   switch (kind) {
     case "allow_once":
       return t("desktop.agent.approval_allow_once");
+    case "allow_session":
+      return t("desktop.agent.approval_allow_session");
     case "allow_always":
       return t("desktop.agent.approval_allow_always");
     case "reject_once":
@@ -41,7 +41,7 @@ function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
  * A decision a reply waits on: a tool the agent wants to use, or a Cadrumo
  * operation to review before it commits. It says what would run, and offers
  * the options the agent offers, each under its own name; an option that would
- * be remembered is left out while one that answers this call alone is
+ * persist beyond the run is left out while a bounded option is
  * offered. Only a press of one of them decides: none is chosen beforehand,
  * none has the focus, and no key answers for the person. The kind of an
  * option decides its place and its emphasis: refusals come first and allowing

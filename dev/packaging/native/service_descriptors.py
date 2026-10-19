@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.application.operations.person_acts import operation_is_persons_act
-from cadrumo.application.user_profile.access_contracts import AccessAction
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .hashing import digest
 from .layout import ApplicationImage, entrypoint_files

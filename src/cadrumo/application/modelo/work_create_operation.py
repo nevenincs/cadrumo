@@ -8,6 +8,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -37,10 +40,6 @@ from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..overview.status_report import build_filing_obligation_advisories
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.projections import record_to_values
 from .action_errors import WorkUnitMutationRefusedError

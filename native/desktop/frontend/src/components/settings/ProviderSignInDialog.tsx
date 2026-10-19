@@ -33,13 +33,88 @@ const ACTIVE = new Set<ProviderSignInEvent>([
 ]);
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CODE = /^[a-z0-9_-]{1,64}$/i;
+const REVISION = /^[0-9a-f]{64}$/;
 const LIFETIME_MS = 300_000;
 const OBSERVE_MS = 1_000;
+const TRANSIENT_STATUS_FAILURES = new Set([
+  "read_failed",
+  "timed_out",
+  "timeout",
+  "host_disconnected",
+  "runtime_unavailable",
+  "unknown",
+]);
 
-function safeFailureCode(error: unknown): string {
+type ProviderSignInFailureCode =
+  | "not_signed_in"
+  | "signed_out"
+  | "profile_required"
+  | "profile_locked"
+  | "person_act_required"
+  | "runtime_unavailable"
+  | "catalog_unavailable"
+  | "revision_conflict"
+  | "timeout"
+  | "expired"
+  | "open_external_failed"
+  | "cancel_failed"
+  | "provider_unavailable"
+  | "busy"
+  | "unsupported_flow"
+  | "host_disconnected"
+  | "cleanup_failed"
+  | "invalid_request"
+  | "provider_sign_in_protocol_error"
+  | "provider_error"
+  | "unknown";
+
+const FAILURE_CODES: ReadonlySet<string> = new Set<ProviderSignInFailureCode>([
+  "not_signed_in",
+  "signed_out",
+  "profile_required",
+  "profile_locked",
+  "person_act_required",
+  "runtime_unavailable",
+  "catalog_unavailable",
+  "revision_conflict",
+  "timeout",
+  "expired",
+  "open_external_failed",
+  "cancel_failed",
+  "provider_unavailable",
+  "busy",
+  "unsupported_flow",
+  "host_disconnected",
+  "cleanup_failed",
+  "invalid_request",
+  "provider_sign_in_protocol_error",
+  "provider_error",
+  "unknown",
+]);
+
+function isProviderSignInFailureCode(
+  code: unknown,
+): code is ProviderSignInFailureCode {
+  return typeof code === "string" && FAILURE_CODES.has(code);
+}
+
+function safeFailureCode(error: unknown): ProviderSignInFailureCode {
   const code = failureCode(error);
-  return CODE.test(code) ? code : "unknown";
+  return isProviderSignInFailureCode(code) ? code : "unknown";
+}
+
+/** A missing status reply is not evidence that sign-in failed. Keep observing
+ * this bounded attempt after transient bridge/runtime errors. */
+function canRetryStatus(error: unknown): boolean {
+  return TRANSIENT_STATUS_FAILURES.has(failureCode(error));
+}
+
+function snapshotFailureCode(
+  snapshot: ProviderSignInSnapshot | null,
+): ProviderSignInFailureCode {
+  return isProviderSignInFailureCode(snapshot?.reason)
+    ? snapshot.reason
+    : "unknown";
 }
 
 function hasControlCharacter(value: string): boolean {
@@ -55,8 +130,9 @@ type Props = {
   provider: ProviderStatus;
   revision: string;
   signIn: ProviderSignIn;
+  methods: readonly ProviderSignInMethod[];
   onOpenChange: (open: boolean) => void;
-  onTerminal: () => void;
+  onTerminal: (providerId: string) => Promise<string | undefined>;
 };
 
 function safeUrl(value: unknown): string | undefined {
@@ -102,9 +178,8 @@ function snapshotOf(
   const event = raw.event as ProviderSignInEvent;
   const terminal = !ACTIVE.has(event);
   const reason =
-    event === "failed" &&
-    typeof raw.reason === "string" &&
-    CODE.test(raw.reason)
+    (event === "failed" || event === "cancelled") &&
+    isProviderSignInFailureCode(raw.reason)
       ? raw.reason
       : undefined;
   if (terminal)
@@ -135,10 +210,19 @@ function snapshotOf(
   };
 }
 
-function failureWords(t: Translate, code: string): string {
+function failureWords(
+  t: Translate,
+  code: ProviderSignInFailureCode,
+  providerName: string,
+  method: ProviderSignInMethod | null,
+): string {
   switch (code) {
     case "not_signed_in":
-      return t("desktop.providers.refused_not_signed_in");
+    case "signed_out":
+    case "profile_required":
+      return t("desktop.providers.sign_in_profile_required", {
+        provider: providerName,
+      });
     case "profile_locked":
       return t("desktop.providers.refused_profile_locked");
     case "person_act_required":
@@ -146,12 +230,42 @@ function failureWords(t: Translate, code: string): string {
     case "runtime_unavailable":
       return t("desktop.providers.refused_runtime_unavailable");
     case "catalog_unavailable":
-      return t("desktop.providers.refused_catalog_unavailable");
+      return t("desktop.providers.load_failed");
     case "revision_conflict":
       return t("desktop.providers.refused_revision_conflict");
     case "timeout":
     case "expired":
       return t("desktop.providers.sign_in_timeout");
+    case "provider_unavailable":
+      return t("desktop.providers.sign_in_provider_unavailable", {
+        provider: providerName,
+      });
+    case "busy":
+      return t("desktop.providers.sign_in_busy", { provider: providerName });
+    case "unsupported_flow":
+      return t(
+        method === "device"
+          ? "desktop.providers.sign_in_unsupported_device"
+          : "desktop.providers.sign_in_unsupported_browser",
+        { provider: providerName },
+      );
+    case "host_disconnected":
+      return t("desktop.providers.sign_in_host_disconnected", {
+        provider: providerName,
+      });
+    case "cleanup_failed":
+      return t("desktop.providers.sign_in_cleanup_failed", {
+        provider: providerName,
+      });
+    case "invalid_request":
+    case "provider_sign_in_protocol_error":
+      return t("desktop.providers.sign_in_invalid_request", {
+        provider: providerName,
+      });
+    case "provider_error":
+      return t("desktop.providers.sign_in_provider_error", {
+        provider: providerName,
+      });
     case "open_external_failed":
       return t("desktop.providers.sign_in_open_failed");
     case "cancel_failed":
@@ -194,16 +308,22 @@ export function ProviderSignInDialog({
   provider,
   revision,
   signIn,
+  methods,
   onOpenChange,
   onTerminal,
 }: Props) {
   const t = useStrings();
   const [snapshot, setSnapshot] = useState<ProviderSignInSnapshot | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ProviderSignInFailureCode | null>(
+    null,
+  );
   const [method, setMethod] = useState<ProviderSignInMethod | null>(null);
   const [starting, setStarting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [opening, setOpening] = useState(false);
+  const [retryRevision, setRetryRevision] = useState<string | null>(null);
+  const [retryState, setRetryState] = useState<
+    "idle" | "checking" | "ready" | "unavailable"
+  >("idle");
   const currentAttempt = useRef<string | null>(null);
   const generation = useRef(0);
   const deadline = useRef(0);
@@ -216,17 +336,52 @@ export function ProviderSignInDialog({
   completed.current = onTerminal;
   close.current = onOpenChange;
 
+  const refreshAfterTerminal = useCallback(
+    (retryable: boolean, forGeneration: number) => {
+      if (retryable) {
+        setRetryRevision(null);
+        setRetryState("checking");
+      }
+      void Promise.resolve()
+        .then(() => completed.current(provider.id))
+        .then((freshRevision) => {
+          if (!retryable || generation.current !== forGeneration) return;
+          if (
+            typeof freshRevision === "string" &&
+            REVISION.test(freshRevision)
+          ) {
+            setRetryRevision(freshRevision);
+            setRetryState("ready");
+          } else {
+            setRetryRevision(null);
+            setRetryState("unavailable");
+          }
+        })
+        .catch(() => {
+          if (!retryable || generation.current !== forGeneration) return;
+          setRetryRevision(null);
+          setRetryState("unavailable");
+        });
+    },
+    [provider.id],
+  );
+
   const cancelQuietly = useCallback(
-    (attemptId: string) => {
+    (attemptId: string, retryGeneration?: number) => {
       void api.current
         .cancel({ attemptId })
         .then((answer) => {
           snapshotOf(answer, provider.id, attemptId);
         })
         .catch(() => undefined)
-        .finally(() => completed.current());
+        .finally(() =>
+          refreshAfterTerminal(
+            retryGeneration !== undefined,
+            retryGeneration ?? -1,
+          ),
+        );
     },
-    [provider.id],
+    [provider.id, refreshAfterTerminal],
   );
 
   const activeAttemptId =
@@ -251,8 +406,7 @@ export function ProviderSignInDialog({
         setSnapshot(null);
         setFailure("timeout");
         setCancelling(false);
-        setOpening(false);
-        cancelQuietly(attemptId);
+        cancelQuietly(attemptId, generation.current);
         return;
       }
       try {
@@ -273,20 +427,31 @@ export function ProviderSignInDialog({
           currentAttempt.current = null;
           setSnapshot(next);
           setFailure(
-            next.event === "failed" ? (next.reason ?? "unknown") : null,
+            next.event === "failed" ? snapshotFailureCode(next) : null,
           );
           setCancelling(false);
-          setOpening(false);
-          completed.current();
+          refreshAfterTerminal(
+            next.event === "failed" ||
+              (next.event === "cancelled" && next.reason !== undefined),
+            generation.current,
+          );
         }
       } catch (error) {
         if (!current || currentAttempt.current !== attemptId) return;
+        if (canRetryStatus(error) && Date.now() < deadline.current) {
+          // The host may be temporarily unable to read its status while it
+          // starts or cleans up the helper. Preserve the active presentation
+          // and let the next bounded poll determine the terminal result.
+          if (current) schedule();
+          return;
+        }
         currentAttempt.current = null;
         setSnapshot(null);
-        setFailure(safeFailureCode(error));
+        setFailure(
+          Date.now() >= deadline.current ? "timeout" : safeFailureCode(error),
+        );
         setCancelling(false);
-        setOpening(false);
-        cancelQuietly(attemptId);
+        cancelQuietly(attemptId, generation.current);
       }
       if (current && currentAttempt.current === attemptId) schedule();
     };
@@ -295,7 +460,14 @@ export function ProviderSignInDialog({
       current = false;
       if (timer !== undefined) clearTimeout(timer);
     };
-  }, [activeAttemptId, cancelQuietly, identity, open, provider.id]);
+  }, [
+    activeAttemptId,
+    cancelQuietly,
+    identity,
+    open,
+    provider.id,
+    refreshAfterTerminal,
+  ]);
 
   useEffect(
     () => () => {
@@ -307,7 +479,10 @@ export function ProviderSignInDialog({
     [cancelQuietly],
   );
 
-  const accept = (next: ProviderSignInSnapshot) => {
+  const accept = (
+    next: ProviderSignInSnapshot,
+    forGeneration = generation.current,
+  ) => {
     if (ACTIVE.has(next.event)) {
       currentAttempt.current = next.attempt_id;
       setSnapshot(
@@ -319,22 +494,27 @@ export function ProviderSignInDialog({
       );
       setFailure(null);
       setCancelling(false);
-      setOpening(false);
       return;
     }
     currentAttempt.current = null;
     openedAttempt.current = null;
     clearedAttempt.current = null;
     setSnapshot(next);
-    setFailure(next.event === "failed" ? (next.reason ?? "unknown") : null);
+    setFailure(next.event === "failed" ? snapshotFailureCode(next) : null);
     setStarting(false);
     setCancelling(false);
-    setOpening(false);
     deadline.current = 0;
-    completed.current();
+    refreshAfterTerminal(
+      next.event === "failed" ||
+        (next.event === "cancelled" && next.reason !== undefined),
+      forGeneration,
+    );
   };
 
-  const start = async (nextMethod: ProviderSignInMethod) => {
+  const start = async (
+    nextMethod: ProviderSignInMethod,
+    nextRevision = revision,
+  ) => {
     if (starting || currentAttempt.current) return;
     const mine = ++generation.current;
     openedAttempt.current = null;
@@ -343,17 +523,19 @@ export function ProviderSignInDialog({
     setStarting(true);
     setFailure(null);
     setSnapshot(null);
+    setRetryRevision(null);
+    setRetryState("idle");
     deadline.current = Date.now() + LIFETIME_MS;
     try {
       const answer = await signIn.start({
         provider: provider.id,
-        revision,
+        revision: nextRevision,
         method: nextMethod,
       });
       const next = snapshotOf(answer, provider.id);
       if (mine !== generation.current) {
         if (ACTIVE.has(next.event)) cancelQuietly(next.attempt_id);
-        else completed.current();
+        else refreshAfterTerminal(false, -1);
         return;
       }
       if (ACTIVE.has(next.event) && Date.now() >= deadline.current) {
@@ -361,11 +543,11 @@ export function ProviderSignInDialog({
         setStarting(false);
         currentAttempt.current = null;
         setFailure("timeout");
-        cancelQuietly(next.attempt_id);
+        cancelQuietly(next.attempt_id, mine);
         return;
       }
       setStarting(false);
-      accept(next);
+      accept(next, mine);
     } catch (error) {
       if (mine !== generation.current) return;
       currentAttempt.current = null;
@@ -373,9 +555,29 @@ export function ProviderSignInDialog({
       setStarting(false);
       setFailure(safeFailureCode(error));
       deadline.current = 0;
-      completed.current();
+      refreshAfterTerminal(true, mine);
     }
   };
+
+  const startCurrent = useRef(start);
+  const methodsCurrent = useRef(methods);
+  methodsCurrent.current = methods;
+  startCurrent.current = start;
+  useEffect(() => {
+    if (!open) return;
+    // Deferring one task prevents StrictMode's setup/cleanup replay from
+    // starting an abandoned authentication attempt.
+    const timer = setTimeout(() => {
+      void startCurrent.current(
+        methodsCurrent.current.includes("browser") ? "browser" : "device",
+      );
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [open, identity]);
+
+  useEffect(() => {
+    if (snapshot?.event === "succeeded") close.current(false);
+  }, [snapshot?.event]);
 
   const cancel = async () => {
     const attemptId = currentAttempt.current;
@@ -383,13 +585,29 @@ export function ProviderSignInDialog({
       close.current(false);
       return;
     }
+    const mine = generation.current;
     setCancelling(true);
     setFailure(null);
     try {
-      accept(
-        snapshotOf(await signIn.cancel({ attemptId }), provider.id, attemptId),
+      const next = snapshotOf(
+        await signIn.cancel({ attemptId }),
+        provider.id,
+        attemptId,
       );
+      if (generation.current !== mine || currentAttempt.current !== attemptId) {
+        // The poller may have settled this attempt while cancellation was in
+        // flight, and a later attempt may already be active. Keep the refresh
+        // caused by cancellation, but never apply its old snapshot to that UI.
+        refreshAfterTerminal(false, -1);
+        return;
+      }
+      accept(next, mine);
+      if (ACTIVE.has(next.event)) refreshAfterTerminal(false, -1);
     } catch {
+      if (generation.current !== mine || currentAttempt.current !== attemptId) {
+        refreshAfterTerminal(false, -1);
+        return;
+      }
       clearedAttempt.current = attemptId;
       setSnapshot((current) =>
         current
@@ -398,40 +616,72 @@ export function ProviderSignInDialog({
       );
       setFailure("cancel_failed");
       setCancelling(false);
+      refreshAfterTerminal(false, -1);
     }
   };
 
-  const continueInBrowser = async () => {
-    const current = snapshot;
-    const url = current?.url;
-    const openExternal = signIn.openExternal;
-    if (!current || !url || !openExternal) return;
-    openedAttempt.current = current.attempt_id;
-    setSnapshot({ ...current, url: undefined });
-    setOpening(true);
-    setFailure(null);
-    try {
-      await openExternal(url);
-    } catch {
-      currentAttempt.current = null;
-      setSnapshot(null);
-      setOpening(false);
-      setFailure("open_external_failed");
-      cancelQuietly(current.attempt_id);
-      return;
+  const continueInBrowser = useCallback(
+    async (current: ProviderSignInSnapshot) => {
+      const url = current.url;
+      const openExternal = api.current.openExternal;
+      if (!url || !openExternal) return;
+      const attemptId = current.attempt_id;
+      const mine = generation.current;
+      if (
+        currentAttempt.current !== attemptId ||
+        openedAttempt.current === attemptId
+      )
+        return;
+      openedAttempt.current = attemptId;
+      setSnapshot({ ...current, url: undefined });
+      setFailure(null);
+      try {
+        await openExternal(url);
+      } catch {
+        if (
+          generation.current !== mine ||
+          currentAttempt.current !== attemptId
+        ) {
+          // The failed browser handoff still belongs to its original attempt;
+          // cleanup is keyed by that id and cannot touch a later attempt.
+          cancelQuietly(attemptId);
+          return;
+        }
+        currentAttempt.current = null;
+        setSnapshot(null);
+        setFailure("open_external_failed");
+        cancelQuietly(attemptId, mine);
+      }
+    },
+    [cancelQuietly],
+  );
+
+  // The browser action is a consequence of the person's explicit Start click.
+  // Open it once as soon as the host supplies a validated address; the URL is
+  // cleared from React state before the native browser handoff begins.
+  useEffect(() => {
+    if (snapshot?.event === "browser_action" && snapshot.url) {
+      if (!api.current.openExternal) {
+        const attemptId = snapshot.attempt_id;
+        const mine = generation.current;
+        if (currentAttempt.current === attemptId) {
+          currentAttempt.current = null;
+          setSnapshot(null);
+          setFailure("open_external_failed");
+          cancelQuietly(attemptId, mine);
+        }
+        return;
+      }
+      void continueInBrowser(snapshot);
     }
-    setOpening(false);
-  };
+  }, [cancelQuietly, continueInBrowser, snapshot]);
 
   const active = snapshot !== null && ACTIVE.has(snapshot.event);
-  const canContinue =
-    snapshot?.event === "browser_action" &&
-    Boolean(snapshot.url) &&
-    Boolean(signIn.openExternal) &&
-    openedAttempt.current !== snapshot.attempt_id;
   const terminalSuccess = snapshot?.event === "succeeded";
   const terminalCancelled = snapshot?.event === "cancelled";
   const terminalFailure = snapshot?.event === "failed";
+  const terminalFailureReason =
+    terminalFailure || (terminalCancelled && snapshot?.reason !== undefined);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -441,28 +691,35 @@ export function ProviderSignInDialog({
       >
         <DialogHeader>
           <DialogTitle>
-            {t("desktop.providers.sign_in_title", { provider: provider.name })}
+            {terminalSuccess
+              ? t("desktop.providers.sign_in_success_title", {
+                  provider: provider.name,
+                })
+              : t("desktop.providers.sign_in_title", {
+                  provider: provider.name,
+                })}
           </DialogTitle>
-          <DialogDescription id="provider-sign-in-description">
-            {t("desktop.providers.sign_in_description", {
-              provider: provider.name,
-            })}
+          <DialogDescription
+            id="provider-sign-in-description"
+            role={terminalSuccess || active || starting ? "status" : undefined}
+            aria-live={
+              terminalSuccess || active || starting ? "polite" : undefined
+            }
+          >
+            {terminalSuccess
+              ? ""
+              : starting
+                ? t("desktop.providers.sign_in_starting")
+                : active && snapshot
+                  ? activeWords(t, snapshot, method)
+                  : failure || terminalCancelled || terminalFailure
+                    ? ""
+                    : t("desktop.providers.sign_in_starting")}
           </DialogDescription>
-          <p className="text-sm text-muted-foreground">
-            {t("desktop.providers.sign_in_security")}
-          </p>
         </DialogHeader>
 
-        {starting && (
-          <p role="status" className="text-sm text-muted-foreground">
-            {t("desktop.providers.sign_in_starting")}
-          </p>
-        )}
         {active && snapshot && (
-          <div role="status" aria-live="polite" className="grid gap-2">
-            <p className="text-sm text-muted-foreground">
-              {activeWords(t, snapshot, method)}
-            </p>
+          <div className="grid gap-2">
             {method === "device" && snapshot.user_code && (
               <p className="grid justify-items-start gap-1 text-sm">
                 <span className="text-muted-foreground">
@@ -475,62 +732,49 @@ export function ProviderSignInDialog({
             )}
           </div>
         )}
-        {terminalSuccess && (
-          <p role="status" className="text-sm text-foreground">
-            {t("desktop.providers.sign_in_success", {
-              provider: provider.name,
-            })}
-          </p>
-        )}
-        {terminalCancelled && (
+        {terminalCancelled && !snapshot?.reason && (
           <p role="status" className="text-sm text-muted-foreground">
             {t("desktop.providers.sign_in_cancelled")}
           </p>
         )}
-        {(failure || terminalFailure) && (
+        {(failure || terminalFailureReason) && (
           <p role="alert" className="text-sm text-destructive">
             {failureWords(
               t,
-              terminalFailure
-                ? (snapshot?.reason ?? "unknown")
+              terminalFailureReason
+                ? snapshotFailureCode(snapshot)
                 : (failure ?? "unknown"),
+              provider.name,
+              method,
             )}
+          </p>
+        )}
+        {retryState === "checking" && (
+          <p role="status" className="text-sm text-muted-foreground">
+            {t("desktop.providers.sign_in_retry_checking")}
+          </p>
+        )}
+        {retryState === "unavailable" && (
+          <p role="alert" className="text-sm text-destructive">
+            {t("desktop.providers.sign_in_retry_refresh_failed")}
           </p>
         )}
 
         <DialogFooter>
-          {!snapshot && (
-            <>
+          {retryRevision &&
+            retryState === "ready" &&
+            !active &&
+            methods.includes(method ?? "browser") && (
               <Button
                 variant="primary"
                 size="sm"
                 disabled={starting}
                 pending={starting}
-                onClick={() => void start("browser")}
+                onClick={() => void start(method ?? "browser", retryRevision)}
               >
-                {t("desktop.providers.sign_in_start_browser")}
+                {t("desktop.providers.sign_in_retry")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={starting}
-                onClick={() => void start("device")}
-              >
-                {t("desktop.providers.sign_in_start_device")}
-              </Button>
-            </>
-          )}
-          {canContinue && (
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={opening}
-              pending={opening}
-              onClick={() => void continueInBrowser()}
-            >
-              {t("desktop.providers.sign_in_continue_browser")}
-            </Button>
-          )}
+            )}
           {active || starting ? (
             <Button
               variant="outline"
@@ -543,11 +787,15 @@ export function ProviderSignInDialog({
             </Button>
           ) : (
             <Button
-              variant="outline"
+              variant={terminalSuccess ? "primary" : "outline"}
               size="sm"
               onClick={() => close.current(false)}
             >
-              {t("desktop.providers.sign_in_close")}
+              {t(
+                terminalSuccess
+                  ? "desktop.providers.sign_in_done"
+                  : "desktop.providers.sign_in_close",
+              )}
             </Button>
           )}
         </DialogFooter>

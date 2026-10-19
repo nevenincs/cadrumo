@@ -14,18 +14,17 @@ import pytest
 from pydantic import SecretBytes, ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    Availability,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    ProfileAccessBinding,
-)
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (

@@ -10,6 +10,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+)
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.operations import OperationEffect
@@ -22,13 +30,6 @@ from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_data_ports import FiledEffectGuard
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight

@@ -589,59 +589,61 @@ desktop:
     zoom_reset: Dokumentáció nagyításának visszaállítása
   automation_access:
     cancel: Mégse
-    cleanup_pending: Visszavonva. A tárolt kulcsot még törlik erről a számítógépről.
+    cleanup_pending: Eltávolítva. A Cadrumo még törli a tárolt kulcsot erről a számítógépről.
     copied: Másolva
-    copy: Hivatkozás másolása
-    copy_failed: Nem sikerült a másolás. Jelöld ki a hivatkozást, és másold ki magad.
+    copy: Kód másolása
+    copy_failed: Nem sikerült a másolás. Jelöld ki a kódot, és másold ki magad.
     done: Kész
-    empty: Ehhez a profilhoz még nem adtál ki hozzáférési kulcsot.
+    empty: Még nincs hozzáférési kulcs.
     expired_on: 'Lejárt: {date}'
     expires_on: 'Lejár: {date}'
-    issue: Kulcs kiadása
-    issue_lead: Ezzel a kulccsal egy külső alkalmazás elolvashatja a profil adatait
-      és a műveletek részleteit, valamint futtathatja a külső alkalmazások számára
-      elérhető összes műveletet. Az adóadatok olvasását külön engedélyezheted alább.
-    issue_submit: Kulcs kiadása
-    issued_lead: Ezt a hivatkozást add meg a külső alkalmazás beállításakor. Maga
-      a kulcs ezen a számítógépen, biztonságos tárhelyen marad, és soha nem jelenik
-      meg.
-    issued_on: 'Kiadva: {date}'
-    issued_once: Csak egyszer jelenik meg. Ha bezárod, nem lehet újra megjeleníteni.
-    issued_title: Kulcs kiadva
-    issuing: Kiadás…
-    key_title: '{id} kulcs'
+    issue: Új hozzáférési kulcs
+    issue_lead: Az alkalmazás olvashatja a profilod adatait, látja az általa végzett
+      műveleteket, és használhatja a Cadrumo összes, csatlakoztatott alkalmazások
+      számára elérhető műveletét.
+    issue_submit: Hozzáférési kulcs létrehozása
+    issued_lead: Ezt a csatlakozási kódot illeszd be a másik alkalmazásba, amikor
+      beállítod. Maga a kulcs biztonságosan ezen a számítógépen marad.
+    issued_once: Csak egyszer jelenik meg. Ha bezárod, többé nem láthatod.
+    issued_title: Hozzáférési kulcs létrehozva
+    issuing: Létrehozás…
+    key_title: 'Hozzáférési kulcs, létrehozva: {date}'
+    key_title_undated: Hozzáférési kulcs
     last_used: 'Utoljára használva: {date}'
-    lead: A hozzáférési kulcsok külső alkalmazásoknak adnak hozzáférést ehhez a profilhoz.
-      Kulcsot csak te adhatsz ki vagy vonhatsz vissza.
+    lead: A hozzáférési kulcsokkal a számítógépeden lévő más MI-alkalmazások dolgozhatnak
+      ezzel a profillal. Kulcsot csak te hozhatsz létre vagy távolíthatsz el.
     never_used: Még nem használták
-    reference_label: Hitelesítőadat-hivatkozás
+    reference_label: Csatlakozási kód
     refresh: Frissítés
+    refused_failed: Nem sikerült befejezni. Próbáld újra.
     refused_not_found: Ez a kulcs már nincs a listában.
-    refused_not_signed_in: A kulcsok kezeléséhez jelentkezz be.
-    refused_outcome_unknown: A Cadrumo nem kapott választ. A kulcs lehet, hogy kiadásra
-      került, lehet, hogy nem; frissíts az ellenőrzéshez.
-    refused_person_act_required: A kulcsokat csak te kezelheted, itt.
-    refused_profile_locked: Ez a profil zárolva van.
-    revoke: Visszavonás
-    revoke_confirm: Visszavonod ezt a kulcsot? Az ezt használó alkalmazások azonnal
-      elveszítik a hozzáférést. A művelet nem vonható vissza.
-    revoke_confirm_action: Kulcs visszavonása
-    revoking: Visszavonás…
-    scope_all_operations: Minden, külső alkalmazások számára elérhető műveletet végrehajthat
-    scope_no_tax_values: Nem olvassa az adóértékeket
-    scope_operations_seen: Látja az általa futtatott műveleteket
-    scope_profile_values: Olvassa a profil értékeit
-    scope_some_operations: Csak néhány műveletet futtathat
-    scope_tax_values: Olvassa az adóértékeket
+    refused_not_signed_in: Jelentkezz be a beállítások módosításához.
+    refused_outcome_unknown: A Cadrumo nem tudta megerősíteni, hogy létrejött-e a
+      kulcs. Frissíts az ellenőrzéshez.
+    refused_person_act_required: Ezeket a beállításokat csak te módosíthatod, ebből
+      az ablakból.
+    refused_profile_locked: Oldd fel a profilodat a beállítások módosításához.
+    revoke: Eltávolítás
+    revoke_confirm: Eltávolítod ezt a kulcsot? Az ezt használó alkalmazások azonnal
+      elveszítik a hozzáférést. Ez nem vonható vissza.
+    revoke_confirm_action: Kulcs eltávolítása
+    revoking: Eltávolítás…
+    scope_all_operations: A Cadrumo minden, csatlakoztatott alkalmazások számára elérhető
+      műveletét használhatja
+    scope_no_tax_values: Nem olvassa az adóösszegeket
+    scope_operations_seen: Látja az általa végzett műveleteket
+    scope_profile_values: Olvassa a profil adatait
+    scope_some_operations: Csak néhány műveletet használhat
+    scope_tax_values: Olvassa az adóösszegeket
     standing_active: Aktív
     standing_expired: Lejárt
     standing_pending: Jóváhagyásra vár
-    standing_revoked: Visszavonva
+    standing_revoked: Eltávolítva
     standing_suspended: Szüneteltetve
-    tax_values: Adóértékek olvasásának engedélyezése is
-    tax_values_note: A kiszámított adóösszegekre és a bevallások adataira is kiterjed.
-      Hagyd kikapcsolva, ha nem szeretnéd, hogy az alkalmazás elolvassa ezeket.
-    title: Hozzáférési kulcsok külső alkalmazásoknak
+    tax_values: Az adóösszegeket is olvashatja
+    tax_values_note: A kiszámított adókra és a bevallások adataira is kiterjed. Hagyd
+      kikapcsolva, ha nem szeretnéd, hogy az alkalmazás lássa ezeket.
+    title: Hozzáférési kulcsok más MI-alkalmazásoknak
   calendar:
     aeat:
       accepted: Elfogadva
@@ -699,6 +701,21 @@ desktop:
     show: Dokumentáció megjelenítése
     unavailable: A dokumentációt nem sikerült megnyitni. Minden más a megszokott módon
       működik.
+  google:
+    checking: A Google-bejelentkezés ellenőrzése…
+    not_in_this_build: A Cadrumo ezen verziója nem tud bejelentkezni a Google-be.
+    palette_sign_in: Hitelesítés a Google-lel
+    sign_in: Bejelentkezés
+    sign_in_label: Bejelentkezés a Google-be
+    sign_out: Kijelentkezés
+    sign_out_label: Kijelentkezés a Google-ből
+    signed_in: 'Bejelentkezve: {email}.'
+    signed_in_plain: Bejelentkezve.
+    signed_out: Nem vagy bejelentkezve.
+    signing_out: Kijelentkezés a Google-ből…
+    title: Google-fiók
+    unknown: A Google-bejelentkezést most nem sikerült beolvasni.
+    waiting: Fejezd be a bejelentkezést a Google-be a böngésződben.
   host:
     failed: Ezt a részt nem sikerült betölteni.
     unavailable: Ehhez a részhez az asztali alkalmazás kell.
@@ -818,6 +835,97 @@ desktop:
     terminals: Terminálok
     title: Beállítások
     window: Ablak
+  setup:
+    advisory_incomplete: A Cadrumo beállítása nem teljes. Kattints ide a befejezéséhez.
+    advisory_running: A Cadrumo beállítása folyamatban van. Kattints ide, hogy lásd,
+      hol tart.
+    approve: Letöltés és beállítás
+    approve_at_least: Legalább {size} letöltése és beállítás
+    approve_size: '{size} letöltése és beállítás'
+    cancel: Beállítás megszakítása
+    cancelling: Leáll a mostani lépés után…
+    checking: Az összetevők ellenőrzése…
+    close: Bezárás
+    copy_details: Részletek másolása
+    details: Részletek
+    hide: Elrejtés
+    lead: A Cadrumo működéséhez ezekre az összetevőkre van szükség.
+    lead_review: Nézd át, mi töltődik le és hová kerül, majd hagyd jóvá.
+    lead_running: Ezt bezárhatod; a beállítás folytatódik, és a Beállításokban látod,
+      hogy áll.
+    not_now: Most nem
+    open: Beállítás megnyitása
+    outcome_cancelled: A beállítás megszakadt. Ami már letöltődött, megmarad.
+    outcome_completed: Minden be van állítva.
+    outcome_failed: A beállítás nem fejeződött be.
+    outcome_interrupted: A beállítás befejezés előtt leállt. Folytasd, hogy onnan
+      menjen tovább, ahol abbamaradt.
+    outcome_not_enough_space: Nem volt elég szabad hely, ezért semmi sem töltődött
+      le.
+    outcome_nothing_to_do: Már minden be volt állítva.
+    outcome_plan_changed: Az indulás előtt megváltozott, mire van szükség. Nézd át
+      az új tervet, és hagyd jóvá.
+    outcome_rejected: Semmi sem töltődött le.
+    overall_progress: A beállítás állapota
+    palette_browser: A böngésző beállítása
+    palette_cancel: Beállítás megszakítása
+    palette_check: Összetevők ellenőrzése
+    palette_local_ai: A helyi MI beállítása
+    palette_open: Összetevők beállítása
+    palette_retry: Beállítás újrapróbálása
+    plan_destination: 'Hely: {folder}'
+    plan_from: 'Forrás: {hosts}'
+    plan_nothing: Nincs mit letölteni.
+    plan_outside_program: Ez egy külön programot telepít erre a számítógépre, amely
+      engedélyt kérhet tőled.
+    plan_shared: 'Ezzel együtt töltődik le: {name}.'
+    plan_size: '{size} letöltése.'
+    plan_size_at_least: Legalább {size} letöltése.
+    planning: Annak kiszámítása, mit kell letölteni…
+    progress_bytes: '{done} / {total}'
+    progress_item: '{index}/{count}: {name} — {step}'
+    progress_label: 'Haladás: {name}'
+    rail_busy: Az összetevők beállítása folyamatban
+    rail_incomplete: A beállítás nem fejeződött be
+    refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.
+    refused_not_cancellable: A beállítás most nem állítható le. Hamarosan befejeződik.
+    refused_not_pending: Ez a terv már nem vár válaszra.
+    refused_not_signed_in: Előbb jelentkezz be a profilodba.
+    refused_other: A beállítás nem érhető el. Próbáld újra egy kicsit később.
+    refused_plan_changed: Megváltozott, mire van szükség. Nézd át az új tervet, majd
+      hagyd jóvá.
+    refused_unavailable: A Cadrumo szolgáltatásai nem válaszolnak. Próbáld újra egy
+      kicsit később.
+    reject: Ne töltsd le
+    result_already: Már be volt állítva
+    result_done: Beállítva
+    result_not_finished: Nem fejeződött be
+    resume: Folytatás
+    show_new_plan: Az új terv megjelenítése
+    size_unknown: A méret induláskor derül ki
+    space: '{required} szabad hely kell hozzá; {free} szabad.'
+    space_short: Nincs elég szabad hely. Szabadíts fel valamennyit, majd próbáld újra.
+    space_unread: '{required} szabad hely kell hozzá; a szabad helyet nem sikerült
+      kiolvasni.'
+    start: Beállítás
+    step_checking: Ellenőrzés
+    step_connecting: Kapcsolódás
+    step_downloading: Letöltés
+    step_installing: Telepítés
+    step_tidying: Rendrakás
+    step_waiting: Indulásra vár
+    summary_complete: Minden be van állítva, amire a Cadrumónak szüksége van.
+    summary_hardware: Ez a számítógép nem tud mindent futtatni, amire a Cadrumónak
+      szüksége van; a többi be van állítva.
+    summary_incomplete: A Cadrumónak szükséges összetevők egy része még nincs beállítva.
+    summary_running: A beállítás folyamatban van.
+    title: A Cadrumo beállítása
+    toast_cancelled: Beállítás megszakítva
+    toast_done: Az összetevők be vannak állítva
+    toast_not_finished: A beállítás nem fejeződött be
+    try_again: Újrapróbálás
+    unavailable: Az összetevőket most nem lehet ellenőrizni. Próbáld újra egy kicsit
+      később.
   signin:
     checking: A bejelentkezésed ellenőrzése…
     choose_profile: Válassz profilt
@@ -1267,22 +1375,17 @@ overview:
     Az automatikus lekérés nem tudja lekérni a társasági adó (Modelo 200/202) benyújtási
     előzményeit; ellenőrizd közvetlenül az AEAT elektronikus ügyfélkapuján.
 provisioning:
-  condition:
-    role_model_fit_for_role: A(z) %{model} válaszolt a tesztdokumentumra, de a válasza
-      nem használható számla beolvasására. Válassz másik szövegmodellt.
-    role_model_fitness_verified: 'A(z) %{model} jelenlegi súlyaihoz nincs rögzített
-      alkalmassági ellenőrzés. Ez nem jelenti azt, hogy a modell alkalmatlan: az ellenőrzéshez
-      futtasd az `aeat config provision verify` parancsot.'
-    role_model_fitness_within_timeout: A(z) %{model} nem fejezte be a tesztválaszt
-      az időkorlát lejárta előtt. Lehet, hogy túl lassú ehhez a géphez; válassz kisebb
-      modellt, vagy növeld az LLM időkorlátját, majd futtasd újra az `aeat config
-      provision verify` parancsot.
   model:
     licence:
       non_commercial_advisory: A(z) %{model} modellre a(z) %{licence} vonatkozik,
         amely nem engedélyezi a kereskedelmi felhasználást. Ezt kifejezetten te adtad
         meg, ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez
         külön licencet kell kérni a kiadótól.
+  role:
+    column_role_mapping: táblázatoszlopokhoz
+    supply_nature_proposal: az eladás vagy vásárlás típusához
+    text_extraction: dokumentumszöveghez
+    vision_transcription: beolvasott oldalakhoz
 review:
   adapters:
     errors:
@@ -2184,6 +2287,7 @@ tui:
     operations: Műveletek
     profile: Profil
     reference: Kézikönyv
+    setup: Összetevők
     withholding: Levonások
   home:
     account_fallback: Fiók
@@ -3959,6 +4063,7 @@ tui:
       operations: Műveletek megnyitása
       profile: Profil megnyitása
       reference: Kézikönyv megnyitása
+      setup: Összetevők megnyitása
       unknown: Terület megnyitása
       withholding: Levonások megnyitása
     destination_help:
@@ -3971,6 +4076,7 @@ tui:
         futtatható'
       profile: A profil adatai és az azokat kitöltő források
       reference: Modelók, rovatok, kategóriák, portálok és bejelentkezési módok
+      setup: A böngésző és a helyi MI
       withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
     refusal:
       not_composed: Még nem sikerült minden területet beolvasni.
@@ -4024,3 +4130,48 @@ tui:
         reconciliation_resolved: Rendezett
         revision_current: Aktuális
         revision_superseded: Felváltva
+  setup:
+    check_again: Újraellenőrzés
+    checking: Ellenőrzés…
+    column:
+      action: Művelet
+      item: Összetevő
+      state: Állapot
+    complete: A Cadrumo elő van készítve.
+    hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
+    hint: Az Enter futtatja a kijelölt sor műveletét. Előkészítéskor megjelenik a
+      terv, és a Cadrumo megkérdez, mielőtt bármit letöltene.
+    incomplete: Néhány összetevő még nem áll készen.
+    intro: 'Amire a Cadrumónak szüksége van ezen a számítógépen: az adóhivatal webhelyéhez
+      használt böngésző és a helyi MI. Válassz egy sort a műveletének futtatásához.'
+    outcome:
+      cancelled: Megszakítottad az előkészítést.
+      completed: Az előkészítés befejeződött.
+      interrupted: Az előkészítés befejezés előtt megszakadt. A folytatáshoz válaszd
+        a Folytatás lehetőséget.
+      not_enough_space: Nincs elég szabad hely a lemezen, ezért semmi sem töltődött
+        le.
+      nothing_to_do: Már minden elő van készítve.
+      plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
+        le. Kezdd újra az új terv megtekintéséhez.
+      rejected: Semmi sem töltődött le.
+    plan:
+      destination: '  Helye: %{path}'
+      entry: '%{name}: %{size}, innen: %{hosts}'
+      heading: 'A Cadrumo ezeket készíti elő:'
+      installs_program: '  Ez egy programot telepít erre a számítógépre. A telepítője
+        engedélyt kérhet tőled.'
+      part: '    %{name}: %{size}'
+      shared: '  Ugyanazt a letöltést használja, mint: %{name}.'
+      size_unknown: a méret még nem ismert
+      total: 'Teljes letöltés: %{size}.'
+      total_unknown: 'Teljes letöltés: legalább %{size}. Néhány méret csak a letöltés
+        kezdetekor derül ki.'
+    set_up_all: Mindent előkészít
+    size:
+      gigabytes: '%{value} GB'
+      megabytes: '%{value} MB'
+    title: Összetevők
+    unavailable: A Cadrumo háttérszolgáltatása nem érhető el, ezért az összetevők
+      most nem ellenőrizhetők és nem készíthetők elő.
+    working: A terv készül…

@@ -11,6 +11,15 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+)
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.participation_index import TransactionRevisionParticipationIndex
@@ -31,14 +40,6 @@ from ...operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
-)
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..participation_rebuild_operation import (

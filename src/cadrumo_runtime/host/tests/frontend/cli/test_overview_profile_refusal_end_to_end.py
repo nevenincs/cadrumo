@@ -25,7 +25,7 @@ from click.testing import Result
 
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from ._overview_calendar_support import _CALENDAR_GATING_FACT_OVERRIDES
 from ._overview_native_support import invoke_native_overview

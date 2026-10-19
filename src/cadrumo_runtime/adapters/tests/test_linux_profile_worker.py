@@ -16,12 +16,8 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo_client.contracts.access_vocabulary import AccessScope, DisclosureCategory, DisclosurePermission
 
 from ..profile_worker import ProfileWorkerProcess
 from .profile_worker_support import changed, lease, worker_profiles

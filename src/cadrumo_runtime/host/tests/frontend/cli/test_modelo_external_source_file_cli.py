@@ -17,16 +17,16 @@ from cadrumo.application.modelo.revision_snapshot_operation import (
     MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.tests import modelo_operation_test_support
+from cadrumo.tests.cli_envelope import unwrap_cli_result
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.tests import modelo_operation_test_support
-from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from .native_api_cli_support import native_api_cli_session
 

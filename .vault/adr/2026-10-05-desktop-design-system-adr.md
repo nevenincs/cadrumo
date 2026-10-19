@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-15'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:596c9dbedfd711795ca47390c8a4b0d60094b5fe1f2681b8da7f925954434990'
+body_hash: 'sha256:65cd79d3aa8df1dcca3b8f29851fa54d6d5d23a69b19fa66f6ef897e5081f95b'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -149,3 +149,7 @@ Settings and the palette reuse the existing select and styling. Supported langua
 ### Amendment 2026-10-09: one bottom-panel rail toggle
 
 Authorized by the user's sidebar simplification request. The 2026-10-06 rail-order amendment is refined: after the shortcuts group, one bottom-panel toggle replaces the Console, Python and Logs rail buttons. Search and documentation home retain their first two positions, Settings remains in the last group, and the panel retains its three tabs and action-registry shortcuts. The log error badge moves to the single toggle; the Messages notification badge stays unchanged. The application starts with the panel collapsed on each launch, retaining its tab and size preferences, as the desktop-shell amendment now specifies. This authorizes the corresponding browser presentation selectors and rail-count assertions to follow the new visible controls; packaged assertions that address Search and Docs home by position stay unchanged. Shared primitives, token ownership and native host boundaries remain binding.
+
+### Amendment 2026-10-18: component setup surfaces
+
+Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` (D10). The Settings constraint, which read "Settings retains frontend preferences and no account section" after the 2026-10-09 amendment, gains one backend-reaching section, Components, built from the existing primitives. The setup dialog, progress bars, first-run and blocked-feature prompts, and the Settings rail badge compose existing primitives. A progress primitive may be added from the official registry on the already-bundled `radix-ui`, with no new runtime dependency. The development scenario host gains synthetic setup scenarios for every state, failure category and phase, labelled as simulated like the others. Rail order, stable hooks and the single colour authority are unchanged.

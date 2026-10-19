@@ -27,10 +27,12 @@ from cadrumo.adapters.persistence.storage.custody import acceleration_receipt
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenied, AccessSession
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError, authenticate_profile_candidate
+from cadrumo.application.user_profile.access_contracts import AccessSession
+from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
 from cadrumo.tests.in_memory_keyring import InMemoryKeyring
+from cadrumo_client.contracts.access_refusals import AccessDenied
 from cadrumo_client.contracts.profile_access import ProfileLogin, ProfileStatus
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import read_runtime_installation

@@ -39,13 +39,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -53,6 +46,13 @@ from cadrumo.entrypoints.operation_composition import build_production_operation
 from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_verification_report,
     seeded_modelo_work_unit,
+)
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
 )
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,

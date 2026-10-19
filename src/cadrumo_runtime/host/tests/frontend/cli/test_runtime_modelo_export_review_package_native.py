@@ -20,7 +20,7 @@ from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_schema_envelope
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )

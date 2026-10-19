@@ -33,28 +33,22 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     KEY_ROTATION_MAXIMUM_OVERLAP,
-    AccessAction,
-    AccessScope,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import (
-    EnrollmentKind,
-    EnrollmentStage,
-    EnrollmentTransition,
-)
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage, EnrollmentTransition
 from cadrumo.core.async_cleanup import AsyncCloseable, await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.transport.automation_decision import run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.credentials import open_installed_credential_client

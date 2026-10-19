@@ -11,7 +11,6 @@ from cadrumo.application.auth.provider_configure_operation_access import AuthCon
 from cadrumo.application.live.filed_history_operation import FILED_HISTORY_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_actions.models import ActionReference
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.acquisition_sources import ProfileAcquisitionSourceKey, ProfileAcquisitionSourceV1
 from cadrumo.application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.completeness import AUTH_PROVIDER_PATH, CLAVE_MOVIL_ROUTE_PATH
@@ -49,6 +48,7 @@ from cadrumo.entrypoints.tui.operations.modal import (
 from cadrumo.entrypoints.tui.profile.aeat_auth_setup import readiness_text
 from cadrumo.entrypoints.tui.profile.client_errors import ProfileManagerCompletedViewUnavailableError
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError, ProfileViewCollection

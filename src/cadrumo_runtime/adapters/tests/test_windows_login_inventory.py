@@ -11,7 +11,8 @@ from typing import cast
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginInventory
 from cadrumo_client.transport.windows_desktop_logon import WindowsDesktopLogon

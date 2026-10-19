@@ -14,6 +14,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
 from ...application.modelo.reconciliation import ReconciliationEvidenceInvalidError
@@ -32,7 +34,6 @@ from ...application.modelo.reconciliation_parsing import (
 from ...application.modelo.reconciliation_records import ModeloReconciliationRecord
 from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationIdentity, OperationRequest
-from ...application.user_profile.access_contracts import AccessAction
 from ...core.config import override_settings
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject

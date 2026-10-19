@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import WorkUnitId
@@ -28,9 +30,6 @@ from ..operations.profile_guard import require_access_request_work_unit_payload
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit

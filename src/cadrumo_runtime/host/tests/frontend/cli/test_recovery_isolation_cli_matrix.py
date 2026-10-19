@@ -25,7 +25,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 from .cli_runner import invoke_unbound_cli
 

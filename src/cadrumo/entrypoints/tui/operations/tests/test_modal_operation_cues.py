@@ -147,7 +147,7 @@ class _Controller:
 
 
 class _Host(App[None]):
-    def __init__(self, controller: _Controller) -> None:
+    def __init__(self, controller: _Controller | _Uncued) -> None:
         super().__init__()
         self.controller = controller
         self.outcome: object = None
@@ -189,3 +189,57 @@ async def test_without_a_cue_a_running_operation_is_not_read_again() -> None:
                 await pilot.pause(0.02)
         await pilot.pause(1.0)
         assert controller.observe_calls == 2
+
+
+class _Uncued:
+    """A runtime binding that offers no change cue at all."""
+
+    def __init__(self, *observations: OperationObservationSuccessV1) -> None:
+        self._scripted = _Controller(*observations, cue=False)
+
+    @property
+    def operation_id(self) -> str:
+        return _OPERATION_ID
+
+    @property
+    def actor_ref(self) -> str:
+        return self._scripted.actor_ref
+
+    @property
+    def observe_calls(self) -> int:
+        return self._scripted.observe_calls
+
+    async def start(self) -> str:
+        return _OPERATION_ID
+
+    async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
+        return await self._scripted.observe(after_cursor, page_limit=page_limit)
+
+    async def resolve_review[ReviewT: BaseModel](
+        self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
+    ) -> OperationReviewProjectionResultV1[ReviewT]:
+        raise AssertionError("no review is pending")
+
+    async def response_control(self, *, interaction_id: str, revision: int) -> OperationResponseControlPort:
+        raise AssertionError("no review is pending")
+
+    async def cancel(self, *, expected_revision: int) -> OperationCancellationResultV1:
+        raise AssertionError("not cancelled")
+
+    async def detach(self, *, expected_revision: int) -> OperationDetachResultV1:
+        raise AssertionError("not detached")
+
+
+@pytest.mark.asyncio
+async def test_a_controller_without_cues_is_read_once_and_never_on_a_timer() -> None:
+    running = _observation(terminal=False)
+    controller = _Uncued(running, running, running)
+    assert not isinstance(controller, OperationChangeSourcePort)
+    host = _Host(controller)
+    async with host.run_test(size=(100, 40)) as pilot:
+        async with asyncio.timeout(10):
+            while controller.observe_calls < 1:
+                await pilot.pause(0.02)
+        # Long enough for several of the former 200 ms polls.
+        await pilot.pause(1.0)
+        assert controller.observe_calls == 1

@@ -16,11 +16,11 @@ from types import SimpleNamespace
 import pytest
 
 from cadrumo.application.operations.registry import OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import DisclosureCategory
 from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
+from cadrumo_client.contracts.access_vocabulary import DisclosureCategory
 from cadrumo_harness.access.automation_key import agent_key_scope
 
 from .._models import LiveNarrationRecord, LiveToolCallRecord

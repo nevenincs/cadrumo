@@ -7,9 +7,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .verification_repository_ports import VerificationRepositoryBundle
 

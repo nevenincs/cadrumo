@@ -19,6 +19,8 @@ __all__ = [
     "OLLAMA_PULL_TIMEOUT_S",
     "OLLAMA_READINESS_TIMEOUT_S",
     "OLLAMA_START_TIMEOUT_S",
+    "OLLAMA_STORE_REGISTRY_HOST",
+    "RUNTIME_MINIMUM_VERSION",
     "ProvisioningFactValue",
     "ProvisioningOutcome",
     "ProvisioningPreconditionCondition",
@@ -69,6 +71,14 @@ OLLAMA_LOAD_KEEP_ALIVE = "30m"
 # A package-manager install downloads and unpacks an application bundle.
 OLLAMA_INSTALL_TIMEOUT_S = 1800.0
 
+# The oldest runtime release that serves every catalogued default: the vision
+# default (qwen3-vl) first loads on 0.12.7. An older runtime still answers, so it
+# reads as usable but older than this version requires, never as missing.
+RUNTIME_MINIMUM_VERSION = (0, 12, 7)
+
+# The registry host the runtime files unqualified model names under in its store.
+OLLAMA_STORE_REGISTRY_HOST = "registry.ollama.ai"
+
 
 class ProvisioningPreconditionCondition(StrEnum):
     """Stable failed-condition identities emitted by provisioning policy."""
@@ -82,7 +92,6 @@ class ProvisioningPreconditionCondition(StrEnum):
     RUNTIME_ENDPOINT_LOCAL = "provisioning.runtime.endpoint_local"
     RUNTIME_START_SUCCEEDED = "provisioning.runtime.start_succeeded"
     RUNTIME_INSTALLER_AVAILABLE = "provisioning.runtime.installer_available"
-    RUNTIME_INSTALL_CONSENTED = "provisioning.runtime.install_consented"
     RUNTIME_INSTALL_SUCCEEDED = "provisioning.runtime.install_succeeded"
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
     ROLE_MODEL_FIT_FOR_ROLE = "provisioning.role_model.fit_for_role"

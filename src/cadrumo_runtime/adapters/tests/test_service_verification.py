@@ -11,8 +11,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import AccessScope
 from cadrumo.core.hashing import sha256_hex
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor
 from cadrumo_client.contracts.transport import ConnectionContext

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .iva_remote_state_ports import IvaRemoteStatePort
 
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ...core.async_cleanup import has_async_cleanup_failure
@@ -24,7 +25,6 @@ from ..storage.sync_runs.records import (
     SyncRunRecordRepositoryProtocol,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.automation_custody_port import AutomationCustodyError
 from .filed_data_capture import capture_filed_data_bulk
 from .filed_data_ports import (
     FiledDataCapturePort,

@@ -10,10 +10,10 @@ from textual.message_pump import MessagePump
 from textual.timer import Timer
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import ProfileAccessStatus
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 #: Past a known expiry, so a timer that wakes a little early still finds it passed.

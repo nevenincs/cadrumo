@@ -19,25 +19,21 @@ from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.application.user_profile.profile_pointer import (
-    ActiveProfilePointerTransactionError,
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ..custody import _login_through_the_prompt
 from ..errors import CliRefusedBoundaryError
 from ..secure_input import MachineSecretChannel, MachineSecretSelection
+from .runtime_target_double import answer_login_targets_locally
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -47,6 +43,13 @@ if TYPE_CHECKING:
 __all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _runtime_answers_login_targets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime client here is a double, so the runtime's login-target answer is given as it would give it."""
+    answer_login_targets_locally(monkeypatch)
+
 
 _PASSWORD = "runtime-login-test-passphrase"  # noqa: S105 - synthetic test input
 
@@ -266,7 +269,7 @@ def test_absent_receipt_and_no_console_refuse_before_password(monkeypatch: Monke
     assert observe_active_profile_pointer() == original
 
 
-def test_candidate_selection_conflict_keeps_other_profile_selected(monkeypatch: MonkeyPatch) -> None:
+def test_a_login_writes_no_selection_and_leaves_a_concurrent_one_standing(monkeypatch: MonkeyPatch) -> None:
     first_id = UUID(register_cli_profile(label="First login target", log_in=False))
     second_id = UUID(register_cli_profile(label="Second login target", log_in=False))
     _select(first_id)
@@ -276,10 +279,12 @@ def test_candidate_selection_conflict_keeps_other_profile_selected(monkeypatch: 
     _install_client(monkeypatch, client)
     monkeypatch.setattr("cadrumo_client.commands.custody.terminal_can_prompt_for_secrets", lambda: True)
 
-    with pytest.raises(ActiveProfilePointerTransactionError):
-        _login_through_the_prompt(_ctx(), name=str(first_id), machine_secret=None)
+    outcome = _login_through_the_prompt(_ctx(), name=str(first_id), machine_secret=None)
+    selected = observe_active_profile_pointer()
 
-    assert observe_active_profile_pointer().bucket_id == str(second_id)
+    # The runtime is the selection's only writer; this command wrote none over the concurrent one.
+    assert outcome.bucket_id == str(first_id)
+    assert selected.bucket_id == str(second_id)
     assert client.calls == ["resume", "status", "close"]
     assert client.closed == 1
 

@@ -44,7 +44,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessStatus
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
@@ -59,6 +58,7 @@ from cadrumo.domain.calculations.registry.authority_location import bundled_auth
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo_client.commands.compiler import build_command_app
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY

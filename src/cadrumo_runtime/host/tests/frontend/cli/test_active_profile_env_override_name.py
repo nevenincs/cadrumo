@@ -31,7 +31,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.entrypoints.cli.common import cli_policy_refusal_projection
 from cadrumo.entrypoints.cli.tests.error_boundary_scope import suspend_error_boundary
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 from .cli_runner import cadrumo_click_command, invoke_unbound_cli
 

@@ -9,6 +9,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.hashing import canonical_json_bytes
@@ -31,9 +32,6 @@ from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filing_record_list_contracts import (
     MAX_MODELO_FILING_RECORD_LIST_ROWS,

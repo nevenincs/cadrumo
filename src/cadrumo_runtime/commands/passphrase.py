@@ -8,7 +8,6 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
-from cadrumo.core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
@@ -79,9 +78,10 @@ def passphrase_change(
 ) -> None:
     """Rotate the active profile's passphrase without replacing its data key."""
     _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo.core.bucket_pointer import resolve_active_bucket_id
     from cadrumo_client.commands.payloads import ConfigPassphraseChangeResult
 
-    active = _resolve_active_bucket_id()
+    active = resolve_active_bucket_id()
     if active is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.passphrase.no_active_profile")
     profile_id = UUID(active)
@@ -177,12 +177,12 @@ def passphrase_reset(
 ) -> None:
     """Replace a forgotten passphrase by proving the profile's recovery code."""
     _activate_subcommand_output_language(ctx, output_language)
-    from cadrumo.application.user_profile.login_session import resolve_login_target
     from cadrumo_client.commands.payloads import ConfigPassphraseResetResult
+    from cadrumo_client.commands.profile_selection import require_runtime_login_target
 
     # Resolve the exact target before consuming any secret source: an unknown
     # name refuses without a prompt and without reading a machine payload.
-    profile_id = UUID(resolve_login_target(name).bucket_id)
+    profile_id = UUID(require_runtime_login_target(name).bucket_id)
     code, replacement, confirmation = bytearray(), bytearray(), bytearray()
     try:
         secrets = _collect_reset_secrets(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)

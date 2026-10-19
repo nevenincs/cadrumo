@@ -7,18 +7,19 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+)
+
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .commit_fence import LedgerCommitAttemptTracker
 from .read_access import resolve_ledger_read_access

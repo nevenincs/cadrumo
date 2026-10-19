@@ -66,11 +66,13 @@ async function openSettings(target: Page) {
 }
 
 const providerBox = (settings: Locator) =>
-  settings.getByRole("combobox", { name: label("desktop.agent.provider") });
+  settings.getByRole("button", { name: label("desktop.agent.provider") });
 const modelBox = (settings: Locator) =>
   settings.getByRole("combobox", { name: label("desktop.agent.model") });
 const effortBox = (settings: Locator) =>
   settings.getByRole("combobox", { name: label("desktop.agent.effort") });
+const pickerList = (target: Page) => target.getByRole("listbox");
+const pickerOptions = (target: Page) => pickerList(target).getByRole("option");
 
 /** The entry of the list for the lane `way`, once the list is open. */
 const entry = (target: Page, way: string) =>
@@ -100,7 +102,7 @@ test.beforeEach(async ({ page: target }) => {
   });
 });
 
-test("the list has one entry for each lane, each with its provider's own mark, and no switch", async ({
+test("the searchable list has one entry for each connection, with its provider's own mark", async ({
   page: target,
 }) => {
   await open(target);
@@ -112,10 +114,25 @@ test("the list has one entry for each lane, each with its provider's own mark, a
   await expect(settings.getByRole("radio")).toHaveCount(0);
   await expect(settings.getByRole("switch")).toHaveCount(0);
   await expect(settings.getByRole("tablist")).toHaveCount(0);
-  await expect(settings.getByRole("combobox")).toHaveCount(3);
+  await expect(settings.getByRole("combobox")).toHaveCount(2);
 
   await providerBox(settings).click();
-  const options = target.getByRole("option");
+  const controls = await providerBox(settings).getAttribute("aria-controls");
+  expect(controls).toBeTruthy();
+  const popup = target.locator(`[id="${controls}"]`);
+  await expect(popup).toHaveAttribute("role", "dialog");
+  await expect(popup).toHaveAccessibleName(label("desktop.agent.provider"));
+  const list = pickerList(target);
+  await expect(list).toHaveAccessibleName(
+    label("desktop.providers.search_label"),
+  );
+  const search = target.getByRole("combobox", {
+    name: label("desktop.providers.search_label"),
+  });
+  await expect(search).toHaveAccessibleName(
+    label("desktop.providers.search_label"),
+  );
+  const options = pickerOptions(target);
   await expect(options).toHaveCount(lanes.length);
   const rows = await options.evaluateAll((nodes) =>
     nodes.map((node) => ({
@@ -131,26 +148,89 @@ test("the list has one entry for each lane, each with its provider's own mark, a
       ),
     })),
   );
-  // One row for each lane, in the order the catalog serves them, named as
-  // the catalog names the lane and nothing more, and drawn with the mark of
-  // the provider the lane belongs to.
+  // One row for each lane, in catalog order, with the provider name, the
+  // connection type and any plain availability explanation.
   expect(rows.map((row) => row.way)).toEqual(lanes.map(wayOf));
   for (const served of lanes) {
     const row = rows.find((held) => held.way === wayOf(served));
     const why = heldBy(served);
-    expect(row?.text, wayOf(served)).toBe(served.display_name + (why ?? ""));
+    expect(row?.text, wayOf(served)).toContain(served.display_name);
+    expect(row?.text, wayOf(served)).toContain(
+      label(
+        served.transport === "api"
+          ? "desktop.providers.connection_api"
+          : "desktop.providers.connection_app",
+      ),
+    );
+    if (why) expect(row?.text, wayOf(served)).toContain(why);
     expect(row?.disabled, wayOf(served)).toBe(why !== null);
     expect(row?.marks, wayOf(served)).toEqual([
-      // Cadrumo holds no artwork: every provider gets the neutral ring.
+      // The made-up fixture provider has no bundled mark, so it uses fallback.
       { provider: served.provider_id, kind: "none", tag: "span" },
     ]);
   }
-  // Example Alpha and Example Beta are each listed twice under the same name.
+  // Example Alpha and Example Beta each have two distinguishable choices.
   for (const name of ["Example Alpha", "Example Beta"])
     expect(rows.filter((row) => row.text.startsWith(name))).toHaveLength(2);
   // Those the catalog holds back stay in the list, disabled.
-  await expect(target.locator("[role=option][aria-disabled=true]")).toHaveCount(
+  await expect(list.locator("[role=option][aria-disabled=true]")).toHaveCount(
     lanes.filter((served) => !served.health.selectable).length,
+  );
+});
+
+test("search filters connection types and reports no matches", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await providerBox(settings).click();
+  const search = target.getByRole("combobox", {
+    name: label("desktop.providers.search_label"),
+  });
+
+  await search.fill(label("desktop.providers.connection_api"));
+  await expect(pickerOptions(target)).toHaveCount(
+    lanes.filter((served) => served.transport === "api").length,
+  );
+  for (const option of await pickerOptions(target).all())
+    await expect(option).toContainText(
+      label("desktop.providers.connection_api"),
+    );
+
+  await search.fill(label("desktop.providers.connection_app"));
+  await expect(pickerOptions(target)).toHaveCount(
+    lanes.filter((served) => served.transport === "cli").length,
+  );
+  await search.fill("no matching provider");
+  await expect(pickerOptions(target)).toHaveCount(0);
+  await expect(
+    target.getByText(label("desktop.providers.search_empty")),
+  ).toBeVisible();
+});
+
+test("search keeps duplicate provider connections distinct for keyboard choice", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await providerBox(settings).click();
+  const search = target.getByRole("combobox", {
+    name: label("desktop.providers.search_label"),
+  });
+  await search.fill("Example Beta");
+  await expect(pickerOptions(target)).toHaveCount(2);
+
+  await search.press("ArrowDown");
+  await search.press("Enter");
+  await expect(providerBox(settings)).toContainText("Example Beta");
+  await expect(providerBox(settings)).toContainText(
+    label("desktop.providers.connection_app"),
+  );
+  await expect(providerBox(settings)).toHaveAccessibleName(
+    `${label("desktop.agent.provider")}: Example Beta, ${label("desktop.providers.connection_app")}`,
+  );
+  await expect(modelBox(settings).locator("option")).toHaveText(
+    laneOf("beta/cli").catalog.models?.map((model) => model.display_name) ?? [],
   );
 });
 
@@ -208,7 +288,7 @@ test("choosing an entry chooses its lane, and a message goes with that lane's tr
   // transport the catalog gives that lane.
   let settings = await openSettings(target);
   await chooseLane(target, settings, "beta/cli");
-  await expect(providerBox(settings)).toHaveText("Example Beta");
+  await expect(providerBox(settings)).toContainText("Example Beta");
   await expect(modelBox(settings).locator("option")).toHaveText(
     laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ?? [],
   );
@@ -349,7 +429,7 @@ test("no “CLI” appears in the agent column, the list or the settings", async
   for (const shown of [
     "Example Relay",
     label("desktop.providers.title"),
-    label("desktop.providers.cli_unknown"),
+    label("desktop.providers.status_setup_needed"),
     label("desktop.agent.lane_not_configured"),
     label("desktop.agent.effort"),
   ])
@@ -357,6 +437,10 @@ test("no “CLI” appears in the agent column, the list or the settings", async
   for (const text of said) {
     expect(text).not.toMatch(/\bCLI\b/i);
     expect(text).not.toMatch(/command[- ]line/i);
+    // Nor any of the agent's own machinery or the build it runs in.
+    expect(text).not.toMatch(
+      /\b(lanes?|catalog|transport|oauth|development|subagents?|runtime)\b/i,
+    );
   }
 });
 
@@ -384,8 +468,8 @@ for (const mode of ["light", "dark", "forced colours"] as const) {
     await open(target);
     const settings = await openSettings(target);
     await providerBox(settings).click();
-    await expect(target.getByRole("option")).toHaveCount(lanes.length);
-    const marks = await target.getByRole("option").evaluateAll((nodes) =>
+    await expect(pickerOptions(target)).toHaveCount(lanes.length);
+    const marks = await pickerOptions(target).evaluateAll((nodes) =>
       nodes.map((node) => {
         const mark = node.querySelector("[data-slot=provider-mark]");
         return {
@@ -460,7 +544,7 @@ for (const width of [390, 520]) {
       await providerBox(settings).tap();
       const list = target.getByRole("listbox");
       await expect(list).toBeVisible();
-      await expect(target.getByRole("option")).toHaveCount(lanes.length);
+      await expect(pickerOptions(target)).toHaveCount(lanes.length);
       const edge = (await list.boundingBox())!;
       expect(edge.x).toBeGreaterThanOrEqual(0);
       expect(edge.x + edge.width).toBeLessThanOrEqual(width);
@@ -469,7 +553,7 @@ for (const width of [390, 520]) {
       expect(await overflowing(target)).toBe(false);
 
       // The entries are a fingertip each, and none is cut off sideways.
-      const rows = await target.getByRole("option").evaluateAll((nodes) =>
+      const rows = await pickerOptions(target).evaluateAll((nodes) =>
         nodes.map((node) => {
           const box = node.getBoundingClientRect();
           return {
@@ -488,7 +572,7 @@ for (const width of [390, 520]) {
 
       // More entries than fit: the list scrolls inside itself, down to its
       // last entry, without the window moving or the list growing sideways.
-      const scroller = list.locator("[data-radix-select-viewport]");
+      const scroller = list;
       const sizes = await scroller.evaluate((node) => ({
         tall: node.scrollHeight > node.clientHeight,
         wide: node.scrollWidth > node.clientWidth,
@@ -516,7 +600,7 @@ for (const width of [390, 520]) {
       // A tap on an entry that can be chosen chooses it.
       await entry(target, "beta/cli").scrollIntoViewIfNeeded();
       await entry(target, "beta/cli").tap();
-      await expect(providerBox(settings)).toHaveText("Example Beta");
+      await expect(providerBox(settings)).toContainText("Example Beta");
       await expect(modelBox(settings).locator("option")).toHaveText(
         laneOf("beta/cli").catalog.models?.map((held) => held.display_name) ??
           [],

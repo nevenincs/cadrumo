@@ -4,23 +4,21 @@ desktop:
     agent_replied: El agente respondió
     approval_allow_always: Permitir
     approval_allow_once: Permitir una vez
+    approval_allow_session: Permitir durante esta sesión
     approval_reject_always: No permitir
     approval_reject_once: No permitir
     approval_review_title: Revisa esto antes de que Cadrumo lo haga
-    approval_tool_title: El agente quiere usar una herramienta
+    approval_tool_title: El agente te pide permiso
     archive: Archivar
     archived_empty: No hay nada archivado
     archived_toggle: Archivadas ({count})
     attach_filter: Documentos
     attachments: Archivos para el próximo mensaje
-    attachments_refused: 'Rechazados: {count}'
+    attachments_refused: 'No aceptados: {count}'
     attachments_uploading: 'Subiendo: {count}'
     can_read_images: leer imágenes
     can_read_pdfs: leer PDF
-    can_run_subagents: ejecutar subagentes
     can_search_web: buscar en la web
-    can_stop_subagent: detener un subagente
-    can_use_tools: usar herramientas
     can_write: escribir archivos
     cancel: Cancelar
     capabilities: 'Puede: {list}'
@@ -33,10 +31,11 @@ desktop:
     condition_invalid_request: El proveedor rechazó la petición
     condition_network_unreachable: No se puede contactar con el proveedor
     condition_provider_overloaded: El proveedor está sobrecargado
-    condition_throttled: El proveedor está limitando las peticiones
-    condition_unauthenticated: Sin autenticar con el proveedor
+    condition_throttled: Has alcanzado el límite de uso del proveedor. Consulta tu
+      cuenta del proveedor o elige otro.
     condition_unknown: Causa desconocida
-    condition_usage_exhausted: Límite de uso alcanzado
+    condition_usage_exhausted: Has alcanzado el límite de uso del proveedor. Consulta
+      tu cuenta del proveedor o elige otro.
     consent_allow: Enviar a {provider}
     consent_decline: No enviar
     consent_items: Lo que se enviaría
@@ -77,13 +76,12 @@ desktop:
     history: Historial
     history_empty: Todavía no hay conversaciones
     history_no_match: Ninguna conversación coincide con «{query}».
-    lane_no_catalog: No se han podido listar los modelos
-    lane_not_admitted: No permitido aquí
-    lane_not_configured: Sin configurar
-    lane_notice: 'Entorno de desarrollo: las conversaciones se guardan sin cifrar
-      en este almacenamiento de prueba. Usa solo datos inventados.'
-    lane_signed_out: Sin sesión iniciada
-    lane_unreachable: No se puede conectar
+    lane_no_catalog: No se han podido cargar los modelos. Vuelve a intentarlo.
+    lane_not_admitted: No está disponible en este equipo. Elige otro.
+    lane_not_configured: Configura este proveedor en los ajustes.
+    lane_notice: Las conversaciones de esta versión no están cifradas.
+    lane_signed_out: Inicia sesión en este proveedor desde los ajustes.
+    lane_unreachable: No se puede conectar. Revisa este proveedor en los ajustes.
     members_multiple: '{count} archivos'
     members_single: 1 archivo
     mention_empty: Ningún documento guardado coincide
@@ -94,17 +92,16 @@ desktop:
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
-    model_written: Este proveedor no lista sus modelos. Escribe el identificador del
-      modelo tal como lo nombra el proveedor.
+    model_written: Este proveedor no lista sus modelos. Escribe el nombre del modelo
+      tal como lo escribe el proveedor.
     more_files: +{count} más
     new_conversation: Nueva conversación
     no_models: No hay modelos para elegir
-    no_provider: El agente aún no tiene ningún proveedor que pueda usar.
+    no_provider: Configura un proveedor de IA para empezar.
     provider: Proveedor
     questions_answer: Responder
     questions_clear: Borrar esta respuesta
-    questions_control: 'Una respuesta es una sola línea: no puede llevar saltos de
-      línea, tabuladores ni otros caracteres de control'
+    questions_control: Escribe cada respuesta en una sola línea.
     questions_decline: No responder
     questions_invalid: Corrige primero las respuestas marcadas
     questions_lead: Responde aquí abajo, o escribe un mensaje para responder con tus
@@ -115,6 +112,7 @@ desktop:
     questions_too_long: Esta respuesta tiene {count} caracteres; el máximo es {max}
     queued: Esperando para subir
     ran_with: 'Se ejecutó con: {selection}'
+    read_failed: No se ha podido cargar esta información. Vuelve a intentarlo.
     ready: Listo
     reference_changed: Un documento que has nombrado ha cambiado desde que lo elegiste.
       Vuelve a elegirlo con @.
@@ -124,7 +122,7 @@ desktop:
       agente.
     references_unavailable: Los documentos guardados de esta conversación no están
       disponibles ahora.
-    refused: Rechazado
+    refused: No aceptado
     remove_all: Quitar todo
     remove_document: Quitar {name}
     remove_file: Quitar {name}
@@ -134,9 +132,10 @@ desktop:
     reply_failed: Esta respuesta no se ha completado.
     reply_in_progress: Todavía hay una respuesta en curso.
     reply_queued: 'Mensajes en espera: {count}'
-    reply_reconciling: Conciliando…
-    reply_repair_needed: Necesita reparación
+    reply_reconciling: Comprobando…
+    reply_repair_needed: Interrumpida
     reply_stopping: Deteniendo…
+    request_failed: No se ha podido completar esta acción. Vuelve a intentarlo.
     resize: Cambiar el tamaño del agente
     restore: Restaurar
     retry: Vuelve a intentarlo
@@ -153,21 +152,22 @@ desktop:
     send_waiting: Espera a que se suban todos los archivos
     sent_files: Archivos enviados con este mensaje
     sent_skills: Habilidades cargadas
-    service_absent: El agente no está instalado.
-    service_credential_missing: No hay ninguna clave configurada para este proveedor.
+    service_absent: El agente no está instalado. Reinstala Cadrumo para añadirlo.
+    service_credential_missing: Configura un proveedor en los ajustes para empezar.
     service_failed: El agente ha dejado de funcionar.
-    service_incompatible: Esta versión del agente no funciona con este Cadrumo.
-    service_root_unmarked: Este almacenamiento de prueba no está marcado como entorno
-      de desarrollo del agente.
-    service_runtime_unavailable: El servicio en segundo plano de Cadrumo no está en
-      marcha.
+    service_incompatible: Esta versión del agente no funciona con esta versión de
+      Cadrumo. Reinstala Cadrumo.
+    service_root_unmarked: No se han podido abrir tus conversaciones. Reinicia Cadrumo
+      y vuelve a intentarlo.
+    service_runtime_unavailable: Cadrumo aún no está listo. Reinícialo y vuelve a
+      intentarlo.
     service_signed_out: Inicia sesión para hablar con el agente.
     service_starting: Iniciando el agente…
     service_stopped: El agente no está en marcha.
     set_up_providers: Configurar proveedores de IA
     settings: Ajustes del agente
-    settings_label: 'Modelo y esfuerzo: {current}'
-    settings_title: Ajustes del modelo
+    settings_label: 'Modelo: {current}'
+    settings_title: Modelo de esta conversación
     show: Mostrar el agente
     show_active: Mostrar activas
     sign_in_first: Inicia sesión para usar el agente
@@ -209,6 +209,9 @@ desktop:
     status_uploading: Subiendo
     stop: Detener
     stopped: Detenido
+    thinking: Razonamiento
+    thoughts: Lo que pensó el agente
+    tool_details: Detalles de la llamada
     tool_done: Hecho
     tool_failed: Con error
     tool_kind_delete: Elimina
@@ -234,7 +237,7 @@ desktop:
     upload_unreadable: No se ha podido leer
     uploading: Subiendo
     uploading_name: Subiendo {name}
-    usage: 'Tokens: {input} de entrada, {output} de salida'
+    usage: 'Tokens usados: {input} enviados, {output} recibidos'
     waiting_on_you: Esperando tu respuesta
     welcome_lead: ¿Algo sobre impuestos? Pregunta por un modelo o un plazo, o añade
       recibos, facturas y extractos bancarios con +.
@@ -245,89 +248,102 @@ desktop:
     agent: Agente
     maximize_agent: Maximizar el agente
   providers:
-    add_key: Añadir clave
+    add_key: Añadir clave API
+    address: 'Dirección: {url}'
     base_url_default: Déjala vacía para usar {url}.
-    base_url_label: URL base
-    base_url_required: 'Obligatoria: este proveedor no tiene una por defecto.'
+    base_url_label: Dirección del servidor
+    base_url_required: Introduce la dirección que te ha facilitado el proveedor.
     cancel: Cancelar
-    cli_installed_signed_in: Instalado y con la sesión iniciada
-    cli_installed_signed_out: Instalado, sin la sesión iniciada
-    cli_not_installed: No instalado
-    cli_unknown: Aún no comprobado
-    development_note: En esta versión de desarrollo, un proveedor sin clave propia
-      usa la del entorno de desarrollo.
-    disable: Desactivar
-    disable_note: Desactivar impide que Cadrumo use un proveedor, ni siquiera con
-      una clave que encuentre en otro sitio.
-    disabled: 'Desactivado: Cadrumo no lo usará hasta que añadas una clave o lo restablezcas.'
+    change_failed: No se ha podido guardar. Actualiza y vuelve a intentarlo.
+    connection_api: Clave API
+    connection_app: Aplicación instalada
+    detail_app_missing: Instala la aplicación de {provider} y luego inicia sesión.
+    detail_off: 'Desactivado: el agente no lo ofrece ni lo usa.'
+    detail_off_kept: 'Desactivado: el agente no lo ofrece ni lo usa. Su clave API
+      se conserva para cuando lo actives.'
+    detail_sign_in: Inicia sesión con tu cuenta de {provider}.
+    group_intro: Elige un proveedor para configurarlo.
+    icon_credits: Créditos de los iconos
     key_label: Clave de API de {provider}
-    key_note: Pégala aquí. Se guarda cifrada y no se vuelve a mostrar.
-    lead: Las claves se guardan cifradas en este perfil y no se vuelven a mostrar.
-      Solo tú puedes añadirlas, sustituirlas o quitarlas.
-    mode_provider_sign_in: Sesión iniciada con {provider}
-    mode_token: Token OAuth guardado en este perfil
-    readiness_disabled: Desactivado
-    readiness_missing: Sin clave
-    readiness_not_verified: Guardada, sin usar aún
-    readiness_ready: Listo
-    readiness_sign_in_required: Requiere iniciar sesión
-    readiness_unusable: No se puede usar
-    reason_not_configured: Aún no está configurado.
-    reason_record_unreadable: No se pueden leer sus ajustes guardados. Vuelve a añadir
-      la clave.
-    reason_sign_in_with_provider_tool: Inicia sesión primero con la aplicación de
-      {provider}.
-    refresh: Actualizar
-    refused_base_url_rejected: Esa URL base no se puede usar.
-    refused_catalog_unavailable: Cadrumo no ha podido leer los proveedores del agente.
+    key_note: Se guarda cifrada en este equipo y no se vuelve a mostrar.
+    load_failed: No se han podido cargar los proveedores. Vuelve a intentarlo.
+    reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
+    reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
+    refresh: Volver a intentar
+    refused_base_url_rejected: Revisa la dirección del servidor y vuelve a intentarlo.
     refused_invalid_key_format: Eso no parece una clave de este proveedor.
-    refused_not_signed_in: Inicia sesión para cambiar las claves.
-    refused_person_act_required: Solo tú puedes cambiar las claves, aquí.
-    refused_profile_locked: Este perfil está bloqueado.
-    refused_revision_conflict: Esto ha cambiado en otro sitio. Se muestra lo último;
-      vuelve a intentarlo.
-    refused_runtime_unavailable: El servicio en segundo plano no está en marcha, así
-      que no se ha leído ni cambiado nada. Comprueba el gestor de servicios en segundo
-      plano y vuelve a intentarlo.
-    replace_key: Sustituir clave
-    reset: Restablecer
-    reset_note: Restablecer olvida lo que se configuró, como si nunca se hubiera configurado.
-    reset_note_development: Restablecer olvida lo que se configuró; en esta versión
-      de desarrollo, se vuelve a usar la clave del entorno de desarrollo.
+    refused_not_signed_in: Inicia sesión para cambiar estos ajustes.
+    refused_person_act_required: Solo tú puedes cambiar estos ajustes, desde esta
+      ventana.
+    refused_profile_locked: Desbloquea tu perfil para cambiar esta configuración.
+    refused_revision_conflict: Estos ajustes han cambiado mientras tanto. Se muestran
+      los últimos; vuelve a intentarlo.
+    refused_runtime_unavailable: Reinicia Cadrumo y vuelve a intentarlo.
+    remove_key: Quitar clave API
+    replace_key: Sustituir clave API
     save: Guardar
-    saved_unread: Guardada, pero no se ha podido leer su estado.
+    saved_unread: Guardado, pero no se ha podido leer su estado. Vuelve a intentarlo.
     saving: Guardando…
+    search_empty: No hay proveedores que coincidan. Prueba otra búsqueda.
+    search_label: Buscar proveedores
+    search_placeholder: Buscar proveedores
     sign_in_action: Iniciar sesión
+    sign_in_busy: Otro inicio de sesión de {provider} aún está terminando. Espera
+      un momento y vuelve a intentarlo.
     sign_in_cancel: Cancelar el inicio de sesión
     sign_in_cancel_failed: Cadrumo aún no ha podido cancelar el inicio de sesión.
       Mantén este cuadro abierto mientras lo comprueba.
     sign_in_cancelled: Se canceló el inicio de sesión.
+    sign_in_cleanup_failed: Reinicia Cadrumo antes de volver a iniciar sesión.
     sign_in_close: Cerrar el inicio de sesión
     sign_in_continue_browser: Continuar en el navegador
     sign_in_description: Continúa en la página de inicio de sesión de {provider}.
       Escribe tu contraseña solo allí.
+    sign_in_done: Listo
     sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo
       más tarde.
-    sign_in_only: Usa el inicio de sesión propio de {provider}.
+    sign_in_host_disconnected: Cadrumo ha perdido el contacto con este inicio de sesión
+      y lo ha cancelado. Inícialo de nuevo para continuar.
+    sign_in_invalid_request: Cierra esta ventana y vuelve a iniciar sesión.
     sign_in_open_failed: Cadrumo no pudo abrir la página de inicio de sesión del proveedor.
+    sign_in_profile_required: Inicia sesión en Cadrumo para continuar el inicio de
+      sesión con {provider}.
+    sign_in_provider_error: No se ha podido iniciar sesión en {provider}. Vuelve a
+      intentarlo.
+    sign_in_provider_unavailable: Instala la aplicación de {provider} y vuelve a intentarlo.
+    sign_in_retry: Volver a intentar el inicio de sesión
+    sign_in_retry_checking: Preparando otro intento…
+    sign_in_retry_refresh_failed: Cierra y abre la configuración de proveedores y
+      vuelve a intentarlo.
     sign_in_security: Cadrumo nunca te pedirá la contraseña del proveedor.
     sign_in_start_browser: Iniciar sesión en el navegador
     sign_in_start_device: Usar un código de dispositivo
     sign_in_starting: Iniciando sesión…
-    sign_in_success: Has iniciado sesión en {provider}. Cadrumo aún tiene que comprobar
-      que este canal puede ejecutar un agente.
+    sign_in_success: Has iniciado sesión en {provider}.
+    sign_in_success_description: Has iniciado sesión. Pulsa Listo para volver a la
+      configuración.
+    sign_in_success_title: 'Inicio de sesión completado: {provider}'
     sign_in_timeout: El inicio de sesión tardó demasiado y se canceló.
     sign_in_title: Iniciar sesión con {provider}
-    sign_in_unavailable: El inicio de sesión desde Cadrumo aún no está disponible
-      para este proveedor.
+    sign_in_unavailable: Aún no puedes iniciar sesión en {provider} desde Cadrumo.
+    sign_in_unsupported_browser: El inicio de sesión de {provider} en el navegador
+      no ha podido continuar desde Cadrumo. Prueba con un código de dispositivo si
+      {provider} lo admite.
+    sign_in_unsupported_device: Cadrumo no ofrece el inicio de sesión de {provider}
+      con código de dispositivo. Prueba a iniciar sesión en el navegador.
     sign_in_user_code: Código de dispositivo
     sign_in_waiting: Termina de iniciar sesión en la página del proveedor y vuelve
       aquí.
     sign_in_waiting_device: Escribe este código en la página del proveedor para terminar
       de iniciar sesión.
-    source_environment: Usa la clave del entorno de desarrollo
-    source_profile: Clave guardada en este perfil
-    through: A través de {url}
+    status_not_checked: Sin comprobar
+    status_off: Desactivado
+    status_ready: Listo
+    status_saved: Guardado
+    status_setup_needed: Sin configurar
+    status_sign_in_needed: Sin sesión iniciada
+    summary: '{connection}: {status}'
     title: Proveedores de IA
+    use_in_agent: Usar {provider} ({connection}) en el agente
   rail:
     agent: Agente

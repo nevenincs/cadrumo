@@ -52,19 +52,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    ProfileAccessStatus,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.config import override_settings
@@ -84,6 +72,15 @@ from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileSessionsResult,
 )
 from cadrumo_client.commands.compiler import build_command_app
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

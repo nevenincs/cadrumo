@@ -8,6 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
@@ -36,7 +38,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import bind_iva_wallet_profile_ports
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory

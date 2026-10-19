@@ -13,7 +13,7 @@ from uuid import UUID
 
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient

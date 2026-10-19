@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef } from "react";
+import {
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import { Empty, EmptyDescription } from "@/components/ui/empty";
@@ -7,6 +13,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { KIND_GLYPH } from "./files";
+import { Markdown, type OpenLink } from "./Markdown";
 import type {
   SentFile,
   ToolActivityState,
@@ -20,6 +27,9 @@ const FILES_SHOWN = 6;
 
 /** How far from the bottom, in pixels, still counts as reading the newest. */
 const NEWEST_SLACK = 8;
+
+/** How much of the agent's thinking the preview keeps: its newest part. */
+const THINKING_SHOWN = 4_000;
 
 const lists = new Map<string, Intl.ListFormat>();
 
@@ -132,39 +142,126 @@ function PersonTurn({
   );
 }
 
+/**
+ * A line that opens and closes what is behind it, below it: the agent's
+ * thinking or a tool call's internals. It is a button only where there is
+ * something to show; otherwise it is the line alone.
+ */
+function Disclosure({
+  label,
+  regionLabel,
+  className,
+  children,
+}: {
+  label: ReactNode;
+  regionLabel: string;
+  className?: string;
+  /** What opens, or nothing when there is nothing to show. */
+  children?: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const region = useId();
+  if (!children)
+    return (
+      <p className={cn("flex min-w-0 items-start gap-2", className)}>{label}</p>
+    );
+  return (
+    <div className="grid min-w-0 gap-1">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={region}
+        onClick={() => setOpen((was) => !was)}
+        className={cn(
+          "group flex min-w-0 items-start gap-2 rounded-sm text-left hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2",
+          className,
+        )}
+      >
+        {label}
+        <Icon
+          name={open ? "chevronUp" : "chevronDown"}
+          size="xs"
+          className="mt-1 shrink-0 opacity-60 group-hover:opacity-100"
+        />
+      </button>
+      {open && (
+        <div
+          id={region}
+          role="region"
+          aria-label={regionLabel}
+          className="max-h-48 overflow-y-auto border-l-2 border-border pl-2 text-xs text-muted-foreground/80"
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** The newest part of the agent's thinking, as it wrote it. */
+function Thinking({ text }: { text: string }) {
+  const shown =
+    text.length > THINKING_SHOWN ? `…${text.slice(-THINKING_SHOWN)}` : text;
+  return <p className="whitespace-pre-wrap wrap-anywhere">{shown}</p>;
+}
+
 function AgentTurn({
   message,
   onRetry,
+  onOpenProviderSettings,
+  onOpenLink,
 }: {
   message: Extract<TranscriptMessage, { kind: "agent" }>;
   onRetry?: () => void;
+  onOpenProviderSettings?: () => void;
+  onOpenLink?: OpenLink;
 }) {
   const t = useStrings();
   const { text, state } = message;
+  const thinking = message.thinking ? (
+    <Thinking text={message.thinking} />
+  ) : undefined;
+  const working = state === "working" && !message.waitingOnPerson;
   return (
-    <li className="pr-4">
+    <li className="grid gap-1.5 pr-4">
+      {/* Once the reply is no longer being written, what the agent thought
+          on the way stays behind its own line, above what it wrote and apart
+          from it. */}
+      {thinking && !working && (
+        <Disclosure
+          label={t("desktop.agent.thinking")}
+          regionLabel={t("desktop.agent.thoughts")}
+          className="text-xs text-muted-foreground"
+        >
+          {thinking}
+        </Disclosure>
+      )}
       <article
         aria-label={t("desktop.agent.agent_replied")}
         className="grid min-w-0 gap-1.5"
       >
-        {text && (
-          <p className="whitespace-pre-wrap text-foreground wrap-anywhere">
-            {text}
-          </p>
-        )}
+        {text && <Markdown text={text} onOpenLink={onOpenLink} />}
         {state === "working" && message.waitingOnPerson && (
           <p className="text-sm text-muted-foreground">
             {t("desktop.agent.waiting_on_you")}
           </p>
         )}
-        {state === "working" && !message.waitingOnPerson && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span
-              aria-hidden="true"
-              className="size-1.5 shrink-0 rounded-full bg-muted-foreground motion-safe:animate-pulse"
-            />
-            {t("desktop.agent.working")}
-          </p>
+        {working && (
+          <Disclosure
+            label={
+              <span className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 shrink-0 rounded-full bg-muted-foreground motion-safe:animate-pulse"
+                />
+                {t("desktop.agent.working")}
+              </span>
+            }
+            regionLabel={t("desktop.agent.thoughts")}
+            className="text-sm text-muted-foreground"
+          >
+            {thinking}
+          </Disclosure>
         )}
         {state === "stopped" && (
           <p className="text-sm text-muted-foreground">
@@ -179,9 +276,21 @@ function AgentTurn({
                 {message.failureReason ?? t("desktop.agent.reply_failed")}
               </span>
             </p>
-            <AgentTextAction variant="outline" size="xs" onAction={onRetry}>
-              {t("desktop.agent.retry")}
-            </AgentTextAction>
+            {message.failureAction === "provider_settings" ? (
+              onOpenProviderSettings && (
+                <AgentTextAction
+                  variant="outline"
+                  size="xs"
+                  onAction={onOpenProviderSettings}
+                >
+                  {t("desktop.agent.settings")}
+                </AgentTextAction>
+              )
+            ) : (
+              <AgentTextAction variant="outline" size="xs" onAction={onRetry}>
+                {t("desktop.agent.retry")}
+              </AgentTextAction>
+            )}
           </div>
         )}
       </article>
@@ -204,14 +313,32 @@ function ToolRow({ activity }: { activity: TranscriptToolActivity }) {
         />
       )}
       <div className="grid min-w-0 flex-1">
-        <span className="wrap-anywhere">
-          {activity.label}
-          {/* A failed call is said in words, not by its icon alone. */}
-          <span className={failed ? "ml-1.5 text-destructive" : "sr-only"}>
-            {failed ? "" : ", "}
-            {toolWords(t)[state]}
-          </span>
-        </span>
+        <Disclosure
+          label={
+            <span className="wrap-anywhere">
+              {activity.label}
+              {/* A failed call is said in words, not by its icon alone. */}
+              <span className={failed ? "ml-1.5 text-destructive" : "sr-only"}>
+                {failed ? "" : ", "}
+                {toolWords(t)[state]}
+              </span>
+            </span>
+          }
+          regionLabel={t("desktop.agent.tool_details")}
+        >
+          {activity.internals?.length ? (
+            <div className="grid gap-1.5">
+              {activity.internals.map((internal, index) => (
+                <pre
+                  key={index}
+                  className="font-mono whitespace-pre-wrap wrap-anywhere"
+                >
+                  {internal}
+                </pre>
+              ))}
+            </div>
+          ) : undefined}
+        </Disclosure>
         {activity.detail && (
           <span className="text-xs wrap-anywhere">{activity.detail}</span>
         )}
@@ -224,8 +351,9 @@ function ToolRow({ activity }: { activity: TranscriptToolActivity }) {
  * The conversation so far, oldest first and newest at the bottom: what the
  * person said, with the files they sent, what the agent replied, and the
  * Cadrumo tools it called on the way. It draws what it is given and nothing
- * more; text is shown as written, line breaks kept, with no formatting read
- * into it.
+ * more. The person's words are shown as written, line breaks kept; the
+ * agent's are read as the Markdown it writes. What the agent thought, and
+ * what a tool call took and gave, open beneath the line that has them.
  *
  * While `followNewest` holds, the list stays at the bottom as it grows,
  * unless the person has scrolled away from the bottom; scrolling back down
@@ -236,6 +364,8 @@ export function Transcript({
   locale,
   emptyHint,
   onRetry,
+  onOpenProviderSettings,
+  onOpenLink,
   followNewest = true,
 }: {
   items: readonly TranscriptItem[];
@@ -245,6 +375,10 @@ export function Transcript({
   /** Ask again for a failed reply. Without it, Retry says it is not
    * available. */
   onRetry?: (id: string) => void;
+  /** Open the provider settings for a reply that needs sign-in. */
+  onOpenProviderSettings?: () => void;
+  /** Open an address a reply links to, outside the window. */
+  onOpenLink?: OpenLink;
   /** Keep the newest turn in view as the conversation grows. */
   followNewest?: boolean;
 }) {
@@ -306,6 +440,8 @@ export function Transcript({
                   key={item.id}
                   message={item}
                   onRetry={onRetry ? () => onRetry(item.id) : undefined}
+                  onOpenProviderSettings={onOpenProviderSettings}
+                  onOpenLink={onOpenLink}
                 />
               ) : (
                 <ToolRow key={item.id} activity={item} />

@@ -57,12 +57,13 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, Availability, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from .conformance_family_contract import ConformanceFamily
 from .conformance_maritime_preview_support import MARITIME_QUICKFILE_MATERIAL_CONFORMANCE_FAMILY

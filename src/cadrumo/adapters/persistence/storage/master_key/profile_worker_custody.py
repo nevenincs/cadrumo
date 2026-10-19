@@ -10,12 +10,13 @@ from pathlib import Path
 from threading import RLock
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
-from .....application.user_profile.access_contracts import AccessDenialCode, AccessSession, SessionKind, SessionState
+from .....application.user_profile.access_contracts import AccessSession, SessionKind, SessionState
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.access_policy import intersect_scopes
-from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .....application.user_profile.profile_record_repository import close_active_profile_record_session
 from .....core.time.clock import now
 from .....core.time.utc import UtcInstant

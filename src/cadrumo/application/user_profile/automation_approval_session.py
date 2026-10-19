@@ -8,15 +8,14 @@ from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
+
 from ...core.identity.digest import ContentDigest
 from ...core.time.utc import UtcInstant
 from .access_administration import AccessAdministrationAction, FreshPasswordAuthorization
-from .access_contracts import (
-    KEY_ROTATION_MAXIMUM_OVERLAP,
-    ApiKeyRecord,
-    AuthorityState,
-    AutomationGrant,
-)
+from .access_contracts import KEY_ROTATION_MAXIMUM_OVERLAP, ApiKeyRecord, AutomationGrant
 from .access_policy import scope_is_subset
 from .automation_administration import (
     authorize_enrollment,
@@ -30,11 +29,10 @@ from .automation_administration import (
     updated_enrollment_state,
     validate_enrollment_state,
 )
-from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError, AutomationKeyVerifier
+from .automation_custody_port import AutomationKeyVerifier
 from .automation_enrollment import (
     EnrollmentControlState,
     EnrollmentGrant,
-    EnrollmentKind,
     EnrollmentRecord,
     EnrollmentStage,
     EnrollmentTransition,

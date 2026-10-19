@@ -27,19 +27,10 @@ from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATI
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -53,6 +44,15 @@ from cadrumo.application.user_profile.operation_access_policy import evaluate_op
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from ._operator_probe_fakes import fake_operator_probe_ports
 from ._operator_scope_fakes import build_inward_operator_scope_ports

@@ -1,9 +1,9 @@
-"""Real supervision of the local-reader and browser provisioning operations for tests.
+"""Real supervision of the local-reader operations for tests.
 
 Every run goes through the real registry, supervisor, journal and encrypted
 operand store. The model runtime is a real loopback endpoint speaking the
-Ollama wire shapes; only the process spawner, the installers and the text
-fitness probe are injected ports, as production composition injects them.
+Ollama wire shapes; only the process spawner and the text fitness probe are
+injected ports, as production composition injects them.
 """
 
 from __future__ import annotations
@@ -20,10 +20,6 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from .....application.browser_runtime_operation import (
-    build_browser_runtime_operation_definition,
-    build_browser_runtime_operation_registration,
-)
 from .....application.local_reader import RoleFitnessOutcome
 from .....application.local_reader_operation import (
     build_local_reader_operation_definition,
@@ -48,7 +44,6 @@ from .....application.operations.frontend_requests import (
 from .....application.operations.models import OperationIdentity, OperationRequest
 from .....application.operations.registry import OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
-from .....application.provisioning_host import RuntimeInstaller
 from .....core.config import Settings, override_settings
 from .....core.model_catalogue import ModelRole, default_model_runtime_id
 from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
@@ -172,38 +167,28 @@ def loopback_model_runtime(
 
 
 class ProvisioningPorts:
-    """Injected process, installer and fitness ports that record every call."""
+    """Injected process and fitness ports that record every call."""
 
     def __init__(
         self,
         *,
-        browser_install: Callable[[], int] = lambda: 0,
         owner_start: Callable[[OperationIdentity], Coroutine[None, None, int | None]] | None = None,
     ) -> None:
-        """Start with nothing spawned, installed or probed.
+        """Start with nothing spawned or probed.
 
-        ``browser_install`` stands in for the vendor download. ``owner_start``
-        binds the runtime server start to the process that owns the executing
-        one, as a contained worker binds it, in place of :meth:`spawn`.
+        ``owner_start`` binds the runtime server start to the process that owns
+        the executing one, as a contained worker binds it, in place of
+        :meth:`spawn`.
         """
         self.spawned: list[Path] = []
-        self.installers: list[RuntimeInstaller] = []
         self.probed: list[str] = []
-        self.browser_installs = 0
         self.owner_start = owner_start
-        self._browser_install = browser_install
 
     def spawn(self, executable: Path, env: Mapping[str, str]) -> int:
         """Record a runtime server start and report a process id."""
         del env
         self.spawned.append(executable)
         return 1
-
-    def install(self, installer: RuntimeInstaller, executable: Path, timeout_s: float) -> int:
-        """Record a package-manager install and report success."""
-        del executable, timeout_s
-        self.installers.append(installer)
-        return 0
 
     def probe(self, model: str, settings: Settings) -> RoleFitnessOutcome:
         """Record a fitness probe and report the model fit."""
@@ -219,27 +204,18 @@ class ProvisioningPorts:
             elapsed_ms=1,
         )
 
-    def install_browser(self, timeout_s: float) -> int:
-        """Record a browser install and report what the stand-in download returned."""
-        del timeout_s
-        self.browser_installs += 1
-        return self._browser_install()
-
 
 def provisioning_registry(ports: ProvisioningPorts) -> OperationRegistry:
-    """Register the four provisioning-family operations over ``ports``."""
+    """Register the three local-reader operations over ``ports``."""
     provision = build_local_reader_operation_definition(
         spawn=ports.spawn if ports.owner_start is None else RuntimeServerOwnerStart(ports.owner_start),
-        run_installer=ports.install,
         text_probe=ports.probe,
     )
     status = build_local_reader_status_definition(text_probe=ports.probe)
     report = build_local_reader_report_definition()
-    browser = build_browser_runtime_operation_definition(run_installer=ports.install_browser)
     return OperationRegistry(
-        definitions=(browser, provision, report, status),
+        definitions=(provision, report, status),
         public_registrations=(
-            build_browser_runtime_operation_registration(browser),
             build_local_reader_operation_registration(provision),
             build_local_reader_report_registration(report),
             build_local_reader_status_registration(status),

@@ -15,16 +15,14 @@ from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIM
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_administration import enrollment_receipt
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
     EnrollmentRequester,
     ProtectedEnrollmentRecipient,
 )
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.enrollment_access import (
     EnrollmentClientReply,
@@ -39,6 +37,7 @@ from cadrumo_client.contracts.enrollment_access import (
     EnrollmentRequest,
     EnrollmentSubmit,
 )
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.profile_access import AccessRefusal, SecretReady
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document, write_secret

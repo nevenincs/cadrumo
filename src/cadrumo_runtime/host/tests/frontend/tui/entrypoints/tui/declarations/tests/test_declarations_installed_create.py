@@ -30,12 +30,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -47,6 +42,7 @@ from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewSc
 from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient

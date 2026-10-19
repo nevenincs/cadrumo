@@ -170,10 +170,15 @@ export type TranscriptMessage =
       state: AgentReplyState;
       /** Why the reply failed, when `state` is `failed`. */
       failureReason?: string;
+      /** An action the host can offer for this failure. */
+      failureAction?: "provider_settings";
       /** While `state` is `working`: the reply is held until the person
        * answers questions or decides an approval, so it says it is waiting
        * for them rather than working. */
       waitingOnPerson?: boolean;
+      /** What the agent thought on the way to the reply, so far, where the
+       * agent shared it. Shown only when the person asks. */
+      thinking?: string;
     };
 
 /** Where a tool the agent called is, in cadrumo-agent's own four states. */
@@ -189,6 +194,9 @@ export type TranscriptToolActivity = {
   state: ToolActivityState;
   /** More about the call, such as what kind of tool it is, already worded. */
   detail?: string;
+  /** What the call took and gave, as the agent recorded it: shown, as it
+   * is, only when the person opens the call. */
+  internals?: readonly string[];
 };
 
 /** Anything the transcript lists, in conversation order. */

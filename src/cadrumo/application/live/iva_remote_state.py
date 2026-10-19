@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ...core.access_gate.gate import AeatAccessGate as _AeatAccessGate
@@ -25,7 +26,6 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.automation_custody_port import AutomationCustodyError
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .filed_data_ports import FiledEffectGuard, LocalEffectTracker
 from .iva_remote_state_ports import IvaRemoteStatePort

@@ -93,19 +93,19 @@ def config_reset_start(
     override_retention: bool = False,
     reason: str | None = None,
 ) -> None:
-    """Start and execute one new reset operation.
+    """Ask the running runtime to start and execute one new reset operation.
 
-    A running runtime hosts profile workers that hold the stores a reset
-    deletes, so when one answers the reset is its act, which drains them first.
-    With no runtime the reset runs in this process.
+    The runtime hosts the profile workers that hold the stores a reset deletes,
+    so the reset is its act, which drains them first. With no runtime the
+    command is refused as unavailable and nothing is reset.
     """
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
     from cadrumo_client.contracts.installation_requests import ResetStartReply, ResetStartRequest
 
     from ....application.operations.registry import OperationFrontendProjection
-    from ..operation_installation import run_installation_act_if_runtime
+    from ..operation_installation import run_installation_act
 
-    reply = run_installation_act_if_runtime(
+    projection = run_installation_act(
         ResetStartRequest(
             request_id=uuid4(),
             frontend=OperationFrontendProjection.CLI,
@@ -114,23 +114,7 @@ def config_reset_start(
             retention_override_reason=reason,
         ),
         ResetStartReply,
-    )
-    if reply is not None:
-        projection = reply.operation
-    else:
-        from ....application.config_reset import start_config_reset
-        from ..state_projection_support import bucket_storage, certificate_secret_backend_factory, operator_scope_ports
-
-        projection = ConfigResetOperationPayload.from_operation(
-            start_config_reset(
-                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-                operator_scope_ports=operator_scope_ports(ctx),
-                bucket_storage=bucket_storage(ctx),
-                confirmed=True,
-                acknowledge_retention_override=override_retention,
-                retention_override_reason=reason,
-            )
-        )
+    ).operation
     emit_envelope(
         ctx,
         command="config.reset.start",
@@ -163,13 +147,13 @@ def config_reset_resume(
     override_retention: bool = False,
     reason: str | None = None,
 ) -> None:
-    """Roll one exact incomplete journal forward, through the running runtime when there is one."""
+    """Ask the running runtime to roll one exact incomplete journal forward; with none, refuse as unavailable."""
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
     from cadrumo_client.contracts.installation_requests import ResetResumeReply, ResetResumeRequest
 
     from ....application.config_reset import ConfigResetRequestRefusedError, latest_incomplete_config_reset_id
     from ....application.operations.registry import OperationFrontendProjection
-    from ..operation_installation import run_installation_act_if_runtime
+    from ..operation_installation import run_installation_act
 
     resolved_operation_id = operation_id
     if resolved_operation_id is None:
@@ -179,7 +163,7 @@ def config_reset_resume(
             raise CliRefusedBoundaryError(
                 "no incomplete configuration reset operation is available to resume",
             ) from refusal
-    reply = run_installation_act_if_runtime(
+    projection = run_installation_act(
         ResetResumeRequest(
             request_id=uuid4(),
             frontend=OperationFrontendProjection.CLI,
@@ -189,24 +173,7 @@ def config_reset_resume(
             retention_override_reason=reason,
         ),
         ResetResumeReply,
-    )
-    if reply is not None:
-        projection = reply.operation
-    else:
-        from ....application.config_reset import resume_config_reset
-        from ..state_projection_support import bucket_storage, certificate_secret_backend_factory, operator_scope_ports
-
-        projection = ConfigResetOperationPayload.from_operation(
-            resume_config_reset(
-                resolved_operation_id,
-                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-                operator_scope_ports=operator_scope_ports(ctx),
-                bucket_storage=bucket_storage(ctx),
-                confirmed=True,
-                acknowledge_retention_override=override_retention,
-                retention_override_reason=reason,
-            )
-        )
+    ).operation
     emit_envelope(
         ctx,
         command="config.reset.resume",

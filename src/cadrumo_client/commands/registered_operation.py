@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import overload
 from uuid import uuid4
 
 from pydantic import BaseModel
 
+from cadrumo.application.operations.frontend_requests import OperationPublicEventPageV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo_client.commands.errors import (
     CliOperationStillRunningError,
@@ -61,6 +63,7 @@ def run_registered_operation[ResultT: BaseModel](
     review: None = None,
     settlement_timeout: float | None = None,
     pending_check_command: str | None = None,
+    on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
 ) -> RegisteredOperationCompletion[ResultT]: ...
 
 
@@ -80,6 +83,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     secret: bytearray | None = None,
     settlement_timeout: float | None = None,
     pending_check_command: str | None = None,
+    on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
 ) -> RegisteredOperationCompletion[ResultT] | RegisteredOperationReviewCompletion[ReviewT]: ...
 
 
@@ -98,6 +102,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     review: RegisteredOperationReviewHandler[ReviewT] | None = None,
     settlement_timeout: float | None = None,
     pending_check_command: str | None = None,
+    on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
 ) -> RegisteredOperationCompletion[ResultT] | RegisteredOperationReviewCompletion[ReviewT]:
     """Run one registered operation with exact contract and result correlation.
 
@@ -107,6 +112,8 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     page exchanges use the later of its deadline or a fresh ``timeout``.
     When settlement waiting ends first, the operation is reported still running
     with its identity and unknown effect, never as a refusal of work that may commit.
+    ``on_events`` receives each observed event page, so a command can draw
+    the operation's progress while it waits; it never decides settlement.
     Any one-shot secret is wiped on every exit.
     """
     try:
@@ -164,6 +171,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
                 progress,
                 review,
                 exchange,
+                on_events,
             )
             if detached_review is not None:
                 return detached_review

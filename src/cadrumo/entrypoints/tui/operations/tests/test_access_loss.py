@@ -156,6 +156,21 @@ class _Control:
         raise FrontendRefusedError("profile_session_expired")
 
 
+class _Cued:
+    """The runtime cues a change after every observation, so the modal reads the operation again at once."""
+
+    armed = False
+
+    def arm(self) -> None:
+        self.armed = True
+
+    async def wait(self, timeout: float) -> None:
+        del timeout
+
+    def close(self) -> None:
+        self.armed = False
+
+
 class _Controller:
     def __init__(self, *, failing_action: str) -> None:
         self.failing_action = failing_action
@@ -176,6 +191,9 @@ class _Controller:
 
     async def start(self) -> str:
         return _OPERATION_ID
+
+    def operation_changes(self) -> _Cued:
+        return _Cued()
 
     async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
         self.observe_calls += 1

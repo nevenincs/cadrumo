@@ -10,9 +10,10 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope, SessionKind, SessionState
+from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 
 from ..access_management import (

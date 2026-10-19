@@ -9,9 +9,10 @@ from contextlib import suppress
 from threading import BoundedSemaphore
 from uuid import uuid4
 
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationPayloadReady, OperationSubmitPayload, OperationSubmitted
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SubmissionPayloadChunk

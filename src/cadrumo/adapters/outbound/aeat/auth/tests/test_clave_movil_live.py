@@ -101,8 +101,8 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
     """Run the real Cl@ve Móvil login flow through the centralized Playwright backend."""
 
     settings = _settings_or_skip()
-    if os.environ.get("AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH") != "1":
-        pytest.fail("AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH is not 1 after live opt-in")
+    if os.environ.get("CADRUMO_CLAVE_MOVIL_FULL_LIVE_AUTH") != "1":
+        pytest.fail("CADRUMO_CLAVE_MOVIL_FULL_LIVE_AUTH is not 1 after live opt-in")
     if not (settings.cadrumo_clave_movil_dni_nie is not None and settings.cadrumo_clave_movil_dni_nie):
         pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
 

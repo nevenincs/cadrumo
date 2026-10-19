@@ -28,8 +28,9 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessSession
+from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...adapters.profile_worker import ProfileWorkerProcess

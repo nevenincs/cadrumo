@@ -21,8 +21,8 @@ from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_approval_session import ApprovalSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from .approval_binding import RuntimeApprovalBinding

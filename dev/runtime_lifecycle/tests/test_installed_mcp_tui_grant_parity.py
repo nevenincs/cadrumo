@@ -50,23 +50,9 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    KEY_ROTATION_MAXIMUM_OVERLAP,
-    AccessDenialCode,
-    AuthorityState,
-    ProfileAccessStatus,
-)
+from cadrumo.application.user_profile.access_contracts import KEY_ROTATION_MAXIMUM_OVERLAP
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-)
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
@@ -79,7 +65,11 @@ from cadrumo.core.operations import (
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.automation_requester import (
     AutomationRequesterCompletion,

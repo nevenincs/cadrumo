@@ -2,6 +2,7 @@
 
 mod agent;
 mod app;
+mod auth_browser;
 mod docs;
 mod environment;
 mod launch;

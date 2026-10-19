@@ -7,14 +7,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentReceipt
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy, OperationAccessRequest
 from cadrumo_runtime.application.approval_binding import RuntimeApprovalBinding
 
 type WorkerApprovalPublicationPhase = Literal["commit_review", "publish_candidate", "activate", "decline"]

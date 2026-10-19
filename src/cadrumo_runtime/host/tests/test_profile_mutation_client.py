@@ -15,12 +15,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileFieldMutationOperationRequest,
@@ -30,6 +25,7 @@ from cadrumo.application.user_profile.profile_record_repository import ProfileRe
 from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation

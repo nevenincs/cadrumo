@@ -17,6 +17,7 @@ import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
 
+from ..compiler.validation_verdict_cache import VERDICT_CACHE_DIR_ENV
 from ..compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
@@ -26,7 +27,6 @@ from ..compiler.verdict_cache import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _VERDICT_FILENAME: Final = re.compile(r"cadrumo_validation_verdict_[0-9a-f]{16}\.json")
 
 
@@ -38,7 +38,7 @@ def _assert_verdict_shape(store: Path, produced: Path) -> None:
 def test_the_real_verdict_file_matches_its_declared_shape(tmp_path: Path) -> None:
     store = tmp_path / "verdicts"
     registry_root = tmp_path / "registry" / "aeat"
-    with scoped_env_var(_CACHE_DIR_ENV, str(store)):
+    with scoped_env_var(VERDICT_CACHE_DIR_ENV, str(store)):
         path = verdict_cache_path(registry_root)
         write_verdict(
             path,

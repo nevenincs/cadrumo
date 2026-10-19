@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
@@ -24,7 +26,6 @@ from ..state_projection import (
     ProjectionModeloReadiness,
 )
 from ..state_projection_ports import StateProjectionReadPorts
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .data_inventory import DataInventoryCasilla, DataInventoryChecklist
 

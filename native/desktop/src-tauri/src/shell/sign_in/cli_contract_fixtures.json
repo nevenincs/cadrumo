@@ -26,7 +26,8 @@
       "category": "REFUSED",
       "code": "REFUSED_CLI_BOUNDARY",
       "context": {
-        "reason": "credential_rejected"
+        "reason": "credential_rejected",
+        "sign_in_reason": "credential_rejected"
       },
       "message": "credential_rejected",
       "retryable": false,

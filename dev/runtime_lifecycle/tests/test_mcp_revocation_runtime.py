@@ -32,13 +32,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-    ProfileAccessStatus,
-)
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
@@ -50,6 +43,13 @@ from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo_client.commands.compiler import build_command_app
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo_client.transport import credentials
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter

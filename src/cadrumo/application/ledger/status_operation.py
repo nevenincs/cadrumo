@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, field_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..modelo.verification_repository_ports import VerificationRepositoryBundleFactory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -19,9 +21,6 @@ from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_manual import summarize_manual_transactions

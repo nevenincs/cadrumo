@@ -38,7 +38,7 @@ from ....application.diagnostics_repair_documents import (
     reset_progress_document as _reset_progress_document,
 )
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
-from ....core.json_contract import strict_round_trip
+from ....core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ..common import emit_envelope, resolve_cli_precondition_action
 from .connectivity_rendering import render_browser_connectivity_text as _render_browser_connectivity_text
 
@@ -63,6 +63,20 @@ def repair(ctx: typer.Context) -> None:
         command="config.repair",
         result=result,
         lines=_render_config_repair_text(report).splitlines(),
+        notices=(_setup_status_notice(),),
+    )
+
+
+def _setup_status_notice() -> Notice:
+    """Point at the command that shows setup state; repair runs without the session that reading it needs."""
+    from ....application.operator_actions.catalogue import next_action
+    from ....core.i18n.render import tr
+
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="config.repair.setup_status",
+        message=tr("cli.config.repair.setup_status_hint"),
+        action=next_action("operator.provision.status"),
     )
 
 

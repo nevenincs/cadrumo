@@ -7,6 +7,9 @@ from typing import TypedDict
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ..core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .diagnostics_operation_ports import DiagnosticsReadPortsFactory
 from .diagnostics_read_contracts import (
@@ -52,12 +55,6 @@ from .operations.registry import (
     OperationReconciliationPolicy,
 )
 from .operations.subject_reference import OperationSubjectReferenceV1
-from .user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from .user_profile.access_errors import ProfileAccessRefusedError
 
 DIAGNOSTICS_READ_OPERATION_DEFINITION_ID = "diagnostics.read"

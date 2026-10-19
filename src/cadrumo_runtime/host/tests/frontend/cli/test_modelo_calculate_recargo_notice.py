@@ -45,12 +45,6 @@ from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.period import Period, PeriodKind, registry_period_kind
 from cadrumo.core.time.clock import today_madrid
@@ -67,6 +61,12 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _result
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 

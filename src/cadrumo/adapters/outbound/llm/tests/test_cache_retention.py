@@ -33,7 +33,7 @@ from ..models import CachedEntry, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_PROVIDER = LLMProvider.ANTHROPIC
+_PROVIDER = LLMProvider.AGENT
 _MODEL = "claude-sonnet-4-6"
 
 

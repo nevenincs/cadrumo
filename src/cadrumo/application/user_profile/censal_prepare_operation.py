@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
@@ -31,7 +33,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .censal_access import bind_whole_profile_censal_access
 from .censal_observation import CensalObservation

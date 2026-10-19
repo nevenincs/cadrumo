@@ -12,6 +12,9 @@ use std::ffi::OsString;
 /// The exit code of the role the process arguments select, or `None` when they select none.
 pub fn dispatch() -> Option<i32> {
     let arguments: Vec<OsString> = std::env::args_os().skip(1).collect();
+    if let Some(code) = crate::auth_browser::dispatch(&arguments) {
+        return Some(code);
+    }
     Some(match role::select(&arguments)? {
         Ok((role, forwarded)) => run(role, forwarded),
         Err(_) => refuse(ErrorCode::InvalidArguments),

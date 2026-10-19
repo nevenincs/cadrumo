@@ -218,7 +218,6 @@ def _invoice_draft_extraction_ports(
                 )
             return TextInvoiceFieldExtractor(
                 provider=provider,
-                model=settings.cadrumo_llm_cloud_text_model,
                 settings=settings,
                 authority_values=authority_values,
                 operation=operation,
@@ -254,7 +253,6 @@ def _invoice_draft_extraction_ports(
                 )
             return LocalVisionDocumentTranscriber(
                 provider=provider,
-                model=settings.cadrumo_llm_cloud_vision_model,
                 settings=settings,
                 consent_token=(None if consent_token is None else _require_evidence_consent_token(consent_token)),
             ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)

@@ -17,8 +17,8 @@ from pydantic import SecretBytes
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_approval_session import ApprovalSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 

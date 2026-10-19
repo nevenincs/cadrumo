@@ -404,21 +404,22 @@ def assert_attachment_and_llm_surfaces(work_dir: Path, venv_path: Path) -> None:
     code = f"""
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from cadrumo.adapters.outbound.llm.client import LLMClient
-from cadrumo.adapters.outbound.llm.models import LLMProvider
+from cadrumo.adapters.outbound.llm.errors import LLMConfigError
+from cadrumo.adapters.outbound.llm.models import LLMProvider, LLMRequest
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.master_key.active_session import activate_session
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.core.config import Settings
-from cadrumo.core.errors.error_codes import resolve_error_message
-from cadrumo.core.optional_extras import ANTHROPIC_EXTRA, MissingOptionalExtraError
+from cadrumo.core.model_catalogue import ModelRole
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import (
     AttachmentBytesContent,
@@ -474,13 +475,18 @@ finally:
     session.close()
     dispose_engine(settings)
 
+agent_request = LLMRequest(
+    prompt="packaging smoke",
+    provider_override=LLMProvider.AGENT,
+    model_role=ModelRole.TEXT_EXTRACTION,
+)
 try:
-    LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
-except MissingOptionalExtraError as exc:
-    if exc.extra != ANTHROPIC_EXTRA or "cadrumo[anthropic]" not in resolve_error_message(exc, locale="en"):
-        raise SystemExit("Anthropic missing-extra refusal lost its registered identity or install guidance")
+    asyncio.run(LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state")).complete(agent_request))
+except LLMConfigError as exc:
+    if (exc.context or dict()).get("model_run_refusal") != "service_unavailable":
+        raise SystemExit("an agent dispatch outside an operation refused for the wrong reason")
 else:
-    raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")
+    raise SystemExit("an agent dispatch outside an operation reached a model")
 
 print("attachment-and-llm-surfaces-ok")
 """
@@ -489,7 +495,7 @@ print("attachment-and-llm-surfaces-ok")
         [str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env, marker="attachment-and-llm-surfaces-ok"
     )
     record_proof("attachment storage round-trip")
-    record_proof("core LLM missing-extra boundary")
+    record_proof("core LLM agent dispatch refuses without a service")
 
 
 def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:

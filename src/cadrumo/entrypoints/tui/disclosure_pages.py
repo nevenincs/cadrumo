@@ -7,7 +7,8 @@ application's pager; this module only words what it reads.
 
 from __future__ import annotations
 
-from ...application.user_profile.access_contracts import DisclosurePage, EffectiveScopeSummary
+from cadrumo_client.contracts.access_vocabulary import DisclosurePage, EffectiveScopeSummary
+
 from ...core.i18n.render import tr
 
 

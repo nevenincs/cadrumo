@@ -98,8 +98,8 @@ def archive_export(
     _activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ConfigProfileArchiveExportResult
     from cadrumo_client.commands.profile_binding import bound_profile_client
+    from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
-    from ....application.user_profile.access_contracts import AccessDenialCode
     from ....application.user_profile.access_errors import ProfileAccessRefusedError
     from ....application.user_profile.archive_operation import ProfileArchiveExportRequest
     from ..operation_profile_archive import run_profile_archive_export

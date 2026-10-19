@@ -17,12 +17,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
 from cadrumo_client.transport import posix_channel
 from cadrumo_client.transport.posix_channel import PosixChannel

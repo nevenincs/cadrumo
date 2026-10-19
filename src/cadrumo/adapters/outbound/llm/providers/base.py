@@ -1,7 +1,7 @@
 """Provider adapter contract for the LLM outbound subpackage.
 
 Defines the normalized request and response shapes that every concrete provider
-adapter (Anthropic, OpenAI, Gemini, and local) consumes and produces,
+adapter (the agent adapter and the local one) consumes and produces,
 so the higher-level :class:`~llm.LLMClient` can stay
 provider-agnostic. Adapters live in sibling modules under
 :mod:`llm.providers`.
@@ -20,13 +20,11 @@ from pydantic import BaseModel, Field, ValidationError
 
 from .....core.config_support import LLMProvider
 from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.operator_action_enums import ActionEvidenceProvenance
-from ..errors import LLMConfigError, LLMProviderError, LLMRateLimitError, LLMTransientTransportError
+from ..errors import LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 from ..models import MultimodalImageInput
-from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 if TYPE_CHECKING:
-    from logging import Logger
+    pass
 
 
 class ProviderRequest(BaseModel):
@@ -123,50 +121,6 @@ class ProviderAdapter(ABC):
 
     provider: LLMProvider
     supports_images: bool = False
-    _api_key: str
-    _timeout_s: int
-
-    def _configure_api_key(self, api_key: str, timeout_s: int) -> None:
-        """Bind credentials and timeout for an API-key-backed provider."""
-        if not api_key:
-            raise LLMConfigError(
-                context={"provider": self.provider.value, "provider_credentials_present": False},
-                precondition_verdict=llm_no_recovery_verdict(
-                    LLMPreconditionCondition.PROVIDER_CREDENTIALS_PRESENT,
-                    facts={"provider": self.provider.value, "provider_credentials_present": False},
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                ),
-            )
-        self._api_key = api_key
-        self._timeout_s = timeout_s
-
-    async def _request_completion[ResponseModel: BaseModel](
-        self,
-        request: ProviderRequest,
-        *,
-        endpoint: str,
-        headers: Mapping[str, str] | None,
-        json: object,
-        response_model: type[ResponseModel],
-        logger: Logger,
-    ) -> ResponseModel:
-        """Send and validate one HTTP provider completion response."""
-        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-            response = await post_provider_request(
-                client,
-                endpoint,
-                provider_name=self.provider.value,
-                model=request.model,
-                logger=logger,
-                headers=headers,
-                json=json,
-            )
-        check_http_error(response, provider_name=self.provider.value, model=request.model, logger=logger)
-        return parse_provider_response(
-            response,
-            provider_name=self.provider.value,
-            response_model=response_model,
-        )
 
     def unsupported_parameters(self, model: str) -> frozenset[str]:
         """Return the request parameters this adapter must NOT put on the wire for *model*.

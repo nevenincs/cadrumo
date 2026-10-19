@@ -107,6 +107,26 @@ def assemble_native(
                 "reason": "Relocated explicit pdfium DLL path",
             }
         )
+    # Playwright starts its Node driver from beside the package; point that default at
+    # the relocated executable while keeping its own PLAYWRIGHT_NODEJS_PATH override.
+    driver = packages / "playwright/_impl/_driver.py"
+    if driver.is_file():
+        before = digest(driver)
+        source = driver.read_text(encoding="utf-8")
+        old = 'str(driver_path / "node.exe")'
+        relative_node = (native / "packages/playwright/driver/node.exe").relative_to(root).as_posix()
+        if source.count(old) != 1 or not (root / relative_node).is_file():
+            raise ValueError("Unrecognized Playwright driver loader")
+        new = f"str(Path(sys.executable).parent / {relative_node!r})"
+        driver.write_text(source.replace(old, new), encoding="utf-8")
+        patches.append(
+            {
+                "file": driver.relative_to(root).as_posix(),
+                "before": before,
+                "after": digest(driver),
+                "reason": "Relocated Playwright Node driver path",
+            }
+        )
     com_init = packages / "win32com/__init__.py"
     if com_init.is_file():
         before = digest(com_init)

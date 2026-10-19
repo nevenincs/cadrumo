@@ -47,17 +47,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmissionState
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-    SessionKind,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
 from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationAvailability, WorkbenchGenerationV1
 from cadrumo.application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
@@ -92,6 +82,13 @@ from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScree
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,

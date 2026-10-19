@@ -14,16 +14,7 @@ from textual.pilot import Pilot
 from textual.widgets import Button, Input, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-    SessionKind,
-    SessionState,
-)
+from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
@@ -34,6 +25,14 @@ from cadrumo.application.user_profile.operations import (
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.i18n.render import tr
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    EffectiveScopeSummary,
+)
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus, SessionsLocked

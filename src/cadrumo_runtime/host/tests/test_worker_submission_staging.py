@@ -8,8 +8,8 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.hashing import sha256_hex
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,
     SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,

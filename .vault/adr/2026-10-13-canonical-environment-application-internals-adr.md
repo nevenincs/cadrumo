@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-13'
-modified: '2026-10-17'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef282d2137bf610076da6835a7b6916dc8b829a002c79731f90769bce679bf10'
+body_hash: 'sha256:eec72692483caba296b4ea50fb9c7fc7dfe51f2cec852c0283f6e0fc3fadd6fa'
 related:
   - "[[2026-10-04-canonical-environment-adr]]"
   - "[[2026-10-03-application-packaging-interpreter-foundation-adr]]"
@@ -155,7 +155,7 @@ Binding; accepted 2026-10-13.
      - session and lock policy (`CADRUMO_BUCKET_DEFAULT_*`, the lock timings);
      - retention and size limits, which govern custody lifecycle;
      - calculation semantics (`FINANCIAL_BASE_CURRENCY`, `CADRUMO_DRAFT_FAIL_ON_WARNING`);
-     - network routing (`CADRUMO_PROXY_*`);
+     - network routing (`CADRUMO_PROXY_*`). (Noted 2026-10-18 under the ruling recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` D6, where the principal took the integration agent's recommendation: the proxy address, user name and bypass list enter as pass-through names of the `cadrumo-runtime` and `python` profiles only, so setup that the runtime's profile worker runs follows the operator's proxy; the password setting stays out under constraint 12, and no operator-facing image admits them.)
      - development and test names (`CADRUMO_DEV_*`, `CADRUMO_LIVE_TESTS_*`, `CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE`, `CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION`);
      - the severed `CADRUMO_ACTIVE_PROFILE` (rule 13).
    - **Remote-interaction set (user decision, 2026-10-13: "yes include browser and network settings as overrides"),** for the same images. These are timing and display settings only:
@@ -540,3 +540,13 @@ Generic runtime/login/custody/session implementation is now `src/cadrumo_runtime
 > - Not claimed: environment definition is not a process sandbox (`2026-10-03-application-packaging-interpreter-foundation-adr`). Acceptance would not show any consumer implements it.
 > - Reconsider if a native consumer must read the file at run time, if the agent stops configuring its worker through the environment or starts running frozen, or if an operator configuration file is adopted.
 >
+
+## Provider executable discovery amendment 2026-10-17
+
+Accepted within the owner's direction to keep improving the actual desktop sign-in flow. The normal packaged launch cannot find user-installed provider CLIs unless an operator supplies CADRUMO_EXTERNAL_BIN_DIRS; the earlier successful probe supplied this override. The packaged provider_auth_smoke.py check reproduced provider_unavailable without it. Provider installation discovery is distinct from credentials: provider-owned homes remain under the canonical per-profile Cadrumo root, and ordinary user provider sign-in is never imported.
+
+Constraints 6 and 17 are refined: the package declaration may name generic, conventional user/system executable directories as defaults for profiles that already admit external binaries. The shared native resolver uses only declared absolute anchors and existing directories; it never inherits ambient PATH, searches the working directory, runs a shell profile, or discovers credentials. Package binaries and explicit external directories retain their existing precedence over these defaults. Runtime profiles that do not admit external directories remain unchanged. Missing default directories are ignored; malformed explicit overrides retain their existing refusal. Explicit overrides extend this search and do not suppress defaults when the service adds its packaged Node directory.
+
+The initial declaration covers Windows USERPROFILE/.local/bin, USERPROFILE/scoop/shims and APPDATA/npm; POSIX HOME/.local/bin and /usr/local/bin; and Darwin /opt/homebrew/bin. These are generic installation directories, not a Cadrumo provider list. Provider names, executable resolution, supported sign-in methods and proof policy remain agent-owned. The declaration, generator, shared resolver and focused tests must change together. No persistent application setting or new environment override is introduced, so the 2026-10-04 canonical-environment operator-file exclusion is unchanged.
+
+Alternatives considered: importing ambient PATH would admit arbitrary shell/workspace search locations; an operator environment-variable workaround does not deliver the requested GUI experience; a persisted executable picker would introduce a new configuration authority. The declared defaults are the narrowest repair for common installed CLIs. Nonstandard installation locations continue to use the existing explicit override. Reconsider the exact defaults when provider distribution changes; discovery is not provider availability or completed sign-in proof.

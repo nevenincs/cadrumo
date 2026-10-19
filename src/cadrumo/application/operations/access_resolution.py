@@ -9,16 +9,17 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ...core.period import Period
-from ..user_profile.access_contracts import (
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    AccessDenialCode,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
     OperationAccessPolicy,
     OperationAccessRequest,
 )
+
+from ...core.period import Period
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .access_port import OperationAccessResolver
 from .frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID

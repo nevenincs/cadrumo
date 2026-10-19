@@ -18,8 +18,9 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
 from cadrumo.core.config import override_settings
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix import posix_owner_uid
 

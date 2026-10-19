@@ -7,7 +7,8 @@ from pathlib import Path
 from threading import RLock
 from typing import TYPE_CHECKING
 
-from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .bucket_session import BucketSession
 
 if TYPE_CHECKING:

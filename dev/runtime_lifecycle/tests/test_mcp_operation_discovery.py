@@ -23,11 +23,11 @@ import pytest
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import ProfileAccessStatus
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_PATCH_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_harness.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import stored_sign_in_runtime

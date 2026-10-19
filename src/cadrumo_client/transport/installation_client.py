@@ -2,8 +2,9 @@
 
 This client needs no profile and holds no session. It sends one act, carries
 the act's secret frames when the act has them, and returns the act's reply. It
-never starts, stops or supervises the runtime: an absent runtime is a typed
-refusal.
+also asks the runtime which profile is selected or signed in, and which profile
+an operator's text names, so no frontend reads the selection itself. It never
+starts, stops or supervises the runtime: an absent runtime is a typed refusal.
 """
 
 from __future__ import annotations
@@ -14,19 +15,22 @@ from collections.abc import Callable
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import NoReturn, Self
+from uuid import uuid4
 
 from pydantic import SecretBytes
 
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 
+from ..contracts.automation_codes import AutomationCustodyCode
 from ..contracts.contracts import ClientHello, EndpointPresence, RefusalCode, RefusalError
 from ..contracts.deadline_budget import deadline_after
 from ..contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
+    INSTALLATION_ACT_DEFAULT_DEADLINE_SECONDS,
     INSTALLATION_SECRET_HANDOVER_SECONDS,
     InstallationActRequest,
     InstallationCompleted,
@@ -38,6 +42,7 @@ from ..contracts.installation_requests import (
     installation_act_of,
 )
 from ..contracts.profile_access import AccessRefusal, SecretReady
+from ..contracts.profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
 from .frame_io import read_secret, write_document
 from .framing import VerifiedConnection
 from .frontend_client_contracts import FrontendRefusedError
@@ -66,6 +71,23 @@ def installation_passphrase_document(passphrase: bytearray) -> bytearray:
         return bytearray(canonical_json_bytes({"passphrase": passphrase.decode("utf-8")}))
     finally:
         passphrase[:] = bytes(len(passphrase))
+
+
+def installation_new_passphrase_document(passphrase: bytearray, confirmation: bytearray) -> bytearray:
+    """Build the one secret frame of an act that sets a profile's first passphrase.
+
+    Both buffers are consumed and wiped. The runtime compares them, so a
+    mistyped confirmation is refused there as it is on every frontend.
+    """
+    try:
+        return bytearray(
+            canonical_json_bytes(
+                {"passphrase": passphrase.decode("utf-8"), "passphrase_confirmation": confirmation.decode("utf-8")}
+            )
+        )
+    finally:
+        passphrase[:] = bytes(len(passphrase))
+        confirmation[:] = bytes(len(confirmation))
 
 
 class InstallationClient:
@@ -112,6 +134,38 @@ class InstallationClient:
             retained.resource = self
             return retained
         return TransportCleanup(self)
+
+    def active_profile(self, *, timeout: float = INSTALLATION_ACT_DEFAULT_DEADLINE_SECONDS) -> ActiveProfileReply:
+        """Ask which profile is selected and which holds the live sign-in; the answer grants nothing.
+
+        Raises:
+            FrontendRefusedError: The host refused to answer this peer.
+            RefusalError: The transport refused, or the reply broke its contract.
+        """
+        request = ActiveProfileRequest(request_id=uuid4())
+        reply = self._connection.active_profile(request, deadline=deadline_after(timeout))
+        if isinstance(reply, AccessRefusal):
+            _raise_wire_refusal(reply)
+        if reply.request_id != request.request_id:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return reply
+
+    def login_target(
+        self, name: str, *, timeout: float = INSTALLATION_ACT_DEFAULT_DEADLINE_SECONDS
+    ) -> LoginTargetReply:
+        """Ask which live profile ``name`` names by identifier or exact label; a reply naming none is not a refusal.
+
+        Raises:
+            FrontendRefusedError: The host refused to answer this peer.
+            RefusalError: The transport refused, or the reply broke its contract.
+        """
+        request = LoginTargetRequest(request_id=uuid4(), name=name)
+        reply = self._connection.login_target(request, deadline=deadline_after(timeout))
+        if isinstance(reply, AccessRefusal):
+            _raise_wire_refusal(reply)
+        if reply.request_id != request.request_id:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return reply
 
     def perform[ReplyT: InstallationCompleted](
         self,
@@ -257,8 +311,10 @@ class _OwnedRelease:
 
 
 def _installed_endpoint(root: Path) -> WindowsEndpoint | PosixEndpoint:
-    """Name the native endpoint that owns ``root``."""
-    return WindowsEndpoint(storage_root=root) if sys.platform == "win32" else PosixEndpoint(storage_root=root)
+    """Name the native endpoint that owns ``root``, as a client that never creates the runtime's namespace."""
+    if sys.platform == "win32":
+        return WindowsEndpoint(storage_root=root)
+    return PosixEndpoint(storage_root=root, create_namespace=False)
 
 
 async def installed_connection_presence() -> EndpointPresence:

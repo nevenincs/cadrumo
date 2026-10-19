@@ -8,15 +8,16 @@ from uuid import UUID
 import typer
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError, resolve_login_target
-from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo_client.commands.custody_payloads import ConfigActivityResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.profile_selection import command_profile_id, require_runtime_login_target
+from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_refusal, session_refusal_translation_key
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .presentation import activate_subcommand_output_language, emit_envelope
-from .profile_admission import _raise_frontend_refusal, _session_refusal_key, runtime_root_context
+from .profile_admission import runtime_root_context
 
 
 def config_activity(ctx: typer.Context, output_language: OutputLanguage | None = None) -> None:
@@ -24,9 +25,9 @@ def config_activity(ctx: typer.Context, output_language: OutputLanguage | None =
     activate_subcommand_output_language(ctx, output_language)
     profile = runtime_root_context(ctx).profile
     if profile is None:
-        bucket_id = observe_active_profile_pointer().bucket_id
+        bucket_id = command_profile_id()
     else:
-        target = resolve_login_target(profile)
+        target = require_runtime_login_target(profile)
         bucket_id = str(target.bucket_id)
         ctx.find_root().ensure_object(dict)["cadrumo.runtime.profile_label"] = target.label
     if bucket_id is None:
@@ -41,11 +42,11 @@ def config_activity(ctx: typer.Context, output_language: OutputLanguage | None =
         client.note_activity()
     except ProfileReceiptRefusedError as error:
         raise CliRefusedBoundaryError(
-            translated_message=_session_refusal_key(error.reason, error.binding),
+            translated_message=session_refusal_translation_key(error.reason, error.binding),
             context={"reason": error.reason.value},
         ) from None
     except FrontendRefusedError as error:
-        _raise_frontend_refusal(error)
+        raise_connection_refusal(error)
     finally:
         client.close()
     emit_envelope(

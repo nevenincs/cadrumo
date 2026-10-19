@@ -18,13 +18,14 @@ def _event(attempt: str, event: str, **fields: object) -> bytes:
     ).encode()
 
 
-def test_valid_browser_and_device_actions_follow_correlated_handshake() -> None:
+@pytest.mark.parametrize("query", ["state=opaque", "state=opaque&code=true"])
+def test_valid_browser_and_device_actions_follow_correlated_handshake(query: str) -> None:
     attempt = str(uuid4())
     protocol = AuthProtocol("example")
     for event in ("ready", "started"):
         assert protocol.read(_event(attempt, event)).event == event
     action = protocol.read(
-        _event(attempt, "browser_action", url="https://example.org/login?state=opaque", user_code="ABCD-EFGH")
+        _event(attempt, "browser_action", url=f"https://example.org/login?{query}", user_code="ABCD-EFGH")
     )
     assert action.user_code == "ABCD-EFGH"
     assert "ABCD-EFGH" not in repr(action)
@@ -45,6 +46,10 @@ def test_valid_browser_and_device_actions_follow_correlated_handshake() -> None:
         {"url": "file:///secret"},
         {"url": "https://example.org/login?access_token=secret"},
         {"url": "https://example.org/login?code=secret"},
+        {"url": "https://example.org/login?code="},
+        {"url": "https://example.org/login?code=false"},
+        {"url": "https://example.org/login?code=true&Code=true"},
+        {"url": "https://example.org/login?Access_Token="},
         {"url": "https://example.org", "user_code": "sensitive arbitrary text"},
         {"url": "https://example.org", "provider": "other"},
         {"url": "https://example.org", "attempt_id": str(uuid4())},

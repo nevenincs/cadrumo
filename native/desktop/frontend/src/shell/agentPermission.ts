@@ -12,7 +12,7 @@ import type { AgentApprovalOption } from "./agentSession";
 export const remembers = (option: AgentApprovalOption): boolean =>
   option.kind === "allow_always" || option.kind === "reject_always";
 
-/** The options to put to the person: those that answer this call alone,
+/** The options to put to the person: those bounded to this call or run,
  * or, when there are none, every option the agent offered. */
 export function offeredOptions(
   options: readonly AgentApprovalOption[],

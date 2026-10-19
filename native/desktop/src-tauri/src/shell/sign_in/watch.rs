@@ -111,7 +111,8 @@ impl Watch {
             {
                 let fence = lock(&self.inner.fence);
                 if fence.mutations != 0 {
-                    return Err(failure(ErrorCode::SessionUnavailable));
+                    return Err(failure(ErrorCode::SessionUnavailable)
+                        .with_reason("sign_in_mutation_in_progress"));
                 }
                 let snapshot = receiver.borrow_and_update();
                 if snapshot.sequence > fence.stale_through
@@ -431,9 +432,11 @@ mod tests {
         publish(&watch.inner, Ok(present.clone()));
         assert_eq!(watch.current().await.unwrap(), present);
         let mutation = watch.mutation();
+        let pending = watch.current().await.unwrap_err();
+        assert_eq!(pending.code, ErrorCode::SessionUnavailable);
         assert_eq!(
-            watch.current().await.unwrap_err().code,
-            ErrorCode::SessionUnavailable
+            pending.reason.as_deref(),
+            Some("sign_in_mutation_in_progress")
         );
         drop(mutation);
         assert!(

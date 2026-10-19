@@ -49,6 +49,7 @@ def _location(
     create_explicit_directory: bool = False,
     fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
     derives_settings_default: bool = True,
+    runtime_owned: bool = False,
 ) -> StorageLocation:
     """Build one declaration, defaulting the axes most members share."""
     return StorageLocation(
@@ -59,6 +60,7 @@ def _location(
         default_anchor=default_anchor,
         override_policy=override_policy,
         create_explicit_directory=create_explicit_directory,
+        runtime_owned=runtime_owned,
         lifecycle=lifecycle,
         grouping=grouping,
         fingerprint_participation=fingerprint_participation,
@@ -138,6 +140,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         consumer_module="core/connection_transport.py",
         settings_field="cadrumo_connection_socket_dir",
         environment_variable=CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE,
+        runtime_owned=True,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
@@ -149,6 +152,18 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         settings_field="cadrumo_playwright_browsers_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    # One non-secret setup receipt per installed item. Receipts are evidence a
+    # status probe compares against, never authority, and they sit beside the
+    # components they describe, so they follow the root rather than moving alone.
+    _location(
+        StorageCategory.DEPENDENCY_RECEIPTS,
+        "components/receipts",
+        consumer_module="application/dependency_receipts.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
@@ -656,6 +671,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
             subpath,
             consumer_module="cadrumo_client/transport/installation.py",
             node_kind=node_kind,
+            runtime_owned=True,
             lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
             grouping=StorageGrouping.STATE,
             override_policy=StorageOverridePolicy.FIXED,
@@ -994,8 +1010,9 @@ def storage_tree_targets(
     failure would surface much later, at the write.
 
     Members with no settings field are fixed layout the bucket lifecycle
-    provisions per bucket, and members whose field is absent are opt-in
-    locations the operator has not asked for; neither is materialised here.
+    provisions per bucket, members whose field is absent are opt-in
+    locations the operator has not asked for, and runtime-owned members are
+    created only by the installed runtime; none is materialised here.
     ``include_explicit`` and ``include_derived`` select settings named in, or
     absent from, ``Settings.model_fields_set``. This lets callers
     distinguish application-owned defaults from operator-owned dependencies
@@ -1026,7 +1043,7 @@ def _storage_tree_target(
     derived_groupings: frozenset[StorageGrouping] | None,
 ) -> Path | None:
     field = location.settings_field
-    if field is None:
+    if field is None or location.runtime_owned:
         return None
     if uses_external_transport(location, settings):
         return None

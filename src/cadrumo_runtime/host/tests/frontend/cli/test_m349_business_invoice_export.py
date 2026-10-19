@@ -21,7 +21,7 @@ from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceReso
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from .cli_runner import invoke_cached_cli
 

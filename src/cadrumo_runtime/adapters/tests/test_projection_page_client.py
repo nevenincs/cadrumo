@@ -33,16 +33,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    ProfileAccessBinding,
-)
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -55,6 +46,15 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.period import Period
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.operation_access import (
     OperationPage,

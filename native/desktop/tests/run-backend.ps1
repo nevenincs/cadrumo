@@ -13,7 +13,7 @@
   Package adds real PTY/projection probes against an existing assembled package;
   use Filter to select a capability. Neither mode starts the GUI or rebuilds the
   supplied package. Clippy checks native targets. Cargo compiles test artifacts
-  incrementally in the selected preset's declared desktop_cargo output.
+  incrementally in desktop_testing/backend-cargo, separate from the app image.
 .EXAMPLE
   ./native/desktop/tests/run-backend.ps1 -Filter shell::sign_in
 .EXAMPLE

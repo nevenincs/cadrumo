@@ -10,7 +10,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from .cli_runner import invoke_cached_cli
 

@@ -11,6 +11,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.confirmation_gate import confirmation_blockers
 from ....application.ledger.consent_withdrawal import ConsentedDispatch
@@ -89,11 +91,6 @@ from ....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationRegistry,
-)
-from ....application.user_profile.access_contracts import (
-    AccessAction,
-    Availability,
-    DisclosureCategory,
 )
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.config import Settings, load_settings

@@ -306,7 +306,12 @@ export type AgentApprovalOption = {
    * allowing or refusing, this call or later ones too. The agent offers an
    * option it would remember only when it offers nothing else; the column
    * leaves such an option out beside any that answers this call alone. */
-  kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
+  kind:
+    | "allow_once"
+    | "allow_session"
+    | "allow_always"
+    | "reject_once"
+    | "reject_always";
 };
 
 /** What a tool does, as cadrumo-agent classes it. */
@@ -353,6 +358,16 @@ export type AgentApproval = {
  * The host takes a run's frames in order and tells what its stream cannot:
  * `reply_started` and `resolved` are its own (the agent sends no such frames),
  * and `lost` is sent only when a stream could not be resumed. */
+/** Why the product refused a tool call that failed, as cadrumo-agent read it
+ * from the tool's result and the host checked it again: the refusal's closed
+ * token, and the operator action that recovers from it where the refusal
+ * names one, such as `operator.provision.browser`. Identifiers for routing,
+ * never shown. */
+export type AgentToolRefusal = {
+  code: string;
+  recovery_action_id?: string;
+};
+
 export type AgentStreamEvent =
   /** The host's, before the first frame it maps of a run. */
   | { type: "reply_started"; reply_id: string }
@@ -369,11 +384,22 @@ export type AgentStreamEvent =
       /** Text to append to the message. */
       delta: string;
     }
+  /** The agent's own reasoning, numbered in the same sequence as its text.
+   * Only the stream has it: the history keeps no thought. */
+  | {
+      type: "thought";
+      reply_id: string;
+      message_id: string;
+      sequence: number;
+      /** Reasoning to append to the reply's thoughts. */
+      delta: string;
+    }
   | {
       type: "tool";
       reply_id: string;
-      /** The tool call, whole, each time it changes. */
-      tool: AgentToolCall;
+      /** The tool call, whole, each time it changes; `refusal` only on a
+       * call that has failed because the product refused it. */
+      tool: AgentToolCall & { refusal?: AgentToolRefusal };
     }
   /** The agent's own frame (`clarification_pending`) is only a nudge that
    * names the request; the host reads the questionnaire from the run's

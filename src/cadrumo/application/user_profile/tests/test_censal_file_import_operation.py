@@ -14,11 +14,6 @@ from cadrumo.application.operations.capabilities import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.censal_file_import_operation import (
     CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,
@@ -30,6 +25,8 @@ from cadrumo.application.user_profile.censal_file_import_operation import (
     resolve_censal_file_import_operation_access,
 )
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

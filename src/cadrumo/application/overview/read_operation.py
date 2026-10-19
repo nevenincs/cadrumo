@@ -6,6 +6,8 @@ from functools import partial
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import override_settings
 from ...core.operations import profile_operation_subject
@@ -20,7 +22,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .read_ports import OverviewReadPortsFactory
 from .read_request import (

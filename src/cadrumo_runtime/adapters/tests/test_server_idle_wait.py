@@ -13,12 +13,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
 from cadrumo_client.transport.framing import VerifiedConnection

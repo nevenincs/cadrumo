@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
@@ -23,7 +24,6 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .attachment_review import get_attachment_review_item, list_attachment_review_queue
 from .confirmation_gate import ConfirmationBlocker, confirmation_blockers

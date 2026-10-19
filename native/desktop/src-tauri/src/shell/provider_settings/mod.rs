@@ -49,6 +49,24 @@ fn outcome(result: Value) -> Outcome {
         active_profile: None,
     }
 }
+
+/// Recheck current profile settings before accepting an agent message. A
+/// running gateway remains available for settings even with no usable provider.
+pub(crate) fn agent_selection_available(
+    host: &AgentHost,
+    provider: &str,
+    transport: &str,
+) -> Result<bool, ApplicationError> {
+    let answer = host.administer(json!({"action":"status"}), None)?;
+    match wire::status(outcome(answer)) {
+        Ok(status) => Ok(status.permits_agent(provider, transport)),
+        Err(CommandFailure::Host(error)) => Err(error),
+        Err(CommandFailure::Refused(_)) => {
+            Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("provider_settings_unavailable"))
+        }
+    }
+}
 async fn execute(
     host: &State<'_, Arc<AgentHost>>,
     request: Value,
@@ -65,6 +83,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         provider_settings_status,
         provider_settings_set,
         provider_settings_remove,
+        provider_settings_turn_on,
         provider_settings_reset,
         provider_sign_in_start,
         provider_sign_in_status,
@@ -114,6 +133,16 @@ pub async fn provider_settings_remove(
     revision: String,
 ) -> Result<Entry, CommandFailure> {
     change(&state, "remove", &provider, &revision).await
+}
+/// Turn an off lane back on with what it kept: its stored key, or its
+/// provider's own sign-in.
+#[tauri::command]
+pub async fn provider_settings_turn_on(
+    state: State<'_, Arc<AgentHost>>,
+    provider: String,
+    revision: String,
+) -> Result<Entry, CommandFailure> {
+    change(&state, "turn_on", &provider, &revision).await
 }
 #[tauri::command]
 pub async fn provider_settings_reset(

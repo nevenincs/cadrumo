@@ -11,6 +11,9 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.config import override_settings
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -25,14 +28,6 @@ from ...operations.operation_definition import OperationDefinition
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..export_operation import (

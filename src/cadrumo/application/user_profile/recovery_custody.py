@@ -33,6 +33,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
+
 from ...core.credentials import assess_profile_password
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.profile import ProfileId
@@ -40,7 +43,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
 from ...core.time.clock import now as _now
 from .authentication import ProfilePasswordProofOperation
-from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
     default_profile_record_crypto_port,
@@ -54,7 +56,6 @@ from .custody_ports import (
     unlock_profile_custody_recovery,
 )
 from .custody_repository import profile_custody_transaction_lock
-from .login_session import ProfileLoginThrottledError
 from .login_session_port import profile_login_session_port
 from .passphrase_rotation import ProfilePassphraseReplacementProof, rewrap_profile_passphrase_under_lock
 from .prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal

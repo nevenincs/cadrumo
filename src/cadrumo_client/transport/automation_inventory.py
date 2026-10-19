@@ -12,7 +12,6 @@ from cadrumo.application.operations.frontend_projection import OperationPublicPr
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import DisclosurePageRequest
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
@@ -23,6 +22,7 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
+from ..contracts.access_vocabulary import DisclosurePageRequest
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import bounded_deadline_after
 from .frontend_client import FrontendClient

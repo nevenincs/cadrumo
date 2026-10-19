@@ -29,9 +29,10 @@ from cadrumo.application.operations.subject_reference import (
     expected_operation_subject,
 )
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, DisclosurePageRequest
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import DisclosurePageRequest
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.operation_access import (
@@ -58,7 +59,12 @@ from .protocol_contract import (
     refusal_code,
     sign_in_remedy,
 )
-from .result_request import resolve_result_request, stopped_operation_detail
+from .result_request import (
+    resolve_result_request,
+    stopped_operation_code,
+    stopped_operation_detail,
+    stopped_operation_recovery_action,
+)
 from .runtime_admission import NO_SESSION, AdmissionDenial, McpAdmission, status_on_surface
 from .surfaces import McpSurface
 
@@ -141,6 +147,8 @@ def _admitted_status(
     reply: dict[str, Any] = {
         "outcome": "status",
         # A lease the runtime now denies is no session, whatever admitted it.
+        "authenticated": status.credential_authenticated and status.denial is None,
+        "grant_required": admission is McpAdmission.KEY,
         "session": admission.value if status.denial is None else NO_SESSION,
         "surface": surface.name.value,
         "status": public_value(status),
@@ -200,7 +208,14 @@ def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], de
     contract = description.contract
     if operation_is_persons_act(contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
         # A credential or access act is the person's own; nothing is submitted.
-        return {"outcome": "refused", "code": AccessDenialCode.PERSON_ACT_REQUIRED.value, "remedy": PERSON_ACT_REMEDY}
+        refused: dict[str, Any] = {
+            "outcome": "refused",
+            "code": AccessDenialCode.PERSON_ACT_REQUIRED.value,
+            "remedy": PERSON_ACT_REMEDY,
+        }
+        if contract.action_reference is not None:
+            refused["recovery_action_id"] = contract.action_reference.action_id
+        return refused
     try:
         submission = _submission(client, contract, args)
     except _ContractRefusedError as refused:
@@ -409,9 +424,13 @@ def _result(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
     request = resolve_result_request(client, binding.contracts, args["result"], deadline)
     document = client.read_result_document(request, deadline=deadline)
     reply: dict[str, Any] = {"outcome": "reply", "document": document}
+    if (code := stopped_operation_code(document)) is not None:
+        reply["code"] = code
     detail = stopped_operation_detail(client, request, document, deadline)
     if detail is not None:
         reply["error_detail"] = detail
+        if (action := stopped_operation_recovery_action(detail)) is not None:
+            reply["recovery_action_id"] = action
     return reply
 
 

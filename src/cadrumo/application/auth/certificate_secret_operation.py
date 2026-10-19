@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, SecretStr
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -32,9 +34,6 @@ from ..operations.registry import (
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .certificate_source_operations import (

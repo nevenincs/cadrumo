@@ -15,12 +15,13 @@ const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
 
-// The shell's two generated inputs, by the names the shell imports them
+// The shell's generated inputs, by the names the shell imports them
 // under. They are outputs of the build directory in use, so one build's are
 // never another's and nothing generated is written into the source tree.
 const GENERATED_INPUTS: Record<string, string> = {
   "virtual:desktop-strings": "chrome-strings.json",
   "virtual:desktop-palette.css": "palette.css",
+  "virtual:desktop-provider-icons": "provider-icons.json",
 };
 
 export default defineConfig(({ command, mode }) => {

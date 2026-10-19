@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -32,9 +34,6 @@ from ..operations.profile_guard import (
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import WorkUnitHistory, assemble_work_unit_history
 from .history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory

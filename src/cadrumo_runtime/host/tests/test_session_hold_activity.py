@@ -49,6 +49,9 @@ class FakeClient:
     def subscribe_attendance_changes(self, callback):
         return lambda: None
 
+    def subscribe_operation_changes(self, callback):
+        return lambda: None
+
     def close(self):
         pass
 

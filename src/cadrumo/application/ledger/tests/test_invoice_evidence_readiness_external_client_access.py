@@ -10,6 +10,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
@@ -19,7 +21,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability
 from ..invoice_evidence_readiness_operation import (
     LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
     LedgerEvidenceReaderReadinessExecutionResult,

@@ -265,8 +265,9 @@ without its options and arguments.
 | `aeat app quickfile` | `modelo.quickfile` | none |
 | `aeat app review queue` | `app.review.queue` | none |
 | `aeat app review view` | `app.review.view` | none |
+| `aeat app tui` | none | the person's act |
 | `aeat config` | none | none |
-| `aeat config check` | `diagnostics.workstation.check` | none |
+| `aeat config check` | `dependencies.status`, `diagnostics.workstation.check` | none |
 | `aeat config collab recipient add` | `config.collab.recipient.add` | none |
 | `aeat config collab recipient list` | `config.collab.recipient.list` | none |
 | `aeat config collab recipient remove` | `config.collab.recipient.remove` | none |
@@ -284,7 +285,7 @@ without its options and arguments.
 | `aeat config profile capabilities set` | `user-profile.field-mutation`, `user-profile.view` | none |
 | `aeat config profile capabilities view` | `user-profile.view` | none |
 | `aeat config profile censo import` | `user-profile.censo-file-import` | `execute` `user-profile.censo-certificate-import` |
-| `aeat config profile censo pull` | `user-profile.censo-prepare`, `user-profile.censo-preview`, `user-profile.censo-review` | none |
+| `aeat config profile censo pull` | `auth.credential.save`, `auth.local-read`, `auth.provider.configure`, `user-profile.censo-prepare`, `user-profile.censo-preview`, `user-profile.censo-review`, `user-profile.field-mutation`, `user-profile.view` | the person's act |
 | `aeat config profile censo show` | `user-profile.censo-prepare` | none |
 | `aeat config profile complete-setup` | `user-profile.complete-setup`, `user-profile.view` | none |
 | `aeat config profile create` | `user-profile.patch`, `user-profile.view` | the person's act |
@@ -304,17 +305,16 @@ without its options and arguments.
 | `aeat config profile status` | `user-profile.view` | none |
 | `aeat config profile validate` | `user-profile.view` | none |
 | `aeat config profile view` | `user-profile.view` | none |
-| `aeat config provision browser` | none | `execute` `browser-runtime.provision` |
-| `aeat config provision install` | none | `execute` `local-reader.provision` |
-| `aeat config provision load` | none | `execute` `local-reader.provision` |
-| `aeat config provision probe` | none | `execute` `local-reader.status` |
-| `aeat config provision pull` | none | `execute` `local-reader.provision` |
-| `aeat config provision remove` | none | `execute` `local-reader.provision` |
-| `aeat config provision report` | none | `execute` `local-reader.report` |
-| `aeat config provision setup` | none | `execute` `local-reader.provision` |
-| `aeat config provision start` | none | `execute` `local-reader.provision` |
-| `aeat config provision status` | none | `execute` `local-reader.status` |
-| `aeat config provision verify` | none | `execute` `local-reader.provision` |
+| `aeat config provision browser` | `dependencies.setup` | none |
+| `aeat config provision load` | `local-reader.provision` | none |
+| `aeat config provision probe` | `dependencies.status` | none |
+| `aeat config provision pull` | `dependencies.setup` | none |
+| `aeat config provision remove` | `local-reader.provision` | none |
+| `aeat config provision report` | `local-reader.report` | none |
+| `aeat config provision setup` | `dependencies.setup` | none |
+| `aeat config provision start` | `local-reader.provision` | none |
+| `aeat config provision status` | `dependencies.status` | none |
+| `aeat config provision verify` | `dependencies.verify` | none |
 | `aeat config repair` | none | the person's act |
 | `aeat config repair connectivity` | none | `execute` `diagnostics.connectivity.probe` |
 | `aeat config repair integrity objects` | none | `execute` `diagnostics.secure-objects.check` |
@@ -349,13 +349,10 @@ named in that command's row above.
 - `auth.certificate.source.remove`
 - `auth.certificate.source.select`
 - `auth.diagnostics.phone-state-report`
-- `auth.local-read`
 - `auth.profile.passphrase-rotate`
-- `auth.provider.configure`
 - `auth.session.acquire`
 - `auth.session.logout`
 - `auth.session.reset`
-- `browser-runtime.provision`
 - `config.google.login`
 - `config.google.logout`
 - `config.google.status`
@@ -368,8 +365,6 @@ named in that command's row above.
 - `ledger.evidence.review.summary`
 - `ledger.history.typed`
 - `live.borrador.100.query`
-- `local-reader.provision`
-- `local-reader.report`
 - `local-reader.status`
 - `modelo.036.query`
 - `modelo.audit.query`

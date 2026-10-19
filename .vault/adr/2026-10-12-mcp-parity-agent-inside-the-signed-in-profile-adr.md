@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-12'
-modified: '2026-10-14'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:e5ee415a3c47ad14df9dccf81d70bad820f5d2263624c560ddf4638ab148cfc5'
+body_hash: 'sha256:faa94c500115cb6111737b3f0eb3ceee05a28d19d5bea108c50d26b6bb0370f0'
 related:
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
   - "[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]"
@@ -138,3 +138,9 @@ Amended 2026-10-12, constraint 7. Adopted 2026-10-12 under the owner's instructi
 Amended 2026-10-13, constraint 7, extending the amendment above. Adopted under the owner's instruction to follow the orchestrator's recommendations; awaiting the owner's explicit confirmation. A key issued for an agent also stores its operations as one grant of every operation an agent may run, the person's own acts excluded, resolved against the live registry at admission, as `2026-09-26-mcp-purpose-authentication-profile-access-adr` now rules. Its stored proposal is 721 bytes, against about 47 KB listed and about 8 KB with category grants alone, and the person's review and inventory count listed disclosures by category and page the full list on request, so the inventory holds many agent keys.
 
 Amended 2026-10-13, then withdrawn the same day on the owner's correction. On the ruling "there should be no agent capability at all if the user is not authenticated", relayed by UI-DESIGN1 after the desktop showed "Agent access you enabled stays on." following a sign-out, constraints 2, 3, 4, 6 and 7 and the consequences were amended so that an API key admitted only while the person was signed in, a sign-out, lock or expired sign-in ended every key session of the profile with its children, and the runtime refused a key with `sign_in_required` while nobody was signed in. The owner corrected that first-hand the same day: "incorrect, thats a defect: including ones that came in with an API key… the api key exists so that it isn't pegged to the login cycle". The constraints and consequences above are restored to their wording before that amendment. The ruling that no agent capability exists without a sign-in governs the agent Cadrumo itself hosts in the desktop; it does not govern keys the person issued, which still admit whether or not the person is signed in, and which a sign-out, lock, expiry or a sign-in to another profile does not end. The sign-out result keeps the persisted automation setting and reports separately, as `agent_access_remains`, whether an issued key can still admit an agent: true while automation is enabled and an active, unexpired key of an active unattended grant remains.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording of constraint 2, "by resuming the person's live sign-in for the active profile, through the runtime", is kept as accepted history. "The active profile" now means the profile the runtime names in its no-session active-profile answer. The MCP server never resolves it from the active-profile pointer file or any other local record; the CLI and the TUI ask the same question in the same way, and only the runtime writes the pointer. The answer grants nothing by itself. Admission is still only by resuming the sign-in, by attendance, or by the configured key. Constraint 5's binding to one profile for the server's life, and its refusal when the signed-in profile later differs, are unchanged.

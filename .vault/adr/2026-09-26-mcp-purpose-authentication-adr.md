@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-14'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:1428fbf5de05423a5a20c17217bf9e666c36c1ffd0edd524ddd11094d2fdc213'
+body_hash: 'sha256:30afd895acad0ee2d04d9456dc69e7cc082a80d66261363dacd85fec89360e81'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -193,3 +193,9 @@ Scope amendment accepted 2026-10-03 under the operator's explicit instruction to
 Scope amendment accepted 2026-10-04 under the operator's approval of `2026-10-04-runtime-manager-architecture-adr` and `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`. Launch, restart and upgrade policy resolve to the per-user runtime manager. The runtime hosts only the private supervisor contract. The adapter still must not stop a shared runtime, and no management surface returns to the transport, CLI or TUI.
 
 It is not a security sandbox for arbitrary code already running as the same OS account. It does not validate domain edges by exposing them. Accepted 2026-09-26 on the operator's instruction to continue the presented plan after the documentation handoff. The plan separately records authorization for runtime implementation; acceptance does not claim implementation or platform readiness.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "Profile-session and admitted-work inspection remain application capabilities." above is kept as accepted history. It now reads together with this ruling: Profile-session authority is the runtime's, implemented in `src/cadrumo_runtime`. Admitted-work inspection remains an application capability of the tax package, hosted by the runtime.

@@ -21,7 +21,6 @@ from cadrumo.application.live.tests.unopened_live_ports import (
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import CensalProfileBaseline
 from cadrumo.application.user_profile.censal_preview_operation import (
@@ -45,6 +44,7 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from . import registered_executor_case_support as conformance
 from .test_censal_operation_operand import _operand

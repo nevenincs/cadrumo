@@ -26,9 +26,6 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
     AccessSession,
     ProfileAccessBinding,
     SessionKind,
@@ -38,6 +35,8 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...bucket.errors import BucketLockedError

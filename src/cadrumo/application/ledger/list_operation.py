@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, PositiveInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -19,7 +21,6 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_manual import ledger_transaction_payload
 from .list_query import LedgerTransactionListQuery, query_ledger_transaction_list

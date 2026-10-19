@@ -213,8 +213,8 @@ test("a lane that is held back stays, saying why, and cannot be chosen", () => {
 
 test("what a way has been proven to do is the way's, and no model's", () => {
   const alpha = choices.providers.find((held) => held.id === "alpha");
+  // Tool use is the agent's machinery, not a capability to choose by.
   expect(alpha?.ways[0]?.capabilities).toEqual([
-    "desktop.agent.can_use_tools",
     "desktop.agent.can_search_web",
     "desktop.agent.can_read_pdfs",
   ]);
@@ -223,7 +223,44 @@ test("what a way has been proven to do is the way's, and no model's", () => {
       expect(model).not.toHaveProperty("capabilities");
 });
 
-test("known lane capabilities are localized and unknown proofs are skipped before formatting", () => {
+test("provider selection requires live authentication and configuration axes", () => {
+  const catalog = structuredClone(FIXTURE_CATALOG);
+  const cli = catalog.providers?.find(
+    (lane) => lane.provider_id === "beta" && lane.transport === "cli",
+  );
+  const api = catalog.providers?.find(
+    (lane) => lane.provider_id === "beta" && lane.transport === "api",
+  );
+  expect(cli).toBeDefined();
+  expect(api).toBeDefined();
+  if (!cli || !api) return;
+
+  // A stale/incorrect selectable bit cannot turn an unauthenticated installed
+  // CLI into a runnable choice.
+  cli.health = { ...cli.health, authentication: "unauthenticated" };
+  const signedOut = catalogChoices(words, catalog).providers.find(
+    (provider) => provider.id === "beta",
+  );
+  expect(
+    signedOut?.ways.find((way) => way.transport === "cli")?.selectable,
+  ).toBe(false);
+
+  // API auth may be not applicable only when the agent also says the lane has
+  // configured credentials and all other health checks passed.
+  api.health = { ...api.health, authentication: "not_applicable" };
+  const apiWay = catalogChoices(words, catalog)
+    .providers.find((provider) => provider.id === "beta")
+    ?.ways.find((way) => way.transport === "api");
+  expect(apiWay?.selectable).toBe(true);
+
+  api.health = { ...api.health, configured: "unknown" };
+  const unconfigured = catalogChoices(words, catalog)
+    .providers.find((provider) => provider.id === "beta")
+    ?.ways.find((way) => way.transport === "api");
+  expect(unconfigured?.selectable).toBe(false);
+});
+
+test("person-facing capabilities are localized; machinery and unknown proofs are skipped", () => {
   const catalog = structuredClone(FIXTURE_CATALOG);
   const alpha = catalog.providers?.find(
     (lane) => lane.provider_id === "alpha" && lane.transport === "api",
@@ -243,11 +280,8 @@ test("known lane capabilities are localized and unknown proofs are skipped befor
   );
   const capabilities = provider?.ways[0]?.capabilities ?? [];
   expect(capabilities).toEqual([
-    "desktop.agent.can_use_tools",
     "desktop.agent.can_search_web",
     "desktop.agent.can_read_pdfs",
-    "desktop.agent.can_run_subagents",
-    "desktop.agent.can_stop_subagent",
   ]);
   expect(() => new Intl.ListFormat("en").format(capabilities)).not.toThrow();
 });
@@ -271,7 +305,6 @@ test("generation-scoped proofs are not presented as lane-wide capabilities", () 
     (held) => held.id === "alpha",
   );
   expect(provider?.ways[0]?.capabilities).toEqual([
-    "desktop.agent.can_use_tools",
     "desktop.agent.can_search_web",
     "desktop.agent.can_read_pdfs",
   ]);

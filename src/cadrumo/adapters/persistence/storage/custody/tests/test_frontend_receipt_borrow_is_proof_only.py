@@ -18,11 +18,9 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......application.user_profile.login_session import (
-    ProfileReceiptRefusedError,
-    borrow_profile_receipt_key,
-    profile_session_keychain_unavailability,
-)
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
+from cadrumo_client.transport.receipt_proof import borrow_receipt_proof, keychain_unavailability
+
 from ......application.user_profile.login_session_port import bind_profile_login_session_port
 from ......core.base64_codec import b64_encode
 from ......core.config import override_settings
@@ -239,7 +237,7 @@ def test_the_application_borrow_refuses_typed_without_reading_custody(
         override_settings(cadrumo_local_storage_root=tmp_path),
         bind_profile_login_session_port(build_profile_login_session_port()),
         pytest.raises(ProfileReceiptRefusedError) as refused,
-        borrow_profile_receipt_key(bucket_id=profile_id),
+        borrow_receipt_proof(profile_id=profile_id),
     ):
         pass
     assert refused.value.reason is ProfileSessionRefusalReason.ABSENT
@@ -387,8 +385,8 @@ def test_the_application_borrow_carries_the_keychain_reason(tmp_path: Path, keyc
         override_settings(cadrumo_local_storage_root=tmp_path),
         bind_profile_login_session_port(build_profile_login_session_port()),
     ):
-        assert profile_session_keychain_unavailability() is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
-        with pytest.raises(ProfileReceiptRefusedError) as refused, borrow_profile_receipt_key(bucket_id=uuid4()):
+        assert keychain_unavailability() is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
+        with pytest.raises(ProfileReceiptRefusedError) as refused, borrow_receipt_proof(profile_id=uuid4()):
             pass
     assert refused.value.reason is ProfileSessionRefusalReason.ABSENT
     assert refused.value.keychain is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS

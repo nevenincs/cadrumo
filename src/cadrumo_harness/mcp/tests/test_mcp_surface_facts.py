@@ -28,3 +28,17 @@ def test_every_combination_of_the_two_facts_is_recorded_for_some_operation() -> 
     recorded = {(facts.changes_records, facts.reaches_network) for facts in OPERATION_SURFACE_FACTS}
 
     assert recorded == {(False, False), (False, True), (True, False), (True, True)}
+
+
+def test_the_setup_operations_are_served_on_mcp_and_the_removed_browser_operation_is_not_recorded() -> None:
+    """MCP refuses nothing the CLI can do: setup is not a person's act, and its facts are recorded."""
+    from cadrumo.application.operations.person_acts import operation_is_persons_act
+
+    for definition_id in ("dependencies.status", "dependencies.verify", "dependencies.setup"):
+        assert not operation_is_persons_act(definition_id, ephemeral_secret_required=False)
+    assert operation_surface_facts("dependencies.setup").changes_records
+    assert operation_surface_facts("dependencies.setup").reaches_network
+    assert not operation_surface_facts("dependencies.status").changes_records
+    assert not operation_surface_facts("dependencies.verify").changes_records
+    with pytest.raises(KeyError):
+        operation_surface_facts("browser-runtime.provision")

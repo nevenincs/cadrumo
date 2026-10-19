@@ -13,18 +13,14 @@ from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     verify_profile_custody_dek_against_sentinel,
 )
-from cadrumo.application.user_profile.login_session import (
-    ProfileLoginCandidate,
-    ProfileLoginOutcome,
-    ProfileReceiptRefusedError,
-    resolve_login_target,
-)
+from cadrumo.application.user_profile.login_session import ProfileLoginCandidate, resolve_login_target
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
 from cadrumo.core.config import load_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now as current_time
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, ProfileReceiptRefusedError
 
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding

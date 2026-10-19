@@ -13,18 +13,13 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import curre
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    AccessSession,
-    SessionKind,
-    SessionState,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind, SessionState
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, worker_profiles

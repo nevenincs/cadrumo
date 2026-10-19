@@ -51,10 +51,10 @@ from .provisioning_runtime import (
     RuntimeResident,
     assess_model_load_contention,
     last_runtime_pull,
+    load_and_verify_model,
     read_installed_models,
     read_runtime_residents,
     runtime_model_names_match,
-    verify_model_ready,
 )
 
 __all__ = [
@@ -240,7 +240,7 @@ def verify_role_target(
 ) -> ReadinessOutcome:
     """Verify a provisioning target is loaded, answering and fit for every role it serves.
 
-    Readiness first, through :func:`verify_model_ready`, then -- for a role in
+    Readiness first, through :func:`load_and_verify_model`, then -- for a role in
     :data:`FITNESS_PROBED_ROLES` and when a probe is supplied -- the role's
     real request shape. An unfit or too-slow model is reported not ready with
     its own condition, so ``verify`` cannot pass a model the reader will never
@@ -253,7 +253,7 @@ def verify_role_target(
     if target.model is None:
         raise ValueError("a refused selection has no model to verify")
     resolved = settings if settings is not None else load_settings()
-    ready = verify_model_ready(target.model, settings=resolved)
+    ready = load_and_verify_model(target.model, settings=resolved)
     if not ready.ready or text_probe is None:
         return ready
     digest = _installed_digest(target.model, resolved)

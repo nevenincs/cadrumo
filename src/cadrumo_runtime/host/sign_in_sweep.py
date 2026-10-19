@@ -19,8 +19,8 @@ from cadrumo.adapters.persistence.storage.custody.filesystem import profile_cust
 from cadrumo.adapters.persistence.storage.custody.filesystem_primitives import anchor_directory
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.core.base64_codec import b64_encode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.installation import Installation
 
 

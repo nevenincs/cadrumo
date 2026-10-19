@@ -17,7 +17,6 @@ from collections.abc import Mapping
 
 from pydantic import Field, NonNegativeInt
 
-from ....application.local_reader import LocalReaderDocumentReadiness, RoleFitnessState
 from ....core.hardware import ContentionCause
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
@@ -76,149 +75,6 @@ class ProvisionReportResult(OutputSchema):
     contention: ProvisionContentionPayload | None = None
 
 
-class ProvisionPullItemPayload(OutputSchema):
-    """One model fetch, or one role whose selection refused before any fetch.
-
-    ``pulled`` false with ``contention`` populated means the fetch was refused
-    BEFORE any bytes moved -- the admission check runs first precisely so a
-    multi-gigabyte download does not complete only to arrive at a refusal that
-    was knowable at the start.
-    """
-
-    model: NonEmptyStr | None = None
-    roles: list[str] = []
-    pulled: bool
-    bytes_fetched: int | None = None
-    contention: ProvisionContentionPayload | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
-class ProvisionPullResult(OutputSchema):
-    """JSON envelope for ``aeat config provision pull``; ``pulled`` is true only when every item pulled."""
-
-    pulled: bool
-    models: list[ProvisionPullItemPayload] = []
-
-
-class ProvisionVerifyItemPayload(OutputSchema):
-    """One model's readiness observation, or one role whose selection refused.
-
-    ``resident`` and ``answered`` are separate claims: a model can be present
-    and not loaded, or loaded and too slow to be useful, and an operator
-    debugging a stalled read needs to know which they have.
-    """
-
-    model: NonEmptyStr | None = None
-    roles: list[str] = []
-    ready: bool
-    resident: bool = False
-    answered: bool = False
-    elapsed_ms: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
-class ProvisionVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat config provision verify``; ``ready`` is true only when every item is."""
-
-    ready: bool
-    models: list[ProvisionVerifyItemPayload] = []
-
-
-class ProvisionRuntimePayload(OutputSchema):
-    """Whether the local runtime is installed on this host and whether it answers."""
-
-    platform: NonEmptyStr
-    endpoint_url: NonEmptyStr
-    endpoint_local: bool
-    executable_located: bool
-    reachable: bool
-    version: str | None = None
-    installer: NonEmptyStr
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
-class ProvisionRoleStatusPayload(OutputSchema):
-    """One reader role's model and what the runtime reports about it.
-
-    ``installed``, ``resident`` and ``load_admitted`` are null when they could
-    not be measured, which is distinct from false. ``fitness`` is null for a
-    role without a fitness probe or a model not ready to probe; otherwise it is
-    ``fit``, ``unfit``, ``timed_out`` or ``not_verified`` -- the last meaning no
-    verdict is recorded for the model's current weights, which is not unfitness.
-    ``fit_for_role`` is null unless a verdict exists.
-    """
-
-    role: NonEmptyStr
-    model: str | None = None
-    installed: bool | None = None
-    resident: bool | None = None
-    load_admitted: bool | None = None
-    contention_causes: list[ContentionCause] = []
-    fitness: RoleFitnessState | None = None
-    fit_for_role: bool | None = None
-    ready: bool
-    failed_condition_id: str | None = None
-
-
-class ProvisionLastPullPayload(OutputSchema):
-    """The most recent fetch this process attempted."""
-
-    model: NonEmptyStr
-    pulled: bool
-    attempted_at: NonEmptyStr
-    bytes_fetched: int | None = None
-    failed_condition_id: str | None = None
-
-
-class ProvisionStatusResult(OutputSchema):
-    """JSON envelope for ``aeat config provision status``. Reads only.
-
-    Text-model fitness is the verdict ``verify`` recorded for the model's
-    current weights.
-    """
-
-    runtime: ProvisionRuntimePayload
-    roles: list[ProvisionRoleStatusPayload] = []
-    last_pull: ProvisionLastPullPayload | None = None
-    extraction_ready: bool
-    document_readiness: LocalReaderDocumentReadiness
-    text_layer_model_fill_available: bool
-
-
-class ProvisionProbeResult(ProvisionStatusResult):
-    """JSON envelope for ``aeat config provision probe``.
-
-    The same projection as ``status``, with the text model's fitness checked
-    now instead of read from the verdict ``verify`` recorded. Nothing is
-    recorded.
-    """
-
-
-class ProvisionInstallResult(OutputSchema):
-    """JSON envelope for ``aeat config provision install``."""
-
-    installed: bool
-    already_installed: bool = False
-    installer: NonEmptyStr
-    consented: bool
-    installer_exit_code: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
-class ProvisionBrowserResult(OutputSchema):
-    """JSON envelope for ``aeat config provision browser``."""
-
-    installed: bool
-    already_installed: bool = False
-    installer_exit_code: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
 class ProvisionStartResult(OutputSchema):
     """JSON envelope for ``aeat config provision start``."""
 
@@ -271,67 +127,105 @@ class ProvisionLoadResult(OutputSchema):
     models: list[ProvisionLoadItemPayload] = []
 
 
-class ProvisionSetupStepPayload(OutputSchema):
-    """One setup step: ``unchanged``, ``changed``, ``failed`` or ``not_reached``."""
+class ProvisionItemPayload(OutputSchema):
+    """One setup item's derived row, exactly as every surface reads it.
 
-    step: NonEmptyStr
+    ``state`` and its one reason are closed values; the text output turns
+    them into a plain sentence. ``command`` is the exact command that offers
+    the row's recovery, present exactly when ``recovery_action_id`` is.
+    """
+
+    item_id: NonEmptyStr
     state: NonEmptyStr
-    failed_condition_id: str | None = None
+    stale_reason: str | None = None
+    blocked_reason: str | None = None
+    failure_category: str | None = None
+    note: str | None = None
+    version: str | None = None
+    size_estimate_bytes: int | None = None
+    recovery: str | None = None
+    recovery_action_id: str | None = None
+    command: str | None = None
 
 
-class ProvisionSetupModelPayload(OutputSchema):
-    """What one setup step did to one model, or one role whose selection refused."""
+class ProvisionStatusResult(OutputSchema):
+    """JSON envelope for ``aeat config provision status``: every item's quick check.
 
-    step: NonEmptyStr
-    model: NonEmptyStr | None = None
-    roles: list[str] = []
-    succeeded: bool
-    already_satisfied: bool = False
-    bytes_fetched: int | None = None
-    elapsed_ms: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
+    ``complete`` is true when every item is ready or usable; ``hardware_limited``
+    names a computer below the model floor, which no setup can fix.
+    """
+
+    mode: NonEmptyStr
+    complete: bool
+    hardware_limited: bool
+    items: list[ProvisionItemPayload] = []
+
+
+class ProvisionProbeResult(ProvisionStatusResult):
+    """JSON envelope for ``aeat config provision probe``: every item's full check."""
+
+
+class ProvisionVerifyResult(ProvisionStatusResult):
+    """JSON envelope for ``aeat config provision verify``: the full check of the named items."""
+
+
+class ProvisionSpacePayload(OutputSchema):
+    """Free space on the storage volume against what the plan needs; unknown free space is never enough."""
+
+    free_bytes: int | None = None
+    required_bytes: NonNegativeInt
+    sufficient: bool
+
+
+class ProvisionSetupItemPayload(OutputSchema):
+    """What setting up one item did, with its failure category when it did not end usable."""
+
+    item_id: NonEmptyStr
+    changed: bool
+    failure_category: str | None = None
+    transferred_bytes: NonNegativeInt = 0
 
 
 class ProvisionSetupResult(OutputSchema):
     """JSON envelope for ``aeat config provision setup``.
 
-    ``stopped_step`` names the step that failed; every later step is
-    ``not_reached``. ``precondition_action`` resolves the install or start
-    refusal when one of those steps stopped the run.
+    ``approved`` records whether the plan was approved; nothing moves without
+    it. ``items`` is a fresh quick check of every item after the setup.
     """
 
-    succeeded: bool
-    stopped_step: str | None = None
-    steps: list[ProvisionSetupStepPayload] = []
-    runtime_started: bool = False
-    install_consented: bool
-    models: list[ProvisionSetupModelPayload] = []
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
+    outcome: NonEmptyStr
+    approved: bool
+    plan_digest: str | None = None
+    space: ProvisionSpacePayload | None = None
+    results: list[ProvisionSetupItemPayload] = []
+    complete: bool
+    items: list[ProvisionItemPayload] = []
+
+
+class ProvisionBrowserResult(ProvisionSetupResult):
+    """JSON envelope for ``aeat config provision browser``: the setup of the browser alone."""
+
+
+class ProvisionPullResult(ProvisionSetupResult):
+    """JSON envelope for ``aeat config provision pull``: the setup of the local AI, its program and models."""
 
 
 __all__ = [
     "ProvisionBrowserResult",
     "ProvisionContentionPayload",
-    "ProvisionInstallResult",
-    "ProvisionLastPullPayload",
+    "ProvisionItemPayload",
     "ProvisionLoadItemPayload",
     "ProvisionLoadResult",
     "ProvisionModelPayload",
     "ProvisionProbeResult",
-    "ProvisionPullItemPayload",
     "ProvisionPullResult",
     "ProvisionRemoveItemPayload",
     "ProvisionRemoveResult",
     "ProvisionReportResult",
-    "ProvisionRoleStatusPayload",
-    "ProvisionRuntimePayload",
-    "ProvisionSetupModelPayload",
+    "ProvisionSetupItemPayload",
     "ProvisionSetupResult",
-    "ProvisionSetupStepPayload",
+    "ProvisionSpacePayload",
     "ProvisionStartResult",
     "ProvisionStatusResult",
-    "ProvisionVerifyItemPayload",
     "ProvisionVerifyResult",
 ]

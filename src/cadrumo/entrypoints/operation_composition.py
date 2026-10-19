@@ -628,6 +628,13 @@ def _diagnostics_repair_composition(inputs: OperationCompositionInputs) -> Opera
     return _built(operations.definitions, operations.registrations)
 
 
+def _dependency_operation_composition(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    from .dependency_operation_composition import build_dependency_operations
+
+    operations = build_dependency_operations(owner_start=inputs.runtime_server_owner_start)
+    return _built(operations.definitions, operations.registrations)
+
+
 def _local_reader_operation_composition(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     from .local_reader_operation_composition import build_local_reader_operations
 
@@ -2905,6 +2912,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.workflow.resume_operation": _workflow_resume_operation,
     "application.workflow.run_read_operation": _workflow_run_read_operation,
     "application.workstation_check_operation": _workstation_check_operation,
+    "entrypoints.dependency_operation_composition": _dependency_operation_composition,
     "entrypoints.diagnostics_repair_composition": _diagnostics_repair_composition,
     "entrypoints.local_reader_operation_composition": _local_reader_operation_composition,
 }

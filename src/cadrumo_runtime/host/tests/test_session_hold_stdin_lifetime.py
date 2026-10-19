@@ -111,6 +111,9 @@ class FakeClient:
     def subscribe_attendance_changes(self, callback):
         return lambda: None
 
+    def subscribe_operation_changes(self, callback):
+        return lambda: None
+
     def close(self):
         pass
 
@@ -208,6 +211,10 @@ class FakeClient:
 
     def subscribe_attendance_changes(self, callback):
         self.receivers["attendance"] = callback
+        return lambda: None
+
+    def subscribe_operation_changes(self, callback):
+        self.receivers["operation"] = callback
         return lambda: None
 
     def close(self):

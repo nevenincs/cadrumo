@@ -13,6 +13,8 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
@@ -34,7 +36,6 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile import capabilities
-from ...user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..google_operation import GoogleSheetsExportCapabilityDisabledError
 from ..google_review_operation import (

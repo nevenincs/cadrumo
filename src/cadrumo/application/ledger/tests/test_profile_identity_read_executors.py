@@ -10,12 +10,13 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ...operations import profile_guard
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import (
     check_operation as check,

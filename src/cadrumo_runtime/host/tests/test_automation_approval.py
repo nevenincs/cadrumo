@@ -29,23 +29,8 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePageRequest,
-    DisclosurePermission,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
@@ -53,9 +38,18 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePageRequest,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,

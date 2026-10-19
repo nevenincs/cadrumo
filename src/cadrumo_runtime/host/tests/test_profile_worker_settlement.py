@@ -17,9 +17,10 @@ from cadrumo.application.operations.composition import OperationComposedServices
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.models import OperationIdentity, new_operation_id
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessBinding
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import OperationLifecycle, profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerReply,

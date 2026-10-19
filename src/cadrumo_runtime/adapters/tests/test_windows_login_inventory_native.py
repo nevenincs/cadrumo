@@ -27,7 +27,8 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.tests.test_windows_automation_secret_store_native import (
     require_selected_normal_desktop,
 )
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.login import LoginInventory
 

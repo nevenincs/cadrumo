@@ -20,9 +20,11 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import LATEST_PROTOCOL_VERSION
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import tr
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 
-from ..protocol_contract import SIGN_IN_REMEDY
 from ..surfaces import MCP_SURFACES, McpSurfaceName
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -60,15 +62,32 @@ _REMOVED_TOOLS = frozenset(
 )
 
 
-def _status_without_a_session(profile_id: UUID) -> dict[str, object]:
+_RUNTIME_REMEDIES = frozenset(
+    tr("common.runtime.manager_unavailable_remedy", locale=language, product=PRODUCT_IDENTITY.prose_name)
+    for language in OutputLanguage
+)
+"""The remedy for a runtime that is not running, in whichever language the server speaks."""
+
+
+def _assert_runtime_unavailable(content: object, **expected: object) -> None:
+    """No runtime serves this test, so the server says so, with the remedy that names the manager.
+
+    The runtime answers which profile is selected, so a server with none to
+    ask never tells the agent to have the person sign in.
+    """
+    assert isinstance(content, dict)
+    assert content.get("remedy") in _RUNTIME_REMEDIES, content
+    assert {key: value for key, value in content.items() if key != "remedy"} == expected, content
+
+
+def _status_without_a_runtime(profile_id: UUID) -> dict[str, object]:
     return {
         "outcome": "status",
         "profile_id": str(profile_id),
         "authenticated": False,
         "session": "none",
         "surface": "full",
-        "denial": "authentication_required",
-        "remedy": SIGN_IN_REMEDY,
+        "denial": "runtime_unavailable",
     }
 
 
@@ -91,14 +110,10 @@ async def test_installed_stdio_serves_a_client_that_never_sends_the_handshake(tm
     assert not names & _REMOVED_TOOLS
     assert all(tool.annotations is not None for tool in tools)
     assert status.is_error is False
-    assert status.structured_content == _status_without_a_session(profile_id)
+    _assert_runtime_unavailable(status.structured_content, **_status_without_a_runtime(profile_id))
     for (name, _arguments), answer in zip(_UNADMITTED, refused, strict=True):
         assert answer.is_error is True, name
-        assert answer.structured_content == {
-            "outcome": "refused",
-            "code": "authentication_required",
-            "remedy": SIGN_IN_REMEDY,
-        }, name
+        _assert_runtime_unavailable(answer.structured_content, outcome="refused", code="runtime_unavailable")
 
 
 @pytest.mark.anyio
@@ -117,13 +132,9 @@ async def test_installed_stdio_answers_a_handshaking_client_the_same_way(tmp_pat
             removed = [await client.call_tool(name, {}) for name in sorted(_REMOVED_TOOLS)]
 
     assert status.is_error is False
-    assert status.structured_content == _status_without_a_session(profile_id)
+    _assert_runtime_unavailable(status.structured_content, **_status_without_a_runtime(profile_id))
     assert authority.is_error is True
-    assert authority.structured_content == {
-        "outcome": "refused",
-        "code": "authentication_required",
-        "remedy": SIGN_IN_REMEDY,
-    }
+    _assert_runtime_unavailable(authority.structured_content, outcome="refused", code="runtime_unavailable")
     for answer in removed:
         assert answer.is_error is True
         assert answer.structured_content == {"outcome": "refused", "code": "unknown_tool"}
@@ -144,8 +155,4 @@ async def test_installed_stdio_on_a_narrowed_surface_lists_its_tools_and_answers
 
     assert names == surface.tools
     assert found.is_error is True
-    assert found.structured_content == {
-        "outcome": "refused",
-        "code": "authentication_required",
-        "remedy": SIGN_IN_REMEDY,
-    }
+    _assert_runtime_unavailable(found.structured_content, outcome="refused", code="runtime_unavailable")

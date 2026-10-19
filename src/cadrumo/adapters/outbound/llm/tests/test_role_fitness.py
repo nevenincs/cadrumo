@@ -137,7 +137,7 @@ def test_a_model_slower_than_the_probe_timeout_is_a_timeout_verdict_not_a_transp
 
 
 def test_an_unreachable_runtime_is_a_transport_failure_not_unfitness() -> None:
-    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat", cadrumo_llm_max_retries=0):
+    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
         outcome = probe_text_extraction_fitness("text-model:1b", load_settings())
 
     assert outcome.fit is False

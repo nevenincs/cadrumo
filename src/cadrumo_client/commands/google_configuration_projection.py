@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from cadrumo.adapters.outbound.google.google_configuration_refusal import google_configuration_refusal_error
 from cadrumo.application.user_profile.google_configuration_operation_contracts import (
     GoogleConfigurationOutcome,
 )
@@ -13,6 +12,7 @@ from cadrumo.application.user_profile.google_configuration_operation_refusal imp
 )
 
 from .google_configuration_refusals import google_invalid_frame
+from .google_refusal_reconstruction import google_configuration_refusal_error
 from .registered_operation_contracts import RegisteredOperationCompletion
 
 

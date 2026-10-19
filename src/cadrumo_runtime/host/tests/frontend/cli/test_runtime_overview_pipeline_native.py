@@ -15,17 +15,17 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.overview.pipeline_operation import OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [

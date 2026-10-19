@@ -39,12 +39,7 @@ from cadrumo.application.operations.frontend_projection import OperationPublicPr
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmissionState
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.view_operation import ProfileViewOperationRequest, ProfileViewPageKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
@@ -68,6 +63,7 @@ from cadrumo.entrypoints.tui.operations.destination import (
 )
 from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProviderV1
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient

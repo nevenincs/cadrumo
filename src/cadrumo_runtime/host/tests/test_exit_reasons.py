@@ -16,14 +16,10 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.diagnostic_log import DiagnosticFormatter, diagnostic_process
 from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ExitReason, RefusalCode
 from cadrumo_client.contracts.login import LoginInventory
 

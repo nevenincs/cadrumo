@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.persistence.profile.evidence_bundles import EvidenceBundleRepository, EvidenceBundleWorkUnitRepository
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..application.evidence.ports import EvidenceBundlePorts
 from ..application.modelo.audit_operation_ports import ModeloAuditOperationPorts
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation

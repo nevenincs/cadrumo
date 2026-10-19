@@ -10,14 +10,14 @@ from uuid import UUID
 import pytest
 
 from cadrumo.application.ledger.counterparty_operation import LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo.core.period import Period
+from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo.core.period import Period
-from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 pytestmark = [

@@ -50,6 +50,7 @@ _DEVELOPMENT_TOOLING_KEYS = frozenset(
         *DELIVERY_CREDENTIAL_ENV,
         *(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()),
         "CADRUMO_NATIVE_BUILD_ROOT",
+        "CADRUMO_BUILD_LOG_LEVEL",
         "CADRUMO_DOCS_BUILD_ROOT",
         "CADRUMO_HOMEBREW_ROOT",
         "CADRUMO_SCOOP_ROOT",
@@ -66,6 +67,8 @@ _DEVELOPMENT_TOOLING_KEYS = frozenset(
         "CADRUMO_CORPUS_TEXT_CACHE_DIR",
         "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
         "CADRUMO_RUNTIME_WHEEL_CACHE_DIR",
+        "CADRUMO_RUNTIME_WHEEL_CACHE_BYTES",
+        "CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES",
     }
 )
 
@@ -79,7 +82,8 @@ _TEST_RUNNER_KEYS = frozenset(
         "CADRUMO_CI_REPORTS_DIR",
         "VAULTSPEC_CI_REPORTS",
         "VAULTSPEC_CI_REPORT_NAME",
-        "AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH",
+        "CADRUMO_CLAVE_MOVIL_FULL_LIVE_AUTH",
+        "CADRUMO_INGEST_CORPUS_ROOT",
     },
 )
 
@@ -96,6 +100,11 @@ def _settings_env_names() -> frozenset[str]:
     return frozenset(Settings.env_var_names())
 
 
+def _package_operator_names() -> frozenset[str]:
+    """Return the names only the package declares for operators, which Settings does not read."""
+    return frozenset(name for name, entry in load(_REPO_ROOT).names.items() if entry["role"] == "package")
+
+
 def test_generated_page_is_fresh() -> None:
     """The committed page equals fresh generator output byte for byte."""
     path = target_path(_REPO_ROOT)
@@ -108,7 +117,9 @@ def test_generated_page_is_fresh() -> None:
 def test_env_example_keys_all_resolve_to_settings_fields() -> None:
     """Every template key is read by Settings or the declared tooling/SDKs."""
     keys = frozenset(_KEY_RE.findall(_ENV_EXAMPLE.read_text(encoding="utf-8")))
-    dead = sorted(keys - _settings_env_names() - _DEVELOPMENT_TOOLING_KEYS - _TEST_RUNNER_KEYS)
+    dead = sorted(
+        keys - _settings_env_names() - _package_operator_names() - _DEVELOPMENT_TOOLING_KEYS - _TEST_RUNNER_KEYS
+    )
     assert not dead, f"env/.env.example keys with no Settings field (dead knobs): {dead}"
 
 

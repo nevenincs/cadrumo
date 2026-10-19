@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 from uuid import uuid4
 
-from pydantic import JsonValue
+from pydantic import JsonValue, ValidationError
 
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -70,6 +71,25 @@ def resolve_result_request(
     return parse_model(OperationResultProjectionRequestV1, supplied | value)
 
 
+def stopped_operation_code(document: dict[str, JsonValue]) -> str | None:
+    """Return the closed refusal token of a refused result read, or ``None`` when the read was not refused.
+
+    The token is the document's own registered result-projection refusal, for
+    example ``operation_not_successful``, lifted beside it so a caller reads
+    the refusal and its recovery from one level. A document whose code is not
+    a registered token names none.
+    """
+    if document.get("outcome") != "refused":
+        return None
+    code = document.get("code")
+    if not isinstance(code, str):
+        return None
+    try:
+        return OperationResultProjectionRefusalCode(code).value
+    except ValueError:
+        return None
+
+
 def stopped_operation_detail(
     client: FrontendClient,
     request: OperationResultProjectionRequestV1,
@@ -102,3 +122,23 @@ def stopped_operation_detail(
     except (FrontendRefusedError, RefusalError):
         return None
     return detail.get("projection") if detail.get("outcome") == "success" else None
+
+
+def stopped_operation_recovery_action(detail: JsonValue) -> str | None:
+    """Return the operator action a stopped operation's precondition verdict names as its recovery, or ``None``.
+
+    It is the same action the command line prints with the error, lifted out of
+    the verdict's text so a caller reads one typed identifier, for example
+    ``operator.provision.browser`` when a feature needs the browser set up.
+    """
+    from cadrumo.application.operations.error_detail import OperationErrorDetailV1
+
+    if not isinstance(detail, dict):
+        return None
+    try:
+        verdict = OperationErrorDetailV1.model_validate_json(json.dumps(detail)).precondition_verdict()
+    except ValidationError:
+        return None
+    if verdict is None or verdict.action is None:
+        return None
+    return verdict.action.action_id

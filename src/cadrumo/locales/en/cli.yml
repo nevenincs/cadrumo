@@ -1936,6 +1936,8 @@ cli:
       missing: missing
       preflight_label: Preflight check
       profile_label: profile
+      setup_unavailable: Setup could not be checked because Cadrumo's background service
+        did not answer.
     collab:
       help: Manage trusted recipients for review-package collaboration.
       recipient:
@@ -2484,64 +2486,91 @@ cli:
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
     provision:
+      approval_needed: This needs your approval. Run the command again with --yes
+        to approve the plan above.
+      approve_prompt: Download and set these up now?
       browser:
-        help: Download the Chromium build that AEAT browser automation launches. Does
-          nothing when it is already installed.
-      help: 'Manage what runs on this computer: the browser build for AEAT automation,
-        and the local document reader''s runtime status, install, start, model pull,
-        load, verify and remove, or set everything up in one run.'
-      install:
-        confirm_help: Agree to download and run the package-manager install. Without
-          it nothing is installed.
-        help: Install the local runtime with the platform package manager (winget
-          on Windows, Homebrew on macOS). Does nothing when it is already installed;
-          on Linux, installing it is left to you.
+        help: Set up the browser Cadrumo uses for the tax agency website. Shows the
+          plan and asks first.
+      complete: Cadrumo is set up.
+      fix: 'To fix it, run: %{command}'
+      hardware_limited: This computer does not have enough memory for the local AI.
+      help: 'Set up and check what Cadrumo needs on this computer: the browser for
+        the tax agency website and the local AI, its program and models. Each command
+        runs in your signed-in profile.'
+      incomplete: Some components are not ready yet.
       load:
-        help: Load models into the local runtime's memory so the first read does not
-          wait for a cold start, every reader role's model unless --role or --model
-          narrows it. Refuses before loading when memory is short; a model that is
-          already loaded is left as it is.
-        model_help: Runtime identifier of the model to load. It must already be downloaded.
-          Defaults to the model selected for the role.
+        help: Load models into memory so the first read does not wait, every role's
+          model unless --role or --model narrows it. Refuses before loading when memory
+          is short.
+        model_help: Name of the model to load. It must already be downloaded. Defaults
+          to the model chosen for the role.
+      outcome:
+        cancelled: You cancelled the setup.
+        completed: Setup finished.
+        interrupted: Setup was interrupted before it finished. Run the command again
+          to resume.
+        not_enough_space: There is not enough free disk space, so nothing was downloaded.
+        nothing_to_do: Everything is already set up.
+        plan_changed: The plan changed after you approved it, so nothing was downloaded.
+          Run the command again to see the new plan.
+        rejected: Nothing was downloaded.
+      plan:
+        destination: '  Stored in %{path}'
+        entry: '%{name}: %{size} from %{hosts}'
+        heading: 'Cadrumo will set up:'
+        installs_program: '  This installs a program on this computer. Its installer
+          may ask for your permission.'
+        part: '    %{name}: %{size}'
+        shared: '  Uses the same download as %{name}.'
+        size_unknown: size not known yet
+        total: 'Total download: %{size}.'
+        total_unknown: 'Total download: at least %{size}. Some sizes are only known
+          once the download starts.'
       probe:
-        help: Check the text model's fitness now instead of reading the verdict recorded
-          by `aeat config provision verify`, and report the local reader with that
-          result. Loads the model; records nothing.
+        help: 'Check every component fully: reach the download servers, open the browser
+          and try each model. Downloads nothing.'
+      progress: '%{name}: %{step}'
+      progress_bytes: '%{name}: downloading %{done} of %{total} (%{percent}%)'
       pull:
-        help: Download models into the local runtime, every reader role's model unless
-          --role or --model narrows it. Refuses before downloading when a model could
-          not be loaded.
-        model_help: Runtime identifier of the model to download. Defaults to the model
-          selected for the role.
+        help: 'Set up the local AI: install its program when it is missing, then download
+          every role''s model. Shows the plan and asks first; the program''s installer
+          may also ask for your permission.'
+        model_help: Name of a catalogue model to use instead of the one Cadrumo chooses.
       remove:
-        help: Delete a model Cadrumo selected from the local runtime's store and report
-          the space reclaimed.
-        model_help: Runtime identifier of the model to delete. Only models Cadrumo
-          selected can be deleted.
+        help: Delete a model Cadrumo chose from this computer and report the space
+          freed.
+        model_help: Name of the model to delete. Only models Cadrumo chose can be
+          deleted.
       report:
-        help: Report measured hardware, the model selected per role, and whether it
-          can be loaded now.
+        help: Report this computer's memory, the model chosen for each role, and whether
+          it can be loaded now.
       role_help: Model role to act on (vision transcription, text extraction, tabular
         mapping, supply-nature proposal). Defaults to every role.
       setup:
-        confirm_help: Agree to download and run the package-manager install if the
-          runtime is missing. Without it setup stops at the install step instead of
-          installing.
-        help: 'Set up the local reader in one run: install the runtime (only with
-          --confirm), start it, download every role''s model, load them and verify
-          them. Steps that are already done are reported unchanged; the first step
-          that fails stops the run.'
+        help: Set up every component that is not ready yet. Shows what will be downloaded,
+          how large it is and where it is stored, and asks before anything is downloaded.
+      size:
+        gigabytes: '%{value} GB'
+        megabytes: '%{value} MB'
       start:
-        help: Start the installed local runtime when the configured local endpoint
-          is not answering. Does nothing when it already answers.
+        help: Start the installed local AI program when it is not answering. Does
+          nothing when it already answers.
       status:
-        help: Report whether the local runtime is installed and answering, and whether
-          each reader role's model is installed. Reads only.
+        help: Show whether each component is ready, from what this computer already
+          has. Quick; downloads nothing.
+      step:
+        cleanup: tidying up
+        download: downloading
+        install: installing
+        plan: planning
+        preflight: checking the connection
+        verify: checking that it works
       verify:
-        help: Verify models load and answer a trivial prompt within a time bound,
-          every reader role's model unless --role or --model narrows it.
-        model_help: Runtime identifier of the model to verify. Defaults to the model
-          selected for the role.
+        help: Check one component fully, or every component when none is named. Downloads
+          nothing.
+        item_help: 'Component to check: browser or local_ai. Defaults to every component.'
+      yes_help: Approve the plan the command shows, without asking.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       help: Diagnose and repair local configuration, modelo definitions, profile,
@@ -2573,6 +2602,8 @@ cli:
       reset_progress_requires_yes: This operation is destructive. Re-run with --yes
         to confirm or pass --dry-run to see what would be cleared.
       reset_progress_yes_help: Confirm clearing saved interrupted-command progress
+      setup_status_hint: Setup is shown by the status command below once you're signed
+        in.
       yes_help: Confirm repair.
     reset:
       help: Start, inspect, or resume the irreversible reset of all locally stored

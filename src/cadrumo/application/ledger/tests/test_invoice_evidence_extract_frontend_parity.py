@@ -15,6 +15,9 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessPolicy
+
 from ....core.config_support import LLMProvider
 from ....core.operations import profile_operation_subject
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -24,7 +27,6 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessPolicy
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import invoice_evidence_extract_operation as extract_operation
 from .. import invoice_evidence_operation as operation_ports
@@ -57,7 +59,7 @@ def _request(*, off_host: bool) -> OperationRequest[BaseModel]:
             profile_id=_PROFILE,
             evidence_id=_EVIDENCE if off_host else None,
             attachment_id=None if off_host else _SOURCE,
-            off_host_provider=LLMProvider.ANTHROPIC if off_host else None,
+            off_host_provider=LLMProvider.AGENT if off_host else None,
             acknowledge_off_host=off_host,
         ),
     )

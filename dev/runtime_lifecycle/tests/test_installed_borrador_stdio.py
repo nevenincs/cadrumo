@@ -47,12 +47,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
@@ -69,6 +63,12 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.entrypoints.adapter_composition import build_borrador_100_snapshot_repository
 from cadrumo.tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 from .test_installed_authenticated_stdio import (

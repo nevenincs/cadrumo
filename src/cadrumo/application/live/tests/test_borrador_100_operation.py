@@ -15,6 +15,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
@@ -25,14 +28,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.public_period import PublicPeriod
 from ...operations.public_scalar import PublicDecimal
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import borrador_100 as service_module
 from .. import borrador_100_contracts as contracts

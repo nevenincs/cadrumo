@@ -79,12 +79,6 @@ from cadrumo.application.overview.home import (
 )
 from cadrumo.application.overview.next_actions import declare_next_action
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
@@ -137,6 +131,8 @@ from cadrumo.domain.modelos.protocols import (
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _NOW = datetime(2026, 9, 27, 18, tzinfo=UTC)

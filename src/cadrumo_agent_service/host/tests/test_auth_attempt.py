@@ -1,6 +1,7 @@
 """A revoked request never reaches native process creation."""
 
 from pathlib import Path
+from threading import Event
 
 import pytest
 
@@ -10,6 +11,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_revoked_attempt_closes_without_creating_a_process_or_profile(tmp_path: Path) -> None:
+    settled = Event()
     attempt = AuthAttempt(
         provider="example",
         lane="example_cli",
@@ -18,8 +20,10 @@ def test_revoked_attempt_closes_without_creating_a_process_or_profile(tmp_path: 
         directory=tmp_path / "absent",
         environment={},
         valid=lambda: False,
+        settled=settled.set,
     )
     attempt.close()
     assert not attempt.active
+    assert settled.is_set()
     assert attempt.observe() == {"attempt_id": attempt.id, "provider": "example_cli", "event": "cancelled"}
     assert list(tmp_path.iterdir()) == []

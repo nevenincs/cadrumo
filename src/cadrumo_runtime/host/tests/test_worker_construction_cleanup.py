@@ -19,13 +19,12 @@ import pytest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
-    AccessScope,
-    Availability,
     ProfileAccessBinding,
     ProfileAccessState,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import AccessRefusal, HumanProof, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext

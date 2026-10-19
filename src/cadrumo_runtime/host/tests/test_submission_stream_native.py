@@ -41,14 +41,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
@@ -57,6 +49,14 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.registered_executor_seeding_support import seeded_modelo_edit_submission
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,

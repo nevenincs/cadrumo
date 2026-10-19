@@ -68,6 +68,7 @@ def _read(stream: socket.socket) -> dict[str, object]:
         "status",
         "set",
         "remove",
+        "turn_on",
         "reset",
         "auth",
         "sign_in",
@@ -89,7 +90,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
     target = _AdminRecorder()
     server = AdminServer(target, bearer=parent)
     request: dict[str, object] = {"version": 1, "request_id": str(uuid4()), "action": action}
-    if action in {"set", "remove", "reset", "auth", "sign_in", "connect"}:
+    if action in {"set", "remove", "turn_on", "reset", "auth", "sign_in", "connect"}:
         request.update(provider="synthetic", expected_revision="0" * 64)
     if action == "connect":
         request["method"] = "browser"

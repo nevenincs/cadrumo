@@ -8,6 +8,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.hashing import canonical_json_bytes
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.buckets.event import (
@@ -24,12 +27,6 @@ from ...operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
-)
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts

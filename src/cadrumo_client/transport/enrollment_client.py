@@ -11,20 +11,15 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
     ClientCredentialMetadata,
     NativeClientCredentialStore,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
 
+from ..contracts.access_refusals import AccessDenialCode
+from ..contracts.automation_codes import AutomationCustodyCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, deadline_after
 from ..contracts.enrollment_access import (

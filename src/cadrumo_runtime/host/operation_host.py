@@ -45,9 +45,7 @@ from cadrumo.application.operations.models import (
     new_operation_id,
 )
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement, zeroize_secret_buffer
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
@@ -56,6 +54,9 @@ from cadrumo.core.operations import OperationDurability, OperationLifecycle
 from cadrumo.core.request_faults import registered_error_fault, request_faults
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.operation_access import OperationManagementRequest, operation_management_action
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 

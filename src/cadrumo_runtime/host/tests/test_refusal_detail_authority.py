@@ -37,17 +37,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentReceipt
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -56,6 +46,14 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo_client.contracts.access_management import AutomationDenied, AutomationDeny
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (

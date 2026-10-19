@@ -1,6 +1,6 @@
 """Turn protocol surface policy into an explicit generic operation ceiling."""
 
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 
 from .surface_facts import OPERATION_SURFACE_FACTS
 from .surfaces import McpSurface

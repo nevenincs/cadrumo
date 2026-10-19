@@ -7,12 +7,13 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, JsonValue, model_validator
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.base64_codec import b64_decode_canonical
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+from .access_refusals import AccessDenialCode
 
 # Base64 leaves room for both runtime and worker authority envelopes within
 # the 64 KiB transport frame, while reducing repeated projection work.

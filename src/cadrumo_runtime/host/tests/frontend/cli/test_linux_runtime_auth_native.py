@@ -9,13 +9,13 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo.tests.cli_envelope import unwrap_cli_result
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 
 from .native_api_cli_support import native_api_cli_session

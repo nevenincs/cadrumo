@@ -5,7 +5,7 @@ import type {
   ProviderStatus,
 } from "@/components/settings/types";
 import { failureCode } from "../errors";
-import { useAgentRead, type AgentRead } from "./agentViews";
+import { useCachedRead, type AgentRead } from "./agentViews";
 
 // The model providers of the signed-in profile, as a host serves them: the
 // masked status of each lane (a provider's API, or its command-line app),
@@ -42,6 +42,9 @@ export type ProviderSettingsRecord = {
   /** Where the lane's command-line app stands on this computer; only a
    * command-line lane has one. */
   cli_state?: ProviderStatus["cliState"] | null;
+  /** Whether a key is stored for the lane, whatever its mode: one that is
+   * turned off keeps it for when it is turned on again. */
+  credential_saved?: boolean;
 };
 
 export type ProviderSettingsAnswer = {
@@ -52,6 +55,8 @@ export type ProviderSettingsAnswer = {
   /** Canonical providers the agent declares usable from the GUI sign-in flow.
    * Missing means no provider supports it. */
   sign_in_providers?: string[];
+  /** GUI sign-in methods supported per canonical provider slug. */
+  sign_in_methods?: Record<string, ProviderSignInMethod[]>;
 };
 
 export type ProviderSignInMethod = "browser" | "device";
@@ -114,8 +119,14 @@ export interface ProviderSettings {
     secret: string;
     base_url?: string;
   }): Promise<ProviderSettingsRecord>;
-  /** Disables the lane: nothing, not even the environment, is used. */
+  /** Turns the lane off: the agent does not offer or use it, and what is
+   * saved for it is kept. */
   turnOff(change: {
+    provider: string;
+    revision: string;
+  }): Promise<ProviderSettingsRecord>;
+  /** Turns a lane that is off back on, as it was saved. */
+  turnOn(change: {
     provider: string;
     revision: string;
   }): Promise<ProviderSettingsRecord>;
@@ -136,6 +147,7 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   readiness: record.readiness,
   source: record.source,
   ...(record.cli_state ? { cliState: record.cli_state } : {}),
+  ...(record.credential_saved ? { credentialSaved: true } : {}),
   ...(record.reason ? { reason: record.reason } : {}),
   ...(record.base_url ? { baseUrl: record.base_url } : {}),
   ...(record.default_base_url
@@ -148,38 +160,54 @@ export type ProviderSettingsView = {
     development: boolean;
     providers: ProviderStatus[];
     signInProviders: string[];
+    signInMethods: Readonly<Record<string, readonly ProviderSignInMethod[]>>;
     revisions: Readonly<Record<string, string>>;
   }>;
   busyId: string | null;
   outcomes: Readonly<Record<string, ProviderOutcome>>;
   save: (providerId: string, secret: ProviderSecret) => void;
   turnOff: (providerId: string) => void;
+  turnOn: (providerId: string) => void;
   reset: (providerId: string) => void;
   refresh: () => void;
+  /** How many changes have been saved, so what depends on them (the agent's
+   * provider list) can be read again. */
+  changes: number;
+  /** Shows a status read made elsewhere, in place of reading it again. */
+  accept: (status: ProviderSettingsAnswer) => void;
 };
 
 /**
- * The providers of `reader`'s profile while `open`, read when opened, after
- * each change of the person's and when asked to refresh; never on a timer.
+ * The providers of `reader`'s profile while `open`: read each time they open
+ * (`opened` counts the openings), after each change of the person's and when
+ * asked to refresh; never on a timer. The last answer stays on screen while
+ * it is read again, so the settings load only the first time.
  */
 export function useProviderSettings(
   host: ProviderSettings | undefined,
   reader: string | null,
   open: boolean,
+  opened: number,
 ): ProviderSettingsView {
   const [state, setState] = useState({
     reader,
     again: 0,
+    changes: 0,
     busyId: null as string | null,
     outcomes: {} as Record<string, ProviderOutcome>,
   });
   if (state.reader !== reader)
-    setState({ reader, again: 0, busyId: null, outcomes: {} });
+    setState({ reader, again: 0, changes: 0, busyId: null, outcomes: {} });
   const readStatus = useMemo(
-    () => (host && reader !== null && open ? () => host.status() : null),
-    [host, reader, open],
+    () => (host && reader !== null ? () => host.status() : null),
+    [host, reader],
   );
-  const answer = useAgentRead(readStatus, state.again);
+  const { read: answer, put } = useCachedRead(
+    readStatus,
+    reader,
+    open,
+    state.again + opened,
+  );
   const read = useMemo(
     (): ProviderSettingsView["read"] =>
       answer.kind === "ready"
@@ -191,6 +219,26 @@ export function useProviderSettings(
               signInProviders: Array.isArray(answer.value.sign_in_providers)
                 ? [...new Set(answer.value.sign_in_providers)]
                 : [],
+              signInMethods: Object.fromEntries(
+                Object.entries(answer.value.sign_in_methods ?? {}).flatMap(
+                  ([provider, methods]) =>
+                    Array.isArray(methods)
+                      ? [
+                          [
+                            provider,
+                            [
+                              ...new Set(
+                                methods.filter(
+                                  (method): method is ProviderSignInMethod =>
+                                    method === "browser" || method === "device",
+                                ),
+                              ),
+                            ],
+                          ],
+                        ]
+                      : [],
+                ),
+              ),
               revisions: Object.fromEntries(
                 answer.value.providers.map(
                   ({ id, revision }) => [id, revision] as const,
@@ -225,7 +273,12 @@ export function useProviderSettings(
     }));
     act(host, revision).then(
       () =>
-        setState((held) => ({ ...held, busyId: null, again: held.again + 1 })),
+        setState((held) => ({
+          ...held,
+          busyId: null,
+          again: held.again + 1,
+          changes: held.changes + 1,
+        })),
       (error: unknown) => {
         const code = failureCode(error);
         const outcome: ProviderOutcome =
@@ -236,6 +289,9 @@ export function useProviderSettings(
           ...held,
           busyId: null,
           outcomes: { ...held.outcomes, [providerId]: outcome },
+          // Saved all the same, so what depends on it is read again.
+          changes:
+            outcome.kind === "saved_unread" ? held.changes + 1 : held.changes,
           // A record changed elsewhere is shown as it is now.
           again: code === "revision_conflict" ? held.again + 1 : held.again,
         }));
@@ -265,10 +321,16 @@ export function useProviderSettings(
       change(providerId, (served, revision) =>
         served.turnOff({ provider: providerId, revision }),
       ),
+    turnOn: (providerId) =>
+      change(providerId, (served, revision) =>
+        served.turnOn({ provider: providerId, revision }),
+      ),
     reset: (providerId) =>
       change(providerId, (served, revision) =>
         served.reset({ provider: providerId, revision }),
       ),
     refresh,
+    changes: state.changes,
+    accept: put,
   };
 }

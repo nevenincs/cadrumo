@@ -15,6 +15,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.buckets.event import BucketEvent
@@ -29,7 +31,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability, SessionKind
+from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
 from .. import catalogue_intake_operation as intake_operation

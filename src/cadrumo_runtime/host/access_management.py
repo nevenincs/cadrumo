@@ -13,7 +13,6 @@ from pydantic import SecretBytes
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import AdministrationFacts
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
@@ -28,6 +27,7 @@ from cadrumo_client.contracts.access_management import (
     ProfileResumed,
     SessionInventoryReply,
 )
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest, HumanSignInRevocationResult
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.profile_access import AccessRefusal, SecretReady

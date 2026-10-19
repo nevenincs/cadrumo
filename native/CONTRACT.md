@@ -330,11 +330,15 @@ names each program passes.
 - `PATH` is set by the host and by no parent. For a profile whose policy is
   `package`, it holds the directory of the package's interpreter, the existing
   absolute directories of `CADRUMO_EXTERNAL_BIN_DIRS` where the profile admits
-  that name, the package's native directory and the platform's system
-  directory, in the order the file declares. The native directory holds the
-  entrypoint images and the bundled agent image. A relative or missing external
-  directory fails the launch as a platform failure, not as a profile refusal.
-  A profile whose policy is `inherit` leaves `PATH` as its caller set it.
+  that name, the package's native directory, existing installation directories
+  declared in `native/application-environment.toml` for profiles that admit the
+  external-directory setting, then the platform's system directory, in the
+  order the file declares. Declared installation directories are considered
+  only when they resolve to existing absolute directories; missing or relative
+  candidates are skipped. The native directory holds the entrypoint images and
+  the bundled agent image. A relative or missing explicit external directory
+  fails the launch as a platform failure, not as a profile refusal. A profile
+  whose policy is `inherit` leaves `PATH` as its caller set it.
 
 An invocation is the exact argument pattern that selects a profile. The host
 matches the arguments after the image's own path against the compiled table before
@@ -548,12 +552,15 @@ name under the agent's prefix, no launch parameter and no pin. The profiles
   agent keeps no list of Cadrumo's tools, and Cadrumo keeps none of the agent's
   providers or lanes; trust in a tool comes from the tool server's own
   declarations, not from these variables.
-- **Search path.** Both profiles take the package's `PATH` composition, so the agent
-  finds `aeat`, `cadrumo-mcp` and the bundled `python` beside the system directory.
-  Both also pass `CADRUMO_EXTERNAL_BIN_DIRS` so explicitly configured provider CLI
-  directories survive gateway and worker re-execution. The service forwards this
-  public package setting; each native launch validates the directories and
-  composes its own `PATH`.
+- **Search path.** The gateway and worker profiles take the package's `PATH`
+  composition, so the agent finds `aeat`, `cadrumo-mcp` and the bundled `python`
+  beside the system directory. They also pass `CADRUMO_EXTERNAL_BIN_DIRS` so
+  explicitly configured provider CLI directories survive gateway and worker
+  re-execution. Profiles that admit this setting also receive existing
+  declaration-owned installation roots such as the user's local executable
+  directory and the platform's standard package-manager directories. The
+  service forwards the public explicit-directory setting; each native launch
+  validates explicit directories and composes its own `PATH`.
 - **Runtime start.** The runtime image's profile fixes
   `CADRUMO_PACKAGE_AGENT_EXECUTABLE`, `CADRUMO_PACKAGE_RELAY_EXECUTABLE`,
   `CADRUMO_PACKAGE_AEAT_EXECUTABLE` and `CADRUMO_PACKAGE_PYTHON_EXECUTABLE` as the
@@ -989,7 +996,10 @@ not publisher authentication.
 Tests, GUI demos, tkinter/IDLE, ensurepip and SDK development directories do not
 ship. The remaining runtime stdlib is retained because application imports can be
 dynamic. Only the locked base third-party dependency closure and the three CADRUMO
-wheels enter `cadrumo/site-packages/`; development and optional extras are excluded.
+wheels enter `cadrumo/site-packages/`, widened only by the locked closures of the
+native bundle's shipped extras (`llm` and `browser`); development and every other
+optional extra are excluded. Playwright's Node driver ships with `browser`; its
+Chromium builds do not, and are provisioned into profile storage on demand.
 `Lib`, `Libs`, `Scripts`, headers and import libraries stay in build inputs. Native
 extensions and their libraries are relocated under `bin/` with qualified module
 names recorded in `data/native-modules.json`.
@@ -1023,9 +1033,11 @@ The generated extension map retains qualified module names. pywin32's three
 path directives become explicit import paths, and its two extension DLLs receive
 ordinary extension specs; its executable `.pth` directive is not run. PDFium's
 generated ctypes loader receives one checked replacement of its library location.
+Playwright's driver loader receives one checked replacement of its default Node
+executable location, keeping its `PLAYWRIGHT_NODEJS_PATH` override.
 The pywin32 package receives one checked replacement of registry environment setup
 with bundled COM extension paths and `U/cache/pywin32/gen_py`. Qualified
-`win32com.*` extension aliases follow its public import surface. Both patches are
+`win32com.*` extension aliases follow its public import surface. These patches are
 recorded with before/after hashes in `data/package-manifest.json`. The assembler
 refuses unreviewed `.pth` files and conflicting DLL basenames. Installed wheel
 RECORD locations describe original wheel contents; the package manifest owns the
@@ -1616,9 +1628,10 @@ stopped when the window closes.
 | `sign_out` | `token` | `config logout` | `{remainingAccess: {automationEnabled, agentAccessRemains, automationRevoked: false}}`. `automationEnabled` is the person's saved automation setting, which a sign-out keeps; it is not access. `agentAccessRemains` is whether a key issued for an external agent can still admit, since keys do not follow the sign-in: `true` or `false`, and `null` when the product could not say, because its automation store was unreadable or it had no sign-in to end. The product writes the field in every result, so a result without it, or with a value that is neither a boolean nor null, fails with `read_failed` rather than reading as no access. A refusal rejects with `{code, retryAfterSeconds}`. |
 | `profile_list` | `token` | `config profile list` | `{profiles: [{name, active}], complete}`, in the product's order. It needs no password, session or runtime. `complete` is false when the product reports that it could not read its profiles coherently: the list is then no evidence of which profiles exist. |
 | `profile_create` | Raw UTF-8 password body, whose JSON encoding must fit the product's 8192-byte read (twice over for a creation); headers `x-cadrumo-token` and `x-cadrumo-profile` | `config profile create --quiet --secrets-stdin -- LABEL` | `{kind: "created", name}`, or `{kind: "refused", code, retryAfterSeconds}`. The new profile is selected and left signed out. A label already in use is refused with the code `profile_already_exists`. One attempt: nothing is retried. |
-| `provider_settings_status` | `token` | `config provider status` | `{development, providers: [{id, provider, display_name, transport, auth_kind, consumers, mode, available, source, readiness, reason, base_url, default_base_url, revision, cli_state}]}`, every value a closed set. No field carries a key or anything derived from one. |
+| `provider_settings_status` | `token` | `config provider status` | `{development, providers: [{id, provider, display_name, transport, auth_kind, consumers, mode, credential_saved, available, source, readiness, reason, base_url, default_base_url, revision, cli_state}]}`, every value a closed set. `credential_saved` says whether a key is stored for the lane whatever its mode, so a lane turned off still reports its kept key. No field carries a key or anything derived from one. |
 | `provider_settings_set` | Raw UTF-8 key body; headers `x-cadrumo-token`, `x-cadrumo-provider`, `x-cadrumo-revision`, and `x-cadrumo-base-url` or `x-cadrumo-clear-base-url: 1` | `config provider set PROVIDER --expected-revision REVISION [--base-url URL \| --clear-base-url] --secrets-stdin`; the key is written once to standard input as `{"secret"}`, which is then closed | The provider's new status entry, or a refusal `{code}`: `not_signed_in`, `profile_locked`, `invalid_key_format`, `base_url_rejected`, `revision_conflict`, `committed_readback_failed`, `person_act_required` or `unknown`. One attempt: nothing is retried. |
-| `provider_settings_remove` | `token`, `provider`, `revision` | `config provider remove PROVIDER --expected-revision REVISION` | The provider's new status entry, disabled, or a refusal as for `provider_settings_set`. |
+| `provider_settings_remove` | `token`, `provider`, `revision` | `config provider remove PROVIDER --expected-revision REVISION` | Turns the lane off: the provider's new status entry, `mode` and `readiness` `disabled` with `reason` `turned_off`, or a refusal as for `provider_settings_set`. A stored key and the lane's sign-in are kept, and the lane leaves the agent's provider catalog. |
+| `provider_settings_turn_on` | `token`, `provider`, `revision` | Agent service administration `turn_on` | Turns an off lane back on: a stored key is used directly again, a lane that takes only its provider's sign-in uses that sign-in again, and a lane with nothing kept returns to unset. The provider's new status entry, or a refusal as for `provider_settings_set`; a lane that is not off is refused with `unknown`. |
 | `provider_settings_reset` | `token`, `provider`, `revision` | `config provider reset PROVIDER --expected-revision REVISION` | The provider's new status entry, unset, or a refusal as for `provider_settings_set`. |
 | `agent_access_list` | `token` | `config profile automation list` | `{credentials: [{id, state, issued_at, expires_at, last_used_at, categories, all_operations}]}`, one per grant, ended ones included. `id` is the grant's UUID, `state` is `pending`, `active`, `suspended` or `revoked`, `issued_at` is when the grant became valid, `last_used_at` is the latest use of any of its keys or null, and `categories` are `profile_values`, `operation_metadata` or `tax_values`. A value outside those sets is a protocol failure. No field carries a key or anything derived from one. Refusals reject with `{code}`: `not_signed_in`, `profile_locked`, `person_act_required` or `unknown`. |
 | `agent_access_issue` | `token`, `taxValues` | None yet | Refused with `{code: "issue_unavailable"}` and nothing is run. Issuing becomes one act of the person's, with no password and no second approval process, when the product offers it; the answer will then be `{credential_reference}`, the reference of the key put in this computer's secure store, never the key. |

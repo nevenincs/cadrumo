@@ -30,11 +30,31 @@ from ..launch_environment import (
     WORKER_PORT_VARIABLE,
     agent_binary_directories,
     agent_launch_environment,
+    auth_browser_executable,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _RETIRED_INSTRUCTION_VARIABLES = frozenset({"CADRUMO_AGENT_SKILLS_DIR", "CADRUMO_AGENT_RULES_DIR"})
+
+
+@pytest.mark.parametrize("placement", [".", "bin", "../outside", "/outside"])
+def test_auth_browser_uses_only_the_declared_package_desktop(tmp_path: Path, placement: str) -> None:
+    python = tmp_path / "python.exe"
+    python.touch()
+    (tmp_path / "data").mkdir()
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "cadrumo.exe").touch()
+    (tmp_path / "bin/cadrumo.exe").touch()
+    layout = {
+        "paths": {"executable": python.name},
+        "entrypoint_suffix": ".exe",
+        "application_images": [{"name": "cadrumo", "placement": placement, "desktop": True}],
+    }
+    (tmp_path / "data/package-manifest.json").write_text(json.dumps({"layout": layout}), encoding="utf-8")
+    assert auth_browser_executable(python) == (
+        (tmp_path / placement / "cadrumo.exe").resolve() if placement in {".", "bin"} else None
+    )
 
 
 def _write_package_manifest(root: Path, *, packages: str, executable: str) -> None:

@@ -10,6 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
@@ -49,7 +51,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import M303Exonerado390AttestationUnadmissibleError
 from .m303_exonerado_390_applicability_attestation import (

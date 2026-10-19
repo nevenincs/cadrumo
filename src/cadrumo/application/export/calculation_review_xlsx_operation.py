@@ -11,6 +11,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
@@ -54,7 +56,6 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..storage.calc_sheets.review_labels import ReviewWorkbookLabels
 from ..storage.calc_sheets.review_workbook import build_review_workbook
 from ..storage.calc_sheets.workbook_export import SheetWorkbookMaterializer
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .review_snapshot import CalculationReviewSelection, ReviewSnapshot, ReviewStatus
 

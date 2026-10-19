@@ -7,7 +7,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from .....application.user_profile.access_contracts import AuthorityState, AutomationGrant, ProfileAccessBinding
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+
+from .....application.user_profile.access_contracts import AutomationGrant, ProfileAccessBinding
 from .....application.user_profile.automation_custody_port import AutomationKeyVerifier
 from .....application.user_profile.automation_enrollment import EnrollmentRecord
 from .....application.user_profile.automation_lifecycle import AutomationDenial, ProfileGlobalLockState

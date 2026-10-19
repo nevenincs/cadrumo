@@ -13,6 +13,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.config import Settings
 from ....core.hashing import sha256_hex
 from ....core.operations import (
@@ -34,7 +36,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
-from ...user_profile.access_contracts import AccessAction, Availability, SessionKind
+from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import llm_review_execution as review_runtime
 from .. import llm_review_operation as operation

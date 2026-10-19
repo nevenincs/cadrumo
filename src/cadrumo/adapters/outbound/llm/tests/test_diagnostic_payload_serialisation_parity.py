@@ -48,7 +48,7 @@ def _request() -> LLMRequest:
         temperature=0.2,
         language="en",
         cache_key="serialisation-parity",
-        provider_override=LLMProvider.ANTHROPIC,
+        provider_override=LLMProvider.AGENT,
         model_override="claude-opus-4-7",
     )
 
@@ -56,7 +56,7 @@ def _request() -> LLMRequest:
 def _response() -> LLMResponse:
     return LLMResponse(
         text="Casilla 03 records the cumulative net revenue for the reporting period.",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-opus-4-7",
         input_tokens=137,
         output_tokens=64,
@@ -82,7 +82,7 @@ def test_the_cache_payload_is_json_native_so_the_strict_helper_suffices(tmp_path
 
     redacted = json.loads(canonical_json_bytes(json.loads(entry.model_dump_json())))
 
-    assert redacted["provider"] == LLMProvider.ANTHROPIC.value
+    assert redacted["provider"] == LLMProvider.AGENT.value
     assert canonical_json_bytes({"logical_root": "x", "entry": redacted})
 
 

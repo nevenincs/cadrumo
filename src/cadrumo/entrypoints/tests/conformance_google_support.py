@@ -43,7 +43,6 @@ from ...application.user_profile.google_configuration_operation_contracts import
     GoogleLogoutProjection,
     GoogleLogoutRequest,
     GoogleProbeRequest,
-    GoogleStatusProjection,
     GoogleStatusRequest,
 )
 from ...application.user_profile.google_configuration_operation_refusal import (
@@ -199,18 +198,23 @@ def _prepare_probe(context: ConformanceFamilyContext) -> ConformancePreparation:
 
 
 def _prepare_status(context: ConformanceFamilyContext) -> ConformancePreparation:
+    """Status checks the token against the installation's client, so a build without one refuses."""
     profile = str(context.profile_id)
     metadata = _synthetic_metadata()
     save_metadata(profile, metadata)
-    expected = GoogleStatusProjection(
-        profile_id=context.profile_id,
-        session_present=True,
-        account_email=metadata.account_email,
-        granted_scopes=metadata.granted_scopes,
-        issued_at=_ISSUED_AT.isoformat(),
-    )
+    save_token(profile, _synthetic_token())
+    refusal = _client_metadata_unavailable(context.profile_id)
+
+    def verify(_outcome: ConformanceOutcome) -> None:
+        assert load_metadata(profile) == metadata and load_token(profile) == _synthetic_token()
+
     request = GoogleStatusRequest(profile_id=context.profile_id)
-    return _preparation(context, request, _succeeded(context.profile_id, expected))
+    return _preparation(
+        context,
+        request,
+        GoogleConfigurationOutcome(profile_id=context.profile_id, outcome="refused", refusal=refusal),
+        verify=verify,
+    )
 
 
 _PREPARERS: dict[str, Callable[[ConformanceFamilyContext], ConformancePreparation]] = {
@@ -252,7 +256,7 @@ GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
         _case(GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
         _case(GOOGLE_LOGOUT_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
         _case(GOOGLE_PROBE_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
-        _case(GOOGLE_STATUS_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
+        _case(GOOGLE_STATUS_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
     ),
     prepare=_prepare,
 )
@@ -298,14 +302,9 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
                     profile_id=context.profile_id, token_removed=True, metadata_removed=True
                 )
             else:
+                # Status checks the stored token against the installation's client.
                 request = GoogleStatusRequest(profile_id=context.profile_id)
-                result = GoogleStatusProjection(
-                    profile_id=context.profile_id,
-                    session_present=True,
-                    account_email=_RETAINED_GOOGLE_METADATA.account_email,
-                    granted_scopes=REQUIRED_SCOPES,
-                    issued_at=_RETAINED_GOOGLE_TIME.isoformat(),
-                )
+                refused = _client_metadata_unavailable(context.profile_id)
         case "config.google.probe":
             save_drive_config(profile, DriveConfig(root_folder_id="synthetic-conformance-folder"))
             request = GoogleProbeRequest(profile_id=context.profile_id, read_only=True)
@@ -342,13 +341,13 @@ GOOGLE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
         RegisteredExecutorConformanceCase(
             "config.google." + suffix,
             OperationTerminalCondition.REFUSED
-            if suffix in {"login", "probe"}
+            if suffix in {"login", "probe", "status"}
             else OperationTerminalCondition.SUCCEEDED,
             # The probe refuses on the missing client while a read-only handoff is
             # open, which leaves no effect in doubt.
             OperationEffect.UPDATED if suffix == "logout" else OperationEffect.NONE,
             ("config.google." + suffix,),
-            "REFUSED_GOOGLE_CONFIGURATION" if suffix in {"login", "probe"} else None,
+            "REFUSED_GOOGLE_CONFIGURATION" if suffix in {"login", "probe", "status"} else None,
         )
         for suffix in (
             "folder.view",

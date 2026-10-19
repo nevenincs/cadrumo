@@ -38,12 +38,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
@@ -58,6 +52,12 @@ from cadrumo.entrypoints.ledger_llm_diagnostics_composition import (
     build_ledger_llm_diagnostics_operation_ports,
 )
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 from cadrumo_runtime.host.tests.frontend.cli.test_ledger_llm_diagnostics import (
     seed_ledger_llm_classified_transactions,
@@ -276,9 +276,9 @@ async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(
                     assert canonical.total_calls == 3
                     assert canonical.total_classified == 2
                     usage = {row.provider: row for row in canonical.usage_providers}
-                    assert usage[LLMProvider.ANTHROPIC.value].cost_estimate_usd == Decimal("0.0015")
-                    assert usage[LLMProvider.OPENAI.value].cost_estimate_usd is None
-                    assert usage[LLMProvider.OPENAI.value].unpriced_calls == 1
+                    assert usage[LLMProvider.AGENT.value].cost_estimate_usd == Decimal("0.0015")
+                    assert usage[LLMProvider.AGENT.value].cost_estimate_usd is None
+                    assert usage[LLMProvider.AGENT.value].unpriced_calls == 1
                     assert canonical.confidence_providers[0].mean_confidence == Decimal("0.6250")
                     assert projection.to_report() == canonical
         except BaseException as error:

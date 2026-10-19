@@ -16,21 +16,14 @@ from cadrumo.adapters.persistence.storage.bucket.output_language_hint import rea
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, ExitReason, RefusalCode, RefusalError
 from cadrumo_client.contracts.installation import Installation
 from cadrumo_client.contracts.login import LoginEvidence, LoginInventory

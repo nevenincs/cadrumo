@@ -6,6 +6,16 @@ from datetime import timedelta
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -36,15 +46,6 @@ from ..operations.registry import (
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .apoderado_contracts import (
     APODERADO_CHECK_OPERATION_DEFINITION_ID,

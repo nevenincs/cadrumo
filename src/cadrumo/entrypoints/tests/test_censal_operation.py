@@ -27,7 +27,6 @@ from cadrumo.application.operations.models import (
 from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.operator_actions.models import ActionReference
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import (
@@ -52,6 +51,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 from cadrumo.tests.inventory import FIXTURES_DIR
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     NOW as _NOW,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from cadrumo.adapters.outbound.google.errors import GoogleAuthNonInteractiveError
 from cadrumo.application.user_profile.google_configuration_operation_contracts import (
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
@@ -15,6 +14,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.google_auth import GoogleAuthNonInteractiveError
 from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitted,

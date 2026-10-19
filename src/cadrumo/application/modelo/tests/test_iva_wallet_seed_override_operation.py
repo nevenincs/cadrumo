@@ -17,6 +17,8 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
@@ -24,7 +26,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_override_operation import (
     MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,

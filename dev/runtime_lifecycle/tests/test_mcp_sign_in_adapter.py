@@ -22,13 +22,15 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID, AuthReadRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AuthorityState, ProfileAccessStatus, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.sign_in import SignInPresence
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.frontend_client import FrontendClient

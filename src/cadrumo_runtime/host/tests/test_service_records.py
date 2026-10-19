@@ -17,9 +17,9 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
-from cadrumo.application.user_profile.access_contracts import AccessScope
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.extension_records import (
     ExtensionRecordCapability,

@@ -6,9 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo_client.contracts.google_auth import GoogleAuthProfileUnboundError
+
 from .....core.config import override_settings
 from ..active_profile import resolve_active_profile
-from ..errors import GoogleAuthProfileUnboundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

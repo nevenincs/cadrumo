@@ -7,6 +7,9 @@ from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
+
 from ...core.identity.digest import ContentDigest
 from .access_administration import AccessAdministrationAction
 from .access_contracts import ACCESS_LEASE_MAXIMUM
@@ -23,7 +26,6 @@ from .automation_administration import (
     validate_enrollment_state,
 )
 from .automation_approval_session import ApprovalSession
-from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .automation_enrollment import (
     AdministrationFacts,
     AutomationAdministrationOwner,
@@ -31,7 +33,6 @@ from .automation_enrollment import (
     AutomationKeyIssuer,
     EnrollmentControlState,
     EnrollmentCustodyPort,
-    EnrollmentProposal,
     EnrollmentRecord,
     EnrollmentRequester,
     EnrollmentStage,

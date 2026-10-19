@@ -28,7 +28,7 @@ def test_usage_recorder_round_trip(tmp_path: Path) -> None:
     recorder = UsageRecorder(root_dir=tmp_path)
     response = LLMResponse(
         text="ok",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=15,
         output_tokens=6,
@@ -56,7 +56,7 @@ def test_usage_default_root_uses_central_settings(tmp_path: Path) -> None:
 
     response = LLMResponse(
         text="ok",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-sonnet-4-6",
         input_tokens=15,
         output_tokens=6,

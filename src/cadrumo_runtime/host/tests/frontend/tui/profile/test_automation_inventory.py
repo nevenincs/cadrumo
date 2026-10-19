@@ -15,14 +15,6 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-    disclosure_digest,
-)
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationGrantProjection,
@@ -33,13 +25,21 @@ from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     AutomationReviewProjection,
     AutomationScopeProjection,
-    EnrollmentKind,
     EnrollmentStage,
 )
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessScope,
+    AuthorityState,
+    Availability,
+    EffectiveScopeSummary,
+    disclosure_digest,
+)
 from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.automation_decision import AutomationDecisionCompletion, AutomationDecisionRunError
 from cadrumo_client.transport.automation_inventory import AutomationInventoryCompletion

@@ -16,10 +16,10 @@ from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.config.check_payloads import ConfigCheckResult
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.commands.tests.diagnostics_native_support import (
+from cadrumo_runtime.host.tests.native_commands.diagnostics_native_support import (
     diagnostics_native_profile as diagnostics_native_profile,
 )
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [
     pytest.mark.integration,

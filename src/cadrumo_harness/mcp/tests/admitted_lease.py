@@ -21,18 +21,13 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ..runtime_adapter import RuntimeMcpAdapter

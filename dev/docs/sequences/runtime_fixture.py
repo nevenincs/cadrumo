@@ -29,17 +29,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.time.clock import frozen_clock
@@ -47,6 +38,8 @@ from cadrumo.domain.calculations.registry.authority_location import bundled_auth
 from cadrumo.domain.filing import software_identity
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.authority_run_snapshot import freeze_authority_root
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
     RefusalCode,

@@ -8,18 +8,14 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
 from cadrumo_client.commands.access_management_payloads import ConfigProfileAutomationCreateResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.secure_input import validate_secrets_payload
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_runtime.commands.runtime_automation_request import AutomationCreateInput
 
 from .runtime_cli import invoke_runtime_cli

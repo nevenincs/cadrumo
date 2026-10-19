@@ -46,7 +46,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_pr
 from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 from cadrumo.entrypoints.overview_evidence_composition import live_censo_verified_profile_keys
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from . import _overview_calendar_support
 from ._overview_calendar_support import (

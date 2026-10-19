@@ -32,7 +32,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,

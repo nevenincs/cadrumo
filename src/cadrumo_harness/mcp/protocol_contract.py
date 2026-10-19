@@ -15,9 +15,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationResultProjectionRefusalV1,
 )
-from cadrumo.application.user_profile.access_contracts import DISCLOSURE_PAGE_ENTRIES, AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationLifecycle
@@ -29,8 +26,12 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.portals.categories import PortalCategory
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import DISCLOSURE_PAGE_ENTRIES
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.projection_pages import ProjectionPage
+from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 
@@ -185,6 +186,10 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     (
         "status",
         "Current exact-profile authorization and availability. You work only inside the one profile the person "
+        "authorized. authenticated describes this connection; grant_required says whether an automation key "
+        "grant is needed. When grant_required is false, grant_valid=false is not a sign-in failure. "
+        "Provider and published-authority requirements are assessed for each operation, not by this status. "
+        "The profile is the one the person "
         "signed in to in Cadrumo, or the one a key the person configured is for, and every tool but this one "
         "needs that: with neither, each answers refused, and remedy says to ask the person to sign in to Cadrumo. "
         "You never sign in, and never ask for a password, a key or any other secret. A notice member carries the "
@@ -333,8 +338,11 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "Read a settled registered result with fresh disclosure checks per page; "
         "the result object needs only operation_id, and the runtime supplies the other identifying values. "
         "An operation that settled refused or failed has no result: its document says operation_not_successful, "
-        "and error_detail beside it carries what the operation recorded about why, which is the registered "
-        "error code, the message key, the context and any precondition verdict the command line prints",
+        "code beside it repeats that refusal token, and error_detail beside it carries what the operation "
+        "recorded about why, which is the registered error code, the message key, the context and any "
+        "precondition verdict the command line prints; "
+        "when that verdict names its recovery, recovery_action_id carries the action's identifier, for example "
+        "operator.provision.browser when the browser needs setting up",
         _schema({"result": _DOC}),
         _reads("Read an operation's result"),
     ),

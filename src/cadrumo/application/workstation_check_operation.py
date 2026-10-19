@@ -9,6 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ..core.async_cleanup import await_cancellation_complete
@@ -38,9 +39,6 @@ from .operations.subject_reference import OperationSubjectReferenceV1
 from .operator_actions.projection import PreconditionVerdictSnapshot
 from .preflight import HealthSeverity, PreflightCheck
 from .provisioning import DependencyStatus
-from .user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, CapabilitySource
 from .workstation_check import WorkstationCheckReport

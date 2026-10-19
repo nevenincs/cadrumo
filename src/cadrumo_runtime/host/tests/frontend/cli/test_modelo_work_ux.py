@@ -48,7 +48,7 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile

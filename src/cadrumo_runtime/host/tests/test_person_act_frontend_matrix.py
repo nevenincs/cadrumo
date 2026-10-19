@@ -39,11 +39,13 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessScope, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo_client.contracts.access_management import AutomationDeny, SessionInventory
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.attendance import AttendanceDecide, AttendancePending
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import ProfileListReply, ProfileListRequest

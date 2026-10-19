@@ -8,6 +8,8 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import cast
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
@@ -21,7 +23,6 @@ from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .classify_requests import (

@@ -18,7 +18,6 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.persistence.leases import OperationOwnerLease
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
@@ -29,6 +28,8 @@ from cadrumo.core.operations import OperationLifecycle, OperationTerminalConditi
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,

@@ -28,7 +28,7 @@ export function toolKindWords(t: Translate, kind: AgentToolKind): string {
 const CONDITIONS = {
   network_unreachable: "desktop.agent.condition_network_unreachable",
   provider_overloaded: "desktop.agent.condition_provider_overloaded",
-  unauthenticated: "desktop.agent.condition_unauthenticated",
+  unauthenticated: "desktop.agent.lane_signed_out",
   throttled: "desktop.agent.condition_throttled",
   usage_exhausted: "desktop.agent.condition_usage_exhausted",
   credits_exhausted: "desktop.agent.condition_credits_exhausted",
@@ -42,7 +42,10 @@ export function conditionWords(
   t: Translate,
   condition: AgentProviderCondition,
 ): string {
-  return t(CONDITIONS[condition]);
+  const key = (CONDITIONS as Readonly<Record<string, string>>)[
+    condition as string
+  ];
+  return typeof key === "string" ? t(key) : t("desktop.agent.reply_failed");
 }
 
 /** The run states a reply is neither written in nor finished in, and that the

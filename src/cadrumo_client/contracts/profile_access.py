@@ -11,16 +11,6 @@ from pydantic import BaseModel, Field, RootModel, model_validator
 
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    AccessScope,
-    AuthorityState,
-    DisclosurePage,
-    DisclosurePageRequest,
-    ProfileAccessStatus,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
@@ -31,7 +21,15 @@ from .access_management import (
     AccessManagementRequest,
     SessionInventoryTransfer,
 )
+from .access_refusals import AccessDenialCode, ProfileAccessStatus
+from .access_vocabulary import (
+    AccessScope,
+    AuthorityState,
+    DisclosurePage,
+    DisclosurePageRequest,
+)
 from .attendance import AttendanceAsk, AttendanceDecide, AttendanceDecided, AttendanceInventory, AttendancePending
+from .automation_codes import AutomationCustodyCode
 from .bootstrap import (
     PasswordReset,
     PasswordResetCompleted,
@@ -51,8 +49,10 @@ from .enrollment_access import EnrollmentReply, EnrollmentRequest
 from .extension_records import ExtensionRecordReply, ExtensionRecordRequest
 from .installation_requests import InstallationActRequest, InstallationReply, InstallationReplyTransfer
 from .operation_access import OperationReply, OperationRequest
+from .profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
 from .service_access import ServiceAdmission, ServiceConnect, ServiceConnected
 from .sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
+from .sign_in_outcomes import SignInRefusal
 
 type HumanProofMethod = Literal["password", "receipt"]
 
@@ -136,6 +136,8 @@ class Request(
             | PasswordResetPrepare
             | PasswordReset
             | SignInStatusRequest
+            | ActiveProfileRequest
+            | LoginTargetRequest
             | SessionRequest
             | ProfileDisclosurePageRequest
             | AttendanceAsk
@@ -297,6 +299,8 @@ class Reply(
             | PasswordResetRefused
             | HumanSignedOut
             | SignInStatusReply
+            | ActiveProfileReply
+            | LoginTargetReply
             | ProfileStatus
             | ProfileStatusTransfer
             | ProfileDisclosurePage

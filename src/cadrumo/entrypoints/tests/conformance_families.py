@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from .conformance_auth_apoderado_support import AUTH_APODERADO_CONFORMANCE_FAMILY
 from .conformance_auth_diagnostic_report_support import AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY
+from .conformance_dependency_support import DEPENDENCY_CONFORMANCE_FAMILY
 from .conformance_diagnostics_repair_support import DIAGNOSTICS_REPAIR_CONFORMANCE_FAMILY
 from .conformance_diagnostics_support import DIAGNOSTICS_CONFORMANCE_FAMILY
 from .conformance_family_contract import ConformanceFamily
@@ -37,6 +38,7 @@ from .conformance_workstation_check_support import WORKSTATION_CHECK_CONFORMANCE
 CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     AUTH_APODERADO_CONFORMANCE_FAMILY,
     AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY,
+    DEPENDENCY_CONFORMANCE_FAMILY,
     DIAGNOSTICS_CONFORMANCE_FAMILY,
     DIAGNOSTICS_REPAIR_CONFORMANCE_FAMILY,
     GOOGLE_CONFORMANCE_FAMILY,

@@ -47,6 +47,7 @@ def _agent_dependencies(root: Path, versions: Mapping[str, str]) -> Path:
     [
         ("missing", "closure mismatch"),
         ("core-only", "closure mismatch"),
+        ("browser-missing", "closure mismatch"),
         ("mixed", "cohort versions"),
         ("duplicate", "Duplicate installed"),
         ("target", "target/layout ABI"),
@@ -65,6 +66,7 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
     for name, requirement in bundled.items():
         versions[name] = next(iter(requirement.specifier)).version
     assert "httpx" in bundled and "websockets" not in bundled
+    assert {"playwright", "playwright-stealth", "pyee"} <= set(bundled)
     versions.update(_AGENT_ADDITIONS)
     versions["cadrumo-agent"] = "0.1.0"
     companion = PRODUCT_IDENTITY.companion_distributions[0]
@@ -72,6 +74,8 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
         del versions[companion]
     if defect == "core-only":
         del versions["nvidia-ml-py"]
+    if defect == "browser-missing":
+        del versions["playwright"]
     if defect == "mixed":
         versions[companion] = "1.2.2"
     if defect == "agent-missing":

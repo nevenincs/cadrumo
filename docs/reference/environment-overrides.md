@@ -21,22 +21,16 @@ value already present in your shell always wins.
 
 | Variable | Type | Default | What it controls |
 | --- | --- | --- | --- |
-| `AEAT_AUTHORITATIVE_LANGUAGE_AEAT_TERMS` | str | `es` | Authoritative language for domain terminology (modelos, registry definitions, references). |
-| `AEAT_BASE_URL` | str | (derived) | AEAT sede electrónica base URL |
 | `AEAT_CLAVE_PERMANENTE_SEDE_ACCESS_URL_TEMPLATE` | str | (derived) | URL template for AEAT's auth-method selector page used by the Cl@ve Permanente login flow. `{target}` is replaced with the URL-encoded target path. The default template is sourced from the external constants registry. |
 | `AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE` | str | (derived) | URL template for AEAT's auth-method selector page. `{target}` is replaced with the URL-encoded target path. The default template is sourced from the external constants registry. |
 | `AEAT_MANUALS_ROOT` | Path | (derived) | Root directory for the structured AEAT Manual práctico corpus |
 | `AEAT_NORMATIVES_ROOT` | Path | (derived) | Root directory for the bundled legal normatives corpus |
 | `AEAT_SEDE_EXPEDIENTES_PATH` | str | (derived) | AEAT Sede path for 'Mis expedientes'; the default post-auth target used by Cl@ve Móvil login and the expedientes reader. |
-| `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Override only when AEAT changes the corresponding route. |
-| `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Override only when AEAT changes the corresponding route. |
 | `CADRUMO_ATTACHMENTS_DIR` | Path | (derived) | Root directory for the attachment byte and manifest store |
-| `CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS` | str | `en` | Authoritative language for internal code and documentation |
 | `CADRUMO_AUTHORITY_ROOT` | Path | unset | Directory holding the published registry authority descriptor ``authority.current.json`` and the content-addressed SQLite generation it selects. The ``None`` default is the installed posture: the authority ships inside the distribution and resolves through the bundled-data boundary, so an unset ``CADRUMO_AUTHORITY_ROOT`` leaves resolution exactly as the packaged product performs it. A development checkout sets it to the generated authority tree it keeps outside the packaged location; the descriptor must exist under the named directory. |
 | `CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S` | int | `180` | Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows |
 | `CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S` | int | `90` | Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the acquisition lock TTL |
 | `CADRUMO_AUTH_PROVIDER` | AuthProviderKind | unset | Default auth provider for `cadrumo-runtime config auth status` / `test` when --provider is omitted. When None, the CLI auto-selects the first configured provider from the canonical registry order. |
-| `CADRUMO_AUTH_TIMEOUT_MS` | int | `30000` | Playwright navigation timeout for protected AEAT authentication in milliseconds |
 | `CADRUMO_BLOB_STORE_DIR` | Path | (derived) | Directory containing the encrypted blob store (content-addressed, classification-aware) |
 | `CADRUMO_BROWSER_BUSCAR_SETTLE_MS` | int | `3000` | Settle delay (ms) after the AEAT 'Buscar' button before reading the results table |
 | `CADRUMO_BROWSER_CLOSE_TIMEOUT_MS` | int | `5000` | Best-effort timeout (ms) for Playwright browser context/session cleanup during AEAT live auth and read flows. Cleanup must not leave a command hanging after the primary operation has already failed or timed out. |
@@ -52,7 +46,6 @@ value already present in your shell always wins.
 | `CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES` | int | `15` | Fallback idle-lock window (minutes) when a bucket manifest omits the value |
 | `CADRUMO_BUCKET_DEFAULT_SESSION_ABSOLUTE_MINUTES` | int | `240` | Fallback absolute session-lifetime cap (minutes) when a bucket manifest omits session_absolute_minutes; fixed at login and never refreshed, so a touched-forever session still seals at this cap (default 4 h, 12 h hard ceiling) |
 | `CADRUMO_BUCKET_LOCK_POLL_INTERVAL_S` | float | `0.1` | Polling interval (seconds) for bucket lockfile acquisition retries |
-| `CADRUMO_CALC_SHEETS_RECALC_DELAY_S` | float | `2.0` | Delay (seconds) waiting for Google Sheets server-side recalculation between parity polls |
 | `CADRUMO_CERTIFICATE_FRIENDLY_NAME` | str | unset | Optional human-readable label for the certificate |
 | `CADRUMO_CERTIFICATE_PASSWORD_SECRET` | SecretStr | (secret) | PKCS#12 passphrase (env only, never logged or persisted) |
 | `CADRUMO_CERTIFICATE_PATH` | Path | unset | Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle |
@@ -71,26 +64,20 @@ value already present in your shell always wins.
 | `CADRUMO_CONNECTION_SOCKET_DIR` | Path | (derived) | Owner-only local connection sockets and locks beneath the storage root. |
 | `CADRUMO_CORPUS_SEARCH_CACHE_DIR` | Path | (derived) | Directory for the corpus-search lexical index (a SQLite database built from bundled normative extractions and rebuilt when their exact content identity changes) |
 | `CADRUMO_DATABASE_URL` | str | empty | SQLAlchemy URL for the primary persistence backend. When empty, the model validator resolves the URL through the active-profile precedence chain to ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/cadrumo.db``; with no active profile it derives a root-level fallback at ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so the URL is never empty when the storage root is set. Tests that need a deterministic location supply this field explicitly; production reads the computed value. |
-| `CADRUMO_DEADLINE_DUE_SOON_DAYS` | int | `14` | Days before an obligation's closes_on date that flag ObligationStatus.DUE_SOON in the deadline engine |
 | `CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE` | str | empty | Development-only: exactly '1' disables native desktop/login-session admission for the manually started runtime. Native same-account transport identity, profile authentication, grants and connection binding remain required. |
 | `CADRUMO_DEV_TEST_DATABASE_PASSWORD` | SecretStr | (secret) | Development/test-only password used by secure-storage subprocess tests. |
 | `CADRUMO_DRAFTS_DIR` | Path | (derived) | Directory where filing drafts are written as JSON files |
-| `CADRUMO_DRAFT_FAIL_ON_WARNING` | bool | `false` | If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced |
 | `CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED` | bool | `false` | Whether this deployment permits reading taxpayer evidence at an off-host model at all. Default off: every evidence read stays on the host. When True, an explicit per-invocation operator acknowledgement is still required for each read, and gestor deployments stay barred. |
 | `CADRUMO_EVIDENCE_GESTOR_MODE` | bool | `false` | Gestor/professional deployment flag for evidence reading. When True, an off-host evidence read is categorically refused regardless of cadrumo_evidence_cloud_upload_permitted or any per-invocation acknowledgement. |
-| `CADRUMO_FALLBACK_LANGUAGES` | str | `es,en` | Comma-separated fallback chain consulted when the target language is missing. |
 | `CADRUMO_FILED_DECLARATIONS_DIR` | Path | (derived) | Directory for filed-declaration observations captured from AEAT. Derived under cadrumo_local_storage_root unless explicitly set. |
 | `CADRUMO_FILE_LOCK_RETRY_BACKOFF_S` | float | `0.05` | Sleep interval (seconds) between non-blocking file-lock acquire attempts |
 | `CADRUMO_FILE_LOCK_TIMEOUT_S` | float | `30.0` | Default exclusive file-lock acquisition timeout (seconds) |
-| `CADRUMO_FILING_HISTORY_ARCHIVE_HTML` | bool | `false` | If true, archive fetched detail-page HTML under <cadrumo_filing_history_dir>/pages/ |
-| `CADRUMO_FILING_HISTORY_CACHE_TTL_S` | int | `900` | TTL in seconds for per-expediente filing-history cache entries (default 15 min) |
 | `CADRUMO_FILING_HISTORY_DIR` | Path | (derived) | Directory where the persisted ModeloHistory JSON file lives |
 | `CADRUMO_FINANCIAL_TXS_DIR` | Path | (derived) | Directory where the transaction catalogue JSON file is stored |
 | `CADRUMO_FORCE_COLOR` | bool | `false` | Force ANSI colour output even when stdout is not a TTY. Operators set this when piping Cadrumo output through a terminal renderer (less -R, gh actions, etc.). Defaults to False; the should_use_color() helper consults this and the standard NO_COLOR convention through Settings rather than reading os.environ directly. |
 | `CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S` | int | `15` | Timeout (seconds) for one ECB Data Portal euro reference-rate lookup. A ledger import resolves one lookup per distinct currency/date, so this budget bounds a single observation query rather than the whole import. |
 | `CADRUMO_GNOME_EXTENSIONS_DIR` | Path | (derived) | Explicit GNOME extension publication directory. |
 | `CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME` | str | `cadrumo-vault` | Folder name created under the Google Drive root for the Cadrumo vault |
-| `CADRUMO_INBOX_ALERT_LEAD_DAYS` | int | `7` | Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH notifications whose appeal_deadline falls within the next N days |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
 | `CADRUMO_IVA_COMPENSATION_HISTORY_DIR` | Path | (derived) | Directory for Modelo 303 compensation-history capture reports. Derived under cadrumo_local_storage_root unless explicitly set. |
 | `CADRUMO_IVA_READ_EVIDENCE_DIR` | Path | (derived) | Directory for IVA remote-state read-evidence reports. Derived under cadrumo_local_storage_root unless explicitly set. |
@@ -107,7 +94,6 @@ value already present in your shell always wins.
 | `CADRUMO_LLM_CACHE_DIR` | Path | (derived) | Directory for on-disk LLM cache entries |
 | `CADRUMO_LLM_CACHE_MAX_RECORDS` | int | `5000` | Maximum number of LLM response-cache entries retained; oldest excess entries are pruned |
 | `CADRUMO_LLM_CACHE_RETENTION_DAYS` | int | `30` | Retention window in days for on-disk LLM response-cache entries; older entries are pruned |
-| `CADRUMO_LLM_CLOUD_MAPPING_MODEL` | str | `claude-haiku-4-5` | Hosted model used to name what each column of a delimited table holds. The cloud counterpart of cadrumo_llm_ollama_mapping_model, kept separate for the same reason: column-role mapping is the easiest job in the product and must be sizeable DOWN independently rather than inheriting a harder role's model |
 | `CADRUMO_LLM_CLOUD_TEXT_MODEL` | str | `claude-haiku-4-5` | Hosted model used to classify an already-extracted text layer off-host. The cloud counterpart of cadrumo_llm_ollama_text_model. This model reads only extracted text and selects from the registry allow-list; it never emits a regulated number |
 | `CADRUMO_LLM_CLOUD_VISION_MODEL` | str | `claude-haiku-4-5` | Hosted model used to read scanned/image evidence when a request is routed off-host. The cloud counterpart of cadrumo_llm_ollama_vision_model, and it exists for the same reason the local roles do: without a role-named cloud setting every off-host read falls through to the single global cadrumo_llm_model, so each new cloud consumer silently re-inherits whatever tier that happens to name. Defaults to the lowest-bound capable current Claude model |
 | `CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE` | bool | `false` | Admit a local model load even when free headroom could not be measured. Default false: an unreadable free figure fails CLOSED at the act, because 'could not tell' is not evidence of headroom. Set true only on a machine known to have capacity that this build cannot read (a non-NVIDIA accelerator, or NVML absent because cadrumo[llm] is not installed). It does not override a MEASURED shortfall -- a load whose requirement exceeds measured free memory is refused regardless of this setting |
@@ -118,7 +104,6 @@ value already present in your shell always wins.
 | `CADRUMO_LLM_GEMINI_API_KEY` | SecretStr | (secret) | Google Gemini API key (optional) |
 | `CADRUMO_LLM_GEMINI_GENERATE_CONTENT_TEMPLATE` | str | `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` | Google Gemini generateContent endpoint template (``{model}`` is substituted) |
 | `CADRUMO_LLM_LOCAL_INFERENCE_CONCURRENCY` | int | `1` | How many on-host inference requests this process may run at once. Default one, because two concurrent reads on consumer hardware are the same out-of-memory kill the contention check exists to prevent, reached by another route: each load individually fits the measured headroom, and together they do not. A request arriving while the arena is full is REFUSED rather than queued -- a queued request would wait holding its decoded pages in the memory under pressure, and would run against headroom measured before it waited. Raise it only on a machine with headroom for a second concurrent model load; it does not bound off-host dispatch, which occupies none of this machine's device memory |
-| `CADRUMO_LLM_MAX_RETRIES` | int | `3` | Maximum retry attempts for retryable LLM failures |
 | `CADRUMO_LLM_MODEL_RUNTIME_MEMORY_FLOOR_BYTES` | int | `8589934592` | Minimum total system memory the local model runtime needs before a vision read is worth attempting. Sized for the default vision model (qwen3-vl:2b, ~1.9 GB of weights) plus the 8192-token context window and normal OS residency, which is why the floor sits well above the weight size alone. Below it the runtime does not refuse -- it loads and thrashes, or is killed mid-read, which reaches the operator as an unexplained timeout rather than as a hardware shortfall. Tunable because the floor tracks the configured model: raise it when overriding upward to a larger catalogued candidate |
 | `CADRUMO_LLM_MODEL` | str | `claude-haiku-4-5` | Default LLM model identifier -- the last-resort fallback for any request that names no model and belongs to no declared role. It previously carried a hand-typed frontier-tier identifier, which made it the single point where every unrouted call silently reached the most expensive tier available; the value is now read from the core model catalogue's lowest-bound capable cloud default. Prefer a role-named setting (cadrumo_llm_cloud_vision_model and siblings) over this field: a caller resolving through a role gets a model chosen for its job, while this one is only a floor |
 | `CADRUMO_LLM_OLLAMA_CHAT_URL` | str | `http://127.0.0.1:11434/api/chat` | Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments |
@@ -144,7 +129,6 @@ value already present in your shell always wins.
 | `CADRUMO_LOG_LEVEL` | str | empty | Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. The desktop Logs view defaults to INFO and uses this as its initial minimum level. CLI verbosity names quiet, default, verbose, and debug remain supported. |
 | `CADRUMO_LOG_ROOT_LEVEL` | str | `DEBUG` | Root logger level installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_STDERR_LEVEL` | str | `ERROR` | Log level for the stderr handler installed by ``cadrumo.core.logging`` |
-| `CADRUMO_MANUALS_HTTP_TIMEOUT_S` | float | `60.0` | HTTP timeout (seconds) for AEAT manual PDF downloads |
 | `CADRUMO_OLLAMA_HOME_DIR` | Path | (derived) | Private home for Cadrumo-owned Ollama processes, including their runtime identity. |
 | `CADRUMO_OLLAMA_MODELS_DIR` | Path | (derived) | Model weights for Cadrumo-owned Ollama processes. |
 | `CADRUMO_OUTPUT_LANGUAGE` | OutputLanguage | `es` | Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default. |
@@ -152,9 +136,8 @@ value already present in your shell always wins.
 | `CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION` | bool | `true` | Whether profile-custody KDF calibration MEASURES the parameter grid on this host. True (the default, and the only production posture) samples real supervised derivations to pick the strongest grid point that still lands inside the operator latency band. False skips the measurement loop and adopts the fixed fallback point the calibrator already falls back to when no point can be confirmed in time. Measuring can only strengthen a wrap: calibration never selects a point weaker than the fallback, so False leaves every new profile at the fallback's strength. The derivation itself is the same real Argon2id through the same supervised worker. |
 | `CADRUMO_PROXY_BYPASS` | str | empty | Comma-separated list of domains to bypass the proxy |
 | `CADRUMO_PROXY_PASSWORD_SECRET` | SecretStr | (secret) | Password for proxy authentication |
-| `CADRUMO_PROXY_URL` | str | empty | Proxy URL (e.g., 'http://proxy.example.com:8080') |
+| `CADRUMO_PROXY_URL` | str | empty | Proxy URL (e.g., 'http://proxy.example.com:8080'); it may carry 'user:password@', and is then treated as a credential |
 | `CADRUMO_PROXY_USERNAME` | str | empty | Username for proxy authentication |
-| `CADRUMO_RATE_LIMIT_DELAY_SECONDS` | float | `2.0` | Minimum delay between AEAT requests in seconds |
 | `CADRUMO_RUNS_DIR` | Path | (derived) | Directory where run traces and JSONL event logs are persisted (one subdirectory per run_id, containing trace.json + events.jsonl) |
 | `CADRUMO_RUNS_MAX_TOTAL_BYTES` | int | `268435456` | Trace-store byte cap; after age pruning, remove oldest runs but always retain the newest |
 | `CADRUMO_RUNS_RETENTION_DAYS` | int | `30` | Retention window in days for per-run trace directories; older run directories are pruned |
@@ -162,11 +145,9 @@ value already present in your shell always wins.
 | `CADRUMO_SECRET_STORE_DIR` | Path | (derived) | Directory for the encrypted secret-store master-key file and ciphertext records |
 | `CADRUMO_STORAGE_PROVIDER_KIND` | str | `local_filesystem` | Backend for `cadrumo.adapters.outbound.storage`. Accepted values: local_filesystem (default), google_drive, in_memory. google_drive additionally requires a Google sign-in for the profile through `cadrumo-runtime config google login`. |
 | `CADRUMO_STORAGE_ROOT` | Path | (derived) | Shared storage root; defaults to the repository's var/storage. CADRUMO_LOCAL_STORAGE_ROOT overrides it for the local backend. |
-| `CADRUMO_STRICT_SECURITY` | bool | `false` | Raise instead of warn when AEAT credential artifact permission hardening fails |
 | `CADRUMO_SUBMISSIONS_DIR` | Path | (derived) | Directory where ModeloPresentado JSON audit records are persisted |
 | `CADRUMO_TEMP_DIR` | Path | (derived) | Application temporary files beneath the storage root. |
 | `CADRUMO_TOKEN_DIR` | Path | (derived) | Directory for cached authentication token and lock files. The the relative default here is a placeholder: when the field is not explicitly set, the model validator roots it at ``<cadrumo_local_storage_root>/tokens`` so every profile store, token and lock files included, lives under one state root. An explicit ``CADRUMO_TOKEN_DIR`` override wins over the derived default. |
-| `CADRUMO_TUI_APPEARANCE` | TuiAppearance | `auto` | Appearance for the full-screen terminal surfaces. auto = follow the host terminal. light = the warm-paper appearance. dark = the low-light appearance. |
 | `CADRUMO_USAGE_RATIOS_PATH` | Path | (derived) | User-configured per-category usage ratio overrides |
 | `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` | Path | unset | Opt-in diagnostic capture directory for the IVA compensation wallet (cartera) read. The ``None`` default disables capture and is the only production posture: with it unset the wallet read path is byte-for-byte unchanged. When set via ``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read writes one redacted structural-shape summary per captured page and frame (URL without query, heading/table/form/input counts, form action paths, input identifiers, and a content hash) to this directory so AEAT DOM drift on the cartera surface can be diagnosed offline. It never writes raw HTML, frame HTML, screenshots, input values, or wallet amounts, so the capture carries no live taxpayer figures; it is written only to this operator-chosen directory and must never be committed or reused as a fixture without sanitisation. |
 | `CADRUMO_WALLET_DIAGNOSTIC_RETENTION_DAYS` | int | `30` | Retention window in days for wallet diagnostic dump files; when the opt-in dump directory is configured, dump files older than this are pruned |
@@ -190,8 +171,8 @@ A profile passes whole groups of names from its caller.
 | Group | Names |
 | --- | --- |
 | `locations` | `CADRUMO_ATTACHMENTS_DIR`, `CADRUMO_BLOB_STORE_DIR`, `CADRUMO_CHROMIUM_DATA_ROOT`, `CADRUMO_CORPUS_SEARCH_CACHE_DIR`, `CADRUMO_DRAFTS_DIR`, `CADRUMO_FILED_DECLARATIONS_DIR`, `CADRUMO_FILING_HISTORY_DIR`, `CADRUMO_FINANCIAL_TXS_DIR`, `CADRUMO_GNOME_EXTENSIONS_DIR`, `CADRUMO_INVOICES_DIR`, `CADRUMO_IVA_COMPENSATION_HISTORY_DIR`, `CADRUMO_IVA_READ_EVIDENCE_DIR`, `CADRUMO_JUSTIFICANTES_DIR`, `CADRUMO_LIVE_STATE_DIR`, `CADRUMO_LLM_CACHE_DIR`, `CADRUMO_LLM_RUN_RECORD_DIR`, `CADRUMO_LLM_USAGE_DIR`, `CADRUMO_LOG_DIR`, `CADRUMO_OLLAMA_HOME_DIR`, `CADRUMO_OLLAMA_MODELS_DIR`, `CADRUMO_PLAYWRIGHT_BROWSERS_DIR`, `CADRUMO_RUNS_DIR`, `CADRUMO_RUNTIME_SOCKET_DIR`, `CADRUMO_SECRET_STORE_DIR`, `CADRUMO_SUBMISSIONS_DIR`, `CADRUMO_TEMP_DIR`, `CADRUMO_TOKEN_DIR`, `CADRUMO_USAGE_RATIOS_PATH`, `CADRUMO_WORKFLOW_RUNS_DIR` |
-| `presentation` | `CADRUMO_LOG_LEVEL`, `CADRUMO_LOG_STDERR_LEVEL`, `CADRUMO_LOG_FILE_LEVEL`, `CADRUMO_LOG_ROOT_LEVEL`, `CADRUMO_OUTPUT_LANGUAGE`, `CADRUMO_FALLBACK_LANGUAGES`, `NO_COLOR`, `CADRUMO_FORCE_COLOR`, `CADRUMO_TUI_APPEARANCE`, `CADRUMO_DEADLINE_DUE_SOON_DAYS`, `CADRUMO_INBOX_ALERT_LEAD_DAYS`, `CADRUMO_CERT_WARN_DAYS`, `CADRUMO_CERT_CRITICAL_DAYS` |
-| `remote` | `CADRUMO_AUTH_TIMEOUT_MS`, `CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`, `CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`, `CADRUMO_BROWSER_HEADLESS`, `CADRUMO_BROWSER_VIEWPORT_WIDTH`, `CADRUMO_BROWSER_VIEWPORT_HEIGHT`, `CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS`, `CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS`, `CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS`, `CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS`, `CADRUMO_BROWSER_BUSCAR_SETTLE_MS`, `CADRUMO_BROWSER_CLOSE_TIMEOUT_MS`, `CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS`, `CADRUMO_RATE_LIMIT_DELAY_SECONDS`, `SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`, `CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S`, `CADRUMO_MANUALS_HTTP_TIMEOUT_S`, `CADRUMO_CALC_SHEETS_RECALC_DELAY_S`, `CADRUMO_LLM_DEFAULT_TIMEOUT_S`, `CADRUMO_LLM_VISION_READ_TIMEOUT_S` |
+| `presentation` | `CADRUMO_LOG_LEVEL`, `CADRUMO_LOG_STDERR_LEVEL`, `CADRUMO_LOG_FILE_LEVEL`, `CADRUMO_LOG_ROOT_LEVEL`, `CADRUMO_OUTPUT_LANGUAGE`, `NO_COLOR`, `CADRUMO_FORCE_COLOR`, `CADRUMO_CERT_WARN_DAYS`, `CADRUMO_CERT_CRITICAL_DAYS` |
+| `remote` | `CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`, `CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`, `CADRUMO_BROWSER_HEADLESS`, `CADRUMO_BROWSER_VIEWPORT_WIDTH`, `CADRUMO_BROWSER_VIEWPORT_HEIGHT`, `CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS`, `CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS`, `CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS`, `CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS`, `CADRUMO_BROWSER_BUSCAR_SETTLE_MS`, `CADRUMO_BROWSER_CLOSE_TIMEOUT_MS`, `CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS`, `CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS`, `SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`, `CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S`, `CADRUMO_LLM_DEFAULT_TIMEOUT_S`, `CADRUMO_LLM_VISION_READ_TIMEOUT_S` |
 | `package` | `CADRUMO_CLI_REVEAL_IDENTIFIERS`, `CADRUMO_EXTERNAL_BIN_DIRS` |
 
 ### Operating-system names
@@ -215,10 +196,10 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Program:** `python`
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
-- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
+- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package` and the names `CADRUMO_PROXY_URL`, `CADRUMO_PROXY_USERNAME` and `CADRUMO_PROXY_BYPASS`
 - **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `kdf-child`
 
@@ -236,7 +217,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
 - **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `cadrumo-mcp`
 
@@ -246,14 +227,14 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
 - **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `cadrumo-runtime`
 
 - **Program:** `cadrumo-runtime`
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `display` and `network`
-- **Passes from its caller:** the names `CADRUMO_CLI_REVEAL_IDENTIFIERS`
+- **Passes from its caller:** the names `CADRUMO_CLI_REVEAL_IDENTIFIERS`, `CADRUMO_PROXY_URL`, `CADRUMO_PROXY_USERNAME` and `CADRUMO_PROXY_BYPASS`
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
@@ -264,7 +245,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Starts from:** only the operating-system groups `system`, `session`, `display` and `network`
 - **Passes from its caller:** the name groups `locations`, `presentation` and `package`
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root, `CADRUMO_AUTHORITY_ROOT` to the package's registry authority, `CADRUMO_PACKAGE_AGENT_EXECUTABLE` to the path of the `cadrumo-agent` program, `CADRUMO_PACKAGE_RELAY_EXECUTABLE` to the path of the `cadrumo-mcp` program, `CADRUMO_PACKAGE_AEAT_EXECUTABLE` to the path of the `aeat` program and `CADRUMO_PACKAGE_PYTHON_EXECUTABLE` to the path of the `python` program
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `agent-gateway`
 
@@ -274,7 +255,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS` and every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
 - **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_PROFILE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `agent-worker`
 
@@ -284,7 +265,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS` and every name that starts with `CADRUMO_AGENT_` except `CADRUMO_AGENT_ENV_FILE`, `CADRUMO_AGENT_HOSTED_CLI_EXECUTABLE` and `CADRUMO_AGENT_HOSTED_PYTHON_EXECUTABLE`
 - **Accepts from its parent:** `CADRUMO_LOCAL_STORAGE_ROOT` (directory, optional), `CADRUMO_PROFILE_ROOT` (directory, optional), `CADRUMO_AGENT_HOSTED_ROOT` (directory, optional), `CADRUMO_AGENT_PORT` (port, optional) and `CADRUMO_AGENT_WORKER_PORT` (port, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 #### `agent-providers`
 
@@ -298,12 +279,12 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `agent-auth`
 
 - **Program:** `cadrumo-agent`
-- **Started with:** `-m cadrumo_agent.cli.main auth login --provider <provider:identifier>`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method browser --timeout 300`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method device --timeout 300`
+- **Started with:** `-m cadrumo_agent.cli.main auth status --json`; `-m cadrumo_agent.cli.main auth login --provider <provider:identifier>`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method browser --timeout 300`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method device --timeout 300`
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS`
-- **Accepts from its parent:** `CADRUMO_AGENT_HOSTED_ROOT` (directory, required)
+- **Accepts from its parent:** `CADRUMO_AGENT_HOSTED_ROOT` (directory, required) and `CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE` (executable, optional)
 - **Sets itself:** `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root
-- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
+- **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
 
 ### Names only the package declares
 
@@ -311,6 +292,7 @@ The settings table above does not list these names.
 
 | Name | Kind | What it is |
 | --- | --- | --- |
+| `CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE` | executable | a launch parameter its parent supplies |
 | `CADRUMO_AGENT_HOSTED_ROOT` | directory | a launch parameter its parent supplies |
 | `CADRUMO_AGENT_PORT` | port | a launch parameter its parent supplies |
 | `CADRUMO_AGENT_WORKER_PORT` | port | a launch parameter its parent supplies |

@@ -12,9 +12,10 @@ import asyncio
 from datetime import datetime
 from uuid import UUID
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from .session_authority_core import SessionAuthorityCore
 

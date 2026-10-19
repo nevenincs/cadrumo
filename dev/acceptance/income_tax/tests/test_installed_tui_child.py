@@ -17,13 +17,9 @@ from textual.app import App, ComposeResult
 from textual.widgets import OptionList, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.session_events import LifecycleNotice
 from cadrumo_client.transport.frontend_client import FrontendClient

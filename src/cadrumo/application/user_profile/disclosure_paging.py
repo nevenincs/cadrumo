@@ -10,8 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from cadrumo_client.contracts.access_vocabulary import DisclosurePage, DisclosurePageRequest
+
 from ...core.identity.digest import ContentDigest
-from .access_contracts import DisclosurePage, DisclosurePageRequest
 
 
 class DisclosurePageReader(Protocol):

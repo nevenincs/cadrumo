@@ -9,7 +9,6 @@ import typer
 from pydantic import SecretStr
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.user_profile.access_contracts import DisclosurePageRequest
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReviewProjection,
@@ -39,6 +38,7 @@ from cadrumo_client.commands.secure_input import (
     read_machine_secret_payload,
     select_machine_secret_channel,
 )
+from cadrumo_client.contracts.access_vocabulary import DisclosurePageRequest
 from cadrumo_client.transport.automation_decision import AutomationDecision, run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.frontend_client import FrontendClient

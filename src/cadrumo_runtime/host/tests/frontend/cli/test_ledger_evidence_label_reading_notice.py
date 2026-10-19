@@ -375,7 +375,6 @@ def _start_holding_read(tmp_path: Path) -> tuple[threading.Thread, list[object]]
     root = tmp_path / "holding-read"
     settings = EnvFileFreeSettings(
         cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model=_UNASSESSED_MODEL,
         cadrumo_llm_ollama_chat_url=load_settings().cadrumo_llm_ollama_chat_url,
         cadrumo_llm_cache_dir=root / "cache",
         cadrumo_llm_usage_dir=root / "usage",

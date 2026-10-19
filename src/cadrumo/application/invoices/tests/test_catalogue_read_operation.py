@@ -12,6 +12,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import InvoiceKind
@@ -24,12 +27,6 @@ from ...operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
-)
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..catalogue_creation import build_catalogue_invoice

@@ -10,12 +10,8 @@ import struct
 import sys
 from dataclasses import dataclass, replace
 
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .macos_process import read_macos_process

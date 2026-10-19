@@ -15,12 +15,23 @@ import threading
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field
 
+from cadrumo_client.contracts.model_runs import (
+    MODEL_RUN_MAX_DEADLINE_SECONDS,
+    ModelRunConsentBinding,
+    ModelRunLane,
+    ModelRunMediaKind,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+)
+
+from ....application.operations.model_runs import ModelRunPort, current_model_run_port
 from ....core.config import Settings
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
@@ -58,15 +69,12 @@ if TYPE_CHECKING:
     from ...persistence.llm.run_records import LLMRunRecorder
     from ...persistence.llm.usage import UsageRecorder
 from ....core.config_support import LLMProvider
+from ....core.model_catalogue import ModelRole
 from .models import LLMRequest, LLMResponse, PromptRegistry
 from .pricing import estimate_cost_usd
+from .providers.agent import AgentAdapter, lane_model_label, model_run_refusal_error
 from .providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
-from .providers.gemini import GeminiAdapter
 from .providers.local import LocalAdapter
-from .providers.openai import OpenAIAdapter
-
-# AnthropicAdapter stays lazy here so provider construction remains behind the
-# optional-extra guard in _build_adapter.
 
 _LOGGER = get_logger(__name__)
 
@@ -315,6 +323,15 @@ def _on_host_inference_arena(settings: Settings) -> _OnHostInferenceArena:
         return _on_host_arena
 
 
+@dataclass(frozen=True)
+class _AgentDispatch:
+    """The lane one agent dispatch was resolved to, and the port that reaches it."""
+
+    port: ModelRunPort
+    role: ModelRole
+    lane: ModelRunLane
+
+
 class LLMClient:
     """Public async-first LLM completion entry point.
 
@@ -346,6 +363,10 @@ class LLMClient:
             reaches the fail-closed arm rather than the shortfall arm. The two
             are indistinguishable from the refusal alone, so a case that means
             to prove one must say which.
+        model_runs: Optional port through which a request dispatched to
+            :attr:`~llm.LLMProvider.AGENT` reaches the agent service. Without
+            one, the port bound to the running operation is used, and outside an
+            operation such a request refuses as ``service_unavailable``.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
     """
@@ -363,6 +384,7 @@ class LLMClient:
         hardware_profile: HardwareProfile | None = None,
         runtime_residents: tuple[RuntimeResident, ...] | None = None,
         runtime_residents_measured: bool = True,
+        model_runs: ModelRunPort | None = None,
         caller: str = "cadrumo.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
     ) -> None:
@@ -391,6 +413,7 @@ class LLMClient:
         self.hardware_profile = hardware_profile
         self.runtime_residents = runtime_residents
         self.runtime_residents_measured = runtime_residents_measured
+        self.model_runs = model_runs
         self.caller = caller
         self.prompt_id = prompt_id
         self._sweep_retention_stores()
@@ -430,7 +453,12 @@ class LLMClient:
             Exception: Re-raised after logging when the LLM provider adapter fails.
         """
         provider = request.provider_override or self._default_provider()
-        model = request.model_override or self._default_model(provider)
+        agent = await self._agent_dispatch(request) if provider is LLMProvider.AGENT else None
+        model = (
+            lane_model_label(agent.lane)
+            if agent is not None
+            else request.model_override or self._default_model(provider)
+        )
         self._require_evidence_consent(provider, model, request)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
@@ -439,7 +467,7 @@ class LLMClient:
             self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
             return response
 
-        adapter = self._build_adapter(provider)
+        adapter = self._build_adapter(provider, agent=agent, request=request)
         provider_request = ProviderRequest(
             request_id=request_id,
             model=model,
@@ -930,54 +958,71 @@ class LLMClient:
             ) from exc
 
     def _default_model(self, provider: LLMProvider) -> str:
-        if provider is self._default_provider():
-            return self.settings.cadrumo_llm_model
-        defaults = {
-            LLMProvider.ANTHROPIC: "claude-sonnet-4-6",
-            LLMProvider.OPENAI: "gpt-4.1",
-            LLMProvider.GEMINI: "gemini-2.5-pro",
-            LLMProvider.LOCAL: "gpt-oss",
-        }
-        return defaults[provider]
+        if provider is LLMProvider.LOCAL:
+            return self.settings.cadrumo_llm_ollama_text_model
+        msg = "an agent dispatch takes its model from the lane the service resolves"
+        raise InternalInvariantError(msg)
 
-    def _build_adapter(self, provider: LLMProvider) -> ProviderAdapter:
-        timeout_s = self.settings.cadrumo_llm_default_timeout_s
-        if provider is LLMProvider.ANTHROPIC:
-            # The Anthropic-API provider needs the optional `anthropic` extra. Guard
-            # before the lazy import so a missing extra is an instructive
-            # LLMConfigError, not a deep ModuleNotFoundError.
-            from ....core.optional_extras import ANTHROPIC_EXTRA, require_optional_extra
+    async def _agent_dispatch(self, request: LLMRequest) -> _AgentDispatch:
+        """Resolve the lane the agent service would use, before consent or cache are consulted.
 
-            require_optional_extra(ANTHROPIC_EXTRA)
-            from .providers.anthropic import AnthropicAdapter
+        The lane is fixed first so that the consent ledger names the lane that
+        will run, and so that an attachment the lane's catalog entry does not
+        accept refuses here, before anything leaves the machine.
 
-            return AnthropicAdapter(
-                api_key=self._unwrap_secret(self.settings.cadrumo_llm_anthropic_api_key),
-                timeout_s=timeout_s,
-            )
-        if provider is LLMProvider.OPENAI:
-            return OpenAIAdapter(
-                api_key=self._unwrap_secret(self.settings.cadrumo_llm_openai_api_key),
-                timeout_s=timeout_s,
-            )
-        if provider is LLMProvider.GEMINI:
-            return GeminiAdapter(
-                api_key=self._unwrap_secret(self.settings.cadrumo_llm_gemini_api_key),
-                timeout_s=timeout_s,
-            )
-        return LocalAdapter(timeout_s=timeout_s)
-
-    @staticmethod
-    def _unwrap_secret(value: SecretStr | None) -> str:
-        """Return the raw secret value for adapter construction.
-
-        Args:
-            value: Secret setting value.
-
-        Returns:
-            The underlying secret string, or an empty string when unset.
+        Raises:
+            LLMConfigError: When the request names no role, no port reaches
+                the service, the lookup refuses, or the lane does not accept an
+                attachment the request carries.
         """
-        return "" if value is None else value.get_secret_value()
+        role = request.model_role
+        if role is None:
+            raise LLMConfigError(
+                context={"provider": LLMProvider.AGENT.value, "model_role_named": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.AGENT_MODEL_ROLE_NAMED,
+                    facts={"provider": LLMProvider.AGENT.value, "model_role_named": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
+        port = self.model_runs or current_model_run_port()
+        if port is None:
+            raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE), role=role)
+        lane = await port.lookup(role)
+        if isinstance(lane, ModelRunRefusal):
+            raise model_run_refusal_error(lane, role=role)
+        if request.images and lane.accepted_media is not None and ModelRunMediaKind.IMAGE not in lane.accepted_media:
+            raise model_run_refusal_error(ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED), role=role)
+        return _AgentDispatch(port=port, role=role, lane=lane)
+
+    def _build_adapter(
+        self, provider: LLMProvider, *, agent: _AgentDispatch | None = None, request: LLMRequest | None = None
+    ) -> ProviderAdapter:
+        timeout_s = self.settings.cadrumo_llm_default_timeout_s
+        if provider is LLMProvider.LOCAL:
+            return LocalAdapter(timeout_s=timeout_s)
+        if agent is None or request is None:
+            msg = "an agent adapter is built only from a resolved lane"
+            raise InternalInvariantError(msg)
+        token = request.consent_token if request.evidence_derived else None
+        consent = (
+            None
+            if token is None
+            else ModelRunConsentBinding(
+                evidence_content_address=token.evidence_content_address,
+                provider_id=agent.lane.provider_id,
+                transport=agent.lane.transport,
+                model=agent.lane.model,
+            )
+        )
+        return AgentAdapter(
+            port=agent.port,
+            role=agent.role,
+            lane=agent.lane,
+            consent=consent,
+            deadline_seconds=max(1, min(timeout_s, MODEL_RUN_MAX_DEADLINE_SECONDS)),
+            expects_json=request.expects_json,
+        )
 
     @staticmethod
     def _request_id(request: LLMRequest) -> str:

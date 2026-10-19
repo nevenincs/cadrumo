@@ -21,12 +21,12 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.config import override_settings
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.attendance import AttendancePending
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.operation_access import OperationRequest, OperationSubmit
 from cadrumo_client.contracts.profile_access import ProfileStatus

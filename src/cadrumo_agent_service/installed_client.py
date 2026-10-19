@@ -22,7 +22,7 @@ async def open_service_client(*, profile_id: UUID, storage_root: Path) -> Instal
     endpoint = (
         WindowsEndpoint(storage_root=storage_root)
         if sys.platform == "win32"
-        else PosixEndpoint(storage_root=storage_root)
+        else PosixEndpoint(storage_root=storage_root, create_namespace=False)
     )
     connection = None
     try:

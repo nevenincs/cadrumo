@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass, field
 from typing import cast, override
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError
 
 from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -28,7 +29,6 @@ from .....application.live.filed_data_ports import (
 from .....application.live.filed_observation_ports import FiledObservationProtocol
 from .....application.live.session import SessionWriteReporter, active_verified_session
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
-from .....application.user_profile.automation_custody_port import AutomationCustodyError
 from .....core.errors.hierarchy import AuthError
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority

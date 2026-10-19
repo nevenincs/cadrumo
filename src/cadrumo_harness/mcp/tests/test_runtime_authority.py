@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application import reference_catalogue
+from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
@@ -32,8 +33,8 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
+from cadrumo_client.contracts.contracts import RefusalCode
 
-from ..protocol_contract import SIGN_IN_REMEDY
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from .admitted_lease import admitted_adapter
@@ -110,8 +111,12 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 
 
 @pytest.mark.anyio
-async def test_authority_is_refused_to_a_connection_with_no_key_and_nobody_signed_in(tmp_path: Path) -> None:
-    """Reference data is read inside the person's profile like everything else; with no session nothing answers."""
+async def test_authority_is_refused_to_a_connection_with_no_key_and_no_runtime(tmp_path: Path) -> None:
+    """Reference data is read inside the person's profile like everything else; with no runtime nothing answers.
+
+    The runtime names the selected profile, so with none running the refusal
+    is the runtime's typed unavailability, never a request to sign in.
+    """
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         adapter = RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
         try:
@@ -124,8 +129,8 @@ async def test_authority_is_refused_to_a_connection_with_no_key_and_nobody_signe
     assert {"status", "authority", "corpus_search", "search", "execute"} <= names
     assert support.is_error is True
     assert isinstance(support.structured_content, dict)
-    assert support.structured_content["code"] == "authentication_required"
-    assert support.structured_content["remedy"] == SIGN_IN_REMEDY
+    assert support.structured_content["code"] == RefusalCode.UNAVAILABLE.value
+    assert support.structured_content["remedy"] == connection_unavailable_remedy(RefusalCode.UNAVAILABLE.value)
     assert adapter.client is None and adapter.profile_id is None
 
 

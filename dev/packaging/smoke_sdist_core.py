@@ -156,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
         "pip dependency check",
         "installed bundled data resources",
         "attachment storage round-trip",
-        "core LLM missing-extra boundary",
+        "core LLM agent dispatch refuses without a service",
         "installed CLI config/profile smoke",
     ]
     if not args.skip_export_checks:

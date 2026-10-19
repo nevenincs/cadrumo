@@ -5,8 +5,9 @@ from __future__ import annotations
 from uuid import UUID
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,

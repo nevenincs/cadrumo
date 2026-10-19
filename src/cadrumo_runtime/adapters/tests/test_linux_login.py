@@ -19,7 +19,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .. import linux_login, linux_login_models, linux_logind_bus, linux_logind_native

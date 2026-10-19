@@ -39,6 +39,7 @@ def _entry() -> ProviderStatusEntry:
             "auth_kind": "provider_sign_in_only",
             "consumers": ["assistant"],
             "mode": "provider_sign_in",
+            "credential_saved": False,
             "available": False,
             "source": "none",
             "readiness": "sign_in_required",

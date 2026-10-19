@@ -540,6 +540,53 @@ fn normal(value: &OsStr) -> String {
     }
 }
 
+fn existing_installation_path_defaults(
+    profile: &LaunchProfile,
+    ambient: &[(OsString, OsString)],
+) -> Vec<PathBuf> {
+    let Some(external) = LAUNCH_PATH_ENTRIES
+        .iter()
+        .find(|entry| entry.kind == "external_defaults")
+        .map(|entry| entry.value)
+    else {
+        return Vec::new();
+    };
+    if !profile.operator.contains(&external) && !profile.pass.contains(&external) {
+        return Vec::new();
+    }
+    let mut existing = Vec::new();
+    for default in LAUNCH_EXTERNAL_PATH_DEFAULTS {
+        let applies = match default.platform {
+            "windows" => cfg!(windows),
+            "posix" => !cfg!(windows),
+            "macos" => cfg!(target_os = "macos"),
+            _ => false,
+        };
+        if !applies {
+            continue;
+        }
+        let mut directory = if let Some(variable) = default.variable {
+            if !profile.base.contains(&variable) {
+                continue;
+            }
+            let Some(root) = launch::lookup(ambient, variable) else {
+                continue;
+            };
+            PathBuf::from(root)
+        } else {
+            PathBuf::from(default.path)
+        };
+        if !directory.is_absolute() {
+            continue;
+        }
+        directory.extend(default.subpaths);
+        if directory.is_dir() && !existing.contains(&directory) {
+            existing.push(directory);
+        }
+    }
+    existing
+}
+
 #[test]
 fn launch_profiles_reproduce_every_generated_launch_vector() {
     let (package, root) = if cfg!(windows) {
@@ -553,11 +600,54 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
     );
     for vector in LAUNCH_VECTORS {
         let arguments: Vec<OsString> = vector.arguments.iter().map(OsString::from).collect();
-        let ambient: Vec<(OsString, OsString)> = vector
+        let auth_hosted_root = [
+            "windows-agent-auth-admits-browser-connect-in-its-profile",
+            "posix-agent-auth-admits-device-connect-in-its-profile",
+            "windows-agent-auth-keeps-the-legacy-login-invocation",
+        ]
+        .contains(&vector.name)
+        .then(|| Scratch::new("agent-auth-hosted-root"));
+        let auth_browser_executable = [
+            "windows-agent-auth-admits-browser-connect-in-its-profile",
+            "posix-agent-auth-admits-device-connect-in-its-profile",
+        ]
+        .contains(&vector.name)
+        .then(|| {
+            let scratch = Scratch::new("agent-auth-browser-executable");
+            let executable = scratch.0.join(if cfg!(windows) {
+                "browser.exe"
+            } else {
+                "browser"
+            });
+            fs::write(&executable, b"fixture").unwrap();
+            (scratch, executable)
+        });
+        let mut ambient: Vec<(OsString, OsString)> = vector
             .ambient
             .iter()
             .map(|(name, value)| (OsString::from(name), OsString::from(value)))
             .collect();
+        if let Some(scratch) = &auth_hosted_root {
+            let Some((_, value)) = ambient
+                .iter_mut()
+                .find(|(name, _)| name == "CADRUMO_AGENT_HOSTED_ROOT")
+            else {
+                panic!("{} declares its hosted-root slot", vector.name);
+            };
+            *value = scratch.0.as_os_str().to_owned();
+        }
+        if let Some((_, executable)) = &auth_browser_executable {
+            let Some((_, value)) = ambient
+                .iter_mut()
+                .find(|(name, _)| name == "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE")
+            else {
+                panic!(
+                    "{} declares its optional browser executable slot",
+                    vector.name
+                );
+            };
+            *value = executable.as_os_str().to_owned();
+        }
         let selected = launch::select(vector.image, &arguments);
         let defined = selected.clone().and_then(|profile| {
             launch::define_environment(profile, &ambient, Path::new(package), &|_| {
@@ -574,8 +664,9 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
                 );
             }
             (Ok(defined), None) => {
+                let selected_profile = selected.clone().unwrap();
                 assert_eq!(
-                    Some(selected.unwrap().name),
+                    Some(selected_profile.name),
                     vector.profile,
                     "{}",
                     vector.name
@@ -591,8 +682,21 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
                     let entries: Vec<String> = env::split_paths(&OsString::from(value))
                         .map(|entry| normal(entry.as_os_str()))
                         .collect();
-                    let expected: Vec<String> =
+                    let mut expected: Vec<String> =
                         path.iter().map(|entry| normal(OsStr::new(entry))).collect();
+                    let defaults = existing_installation_path_defaults(selected_profile, &ambient);
+                    let system_count = if cfg!(windows) {
+                        1
+                    } else {
+                        LAUNCH_POSIX_SYSTEM_PATH.len()
+                    };
+                    let insertion = expected.len().saturating_sub(system_count);
+                    expected.splice(
+                        insertion..insertion,
+                        defaults
+                            .iter()
+                            .map(|directory| normal(directory.as_os_str())),
+                    );
                     assert_eq!(entries, expected, "{}", vector.name);
                 }
                 let mut expected: Vec<(String, String)> = vector
@@ -600,6 +704,27 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
                     .iter()
                     .map(|(name, value)| ((*name).to_owned(), normal(OsStr::new(value))))
                     .collect();
+                if let Some(scratch) = &auth_hosted_root {
+                    let Some((_, value)) = expected
+                        .iter_mut()
+                        .find(|(name, _)| name == "CADRUMO_AGENT_HOSTED_ROOT")
+                    else {
+                        panic!("{} defines its hosted-root slot", vector.name);
+                    };
+                    *value = normal(scratch.0.as_os_str());
+                }
+                if let Some((_, executable)) = &auth_browser_executable {
+                    let Some((_, value)) = expected
+                        .iter_mut()
+                        .find(|(name, _)| name == "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE")
+                    else {
+                        panic!(
+                            "{} defines its optional browser executable slot",
+                            vector.name
+                        );
+                    };
+                    *value = normal(executable.as_os_str());
+                }
                 actual.sort();
                 expected.sort();
                 assert_eq!(actual, expected, "{}", vector.name);

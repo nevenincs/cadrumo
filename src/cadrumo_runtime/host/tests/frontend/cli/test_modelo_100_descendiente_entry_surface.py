@@ -42,7 +42,7 @@ from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via
 from cadrumo.entrypoints.cli.tests.native_profile_cli_support import invoke_native_cli
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_unbound_cli
 
 pytestmark = [

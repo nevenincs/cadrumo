@@ -48,12 +48,6 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import (
     OperationEffect,
@@ -64,6 +58,8 @@ from cadrumo.core.operations import (
 from cadrumo.domain.attachments.protocols import AttachmentStoreProtocol
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.notifications.sancion import SancionLiquidacion
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

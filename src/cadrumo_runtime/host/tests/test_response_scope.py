@@ -18,20 +18,11 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
     LoginEligibility,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    OperationResponseScopeAllowed,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
@@ -55,6 +46,15 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied, OperationResponseScopeAllowed
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

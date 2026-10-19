@@ -17,8 +17,9 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentProposal, EnrollmentStage
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
 from cadrumo_client.transport.installation import installation
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 

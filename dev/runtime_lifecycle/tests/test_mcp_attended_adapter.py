@@ -27,10 +27,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.person_acts import ACCESS_ADMINISTRATION_OPERATIONS
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import ProfileAccessStatus
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_harness.mcp.protocol_contract import PERSON_ACT_REMEDY, sign_in_remedy

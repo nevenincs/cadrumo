@@ -487,6 +487,7 @@ class OperationPublicProgressEventV1(_OperationPublicEventBase):
     completed: NonNegativeInt
     total: Annotated[int, Field(gt=0)]
     unit_code: OperationEventCode | None
+    subject_code: OperationEventCode | None = None
 
     @model_validator(mode="after")
     def _validate_progress(self) -> OperationPublicProgressEventV1:

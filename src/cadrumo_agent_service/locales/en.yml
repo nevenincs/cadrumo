@@ -4,23 +4,21 @@ desktop:
     agent_replied: Agent replied
     approval_allow_always: Allow
     approval_allow_once: Allow once
+    approval_allow_session: Allow for this session
     approval_reject_always: Don't allow
     approval_reject_once: Don't allow
     approval_review_title: Review this before Cadrumo does it
-    approval_tool_title: The agent wants to use a tool
+    approval_tool_title: The agent is asking for permission
     archive: Archive
     archived_empty: Nothing archived
     archived_toggle: Archived ({count})
     attach_filter: Documents
     attachments: Files for the next message
-    attachments_refused: 'Refused: {count}'
+    attachments_refused: 'Not accepted: {count}'
     attachments_uploading: 'Uploading: {count}'
     can_read_images: read images
     can_read_pdfs: read PDFs
-    can_run_subagents: run subagents
     can_search_web: search the web
-    can_stop_subagent: stop one subagent
-    can_use_tools: use tools
     can_write: write files
     cancel: Cancel
     capabilities: 'Can: {list}'
@@ -33,10 +31,11 @@ desktop:
     condition_invalid_request: The provider rejected the request
     condition_network_unreachable: The provider can't be reached
     condition_provider_overloaded: The provider is overloaded
-    condition_throttled: The provider is limiting requests
-    condition_unauthenticated: Not authenticated with the provider
+    condition_throttled: Provider usage limit reached. Check your provider account
+      or choose another provider.
     condition_unknown: Unknown cause
-    condition_usage_exhausted: Usage limit reached
+    condition_usage_exhausted: Provider usage limit reached. Check your provider account
+      or choose another provider.
     consent_allow: Send to {provider}
     consent_decline: Don't send
     consent_items: What would be sent
@@ -76,13 +75,12 @@ desktop:
     history: History
     history_empty: No conversations yet
     history_no_match: No conversations match “{query}”.
-    lane_no_catalog: Models couldn't be listed
-    lane_not_admitted: Not allowed here
-    lane_not_configured: Not set up
-    lane_notice: 'Development lane: conversations are kept unencrypted on this test
-      storage. Use made-up data only.'
-    lane_signed_out: Not signed in
-    lane_unreachable: Can't be reached
+    lane_no_catalog: Could not load models. Try again.
+    lane_not_admitted: Not available on this computer. Choose another.
+    lane_not_configured: Set up this provider in settings.
+    lane_notice: Conversations in this version aren't encrypted.
+    lane_signed_out: Sign in to this provider in settings.
+    lane_unreachable: Can't connect. Check this provider in settings.
     members_multiple: '{count} files'
     members_single: 1 file
     mention_empty: No stored document matches
@@ -93,17 +91,16 @@ desktop:
     message_label: Message
     message_placeholder: Ask about a modelo, a deadline or your records
     model: Model
-    model_written: This provider doesn't list its models. Write the model's id as
-      the provider names it.
+    model_written: This provider doesn't list its models. Enter the model name exactly
+      as the provider writes it.
     more_files: +{count} more
     new_conversation: New conversation
     no_models: No models to choose from
-    no_provider: The agent has no provider it can use yet.
+    no_provider: Set up an AI provider to start.
     provider: Provider
     questions_answer: Answer
     questions_clear: Clear this answer
-    questions_control: 'An answer is one line: it can''t hold line breaks, tabs or
-      other control characters'
+    questions_control: Keep each answer on one line.
     questions_decline: Don't answer
     questions_invalid: Correct the answers marked first
     questions_lead: Answer below, or write a message instead to answer in your own
@@ -114,6 +111,7 @@ desktop:
     questions_too_long: This answer has {count} characters; {max} is the most
     queued: Waiting to upload
     ran_with: 'Ran with: {selection}'
+    read_failed: Could not load this information. Try again.
     ready: Ready
     reference_changed: A document you named changed after you chose it. Choose it
       again with @.
@@ -122,7 +120,7 @@ desktop:
     reference_refused: A document you named can't be shared with the agent.
     references_unavailable: This conversation's stored documents aren't available
       right now.
-    refused: Refused
+    refused: Not accepted
     remove_all: Remove all
     remove_document: Remove {name}
     remove_file: Remove {name}
@@ -132,9 +130,10 @@ desktop:
     reply_failed: This reply didn't finish.
     reply_in_progress: A reply is still in progress.
     reply_queued: 'Messages waiting: {count}'
-    reply_reconciling: Reconciling…
-    reply_repair_needed: Needs repair
+    reply_reconciling: Checking…
+    reply_repair_needed: Interrupted
     reply_stopping: Stopping…
+    request_failed: Could not complete this action. Try again.
     resize: Resize the agent
     restore: Restore
     retry: Try again
@@ -151,20 +150,21 @@ desktop:
     send_waiting: Wait until every file has uploaded
     sent_files: Files sent with this message
     sent_skills: Skills loaded
-    service_absent: The agent isn't installed.
-    service_credential_missing: No key is set up for this provider.
+    service_absent: The agent isn't installed. Reinstall Cadrumo to add it.
+    service_credential_missing: Set up a provider in settings to start.
     service_failed: The agent stopped working.
-    service_incompatible: This version of the agent doesn't work with this Cadrumo.
-    service_root_unmarked: This test storage isn't marked as the agent's development
-      lane.
-    service_runtime_unavailable: Cadrumo's background service isn't running.
+    service_incompatible: This version of the agent doesn't work with this version
+      of Cadrumo. Reinstall Cadrumo.
+    service_root_unmarked: Your conversations couldn't be opened. Restart Cadrumo
+      and try again.
+    service_runtime_unavailable: Cadrumo isn't ready yet. Restart it and try again.
     service_signed_out: Sign in to talk to the agent.
     service_starting: Starting the agent…
     service_stopped: The agent isn't running.
     set_up_providers: Set up AI providers
     settings: Agent settings
-    settings_label: 'Model and effort: {current}'
-    settings_title: Model settings
+    settings_label: 'Model: {current}'
+    settings_title: Model for this conversation
     show: Show the agent
     show_active: Show active
     sign_in_first: Sign in to use the agent
@@ -205,6 +205,9 @@ desktop:
     status_uploading: Uploading
     stop: Stop
     stopped: Stopped
+    thinking: Thinking
+    thoughts: What the agent thought
+    tool_details: Call details
     tool_done: Done
     tool_failed: Failed
     tool_kind_delete: Deletes
@@ -230,7 +233,7 @@ desktop:
     upload_unreadable: Couldn't be read
     uploading: Uploading
     uploading_name: Uploading {name}
-    usage: 'Tokens: {input} in, {output} out'
+    usage: 'Tokens used: {input} sent, {output} received'
     waiting_on_you: Waiting for you
     welcome_lead: Something tax related? Ask about a modelo or a deadline, or add
       receipts, invoices and bank exports with +.
@@ -241,83 +244,94 @@ desktop:
     agent: Agent
     maximize_agent: Maximize the agent
   providers:
-    add_key: Add key
+    add_key: Add API key
+    address: 'Address: {url}'
     base_url_default: Leave it empty to use {url}.
-    base_url_label: Base URL
-    base_url_required: 'Required: this provider has no default.'
+    base_url_label: Server address
+    base_url_required: Enter the address provided by your provider.
     cancel: Cancel
-    cli_installed_signed_in: Installed and signed in
-    cli_installed_signed_out: Installed, not signed in
-    cli_not_installed: Not installed
-    cli_unknown: Not checked yet
-    development_note: In this development build, a provider with no key of its own
-      uses the development environment's.
-    disable: Disable
-    disable_note: Disable stops Cadrumo from using a provider at all, not even with
-      a key it finds elsewhere.
-    disabled: 'Disabled: Cadrumo won''t use it until you add a key or reset it.'
+    change_failed: Could not save. Refresh and try again.
+    connection_api: API key
+    connection_app: Installed app
+    detail_app_missing: Install the {provider} app, then sign in.
+    detail_off: 'Off: the agent doesn''t offer or use it.'
+    detail_off_kept: 'Off: the agent doesn''t offer or use it. Its API key is kept
+      for when you turn it on.'
+    detail_sign_in: Sign in with your {provider} account.
+    group_intro: Choose a provider to set it up.
+    icon_credits: Icon credits
     key_label: '{provider} API key'
-    key_note: Paste it here. It's saved encrypted and never shown again.
-    lead: Keys are kept encrypted in this profile and are never shown again. Only
-      you can add, replace or remove them.
-    mode_provider_sign_in: Signed in through {provider}
-    mode_token: OAuth token saved in this profile
-    readiness_disabled: Disabled
-    readiness_missing: No key
-    readiness_not_verified: Saved, not used yet
-    readiness_ready: Ready
-    readiness_sign_in_required: Needs sign-in
-    readiness_unusable: Can't be used
-    reason_not_configured: It isn't set up yet.
-    reason_record_unreadable: Its saved settings can't be read. Add the key again.
-    reason_sign_in_with_provider_tool: Sign in with {provider}'s own app first.
-    refresh: Refresh
-    refused_base_url_rejected: That base URL can't be used.
-    refused_catalog_unavailable: Cadrumo couldn't read the agent's providers.
+    key_note: It's saved encrypted on this computer and never shown again.
+    load_failed: Could not load providers. Try again.
+    reason_check_settings: Check these settings and try again.
+    reason_record_unreadable: The saved API key can't be read. Add it again.
+    refresh: Try again
+    refused_base_url_rejected: Check the server address and try again.
     refused_invalid_key_format: That doesn't look like a key for this provider.
-    refused_not_signed_in: Sign in to change keys.
-    refused_person_act_required: Keys can only be changed by you, here.
-    refused_profile_locked: This profile is locked.
-    refused_revision_conflict: This changed somewhere else. The latest is shown; try
-      again.
-    refused_runtime_unavailable: The background runtime isn't running, so nothing
-      was read or changed. Check the background-services manager, then try again.
-    replace_key: Replace key
-    reset: Reset
-    reset_note: Reset forgets what was set for it, as if it had never been set up.
-    reset_note_development: Reset forgets what was set for it; in this development
-      build, the development environment's key is used again.
+    refused_not_signed_in: Sign in to change these settings.
+    refused_person_act_required: Only you can change these settings, from this window.
+    refused_profile_locked: Unlock your profile to change these settings.
+    refused_revision_conflict: These settings changed in the meantime. The latest
+      are shown; try again.
+    refused_runtime_unavailable: Restart Cadrumo and try again.
+    remove_key: Remove API key
+    replace_key: Replace API key
     save: Save
-    saved_unread: Saved, but its status couldn't be read.
+    saved_unread: Saved, but its status couldn't be read. Try again.
     saving: Saving…
+    search_empty: No matching providers. Try another search.
+    search_label: Search providers
+    search_placeholder: Search providers
     sign_in_action: Sign in
+    sign_in_busy: Another {provider} sign-in is still finishing. Wait a moment, then
+      try again.
     sign_in_cancel: Cancel sign-in
     sign_in_cancel_failed: Cadrumo couldn't cancel sign-in yet. Keep this dialog open
       while it checks.
     sign_in_cancelled: Sign-in was cancelled.
+    sign_in_cleanup_failed: Restart Cadrumo before signing in again.
     sign_in_close: Close sign-in
     sign_in_continue_browser: Continue in browser
     sign_in_description: Continue to {provider}'s sign-in page. Enter your password
       only on that page.
+    sign_in_done: Done
     sign_in_failure: Sign-in couldn't be completed. Try again later.
-    sign_in_only: Uses {provider}'s own sign-in.
+    sign_in_host_disconnected: Cadrumo lost contact with this sign-in and cancelled
+      it. Start again to continue.
+    sign_in_invalid_request: Close this window and try signing in again.
     sign_in_open_failed: Cadrumo couldn't open the provider's sign-in page.
+    sign_in_profile_required: Sign in to Cadrumo to continue signing in with {provider}.
+    sign_in_provider_error: Could not sign in to {provider}. Try again.
+    sign_in_provider_unavailable: Install the {provider} app, then try again.
+    sign_in_retry: Try sign-in again
+    sign_in_retry_checking: Preparing to try again…
+    sign_in_retry_refresh_failed: Close and reopen provider settings, then try again.
     sign_in_security: Cadrumo never asks for your provider password.
-    sign_in_start_browser: Start browser sign-in
+    sign_in_start_browser: Sign in with your browser
     sign_in_start_device: Use a device code
     sign_in_starting: Starting sign-in…
-    sign_in_success: Signed in to {provider}. Cadrumo still needs to prove this lane
-      can run an agent.
+    sign_in_success: Signed in to {provider}.
+    sign_in_success_description: Sign-in complete. Choose Done to return to settings.
+    sign_in_success_title: 'Sign-in complete: {provider}'
     sign_in_timeout: Sign-in took too long and was cancelled.
     sign_in_title: Sign in to {provider}
-    sign_in_unavailable: Sign-in from Cadrumo isn't available for this provider yet.
+    sign_in_unavailable: Signing in to {provider} from Cadrumo isn't available yet.
+    sign_in_unsupported_browser: Browser sign-in with {provider} couldn't continue
+      through Cadrumo. Try device-code sign-in if {provider} supports it.
+    sign_in_unsupported_device: Device-code sign-in with {provider} is not available
+      through Cadrumo. Try browser sign-in instead.
     sign_in_user_code: Device code
     sign_in_waiting: Finish signing in on the provider's page, then return here.
     sign_in_waiting_device: Enter this code on the provider's page to finish signing
       in.
-    source_environment: Using the development environment's key
-    source_profile: Key saved in this profile
-    through: Through {url}
+    status_not_checked: Not checked
+    status_off: 'Off'
+    status_ready: Ready
+    status_saved: Saved
+    status_setup_needed: Not set up
+    status_sign_in_needed: Not signed in
+    summary: '{connection}: {status}'
     title: AI providers
+    use_in_agent: Use {provider} ({connection}) in the agent
   rail:
     agent: Agent

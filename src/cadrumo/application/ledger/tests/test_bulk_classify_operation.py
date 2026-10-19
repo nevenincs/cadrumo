@@ -13,6 +13,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -25,7 +27,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...operations.registry_schema_validation import strict_model_json_schema
-from ...user_profile.access_contracts import AccessAction, Availability, SessionKind
+from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import bulk_classify_operation as operation
 from ..action_ports import LedgerActionPorts

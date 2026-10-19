@@ -17,8 +17,9 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+from .access_vocabulary import AccessScope
 
 ATTENDANCE_PENDING_SECONDS = 120
 """How long an ask waits for the person's decision before it lapses unanswered."""

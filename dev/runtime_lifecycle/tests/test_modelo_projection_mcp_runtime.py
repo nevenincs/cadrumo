@@ -36,12 +36,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import (
     OperationEffect,
@@ -53,6 +47,12 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_modelo_history_ports
 from cadrumo.entrypoints.tests.modelo_projection_history_conformance_support import (
     prepare_modelo_projection_history_conformance_case,
+)
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
 )
 from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo_client.transport import credentials

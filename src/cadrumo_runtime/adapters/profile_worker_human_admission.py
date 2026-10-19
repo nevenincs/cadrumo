@@ -8,13 +8,13 @@ from contextlib import contextmanager
 from uuid import UUID, uuid4
 
 from cadrumo.application.user_profile.access_contracts import AccessSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.application.user_profile.login_session_port import ProfileSignInGenerationPort
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import HumanProofMethod
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerControlRequest,
     ProfileWorkerHumanBindingRequest,

@@ -144,10 +144,12 @@ pub fn run(
             logs::commands(),
             shell::commands(),
             shell::window_controls::commands(),
+            shell::about::commands(),
             shell::sign_in::commands(),
             shell::provider_settings::commands(),
             shell::agent_access::commands(),
             shell::language::commands(),
+            shell::setup::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),
@@ -263,6 +265,11 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
         .map_or(Ok(()), |language| {
             tauri::async_runtime::block_on(language.close())
         });
+    let setup_cleanup = handle
+        .try_state::<Arc<shell::setup::SetupHost>>()
+        .map_or(Ok(()), |setup| {
+            tauri::async_runtime::block_on(setup.close())
+        });
     let agent_cleanup = handle
         .try_state::<Arc<agent::AgentHost>>()
         .map_or(Ok(()), |agent| {
@@ -282,6 +289,7 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
             tauri::async_runtime::block_on(manager.close_checked())
         });
     language_cleanup
+        .and(setup_cleanup)
         .and(agent_cleanup)
         .and(sign_in_cleanup)
         .and(terminal_cleanup)
@@ -316,6 +324,7 @@ pub(crate) async fn assemble<R: Runtime>(
     app.manage(manager.clone());
     app.manage(Arc::new(TerminalState::new(launch)));
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
+    app.manage(Arc::new(shell::setup::SetupHost::new(sign_in.clone())));
     startup.stage(crate::startup::Phase::Runtime);
     #[cfg(windows)]
     tokio::select! {
@@ -537,6 +546,7 @@ mod tests {
             shell::provider_settings::commands(),
             shell::agent_access::commands(),
             shell::language::commands(),
+            shell::setup::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),

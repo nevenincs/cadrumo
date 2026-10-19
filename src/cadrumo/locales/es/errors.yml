@@ -457,6 +457,9 @@ errors:
     fail_cli_command_group_unavailable: 'No se pudo cargar el grupo de comandos ''%{group}'':
       falta el módulo requerido ''%{module}''. Esta instalación está incompleta.'
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
+    fail_dependency_preflight_stage: No ha terminado la comprobación de red del servidor
+      de descarga de un componente.
+    fail_dependency_transfer: Ha fallado la descarga de un componente.
     fail_filing_import: No se pudo importar la declaración desde el PDF del justificante.
     fail_financial_attachments_attachment_persistence: El almacén de justificantes
       no pudo leer o escribir los datos.
@@ -798,6 +801,8 @@ errors:
     locked_cli_operation_still_running: La operación {operation_id} sigue en curso.
       Todavía no se conoce su resultado. Comprueba el resultado antes de volver a
       intentarlo.
+    locked_dependency_item: Otra instalación está cambiando este componente ahora
+      mismo. Vuelve a intentarlo cuando termine.
     locked_google_keychain: El llavero del sistema operativo que guarda las credenciales
       de Google está bloqueado o no es accesible. Desbloquea el llavero y vuelve a
       intentarlo.
@@ -1096,6 +1101,9 @@ errors:
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
     refused_corpus_search_input: No se pudo satisfacer la solicitud de búsqueda en
       el corpus.
+    refused_dependency_proxy_configuration: El ajuste del proxy no es una dirección
+      http:// con un nombre de host y un puerto válido.
+    refused_dependency_selection: Ese componente no se puede configurar aquí.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnóstico
       incumplida.'
     refused_einvoice_xml_parse: No se ha podido leer el XML de la factura electrónica

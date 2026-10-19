@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import ast
-import importlib
 import inspect
+import webbrowser
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -13,6 +13,14 @@ from typing import override
 
 import pytest
 from google.oauth2.credentials import Credentials
+
+from cadrumo_client.contracts import google_auth as google_auth_contract_module
+from cadrumo_client.contracts.google_auth import (
+    GoogleAuthError,
+    GoogleAuthPreconditionCondition,
+    GoogleAuthProfileUnboundError,
+    require_interactive_terminal,
+)
 
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
@@ -23,12 +31,10 @@ from .. import installation_client as installation_client_module
 from .. import oauth_flow as oauth_flow_module
 from .. import sign_in_state as sign_in_state_module
 from ..active_profile import resolve_active_profile
-from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
 from ..oauth_flow import (
     _decode_email_from_id_token,
     _raise_local_server_error,
     credentials_to_records,
-    require_interactive_terminal,
     require_resolvable_profile_record,
 )
 from ..records import REQUIRED_SCOPES
@@ -54,7 +60,7 @@ def _contract(
 
 
 # This is a complete, source-level contract for the 1 active-profile, 2
-# installation-client, 16 OAuth and 4 sign-in-state GoogleAuthError producers. Values are AST expressions, not
+# installation-client, 17 OAuth and 4 sign-in-state GoogleAuthError producers. Values are AST expressions, not
 # merely fact keys, so a polarity or dynamic-expression mutation is observable.
 _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
@@ -75,7 +81,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:require_interactive_terminal:GoogleAuthNonInteractiveError:google OAuth refused: interactive browser consent requires a controlling terminal": _contract(
+    "google_auth:require_interactive_terminal:GoogleAuthNonInteractiveError:google OAuth refused: interactive browser consent requires a controlling terminal": _contract(
         GoogleAuthPreconditionCondition.INTERACTIVE_TERMINAL_AVAILABLE,
         (("interactive_terminal_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -93,7 +99,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "oauth_flow:credentials_to_records:GoogleAuthScopeInsufficientError:consent screen returned without granting required scopes: {value}": _contract(
+    "oauth_flow:require_exact_scope_grant:GoogleAuthScopeInsufficientError:consent screen returned without granting required scopes: {value}": _contract(
         GoogleAuthPreconditionCondition.REQUIRED_SCOPES_GRANTED,
         (("required_scopes_granted", "False"), ("missing_scope_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -171,7 +177,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_oauth_loopback_records:GoogleAuthScopeInsufficientError:Google did not confirm the exact required scope grant": _contract(
+    "oauth_flow:require_exact_scope_grant:GoogleAuthScopeInsufficientError:Google did not confirm the exact required scope grant": _contract(
         GoogleAuthPreconditionCondition.REQUIRED_SCOPES_GRANTED,
         (("required_scopes_granted", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -204,6 +210,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
 }
 
 _AUTH_PRODUCER_MODULES: tuple[ModuleType, ...] = (
+    google_auth_contract_module,
     active_profile_module,
     installation_client_module,
     oauth_flow_module,
@@ -337,7 +344,7 @@ def test_google_auth_failure_totality_uses_one_canonical_no_action_projection() 
 
 def test_google_auth_modules_never_construct_verdict_or_evidence_locally() -> None:
     """Google auth delegates terminal construction to application.operator_actions."""
-    for module in (*_AUTH_PRODUCER_MODULES, importlib.import_module("..errors", __package__)):
+    for module in _AUTH_PRODUCER_MODULES:
         tree = ast.parse(inspect.getsource(module))
         constructed = {
             _call_name(node.func)
@@ -417,19 +424,19 @@ def test_scope_refusal_has_an_exact_runtime_safety_verdict() -> None:
     ("upstream", "condition", "facts"),
     [
         (
-            RuntimeError("webbrowser launcher refused"),
+            webbrowser.Error("launcher refused"),
             GoogleAuthPreconditionCondition.BROWSER_LAUNCHER_AVAILABLE,
             {"browser_launcher_available": False},
         ),
         (
-            RuntimeError("transport connection refused"),
+            ConnectionRefusedError("refused"),
             GoogleAuthPreconditionCondition.OAUTH_ENDPOINT_REACHABLE,
             {"oauth_endpoint_reachable": False},
         ),
     ],
 )
 def test_local_oauth_external_refusals_have_exact_runtime_safety_verdicts(
-    upstream: RuntimeError,
+    upstream: Exception,
     condition: GoogleAuthPreconditionCondition,
     facts: dict[str, bool],
 ) -> None:

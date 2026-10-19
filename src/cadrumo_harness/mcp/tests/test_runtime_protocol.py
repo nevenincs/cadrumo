@@ -9,14 +9,9 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo_harness.mcp.access_scope import surface_scope
 from cadrumo_harness.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
@@ -170,6 +165,8 @@ async def test_the_configured_key_admits_exact_profile_for_mcp_and_close_release
             assert status.structured_content == {
                 "outcome": "status",
                 "session": "key",
+                "authenticated": True,
+                "grant_required": True,
                 "surface": "full",
                 "status": admitted.status().status.model_dump(mode="json"),
             }

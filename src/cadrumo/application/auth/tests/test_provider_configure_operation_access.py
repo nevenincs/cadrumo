@@ -38,16 +38,12 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

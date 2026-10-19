@@ -12,26 +12,24 @@ from uuid import UUID
 from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    AccessDenied,
-    AccessScope,
-    AccessSession,
-    AuthorityState,
-    Availability,
-)
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
+from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_policy import intersect_scopes
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationCustodySnapshot,
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodySnapshot
+from cadrumo.application.user_profile.profile_pointer import (
+    ActiveProfilePointerTransactionError,
+    active_profile_pointer_transaction,
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo.core.config import load_settings
 from cadrumo.core.errors.failure_report import log_boundary_failure
+from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
+from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability
 from cadrumo_client.contracts.attendance import (
     AttendanceAsk,
     AttendanceDecide,
@@ -39,6 +37,7 @@ from cadrumo_client.contracts.attendance import (
     AttendanceInventory,
     AttendancePending,
 )
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
@@ -50,12 +49,18 @@ from cadrumo_client.contracts.profile_access import (
     SessionRequest,
     SessionsLocked,
 )
+from cadrumo_client.contracts.profile_selection import (
+    ActiveProfileReply,
+    ActiveProfileRequest,
+    LoginTargetReply,
+    LoginTargetRequest,
+)
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import read_secret, write_document
 
 from .profile_host import ProfileConnection, RuntimeProfileHost
-from .sign_in_status import observe_sign_in
+from .sign_in_status import observe_active_profile, observe_sign_in, resolve_login_target
 from .sign_in_sweep import revoke_other_saved_sign_ins
 
 if TYPE_CHECKING:
@@ -100,8 +105,10 @@ class ProfileConnectionSessionMixin:
         status = host.authority.status(
             connection_id=connection.context.connection_id,
             session_id=session_id,
-            published_authority=Availability.UNAVAILABLE,
-            provider=Availability.NEEDS_USER,
+            # Reading connection status requires neither tax authority data
+            # nor an external provider. Operations assess their own needs.
+            published_authority=Availability.NOT_REQUIRED,
+            provider=Availability.NOT_REQUIRED,
         )
         if isinstance(status, AccessDenied):
             return status
@@ -163,9 +170,37 @@ class ProfileConnectionSessionMixin:
                 and finished.status.profile_bound
             ):
                 signed_out = self._sign_out_other_profiles(keep=request.profile_id)
+                if request.persist_receipt or request.hand_over:
+                    # The person's own sign-in, which keeps a stored sign-in for later commands,
+                    # moves the selection; authentication supplied to one command does not.
+                    self._select_signed_in_profile(request.profile_id)
                 if signed_out:
                     return finished.model_copy(update={"signed_out_profile_ids": signed_out})
             return finished
+
+    def selection_changed(self: RuntimeProfileConnections) -> None:
+        """Cue sign-in watchers after an act that may have moved the selection, such as a creation."""
+        self._sign_in_changed()
+
+    def _select_signed_in_profile(self: RuntimeProfileConnections, profile_id: UUID) -> None:
+        """Select the profile the person just signed in to; the runtime is the selection's only writer.
+
+        The selection names which profile a frontend means when it names none,
+        and every frontend reads it from the runtime. One that cannot be written
+        leaves the sign-in standing: the selection grants nothing, and the
+        active-profile answer reads what was written.
+        """
+        try:
+            with composed_profile_persistence_ports(), active_profile_pointer_transaction(self.root) as selection:
+                if selection.read().bucket_id != str(profile_id):
+                    selection.select(str(profile_id))
+        except (
+            OSError,
+            LockAcquisitionError,
+            ActiveProfilePointerError,
+            ActiveProfilePointerTransactionError,
+        ) as error:
+            log_boundary_failure(_LOGGER, "profile_selection_not_written", error, level=logging.WARNING)
 
     def _sign_out_other_profiles(self: RuntimeProfileConnections, *, keep: UUID) -> tuple[UUID, ...]:
         """Keep one profile signed in: a person's sign-in to ``keep`` signs every other profile out everywhere.
@@ -407,6 +442,40 @@ class ProfileConnectionSessionMixin:
         if identities:
             self._sign_in_changed()
 
+    def _profile_selection(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: ActiveProfileRequest | LoginTargetRequest,
+    ) -> ActiveProfileReply | LoginTargetReply:
+        """Answer which profile is selected or named, on a connection that holds no session and gains none."""
+        login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
+        if login.os_owner_id != context.peer.os_owner_id:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="profile_selection_owner_mismatch")
+        if isinstance(request, LoginTargetRequest):
+            target = resolve_login_target(root=self.root, name=request.name)
+            return LoginTargetReply(
+                request_id=request.request_id,
+                runtime_boot_id=self.boot,
+                connection_id=context.connection_id,
+                profile_id=None if target is None else UUID(str(target.bucket_id)),
+                label=None if target is None else target.label,
+            )
+        if request.watch:
+            # Watch before reading, so a change racing this read still cues the watcher.
+            self.watch_sign_in(context)
+        selected, signed_in, presence = observe_active_profile(
+            root=self.root, storage_identity=self.storage_identity, login=login, instant=self._wall_clock()
+        )
+        return ActiveProfileReply(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            selected_profile_id=selected,
+            signed_in_profile_id=signed_in,
+            presence=presence,
+        )
+
     def handle(
         self: RuntimeProfileConnections,
         context: ConnectionContext,
@@ -415,6 +484,8 @@ class ProfileConnectionSessionMixin:
         | SessionRequest
         | ProfileDisclosurePageRequest
         | SignInStatusRequest
+        | ActiveProfileRequest
+        | LoginTargetRequest
         | AttendanceAsk
         | AttendanceDecide,
     ) -> (
@@ -422,6 +493,8 @@ class ProfileConnectionSessionMixin:
         | ProfileDisclosurePage
         | SessionsLocked
         | SignInStatusReply
+        | ActiveProfileReply
+        | LoginTargetReply
         | HumanSignedOut
         | AttendancePending
         | AttendanceInventory
@@ -461,6 +534,8 @@ class ProfileConnectionSessionMixin:
                         instant=self._wall_clock(),
                     ),
                 )
+            if isinstance(request, ActiveProfileRequest | LoginTargetRequest):
+                return self._profile_selection(context, channel, request)
             if isinstance(request, AttendanceAsk):
                 result = self._attendance_ask(context, channel, request)
             elif isinstance(request, AttendanceDecide):
@@ -486,6 +561,9 @@ class ProfileConnectionSessionMixin:
         except RefusalError as error:
             code = error.reason
             log_boundary_failure(_LOGGER, "profile_request_refused", error, level=logging.WARNING)
+        if sign_in is not None and sign_in.reason == "credential_rejected":
+            # Frontends already name a wrong password by this code; the sign-in reason adds it to the closed set.
+            code = AutomationCustodyCode.CREDENTIAL_REJECTED
         return AccessRefusal(
             request_id=request.request_id,
             runtime_boot_id=self.boot,

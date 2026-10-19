@@ -1,4 +1,4 @@
-"""Installation acts over profiles nobody has opened: listing, archives and recovery enrolment.
+"""Installation acts over profiles nobody has opened: listing, creation, archives and recovery.
 
 Each handler calls the application function the matching ``config profile``
 command calls, over the storage root this runtime owns, and answers with that
@@ -7,6 +7,8 @@ reply as it arrives. Hiding an identifier is what the command does when it
 prints, and a caller names a profile by the identifier it reads here.
 
 A passphrase arrives in the act's one secret frame and never in a request. A
+profile is created here, in the runtime, so its key is generated and wrapped in
+no frontend process, and the created profile is left selected and signed out. A
 recovery code leaves in the act's one outbound secret frame and is read back
 before the wrapper is installed, so nothing is enrolled under a code nobody
 holds. Neither enters a reply, a refusal or a log record.
@@ -26,7 +28,6 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery_code
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.capsule_archive import (
     inspect_profile_capsule_archive,
     read_restorable_profile_capsule,
@@ -34,9 +35,15 @@ from cadrumo.application.user_profile.capsule_archive import (
 from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
 from cadrumo.application.user_profile.custody_ports import ProfileCustodyRecordIntegrityError
 from cadrumo.application.user_profile.profile_summary import profile_listing, selected_profile_id
-from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryError, enroll_profile_recovery
+from cadrumo.application.user_profile.recovery_custody import (
+    ProfileRecoveryError,
+    enroll_profile_recovery,
+    revoke_profile_recovery,
+)
+from cadrumo.application.user_profile.registration import ProfileRegistrationError, create_profile_signed_out
 from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.installation_requests import (
     ArchiveImportPrepareReply,
     ArchiveImportPrepareRequest,
@@ -45,9 +52,14 @@ from cadrumo_client.contracts.installation_requests import (
     ArchiveInspectReply,
     ArchiveInspectRequest,
     InstallationCompleted,
+    InstallationNewPassphrase,
     InstallationPassphrase,
+    ProfileCreateReply,
+    ProfileCreateRequest,
     ProfileListReply,
     ProfileListRequest,
+    RecoveryDisableReply,
+    RecoveryDisableRequest,
     RecoveryEnrollReply,
     RecoveryEnrollRequest,
 )
@@ -100,6 +112,43 @@ def _serve_profile_list(request: ProfileListRequest, exchange: InstallationActEx
             # profiles are gone. The observation is refused as what it is.
             raise ProfileCustodyRecordIntegrityError(listing.inventory.detail or str(listing.inventory.outcome))
         return _result_reply(exchange, ProfileListReply, listing.result())
+
+
+def _serve_profile_create(request: ProfileCreateRequest, exchange: InstallationActExchange) -> ProfileCreateReply:
+    """Create the profile under the passphrase the person chose and confirmed, without signing it in.
+
+    The two copies are compared before anything is derived or written, as
+    every frontend that asks for a new passphrase compares them.
+    """
+    with _installation_scope(exchange, changes_custody=True):
+        secrets = exchange.receive_secret(InstallationNewPassphrase)
+        try:
+            passphrase = secrets.passphrase.get_secret_value()
+            if not compare_digest(
+                passphrase.encode("utf-8"), secrets.passphrase_confirmation.get_secret_value().encode("utf-8")
+            ):
+                raise ProfileRegistrationError(
+                    translated_message="application.user_profile.errors.passphrase_confirmation_mismatch"
+                )
+            with bundled_indexed_authority().operation() as operation:
+                exchange.changes_begin()
+                outcome = create_profile_signed_out(
+                    label=request.label,
+                    passphrase=passphrase,
+                    profile_create_context=operation.profile_create_context(),
+                    profile_decode_context=operation.profile_decode_context(),
+                )
+        finally:
+            del secrets
+        # Creation selects the new profile: a frontend watching the selection asks again.
+        exchange.selection_changed()
+        return exchange.reply(
+            ProfileCreateReply,
+            profile_id=outcome.profile_id,
+            label=outcome.label,
+            setup_state=outcome.setup_state.value,
+            selected=selected_profile_id(root=exchange.storage_root) == outcome.profile_id,
+        )
 
 
 def _serve_archive_inspect(request: ArchiveInspectRequest, exchange: InstallationActExchange) -> ArchiveInspectReply:
@@ -161,7 +210,9 @@ def _read_back_code(read_back: bytes) -> str:
     return canonical
 
 
-def _profile_to_enrol(request: RecoveryEnrollRequest, exchange: InstallationActExchange) -> UUID:
+def _profile_to_enrol(
+    request: RecoveryEnrollRequest | RecoveryDisableRequest, exchange: InstallationActExchange
+) -> UUID:
     """Return the profile the request names, or the selected one when it names none."""
     if request.profile_id is not None:
         return request.profile_id
@@ -201,10 +252,35 @@ def _serve_recovery_enroll(request: RecoveryEnrollRequest, exchange: Installatio
         return _result_reply(exchange, RecoveryEnrollReply, outcome)
 
 
+def _serve_recovery_disable(request: RecoveryDisableRequest, exchange: InstallationActExchange) -> RecoveryDisableReply:
+    """Remove the code after the custody service proves the passphrase taken in.
+
+    The profile is settled before the passphrase is asked for, as it is for
+    enrolment. The passphrase is proved before anything is removed, so a
+    refused proof changes nothing.
+    """
+    with _installation_scope(exchange, changes_custody=True):
+        profile_id = _profile_to_enrol(request, exchange)
+        secrets = exchange.receive_secret(InstallationPassphrase)
+        try:
+            with exchange.reserve_profiles((profile_id,)):
+                exchange.changes_begin()
+                outcome = revoke_profile_recovery(
+                    profile_id=profile_id,
+                    current_passphrase=secrets.passphrase.get_secret_value(),
+                    root=exchange.storage_root,
+                )
+        finally:
+            del secrets
+        return exchange.reply(RecoveryDisableReply, profile_id=outcome.profile_id, changed=outcome.changed)
+
+
 def register_profile_acts(registry: InstallationActRegistry) -> None:
-    """Serve the profile listing, the archive acts and recovery enrolment on ``registry``."""
+    """Serve the profile listing, creation, the archive acts and recovery enrolment and removal on ``registry``."""
     registry.register(ProfileListRequest, _serve_profile_list)
+    registry.register(ProfileCreateRequest, _serve_profile_create)
     registry.register(ArchiveInspectRequest, _serve_archive_inspect)
     registry.register(ArchiveImportPrepareRequest, _serve_archive_import_prepare)
     registry.register(ArchiveImportRequest, _serve_archive_import)
     registry.register(RecoveryEnrollRequest, _serve_recovery_enroll)
+    registry.register(RecoveryDisableRequest, _serve_recovery_disable)

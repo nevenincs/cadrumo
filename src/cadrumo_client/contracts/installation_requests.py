@@ -52,7 +52,6 @@ from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.documents import StorageAreaIssuePayload, StorageAreaPayload
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.hex import Hex64Str
@@ -64,6 +63,8 @@ from cadrumo.core.identity.profile_label import ProfileLabel
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.core.text_bounds import NonEmptyStr
+
+from .automation_codes import AutomationCustodyCode
 
 #: Largest reply one act may return across its bounded transfer.
 INSTALLATION_REPLY_MAX_BYTES: Final[int] = 4_194_304
@@ -94,6 +95,7 @@ class InstallationAct(StrEnum):
     STORAGE_INIT = "storage_init"
     STORAGE_RECLAIM = "storage_reclaim"
     PROFILE_LIST = "profile_list"
+    PROFILE_CREATE = "profile_create"
     RESET_START = "reset_start"
     RESET_STATUS = "reset_status"
     RESET_RESUME = "reset_resume"
@@ -101,6 +103,7 @@ class InstallationAct(StrEnum):
     ARCHIVE_IMPORT_PREPARE = "archive_import_prepare"
     ARCHIVE_IMPORT = "archive_import"
     RECOVERY_ENROLL = "recovery_enroll"
+    RECOVERY_DISABLE = "recovery_disable"
     REPAIR_REPORT = "repair_report"
     REPAIR_LOGS = "repair_logs"
     REPAIR_PROFILE = "repair_profile"
@@ -283,6 +286,30 @@ class ProfileListReply(InstallationCompleted):
     profiles: tuple[ProfileListRow, ...] = ()
 
 
+class ProfileCreateRequest(_InstallationRequest):
+    """Create a profile in the runtime from a label and its first passphrase.
+
+    The passphrase and its confirmation follow in one secret frame. The
+    runtime generates and wraps the profile's key, publishes its capsule and
+    first record, and selects it. No session is opened: the profile is created
+    signed out, and the person signs in to it as to any other.
+    """
+
+    action: Literal["profile_create"] = "profile_create"
+    label: _OperatorText
+
+
+class ProfileCreateReply(InstallationCompleted):
+    """The created profile, selected and signed out; no key or session is part of it."""
+
+    kind: Literal["profile_create_reply"] = "profile_create_reply"
+    profile_id: ProfileId
+    label: ProfileLabel
+    setup_state: _VocabularyToken
+    selected: bool
+    signed_in: Literal[False] = False
+
+
 class ArchiveInspectRequest(_InstallationRequest):
     """Read an archive's plaintext header without decrypting anything."""
 
@@ -362,6 +389,28 @@ class RecoveryEnrollReply(InstallationCompleted):
     kind: Literal["recovery_enroll_reply"] = "recovery_enroll_reply"
     profile_id: ProfileId
     enrolled: bool
+    changed: bool
+
+
+class RecoveryDisableRequest(_InstallationRequest):
+    """Remove one committed profile's recovery code.
+
+    The current passphrase follows in one secret frame and is proved before
+    anything is removed. A profile with no code is answered unchanged, still
+    only after the passphrase is proved. A request that names no profile
+    disables the selected one, as the command does.
+    """
+
+    action: Literal["recovery_disable"] = "recovery_disable"
+    profile_id: UUID | None = None
+
+
+class RecoveryDisableReply(InstallationCompleted):
+    """The result of ``config profile recovery disable``."""
+
+    kind: Literal["recovery_disable_reply"] = "recovery_disable_reply"
+    profile_id: ProfileId
+    enrolled: Literal[False] = False
     changed: bool
 
 
@@ -636,6 +685,15 @@ class InstallationPassphrase(BaseModel):
     passphrase: SecretStr
 
 
+class InstallationNewPassphrase(BaseModel):
+    """Secret-frame-only payload of an act that sets a profile's first passphrase."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    passphrase: SecretStr
+    passphrase_confirmation: SecretStr
+
+
 class InstallationSecretReceipt(BaseModel):
     """The client's answer to one delivery; a held secret follows in one secret frame."""
 
@@ -659,6 +717,7 @@ type InstallationActRequest = Annotated[
     | StorageInitRequest
     | StorageReclaimRequest
     | ProfileListRequest
+    | ProfileCreateRequest
     | ResetStartRequest
     | ResetStatusRequest
     | ResetResumeRequest
@@ -666,6 +725,7 @@ type InstallationActRequest = Annotated[
     | ArchiveImportPrepareRequest
     | ArchiveImportRequest
     | RecoveryEnrollRequest
+    | RecoveryDisableRequest
     | RepairReportRequest
     | RepairLogsRequest
     | RepairProfileRequest
@@ -683,6 +743,7 @@ type InstallationActReply = (
     | StorageInitReply
     | StorageReclaimReply
     | ProfileListReply
+    | ProfileCreateReply
     | ResetStartReply
     | ResetStatusReply
     | ResetResumeReply
@@ -690,6 +751,7 @@ type InstallationActReply = (
     | ArchiveImportPrepareReply
     | ArchiveImportReply
     | RecoveryEnrollReply
+    | RecoveryDisableReply
     | RepairReportReply
     | RepairLogsReply
     | RepairProfileReply
@@ -759,6 +821,13 @@ INSTALLATION_ACT_CONTRACTS: Final[Mapping[InstallationAct, InstallationActContra
     ),
     InstallationActContract(InstallationAct.PROFILE_LIST, ProfileListRequest, ProfileListReply, _READS),
     InstallationActContract(
+        InstallationAct.PROFILE_CREATE,
+        ProfileCreateRequest,
+        ProfileCreateReply,
+        _CHANGES_RECORDS,
+        takes_secret=True,
+    ),
+    InstallationActContract(
         InstallationAct.RESET_START,
         ResetStartRequest,
         ResetStartReply,
@@ -797,6 +866,13 @@ INSTALLATION_ACT_CONTRACTS: Final[Mapping[InstallationAct, InstallationActContra
         _CHANGES_RECORDS,
         takes_secret=True,
         delivers_secret=True,
+    ),
+    InstallationActContract(
+        InstallationAct.RECOVERY_DISABLE,
+        RecoveryDisableRequest,
+        RecoveryDisableReply,
+        _CHANGES_RECORDS,
+        takes_secret=True,
     ),
     InstallationActContract(InstallationAct.REPAIR_REPORT, RepairReportRequest, RepairReportReply, _READS),
     InstallationActContract(InstallationAct.REPAIR_LOGS, RepairLogsRequest, RepairLogsReply, _READS),

@@ -13,11 +13,8 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from .automation_support import MemoryNativePort
 from .test_automation_store import Subject

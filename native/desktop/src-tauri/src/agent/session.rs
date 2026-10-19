@@ -101,6 +101,10 @@ pub struct SendRequest {
 
 /// The most skills one message may load.
 const SKILL_LIMIT: usize = 8;
+/// The most of a tool call's details the transcript previews, and the
+/// characters of each.
+const DETAIL_BLOCKS: usize = 8;
+const DETAIL_LIMIT: usize = 4_000;
 
 /// A bundled skill's name as the agent writes one: `cadrumo-`, then a
 /// lowercase letter or digit and up to 118 more of those or hyphens.
@@ -233,6 +237,46 @@ fn echoed_skills(message: &Value) -> Value {
             .filter_map(Value::as_str)
             .filter(|name| skill_name(name))
             .map(|name| json!(name))
+            .collect(),
+    )
+}
+
+/// What a tool call's history says of it, as text to preview: its text
+/// blocks, the call's input and its result as the agent worded them, each cut
+/// to `DETAIL_LIMIT` characters, then the places it touched. Diffs and
+/// terminals are named by their path only.
+fn tool_details(call: &Value) -> Value {
+    let blocks = call
+        .get("content")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|block| match text(block, "content_type") {
+            Some("text") => text(block, "text").filter(|text| !text.trim().is_empty()),
+            Some("diff") => text(block, "path"),
+            _ => None,
+        });
+    let places = call
+        .get("locations")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|place| {
+            let path = text(place, "path").filter(|path| !path.is_empty())?;
+            Some(match place.get("line").and_then(Value::as_u64) {
+                Some(line) => format!("{path}:{line}"),
+                None => path.to_owned(),
+            })
+        });
+    Value::Array(
+        blocks
+            .map(str::to_owned)
+            .chain(places)
+            .take(DETAIL_BLOCKS)
+            .map(|detail| match detail.char_indices().nth(DETAIL_LIMIT) {
+                Some((cut, _)) => json!(format!("{}…", &detail[..cut])),
+                None => json!(detail),
+            })
             .collect(),
     )
 }
@@ -588,6 +632,7 @@ pub fn history_records(runs: &[(String, Value, Value)]) -> Vec<Value> {
                 "title": text(call, "title"),
                 "tool_kind": text(call, "kind"),
                 "status": text(call, "status"),
+                "details": tool_details(call),
             }));
         }
         for message in own.iter().filter(|m| text(m, "role") == Some("assistant")) {
@@ -872,9 +917,17 @@ impl Session {
     /// Starts the conversation's next run with the person's message. A
     /// conversation whose last run is live takes no message: nothing is
     /// queued behind it.
-    pub fn send(&self, supervisor: &Supervisor, request: &SendRequest) -> Result<Value, Refused> {
+    pub fn send(
+        &self,
+        supervisor: &Supervisor,
+        request: &SendRequest,
+        admitted_gateway: &Gateway,
+    ) -> Result<Value, Refused> {
         admit_send(request)?;
         let gateway = Self::gateway(supervisor)?;
+        if !gateway.same_instance(admitted_gateway) {
+            return Err(refused("agent_service_not_ready"));
+        }
         let client = Client::new(&gateway);
         let chain = self.chain(&client, &request.conversation_id)?;
         let (run_id, continues) = match chain.last() {
@@ -888,6 +941,9 @@ impl Session {
                 (mint_run_id()?, Some(last.id.clone()))
             }
         };
+        if !Self::gateway(supervisor)?.same_instance(admitted_gateway) {
+            return Err(refused("agent_service_not_ready"));
+        }
         let named = lock(&self.named).get(&request.conversation_id).cloned();
         let started = client.start_run(&start_body(
             &run_id,
@@ -1468,7 +1524,12 @@ mod tests {
         let first = json!({"state": {"status": "completed",
             "messages": [message("u1", "user", "Hola"), message("a1", "assistant", "¿Qué tal?")],
             "tool_calls": [{"tool_call_id": "t1", "title": "ledger_list", "kind": "read", "status": "completed",
-                            "locations": [], "content": []}]},
+                            "locations": [{"path": "libro.csv", "line": 3}, {"path": ""}],
+                            "content": [{"content_type": "text", "text": "{\"year\":2026}"},
+                                        {"content_type": "text", "text": "  "},
+                                        {"content_type": "terminal", "terminal_id": "term-1"},
+                                        {"content_type": "diff", "path": "notas.md", "new_text": "x"},
+                                        {"content_type": "text", "text": "r".repeat(DETAIL_LIMIT + 1)}]}]},
             "usage": {"total": {"input_tokens": 10, "output_tokens": 4}}});
         // The successor is seeded with the predecessor's messages under new ids.
         let second = json!({"state": {"status": "failed",
@@ -1493,7 +1554,8 @@ mod tests {
             json!([
                 {"kind": "person", "id": "u1", "reply_id": "c1", "text": "Hola", "sent_at": "2026-10-13T12:00:00Z",
                  "attachments": [], "skills": []},
-                {"kind": "tool", "reply_id": "c1", "id": "t1", "title": "ledger_list", "tool_kind": "read", "status": "completed"},
+                {"kind": "tool", "reply_id": "c1", "id": "t1", "title": "ledger_list", "tool_kind": "read", "status": "completed",
+                 "details": ["{\"year\":2026}", "notas.md", format!("{}…", "r".repeat(DETAIL_LIMIT)), "libro.csv:3"]},
                 {"kind": "agent", "id": "a1", "reply_id": "c1", "text": "¿Qué tal?"},
                 {"kind": "reply", "id": "c1", "status": "completed", "provider_condition": null,
                  "failure_reason": null, "queued_messages": 0,

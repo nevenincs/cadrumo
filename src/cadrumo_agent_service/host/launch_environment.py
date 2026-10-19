@@ -48,6 +48,9 @@ EXTERNAL_BIN_DIRECTORIES_VARIABLE: Final = "CADRUMO_EXTERNAL_BIN_DIRS"
 DIAGNOSTIC_VARIABLES: Final = frozenset({AGENT_LOG_LEVEL_VARIABLE})
 """Capture agent diagnostics independently of the operator view filter."""
 
+AUTH_BROWSER_EXECUTABLE_VARIABLE: Final = "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE"
+"""The packaged browser handoff executable, supplied only to the login helper."""
+
 AGENT_SLOTS: Final = frozenset({HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE})
 """The agent's own launch parameters the service fills."""
 GATEWAY_SLOTS: Final = AGENT_SLOTS | {STORAGE_ROOT.variable, PROFILE_ROOT_VARIABLE}
@@ -189,6 +192,33 @@ def agent_binary_directories(
             str(node_bin) if external is None or external == "" else path_separator.join((str(node_bin), external))
         )
     return external if external is not None and external != "" else None
+
+
+def auth_browser_executable(python: Path | None) -> Path | None:
+    """Locate the declared desktop image that relays a provider's browser hook."""
+    if python is None or not python.is_absolute() or not python.is_file():
+        return None
+    try:
+        root = python.parent.resolve(strict=True)
+        manifest = _resolve_package_path(root, ("data", "package-manifest.json"))
+        if manifest is None:
+            return None
+        layout = json.loads(manifest.read_text(encoding="utf-8"))["layout"]
+        executable_parts = _package_relative_parts(layout["paths"]["executable"])
+        if executable_parts is None or _resolve_package_path(root, executable_parts) != python.resolve(strict=True):
+            return None
+        images = [image for image in layout["application_images"] if image.get("desktop") is True]
+        if len(images) != 1:
+            return None
+        image = images[0]
+        parts = _package_relative_parts(image["name"] + layout["entrypoint_suffix"])
+        placement = () if image["placement"] == "." else _package_relative_parts(image["placement"])
+        if parts is None or placement is None:
+            return None
+        candidate = _resolve_package_path(root, (*placement, *parts))
+        return candidate if candidate is not None and candidate.is_file() else None
+    except (OSError, RuntimeError, KeyError, TypeError, ValueError, RecursionError):
+        return None
 
 
 def agent_launch_environment(

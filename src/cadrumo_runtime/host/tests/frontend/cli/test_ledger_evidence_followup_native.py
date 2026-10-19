@@ -21,7 +21,7 @@ from cadrumo.entrypoints.tests.evidence_followup_operation_test_support import (
     prepare_evidence_followup_conformance_case,
 )
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,

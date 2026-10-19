@@ -4,23 +4,21 @@ desktop:
     agent_replied: L'agent ha respost
     approval_allow_always: Permet-ho
     approval_allow_once: Permet-ho un cop
+    approval_allow_session: Permet-ho durant aquesta sessió
     approval_reject_always: No ho permetis
     approval_reject_once: No ho permetis
     approval_review_title: Revisa això abans que Cadrumo ho faci
-    approval_tool_title: L'agent vol fer servir una eina
+    approval_tool_title: L'agent et demana permís
     archive: Arxiva
     archived_empty: No hi ha res arxivat
     archived_toggle: Arxivades ({count})
     attach_filter: Documents
     attachments: Fitxers per al missatge següent
-    attachments_refused: 'Rebutjats: {count}'
+    attachments_refused: 'No acceptats: {count}'
     attachments_uploading: 'S''estan pujant: {count}'
     can_read_images: llegir imatges
     can_read_pdfs: llegir PDF
-    can_run_subagents: executar subagents
     can_search_web: cercar al web
-    can_stop_subagent: aturar un subagent
-    can_use_tools: fer servir eines
     can_write: escriure fitxers
     cancel: Cancel·la
     capabilities: 'Pot: {list}'
@@ -33,10 +31,11 @@ desktop:
     condition_invalid_request: El proveïdor ha rebutjat la petició
     condition_network_unreachable: No es pot contactar amb el proveïdor
     condition_provider_overloaded: El proveïdor està sobrecarregat
-    condition_throttled: El proveïdor està limitant les peticions
-    condition_unauthenticated: Sense autenticar amb el proveïdor
+    condition_throttled: Has arribat al límit d'ús del proveïdor. Consulta el teu
+      compte del proveïdor o tria'n un altre.
     condition_unknown: Causa desconeguda
-    condition_usage_exhausted: Límit d'ús assolit
+    condition_usage_exhausted: Has arribat al límit d'ús del proveïdor. Consulta el
+      teu compte del proveïdor o tria'n un altre.
     consent_allow: Envia-ho a {provider}
     consent_decline: No ho enviïs
     consent_items: Què s'enviaria
@@ -77,13 +76,12 @@ desktop:
     history: Historial
     history_empty: Encara no hi ha converses
     history_no_match: Cap conversa no coincideix amb «{query}».
-    lane_no_catalog: No s'han pogut llistar els models
-    lane_not_admitted: No permès aquí
-    lane_not_configured: Sense configurar
-    lane_notice: 'Entorn de desenvolupament: les converses es desen sense xifrar en
-      aquest emmagatzematge de prova. Fes servir només dades inventades.'
-    lane_signed_out: Sense la sessió iniciada
-    lane_unreachable: No s'hi pot connectar
+    lane_no_catalog: No s’han pogut carregar els models. Torna-ho a provar.
+    lane_not_admitted: No està disponible en aquest ordinador. Tria'n un altre.
+    lane_not_configured: Configura aquest proveïdor als ajustos.
+    lane_notice: Les converses d'aquesta versió no estan xifrades.
+    lane_signed_out: Inicia la sessió en aquest proveïdor des dels ajustos.
+    lane_unreachable: No es pot connectar. Revisa aquest proveïdor als ajustos.
     members_multiple: '{count} fitxers'
     members_single: 1 fitxer
     mention_empty: Cap document desat no coincideix
@@ -94,17 +92,16 @@ desktop:
     message_label: Missatge
     message_placeholder: Pregunta per un model, un termini o els teus registres
     model: Model
-    model_written: Aquest proveïdor no llista els seus models. Escriu l'identificador
-      del model tal com el nomena el proveïdor.
+    model_written: Aquest proveïdor no llista els seus models. Escriu el nom del model
+      tal com l'escriu el proveïdor.
     more_files: +{count} més
     new_conversation: Conversa nova
     no_models: No hi ha models per triar
-    no_provider: L'agent encara no té cap proveïdor que pugui fer servir.
+    no_provider: Configura un proveïdor d'IA per començar.
     provider: Proveïdor
     questions_answer: Respon
     questions_clear: Esborra aquesta resposta
-    questions_control: 'Una resposta és una sola línia: no pot dur salts de línia,
-      tabuladors ni altres caràcters de control'
+    questions_control: Escriu cada resposta en una sola línia.
     questions_decline: No responguis
     questions_invalid: Corregeix primer les respostes marcades
     questions_lead: Respon aquí sota, o escriu un missatge per respondre amb les teves
@@ -115,6 +112,7 @@ desktop:
     questions_too_long: Aquesta resposta té {count} caràcters; el màxim és {max}
     queued: Esperant per pujar
     ran_with: 'S''ha executat amb: {selection}'
+    read_failed: No s’ha pogut carregar aquesta informació. Torna-ho a provar.
     ready: A punt
     reference_changed: Un document que has esmentat ha canviat des que el vas triar.
       Torna a triar-lo amb @.
@@ -123,7 +121,7 @@ desktop:
     reference_refused: Un document que has esmentat no es pot compartir amb l'agent.
     references_unavailable: Els documents desats d'aquesta conversa no estan disponibles
       ara.
-    refused: Rebutjat
+    refused: No acceptat
     remove_all: Treu-ho tot
     remove_document: Treu {name}
     remove_file: Treu {name}
@@ -133,9 +131,10 @@ desktop:
     reply_failed: Aquesta resposta no s'ha completat.
     reply_in_progress: Encara hi ha una resposta en curs.
     reply_queued: 'Missatges en espera: {count}'
-    reply_reconciling: Conciliant…
-    reply_repair_needed: Necessita reparació
+    reply_reconciling: S'està comprovant…
+    reply_repair_needed: Interrompuda
     reply_stopping: Aturant…
+    request_failed: No s’ha pogut completar aquesta acció. Torna-ho a provar.
     resize: Canvia la mida de l'agent
     restore: Restaura
     retry: Torna-ho a provar
@@ -152,20 +151,22 @@ desktop:
     send_waiting: Espera que es pugin tots els fitxers
     sent_files: Fitxers enviats amb aquest missatge
     sent_skills: Habilitats carregades
-    service_absent: L'agent no està instal·lat.
-    service_credential_missing: No hi ha cap clau configurada per a aquest proveïdor.
+    service_absent: L'agent no està instal·lat. Reinstal·la Cadrumo per afegir-lo.
+    service_credential_missing: Configura un proveïdor als ajustos per començar.
     service_failed: L'agent ha deixat de funcionar.
-    service_incompatible: Aquesta versió de l'agent no funciona amb aquest Cadrumo.
-    service_root_unmarked: Aquest emmagatzematge de prova no està marcat com a entorn
-      de desenvolupament de l'agent.
-    service_runtime_unavailable: El servei en segon pla de Cadrumo no està en marxa.
+    service_incompatible: Aquesta versió de l'agent no funciona amb aquesta versió
+      de Cadrumo. Reinstal·la Cadrumo.
+    service_root_unmarked: No s'han pogut obrir les teves converses. Reinicia Cadrumo
+      i torna-ho a provar.
+    service_runtime_unavailable: Cadrumo encara no està a punt. Reinicia'l i torna-ho
+      a provar.
     service_signed_out: Inicia la sessió per parlar amb l'agent.
     service_starting: S'està iniciant l'agent…
     service_stopped: L'agent no està en marxa.
     set_up_providers: Configura els proveïdors d'IA
     settings: Configuració de l'agent
-    settings_label: 'Model i esforç: {current}'
-    settings_title: Configuració del model
+    settings_label: 'Model: {current}'
+    settings_title: Model d'aquesta conversa
     show: Mostra l'agent
     show_active: Mostra les actives
     sign_in_first: Inicia la sessió per fer servir l'agent
@@ -207,6 +208,9 @@ desktop:
     status_uploading: S'està pujant
     stop: Atura
     stopped: Aturat
+    thinking: Raonament
+    thoughts: El que va pensar l'agent
+    tool_details: Detalls de la crida
     tool_done: Fet
     tool_failed: Amb error
     tool_kind_delete: Elimina
@@ -232,7 +236,7 @@ desktop:
     upload_unreadable: No s'ha pogut llegir
     uploading: S'està pujant
     uploading_name: S'està pujant {name}
-    usage: 'Tokens: {input} d''entrada, {output} de sortida'
+    usage: 'Tokens utilitzats: {input} enviats, {output} rebuts'
     waiting_on_you: Esperant la teva resposta
     welcome_lead: Alguna cosa d'impostos? Pregunta per un model o un termini, o afegeix
       rebuts, factures i extractes bancaris amb +.
@@ -243,91 +247,102 @@ desktop:
     agent: Agent
     maximize_agent: Maximitza l'agent
   providers:
-    add_key: Afegeix una clau
+    add_key: Afegeix una clau API
+    address: 'Adreça: {url}'
     base_url_default: Deixa-la buida per fer servir {url}.
-    base_url_label: URL base
-    base_url_required: 'Obligatòria: aquest proveïdor no en té cap per defecte.'
+    base_url_label: Adreça del servidor
+    base_url_required: Introdueix l’adreça que t’ha facilitat el proveïdor.
     cancel: Cancel·la
-    cli_installed_signed_in: Instal·lat i amb la sessió iniciada
-    cli_installed_signed_out: Instal·lat, sense la sessió iniciada
-    cli_not_installed: No instal·lat
-    cli_unknown: Encara no comprovat
-    development_note: En aquesta versió de desenvolupament, un proveïdor sense clau
-      pròpia fa servir la de l'entorn de desenvolupament.
-    disable: Desactiva
-    disable_note: Desactivar impedeix que Cadrumo faci servir un proveïdor, ni tan
-      sols amb una clau que trobi en un altre lloc.
-    disabled: 'Desactivat: Cadrumo no el farà servir fins que hi afegeixis una clau
-      o el restableixis.'
+    change_failed: No s’ha pogut desar. Actualitza i torna-ho a provar.
+    connection_api: Clau API
+    connection_app: Aplicació instal·lada
+    detail_app_missing: Instal·la l'aplicació de {provider} i després inicia la sessió.
+    detail_off: 'Desactivat: l''agent no l''ofereix ni el fa servir.'
+    detail_off_kept: 'Desactivat: l''agent no l''ofereix ni el fa servir. La seva
+      clau API es conserva per quan l''activis.'
+    detail_sign_in: Inicia la sessió amb el teu compte de {provider}.
+    group_intro: Tria un proveïdor per configurar-lo.
+    icon_credits: Crèdits de les icones
     key_label: Clau d'API de {provider}
-    key_note: Enganxa-la aquí. Es desa xifrada i no es torna a mostrar.
-    lead: Les claus es desen xifrades en aquest perfil i no es tornen a mostrar. Només
-      tu les pots afegir, substituir o treure.
-    mode_provider_sign_in: Sessió iniciada amb {provider}
-    mode_token: Testimoni OAuth desat en aquest perfil
-    readiness_disabled: Desactivat
-    readiness_missing: Sense clau
-    readiness_not_verified: Desada, encara sense fer servir
-    readiness_ready: A punt
-    readiness_sign_in_required: Cal iniciar la sessió
-    readiness_unusable: No es pot fer servir
-    reason_not_configured: Encara no està configurat.
-    reason_record_unreadable: No se'n pot llegir la configuració desada. Torna a afegir
-      la clau.
-    reason_sign_in_with_provider_tool: Inicia primer la sessió amb l'aplicació de
-      {provider}.
-    refresh: Actualitza
-    refused_base_url_rejected: Aquesta URL base no es pot fer servir.
-    refused_catalog_unavailable: El Cadrumo no ha pogut llegir els proveïdors de l'agent.
+    key_note: Es desa xifrada en aquest ordinador i no es torna a mostrar.
+    load_failed: No s’han pogut carregar els proveïdors. Torna-ho a provar.
+    reason_check_settings: Revisa aquesta configuració i torna-ho a provar.
+    reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
+    refresh: Torna-ho a provar
+    refused_base_url_rejected: Revisa l’adreça del servidor i torna-ho a provar.
     refused_invalid_key_format: Això no sembla una clau d'aquest proveïdor.
-    refused_not_signed_in: Inicia la sessió per canviar les claus.
-    refused_person_act_required: Només tu pots canviar les claus, aquí.
-    refused_profile_locked: Aquest perfil està bloquejat.
-    refused_revision_conflict: Això ha canviat en un altre lloc. Es mostra el més
-      recent; torna-ho a provar.
-    refused_runtime_unavailable: El servei en segon pla no està en marxa, així que
-      no s'ha llegit ni canviat res. Comprova el gestor de serveis en segon pla i
-      torna-ho a provar.
-    replace_key: Substitueix la clau
-    reset: Restableix
-    reset_note: Restablir oblida el que s'hi havia configurat, com si mai no s'hagués
-      configurat.
-    reset_note_development: Restablir oblida el que s'hi havia configurat; en aquesta
-      versió de desenvolupament, es torna a fer servir la clau de l'entorn de desenvolupament.
+    refused_not_signed_in: Inicia la sessió per canviar aquesta configuració.
+    refused_person_act_required: Només tu pots canviar aquesta configuració, des d'aquesta
+      finestra.
+    refused_profile_locked: Desbloqueja el perfil per canviar aquesta configuració.
+    refused_revision_conflict: Aquesta configuració ha canviat mentrestant. Es mostra
+      la darrera; torna-ho a provar.
+    refused_runtime_unavailable: Reinicia Cadrumo i torna-ho a provar.
+    remove_key: Elimina la clau API
+    replace_key: Substitueix la clau API
     save: Desa
-    saved_unread: Desada, però no se n'ha pogut llegir l'estat.
+    saved_unread: Desat, però no se n'ha pogut llegir l'estat. Torna-ho a provar.
     saving: S'està desant…
+    search_empty: No hi ha proveïdors que coincideixin. Prova una altra cerca.
+    search_label: Cerca proveïdors
+    search_placeholder: Cerca proveïdors
     sign_in_action: Inicia la sessió
+    sign_in_busy: Un altre inici de sessió de {provider} encara s'està acabant. Espera
+      un moment i torna-ho a provar.
     sign_in_cancel: Cancel·la l'inici de sessió
     sign_in_cancel_failed: El Cadrumo encara no ha pogut cancel·lar l'inici de sessió.
       Mantén aquest diàleg obert mentre ho comprova.
     sign_in_cancelled: S'ha cancel·lat l'inici de sessió.
+    sign_in_cleanup_failed: Reinicia Cadrumo abans de tornar a iniciar la sessió.
     sign_in_close: Tanca l'inici de sessió
     sign_in_continue_browser: Continua al navegador
     sign_in_description: Continua a la pàgina d'inici de sessió de {provider}. Escriu-hi
       la contrasenya només allà.
+    sign_in_done: Fet
     sign_in_failure: No s'ha pogut completar l'inici de sessió. Torna-ho a provar
       més tard.
-    sign_in_only: Fa servir l'inici de sessió propi de {provider}.
+    sign_in_host_disconnected: El Cadrumo ha perdut el contacte amb aquest inici de
+      sessió i l'ha cancel·lat. Torna'l a iniciar per continuar.
+    sign_in_invalid_request: Tanca aquesta finestra i torna a iniciar la sessió.
     sign_in_open_failed: El Cadrumo no ha pogut obrir la pàgina d'inici de sessió
       del proveïdor.
+    sign_in_profile_required: Inicia la sessió al Cadrumo per continuar iniciant-la
+      amb {provider}.
+    sign_in_provider_error: No s’ha pogut iniciar la sessió a {provider}. Torna-ho
+      a provar.
+    sign_in_provider_unavailable: Instal·la l’aplicació de {provider} i torna-ho a
+      provar.
+    sign_in_retry: Torna a provar d'iniciar la sessió
+    sign_in_retry_checking: Preparant un altre intent…
+    sign_in_retry_refresh_failed: Tanca i obre la configuració de proveïdors i torna-ho
+      a provar.
     sign_in_security: El Cadrumo mai no et demanarà la contrasenya del proveïdor.
     sign_in_start_browser: Inicia la sessió al navegador
     sign_in_start_device: Fes servir un codi de dispositiu
     sign_in_starting: S'està iniciant la sessió…
-    sign_in_success: Has iniciat la sessió amb {provider}. El Cadrumo encara ha de
-      comprovar que aquest canal pot executar un agent.
+    sign_in_success: Has iniciat la sessió a {provider}.
+    sign_in_success_description: Has iniciat la sessió. Prem Fet per tornar a la configuració.
+    sign_in_success_title: 'Inici de sessió completat: {provider}'
     sign_in_timeout: L'inici de sessió ha trigat massa i s'ha cancel·lat.
     sign_in_title: Inicia la sessió amb {provider}
-    sign_in_unavailable: Encara no es pot iniciar la sessió amb aquest proveïdor des
-      del Cadrumo.
+    sign_in_unavailable: Encara no pots iniciar la sessió a {provider} des de Cadrumo.
+    sign_in_unsupported_browser: L'inici de sessió de {provider} al navegador no ha
+      pogut continuar des del Cadrumo. Prova amb un codi de dispositiu si {provider}
+      ho permet.
+    sign_in_unsupported_device: El Cadrumo no ofereix l'inici de sessió de {provider}
+      amb codi de dispositiu. Prova d'iniciar la sessió al navegador.
     sign_in_user_code: Codi del dispositiu
     sign_in_waiting: Acaba d'iniciar la sessió a la pàgina del proveïdor i torna aquí.
     sign_in_waiting_device: Escriu aquest codi a la pàgina del proveïdor per acabar
       d'iniciar la sessió.
-    source_environment: Fa servir la clau de l'entorn de desenvolupament
-    source_profile: Clau desada en aquest perfil
-    through: A través de {url}
+    status_not_checked: Sense comprovar
+    status_off: Desactivat
+    status_ready: A punt
+    status_saved: Desat
+    status_setup_needed: Sense configurar
+    status_sign_in_needed: Sense sessió iniciada
+    summary: '{connection}: {status}'
     title: Proveïdors d'IA
+    use_in_agent: Fes servir {provider} ({connection}) a l'agent
   rail:
     agent: Agent

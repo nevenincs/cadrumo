@@ -10,7 +10,6 @@ from uuid import uuid4
 import pytest
 import typer
 
-from cadrumo.application.user_profile.access_contracts import AuthorityState, disclosure_digest
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationGrantProjection,
     AutomationInventoryProjection,
@@ -18,6 +17,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     AutomationScopeProjection,
 )
 from cadrumo_client.commands.access_management_payloads import ConfigProfileAutomationListResult
+from cadrumo_client.contracts.access_vocabulary import AuthorityState, disclosure_digest
 from cadrumo_client.transport.automation_inventory import (
     AutomationInventoryCompletion,
     AutomationInventoryReadError,

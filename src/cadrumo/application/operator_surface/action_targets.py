@@ -133,6 +133,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         program=CommandProgram.AUTHENTICATION,
         profile_bound_write=True,
     ),
+    ActionTarget(
+        "config.google.login",
+        ("config", "google", "login"),
+        "GoogleLoginResult",
+        program=CommandProgram.AUTHENTICATION,
+        profile_bound_write=True,
+    ),
     ActionTarget("config.login", ("config", "login"), "ConfigLoginResult"),
     ActionTarget("config.logout", ("config", "logout"), "ConfigLogoutResult"),
     ActionTarget(
@@ -159,6 +166,9 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("config.profile.list", ("config", "profile", "list"), "ConfigListResult"),
     ActionTarget("config.profile.status", ("config", "profile", "status"), "ConfigStatusResult"),
     ActionTarget("config.provision.browser", ("config", "provision", "browser"), "ProvisionBrowserResult"),
+    ActionTarget("config.provision.pull", ("config", "provision", "pull"), "ProvisionPullResult"),
+    ActionTarget("config.provision.setup", ("config", "provision", "setup"), "ProvisionSetupResult"),
+    ActionTarget("config.provision.status", ("config", "provision", "status"), "ProvisionStatusResult"),
     ActionTarget("config.repair", ("config", "repair"), "ConfigRepairResult"),
     ActionTarget("config.repair.profile", ("config", "repair", "profile"), "RepairProfileResult"),
     ActionTarget("config.repair.quarantine", ("config", "repair", "quarantine"), "RepairQuarantineResult"),

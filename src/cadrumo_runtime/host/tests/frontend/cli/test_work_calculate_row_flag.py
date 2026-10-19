@@ -29,7 +29,7 @@ from cadrumo.domain.modelos.row_models import (
 )
 from cadrumo.tests.storage_scope import storage_overrides
 from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

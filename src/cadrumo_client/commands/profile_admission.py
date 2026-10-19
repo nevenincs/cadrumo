@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from uuid import UUID
 
 import typer
@@ -12,12 +13,11 @@ from cadrumo.application.profile_preconditions import (
     profile_password_channel_failure_verdict,
     profile_session_failure_verdict,
 )
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
-from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
+from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
@@ -37,6 +37,7 @@ from cadrumo_client.commands.sign_in_refusal_projection import (
     session_refusal_context,
     session_refusal_translation_key,
 )
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -53,8 +54,10 @@ def require_automation_change_credential_reference(ctx: typer.Context) -> UUID:
     return source.credential_reference
 
 
-def _password(client: FrontendClient, *, selection: ProfileSecretSelection | None) -> None:
-    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+def _password(
+    client: FrontendClient, *, selection: ProfileSecretSelection | None, not_persisted: Callable[[], None]
+) -> None:
+    from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 
     if selection is None:
         secret = bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")).encode("utf-8"))
@@ -89,7 +92,7 @@ def _password(client: FrontendClient, *, selection: ProfileSecretSelection | Non
     finally:
         secret[:] = bytes(len(secret))
     if admitted.human_login is None or not admitted.human_login.session_persisted:
-        stage_profile_session_not_persisted_notice()
+        not_persisted()
 
 
 def _api_key(client: FrontendClient, *, selection: ProfileSecretSelection) -> None:
@@ -110,14 +113,24 @@ def _api_key(client: FrontendClient, *, selection: ProfileSecretSelection) -> No
         secret[:] = bytes(len(secret))
 
 
-def _authenticate(
-    ctx: typer.Context,
+def authenticate_profile_client(
     client: FrontendClient,
     *,
     root_selection: ProfileSecretSelection | None,
     profile_label: str | None,
     method: ProfileAuthenticationMethod,
+    not_persisted: Callable[[], None] = stage_profile_session_not_persisted_notice,
 ) -> None:
+    """Admit ``client``'s profile by its live sign-in, a password or a key, presented only to the runtime.
+
+    This is the one admission door of every command, whichever executable
+    runs it. A key needs its secret channel. A password given on the root
+    secret channel is presented as given. Otherwise the live sign-in on this
+    OS login is resumed, and only when this process cannot use the keychain
+    is a password asked for at a terminal. Every refusal keeps the runtime's
+    typed reason. ``not_persisted`` reports a password sign-in the runtime
+    kept for this invocation only, in the calling executable's notice channel.
+    """
     if method is ProfileAuthenticationMethod.API_KEY:
         if root_selection is None:
             raise CliRefusedBoundaryError(
@@ -126,7 +139,7 @@ def _authenticate(
         _api_key(client, selection=root_selection)
         return
     if root_selection is not None:
-        _password(client, selection=root_selection)
+        _password(client, selection=root_selection, not_persisted=not_persisted)
         return
     # A live sign-in on this OS login admits every client, attached to a terminal or not.
     try:
@@ -135,7 +148,7 @@ def _authenticate(
         refusal = error.reason
         if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
             if terminal_can_prompt_for_secrets():
-                _password(client, selection=None)
+                _password(client, selection=None, not_persisted=not_persisted)
                 return
             raise attach_cli_policy_verdict(
                 CliRefusedBoundaryError(
@@ -166,18 +179,16 @@ def activate_profile(
     Parsed dispatch selects the migrated registered leaves. An ambient
     selection supplies a target, never authentication.
     """
-    bucket_id = target_bucket_id or resolve_active_bucket_id()
+    bucket_id = target_bucket_id or profile_selection.command_profile_id()
     if bucket_id is None:
         if root_selection is not None or credential_reference is not None:
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_missing_target")
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_label = target_profile_label
     if profile_label is None and credential_reference is None:
-        from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
-        pointer = read_profile_bucket_by_id(bucket_id)
-        if pointer is not None:
-            profile_label = pointer.label
+        target = profile_selection.runtime_login_target(bucket_id)
+        if target is not None:
+            profile_label = target.label
     if credential_reference is not None:
         client = _open_profile_credential_client(bucket_id, credential_reference, root_selection, method, ctx)
     else:
@@ -187,7 +198,9 @@ def activate_profile(
     try:
         if credential_reference is None:
             subscribe_profile_notices(ctx, client)
-            _authenticate(ctx, client, root_selection=root_selection, profile_label=profile_label, method=method)
+            authenticate_profile_client(
+                client, root_selection=root_selection, profile_label=profile_label, method=method
+            )
         bind_profile_target(ctx, bucket_id=bucket_id)
         bind_profile_client(ctx, client, profile_id=UUID(bucket_id))
     except FrontendRefusedError as error:
@@ -211,7 +224,7 @@ def activate_profile_recovery(
     """
     if root_selection is not None:
         raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_inapplicable")
-    bucket_id = target_bucket_id or resolve_active_bucket_id()
+    bucket_id = target_bucket_id or profile_selection.command_profile_id()
     if bucket_id is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     client = asyncio.run(open_installed_client(profile_id=UUID(bucket_id), frontend=OperationFrontendProjection.CLI))
@@ -256,6 +269,7 @@ def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:
 __all__ = [
     "activate_profile",
     "activate_profile_recovery",
+    "authenticate_profile_client",
     "bind_profile_target",
     "require_automation_change_credential_reference",
 ]

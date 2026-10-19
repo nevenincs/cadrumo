@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -34,9 +36,6 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.projection import PreconditionVerdictSnapshot
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,

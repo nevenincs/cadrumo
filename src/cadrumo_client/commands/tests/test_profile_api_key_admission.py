@@ -17,7 +17,15 @@ from cadrumo_client.commands.profile_authentication import (
 from cadrumo_client.commands.secure_input import ProfileSecretChannel, ProfileSecretSelection
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from .runtime_target_double import answer_login_targets_locally
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _runtime_answers_login_targets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime client here is a double, so the runtime's login-target answer is given as it would give it."""
+    answer_login_targets_locally(monkeypatch)
 
 
 def _context(source: ProfileSecretSourceOptions) -> typer.Context:
@@ -58,8 +66,7 @@ def test_api_login_consumes_once_and_wipes_the_mutable_secret(monkeypatch: pytes
         "read_profile_secret_payload",
         lambda _model, *, selection: ProfileAuthenticationSecrets.model_validate({"api_key": "synthetic-api-key"}),
     )
-    admission._authenticate(
-        _context(ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY)),
+    admission.authenticate_profile_client(
         cast(FrontendClient, witness),
         root_selection=ProfileSecretSelection(ProfileSecretChannel.STDIN),
         profile_label=None,
@@ -89,8 +96,7 @@ def test_selected_method_refuses_the_other_valid_payload(
     )
     with pytest.raises(CliRefusedBoundaryError) as refused:
         if method is ProfileAuthenticationMethod.API_KEY:
-            admission._authenticate(
-                _context(ProfileSecretSourceOptions(method=method)),
+            admission.authenticate_profile_client(
                 cast(FrontendClient, witness),
                 root_selection=ProfileSecretSelection(ProfileSecretChannel.STDIN),
                 profile_label=None,
@@ -98,7 +104,9 @@ def test_selected_method_refuses_the_other_valid_payload(
             )
         else:
             admission._password(
-                cast(FrontendClient, witness), selection=ProfileSecretSelection(ProfileSecretChannel.STDIN)
+                cast(FrontendClient, witness),
+                selection=ProfileSecretSelection(ProfileSecretChannel.STDIN),
+                not_persisted=lambda: pytest.fail("a refused secret signed nothing in"),
             )
     assert refused.value.translated_message is not None
     assert refused.value.translated_message.endswith("profile_secrets_method_mismatch")

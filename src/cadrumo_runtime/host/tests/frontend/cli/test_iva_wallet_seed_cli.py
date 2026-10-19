@@ -23,7 +23,7 @@ from cadrumo.domain.iva_compensation.carry_forward import (
 from cadrumo.domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from cadrumo.entrypoints.cli.tests.native_profile_cli_support import invoke_native_cli, reauthenticate_native_profile
 from cadrumo.tests.cli_envelope import require_schema_envelope
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from ._iva_wallet_inspector_support import _NIF
 from .cli_runner import invoke_cached_cli

@@ -22,9 +22,9 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationDefinitionId, OperationId, OperationReference
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.user_profile.access_contracts import AccessAction
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
+from .access_vocabulary import AccessAction
 from .projection_pages import ProjectionPage, ProjectionPageRequest
 from .submission_payload import (
     SUBMISSION_PAYLOAD_MAX_BYTES,

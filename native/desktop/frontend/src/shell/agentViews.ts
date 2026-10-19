@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AgentReplyState,
   ConversationGroup,
@@ -59,13 +59,17 @@ export type AgentToolStatus =
   "pending" | "in_progress" | "completed" | "failed";
 
 /** A tool call as the agent reports it: its `tool_call_id`, its `title` (the
- * tool's name), its `kind` and its `status`. Its input and result are not
- * here: the stream carries none, and the history's input may be private. */
+ * tool's name), its `kind` and its `status`. The stream carries nothing of
+ * its input or result; the history may say more in `details`. */
 export type AgentToolCall = {
   id: string;
   title: string;
   tool_kind: AgentToolKind;
   status: AgentToolStatus;
+  /** What the history says of the call, as the agent worded it and the
+   * host cut it: its input, its result and the places it touched. Absent
+   * while the call is only streamed. */
+  details?: string[];
 };
 
 /** What a reply ran with, as the agent froze it when the run started: the
@@ -199,6 +203,10 @@ export type AgentTurnRecord =
       text: string;
     }
   | ({ kind: "tool"; reply_id: string } & AgentToolCall)
+  /** What the agent thought on the way, by the stream's `message_id`. The
+   * history lists none: only the stream has it, and the column keeps it
+   * beside what it reads for as long as it watches. */
+  | { kind: "thought"; id: string; reply_id: string; text: string }
   | AgentReplyRecord;
 
 /** The reply a record belongs to. */
@@ -264,6 +272,65 @@ export function useAgentRead<T>(
   return state.for === read ? state.read : { kind: "loading" };
 }
 
+/**
+ * A read whose answer is kept for `owner` and shown while it is asked again,
+ * so it is loading only the first time. It is asked whenever `enabled` and
+ * either `ask` changes or it has no answer yet; leaving it disabled keeps the
+ * answer for when it is enabled again. A re-read that fails keeps the answer
+ * it would have replaced. An answer for an earlier owner is dropped, and
+ * `put` sets the answer from a read made elsewhere, without asking again.
+ */
+export function useCachedRead<T>(
+  read: (() => Promise<T>) | null,
+  owner: string | null,
+  enabled: boolean,
+  ask: number,
+): { read: AgentRead<T>; put: (value: T) => void } {
+  const [state, setState] = useState<{
+    owner: string | null;
+    read: AgentRead<T>;
+  }>({ owner, read: { kind: "loading" } });
+  const asked = useRef<{ owner: string | null; ask: number } | null>(null);
+  if (state.owner !== owner) setState({ owner, read: { kind: "loading" } });
+  useEffect(() => {
+    if (!read || !enabled) return;
+    const last = asked.current;
+    if (last && last.owner === owner && last.ask === ask) return;
+    asked.current = { owner, ask };
+    let current = true;
+    let settled = false;
+    read().then(
+      (value) => {
+        settled = true;
+        if (current) setState({ owner, read: { kind: "ready", value } });
+      },
+      (error: unknown) => {
+        settled = true;
+        if (current)
+          setState((held) =>
+            held.owner === owner && held.read.kind === "ready"
+              ? held
+              : { owner, read: { kind: "failed", code: failureCode(error) } },
+          );
+      },
+    );
+    return () => {
+      // A read cut short is asked again when it can be.
+      if (!settled) asked.current = null;
+      current = false;
+    };
+  }, [read, owner, enabled, ask]);
+  const put = useCallback(
+    (value: T) => setState({ owner, read: { kind: "ready", value } }),
+    [owner],
+  );
+  if (!read) return { read: { kind: "unavailable" }, put };
+  return {
+    read: state.owner === owner ? state.read : { kind: "loading" },
+    put,
+  };
+}
+
 /** Whether a run is still going: neither settled nor past help. */
 export const isLiveStatus = (status: AgentRunStatus): boolean =>
   status === "submitted" ||
@@ -295,19 +362,15 @@ function replyState(status: AgentRunStatus): AgentReplyState {
   }
 }
 
-/** Why a reply failed, in words: the provider's condition, then the agent's
- * own line. Undefined where the agent served neither. */
+/** Why a reply failed, in localized words from its typed provider condition.
+ * The agent's failure prose remains for diagnostics and is not shown here. */
 function failureWords(
   t: Translate,
   reply: AgentReplyRecord,
 ): string | undefined {
-  const words = [
-    reply.provider_condition
-      ? conditionWords(t, reply.provider_condition)
-      : undefined,
-    reply.failure_reason || undefined,
-  ].filter((part): part is string => part !== undefined);
-  return words.length > 0 ? words.join(": ") : undefined;
+  return reply.provider_condition
+    ? conditionWords(t, reply.provider_condition)
+    : undefined;
 }
 
 /** When a message was sent, in words: the time today, else the day too. */
@@ -337,10 +400,21 @@ export function transcriptItems(
 ): TranscriptItem[] {
   const replies = new Map<string, AgentReplyRecord>();
   const lastAgent = new Map<string, number>();
+  const thoughts = new Map<string, string[]>();
   records.forEach((record, index) => {
     if (record.kind === "reply") replies.set(record.id, record);
     else if (record.kind === "agent") lastAgent.set(record.reply_id, index);
+    else if (record.kind === "thought" && record.text.trim())
+      thoughts.set(record.reply_id, [
+        ...(thoughts.get(record.reply_id) ?? []),
+        record.text,
+      ]);
   });
+  // A reply's thoughts go with the item its state is drawn on.
+  const thinking = (reply: string) => {
+    const thought = thoughts.get(reply);
+    return thought ? { thinking: thought.join("\n\n") } : {};
+  };
   const counts = new Map<string, number>();
   const unique = (key: string) => {
     const before = counts.get(key) ?? 0;
@@ -353,6 +427,9 @@ export function transcriptItems(
     return {
       state,
       ...(reason ? { failureReason: reason } : {}),
+      ...(state === "failed" && reply.provider_condition === "unauthenticated"
+        ? { failureAction: "provider_settings" as const }
+        : {}),
       ...(reply.status === "input_required"
         ? { waitingOnPerson: true as const }
         : {}),
@@ -384,7 +461,10 @@ export function transcriptItems(
           label: record.title,
           state: record.status,
           detail: toolKindWords(t, record.tool_kind),
+          ...(record.details?.length ? { internals: record.details } : {}),
         });
+        return;
+      case "thought":
         return;
       case "agent": {
         const reply = replies.get(record.reply_id);
@@ -394,6 +474,7 @@ export function transcriptItems(
           id: unique(`agent:${record.reply_id}:${record.id}`),
           text: record.text,
           ...(last && reply ? drawn(reply) : { state: "complete" as const }),
+          ...(last ? thinking(record.reply_id) : {}),
         });
         return;
       }
@@ -406,6 +487,7 @@ export function transcriptItems(
           id: unique(`reply:${record.id}`),
           text: "",
           ...state,
+          ...thinking(record.id),
         });
       }
     }
@@ -530,6 +612,18 @@ export function useConversationGroups(
   );
 }
 
+/** What the newest reply of a conversation that says so ran with; undefined
+ * where none says. */
+export function newestRanWith(
+  records: readonly AgentTurnRecord[],
+): AgentRanWith | undefined {
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const record = records[index];
+    if (record?.kind === "reply" && record.selection) return record.selection;
+  }
+  return undefined;
+}
+
 /** What the replies of a conversation served about themselves, in words: what
  * the newest of them ran with, and the tokens all of them used. Each is null
  * where no reply served it. */
@@ -541,9 +635,7 @@ export function replyFacts(
   const replies = records.filter(
     (record): record is AgentReplyRecord => record.kind === "reply",
   );
-  const selection = [...replies]
-    .reverse()
-    .find((reply) => reply.selection)?.selection;
+  const selection = newestRanWith(records);
   const ranWith = selection
     ? [
         selection.provider_display_name || selection.provider,

@@ -24,7 +24,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 __all__ = ["_isolated_cli_backend"]
 

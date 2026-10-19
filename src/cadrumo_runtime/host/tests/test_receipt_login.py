@@ -24,14 +24,11 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession, OsLockState
-from cadrumo.application.user_profile.login_session import (
-    ProfileReceiptRefusedError,
-    authenticate_profile_candidate,
-    borrow_profile_receipt_key,
-)
+from cadrumo.application.user_profile.access_contracts import AccessSession, OsLockState
+from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
@@ -42,10 +39,12 @@ from cadrumo_client.contracts.profile_access import (
 )
 from cadrumo_client.contracts.session_events import SessionEvent
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, SignInStatusReply, SignInStatusRequest
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
@@ -204,7 +203,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     copied = _session(stranger, profile_id, api_id, "session_status")
                     assert isinstance(copied, AccessRefusal)
                     wrong = bytearray(b"\x00" * 32)
-                    with borrow_profile_receipt_key(bucket_id=profile_id) as proof:
+                    with borrow_receipt_proof(profile_id=profile_id) as proof:
                         assert bytes(proof) != bytes(wrong)
                         denied = _login(human, profile_id, "receipt", wrong)
                         assert isinstance(denied, AccessRefusal)
@@ -232,7 +231,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     locked = _session(human, profile_id, first_human_id, "session_lock")
                     assert isinstance(locked, SessionsLocked) and locked.session_ids == (first_human_id,)
                     assert isinstance(_session(stranger, profile_id, first_human_id, "session_status"), AccessRefusal)
-                    with borrow_profile_receipt_key(bucket_id=profile_id) as fresh_proof:
+                    with borrow_receipt_proof(profile_id=profile_id) as fresh_proof:
                         second = _login(stranger, profile_id, "receipt", fresh_proof)
                         assert isinstance(second, ProfileStatus), second
                     assert fresh_proof == bytes(32)
@@ -265,7 +264,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                             assert receipt_path.read_bytes() == original_receipt
                         finally:
                             host._logins = original_logins
-                    with borrow_profile_receipt_key(bucket_id=profile_id) as stale_proof:
+                    with borrow_receipt_proof(profile_id=profile_id) as stale_proof:
                         if revocation == "sign_out":
                             revoked = _session(stranger, profile_id, second_human_id, "human_sign_out")
                             assert isinstance(revoked, HumanSignedOut), revoked

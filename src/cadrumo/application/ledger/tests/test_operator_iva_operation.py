@@ -12,6 +12,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import IvaCategory
@@ -22,7 +24,6 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import operator_iva_contracts as operator_contracts
 from .. import operator_iva_operation as subject

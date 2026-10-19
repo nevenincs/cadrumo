@@ -10,6 +10,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory, DisclosurePermission
+
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
@@ -27,7 +30,6 @@ from ..operations.profile_guard import require_access_request_payload, require_o
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, DisclosureCategory, DisclosurePermission
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import assemble_modelo_lifecycle_history
 from .history_ports import ModeloHistoryPortsFactory

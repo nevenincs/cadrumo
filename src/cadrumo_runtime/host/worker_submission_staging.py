@@ -14,7 +14,7 @@ from uuid import UUID
 
 from cadrumo.application.operations.models import OperationDefinitionId, OperationReference
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.submission_payload import (
     SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
     FinancialOperandInputDescriptor,

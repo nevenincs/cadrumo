@@ -1,61 +1,81 @@
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import iconArtwork from "virtual:desktop-provider-icons";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
 import { ProviderSignInDialog } from "./ProviderSignInDialog";
-import type { ProviderSignIn } from "../../shell/providerSettings";
 import type {
-  CliState,
-  ProviderOutcome,
-  ProviderReadiness,
-  ProviderSecret,
-  ProviderStatus,
-} from "./types";
+  ProviderSignIn,
+  ProviderSignInMethod,
+} from "../../shell/providerSettings";
+import type { ProviderOutcome, ProviderSecret, ProviderStatus } from "./types";
 
-const READINESS_LOOK: Record<
-  ProviderReadiness,
-  "success" | "neutral" | "warning" | "danger"
-> = {
-  ready: "success",
-  not_verified: "neutral",
-  missing: "neutral",
-  disabled: "neutral",
-  sign_in_required: "warning",
-  unusable: "danger",
-};
+/** One status for a connection, in the same words wherever it is shown. */
+type ConnectionStatus =
+  "ready" | "saved" | "not_checked" | "setup_needed" | "sign_in_needed" | "off";
 
-function readinessWords(t: Translate, readiness: ProviderReadiness): string {
-  switch (readiness) {
-    case "ready":
-      return t("desktop.providers.readiness_ready");
-    case "not_verified":
-      return t("desktop.providers.readiness_not_verified");
-    case "missing":
-      return t("desktop.providers.readiness_missing");
-    case "disabled":
-      return t("desktop.providers.readiness_disabled");
-    case "sign_in_required":
-      return t("desktop.providers.readiness_sign_in_required");
-    case "unusable":
-      return t("desktop.providers.readiness_unusable");
+/** Describe what is set, without claiming more than the reading says. */
+function connectionStatus(provider: ProviderStatus): ConnectionStatus {
+  if (provider.reason === "record_unreadable") return "setup_needed";
+  if (provider.mode === "disabled") return "off";
+  if (provider.readiness === "unusable") return "setup_needed";
+  // An app connection needs its app, whatever it signs in with.
+  if (provider.cliState === "not_installed") return "setup_needed";
+  if (provider.authKind === "provider_sign_in_only") {
+    if (
+      provider.cliState === "installed_signed_in" ||
+      provider.readiness === "ready"
+    )
+      return "ready";
+    if (
+      provider.cliState === "installed_signed_out" ||
+      provider.readiness === "sign_in_required"
+    )
+      return "sign_in_needed";
+    return "not_checked";
   }
+  if (provider.readiness === "ready") return "ready";
+  if (provider.readiness === "sign_in_required") return "sign_in_needed";
+  if (
+    provider.mode === "key" ||
+    provider.mode === "oauth_token" ||
+    provider.source !== "none"
+  )
+    return "saved";
+  return "setup_needed";
 }
 
-function cliStateWords(t: Translate, state: CliState): string {
-  switch (state) {
-    case "installed_signed_in":
-      return t("desktop.providers.cli_installed_signed_in");
-    case "installed_signed_out":
-      return t("desktop.providers.cli_installed_signed_out");
-    case "not_installed":
-      return t("desktop.providers.cli_not_installed");
-    case "unknown":
-      return t("desktop.providers.cli_unknown");
-  }
+const STATUS_WORDS = {
+  ready: "desktop.providers.status_ready",
+  saved: "desktop.providers.status_saved",
+  not_checked: "desktop.providers.status_not_checked",
+  setup_needed: "desktop.providers.status_setup_needed",
+  sign_in_needed: "desktop.providers.status_sign_in_needed",
+  off: "desktop.providers.status_off",
+} as const satisfies Record<ConnectionStatus, string>;
+
+function statusWords(t: Translate, status: ConnectionStatus): string {
+  return t(STATUS_WORDS[status]);
+}
+
+/** Only a connection the agent can use stands out; one that is not set up,
+ * not signed in or off is said quietly, since nothing is wrong with it. */
+function statusVariant(status: ConnectionStatus): "success" | "neutral" {
+  return status === "ready" ? "success" : "neutral";
+}
+
+function connectionWords(
+  t: Translate,
+  transport: ProviderStatus["transport"],
+): string {
+  return transport === "api"
+    ? t("desktop.providers.connection_api")
+    : t("desktop.providers.connection_app");
 }
 
 /** Why a change was not made, in words where it is a refusal we know. */
@@ -72,50 +92,50 @@ function refusalWords(t: Translate, code: string): string {
     case "revision_conflict":
       return t("desktop.providers.refused_revision_conflict");
     case "catalog_unavailable":
-      return t("desktop.providers.refused_catalog_unavailable");
+      return t("desktop.providers.load_failed");
     case "runtime_unavailable":
       return t("desktop.providers.refused_runtime_unavailable");
     case "person_act_required":
       return t("desktop.providers.refused_person_act_required");
     default:
-      return t("desktop.messages.failed", { code });
+      return t("desktop.providers.change_failed");
   }
 }
 
-/** Why a provider is not ready, in words; null where its standing already
- * says it. */
-function reasonWords(t: Translate, provider: ProviderStatus): string | null {
+/** The one line that says what to do about a connection, or null where its
+ * status already says it all. */
+function detailWords(t: Translate, provider: ProviderStatus): string | null {
+  const status = connectionStatus(provider);
+  if (status === "off")
+    return provider.credentialSaved
+      ? t("desktop.providers.detail_off_kept")
+      : t("desktop.providers.detail_off");
+  if (provider.reason === "record_unreadable")
+    return t("desktop.providers.reason_record_unreadable");
+  if (provider.cliState === "not_installed")
+    return t("desktop.providers.detail_app_missing", {
+      provider: provider.name,
+    });
+  if (provider.authKind === "provider_sign_in_only") {
+    if (status === "setup_needed")
+      return t("desktop.providers.reason_check_settings");
+    if (status === "sign_in_needed")
+      return t("desktop.providers.detail_sign_in", { provider: provider.name });
+    return null;
+  }
   switch (provider.reason) {
     case undefined:
     case "turned_off":
-      return null;
     case "not_configured":
-      return t("desktop.providers.reason_not_configured");
     case "sign_in_with_provider_tool":
-      return t("desktop.providers.reason_sign_in_with_provider_tool", {
-        provider: provider.name,
-      });
-    case "record_unreadable":
-      return t("desktop.providers.reason_record_unreadable");
+      break;
     default:
       return refusalWords(t, provider.reason);
   }
-}
-
-/** Where the provider's credential stands, in a sentence; null when the
- * readiness alone says it. */
-function standing(t: Translate, provider: ProviderStatus): string | null {
-  const { name } = provider;
-  if (provider.authKind === "provider_sign_in_only")
-    return t("desktop.providers.sign_in_only", { provider: name });
-  if (provider.mode === "disabled") return t("desktop.providers.disabled");
-  if (provider.mode === "provider_sign_in")
-    return t("desktop.providers.mode_provider_sign_in", { provider: name });
-  if (provider.mode === "oauth_token") return t("desktop.providers.mode_token");
-  if (provider.source === "profile")
-    return t("desktop.providers.source_profile");
-  if (provider.source === "environment")
-    return t("desktop.providers.source_environment");
+  if (status === "setup_needed" && provider.readiness === "unusable")
+    return t("desktop.providers.reason_check_settings");
+  if (status === "sign_in_needed")
+    return t("desktop.providers.detail_sign_in", { provider: provider.name });
   return null;
 }
 
@@ -221,14 +241,19 @@ function SecretForm({
   );
 }
 
-/** One lane of a provider, named and drawn as the agent's provider list names
- * and draws it: its status and the person's ways to change it. */
+/**
+ * One connection of a provider. Its header says where it stands and holds the
+ * one switch that turns it on or off for the agent, the same for every
+ * connection; setting it up (a key, or a sign-in) is a row of its own below,
+ * offered while it is on.
+ */
 function WayRow({
   provider,
   busy,
   outcome,
   onSave,
   onTurnOff,
+  onTurnOn,
   onReset,
   onRefresh,
   signInSupported,
@@ -239,6 +264,7 @@ function WayRow({
   outcome?: ProviderOutcome;
   onSave: (secret: ProviderSecret) => void;
   onTurnOff: () => void;
+  onTurnOn: () => void;
   onReset: () => void;
   onRefresh: () => void;
   signInSupported: boolean;
@@ -248,46 +274,50 @@ function WayRow({
   const headingId = useId();
   const [editing, setEditing] = useState(false);
   const signInOnly = provider.authKind === "provider_sign_in_only";
-  const secretAction =
-    provider.mode === "key" || provider.mode === "oauth_token"
-      ? t("desktop.providers.replace_key")
-      : t("desktop.providers.add_key");
-  const sentence = standing(t, provider);
-  const why = reasonWords(t, provider);
+  const hasKey = provider.mode === "key" || provider.mode === "oauth_token";
+  const off = provider.mode === "disabled";
+  const state = connectionStatus(provider);
+  const detail = detailWords(t, provider);
+  const connection = connectionWords(t, provider.transport);
   const address =
     provider.authKind === "api_key_with_base_url"
       ? (provider.baseUrl ?? provider.defaultBaseUrl)
       : undefined;
   return (
     <li
-      aria-labelledby={headingId}
       data-lane={provider.id}
+      aria-labelledby={headingId}
       className="way grid gap-2 rounded-lg border bg-card p-3"
     >
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <ProviderMark provider={provider.provider} size="md" />
-          <h4
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <h5
             id={headingId}
             className="min-w-0 font-medium wrap-anywhere text-foreground"
           >
-            {provider.name}
-          </h4>
+            {connection}
+          </h5>
+          <Badge variant={statusVariant(state)}>{statusWords(t, state)}</Badge>
+          {busy && (
+            <span className="text-sm text-muted-foreground">
+              {t("desktop.providers.saving")}
+            </span>
+          )}
         </div>
-        <Badge variant={READINESS_LOOK[provider.readiness]}>
-          {readinessWords(t, provider.readiness)}
-        </Badge>
+        <Switch
+          checked={!off}
+          disabled={busy}
+          aria-label={t("desktop.providers.use_in_agent", {
+            provider: provider.name,
+            connection,
+          })}
+          onCheckedChange={(on) => (on ? onTurnOn() : onTurnOff())}
+        />
       </div>
-      {provider.cliState && (
-        <p className="text-sm text-muted-foreground">
-          {cliStateWords(t, provider.cliState)}
-        </p>
-      )}
-      {sentence && <p className="text-sm text-muted-foreground">{sentence}</p>}
-      {why && <p className="text-sm text-foreground">{why}</p>}
-      {address && (
+      {detail && <p className="text-sm text-foreground">{detail}</p>}
+      {address && !off && (
         <p className="text-sm text-muted-foreground wrap-anywhere">
-          {t("desktop.providers.through", { url: address })}
+          {t("desktop.providers.address", { url: address })}
         </p>
       )}
       {outcome?.kind === "saved_unread" && (
@@ -308,53 +338,123 @@ function WayRow({
           <span>{refusalWords(t, outcome.code)}</span>
         </p>
       )}
-      {signInOnly ? (
-        signInSupported ? (
-          <Button variant="outline" size="sm" onClick={onSignIn}>
-            {t("desktop.providers.sign_in_action")}
-          </Button>
-        ) : (
-          <p role="note" className="text-sm text-muted-foreground">
-            {t("desktop.providers.sign_in_unavailable")}
-          </p>
-        )
-      ) : editing ? (
-        <SecretForm
-          provider={provider}
-          saving={busy}
-          onSave={(secret) => {
-            onSave(secret);
-            setEditing(false);
-          }}
-          onCancel={() => setEditing(false)}
-        />
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={busy}
-            onClick={() => setEditing(true)}
-          >
-            {secretAction}
-          </Button>
-          {provider.mode !== "disabled" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={onTurnOff}
-            >
-              {t("desktop.providers.disable")}
-            </Button>
-          )}
-          {provider.mode !== "unset" && (
-            <Button variant="ghost" size="sm" disabled={busy} onClick={onReset}>
-              {t("desktop.providers.reset")}
-            </Button>
+      {!off && (
+        <div className="grid gap-2 border-t pt-2">
+          {signInOnly ? (
+            signInSupported ? (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={onSignIn}>
+                  {t("desktop.providers.sign_in_action")}
+                </Button>
+              </div>
+            ) : (
+              <p role="note" className="text-sm text-muted-foreground">
+                {t("desktop.providers.sign_in_unavailable", {
+                  provider: provider.name,
+                })}
+              </p>
+            )
+          ) : editing ? (
+            <SecretForm
+              provider={provider}
+              saving={busy}
+              onSave={(secret) => {
+                onSave(secret);
+                setEditing(false);
+              }}
+              onCancel={() => setEditing(false)}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy}
+                onClick={() => setEditing(true)}
+              >
+                {hasKey
+                  ? t("desktop.providers.replace_key")
+                  : t("desktop.providers.add_key")}
+              </Button>
+              {hasKey && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  onClick={onReset}
+                >
+                  {t("desktop.providers.remove_key")}
+                </Button>
+              )}
+            </div>
           )}
         </div>
       )}
+    </li>
+  );
+}
+
+type ProviderGroup = {
+  provider: string;
+  name: string;
+  lanes: ProviderStatus[];
+};
+
+/** Keep each provider's API and app connections together, but independent. */
+function providerGroups(providers: readonly ProviderStatus[]): ProviderGroup[] {
+  const groups = new Map<string, ProviderGroup>();
+  for (const lane of inListOrder(providers)) {
+    const group = groups.get(lane.provider);
+    if (group) group.lanes.push(lane);
+    else
+      groups.set(lane.provider, {
+        provider: lane.provider,
+        name: lane.name,
+        lanes: [lane],
+      });
+  }
+  return [...groups.values()];
+}
+
+function ProviderGroupRow({
+  group,
+  t,
+  renderLane,
+}: {
+  group: ProviderGroup;
+  t: Translate;
+  renderLane: (lane: ProviderStatus) => ReactNode;
+}) {
+  return (
+    <li data-provider={group.provider} className="rounded-lg border bg-card">
+      <details className="group/provider">
+        <summary className="flex min-h-control-lg cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-2 rounded-lg px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <ProviderMark provider={group.provider} size="md" />
+            <h4 className="min-w-0 flex-1 font-medium break-words text-foreground">
+              {group.name}
+            </h4>
+          </span>
+          <Icon
+            name="chevronDown"
+            className="shrink-0 text-faint transition-transform group-open/provider:rotate-180"
+          />
+          <span className="flex w-full basis-full flex-wrap gap-1.5">
+            {group.lanes.map((lane) => {
+              const state = connectionStatus(lane);
+              return (
+                <Badge key={lane.id} variant={statusVariant(state)}>
+                  {t("desktop.providers.summary", {
+                    connection: connectionWords(t, lane.transport),
+                    status: statusWords(t, state),
+                  })}
+                </Badge>
+              );
+            })}
+          </span>
+        </summary>
+        <ul className="grid gap-2 px-2 pb-2">{group.lanes.map(renderLane)}</ul>
+      </details>
     </li>
   );
 }
@@ -373,44 +473,50 @@ function inListOrder(providers: readonly ProviderStatus[]) {
 }
 
 /**
- * The AI providers of the signed-in profile, one card for each lane the agent
- * has: named and drawn as the agent's provider list names and draws it, with
- * what it needs and where it stands, and the person's available way to set a
- * direct credential or start provider-owned sign-in. A stored key is never
- * shown, and only these controls, pressed by the person, change one.
+ * The AI providers of the signed-in profile, one card for each connection the
+ * agent has: named and drawn as the agent's provider list names and draws it,
+ * with one status, the one thing to do about it, and the person's way to set
+ * an API key or sign in. A stored key is never shown, and only these
+ * controls, pressed by the person, change one.
  */
 export function ProviderSettings({
   providers,
-  development,
   busyId = null,
   outcomes = {},
   onSave,
   onTurnOff,
+  onTurnOn,
   onReset,
   onRefresh,
   onSignInTerminal,
   signIn,
   signInProviders = [],
+  signInMethods = {},
   revisions = {},
   identity = null,
 }: {
   providers: readonly ProviderStatus[];
-  /** A development build, where a provider with no key uses the
-   * environment's. */
-  development: boolean;
   /** The way whose change is on its way. */
   busyId?: string | null;
   /** How the last change to each way ended, by way id. */
   outcomes?: Readonly<Record<string, ProviderOutcome>>;
   onSave: (providerId: string, secret: ProviderSecret) => void;
   onTurnOff: (providerId: string) => void;
+  onTurnOn: (providerId: string) => void;
   onReset: (providerId: string) => void;
   onRefresh: () => void;
-  /** Refreshes only if the profile that opened sign-in remains current. */
-  onSignInTerminal?: () => void;
+  /** Refreshes the lane after sign-in and returns its freshly read revision. */
+  onSignInTerminal?: (
+    providerId: string,
+    identity: string | null,
+  ) => Promise<string | undefined>;
   signIn?: ProviderSignIn;
   /** Canonical provider slugs declared by the agent as GUI sign-in capable. */
   signInProviders?: readonly string[];
+  /** GUI sign-in methods the agent declares for each canonical provider. */
+  signInMethods?: Readonly<
+    Record<string, readonly ProviderSignInMethod[] | undefined>
+  >;
   /** Current lane revisions from the same provider status read. */
   revisions?: Readonly<Record<string, string>>;
   /** Signed-in profile identity, used to discard an open attempt on switch. */
@@ -418,14 +524,18 @@ export function ProviderSettings({
 }) {
   const t = useStrings();
   const titleId = useId();
+  const searchId = useId();
+  const [query, setQuery] = useState("");
   const [selection, setSelection] = useState<{
     laneId: string;
     identity: string | null;
   } | null>(null);
   const currentIdentity = useRef(identity);
   currentIdentity.current = identity;
-  const refreshCurrent = useRef(onSignInTerminal ?? onRefresh);
-  refreshCurrent.current = onSignInTerminal ?? onRefresh;
+  const refreshCurrent = useRef(onSignInTerminal);
+  refreshCurrent.current = onSignInTerminal;
+  const fallbackRefresh = useRef(onRefresh);
+  fallbackRefresh.current = onRefresh;
   const selectedProvider =
     selection?.identity === identity
       ? providers.find((provider) => provider.id === selection.laneId)
@@ -434,6 +544,26 @@ export function ProviderSettings({
   const selectedRevision = selectedProvider
     ? revisions[selectedProvider.id]
     : undefined;
+  const selectedMethods = selectedProvider
+    ? (signInMethods[selectedProvider.provider] ?? [])
+    : [];
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const visibleGroups = providerGroups(providers)
+    .map((group) => ({
+      ...group,
+      lanes: group.lanes.filter((lane) => {
+        if (!normalizedQuery) return true;
+        const searchable = [
+          group.name,
+          connectionWords(t, lane.transport),
+          statusWords(t, connectionStatus(lane)),
+        ]
+          .join(" ")
+          .toLocaleLowerCase();
+        return searchable.includes(normalizedQuery);
+      }),
+    }))
+    .filter((group) => group.lanes.length > 0);
   return (
     <section aria-labelledby={titleId} className="provider-settings grid gap-2">
       <div className="grid gap-1">
@@ -441,40 +571,69 @@ export function ProviderSettings({
           {t("desktop.providers.title")}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {t("desktop.providers.lead")}
-        </p>
-        {development && (
-          <p className="text-sm text-muted-foreground">
-            {t("desktop.providers.development_note")}
-          </p>
-        )}
-        <p className="text-sm text-muted-foreground">
-          {t("desktop.providers.disable_note")}{" "}
-          {development
-            ? t("desktop.providers.reset_note_development")
-            : t("desktop.providers.reset_note")}
+          {t("desktop.providers.group_intro")}
         </p>
       </div>
+      <Field>
+        <FieldLabel htmlFor={searchId}>
+          {t("desktop.providers.search_label")}
+        </FieldLabel>
+        <Input
+          id={searchId}
+          type="search"
+          value={query}
+          placeholder={t("desktop.providers.search_placeholder")}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+        />
+      </Field>
       <ul className="grid gap-2">
-        {inListOrder(providers).map((lane) => (
-          <WayRow
-            key={lane.id}
-            provider={lane}
-            busy={busyId === lane.id}
-            outcome={outcomes[lane.id]}
-            signInSupported={Boolean(
-              signIn?.openExternal &&
-              revisions[lane.id] &&
-              signInProviders.includes(lane.provider),
+        {visibleGroups.map((group) => (
+          <ProviderGroupRow
+            key={group.provider}
+            group={group}
+            t={t}
+            renderLane={(lane) => (
+              <WayRow
+                key={lane.id}
+                provider={lane}
+                busy={busyId === lane.id}
+                outcome={outcomes[lane.id]}
+                signInSupported={Boolean(
+                  signIn?.openExternal &&
+                  revisions[lane.id] &&
+                  signInProviders.includes(lane.provider) &&
+                  (signInMethods[lane.provider]?.length ?? 0) > 0,
+                )}
+                onSignIn={() => setSelection({ laneId: lane.id, identity })}
+                onSave={(secret) => onSave(lane.id, secret)}
+                onTurnOff={() => onTurnOff(lane.id)}
+                onTurnOn={() => onTurnOn(lane.id)}
+                onReset={() => onReset(lane.id)}
+                onRefresh={onRefresh}
+              />
             )}
-            onSignIn={() => setSelection({ laneId: lane.id, identity })}
-            onSave={(secret) => onSave(lane.id, secret)}
-            onTurnOff={() => onTurnOff(lane.id)}
-            onReset={() => onReset(lane.id)}
-            onRefresh={onRefresh}
           />
         ))}
       </ul>
+      {visibleGroups.length === 0 && (
+        <p
+          role="status"
+          className="rounded-lg border p-3 text-sm text-muted-foreground"
+        >
+          {t("desktop.providers.search_empty")}
+        </p>
+      )}
+      <details className="text-sm text-muted-foreground">
+        <summary className="w-fit cursor-pointer rounded-sm py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          {t("desktop.providers.icon_credits")}
+        </summary>
+        <div className="grid gap-1 pt-1">
+          <p>{iconArtwork.attribution.title}</p>
+          <p>{iconArtwork.attribution.licence}</p>
+          <p>{iconArtwork.attribution.notice}</p>
+          <p>{iconArtwork.attribution.trademarks}</p>
+        </div>
+      </details>
       {selectedProvider && selectedRevision && signIn?.openExternal && (
         <ProviderSignInDialog
           open
@@ -482,12 +641,29 @@ export function ProviderSettings({
           provider={selectedProvider}
           revision={selectedRevision}
           signIn={signIn}
+          methods={selectedMethods}
           onOpenChange={(open) => {
             if (!open) setSelection(null);
           }}
-          onTerminal={() => {
-            if (currentIdentity.current === selectedIdentity)
-              refreshCurrent.current();
+          onTerminal={(providerId) => {
+            if (
+              currentIdentity.current !== selectedIdentity ||
+              providerId !== selectedProvider.id
+            )
+              return Promise.resolve(undefined);
+            const refresh = refreshCurrent.current;
+            if (!refresh) {
+              fallbackRefresh.current();
+              return Promise.resolve(undefined);
+            }
+            return Promise.resolve()
+              .then(() => refresh(providerId, selectedIdentity))
+              .then((freshRevision) =>
+                currentIdentity.current === selectedIdentity
+                  ? freshRevision
+                  : undefined,
+              )
+              .catch(() => undefined);
           }}
         />
       )}

@@ -17,8 +17,8 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
-from ......application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ......core.base64_codec import b64_decode, b64_encode
 from ......core.hashing import canonical_json_bytes
 from ......core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal

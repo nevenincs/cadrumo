@@ -6,6 +6,8 @@ from collections.abc import Callable
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ..adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
@@ -16,7 +18,6 @@ from ..adapters.persistence.storage.runtime_repository import secure_object_repo
 from ..application.ledger.persistence_ports import LedgerPersistenceConflictError
 from ..application.modelo.review_package_exchange_operation_ports import ReviewPackageExchangeOperationPorts
 from ..application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.external_constants import UTF_8_ENCODING

@@ -23,15 +23,15 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
     AccessSession,
     ProfileAccessBinding,
     SessionKind,
     SessionState,
 )
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
 from cadrumo_client.transport.windows import WindowsEndpoint

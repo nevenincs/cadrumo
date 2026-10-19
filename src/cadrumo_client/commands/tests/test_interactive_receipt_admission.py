@@ -2,21 +2,29 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import cast
 from uuid import uuid4
 
 import pytest
-import typer
 
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_admission as admission
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod
 from cadrumo_client.commands.secure_input import ProfileSecretChannel, ProfileSecretSelection
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from .runtime_target_double import answer_login_targets_locally
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _runtime_answers_login_targets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime client here is a double, so the runtime's login-target answer is given as it would give it."""
+    answer_login_targets_locally(monkeypatch)
 
 
 class _ReceiptClient:
@@ -32,8 +40,7 @@ class _ReceiptClient:
 
 
 def _authenticate(client: _ReceiptClient) -> None:
-    admission._authenticate(
-        typer.Context(typer.main.TyperCommand("test")),
+    admission.authenticate_profile_client(
         cast(FrontendClient, client),
         root_selection=None,
         profile_label=None,
@@ -70,7 +77,9 @@ def test_a_keychainless_logon_asks_for_the_password_only_at_a_terminal(
     client = _ReceiptClient(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE)
     prompted: list[ProfileSecretSelection | None] = []
 
-    def password(_client: FrontendClient, *, selection: ProfileSecretSelection | None) -> None:
+    def password(
+        _client: FrontendClient, *, selection: ProfileSecretSelection | None, not_persisted: Callable[[], None]
+    ) -> None:
         prompted.append(selection)
 
     monkeypatch.setattr(admission, "_password", password)
@@ -90,13 +99,14 @@ def test_explicit_password_never_borrows_a_receipt(monkeypatch: pytest.MonkeyPat
     selected = ProfileSecretSelection(ProfileSecretChannel.STDIN)
     channels: list[ProfileSecretSelection | None] = []
 
-    def password(_client: FrontendClient, *, selection: ProfileSecretSelection | None) -> None:
+    def password(
+        _client: FrontendClient, *, selection: ProfileSecretSelection | None, not_persisted: Callable[[], None]
+    ) -> None:
         channels.append(selection)
 
     monkeypatch.setattr(admission, "_password", password)
     monkeypatch.setattr(admission, "terminal_can_prompt_for_secrets", lambda: False)
-    admission._authenticate(
-        typer.Context(typer.main.TyperCommand("test")),
+    admission.authenticate_profile_client(
         cast(FrontendClient, client),
         root_selection=selected,
         profile_label=None,

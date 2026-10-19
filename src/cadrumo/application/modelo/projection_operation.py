@@ -9,6 +9,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.digest import ContentDigest
@@ -31,7 +34,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from .projection import (

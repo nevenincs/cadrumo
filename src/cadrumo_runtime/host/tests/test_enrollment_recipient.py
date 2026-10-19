@@ -11,17 +11,17 @@ import pytest
 from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope, ProfileAccessBinding
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
-    EnrollmentKind,
-    EnrollmentProposal,
     EnrollmentRecord,
     EnrollmentRequester,
     EnrollmentStage,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 from ...application.enrollment_recipient import (
     EnrollmentMissing,

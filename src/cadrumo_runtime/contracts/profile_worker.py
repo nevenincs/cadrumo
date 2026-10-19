@@ -22,17 +22,17 @@ from cadrumo.application.operations.models import (
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
+from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest
 from cadrumo_client.contracts.operation_access import OperationManagementRequest
 from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, SignInRefusal
 from cadrumo_client.contracts.submission_payload import (
     FinancialOperandInputDescriptor,
     SubmissionPayloadChunk,

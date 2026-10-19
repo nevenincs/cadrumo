@@ -65,7 +65,7 @@ def _context(source: ProfileSecretSourceOptions) -> typer.Context:
         ),
         (
             ProfileSecretSourceOptions(method=ProfileAuthenticationMethod.API_KEY, credential_reference=uuid4()),
-            "config_provision_status",
+            "app_modelo_list",
             {},
             "profile_credential_ref_inapplicable",
         ),

@@ -25,7 +25,7 @@ from cadrumo.application.overview.data_prep import DataPrepStepId, DataPrepStepS
 from cadrumo.entrypoints.cli.overview_results import OverviewPrepareStepPayload
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from ._overview_native_support import invoke_native_overview
 

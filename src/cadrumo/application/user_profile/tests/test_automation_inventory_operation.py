@@ -11,17 +11,10 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -50,6 +43,14 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -8,8 +8,6 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
-from cadrumo.adapters.outbound.google.errors import GoogleAuthNonInteractiveError
-from cadrumo.adapters.outbound.google.oauth_flow import require_interactive_terminal
 from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -35,6 +33,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.google_auth import GoogleAuthNonInteractiveError, require_interactive_terminal
 from cadrumo_client.contracts.operation_access import (
     OperationProjected,
     OperationReview,

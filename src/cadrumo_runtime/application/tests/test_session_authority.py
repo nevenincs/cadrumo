@@ -41,29 +41,20 @@ from cadrumo.application.user_profile.access_administration import (
 )
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
     AccessSession,
-    AuthorityState,
-    Availability,
     LoginEligibility,
-    OperationAccessPolicy,
-    OperationAccessRequest,
     OsLockState,
-    ProfileAccessStatus,
     SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_projections import project_access_session
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import AdministrationFacts
 from cadrumo.application.user_profile.automation_lifecycle import (
     AutomationDenial,
     AutomationDenialKind,
     AutomationDenialReceipt,
 )
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, authenticate_profile_for_invocation
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -71,7 +62,17 @@ from cadrumo.application.user_profile.operations import (
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.profile_session import ReceiptBindingRefusal
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AuthorityState,
+    Availability,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest, HumanSignInRevocationResult
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 from ..automation_lifecycle_service import (
     AutomationLifecycleService,

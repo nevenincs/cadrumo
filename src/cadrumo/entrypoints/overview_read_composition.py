@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.overview.applicability_evidence import (
     FilingYearApplicabilityEvidence,
     bind_filing_year_applicability_evidence,
@@ -42,7 +44,6 @@ from ..application.overview.read_projection import (
     OverviewStatusSnapshot,
 )
 from ..application.overview.read_request import OverviewReadKind, OverviewReadRequest
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..application.user_profile.projections import fact_value, projection_for_taxpayer, record_to_values

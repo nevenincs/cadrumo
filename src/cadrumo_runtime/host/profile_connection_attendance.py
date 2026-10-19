@@ -20,10 +20,10 @@ from uuid import UUID, uuid4
 
 from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessDenied, AccessScope, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
 from cadrumo_client.contracts.attendance import (
     ATTENDANCE_PENDING_LIMIT,
     ATTENDANCE_PENDING_SECONDS,
@@ -34,6 +34,7 @@ from cadrumo_client.contracts.attendance import (
     AttendanceInventory,
     AttendancePending,
 )
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.session_events import AttendanceAnswered, AttendanceChanged

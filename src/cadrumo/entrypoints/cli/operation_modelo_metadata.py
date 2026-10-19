@@ -9,6 +9,7 @@ import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_binding import require_profile_client
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import remaining_budget
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -29,7 +30,6 @@ from ...application.modelo.work_change_contracts import (
     ModeloWorkRenameRequest,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.modelos.work_unit import WorkUnit
 from ._modelo_behavior_support import work_address_for_cli

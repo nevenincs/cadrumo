@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,

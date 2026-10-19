@@ -29,7 +29,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,

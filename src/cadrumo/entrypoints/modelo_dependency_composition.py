@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.calculations.m111_no_retenciones import m111_no_retenciones_periods_from_profile_values
 from ..application.modelo.dependency_read_ports import DependencyReadPorts, DependencyReadRepositories
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..application.user_profile.projections import record_to_path_values

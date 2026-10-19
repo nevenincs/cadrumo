@@ -6,6 +6,14 @@ from dataclasses import replace
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+)
+
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -35,13 +43,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,

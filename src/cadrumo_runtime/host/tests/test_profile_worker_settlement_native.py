@@ -11,9 +11,9 @@ import pytest
 
 from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.models import OperationIdentity, new_operation_id
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerRequest,

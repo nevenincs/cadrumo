@@ -44,7 +44,7 @@ def _usage(request_id: str, created_at: datetime) -> UsageRecord:
         prompt_id="translation_v1",
         caller="cli",
         text="respuesta",
-        provider=LLMProvider.ANTHROPIC,
+        provider=LLMProvider.AGENT,
         model="claude-opus-4-7",
         input_tokens=11,
         output_tokens=7,

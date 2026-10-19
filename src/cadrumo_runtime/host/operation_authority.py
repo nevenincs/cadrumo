@@ -18,7 +18,6 @@ from cadrumo.application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     ProfilePassphraseRotationOperationRequest,
 )
-from cadrumo.application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
@@ -33,15 +32,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessSession,
-    Availability,
-    SessionKind,
-)
+from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
@@ -62,6 +54,9 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.request_faults import registered_error_fault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
@@ -70,6 +65,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicationPhase, WorkerApprovalRequest
 
+from ..adapters.worker_authorization import runtime_server_start_definitions
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
 from ..adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..application.approval_binding import RuntimeApprovalBinding
@@ -534,7 +530,7 @@ class ProfileWorkerOperationAuthority:
         the exchange; the answer is the server's process id, or ``None`` when
         the runtime started nothing.
         """
-        if identity.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID:
+        if identity.definition_id not in runtime_server_start_definitions():
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         async with self.guard(identity, AccessAction.COMMIT):
             task = asyncio.current_task()

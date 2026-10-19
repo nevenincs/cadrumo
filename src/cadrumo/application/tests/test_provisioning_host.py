@@ -299,7 +299,6 @@ def test_start_reports_a_spawn_the_system_refused() -> None:
 def test_install_is_a_no_op_when_the_runtime_is_already_located() -> None:
     installer = _Installer()
     outcome = install_runtime(
-        consent=False,
         run=installer,
         platform=RuntimeHostPlatform.WINDOWS,
         which=_lookup({"ollama": "C:/ollama.exe", "winget": "C:/winget.exe"}),
@@ -309,28 +308,9 @@ def test_install_is_a_no_op_when_the_runtime_is_already_located() -> None:
     assert installer.calls == []
 
 
-def test_install_without_consent_runs_nothing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
-    installer = _Installer()
-    outcome = install_runtime(
-        consent=False,
-        run=installer,
-        platform=RuntimeHostPlatform.WINDOWS,
-        which=_lookup({"winget": "C:/winget.exe"}),
-    )
-    assert outcome.installed is False
-    assert outcome.installer is RuntimeInstaller.WINGET
-    assert outcome.precondition_verdict is not None
-    assert (
-        outcome.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALL_CONSENTED
-    )
-    assert installer.calls == []
-
-
 def test_install_refuses_where_no_installer_exists() -> None:
     installer = _Installer()
     outcome = install_runtime(
-        consent=True,
         run=installer,
         platform=RuntimeHostPlatform.LINUX,
         which=_lookup({}),
@@ -344,14 +324,13 @@ def test_install_refuses_where_no_installer_exists() -> None:
     assert installer.calls == []
 
 
-def test_consented_install_runs_the_located_installer_and_confirms_the_binary(
+def test_an_install_runs_the_located_installer_and_confirms_the_binary(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
     installer = _Installer(creates=tmp_path / "Programs" / "Ollama" / "ollama.exe")
     outcome = install_runtime(
-        consent=True,
         run=installer,
         platform=RuntimeHostPlatform.WINDOWS,
         which=_lookup({"winget": "C:/winget.exe"}),
@@ -367,7 +346,6 @@ def test_an_install_that_exits_zero_without_producing_the_binary_is_not_installe
 ) -> None:
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
     outcome = install_runtime(
-        consent=True,
         run=_Installer(exit_code=0),
         platform=RuntimeHostPlatform.WINDOWS,
         which=_lookup({"winget": "C:/winget.exe"}),
@@ -383,7 +361,6 @@ def test_an_install_that_exits_zero_without_producing_the_binary_is_not_installe
 def test_a_failed_installer_exit_is_reported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
     outcome = install_runtime(
-        consent=True,
         run=_Installer(exit_code=1603),
         platform=RuntimeHostPlatform.WINDOWS,
         which=_lookup({"winget": "C:/winget.exe"}),

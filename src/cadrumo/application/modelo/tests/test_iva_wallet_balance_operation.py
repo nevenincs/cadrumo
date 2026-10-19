@@ -17,13 +17,14 @@ from pydantic import BaseModel, ValidationError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.iva_compensation.balance import IvaWalletBalanceReport
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_balance_operation import (
     MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,

@@ -8,7 +8,7 @@ import type {
   IssuedKey,
 } from "@/components/settings/AgentAccess";
 import { failureCode } from "../errors";
-import { useAgentRead, type AgentRead } from "./agentViews";
+import { useCachedRead, type AgentRead } from "./agentViews";
 
 // The API keys the signed-in profile has issued to agents outside Cadrumo, as
 // a host serves them: each key's standing and what it may do, and the person's
@@ -128,16 +128,19 @@ const fresh = (reader: string | null) => ({
 });
 
 /**
- * The keys of `reader`'s profile while `open`, read when opened, after each
- * change of the person's and when asked to refresh; never on a timer. With no
- * reader, nobody is signed in and the host is not asked anything. A key just
- * issued is shown until it is closed and is dropped with the profile or when
- * the section closes, so it is never seen twice.
+ * The keys of `reader`'s profile while `open`: read each time the settings
+ * open (`opened` counts them), after each change of the person's and when
+ * asked to refresh; never on a timer. The last list stays on screen while it
+ * is read again. With no reader, nobody is signed in
+ * and the host is not asked anything. A key just issued is shown until it is
+ * closed and is dropped with the profile or when the section closes, so it is
+ * never seen twice.
  */
 export function useAgentAccess(
   host: AgentAccess | undefined,
   reader: string | null,
   open: boolean,
+  opened: number,
 ): AgentAccessView {
   const [state, setState] = useState(() => fresh(reader));
   if (state.reader !== reader) setState(fresh(reader));
@@ -146,12 +149,17 @@ export function useAgentAccess(
 
   const readList = useMemo(
     () =>
-      host && reader !== null && open
+      host && reader !== null
         ? () => host.list().then((answer) => ({ answer, readAt: new Date() }))
         : null,
-    [host, reader, open],
+    [host, reader],
   );
-  const answer = useAgentRead(readList, state.again);
+  const { read: answer } = useCachedRead(
+    readList,
+    reader,
+    open,
+    state.again + opened,
+  );
   const read = useMemo(
     (): AgentAccessView["read"] =>
       answer.kind === "ready"

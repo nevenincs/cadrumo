@@ -173,7 +173,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         local = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
         cloud = TextInvoiceFieldExtractor(
             model="m",
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             operation=operation,
             authority_values=annual_2026_values,
         )
@@ -195,7 +195,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         """
         extractor = TextInvoiceFieldExtractor(
             model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             operation=operation,
             authority_values=annual_2026_values,
         )
@@ -215,7 +215,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         local = LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity
         cloud = LocalVisionDocumentTranscriber(
             model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
         ).transcriber_identity
 
         # The transport rides its own field now. It began folded into ``name``,

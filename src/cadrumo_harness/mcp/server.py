@@ -11,6 +11,7 @@ import anyio
 
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
+from .progress_relay import relayed_progress
 from .protocol_contract import (
     MCP_TOOL_CATALOGUE,
     MCP_TOOL_HINTS,
@@ -22,6 +23,7 @@ from .surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 
 if TYPE_CHECKING:
     from mcp.server import Server
+    from mcp.server.context import ServerRequestContext
 
     from .runtime_adapter import RuntimeMcpAdapter
 
@@ -55,8 +57,9 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
             ]
         )
 
-    async def call_tool(_context: object, params: CallToolRequestParams) -> CallToolResult:
+    async def call_tool(context: ServerRequestContext[Any], params: CallToolRequestParams) -> CallToolResult:
         result = await adapter.call(params.name, params.arguments or {})
+        await _relay_progress(context, params.name, result)
         instruction = unknown_outcome_instruction(result)
         if instruction is not None:
             result = {**result, UNKNOWN_OUTCOME_MEMBER: instruction}
@@ -68,6 +71,22 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
         )
 
     return Server("cadrumo", on_list_tools=list_tools, on_call_tool=call_tool)
+
+
+async def _relay_progress(context: ServerRequestContext[Any], tool: str, result: dict[str, Any]) -> None:
+    """Send each progress figure an observation carried, when the client supplied a progress token."""
+    meta = context.meta
+    token = None if meta is None else meta.get("progress_token")
+    if token is None:
+        return
+    for figure in relayed_progress(tool, result):
+        await context.session.send_progress_notification(
+            token,
+            figure.progress,
+            figure.total,
+            figure.message,
+            related_request_id=None if context.request_id is None else str(context.request_id),
+        )
 
 
 def serve(

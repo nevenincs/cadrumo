@@ -13,12 +13,13 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationIdentity, OperationRequest
-from ...application.user_profile.access_contracts import AccessAction
 from ...application.user_profile.capsule_record import ProfileRecordStore
 from ...application.user_profile.censal_file_import_operation import (
     CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,

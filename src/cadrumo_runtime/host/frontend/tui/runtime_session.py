@@ -23,7 +23,6 @@ from textual.timer import Timer
 from textual.widgets import Button, Footer, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import ProfileAccessStatus
 from cadrumo.application.user_profile.disclosure_paging import DisclosurePager
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.i18n.render import tr
@@ -43,6 +42,7 @@ from cadrumo.entrypoints.tui.navigation import TuiDestinationIdV1, TuiScreenCont
 from cadrumo.entrypoints.tui.operations.catalogue import OperationCatalogueSourceV1
 from cadrumo.entrypoints.tui.operations.destination import OperationsDestinationV1
 from cadrumo.entrypoints.tui.reference.destination import reference_screen_factory
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient

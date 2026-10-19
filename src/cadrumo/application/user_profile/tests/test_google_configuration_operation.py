@@ -15,6 +15,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
@@ -33,7 +35,6 @@ from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from .. import google_configuration_operation as worker
 from .. import google_configuration_operation_contracts as contracts
-from ..access_contracts import AccessAction, Availability, DisclosureCategory
 from ..access_errors import ProfileAccessRefusedError
 from ..google_configuration_executor import GoogleConfigurationExecutor
 from ..google_configuration_operation_contracts import GoogleConfigurationExecutionResult

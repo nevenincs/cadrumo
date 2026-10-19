@@ -10,14 +10,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-    SessionKind,
-    SessionState,
-)
+from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.period import Period
@@ -41,6 +34,12 @@ from cadrumo_client.commands.secure_input import (
     stage_machine_secret_payload,
 )
 from cadrumo_client.commands.shared_contracts import SchemaState
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 from cadrumo_client.contracts.profile_access import SessionsLocked
 from cadrumo_client.transport.frontend_client import FrontendClient

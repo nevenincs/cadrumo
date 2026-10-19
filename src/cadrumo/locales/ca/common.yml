@@ -601,61 +601,63 @@ desktop:
     zoom_reset: Restableix el zoom de la documentació
   automation_access:
     cancel: Cancel·la
-    cleanup_pending: Revocada. La clau desada encara s'està eliminant d'aquest equip.
-    copied: Copiada
-    copy: Copia la referència
-    copy_failed: No s'ha pogut copiar. Selecciona la referència i copia-la tu.
+    cleanup_pending: Eliminada. Cadrumo encara està esborrant la clau desada d’aquest
+      equip.
+    copied: Copiat
+    copy: Copia el codi
+    copy_failed: No s’ha pogut copiar. Selecciona el codi i copia’l tu.
     done: Fet
-    empty: Encara no s’ha emès cap clau d’accés per a aquest perfil.
+    empty: Encara no hi ha cap clau d’accés.
     expired_on: Va caducar el {date}
     expires_on: Caduca el {date}
-    issue: Emet una clau
-    issue_lead: Aquesta clau permet que una aplicació externa llegeixi informació
-      del perfil i detalls de les operacions, i que executi totes les operacions disponibles
-      per a aplicacions externes. També pots permetre per separat que llegeixi els
-      valors fiscals.
-    issue_submit: Emet la clau
-    issued_lead: Fes servir aquesta referència quan configuris l’aplicació externa.
-      La clau es conserva a l’emmagatzematge segur d’aquest equip i no es mostra mai.
-    issued_on: Emesa el {date}
-    issued_once: Es mostra una sola vegada. Quan la tanquis, no es podrà tornar a
-      mostrar.
-    issued_title: Clau emesa
-    issuing: S'està emetent…
-    key_title: Clau {id}
+    issue: Crea una clau d’accés
+    issue_lead: L’aplicació pot llegir les dades del teu perfil, veure les accions
+      que fa i fer servir totes les accions de Cadrumo disponibles per a les aplicacions
+      connectades.
+    issue_submit: Crea la clau d’accés
+    issued_lead: Enganxa aquest codi de connexió a l’altra aplicació quan la configuris.
+      La clau queda desada de manera segura en aquest equip.
+    issued_once: Només es mostra una vegada. Quan tanquis això, no el podràs tornar
+      a veure.
+    issued_title: Clau d’accés creada
+    issuing: S’està creant…
+    key_title: Clau d’accés creada el {date}
+    key_title_undated: Clau d’accés
     last_used: 'Últim ús: {date}'
-    lead: Les claus d’accés permeten que les aplicacions externes facin servir aquest
-      perfil. Només tu les pots emetre o revocar.
+    lead: Les claus d’accés permeten que altres aplicacions d’IA d’aquest equip treballin
+      amb aquest perfil. Només tu les pots crear o eliminar.
     never_used: Encara sense usar
-    reference_label: Referència de credencial
+    reference_label: Codi de connexió
     refresh: Actualitza
+    refused_failed: No s’ha pogut completar. Torna-ho a provar.
     refused_not_found: Aquesta clau ja no és a la llista.
-    refused_not_signed_in: Inicia la sessió per gestionar les claus.
-    refused_outcome_unknown: Cadrumo no ha rebut resposta. Pot ser que la clau s'hagi
-      emès o no; actualitza per comprovar-ho.
-    refused_person_act_required: Només tu pots gestionar les claus, aquí.
-    refused_profile_locked: Aquest perfil està bloquejat.
-    revoke: Revoca
-    revoke_confirm: Vols revocar aquesta clau? Les aplicacions que la facin servir
+    refused_not_signed_in: Inicia la sessió per canviar aquesta configuració.
+    refused_outcome_unknown: Cadrumo no ha pogut confirmar si s’ha creat la clau.
+      Actualitza per comprovar-ho.
+    refused_person_act_required: Només tu pots canviar aquesta configuració, des d’aquesta
+      finestra.
+    refused_profile_locked: Desbloqueja el perfil per canviar aquesta configuració.
+    revoke: Elimina
+    revoke_confirm: Vols eliminar aquesta clau? Les aplicacions que la facin servir
       perdran l’accés immediatament. No es pot desfer.
-    revoke_confirm_action: Revoca la clau
-    revoking: S'està revocant…
-    scope_all_operations: Pot executar totes les operacions disponibles per a les
-      aplicacions externes
-    scope_no_tax_values: No llegeix valors fiscals
-    scope_operations_seen: Veu les operacions que executa
-    scope_profile_values: Llegeix els valors del perfil
-    scope_some_operations: Executa només algunes operacions
-    scope_tax_values: Llegeix valors fiscals
+    revoke_confirm_action: Elimina la clau
+    revoking: S’està eliminant…
+    scope_all_operations: Pot fer servir totes les accions de Cadrumo disponibles
+      per a les aplicacions connectades
+    scope_no_tax_values: No llegeix imports fiscals
+    scope_operations_seen: Veu les accions que fa
+    scope_profile_values: Llegeix les dades del perfil
+    scope_some_operations: Només pot fer servir algunes accions
+    scope_tax_values: Llegeix imports fiscals
     standing_active: Activa
     standing_expired: Caducada
     standing_pending: Pendent d'aprovació
-    standing_revoked: Revocada
+    standing_revoked: Eliminada
     standing_suspended: En pausa
-    tax_values: Permet-li també llegir valors fiscals
-    tax_values_note: Inclou els imports fiscals calculats i les dades de les declaracions.
-      Deixa-ho desactivat perquè l’aplicació no les pugui llegir.
-    title: Claus d’accés per a aplicacions externes
+    tax_values: Permet-li també llegir imports fiscals
+    tax_values_note: Inclou els impostos calculats i les dades de les declaracions.
+      Deixa-ho desactivat perquè l’aplicació no els vegi.
+    title: Claus d’accés per a altres aplicacions d’IA
   calendar:
     aeat:
       accepted: Acceptada
@@ -711,6 +713,21 @@ desktop:
       la resta funciona amb normalitat.
     show: Mostra la documentació
     unavailable: No s'ha pogut obrir la documentació. Tota la resta funciona amb normalitat.
+  google:
+    checking: Comprovant l'accés a Google…
+    not_in_this_build: Aquesta versió de Cadrumo no pot iniciar la sessió a Google.
+    palette_sign_in: Autentica't amb Google
+    sign_in: Inicia la sessió
+    sign_in_label: Inicia la sessió a Google
+    sign_out: Tanca la sessió
+    sign_out_label: Tanca la sessió de Google
+    signed_in: Sessió iniciada com a {email}.
+    signed_in_plain: Sessió iniciada.
+    signed_out: No has iniciat la sessió.
+    signing_out: Tancant la sessió de Google…
+    title: Compte de Google
+    unknown: Ara no s'ha pogut llegir l'accés a Google.
+    waiting: Acaba d'iniciar la sessió a Google al teu navegador.
   host:
     failed: Aquesta part no s'ha pogut carregar.
     unavailable: Aquesta part necessita l'aplicació d'escriptori.
@@ -831,6 +848,99 @@ desktop:
     terminals: Terminals
     title: Configuració
     window: Finestra
+  setup:
+    advisory_incomplete: La configuració de Cadrumo no és completa. Fes clic aquí
+      per completar-la.
+    advisory_running: La configuració de Cadrumo està en curs. Fes clic aquí per veure
+      com va.
+    approve: Baixa i configura
+    approve_at_least: Baixa almenys {size} i configura
+    approve_size: Baixa {size} i configura
+    cancel: Cancel·la la configuració
+    cancelling: S'aturarà després del pas actual…
+    checking: S'estan comprovant els components…
+    close: Tanca
+    copy_details: Copia els detalls
+    details: Detalls
+    hide: Amaga
+    lead: Cadrumo necessita aquests components per funcionar.
+    lead_review: Revisa què es baixarà i on es desa, i després aprova-ho.
+    lead_running: Pots tancar això; la configuració continua i Configuració mostra
+      com va.
+    not_now: Ara no
+    open: Obre la configuració
+    outcome_cancelled: S'ha cancel·lat la configuració. El que ja s'havia baixat es
+      conserva.
+    outcome_completed: Tot està configurat.
+    outcome_failed: La configuració no ha acabat.
+    outcome_interrupted: La configuració s'ha aturat abans d'acabar. Reprèn-la per
+      continuar on s'havia quedat.
+    outcome_not_enough_space: No hi havia prou espai lliure, així que no s'ha baixat
+      res.
+    outcome_nothing_to_do: Tot ja estava configurat.
+    outcome_plan_changed: El que cal ha canviat abans de començar. Revisa el nou pla
+      i aprova'l.
+    outcome_rejected: No s'ha baixat res.
+    overall_progress: Progrés de la configuració
+    palette_browser: Configura el navegador
+    palette_cancel: Cancel·la la configuració
+    palette_check: Comprova els components
+    palette_local_ai: Configura la IA local
+    palette_open: Configura els components
+    palette_retry: Torna a provar la configuració
+    plan_destination: 'Es desa a: {folder}'
+    plan_from: 'Des de: {hosts}'
+    plan_nothing: No hi ha res per baixar.
+    plan_outside_program: Això instal·la un programa a part en aquest ordinador, que
+      et pot demanar permís.
+    plan_shared: Es baixa juntament amb {name}.
+    plan_size: Es baixaran {size}.
+    plan_size_at_least: Es baixaran com a mínim {size}.
+    planning: S'està calculant què cal baixar…
+    progress_bytes: '{done} de {total}'
+    progress_item: '{index} de {count}: {name} — {step}'
+    progress_label: Progrés de {name}
+    rail_busy: S'estan configurant els components
+    rail_incomplete: La configuració no ha acabat
+    refused_busy: Ja hi ha una configuració en curs en un altre lloc. Espera que acabi.
+    refused_not_cancellable: Ara no es pot aturar la configuració. Acabarà aviat.
+    refused_not_pending: Aquest pla ja no espera resposta.
+    refused_not_signed_in: Primer inicia la sessió al teu perfil.
+    refused_other: No s'ha pogut contactar amb la configuració. Torna-ho a provar
+      d'aquí a un moment.
+    refused_plan_changed: El que cal ha canviat. Revisa el nou pla i després aprova'l.
+    refused_unavailable: Els serveis de Cadrumo no responen. Torna-ho a provar d'aquí
+      a un moment.
+    reject: No baixis res
+    result_already: Ja estava configurat
+    result_done: Configurat
+    result_not_finished: No ha acabat
+    resume: Reprèn
+    show_new_plan: Mostra el nou pla
+    size_unknown: Mida coneguda en començar
+    space: Necessita {required} d'espai lliure; n'hi ha {free} de lliures.
+    space_short: No hi ha prou espai lliure. Allibera'n una mica i torna-ho a provar.
+    space_unread: Necessita {required} d'espai lliure; no s'ha pogut llegir l'espai
+      lliure.
+    start: Configura
+    step_checking: Comprovant
+    step_connecting: Connectant
+    step_downloading: Baixant
+    step_installing: Instal·lant
+    step_tidying: Endreçant
+    step_waiting: Esperant per començar
+    summary_complete: Tot el que Cadrumo necessita està configurat.
+    summary_hardware: Aquest ordinador no pot executar tot el que Cadrumo necessita;
+      la resta està configurada.
+    summary_incomplete: Part del que Cadrumo necessita encara no està configurat.
+    summary_running: La configuració està en curs.
+    title: Configura Cadrumo
+    toast_cancelled: Configuració cancel·lada
+    toast_done: Els components estan configurats
+    toast_not_finished: La configuració no ha acabat
+    try_again: Torna-ho a provar
+    unavailable: Ara no es poden comprovar els components. Torna-ho a provar d'aquí
+      a un moment.
   signin:
     checking: S'està comprovant la teva sessió…
     choose_profile: Tria un perfil
@@ -1277,22 +1387,17 @@ overview:
     sobre Societats (model 200/202); consulta'l directament a la seu electrònica de
     l'AEAT.
 provisioning:
-  condition:
-    role_model_fit_for_role: '%{model} ha respost al document de prova, però la seva
-      resposta no serveix per llegir una factura. Tria un altre model de text.'
-    role_model_fitness_verified: 'No hi ha cap comprovació d''aptitud registrada per
-      als pesos actuals de %{model}. Això no vol dir que el model no sigui apte: executa
-      `aeat config provision verify` per comprovar-ho.'
-    role_model_fitness_within_timeout: '%{model} no ha acabat la resposta de prova
-      abans que s''esgotés el temps límit. Pot ser massa lent per a aquest equip;
-      tria un model més petit o augmenta el temps d''espera de l''LLM i torna a executar
-      `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El model %{model} està subjecte a la %{licence}, que
         no permet l'ús comercial. L'has indicat tu de manera explícita, així que Cadrumo
         l'utilitzarà, però una gestoria comercial necessita una llicència a part de
         l'editor.
+  role:
+    column_role_mapping: per a columnes de taules
+    supply_nature_proposal: per al tipus de venda o compra
+    text_extraction: per al text de documents
+    vision_transcription: per a pàgines escanejades
 review:
   adapters:
     errors:
@@ -2195,6 +2300,7 @@ tui:
     operations: Operacions
     profile: Perfil
     reference: Referència
+    setup: Components
     withholding: Retencions
   home:
     account_fallback: Compte
@@ -3973,6 +4079,7 @@ tui:
       operations: Obre Operacions
       profile: Obre Perfil
       reference: Obre Referència
+      setup: Obre Components
       unknown: Obre l'àrea
       withholding: Obre Retencions
     destination_help:
@@ -3987,6 +4094,7 @@ tui:
         i executar-les
       profile: Les dades d'aquest perfil i els orígens que les completen
       reference: Models, caselles, categories, portals i mètodes d'accés
+      setup: El navegador i la IA local
       withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
     refusal:
       not_composed: Encara no s'han pogut llegir totes les àrees.
@@ -4040,3 +4148,48 @@ tui:
         reconciliation_resolved: Resolta
         revision_current: Vigent
         revision_superseded: Substituïda
+  setup:
+    check_again: Torna a comprovar
+    checking: Comprovant…
+    column:
+      action: Acció
+      item: Component
+      state: Estat
+    complete: Cadrumo està preparat.
+    hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
+    hint: Retorn executa l'acció de la fila triada. En preparar, es mostra el pla
+      i se't pregunta abans de baixar res.
+    incomplete: Alguns components encara no estan a punt.
+    intro: 'El que Cadrumo necessita en aquest ordinador: el navegador per al web
+      de l''Agència Tributària i la IA local. Tria una fila per executar-ne l''acció.'
+    outcome:
+      cancelled: Has cancel·lat la preparació.
+      completed: La preparació ha acabat.
+      interrupted: La preparació es va interrompre abans d'acabar. Tria Reprèn per
+        continuar.
+      not_enough_space: No hi ha prou espai lliure al disc, així que no s'ha baixat
+        res.
+      nothing_to_do: Tot ja està preparat.
+      plan_changed: El pla va canviar després que l'aprovessis, així que no s'ha baixat
+        res. Torna a començar per veure el pla nou.
+      rejected: No s'ha baixat res.
+    plan:
+      destination: '  Es desa a %{path}'
+      entry: '%{name}: %{size} des de %{hosts}'
+      heading: 'Cadrumo prepararà:'
+      installs_program: '  Això instal·la un programa en aquest ordinador. El seu
+        instal·lador et pot demanar permís.'
+      part: '    %{name}: %{size}'
+      shared: '  Fa servir la mateixa baixada que %{name}.'
+      size_unknown: mida encara desconeguda
+      total: 'Baixada total: %{size}.'
+      total_unknown: 'Baixada total: com a mínim %{size}. Algunes mides només es coneixen
+        quan comença la baixada.'
+    set_up_all: Prepara-ho tot
+    size:
+      gigabytes: '%{value} GB'
+      megabytes: '%{value} MB'
+    title: Components
+    unavailable: No s'ha pogut contactar amb el servei en segon pla de Cadrumo, així
+      que ara no es poden comprovar ni preparar els components.
+    working: Preparant el pla…

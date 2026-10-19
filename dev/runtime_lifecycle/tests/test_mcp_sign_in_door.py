@@ -22,8 +22,10 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, EffectiveScopeSummary, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import EffectiveScopeSummary
 from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionsLocked
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence

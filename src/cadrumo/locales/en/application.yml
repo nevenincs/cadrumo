@@ -1,9 +1,5 @@
 application:
   auth:
-    sync:
-      errors:
-        requirements_missing: 'AEAT synchronization requires: {required_fields}. Open authentication settings
-          beside synchronization to complete or edit them. {reasons}'
     acquisition_lock:
       errors:
         acquire_failed: AEAT auth lock could not be acquired after stale-lock recovery.
@@ -158,6 +154,11 @@ application:
         session_identity_profile_mismatch: AEAT session identity does not match the
           active profile tax identity; clear auth sessions and authenticate the matching
           profile before live AEAT reads.
+    sync:
+      errors:
+        requirements_missing: 'AEAT synchronization requires: {required_fields}. Open
+          authentication settings beside synchronization to complete or edit them.
+          {reasons}'
   calculations:
     bienes_inversion_regularizacion:
       register_advisory: '%{count} capital good(s) in the regularisation period (LIVA
@@ -1806,6 +1807,63 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
+  provisioning:
+    action:
+      check_again: Check again
+      resume: Resume
+      set_up: Set up
+      try_again: Try again
+      update: Update
+    blocked:
+      hardware: This computer does not have enough memory for this.
+      needs_person: Waiting for you to approve it, or to install it yourself.
+      not_in_this_build: This version of Cadrumo does not include this.
+      offline: You are offline. Connect to the internet to set this up.
+    dependency:
+      browser:
+        name: Browser for the tax agency website
+      local_ai:
+        model: Model %{role}
+        name: Local AI
+        program: The program that runs the models
+    failure:
+      blocked_by_network: Your network blocked the download.
+      cancelled: You cancelled the setup.
+      damaged_download: The download was damaged and could not be used.
+      disk_full: There is not enough free disk space.
+      host_unreachable: The download server could not be reached.
+      interrupted: Setup was interrupted before it finished.
+      memory_busy: Too much memory is in use right now. Close other programs and try
+        again.
+      needs_sign_in: You need to sign in to Google.
+      no_permission: Cadrumo was not allowed to write the files.
+      not_enough_memory: This computer does not have enough memory for this.
+      not_in_this_build: This version of Cadrumo does not include this.
+      offline: You are offline.
+      program_missing: The local AI program is not installed.
+      program_not_running: The local AI program is not running.
+      secure_connection_failed: A secure connection could not be made. A network filter
+        may be in the way.
+      unexpected: Something went wrong.
+    note:
+      downloaded_not_loaded: Downloaded, not loaded yet.
+      own_network_settings: Uses its own network settings.
+    retry: Connection problem. Trying again in %{seconds} seconds (attempt %{attempt}).
+    space_needed: Setup needs %{required} free and %{free} is available.
+    stale:
+      different_model_version: Works, but it is a different version from the one Cadrumo
+        was tested with.
+      older_revision: Works, but a newer version is needed.
+      program_too_old: Works, but this version is too old for Cadrumo.
+    state:
+      absent: Not set up yet.
+      blocked: This cannot be set up right now.
+      failed: Setup did not finish.
+      provisioning: Setting up now.
+      ready: Ready.
+      stale: Works, but needs an update.
+      unknown: Cadrumo could not check this right now.
+      verifying: Checking that it works.
   reconciliation_export:
     actor: Actor
     advisory: Advisory

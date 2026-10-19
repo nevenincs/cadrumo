@@ -50,12 +50,6 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
             raise ValueError("the former product Google Drive vault folder is not supported")
         return value
 
-    # ── Sheets ───────────────────────────────────────────────────────────
-    cadrumo_calc_sheets_recalc_delay_s: float = Field(
-        default=2.0,
-        gt=0,
-        description="Delay (seconds) waiting for Google Sheets server-side recalculation between parity polls",
-    )
     # ── Financial ingest ───────────────────────────────────────────────────
     financial_base_currency: str = Field(
         default=DEFAULT_CURRENCY,

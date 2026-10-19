@@ -48,17 +48,6 @@ IN_PROCESS_COMMAND_COUNTERPARTS: Final = MappingProxyType(
         ("app", "modelo", "support-matrix"): _query("support"),
         # The certificate parser is an in-process preview before optional fact import.
         ("config", "profile", "censo", "import"): _operation("user-profile.censo-certificate-import"),
-        ("config", "provision", "browser"): _operation("browser-runtime.provision"),
-        ("config", "provision", "install"): _operation("local-reader.provision"),
-        ("config", "provision", "load"): _operation("local-reader.provision"),
-        ("config", "provision", "probe"): _operation("local-reader.status"),
-        ("config", "provision", "pull"): _operation("local-reader.provision"),
-        ("config", "provision", "remove"): _operation("local-reader.provision"),
-        ("config", "provision", "report"): _operation("local-reader.report"),
-        ("config", "provision", "setup"): _operation("local-reader.provision"),
-        ("config", "provision", "start"): _operation("local-reader.provision"),
-        ("config", "provision", "status"): _operation("local-reader.status"),
-        ("config", "provision", "verify"): _operation("local-reader.provision"),
         ("config", "repair", "connectivity"): _operation("diagnostics.connectivity.probe"),
         ("config", "repair", "integrity", "objects"): _operation("diagnostics.secure-objects.check"),
         ("config", "repair", "quarantine"): _operation("diagnostics.secure-objects.quarantine"),
@@ -73,6 +62,8 @@ PERSON_ACT_COMMANDS: Final = frozenset(
         ("app", "modelo", "review-package", "verify-signature"),
         # Document-only verification works on a file outside the admitted profile.
         ("app", "modelo", "work", "report-verify"),
+        # Opening the terminal interface is the person sitting down at it.
+        ("app", "tui"),
         ("config", "login"),
         ("config", "logout"),
         ("config", "profile", "archive", "import"),

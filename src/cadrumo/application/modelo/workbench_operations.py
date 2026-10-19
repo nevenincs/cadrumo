@@ -26,6 +26,16 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
@@ -53,15 +63,6 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .casilla_help import ModeloCasillaHelpCardV1
 from .edit_admission import ModeloEditRenewedV1, renew_modelo_edit_baseline

@@ -26,21 +26,10 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
     EnrollmentStage,
 )
 from cadrumo.application.user_profile.automation_operations import (
@@ -51,9 +40,12 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.enrollment_access import EnrollmentInspect, EnrollmentPrepare, EnrollmentPrepared
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,

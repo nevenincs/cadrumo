@@ -125,6 +125,7 @@ def wait_registered_settlement[ReviewT: BaseModel](
     progress: RegisteredOperationProgress,
     review: RegisteredOperationReviewHandler[ReviewT] | None,
     exchange: Callable[[OperationRequest], OperationReply],
+    on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
 ) -> tuple[OperationPublicProjectionV1, RegisteredOperationReviewCompletion[ReviewT] | None]:
     """Observe settlement on each runtime cue, with sticky uncertainty after response submission."""
     responded_interactions: set[tuple[str, int]] = set()
@@ -146,6 +147,7 @@ def wait_registered_settlement[ReviewT: BaseModel](
             changes,
             responded_interactions,
             event_cursor,
+            on_events,
         )
 
 
@@ -165,6 +167,7 @@ def _observe_until_settled[ReviewT: BaseModel](
     changes: OperationChanges,
     responded_interactions: set[tuple[str, int]],
     event_cursor: OperationEventCursor,
+    on_events: Callable[[OperationPublicEventPageV1], None] | None,
 ) -> tuple[OperationPublicProjectionV1, RegisteredOperationReviewCompletion[ReviewT] | None]:
     while True:
         if changes.armed:
@@ -184,6 +187,8 @@ def _observe_until_settled[ReviewT: BaseModel](
             event_cursor,
         )
         event_cursor = render_registered_operation_notices(observation.event_page)
+        if on_events is not None:
+            on_events(observation.event_page)
         state = observation.projection
         if state.lifecycle is OperationLifecycle.TERMINAL:
             progress.condition, progress.effect = state.terminal_condition, state.effect

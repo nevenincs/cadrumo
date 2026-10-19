@@ -16,15 +16,11 @@ from cadrumo.adapters.persistence.storage.custody.capsule import (
 from cadrumo.adapters.persistence.storage.custody.records import ProfileCustodyEnvelope
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, publish_sign_in_custody
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.base64_codec import b64_encode
 from cadrumo.core.hashing import prefixed_digest
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.sign_in import SignInPresence
 from cadrumo_client.transport.installation import installation
 

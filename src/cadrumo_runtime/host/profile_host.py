@@ -39,17 +39,8 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
     AccessEvaluationContext,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    DisclosureCategoryGrant,
-    DisclosurePermission,
     LoginEligibility,
-    OperationResponseScopeAllowed,
     OsLockState,
     ProfileAccessState,
 )
@@ -59,7 +50,6 @@ from cadrumo.application.user_profile.automation_administration import (
     inspect_automation_inventory,
 )
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,
     EnrollmentCustodyPort,
@@ -77,6 +67,16 @@ from cadrumo.application.user_profile.session_retirement import SessionRetiremen
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.local_reader_operation_composition import start_owned_runtime_server
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    DisclosureCategoryGrant,
+    DisclosurePermission,
+)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.profile_access import HumanProof

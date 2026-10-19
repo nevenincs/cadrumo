@@ -12,13 +12,13 @@ import pytest
 from cadrumo.application.operations.frontend_requests import (
     OperationPublicPhaseEventV1,
 )
-from cadrumo.application.user_profile.login_session import borrow_profile_receipt_key
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin
 from cadrumo_client.contracts.sign_in import SignInPresence
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
 
 from ..client_probes import (
     _execute_read,
@@ -58,7 +58,7 @@ def test_login_logout_profile_switch_and_stale_receipt(harness: LifecycleHarness
     assert observer.client.sign_in_status().status.presence is SignInPresence.PRESENT
     _refused(_private_request(observer, session_id))
     _refused(_private_request(a, session_id, profile_id=second.profile_id))
-    with borrow_profile_receipt_key(bucket_id=first.profile_id) as proof:
+    with borrow_receipt_proof(profile_id=first.profile_id) as proof:
         stale_proof = bytearray(proof)
     try:
         resumed = harness.connect(first.profile_id)

@@ -46,21 +46,14 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import (
     KEY_ROTATION_MAXIMUM_OVERLAP,
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationSecretStore
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentStage
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
@@ -74,7 +67,18 @@ from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo_client.commands.access_management_payloads import ConfigProfileAutomationInspectResult
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.contracts.operation_access import OperationObserve, OperationObserved
 from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, ProjectionPageRequest
 from cadrumo_client.transport import credentials

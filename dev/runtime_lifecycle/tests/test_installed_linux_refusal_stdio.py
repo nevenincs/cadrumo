@@ -30,11 +30,8 @@ from cadrumo.adapters.persistence.storage.custody.linux_secret_service_store imp
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.posix import posix_owner_uid
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint

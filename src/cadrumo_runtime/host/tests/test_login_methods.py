@@ -16,13 +16,13 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 
-from ...adapters.tests.test_enrollment_framing import MemoryChannel
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

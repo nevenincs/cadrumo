@@ -150,12 +150,29 @@ def test_sign_in_actions_are_agent_reported_and_credential_free(tmp_path: Path) 
 def test_gui_capability_is_independent_of_terminal_support(tmp_path: Path) -> None:
     source, runner = _source(tmp_path, _ok('{"schema_version":1,"providers":["example"]}'))
     assert source.sign_in_providers() == ("example",)
-    runner.result = _ok('{"schema_version":1,"providers":[]}')
+    runner.result = _ok('{"schema_version":2,"providers":{}}')
     assert source.gui_sign_in_providers() == ()
     assert source.gui_sign_in_providers() == ()
     assert len(runner.calls) == 2
     assert runner.calls[1]["arguments"] == GUI_AUTH_CAPABILITIES_ARGUMENTS
     assert "CADRUMO_LLM_X_API_KEY" not in json.dumps(runner.calls[1]["environment"])
+
+
+def test_gui_methods_are_read_from_the_agent_and_cannot_be_mutated_by_callers(tmp_path: Path) -> None:
+    source, runner = _source(tmp_path, _ok('{"schema_version":2,"providers":{"example":["browser"]}}'))
+    methods = source.gui_sign_in_methods()
+    assert methods == {"example": ("browser",)}
+    methods.clear()
+    assert source.gui_sign_in_providers() == ("example",)
+    assert source.gui_sign_in_methods() == {"example": ("browser",)}
+    assert len(runner.calls) == 1
+
+
+@pytest.mark.parametrize("methods", [[], ["browser", "browser"], ["password"], "browser"])
+def test_invalid_gui_method_declarations_are_refused(tmp_path: Path, methods: object) -> None:
+    source, _runner = _source(tmp_path, _ok(json.dumps({"schema_version": 2, "providers": {"example": methods}})))
+    with pytest.raises(ProviderCatalogUnavailableError):
+        source.gui_sign_in_methods()
 
 
 @pytest.mark.parametrize(

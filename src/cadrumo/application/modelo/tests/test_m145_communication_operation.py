@@ -15,6 +15,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.buckets.event import BucketEventHistoryCatalogue
@@ -33,7 +35,6 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, Availability
 from .. import m145_communication_execution as m145_operation
 from .._ports import FicheroBoeRecordRenderer
 from ..m145_communication_contracts import (

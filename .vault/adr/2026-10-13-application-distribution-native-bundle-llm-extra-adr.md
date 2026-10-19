@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-13'
-modified: '2026-10-16'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:844cc942386cc66c7f9a09b11ba0c033bc0c3fd536120929747801368228da01'
+body_hash: 'sha256:bb5a2e13b25271bceaada9e844edb5a0ae20c253c27f5e305e49b5a7127cdd28'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]"
   - "[[2026-10-04-application-distribution-adr]]"
@@ -35,7 +35,7 @@ The native application package installs only the locked base closure of the `cad
 
 - Applies to the native application package only. The wheel's default install stays core-only, and the absent-llm lane keeps proving the instructive refusal there; it is not loosened.
 - The added distributions come from the same `uv.lock` resolution, version-pinned, wheel-only and target-selected, under the same assembly refusals as the base closure.
-- Every other extra stays out of the bundle; this ruling names `llm` alone.
+- Every other extra stays out of the bundle; this ruling named `llm` alone, and the 2026-10-18 amendment below adds `browser`.
 - No model weights enter any artifact.
 
 ## Implementation
@@ -53,3 +53,15 @@ The packaged app is the operator's only installation, so a surface gated on an e
 The bundle grows by the `[llm]` closure. Model surfaces in the packaged app now refuse for model or runtime reasons (no local runtime, model not pulled, hardware below floor) rather than for a missing extra. Reconsider if the extra gains a heavy native runtime or a licence the distribution cannot carry.
 
 Authorization: the owner's ruling of 2026-10-13, "yes, we'll bundle the llm package set", given after the packaged review proof failed with `ERROR_OPTIONAL_EXTRA_MISSING` at `src/cadrumo/adapters/outbound/llm/text_classifier.py:76`.
+
+### 2026-10-18 amendment: the browser extra ships too
+
+The native application package also installs the locked `[browser]` extra closure: `playwright` with its platform wheel's bundled Node driver, `playwright-stealth`, and their locked dependencies (`pyee`, `greenlet`). `BUNDLED_EXTRAS` becomes `("llm", "browser")`, so wheel planning, provisioning, assembly verification and the CMake build select both extras through the same path as above. The staged package previously held no `playwright`, `playwright_stealth` or `pyee`, so every AEAT browser surface refused for a missing extra that the operator could not install, the same dead end this decision removed for `llm`.
+
+Every native target has a locked wheel for the added closure: `playwright` 1.64.0 ships `win_amd64`, `manylinux1_x86_64`, `manylinux_2_17_aarch64` and `macosx_11_0_arm64` wheels, and the other additions are pure-Python or already locked for each target.
+
+The Chromium browser builds are not bundled. They stay provisioned on demand into profile storage under `CADRUMO_PLAYWRIGHT_BROWSERS_DIR` through the existing browser provisioning probe and install path, so the packaged app's probe now reports a browser that is not provisioned rather than an unavailable extra. No browser binary enters any artifact. How the operator is offered and guided through that provisioning is decided by a separate design effort and is not part of this decision.
+
+The other constraints stand: the wheel's default install stays core-only, the added distributions are locked, version-pinned, wheel-only and target-selected, and every remaining extra stays out of the bundle. The bundle grows by the `[browser]` closure, which is dominated by the per-platform Node driver.
+
+Authorization: the owner's ruling of 2026-10-18, "Ship it", choosing to ship the `browser` extra alongside `llm` in the native application package with Chromium left to on-demand storage provisioning.

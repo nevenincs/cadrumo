@@ -14,17 +14,14 @@ from typing import Protocol
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import ClientCredentialMetadata
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
+from ..contracts.access_refusals import AccessDenialCode
+from ..contracts.automation_codes import AutomationCustodyCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, remaining_budget
 from .enrollment_client import NativeEnrollmentClient

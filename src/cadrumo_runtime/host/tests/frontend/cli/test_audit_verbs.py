@@ -32,7 +32,7 @@ from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.core.output_rendering import jsonable_output_payload
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

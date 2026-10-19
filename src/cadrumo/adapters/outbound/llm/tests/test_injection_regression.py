@@ -167,7 +167,6 @@ def _serve_authored_reply(reply: str) -> Generator[str]:
 def _complete_over_loopback(reply: str, tmp_path: Path) -> str:
     settings = EnvFileFreeSettings(
         cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
     )

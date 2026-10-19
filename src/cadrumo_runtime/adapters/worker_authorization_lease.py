@@ -8,7 +8,6 @@ from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
-from cadrumo.application.user_profile.access_contracts import AccessAction
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
@@ -17,6 +16,7 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.diagnostic_log import diagnostic_timing_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.profile_access import AccessRefusal
@@ -49,7 +49,7 @@ from cadrumo_runtime.contracts.worker_enrollment import (
 
 from ..application.approval_binding import RuntimeApprovalBinding
 from .native_peer import require_live_native_peer
-from .worker_authorization import worker_authorization_namespace
+from .worker_authorization import runtime_server_start_definitions, worker_authorization_namespace
 from .worker_authorization_refusals import raise_worker_access_refusal
 from .worker_transport import WorkerChannel, worker_endpoint
 
@@ -174,17 +174,13 @@ class WorkerAuthorizationLease:
         nothing. Nothing this process located is sent: the runtime resolves the
         program and its environment itself.
         """
-        # The provisioning contracts reach the model installer; only this
-        # operation's own request loads them, never a worker's start.
-        from cadrumo.application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
-
         channel, permit, request = self._channel, self._permit, self.request
         if (
             channel is None
             or not isinstance(permit, WorkerAuthorizationPermit)
             or not isinstance(request, WorkerAuthorizationRequest)
             or request.request.action is not AccessAction.COMMIT
-            or request.request.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID
+            or request.request.definition_id not in runtime_server_start_definitions()
             or self._runtime_server_start_sent
         ):
             raise RefusalError(RefusalCode.INVALID_FRAME)

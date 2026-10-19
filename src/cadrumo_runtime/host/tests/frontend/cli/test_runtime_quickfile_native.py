@@ -38,7 +38,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.aggregation import RetencionScheme
 from cadrumo.core.config import override_settings
@@ -49,6 +48,7 @@ from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.operation_access import (
     OperationObserved,
     OperationReply,
@@ -58,7 +58,7 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,

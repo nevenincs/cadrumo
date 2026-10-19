@@ -10,6 +10,17 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessRequest,
+)
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.buckets.event import (
@@ -29,21 +40,11 @@ from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ..access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
     LoginEligibility,
-    OperationAccessRequest,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,

@@ -6,7 +6,8 @@ import math
 import time
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.person_acts import is_persons_frontend
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.user_profile.google_configuration_operation_contracts import (
     GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING,
@@ -28,7 +29,7 @@ def admit_google_consent_connection(
         raise ValueError("Google browser consent requires a finite timeout of at most 420 seconds")
     deadline = time.monotonic() + timeout
     profile_id, session_id = client.profile_id, client.session_id
-    if request.profile_id != profile_id or client.frontend is not OperationFrontendProjection.CLI:
+    if request.profile_id != profile_id or not is_persons_frontend(client.frontend):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return deadline, profile_id, session_id
 

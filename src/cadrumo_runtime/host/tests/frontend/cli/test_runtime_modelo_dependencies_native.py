@@ -21,12 +21,6 @@ from cadrumo.application.modelo.dependency_operation import (
 )
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
@@ -34,7 +28,16 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    native_cli_profile_scope,
+)
 
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session

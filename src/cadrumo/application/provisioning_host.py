@@ -9,7 +9,7 @@ already listening. This module owns the step before that, per platform:
   executable is present and nothing answers yet. Starting an already running
   runtime is a successful no-op, so the verb is idempotent.
 * **Install.** Run the platform package manager -- ``winget`` on Windows,
-  Homebrew on macOS -- only with explicit operator consent. Linux has no
+  Homebrew on macOS -- for a setup plan the person approved. Linux has no
   unprivileged installer: the upstream script needs root, so the operator runs
   it and this module reports the typed refusal.
 
@@ -26,7 +26,8 @@ import time
 from collections.abc import Callable, Mapping
 from enum import StrEnum
 from pathlib import Path
-from urllib.parse import urlsplit
+from typing import Final
+from urllib.parse import quote, urlsplit, urlunsplit
 
 import httpx
 from pydantic import Field, model_validator
@@ -65,6 +66,7 @@ __all__ = [
     "locate_runtime_executable",
     "probe_runtime_host",
     "read_runtime_version",
+    "runtime_proxy_environment",
     "start_runtime",
 ]
 
@@ -279,6 +281,37 @@ def _start_refusal(
     )
 
 
+_LOOPBACK_NO_PROXY: Final = ("localhost", "127.0.0.1", "::1")
+
+
+def runtime_proxy_environment(settings: Settings) -> dict[str, str]:
+    """Return the proxy variables a runtime server Cadrumo starts downloads models through.
+
+    Empty when no proxy is configured, so the server keeps the environment it
+    inherits. Loopback is always exempt, because the runtime's own endpoint
+    and its clients are on this machine.
+    """
+    proxy = settings.cadrumo_proxy_url.strip()
+    if not proxy:
+        return {}
+    parts = urlsplit(proxy)
+    username = settings.cadrumo_proxy_username
+    secret = settings.cadrumo_proxy_password_secret
+    if username and parts.hostname is not None:
+        credentials = quote(username, safe="")
+        if secret is not None and secret.get_secret_value():
+            credentials += ":" + quote(secret.get_secret_value(), safe="")
+        host = parts.hostname if parts.port is None else f"{parts.hostname}:{parts.port}"
+        proxy = urlunsplit((parts.scheme, f"{credentials}@{host}", parts.path, parts.query, parts.fragment))
+    bypass = [entry.strip() for entry in settings.cadrumo_proxy_bypass.split(",") if entry.strip()]
+    no_proxy = ",".join(dict.fromkeys((*bypass, *_LOOPBACK_NO_PROXY)))
+    return {
+        "HTTPS_PROXY": proxy,
+        "HTTP_PROXY": proxy,
+        "NO_PROXY": no_proxy,
+    }
+
+
 def _runtime_server_launch(
     settings: Settings, *, which: ExecutableLookup
 ) -> tuple[Path, dict[str, str]] | RuntimeStartOutcome:
@@ -301,7 +334,9 @@ def _runtime_server_launch(
             {"runtime_url": endpoint, "executable_located": False},
         )
     parts = urlsplit(endpoint)
-    environment = dict(os.environ)
+    # Cadrumo's proxy settings reach the server only as the standard variables below.
+    withheld = Settings.proxy_env_var_names()
+    environment = {name: value for name, value in os.environ.items() if name.upper() not in withheld}
     environment["OLLAMA_HOST"] = f"{parts.hostname}:{parts.port or 11434}"
     models_root = storage_path(StorageCategory.OLLAMA_MODELS, settings=settings)
     home_root = storage_path(StorageCategory.OLLAMA_HOME, settings=settings)
@@ -319,6 +354,7 @@ def _runtime_server_launch(
             ProvisioningPreconditionCondition.RUNTIME_START_SUCCEEDED,
             {"runtime_url": endpoint, "spawned": False, "start_error_type": exc.__class__.__name__},
         )
+    environment.update(runtime_proxy_environment(settings))
     environment["OLLAMA_MODELS"] = str(models_root)
     environment["HOME"] = str(home_root)
     environment["USERPROFILE"] = str(home_root)
@@ -427,7 +463,6 @@ class RuntimeInstallOutcome(ProvisioningOutcome):
     installed: bool
     already_installed: bool = False
     installer: RuntimeInstaller
-    consented: bool
     installer_exit_code: int | None = None
 
     @model_validator(mode="after")
@@ -439,23 +474,24 @@ class RuntimeInstallOutcome(ProvisioningOutcome):
 
 def install_runtime(
     *,
-    consent: bool,
     run: InstallerRunner,
     platform: RuntimeHostPlatform | None = None,
     which: ExecutableLookup = shutil.which,
+    replace_existing: bool = False,
 ) -> RuntimeInstallOutcome:
-    """Install the local runtime through the platform package manager, with consent.
+    """Install the local runtime through the platform package manager.
 
-    Idempotent: an executable that is already present is reported installed
-    and nothing runs, with or without consent. Without consent nothing is
-    downloaded; the refusal names the installer that would run so the operator
-    can decide.
+    Called only by the setup operation, after the person approved a plan that
+    says a program will be installed. Idempotent: an executable that is
+    already present is reported installed and nothing runs.
 
     Args:
-        consent: The operator's explicit agreement to run the installer.
         platform: Host platform; detected when omitted.
         which: Executable lookup for the runtime and the package manager.
         run: Runs the install invocation and returns its exit code.
+        replace_existing: Run the installer over a program that is already
+            present, so a program older than this version requires is replaced
+            by the current release.
 
     Returns:
         A :class:`RuntimeInstallOutcome`. Never raises.
@@ -463,12 +499,11 @@ def install_runtime(
     host_platform = platform if platform is not None else current_runtime_platform()
     installer, installer_path = _located_installer(host_platform, which)
     base_facts: dict[str, ProvisioningFactValue] = {"platform": host_platform.value, "installer": installer.value}
-    if locate_runtime_executable(platform=host_platform, which=which) is not None:
+    if not replace_existing and locate_runtime_executable(platform=host_platform, which=which) is not None:
         return RuntimeInstallOutcome(
             installed=True,
             already_installed=True,
             installer=installer,
-            consented=consent,
             facts={**base_facts, "executable_located": True},
         )
 
@@ -481,7 +516,6 @@ def install_runtime(
         return RuntimeInstallOutcome(
             installed=False,
             installer=installer,
-            consented=consent,
             installer_exit_code=exit_code,
             facts=facts,
             precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
@@ -489,8 +523,6 @@ def install_runtime(
 
     if installer_path is None:
         return refusal(ProvisioningPreconditionCondition.RUNTIME_INSTALLER_AVAILABLE, {"executable_located": False})
-    if not consent:
-        return refusal(ProvisioningPreconditionCondition.RUNTIME_INSTALL_CONSENTED, {"consented": False})
     try:
         exit_code = run(installer, installer_path, OLLAMA_INSTALL_TIMEOUT_S)
     except (OSError, ValueError, TimeoutError) as exc:
@@ -508,7 +540,6 @@ def install_runtime(
     return RuntimeInstallOutcome(
         installed=True,
         installer=installer,
-        consented=True,
         installer_exit_code=exit_code,
         facts={**base_facts, "installer_ran": True, "installer_exit_code": 0, "executable_located": True},
     )

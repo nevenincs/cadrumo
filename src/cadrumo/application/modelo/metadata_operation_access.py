@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import OperationAccessRequest
+
 from ...core.operations import profile_operation_subject
 from ...core.period import Period
 from ...domain.modelos.work_unit import WorkUnit
@@ -17,10 +20,6 @@ from ..operations.access_resolution import (
     require_single_period_admission,
 )
 from ..operations.models import OperationRequest
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-    OperationAccessRequest,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .edit_operation_requests import ModeloEditApplyOperationRequestV2
 from .m303_attestation_operation import (

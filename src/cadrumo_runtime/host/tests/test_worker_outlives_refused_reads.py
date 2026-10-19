@@ -49,14 +49,16 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessScope, SessionKind
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.attendance import AttendancePending
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (
     OperationContract,

@@ -12,25 +12,21 @@ from uuid import UUID
 from pydantic import model_validator
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.user_profile.access_contracts import (
-    DisclosureCategoryCount,
-    DisclosurePage,
-    SessionKind,
-    SessionState,
-)
+from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationReceiptProjection,
     AutomationReviewProjection,
     AutomationScopeProjection,
-    EnrollmentKind,
     EnrollmentStage,
 )
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.json_contract import OutputSchema
 from cadrumo.core.operations import OperationEffect
+from cadrumo_client.contracts.access_vocabulary import DisclosureCategoryCount, DisclosurePage
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 
 
 class RuntimeSessionPayload(OutputSchema):

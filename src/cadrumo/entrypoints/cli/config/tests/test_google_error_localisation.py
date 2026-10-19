@@ -9,13 +9,13 @@ from __future__ import annotations
 import pytest
 
 from cadrumo_client.commands.google_errors import google_refusal
-
-from .....adapters.outbound.google.errors import (
+from cadrumo_client.contracts.google_auth import (
     GoogleAuthClientMetadataUnavailableError,
     GoogleAuthError,
     GoogleAuthSignInRequiredError,
     GoogleAuthValidationError,
 )
+
 from .....adapters.outbound.storage.errors import OutboundStorageError
 from .....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from .....core.i18n.render import tr

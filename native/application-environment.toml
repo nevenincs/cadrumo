@@ -59,16 +59,11 @@ CADRUMO_LOG_STDERR_LEVEL = { kind = "text", role = "operator" }
 CADRUMO_LOG_FILE_LEVEL = { kind = "text", role = "operator" }
 CADRUMO_LOG_ROOT_LEVEL = { kind = "text", role = "operator" }
 CADRUMO_OUTPUT_LANGUAGE = { kind = "language", role = "operator" }
-CADRUMO_FALLBACK_LANGUAGES = { kind = "text", role = "operator" }
 NO_COLOR = { kind = "boolean", role = "operator" }
 CADRUMO_FORCE_COLOR = { kind = "boolean", role = "operator" }
-CADRUMO_TUI_APPEARANCE = { kind = "text", role = "operator" }
-CADRUMO_DEADLINE_DUE_SOON_DAYS = { kind = "integer", role = "operator" }
-CADRUMO_INBOX_ALERT_LEAD_DAYS = { kind = "integer", role = "operator" }
 CADRUMO_CERT_WARN_DAYS = { kind = "integer", role = "operator" }
 CADRUMO_CERT_CRITICAL_DAYS = { kind = "integer", role = "operator" }
 
-CADRUMO_AUTH_TIMEOUT_MS = { kind = "integer", role = "operator" }
 CADRUMO_CLAVE_MOVIL_TIMEOUT_MS = { kind = "integer", role = "operator" }
 CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS = { kind = "integer", role = "operator" }
 CADRUMO_BROWSER_HEADLESS = { kind = "boolean", role = "operator" }
@@ -84,16 +79,21 @@ CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS = { kind = "integer", role = "operat
 CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS = { kind = "integer", role = "operator" }
 CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS = { kind = "integer", role = "operator" }
 CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS = { kind = "integer", role = "operator" }
-CADRUMO_RATE_LIMIT_DELAY_SECONDS = { kind = "number", role = "operator" }
 SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT = { kind = "integer", role = "operator" }
 CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S = { kind = "integer", role = "operator" }
-CADRUMO_MANUALS_HTTP_TIMEOUT_S = { kind = "number", role = "operator" }
-CADRUMO_CALC_SHEETS_RECALC_DELAY_S = { kind = "number", role = "operator" }
 CADRUMO_LLM_DEFAULT_TIMEOUT_S = { kind = "integer", role = "operator" }
 CADRUMO_LLM_VISION_READ_TIMEOUT_S = { kind = "integer", role = "operator" }
 
 CADRUMO_CLI_REVEAL_IDENTIFIERS = { kind = "boolean", role = "package" }
 CADRUMO_EXTERNAL_BIN_DIRS = { kind = "directory_list", role = "package" }
+
+# The operator's proxy for the downloads Cadrumo starts. The runtime passes them to
+# the profile workers that run setup, and a worker hands them only to the download
+# tools that need them. No credential name is declared: a proxy password travels in
+# the address, which is therefore treated as sensitive.
+CADRUMO_PROXY_URL = { kind = "text", role = "pass" }
+CADRUMO_PROXY_USERNAME = { kind = "text", role = "pass" }
+CADRUMO_PROXY_BYPASS = { kind = "text", role = "pass" }
 
 TEMP = { kind = "directory", role = "pin" }
 TMP = { kind = "directory", role = "pin" }
@@ -115,6 +115,8 @@ CADRUMO_PACKAGE_PYTHON_EXECUTABLE = { kind = "executable", role = "fixed" }
 CADRUMO_AGENT_HOSTED_ROOT = { kind = "directory", role = "slot" }
 CADRUMO_AGENT_PORT = { kind = "port", role = "slot" }
 CADRUMO_AGENT_WORKER_PORT = { kind = "port", role = "slot" }
+# The host supplies this executable only for GUI sign-in; the auth profile validates its path.
+CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = { kind = "executable", role = "slot" }
 
 # The folder of the one profile a process is started for. Its launcher derives it from
 # that exact profile, never relays a received value, and no process reads it back to
@@ -176,17 +178,12 @@ presentation = [
   "CADRUMO_LOG_FILE_LEVEL",
   "CADRUMO_LOG_ROOT_LEVEL",
   "CADRUMO_OUTPUT_LANGUAGE",
-  "CADRUMO_FALLBACK_LANGUAGES",
   "NO_COLOR",
   "CADRUMO_FORCE_COLOR",
-  "CADRUMO_TUI_APPEARANCE",
-  "CADRUMO_DEADLINE_DUE_SOON_DAYS",
-  "CADRUMO_INBOX_ALERT_LEAD_DAYS",
   "CADRUMO_CERT_WARN_DAYS",
   "CADRUMO_CERT_CRITICAL_DAYS",
 ]
 remote = [
-  "CADRUMO_AUTH_TIMEOUT_MS",
   "CADRUMO_CLAVE_MOVIL_TIMEOUT_MS",
   "CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS",
   "CADRUMO_BROWSER_HEADLESS",
@@ -202,11 +199,8 @@ remote = [
   "CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS",
   "CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS",
   "CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS",
-  "CADRUMO_RATE_LIMIT_DELAY_SECONDS",
   "SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT",
   "CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S",
-  "CADRUMO_MANUALS_HTTP_TIMEOUT_S",
-  "CADRUMO_CALC_SHEETS_RECALC_DELAY_S",
   "CADRUMO_LLM_DEFAULT_TIMEOUT_S",
   "CADRUMO_LLM_VISION_READ_TIMEOUT_S",
 ]
@@ -390,14 +384,43 @@ home_variable = "HOME"
 
 # ---------------------------------------------------------------------------
 # PATH: composed from the package's binary directories, an admitted
-# CADRUMO_EXTERNAL_BIN_DIRS, and the platform's system directories.
+# CADRUMO_EXTERNAL_BIN_DIRS, declared existing installation directories, and
+# the platform's system directories.
 # ---------------------------------------------------------------------------
 
 [path]
-entries = ["executable", "external", "native", "system"]
+entries = ["executable", "external", "native", "external_defaults", "system"]
 external = "CADRUMO_EXTERNAL_BIN_DIRS"
 windows_system = { variable = "SYSTEMROOT", subpaths = ["System32"] }
 posix_system = ["/usr/bin", "/bin"]
+
+[[path.external_defaults]]
+platform = "windows"
+variable = "USERPROFILE"
+subpaths = [".local", "bin"]
+
+[[path.external_defaults]]
+platform = "windows"
+variable = "USERPROFILE"
+subpaths = ["scoop", "shims"]
+
+[[path.external_defaults]]
+platform = "windows"
+variable = "APPDATA"
+subpaths = ["npm"]
+
+[[path.external_defaults]]
+platform = "posix"
+variable = "HOME"
+subpaths = [".local", "bin"]
+
+[[path.external_defaults]]
+platform = "posix"
+path = "/usr/local/bin"
+
+[[path.external_defaults]]
+platform = "macos"
+path = "/opt/homebrew/bin"
 
 # ---------------------------------------------------------------------------
 # Launch profiles. Each names the image it is compiled into. A profile with an
@@ -418,6 +441,7 @@ base = "groups"
 base_groups = ["system", "session", "terminal", "display", "network"]
 pins = true
 operator = ["locations", "presentation", "remote", "package"]
+pass = ["CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"]
 slots = [{ name = "CADRUMO_PROFILE_ROOT", required = false }]
 path = "package"
 
@@ -452,7 +476,13 @@ base_groups = ["system", "session", "display", "network"]
 pins = true
 # The desktop reads the active profile's identity through this image's sign-in
 # status command; the reveal opt-in un-redacts only opaque profile/bucket ids.
-pass = ["CADRUMO_CLI_REVEAL_IDENTIFIERS"]
+# It passes the operator's proxy on to the profile workers that run setup.
+pass = [
+  "CADRUMO_CLI_REVEAL_IDENTIFIERS",
+  "CADRUMO_PROXY_URL",
+  "CADRUMO_PROXY_USERNAME",
+  "CADRUMO_PROXY_BYPASS",
+]
 path = "package"
 
 [profiles.cadrumo-agent-service]
@@ -529,6 +559,7 @@ pass = ["CADRUMO_EXTERNAL_BIN_DIRS"]
 pins = ["temporary"]
 slots = [
   { name = "CADRUMO_AGENT_HOSTED_ROOT", required = true },
+  { name = "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE", required = false },
 ]
 path = "package"
 
@@ -601,6 +632,17 @@ arguments = [
   { literal = "cadrumo_agent.cli.main" },
   { literal = "providers" },
   { literal = "--declared" },
+  { literal = "--json" },
+]
+
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "status" },
   { literal = "--json" },
 ]
 
@@ -1321,7 +1363,7 @@ name = "windows-agent-providers-takes-the-system-base-only"
 platform = "windows"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json"]
-ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_SAMPLE_SETTING = "dropped", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", TERM = "xterm", CADRUMO_LOG_LEVEL = "DEBUG", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\Windows", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_SAMPLE_SETTING = "dropped", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
 profile = "agent-providers"
 environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
@@ -1331,7 +1373,7 @@ name = "posix-agent-providers-takes-the-system-base-only"
 platform = "posix"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "providers", "--declared", "--json"]
-ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_SAMPLE_SETTING = "dropped", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", CADRUMO_LOCAL_STORAGE_ROOT = "/", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_SAMPLE_SETTING = "dropped", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
 profile = "agent-providers"
 environment = { HOME = "/home/ada", LANG = "C.UTF-8" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
@@ -1341,7 +1383,7 @@ name = "windows-agent-gui-auth-capabilities-takes-the-system-base-only"
 platform = "windows"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui", "--json"]
-ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", PATH = "C:\\elsewhere" }
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", ANTHROPIC_API_KEY = "must-not-cross", PATH = "C:\\elsewhere" }
 profile = "agent-providers"
 environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
@@ -1351,7 +1393,7 @@ name = "posix-agent-gui-auth-capabilities-takes-the-system-base-only"
 platform = "posix"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "auth", "providers", "--interface", "gui", "--json"]
-ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", PATH = "/elsewhere" }
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", DISPLAY = ":0", CADRUMO_AGENT_PORT = "0", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", ANTHROPIC_API_KEY = "must-not-cross", PATH = "/elsewhere" }
 profile = "agent-providers"
 environment = { HOME = "/home/ada", LANG = "C.UTF-8" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
@@ -1361,9 +1403,9 @@ name = "windows-agent-auth-admits-browser-connect-in-its-profile"
 platform = "windows"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "browser", "--timeout", "300"]
-ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
 profile = "agent-auth"
-environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
 path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
 
 [[launch_vectors]]
@@ -1371,9 +1413,9 @@ name = "posix-agent-auth-admits-device-connect-in-its-profile"
 platform = "posix"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "300"]
-ambient = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_LOCAL_STORAGE_ROOT = "/elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", CADRUMO_LOCAL_STORAGE_ROOT = "/elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
 profile = "agent-auth"
-environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp" }
+environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp" }
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]

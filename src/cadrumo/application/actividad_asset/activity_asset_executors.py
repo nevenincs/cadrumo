@@ -8,6 +8,8 @@ from decimal import Decimal
 from typing import Any, cast
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, profile_operation_subject
@@ -29,7 +31,6 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operator_actions.models import PreconditionVerdict
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,

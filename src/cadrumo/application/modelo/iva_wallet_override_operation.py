@@ -9,6 +9,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, StringConstraints, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
@@ -38,7 +40,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import (
     IVA_WALLET_MUTATION_RESULT_MAX_BYTES,

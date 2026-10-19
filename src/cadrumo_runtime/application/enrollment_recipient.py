@@ -20,7 +20,6 @@ from pydantic import SecretBytes
 
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationKeyIssuer,
     EnrollmentRecord,
@@ -29,6 +28,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_access import EnrollmentCredentialBinding
 
 _PRODUCER_MAX_SECONDS = 60.0

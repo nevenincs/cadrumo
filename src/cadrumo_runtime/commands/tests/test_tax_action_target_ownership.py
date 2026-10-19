@@ -11,6 +11,8 @@ from cadrumo.application.cli_exception_preconditions import nested_terminal_prec
 from cadrumo.application.operator_surface.action_targets import ACTION_TARGETS
 from cadrumo.core.operator_action_enums import ActionConditionality
 from cadrumo.core.output_rendering import OutputFormat
+from cadrumo_client.commands import profile_admission as client_profile_admission
+from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.secret_contracts import MachineSecretChannelKind
@@ -114,7 +116,10 @@ def test_self_authenticating_leaves_reject_root_sources_before_profile_or_secret
         profile_admission, "_open_recovery_profile", lambda *_args: pytest.fail("refusal opened a recovery connection")
     )
     monkeypatch.setattr(
-        profile_admission,
+        profile_selection, "runtime_login_target", lambda *_args: pytest.fail("refusal asked the runtime for a profile")
+    )
+    monkeypatch.setattr(
+        client_profile_admission,
         "read_profile_secret_payload",
         lambda *_args, **_kwargs: pytest.fail("refusal read an inapplicable root secret"),
     )

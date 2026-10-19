@@ -41,7 +41,7 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.time.clock import now
@@ -62,6 +62,8 @@ from cadrumo.entrypoints.tests.ledger_attachment_operation_test_support import (
 from cadrumo.entrypoints.tests.ledger_lifecycle_operation_test_support import (
     prepare_ledger_lifecycle_operation_conformance_case,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

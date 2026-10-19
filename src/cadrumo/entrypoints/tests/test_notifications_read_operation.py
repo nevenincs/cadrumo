@@ -58,7 +58,6 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import (
     OperationEffect,
@@ -67,6 +66,8 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

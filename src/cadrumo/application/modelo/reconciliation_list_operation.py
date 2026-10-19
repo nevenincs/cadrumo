@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -32,9 +33,6 @@ from ..operations.profile_guard import require_access_request_profile_payload, r
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .reconciliation_records import (

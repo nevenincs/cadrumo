@@ -19,6 +19,8 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 from ...aggregation.invoice_retencion import (
     InvoiceRetencionProjectionDefect,
@@ -47,7 +49,6 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,

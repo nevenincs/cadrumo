@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..adapters.outbound.google.artifact_receipt_store import GoogleArtifactReceiptStore
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -14,7 +16,6 @@ from ..application.export.publication_receipt import PublicationReceipt, Readabl
 from ..application.export.review_snapshot import ReviewSnapshot
 from ..application.storage.calc_sheets.records import SheetExportPlan, SheetReviewMetadata
 from ..application.storage.calc_sheets.review_labels import ReviewWorkbookLabels
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationAcknowledgement,

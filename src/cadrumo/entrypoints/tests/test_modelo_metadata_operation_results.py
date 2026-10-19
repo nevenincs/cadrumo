@@ -33,7 +33,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import (
@@ -47,6 +46,8 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     MODELO_OPERATION_TEST_ACTOR,
     seeded_modelo_work_unit,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ..adapter_composition import build_work_lifecycle_ports
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime

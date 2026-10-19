@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Literal
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qsl, urlsplit
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
@@ -91,7 +91,12 @@ class AuthProtocol:
                     raise ValueError
                 if url.port not in (None, 443):
                     raise ValueError
-                if {"access_token", "refresh_token", "id_token", "code"} & parse_qs(url.query).keys():
+                query = [(key.lower(), value) for key, value in parse_qsl(url.query, keep_blank_values=True)]
+                if any(key in {"access_token", "refresh_token", "id_token"} for key, _ in query):
+                    raise ValueError
+                codes = [value for key, value in query if key == "code"]
+                # Some authorization pages use a boolean flow flag, never a returned code.
+                if codes and codes != ["true"]:
                     raise ValueError
             elif event.url is not None or event.user_code is not None:
                 raise ValueError

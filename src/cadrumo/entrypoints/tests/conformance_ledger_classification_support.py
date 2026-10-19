@@ -219,7 +219,7 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "before-window",
             datetime(2026, 3, 30, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=9000,
             output_tokens=900,
             cost=Decimal("9.00"),
@@ -227,7 +227,7 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "after-window",
             datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=8000,
             output_tokens=800,
             cost=Decimal("8.00"),
@@ -235,7 +235,7 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "anthropic-priced-first",
             datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=1000,
             output_tokens=200,
             cost=Decimal("1.50"),
@@ -243,7 +243,7 @@ def _seed_diagnostics_usage() -> None:
         _usage_record(
             "anthropic-priced-cached",
             datetime(2026, 4, 5, 9, 0, tzinfo=UTC),
-            provider=LLMProvider.ANTHROPIC,
+            provider=LLMProvider.AGENT,
             input_tokens=500,
             output_tokens=100,
             cost=Decimal("0.25"),

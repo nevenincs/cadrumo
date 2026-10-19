@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ...core.operations import profile_operation_subject
 from ..operations.access_resolution import (
     SINGLE_RUN_COMMITTING_ACTIONS,
@@ -14,12 +17,6 @@ from ..operations.access_resolution import (
     require_declared_action,
 )
 from ..operations.models import OperationRequest
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operation_definitions import (
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,

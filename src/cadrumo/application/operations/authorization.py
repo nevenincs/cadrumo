@@ -8,7 +8,8 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from ..user_profile.access_contracts import AccessAction
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from .models import OperationIdentity, OperationRequest
 
 

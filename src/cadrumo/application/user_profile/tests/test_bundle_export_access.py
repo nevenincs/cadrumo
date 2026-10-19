@@ -12,13 +12,6 @@ from pydantic import ValidationError
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
@@ -31,6 +24,8 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileBundleExportOperationProjection,
     ProfileBundleExportOperationRequest,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, DisclosureCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

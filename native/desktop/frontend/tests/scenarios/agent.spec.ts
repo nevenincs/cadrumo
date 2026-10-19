@@ -44,12 +44,93 @@ const calls = (target: Page) =>
 const replyTo = (text: string) =>
   `Lo miro en tus apuntes. Has escrito: «${text}». En estos datos de prueba no hay nada que revisar.`;
 
+const accountMenuButton = (target: Page) =>
+  target.getByRole("button", {
+    name: label("desktop.titlebar.profile_menu"),
+  });
+const accountMenu = (target: Page) => target.locator(".account-menu");
+
 test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
     sessionStorage.setItem("layout-cleared", "1");
   });
+});
+
+/** A label as a literal pattern, for one with numbers left open. */
+const escapedPattern = (text: string) =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+test("a ready runtime is observed again after the profile is locked and unlocked", async ({
+  page: target,
+}) => {
+  scenarioOnly("The scenario host controls these status and catalog reads.");
+  await target.goto("/scenarios.html?scenario=signed-in&latency=2000&bar=off");
+  await expect
+    .poll(
+      async () =>
+        (await calls(target)).filter((call) => call === "agentProviderCatalog")
+          .length,
+    )
+    .toBe(1);
+  await expect
+    .poll(
+      async () =>
+        (await calls(target)).filter(
+          (call) => call === "agentProviderCatalogResolved",
+        ).length,
+    )
+    .toBe(1);
+
+  await accountMenuButton(target).click();
+  await accountMenu(target)
+    .getByRole("menuitem", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await accountMenu(target)
+    .getByRole("menuitem", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    })
+    .click();
+  await expect(target.locator("#profile-password")).toBeFocused();
+  await target.locator("#profile-password").fill("anything");
+  await target
+    .locator(".sign-in")
+    .getByRole("button", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    })
+    .click();
+
+  await expect
+    .poll(
+      async () =>
+        (await calls(target)).filter((call) => call === "agentStatus").length,
+    )
+    .toBeGreaterThanOrEqual(2);
+  // The second read is still waiting on the host. A ready value from before
+  // sign-out must not trigger a catalog read for the newly unlocked profile.
+  expect(
+    (await calls(target)).filter((call) => call === "agentProviderCatalog"),
+  ).toHaveLength(1);
+  await expect
+    .poll(
+      async () =>
+        (await calls(target)).filter((call) => call === "agentStatusResolved")
+          .length,
+    )
+    .toBeGreaterThan(1);
+  await expect
+    .poll(
+      async () =>
+        (await calls(target)).filter((call) => call === "agentProviderCatalog")
+          .length,
+    )
+    .toBe(2);
 });
 
 test("a message goes when it is sent, and its reply streams in once", async ({
@@ -94,7 +175,9 @@ test("a message goes when it is sent, and its reply streams in once", async ({
   // What the agent served of the reply: what it ran with and its tokens.
   await expect(replyFacts(target)).toHaveText([
     "Ran with: Example Alpha, Fixture Deep",
-    /^Tokens: [\d,]+ in, [\d,]+ out$/,
+    new RegExp(
+      `^${escapedPattern(label("desktop.agent.usage", { input: "NUMBER", output: "NUMBER" })).replaceAll("NUMBER", "[\\d,]+")}$`,
+    ),
   ]);
 
   // The conversation was watched before anything was sent to it, and read
@@ -217,8 +300,9 @@ test("a run that failed before it wrote shows why, from the run, with no message
   const failure = agentTurns(target);
   await expect(failure).toHaveCount(1);
   await expect(failure).toContainText(
-    `${label("desktop.agent.condition_provider_overloaded")}: The provider answered 529 overloaded_error.`,
+    label("desktop.agent.condition_provider_overloaded"),
   );
+  await expect(failure).not.toContainText("529 overloaded_error");
   await expect(toolRows(target)).toHaveCount(0);
   await expect(conversation(target)).not.toContainText(
     label("desktop.agent.working"),
@@ -243,7 +327,56 @@ test("a conversation from the host that failed before it wrote shows the same", 
   await expect(personTurns(target)).toHaveCount(1);
   await expect(agentTurns(target)).toHaveCount(1);
   await expect(agentTurns(target)).toContainText(
-    `${label("desktop.agent.condition_provider_overloaded")}: The provider answered 529 overloaded_error.`,
+    label("desktop.agent.condition_provider_overloaded"),
+  );
+  await expect(agentTurns(target)).not.toContainText("529 overloaded_error");
+});
+
+test("an unauthenticated reply opens provider settings without showing internal failure prose", async ({
+  page: target,
+}) => {
+  scenarioOnly("the scenario host returns a typed authentication failure");
+  await open(target);
+  await send(target, "El proveedor requiere iniciar sesión.");
+  await settled(target);
+
+  const failed = agentTurns(target);
+  await expect(failed).toContainText(label("desktop.agent.lane_signed_out"));
+  await expect(failed).not.toContainText("auth_required");
+  await expect(conversation(target)).not.toContainText(
+    label("desktop.agent.working"),
+  );
+  await expect(
+    failed.getByRole("button", { name: label("desktop.agent.retry") }),
+  ).toHaveCount(0);
+
+  await failed
+    .getByRole("button", { name: label("desktop.agent.settings") })
+    .click();
+  await expect(
+    column(target).getByRole("heading", {
+      name: label("desktop.providers.title"),
+    }),
+  ).toBeVisible();
+});
+
+test("an unexpected provider condition uses the generic localized failure", async ({
+  page: target,
+}) => {
+  scenarioOnly("the scenario host sends an unexpected provider condition");
+  await open(target);
+  await send(target, "La respuesta trae una condición desconocida.");
+  await settled(target);
+
+  const failed = agentTurns(target);
+  await expect(failed).toContainText(label("desktop.agent.reply_failed"));
+  await expect(failed).not.toContainText("permission_requests");
+  await expect(failed).not.toContainText("unexpected_internal_condition");
+  await expect(
+    failed.getByRole("button", { name: label("desktop.agent.settings") }),
+  ).toHaveCount(0);
+  await expect(conversation(target)).not.toContainText(
+    label("desktop.agent.working"),
   );
 });
 
@@ -305,7 +438,7 @@ test("a conversation of several runs shows each message once, the tools before t
   // What the replies ran with and the tokens they used, all of them counted.
   await expect(replyFacts(target)).toHaveText([
     "Ran with: Example Alpha, Fixture Deep, High",
-    "Tokens: 39,290 in, 1,950 out",
+    label("desktop.agent.usage", { input: "39,290", output: "1,950" }),
   ]);
 });
 
@@ -660,11 +793,14 @@ async function openSettings(target: Page) {
 }
 
 const providerBox = (settings: Locator) =>
-  settings.getByRole("combobox", { name: label("desktop.agent.provider") });
+  settings.getByRole("button", { name: label("desktop.agent.provider") });
 const modelBox = (settings: Locator) =>
   settings.getByRole("combobox", { name: label("desktop.agent.model") });
 const effortBox = (settings: Locator) =>
   settings.getByRole("combobox", { name: label("desktop.agent.effort") });
+
+const pickerOptions = (target: Page) =>
+  target.getByRole("listbox").getByRole("option");
 
 /** Chooses a catalog lane by identity when providers share a name. */
 async function chooseLane(target: Page, settings: Locator, way: string) {
@@ -679,7 +815,7 @@ test("each catalog lane is one entry of the list with its provider's mark", asyn
   await open(target);
   const settings = await openSettings(target);
   await providerBox(settings).click();
-  const options = target.getByRole("option");
+  const options = pickerOptions(target);
   await expect(options).toHaveCount(lanes.length);
   await expect(options.locator("[data-slot=provider-mark]")).toHaveCount(
     lanes.length,
@@ -697,9 +833,9 @@ test("each catalog lane is one entry of the list with its provider's mark", asyn
       await expect(entry).toHaveAttribute("aria-disabled", "true");
   }
   // Those that cannot run stay in the list, disabled, with their reason.
-  await expect(target.locator("[role=option][aria-disabled=true]")).toHaveCount(
-    lanes.filter((lane) => !lane.health.selectable).length,
-  );
+  await expect(
+    target.getByRole("listbox").locator("[role=option][aria-disabled=true]"),
+  ).toHaveCount(lanes.filter((lane) => !lane.health.selectable).length);
   await expect(options.filter({ hasText: nameOf("delta") })).toContainText(
     label("desktop.agent.lane_not_configured"),
   );
@@ -807,7 +943,7 @@ test("the efforts offered follow the model chosen", async ({
   await modelBox(settings).selectOption("fixture-tiered");
   await expect(effortBox(settings)).toHaveValue("medium");
   // A model's other settings are not offered: a run does not take them.
-  await expect(settings.getByRole("combobox")).toHaveCount(3);
+  await expect(settings.getByRole("combobox")).toHaveCount(2);
   await expect(settings).not.toContainText("Fixture service tier");
 });
 

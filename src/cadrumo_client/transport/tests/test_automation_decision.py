@@ -28,13 +28,11 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
 )
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, disclosure_digest
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationProposalProjection,
     AutomationReceiptProjection,
     AutomationReviewProjection,
     AutomationScopeProjection,
-    EnrollmentKind,
     EnrollmentStage,
 )
 from cadrumo.application.user_profile.automation_operations import (
@@ -51,6 +49,9 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import disclosure_digest
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.operation_access import (

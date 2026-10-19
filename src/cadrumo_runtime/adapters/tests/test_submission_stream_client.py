@@ -11,8 +11,8 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.hashing import sha256_hex
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.operation_access import (
     OperationPayloadReady,

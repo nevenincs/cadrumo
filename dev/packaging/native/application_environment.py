@@ -33,7 +33,7 @@ ARGUMENT_KINDS = NUMERIC_ARGUMENT_KINDS | {"revision", "identifier"}
 OPTION_KINDS = frozenset({"revision"})
 BASE_GROUPS = ("system", "session", "terminal", "display", "network")
 PLATFORMS = ("windows", "posix")
-PATH_ENTRIES = frozenset({"executable", "external", "native", "system"})
+PATH_ENTRIES = frozenset({"executable", "external", "native", "external_defaults", "system"})
 PIN_KINDS = ("root", "temporary", "authority")
 
 # Declared names reach C and Rust string literals and process environments unescaped.
@@ -48,6 +48,7 @@ _OPTION = re.compile(r"--[a-z][a-z0-9]*(-[a-z0-9]+)*")
 # An opaque revision is bounded printable ASCII that cannot be read as an option or a path.
 _REVISION = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
 _IDENTIFIER = re.compile(r"[a-z][a-z0-9_]{0,63}")
+_PATH_COMPONENT = re.compile(r"[A-Za-z0-9._-]+")
 
 
 class ApplicationEnvironmentError(ValueError):
@@ -70,6 +71,16 @@ class LaunchSlot:
     name: str
     kind: str
     required: bool
+
+
+@dataclass(frozen=True)
+class ExternalPathDefault:
+    """A declaration-owned installation directory considered for an admitted image's PATH."""
+
+    platform: str
+    variable: str | None
+    path: str
+    subpaths: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -122,6 +133,7 @@ class ApplicationEnvironment:
     authority: FixedValue
     path_entries: tuple[str, ...]
     path_external: str
+    external_path_defaults: tuple[ExternalPathDefault, ...]
     windows_system: tuple[str, tuple[str, ...]]
     posix_system: tuple[str, ...]
     profiles: Mapping[str, dict[str, Any]]
@@ -438,6 +450,55 @@ def _relative(value: object, where: str) -> str:
     if any(part in {"", ".", ".."} for part in value.split("/")):
         raise _fail(f"{where} must not hold empty, current or parent components")
     return value
+
+
+def _external_path_defaults(
+    raw: object,
+    base: Mapping[str, Mapping[str, tuple[str, ...]]],
+) -> tuple[ExternalPathDefault, ...]:
+    defaults: list[ExternalPathDefault] = []
+    seen: set[tuple[str, str | None, str, tuple[str, ...]]] = set()
+    for index, item in enumerate(_list(raw, "path.external_defaults")):
+        where = f"path.external_defaults[{index}]"
+        entry = _table(item, where)
+        _keys(entry, where, {"platform"}, {"variable", "path", "subpaths"})
+        platform = entry["platform"]
+        if not isinstance(platform, str) or platform not in {"windows", "posix", "macos"}:
+            raise _fail(f"{where}.platform must be windows, posix or macos")
+        has_variable, has_path = "variable" in entry, "path" in entry
+        if has_variable == has_path:
+            raise _fail(f"{where} must declare exactly one of variable or path")
+        family = "windows" if platform == "windows" else "posix"
+        subpaths = _strings(entry.get("subpaths", []), f"{where}.subpaths", _PATH_COMPONENT)
+        if any(part in {".", ".."} for part in subpaths):
+            raise _fail(f"{where}.subpaths must not contain current or parent components")
+        if has_variable:
+            variable = entry["variable"]
+            if not isinstance(variable, str) or not _BASE_NAME.fullmatch(variable):
+                raise _fail(f"{where}.variable is malformed")
+            canonical_variable = variable.upper() if family == "windows" else variable
+            if canonical_variable not in base[family]["system"]:
+                raise _fail(f"{where}.variable must be a declared {family} system base name")
+            path = ""
+        else:
+            raw_path = entry["path"]
+            if not isinstance(raw_path, str) or not raw_path:
+                raise _fail(f"{where}.path must be a non-empty absolute path")
+            path_type: type[PurePath] = PureWindowsPath if family == "windows" else PurePosixPath
+            candidate = path_type(raw_path)
+            if not candidate.is_absolute() or ".." in candidate.parts:
+                raise _fail(f"{where}.path must be an absolute path without parent components")
+            if subpaths:
+                raise _fail(f"{where}.subpaths is only valid with variable")
+            variable = None
+            path = str(candidate)
+        default = ExternalPathDefault(platform, variable, path, subpaths)
+        identity = (default.platform, default.variable, default.path, default.subpaths)
+        if identity in seen:
+            raise _fail(f"{where} repeats an installation directory")
+        seen.add(identity)
+        defaults.append(default)
+    return tuple(defaults)
 
 
 def _integer(value: object, where: str, *, minimum: int = 1) -> int:
@@ -810,12 +871,13 @@ def parse(text: str) -> ApplicationEnvironment:
         raise _fail("pins.authority must name a layout path")
     temporary_member = _temporary_member(pins["temporary_member"], names)
     path = _table(document["path"], "path")
-    _keys(path, "path", {"entries", "external", "windows_system", "posix_system"})
+    _keys(path, "path", {"entries", "external", "windows_system", "posix_system"}, {"external_defaults"})
     entries = _strings(path["entries"], "path.entries")
     if not set(entries) <= PATH_ENTRIES or "executable" not in entries:
         raise _fail(f"path.entries must be drawn from {sorted(PATH_ENTRIES)} and include executable")
     if names.get(path["external"], {}).get("kind") != "directory_list":
         raise _fail("path.external must name a declared directory_list name")
+    external_path_defaults = _external_path_defaults(path.get("external_defaults", []), base)
     windows_system = _table(path["windows_system"], "path.windows_system")
     _keys(windows_system, "path.windows_system", {"variable", "subpaths"})
     if not isinstance(windows_system["variable"], str) or not _BASE_NAME.fullmatch(windows_system["variable"]):
@@ -877,6 +939,7 @@ def parse(text: str) -> ApplicationEnvironment:
         authority=authority,
         path_entries=entries,
         path_external=path["external"],
+        external_path_defaults=external_path_defaults,
         windows_system=(
             windows_system["variable"],
             _strings(windows_system["subpaths"], "path.windows_system.subpaths"),
@@ -1013,6 +1076,8 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
     for entry in declaration.path_entries:
         if entry in {"executable", "native"}:
             path_entries.append({"kind": "package", "value": _package_relative(layout, entry)})
+        elif entry == "external_defaults":
+            path_entries.append({"kind": entry, "value": declaration.path_external})
         else:
             path_entries.append({"kind": entry, "value": declaration.path_external if entry == "external" else ""})
     return {
@@ -1027,6 +1092,15 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
         },
         "path": {
             "entries": path_entries,
+            "external_defaults": [
+                {
+                    "platform": default.platform,
+                    "variable": default.variable,
+                    "path": default.path,
+                    "subpaths": list(default.subpaths),
+                }
+                for default in declaration.external_path_defaults
+            ],
             "windows_system": {
                 "variable": declaration.windows_system[0],
                 "subpaths": list(declaration.windows_system[1]),
@@ -1087,6 +1161,10 @@ def _rust_argument(argument: Mapping[str, Any]) -> str:
 
 def rust_lines(section: Mapping[str, Any]) -> list[str]:
     """Emit the compiled launch profiles and invocation tables as Rust constants."""
+
+    def rust_option_string(value: str | None) -> str:
+        return "None" if value is None else f"Some({_rust_string(value)})"
+
     lines = [
         "pub struct LaunchFixed { pub name: &'static str, pub source: &'static str, pub value: &'static str }",
         "pub struct LaunchSlot { pub name: &'static str, pub kind: &'static str, pub required: bool }",
@@ -1115,6 +1193,8 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         "    pub greater: &'static [(&'static str, &'static str)],",
         "}",
         "pub struct LaunchPathEntry { pub kind: &'static str, pub value: &'static str }",
+        "pub struct LaunchExternalPathDefault { pub platform: &'static str, pub variable: Option<&'static str>, "
+        "pub path: &'static str, pub subpaths: &'static [&'static str] }",
         "pub struct LaunchName { pub name: &'static str, pub kind: &'static str, pub role: &'static str }",
         f"pub const LAUNCH_SCHEMA: u32 = {section['schema']};",
         f"pub const LAUNCH_PROFILE_REFUSED_EXIT: u32 = {section['native_host']['launch_profile_refused']};",
@@ -1128,6 +1208,16 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
         + ", ".join(
             f"LaunchPathEntry {{ kind: {_rust_string(entry['kind'])}, value: {_rust_string(entry['value'])} }}"
             for entry in section["path"]["entries"]
+        )
+        + "];",
+        "pub const LAUNCH_EXTERNAL_PATH_DEFAULTS: &[LaunchExternalPathDefault] = &["
+        + ", ".join(
+            "LaunchExternalPathDefault { "
+            f"platform: {_rust_string(default['platform'])}, "
+            f"variable: {rust_option_string(default['variable'])}, "
+            f"path: {_rust_string(default['path'])}, "
+            f"subpaths: {_rust_strings(default['subpaths'])} }}"
+            for default in section["path"]["external_defaults"]
         )
         + "];",
         "pub const LAUNCH_WINDOWS_SYSTEM_VARIABLE: &str = "
@@ -1295,10 +1385,12 @@ def reference_define(
     root: str,
     layout_paths: Mapping[str, str],
     suffix: str,
+    existing_dirs: Sequence[str] = (),
 ) -> dict[str, str]:
     """Define a profile's environment as the host must, for vectors whose root is already resolved.
 
     Directory and executable launch parameters are not checked against a filesystem here.
+    `existing_dirs` supplies the optional directories materialized by the vector oracle.
     """
     path_type: type[PurePath] = PureWindowsPath if family == "windows" else PurePosixPath
     folded = family == "windows"
@@ -1377,8 +1469,38 @@ def reference_define(
         for entry in declaration.path_entries:
             if entry == "executable":
                 entries.append(str(package_path))
+            elif entry == "external" and declaration.path_external in {*profile["operator"], *profile["pass"]}:
+                directories = get(declaration.path_external)
+                if directories:
+                    separator = ";" if family == "windows" else ":"
+                    entries.extend(
+                        str(path_type(directory))
+                        for directory in directories.split(separator)
+                        if str(path_type(directory)) in existing_dirs
+                    )
             elif entry == "native":
                 entries.append(str(package_path / layout_paths["native"]))
+            elif entry == "external_defaults" and declaration.path_external in {
+                *profile["operator"],
+                *profile["pass"],
+            }:
+                for default in declaration.external_path_defaults:
+                    if default.platform == "windows" and family != "windows":
+                        continue
+                    if default.platform in {"posix", "macos"} and family != "posix":
+                        continue
+                    if default.variable is None:
+                        candidate = path_type(default.path)
+                    else:
+                        if default.variable not in base:
+                            continue
+                        base_directory = get(default.variable)
+                        if base_directory is None or not path_type(base_directory).is_absolute():
+                            continue
+                        candidate = path_type(base_directory).joinpath(*default.subpaths)
+                    rendered = str(candidate)
+                    if rendered in existing_dirs:
+                        entries.append(rendered)
             elif entry == "system":
                 if family == "windows":
                     system = get(declaration.windows_system[0])

@@ -11,15 +11,11 @@ import typer
 from pydantic import SecretStr
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, ProfileReceiptRefusedError
-from cadrumo.application.user_profile.profile_pointer import (
-    active_profile_pointer_transaction,
-    observe_active_profile_pointer,
-)
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo.core.output_rendering import OutputFormat, render_command_output
+from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.secure_input import (
@@ -32,6 +28,7 @@ from cadrumo_client.commands.secure_input import (
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import HumanSignedOut
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
@@ -146,13 +143,8 @@ def _previous_profile_label(outcome: ProfileLoginOutcome) -> str | None:
     """Name the profile a cross-profile handover signed out by its label, as the active profile is named."""
     if outcome.closed_previous_bucket_id is None:
         return None
-    from cadrumo.application.user_profile.login_session import resolve_login_target
-    from cadrumo.domain.user_profile.errors import ProfileNotFoundError
-
-    try:
-        return resolve_login_target(outcome.closed_previous_bucket_id).label
-    except ProfileNotFoundError:
-        return None
+    target = profile_selection.runtime_login_target(outcome.closed_previous_bucket_id)
+    return None if target is None else target.label
 
 
 def _login_notices(outcome: ProfileLoginOutcome, *, previous_profile: str | None = None) -> tuple[Notice, ...]:
@@ -198,10 +190,10 @@ def _session_not_persisted_notice(outcome: ProfileLoginOutcome) -> Notice:
     outcome and decides the remedy. A usable keychain here leaves the cause
     with the runtime, and the message says so rather than blaming the keychain.
     """
-    from cadrumo.application.user_profile.login_session import profile_session_keychain_unavailability
     from cadrumo.core.profile_session import KeychainUnavailability
+    from cadrumo_client.transport.receipt_proof import keychain_unavailability
 
-    keychain = profile_session_keychain_unavailability()
+    keychain = keychain_unavailability()
     if keychain is None:
         message = tr("cli.config.login.notices.session_not_persisted_unconfirmed")
     elif keychain is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS:
@@ -232,18 +224,16 @@ def _login_through_the_prompt(
     Selection is only a hint for later invocations. Neither candidate failure
     nor successful selection retires another connection or profile receipt.
     """
-    from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, resolve_login_target
-    from cadrumo.domain.user_profile.errors import ProfileNotFoundError
+    from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
     interactive = terminal_can_prompt_for_secrets()
-    captured = observe_active_profile_pointer()
-    target_name = name or captured.bucket_id
+    # The runtime answers which profile is selected, and selects the one signed in to.
+    target_name = name or profile_selection.runtime_selected_profile_id()
     if target_name is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
-    try:
-        target = resolve_login_target(target_name)
-    except ProfileNotFoundError:
-        raise _unknown_profile_refusal(target_name) from None
+    target = profile_selection.runtime_login_target(target_name)
+    if target is None:
+        raise _unknown_profile_refusal(target_name.strip() or target_name)
     _pin_render_language_to_target_bucket(ctx, bucket_id=target.bucket_id)
     client = asyncio.run(
         open_installed_client(profile_id=UUID(target.bucket_id), frontend=OperationFrontendProjection.CLI)
@@ -281,13 +271,8 @@ def _login_through_the_prompt(
         receipt = admitted.human_login
         if receipt is None:
             raise RefusalError(RefusalCode.INVALID_FRAME)
-        # The live connection proves admission; the persisted pointer remains
-        # non-authoritative metadata and cannot retarget an existing session.
+        # The live connection proves admission. The runtime selected the profile as it admitted the sign-in.
         _require_current_profile_login(client)
-        with active_profile_pointer_transaction() as selection:
-            # A concurrent sign-in to the same profile already published this selection.
-            if selection.read().bucket_id != target.bucket_id:
-                selection.compare_and_select(expected=captured, bucket_id=target.bucket_id)
         # One profile is signed in at a time; there was at most one other to sign out.
         signed_out = next(iter(admitted.signed_out_profile_ids), None)
         return ProfileLoginOutcome(
@@ -370,15 +355,11 @@ def config_logout(
     _activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
-    captured = observe_active_profile_pointer()
-    target = read_profile_bucket_by_id(captured.bucket_id) if captured.bucket_id is not None else None
+    selected = profile_selection.runtime_selected_profile_id()
+    target = None if selected is None else profile_selection.runtime_login_target(selected)
     outcome = None
-    if captured.bucket_id is not None:
-        client = asyncio.run(
-            open_installed_client(profile_id=UUID(captured.bucket_id), frontend=OperationFrontendProjection.CLI)
-        )
+    if selected is not None:
+        client = asyncio.run(open_installed_client(profile_id=UUID(selected), frontend=OperationFrontendProjection.CLI))
         try:
             from cadrumo_client.commands.profile_binding import subscribe_profile_notices
 
@@ -411,9 +392,9 @@ def config_logout(
             ) from None
         finally:
             client.close()
-    # Selection is a non-authoritative login target, not human access. Keep it
-    # available for the next exact login; never overwrite a concurrent selection.
-    signed_out = captured.bucket_id
+    # Selection is a non-authoritative login target, not human access: the
+    # runtime keeps it for the next login, and a sign-out writes none.
+    signed_out = selected
     logged_out_profile = target.label if target is not None else signed_out
 
     result = _config_logout_result(
@@ -451,8 +432,8 @@ __all__ = ["config_login", "config_logout"]
 
 
 def _require_current_profile_login(client: FrontendClient) -> None:
-    """Require the exact connected authenticated runtime session before selecting its pointer."""
-    from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+    """Require the exact connected authenticated runtime session before reporting the sign-in."""
+    from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
     current = client.status().status
     if (
@@ -481,13 +462,15 @@ def _activate_subcommand_output_language(ctx: typer.Context, language: OutputLan
 
 def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     """Translate the runtime's typed session refusal at the command boundary."""
-    from cadrumo.application.user_profile.access_contracts import AccessDenialCode
     from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+    from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
     sign_in = error.sign_in
     key: str | None = None
     if sign_in is not None and sign_in.reason == "throttled":
         key = "errors.refused.refused_profile_login_throttled"
+    elif sign_in is not None and sign_in.reason == "credential_rejected":
+        key = "application.user_profile.errors.profile_authentication_refused"
     elif sign_in is not None and isinstance(sign_in.reason, ProfileSessionRefusalReason):
         if sign_in.binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
             key = "cli.config.errors.profile_session_login_mismatch"
@@ -526,16 +509,14 @@ def _emit_envelope(
     """Render a typed direct-auth result through the shared success boundary."""
     from cadrumo.application.operator_output.emit import emit_operator_json_success
     from cadrumo.application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-    from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
     root = ctx.find_root()
     root_state = root.obj if isinstance(root.obj, dict) else {}
     raw_format = root_state.get("format", root.params.get("format", root.params.get("format_", "text")))
     output_format = raw_format if isinstance(raw_format, OutputFormat) else OutputFormat(raw_format)
-    active_id = resolve_active_bucket_id()
-    pointer = None if active_id is None else read_profile_bucket_by_id(active_id)
-    active_profile = None if pointer is None else pointer.label
+    active_id = profile_selection.command_profile_id()
+    target = None if active_id is None else profile_selection.runtime_login_target(active_id)
+    active_profile = None if target is None else target.label
     if output_format is OutputFormat.JSON:
         emit_operator_json_success(command, result, notices=notices, active_profile=active_profile)
         return

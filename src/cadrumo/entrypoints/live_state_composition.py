@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, override
 from uuid import UUID
 
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.inbound.notificacion.document_reader import NotificationDocumentReader
@@ -130,7 +131,6 @@ from ..application.live.session import SessionWriteReporter, active_verified_ses
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
-from ..application.user_profile.automation_custody_port import AutomationCustodyError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError

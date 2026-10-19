@@ -9,7 +9,8 @@ from uuid import UUID, uuid4
 
 from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessDenied, Availability
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,

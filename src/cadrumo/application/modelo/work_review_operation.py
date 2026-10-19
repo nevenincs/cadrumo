@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ..operations.access_resolution import (
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -23,9 +25,6 @@ from ..operations.profile_guard import require_access_request_work_unit_payload,
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history_operation import bind_profile_history_ports, read_profile_work_unit
 from .history_ports import ModeloHistoryPortsFactory

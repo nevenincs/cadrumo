@@ -64,18 +64,12 @@ from cadrumo.application.operations.registry import (
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
     AccessSession,
-    DisclosureCategory,
-    DisclosurePermission,
     ProfileAccessBinding,
     SessionKind,
     SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.core.i18n.translatable import Translatable as tr
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
@@ -86,6 +80,14 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest, project_document_page
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest

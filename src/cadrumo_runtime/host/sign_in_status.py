@@ -1,4 +1,4 @@
-"""Observe shared sign-in without constructing a profile host or touching keychain custody."""
+"""Observe shared sign-in and the selection without constructing a profile host or touching keychain custody."""
 
 from __future__ import annotations
 
@@ -12,9 +12,15 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import StorageError
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
+from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
+from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
 from cadrumo.core.base64_codec import b64_encode
+from cadrumo.core.bucket_pointer import read_pointer_selection
+from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus
 from cadrumo_client.transport.installation import read_runtime_installation
@@ -70,3 +76,47 @@ def observe_sign_in(
         )
     except (OSError, ValueError, StorageError, ProfileCustodyRecordError, AutomationCustodyError, RefusalError):
         return SignInStatus(presence=SignInPresence.UNKNOWN)
+
+
+def observe_active_profile(
+    *,
+    root: Path,
+    storage_identity: str,
+    login: OsLoginContext,
+    instant: datetime,
+) -> tuple[UUID | None, UUID | None, SignInPresence]:
+    """Return the selected profile, the signed-in profile and the sign-in's presence, granting nothing.
+
+    One profile is signed in at a time, and the runtime selects the profile it
+    signs in, so the live sign-in is read for the selected profile alone. A
+    selection that cannot be read is unknown, never "nothing selected".
+    """
+    try:
+        selected = read_pointer_selection(root).bucket_id
+    except (OSError, ValueError, ActiveProfilePointerError):
+        return None, None, SignInPresence.UNKNOWN
+    if selected is None:
+        return None, None, SignInPresence.ABSENT
+    try:
+        profile_id = UUID(selected)
+    except ValueError:
+        return None, None, SignInPresence.UNKNOWN
+    status = observe_sign_in(
+        root=root, storage_identity=storage_identity, profile_id=profile_id, login=login, instant=instant
+    )
+    signed_in = profile_id if status.presence is SignInPresence.PRESENT else None
+    return profile_id, signed_in, status.presence
+
+
+def resolve_login_target(*, root: Path, name: str) -> ProfileBucketPointer | None:
+    """Return the live profile ``name`` names by identifier or exact label, or ``None``.
+
+    An ambiguous label names no profile: the operator names it by its identifier.
+    The request's connection thread inherits no composition, so the profile
+    persistence it reads is bound for the length of the read.
+    """
+    with composed_profile_persistence_ports():
+        try:
+            return resolve_profile_bucket(name.strip(), root=root)
+        except ProfileLabelAmbiguousError:
+            return None

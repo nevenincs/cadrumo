@@ -11,51 +11,41 @@ consent" assertion below passes equally against a path that refuses always --
 including one that can no longer dispatch at all -- so a refusal-only suite
 would be satisfied by a broken feature. The control therefore mints a REAL token
 through the real minting path and drives a real HTTP request into a real
-loopback endpoint, asserting the body arrived. It could genuinely have failed:
-if a minted token did not satisfy the dispatch-point gate, the queue would be
-empty.
+recording agent service, asserting the body arrived. It could genuinely have
+failed: if a minted token did not satisfy the dispatch-point gate, the queue
+would be empty.
 
 The refusals are asserted on their CONSEQUENCE rather than on the call raising.
 Where a value was chosen by the code -- which surface a token names, whether a
 provider reached the request -- the assertion names that value, because "it
 raised" is equally true of a surface that refuses for an unrelated reason.
 
-No model runs. The endpoint is loopback and nothing leaves the machine.
+No model runs. The service is a recording stand-in and nothing leaves the machine.
 """
 
 from __future__ import annotations
 
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
-from typing import override
 
 import pytest
-from pydantic import SecretStr
 
 from ....adapters.outbound.llm.client import LLMClient
 from ....adapters.outbound.llm.consent import mint_evidence_consent_token
 from ....adapters.outbound.llm.errors import LLMConsentError
 from ....adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
+from ....adapters.outbound.llm.tests.model_run_support import serving_agent
 from ....adapters.persistence.llm.cache import LLMCache
 from ....adapters.persistence.llm.usage import UsageRecorder
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ....core.config import override_settings
 from ....core.config_support import LLMProvider
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.fixtures.settings import EnvFileFreeSettings
-from ....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    openai_chat_reply,
-    read_text_body,
-    serving_loopback,
-    write_json_response,
-)
 
 # INTEGRATION, not unit, and the reason is a production guard rather than a
 # preference: a consented off-host dispatch writes a consent-ledger entry, and
@@ -87,15 +77,13 @@ _SURFACE = "cli:ledger.evidence.extract"
 def _settings(tmp_path: Path, *, cloud_upload_permitted: bool, gestor_mode: bool = False) -> EnvFileFreeSettings:
     """Build settings with the LLM stores inside ``tmp_path``.
 
-    The OpenAI key is populated in EVERY case, refusals included. An absent
-    credential is an accident that looks like a control: with the key unset the
-    provider refuses first, and the suite would go green on a consent boundary
-    that had stopped working.
+    Every case binds a service that would answer, refusals included. An
+    unreachable service is an accident that looks like a control: with no
+    service the run refuses first, and the suite would go green on a consent
+    boundary that had stopped working.
     """
     return EnvFileFreeSettings(
         cadrumo_llm_provider=LLMProvider.LOCAL,
-        cadrumo_llm_model="gpt-oss",
-        cadrumo_llm_openai_api_key=SecretStr("loopback-key"),
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -105,30 +93,14 @@ def _settings(tmp_path: Path, *, cloud_upload_permitted: bool, gestor_mode: bool
 
 
 @contextmanager
-def _serve_openai() -> Generator[tuple[str, Queue[str]]]:
-    """Serve an OpenAI-shaped endpoint on loopback, recording every body that arrives.
+def _serve_agent() -> Generator[Queue[str]]:
+    """Stand in for the agent service behind the model-run port, recording every run body.
 
     The queue is what makes "the document was transmitted" an observation rather
     than an inference from the absence of an exception.
     """
-    bodies: Queue[str] = Queue()
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_POST(self) -> None:
-            bodies.put(read_text_body(self))
-            write_json_response(
-                self,
-                openai_chat_reply(
-                    '{"taxable_base": "100,00"}',
-                    prompt_tokens=1,
-                    completion_tokens=1,
-                ),
-                status=HTTPStatus.OK,
-            )
-
-    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
-        yield endpoint, bodies
+    with serving_agent(replies=('{"taxable_base": "100,00"}',)) as port:
+        yield port.bodies
 
 
 def _transcription() -> DocumentTranscription:
@@ -183,10 +155,9 @@ def test_a_minted_token_carries_an_evidence_read_all_the_way_to_the_endpoint(
         evidence_content_address=_CONTENT_ADDRESS,
     )
 
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.OPENAI,
-            model="gpt-4.1",
+            provider=LLMProvider.AGENT,
             settings=settings,
             client=_client(settings),
             consent_token=token,
@@ -216,10 +187,9 @@ def test_the_same_read_without_the_token_reaches_nothing(
     _ = runtime_profile
     settings = _settings(tmp_path, cloud_upload_permitted=True)
 
-    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+    with _serve_agent() as bodies:
         extractor = TextInvoiceFieldExtractor(
-            provider=LLMProvider.OPENAI,
-            model="gpt-4.1",
+            provider=LLMProvider.AGENT,
             settings=settings,
             client=_client(settings),
             operation=operation,

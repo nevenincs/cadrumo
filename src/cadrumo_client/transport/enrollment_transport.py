@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 from pydantic import SecretBytes
 
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.enrollment_access import (

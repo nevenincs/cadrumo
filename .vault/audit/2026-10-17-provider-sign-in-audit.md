@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#provider-sign-in'
 date: '2026-10-17'
-modified: '2026-10-17'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c2e6f91e712b35652e5880f593753a52a5bdc2e9d94732bb0bf9c9bec4e6f36'
+body_hash: 'sha256:c5e27b34a8cd3ca27cebcae1758812e8fdedb7e2aacb0b2974d6c1bd276eef7f'
 related:
   - "[[2026-10-17-provider-sign-in-plan]]"
 ---
@@ -78,3 +78,44 @@ The final app-payload build passed and the assembled bundle.agent and bundle.pro
 Manual relocation required a separate runtime identity recovery. The displaced .runtime/installation.json retained its old storage identity; status translated that refusal to unknown, blocking the startup readiness gate, while authenticated logout exposed runtime_root_mismatch. With all package processes stopped, the old nonsecret record was archived outside .runtime without modification. Normal profile admission then generated a fresh root-bound installation identity. Password-assisted production config logout succeeded, followed by a successful actual GUI password login. Profile, keystore and agent identity files were retained. A new installation creates new automation and sign-in bindings; old automation grants are not adopted. This repair is confined to the disposable development environment, not a change to identity verification.
 
 S04 prerequisite repairs and scoped static review pass. S03 remains open for the previously recorded repository gate failures and uncompleted live-account/model-turn evidence. The window is closed. Repeat verification uses the local build/windows-x64/launch-provider-sign-in-dev.ps1 launcher, which selects an external debug data root and refuses Git ancestry. Direct launches do not inherit that script's development override.
+
+### normal-launch-sign-in-review | medium | Retry callbacks and input validation need correction
+
+Independent integrated S05 review found that delayed cancel/browser-opening responses could overwrite a newer retry in ProviderSignInDialog.tsx; bind these callbacks to the originating attempt and generation. The supplier Claude relay must reject non-ASCII nonces without an unhandled task exception. Supplier URL validation must preserve blank query values and reject duplicate or mixed-case code flags consistently with host validation. The installed Claude probe must fail explicitly when the relay prerequisite is missing instead of skipping. The principal assigned these corrections to the owning workers. No additional defects were found in method metadata, executable discovery or native relay dispatch.
+
+Verdict remains PENDING. Component evidence covers 338 service tests, 26 final protocol tests, supplier auth tests and installed Claude initiation/cancel, frontend checks and provider scenarios, and the platform resolver. Packaged rebuild/probes, final changed-behavior review, human OAuth completion and completed real model work remain outstanding. Initiation and cleanup do not prove authentication or model capability.
+
+### live-sign-in-repair-final | low | Source and packaged initiation checks pass
+
+Verdict: PASS for S05 source and packaged initiation/cleanup scope. The independent reviewer rechecked all reported findings: generation-bound UI retries, nonce rejection, consistent query handling, explicit missing-prerequisite failures and the native executable slot are resolved. The host supplies the browser relay only during GUI auth; ordinary agent prefix admission remains unchanged.
+
+The final native_contract plus app-payload build passed. Native host unit checks passed 351 tests with Clippy; the final platform resolver check passed after adding the typed browser executable slot. Frontend checks passed, and both deferred-response regressions passed. The final package passed bundle.agent and bundle.provider-auth. The offline missing-provider fixture initially failed installed_base_unavailable after isolating USERPROFILE; setting the canonical storage-root override only for that temporary fixture corrected its setup without changing production behavior.
+
+All six installed-provider probes passed through the assembled package with no external-bin override: Codex browser cancel and observation-loss cleanup, Codex device revocation cleanup, and Claude browser cancel, revocation and observation-loss cleanup. These use the packaged native browser relay and external disposable homes. They establish login initiation and cleanup, not completed OAuth or model capability.
+
+The normal GUI was reopened without storage or executable-path overrides and reached the local sign-in screen for Test Profile. The owner was asked to authenticate in the app. S03 remains PENDING for attended application verification, completed provider OAuth and a completed real model turn, alongside its previously recorded repository-gate gaps. No credentials were copied or recorded, and no commit or push was made.
+### sign-in-completion-recovery | low | Integrated source review passes; live recovery remains pending
+
+The owner completed Codex browser authentication in the normal packaged GUI. The service recorded provider sign-in succeeded with cleanup_confirmed=True at 2026-10-17T22:01:37.325Z. This proves provider sign-in, not a completed agent turn. The earlier agent_service_failed event came from the intentional agent retirement before sign-in; the service had no terminal-auth resume path.
+
+S06 repairs the completion dialog, neutral treatment of agent_retired while retaining the admin endpoint, and one-shot agent resume through the existing observation loop after auth cleanup. Resume requires the original profile/session/settings authority to remain current. Unexpected outer service exit still produces a failure and retry. Stored provider-sign-in selection is shown as not verified rather than requiring sign-in unconditionally.
+
+Independent integrated source review passed. The service suite passed 346 tests; four focused resume tests passed. Native unit tests passed 353 tests and Clippy passed. Frontend checks, locale generation and the focused success presentation scenario passed. The rebuilt package and live recovered-gateway/model response remain pending; S06 and S03 remain open. No real-turn capability claim is made.
+
+### provider-ui-simplification | low | Source review and focused browser checks pass; packaged verification pending
+
+S07 groups provider connections beneath searchable expandable provider rows, uses the admitted wheel's validated artwork, and replaces internal status and error wording with actionable messages in English, Spanish, Catalan and Hungarian. Each connection remains separately configurable. Configured describes saved credentials or observed sign-in, not proven agent capability. Unknown sign-in remains Not checked. The picker retains unavailable connections with explanations and prevents selecting them.
+
+Independent integrated source review found two accessibility issues in the searchable picker. Both are resolved: Radix owns the trigger/dialog relationship, localized labels name cmdk controls, and the trigger announces the selected provider and connection. The final three-spec browser run passed 56 cases; frontend type, lint and formatting checks passed. Icon generation passed eight focused tests, Ruff and ty, and the real CMake icon target; canonical chrome tests passed 20 cases. The frontend and desktop host compiled successfully.
+
+Visual review then found long Spanish badges squeezing the provider name into one letter per line. The summary now places icon/name/caret together and badges in a separate full-width row. Independent review of this correction and the new Spanish/Hungarian geometry assertions found no further issue. Execution of those final regressions and refreshed screenshots is pending at this checkpoint.
+
+A separate lifecycle-test session continues using the shared staged app. Package replacement is held. The desktop-host-build dependency unexpectedly invoked native-process-quiesce, which reported stopping three package identities during that external test; affected external test evidence may need rerunning. S07 remains open pending final visual and packaged verification. S06 and S03 retain their previously recorded live recovery/model-turn gaps.
+### provider-ui-simplification-final | low | UI verification and rebuilt package pass
+
+Verdict: PASS for S07. The final two-row correction passed frontend checks and both Spanish/Hungarian narrow-layout geometry tests. Principal visual inspection confirmed readable names, aligned expand controls, wrapped status labels, visible Codex artwork and a searchable picker with an unavailable connection explanation. Screenshots are under build/windows-x64/desktop/provider-ui-review (provider-settings-collapsed.png, provider-settings-expanded.png, provider-picker-search.png, provider-settings-es-narrow.png and provider-settings-hu-narrow.png). These are presentation evidence, not provider capability evidence. The preceding broader provider/picker/agent run passed 56 scenarios; unchanged behaviors were not rerun after the layout-only correction. Temporary capture code was removed.
+
+The external lifecycle test exited before package replacement. The app-payload build completed with exit 0, and bundle.agent plus bundle.provider-auth both passed through the assembled package. The normal app was reopened without storage or executable overrides and displayed its local profile sign-in screen. The owner was asked to sign in inside the app. S07 is closed; S06 and S03 remain open for attended recovery and completed model-turn proof. No commit or push was made.
+### S08 authentication failure presentation review
+
+PASS. Authentication failures use existing localized sign-in guidance and an enabled Agent settings action; raw backend failure_reason text is no longer appended. Unknown conditions fall back to the generic localized failure. The authentication case omits disabled Retry. Frontend checks and four focused browser scenarios pass; canonical chrome projection passes 20 checks. Normal Debug app-payload build and assembled bundle.agent and bundle.provider-auth checks pass. The actual upgraded profile accepted a fresh Claude/haiku run r8a1fd5f920c73eb93041ef50 which failed Authentication required and settled failed/inactive, followed by provider settings and Sign in to Claude dialog. This establishes live refusal settlement, not a completed model turn. S08 is closed; historical real-model gates remain open. The subsequent transient unlock startup diagnostics request is tracked separately by event-relay-recovery S04 in the supplier worktree.

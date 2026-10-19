@@ -154,6 +154,51 @@ export type ProcessRole =
   | "manager_dispatch";
 
 // ---------------------------------------------------------------------------
+// about_info
+// ---------------------------------------------------------------------------
+
+/** One name with its version, ordered by name. */
+export type AboutNamed = { name: string; version: string };
+
+/** A native binary of the installed package. Every field the package does
+ * not state is null. */
+export type AboutComponent = {
+  name: string | null;
+  role: string | null;
+  path: string | null;
+  version: string | null;
+  build_id: string | null;
+  build_type: string | null;
+};
+
+/** What this installation is: the installed package manifest's statement,
+ * plus the desktop binary's own compile-time identity. A null is a value the
+ * package or the build did not state; the shell says it is unavailable. */
+export type AboutInfo = {
+  product: string | null;
+  display_version: string | null;
+  version: string | null;
+  build_id: string | null;
+  build_type: string | null;
+  build_date: string | null;
+  channel: string | null;
+  target: string | null;
+  /** The bundled CPython runtime's version. */
+  python: string | null;
+  desktop: {
+    version: string | null;
+    build_id: string | null;
+    build_type: "debug" | "release";
+  };
+  components: AboutComponent[];
+  /** Null when the package does not bundle the agent. */
+  agent: { version: string | null; dependencies: AboutNamed[] } | null;
+  /** Bundled tools by name, for example `node`. */
+  tools: Record<string, string>;
+  distributions: AboutNamed[];
+};
+
+// ---------------------------------------------------------------------------
 // desktop_environment
 // ---------------------------------------------------------------------------
 
@@ -769,6 +814,278 @@ export type ProfileList = {
 export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
+// ---------------------------------------------------------------------------
+// Component setup (desktop_setup_*)
+// ---------------------------------------------------------------------------
+//
+// The software Cadrumo needs on this computer -- the browser and the local AI
+// (its program and every model it runs, as one item) -- read and set up
+// through the held person session. The profile's Google account travels in
+// the same snapshot because it rides the same session, but it is not setup:
+// it is the profile's own sign-in, read and changed on its own. The host
+// pushes a fresh `DesktopSetup` on the observe channel whenever an observed
+// setup, check or Google act changes; nothing polls. Every closed value below
+// is for choosing what to show; the words to show are the `name`, `sentence`,
+// `note` and `action_label` fields, already in the profile's language. Never
+// render a closed value itself.
+
+/** `browser` or `local_ai`. */
+export type SetupItemId = string;
+
+export type SetupItemKind = "browser" | "local_ai";
+
+export type SetupState =
+  | "absent"
+  | "provisioning"
+  | "verifying"
+  | "ready"
+  | "stale"
+  | "failed"
+  | "blocked"
+  | "unknown";
+
+export type SetupBlockedReason =
+  "offline" | "needs_person" | "hardware" | "not_in_this_build";
+
+export type SetupStaleReason =
+  "older_revision" | "different_model_version" | "program_too_old";
+
+export type SetupFailureCategory =
+  | "offline"
+  | "host_unreachable"
+  | "secure_connection_failed"
+  | "blocked_by_network"
+  | "disk_full"
+  | "no_permission"
+  | "damaged_download"
+  | "not_enough_memory"
+  | "memory_busy"
+  | "program_missing"
+  | "program_not_running"
+  | "interrupted"
+  | "needs_sign_in"
+  | "not_in_this_build"
+  | "cancelled"
+  | "unexpected";
+
+/** The one button a row offers; its words are the row's `action_label`. */
+export type SetupRecovery =
+  "set_up" | "update" | "try_again" | "resume" | "check_again";
+
+export type SetupCheckMode = "quick" | "full";
+
+/** Why the local AI's plan entry is worth telling the person about. */
+export type SetupAdvisory =
+  | "licence_commercial_use_barred"
+  | "licence_unverified"
+  | "override_not_in_catalogue"
+  | "override_below_context_floor"
+  | "fit_exceeds_measured_headroom"
+  | "fit_unverified";
+
+export type SetupStep =
+  "plan" | "preflight" | "download" | "install" | "verify" | "cleanup";
+
+/** One item's derived state and its plain wording. */
+export type SetupRow = {
+  item: SetupItemId;
+  kind: SetupItemKind;
+  /** Which check produced the row. */
+  mode: SetupCheckMode;
+  state: SetupState;
+  stale_reason: SetupStaleReason | null;
+  blocked_reason: SetupBlockedReason | null;
+  failure: SetupFailureCategory | null;
+  recovery: SetupRecovery | null;
+  /** The operator action that offers `recovery`, such as
+   * `operator.provision.browser`; null exactly when `recovery` is. An
+   * identifier for routing, never shown. */
+  recovery_action_id: string | null;
+  version: string | null;
+  size_bytes: number | null;
+  /** The item's plain name, such as "Local AI". */
+  name: string;
+  /** One sentence stating the state and its reason. */
+  sentence: string;
+  /** For example "downloaded, not loaded yet"; null when there is none. */
+  note: string | null;
+  /** The button's words for `recovery`; null exactly when it is null. */
+  action_label: string | null;
+};
+
+/** A status read or a full check this window started. A settled check has
+ * already replaced `rows`; a failed one leaves the earlier rows. */
+export type SetupCheck = {
+  operation_id: string;
+  kind: "status_quick" | "status_full" | "verify";
+  stage: "running" | "done" | "failed";
+};
+
+/** One part of the local AI's plan: its program, or the model one role
+ * reads with. A part sharing an earlier part's download has size 0. */
+export type SetupPlanPart = {
+  part: string;
+  name: string;
+  /** Null when the size is not known before the download starts. */
+  download_bytes: number | null;
+};
+
+/** One entry of the plan a person approves: what, how large, from where and
+ * where it is stored. Shown, never sent back. */
+export type SetupPlanEntry = {
+  item: SetupItemId;
+  name: string;
+  /** Null when the size is not known before the download starts. */
+  download_bytes: number | null;
+  source_hosts: string[];
+  /** The folder it goes into; null when only an outside program installs. */
+  destination: string | null;
+  installs_outside_program: boolean;
+  /** Another entry of this plan that downloads the same files. */
+  shares_download_with: SetupItemId | null;
+  /** A model's licence notice, such as a non-commercial use limit, in the
+   * profile's language; null when there is none. Approving the plan
+   * approves it too. */
+  licence_notice: string | null;
+  /** Empty except on the local AI's entry; approving the plan approves
+   * them too. `licence_notice` is present exactly when one is
+   * "licence_commercial_use_barred". */
+  advisories: SetupAdvisory[];
+  /** The local AI's parts in the order setup carries them out; empty for
+   * any other item. */
+  parts: SetupPlanPart[];
+};
+
+/** The plan awaiting approval. `plan_digest` is what an answer binds. */
+export type SetupReview = {
+  plan_digest: string;
+  expires_at: string | null;
+  entries: SetupPlanEntry[];
+  known_download_bytes: number;
+  has_unknown_size: boolean;
+  installs_outside_program: boolean;
+  required_bytes: number;
+  /** Null when the free space could not be read. */
+  free_bytes: number | null;
+  space_sufficient: boolean;
+};
+
+export type SetupRetry = {
+  attempt: number;
+  delay_s: number;
+  /** "Trying again in N seconds (attempt M)", in the profile's language. */
+  sentence: string;
+};
+
+export type SetupItemResult = {
+  changed: boolean;
+  failure: SetupFailureCategory | null;
+  /** The failure's sentence; null when the item ended usable. */
+  sentence: string | null;
+  transferred_bytes: number;
+};
+
+/** One planned item while setup runs: its current step, byte progress and
+ * last retry notice, then its result once setup settles. */
+export type SetupItemProgress = {
+  item: SetupItemId;
+  name: string;
+  step: SetupStep | null;
+  /** Both null while the size is unknown: show an indeterminate bar. */
+  completed: number | null;
+  total: number | null;
+  retry: SetupRetry | null;
+  result: SetupItemResult | null;
+};
+
+export type SetupOutcome =
+  | "completed"
+  | "nothing_to_do"
+  | "rejected"
+  | "plan_changed"
+  | "not_enough_space"
+  | "interrupted"
+  | "cancelled"
+  /** The setup ended without a result of its own; see `failure_sentence`. */
+  | "failed";
+
+/** The setup this window started or joined. */
+export type SetupRun = {
+  operation_id: string;
+  stage: "planning" | "review" | "running" | "settled";
+  /** Present exactly while `stage` is "review". */
+  review: SetupReview | null;
+  items: SetupItemProgress[];
+  /** Whether Cancel can be offered now. */
+  cancellable: boolean;
+  cancel_requested: boolean;
+  /** Present exactly once `stage` is "settled". */
+  outcome: SetupOutcome | null;
+  /** Present when `outcome` is "failed". */
+  failure_sentence: string | null;
+};
+
+/** The profile's stored Google sign-in, as the product reads it. */
+export type GoogleAccountState =
+  "signed_in" | "signed_out" | "not_in_this_build" | "unknown";
+
+/** The sign-in or sign-out this window started. */
+export type GoogleActStage = "idle" | "signing_in" | "signing_out" | "failed";
+
+/** The signed-in profile's Google account: not a setup item. */
+export type GoogleAccount = {
+  /** Null until the stored sign-in has been read. */
+  state: GoogleAccountState | null;
+  /** The account's address; present only when signed in. */
+  email: string | null;
+  stage: GoogleActStage;
+  failure: SetupFailureCategory | null;
+  /** The failure's sentence; present exactly when `stage` is "failed". */
+  sentence: string | null;
+};
+
+export type SetupSnapshot = {
+  /** Empty until the first status read settles. */
+  rows: SetupRow[];
+  /** Null until the first status read settles, as are the next two. */
+  rows_mode: SetupCheckMode | null;
+  /** Every item ready or usable: Cadrumo is set up. */
+  complete: boolean | null;
+  /** Setup cannot complete on this computer's hardware. */
+  hardware_limited: boolean | null;
+  check: SetupCheck | null;
+  setup: SetupRun | null;
+  google: GoogleAccount;
+  /** The redacted report "Copy details" puts on the clipboard. */
+  details: string;
+};
+
+/** What the observe channel carries and every setup command answers.
+ * `revision` grows with every change; `snapshot` is present exactly when
+ * `state` is "ready", which needs a signed-in profile and its runtime. */
+export type DesktopSetup = {
+  revision: number;
+  state: "signed_out" | "unavailable" | "ready";
+  snapshot: SetupSnapshot | null;
+};
+
+/** Why a setup command was refused; a host failure rejects as `HostFailure`. */
+export type SetupRefusalCode =
+  /** No profile is signed in. */
+  | "not_signed_in"
+  /** Another setup, started elsewhere, is running. */
+  | "busy"
+  /** The plan changed since it was shown; show the new one. */
+  | "plan_changed"
+  /** No plan of that setup is awaiting an answer, or it is not this window's. */
+  | "not_pending"
+  /** The setup cannot be cancelled now. */
+  | "not_cancellable"
+  /** The runtime could not carry the request. */
+  | "unavailable";
+
+export type SetupRefusal = { code: SetupRefusalCode };
+
 export type StartupPhase = "environment" | "runtime" | "workspace";
 export type StartupProgress = {
   phase: StartupPhase;
@@ -861,6 +1178,61 @@ export interface HostCommands {
   desktop_environment: {
     args: Authorized;
     result: DesktopEnvironment;
+  };
+  about_info: { args: Authorized; result: AboutInfo };
+  /** Each setup command refuses with `SetupRefusal` or a `HostFailure`. */
+  desktop_setup_read: { args: Authorized; result: DesktopSetup };
+  /** Starts a status read; "quick" reads local facts only, "full" also
+   * reaches the network and exercises each item. */
+  desktop_setup_check: {
+    args: Authorized<{ mode: SetupCheckMode }>;
+    result: DesktopSetup;
+  };
+  /** Starts a full check of `items`, or of every item when null. */
+  desktop_setup_verify: {
+    args: Authorized<{ items: SetupItemId[] | null }>;
+    result: DesktopSetup;
+  };
+  /** Plans setup of `items`, or of every item not ready when null; the plan
+   * then awaits an answer in `setup.review`. `model` picks one catalogue
+   * model for every role of the local AI. A setup already running is joined.
+   * `resume` is the person's Resume click after an interruption: when the
+   * new plan is exactly the one approved before, it is approved again
+   * without a second review; any other plan awaits an answer as usual. */
+  desktop_setup_start: {
+    args: Authorized<{
+      items: SetupItemId[] | null;
+      model: string | null;
+      resume: boolean;
+    }>;
+    result: DesktopSetup;
+  };
+  /** Answers the plan whose digest the review showed; a changed plan
+   * refuses with `plan_changed`. */
+  desktop_setup_answer: {
+    args: Authorized<{
+      operationId: string;
+      planDigest: string;
+      decision: "apply" | "reject";
+    }>;
+    result: DesktopSetup;
+  };
+  desktop_setup_cancel: {
+    args: Authorized<{ operationId: string }>;
+    result: DesktopSetup;
+  };
+  /** Opens Google's own sign-in page for the signed-in profile; `google`
+   * follows the attempt. */
+  desktop_google_sign_in: { args: Authorized; result: DesktopSetup };
+  /** Removes the profile's stored Google sign-in. */
+  desktop_google_sign_out: { args: Authorized; result: DesktopSetup };
+  desktop_setup_observe: {
+    args: Authorized<{ updates: Channel<DesktopSetup> }>;
+    result: number;
+  };
+  desktop_setup_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
   };
   /**
    * Starts a session of `kind`, replacing one that already exited. Refuses
@@ -1066,6 +1438,10 @@ export interface HostCommands {
     result: ProviderSettingsAnswer;
   };
   provider_settings_remove: {
+    args: Authorized<{ provider: string; revision: string }>;
+    result: ProviderSettingsRecord;
+  };
+  provider_settings_turn_on: {
     args: Authorized<{ provider: string; revision: string }>;
     result: ProviderSettingsRecord;
   };

@@ -1,9 +1,5 @@
 application:
   auth:
-    sync:
-      errors:
-        requirements_missing: 'Az AEAT-szinkronizálás feltételei: {required_fields}. Nyissa meg a hitelesítési
-          beállításokat a szinkronizálás mellett az adatok kitöltéséhez vagy szerkesztéséhez. {reasons}'
     acquisition_lock:
       errors:
         acquire_failed: Az AEAT hitelesítési zárat nem sikerült beszerezni az elavult
@@ -161,6 +157,11 @@ application:
         session_identity_profile_mismatch: Az AEAT munkamenet azonossága nem egyezik
           az aktív profil adóazonosítójával; töröld a hitelesítési munkameneteket,
           és hitelesítsd az egyező profilt.
+    sync:
+      errors:
+        requirements_missing: 'Az AEAT-szinkronizálás feltételei: {required_fields}.
+          Nyissa meg a hitelesítési beállításokat a szinkronizálás mellett az adatok
+          kitöltéséhez vagy szerkesztéséhez. {reasons}'
   calculations:
     bienes_inversion_regularizacion:
       register_advisory: '%{count} beruházási tárgyi eszköz a korrekciós időszakban
@@ -1889,6 +1890,64 @@ application:
     explain:
       errors:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
+  provisioning:
+    action:
+      check_again: Újraellenőrzés
+      resume: Folytatás
+      set_up: Beállítás
+      try_again: Újrapróbálás
+      update: Frissítés
+    blocked:
+      hardware: Ebben a számítógépben nincs elég memória ehhez.
+      needs_person: Arra vár, hogy jóváhagyd, vagy magad telepítsd.
+      not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
+      offline: Nincs internetkapcsolatod. Csatlakozz az internethez a beállításhoz.
+    dependency:
+      browser:
+        name: Böngésző az adóhivatal webhelyéhez
+      local_ai:
+        model: Modell %{role}
+        name: Helyi MI
+        program: A modelleket futtató program
+    failure:
+      blocked_by_network: A hálózatod letiltotta a letöltést.
+      cancelled: Leállítottad a beállítást.
+      damaged_download: A letöltés sérült volt, ezért nem használható.
+      disk_full: Nincs elég szabad hely a lemezen.
+      host_unreachable: A letöltési kiszolgáló nem érhető el.
+      interrupted: A beállítás a befejezés előtt megszakadt.
+      memory_busy: Most túl sok memória van használatban. Zárj be más programokat,
+        és próbáld újra.
+      needs_sign_in: Be kell jelentkezned a Google-fiókodba.
+      no_permission: A Cadrumo nem kapott engedélyt a fájlok írására.
+      not_enough_memory: Ebben a számítógépben nincs elég memória ehhez.
+      not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
+      offline: Nincs internetkapcsolatod.
+      program_missing: A helyi MI-program nincs telepítve.
+      program_not_running: A helyi MI-program nem fut.
+      secure_connection_failed: Nem sikerült biztonságos kapcsolatot létesíteni. Lehet,
+        hogy egy hálózati szűrő akadályozza.
+      unexpected: Valami hiba történt.
+    note:
+      downloaded_not_loaded: Letöltve, még nincs betöltve.
+      own_network_settings: A saját hálózati beállításait használja.
+    retry: Kapcsolati hiba. Újrapróbálkozás %{seconds} másodperc múlva (%{attempt}.
+      próbálkozás).
+    space_needed: A beállításhoz %{required} szabad hely kell, és %{free} érhető el.
+    stale:
+      different_model_version: Működik, de más verzió, mint amelyikkel a Cadrumót
+        tesztelték.
+      older_revision: Működik, de újabb verzióra van szükség.
+      program_too_old: Működik, de ez a verzió túl régi a Cadrumóhoz.
+    state:
+      absent: Még nincs beállítva.
+      blocked: Most nem lehet beállítani.
+      failed: A beállítás nem fejeződött be.
+      provisioning: Beállítás folyamatban.
+      ready: Kész.
+      stale: Működik, de frissítésre szorul.
+      unknown: A Cadrumo most nem tudta ellenőrizni.
+      verifying: Működés ellenőrzése folyamatban.
   reconciliation_export:
     actor: Felelős
     advisory: Figyelmeztetés

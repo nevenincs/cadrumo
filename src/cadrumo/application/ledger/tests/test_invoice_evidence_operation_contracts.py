@@ -9,6 +9,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.config_support import LLMProvider
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.iva.schema import InvoiceKind
@@ -20,7 +22,6 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
 from ..invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmRequest,
@@ -129,7 +130,7 @@ def test_only_explicit_off_host_extraction_acquires_commit_and_cannot_use_an_att
     off_host = LedgerEvidenceExtractRequest(
         profile_id=_PROFILE,
         evidence_id="e" * 16,
-        off_host_provider=LLMProvider.ANTHROPIC,
+        off_host_provider=LLMProvider.AGENT,
         acknowledge_off_host=True,
     )
     resolved = resolve_operation_access(
@@ -143,7 +144,7 @@ def test_only_explicit_off_host_extraction_acquires_commit_and_cannot_use_an_att
         LedgerEvidenceExtractRequest(
             profile_id=_PROFILE,
             attachment_id="a" * 64,
-            off_host_provider=LLMProvider.ANTHROPIC,
+            off_host_provider=LLMProvider.AGENT,
             acknowledge_off_host=True,
         )
     with pytest.raises(ValidationError):

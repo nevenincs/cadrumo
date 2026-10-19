@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:9df1b47badc6dd1afd7fcdaba663a548205ed9989222f5b43741e98728c96787'
+body_hash: 'sha256:b08a5c5783342504098d8d80370a11dceefaea41b4ac2c8c48144f7738ddb816'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
@@ -165,3 +165,7 @@ Each process queries the native transport base once and retains validated namesp
 Accepted 2026-10-08 under the user's advance authorization to fix the identified defects and code/build all installer and manager work except signing. This scoped default-path correction is required for installed Darwin launch and does not claim implementation or native lifecycle acceptance.
 
 Service-only boundary clarification 2026-10-14 under the user's explicit migration authorization: provider interpretation/fallback belongs to the separate service, with preserved opaque encrypted custody at runtime and no DEK export. Runtime source-locator and root-policy amendments from the other owning session are preserved.
+
+## Amendment 2026-10-19 - the derived profile-folder variable
+
+Accepted 2026-10-19 on operator directive 2026-10-19 under `2026-10-19-google-app-identity-profile-folder-scope-adr`. The reserved-names bullet keeps `CADRUMO_ACTIVE_PROFILE` severed. It gains one derived, read-only name, `CADRUMO_PROFILE_ROOT`, the folder of the one profile a process is started for. A launcher derives it from that exact profile, never relays a received value, and nothing reads it back as a selection. `native/application-environment.toml` declares it as an optional launch slot of the profiles that can be started for one profile. Before this amendment no environment name pointed at a profile folder, and the bullet read only "`CADRUMO_ACTIVE_PROFILE` stays severed".

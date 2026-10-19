@@ -1,11 +1,12 @@
 """Send one sessionless installation act from a command and bring back its reply.
 
-A command that works with no profile open asks the runtime to do the work
-instead of doing it in this process, so the terminal interface and external client reach
-the same act. The command builds the act's request, calls
-:func:`run_installation_act_if_runtime`, and projects the reply onto its own envelope. A
-refusal is raised as the error the in-process command would have raised, so
-the shared command boundary renders it in the envelope unchanged.
+A command that works with no profile open asks the runtime to do the work, so
+the terminal interface and external client reach the same act. The command
+builds the act's request, calls :func:`run_installation_act`, and projects the
+reply onto its own envelope. The command is a client of the runtime and never
+does the act in its place: with no runtime it reports the runtime unavailable.
+A refusal is raised as the error the act's handler raised, so the shared
+command boundary renders it in the envelope unchanged.
 """
 
 from __future__ import annotations
@@ -44,31 +45,31 @@ _UNANSWERED_REFUSALS: Final = frozenset({RefusalCode.UNAVAILABLE, RefusalCode.DE
 """The outcomes of opening a connection that a later attempt can cure: busy, timed out, or unreadable."""
 
 
-def run_installation_act_if_runtime[ReplyT: InstallationCompleted](
+def run_installation_act[ReplyT: InstallationCompleted](
     request: InstallationActRequest,
     reply_type: type[ReplyT],
     *,
     timeout: float | None = None,
-) -> ReplyT | None:
-    """Send ``request`` to the runtime when one is running, and say so when none is.
+) -> ReplyT:
+    """Send ``request`` to the running runtime and bring back its reply.
 
-    ``None`` means the storage root has no runtime endpoint, and nothing was
-    sent: the caller does the work in this process. Nothing else means that. A
+    A storage root with no runtime endpoint is refused as unavailable, and
+    nothing was sent: the command never does the act in this process. A
     refusal to connect is not proof of absence: a runtime whose endpoint is
     busy, one that did not answer in time and one whose state could not be read
-    all refuse while they host the workers the caller's own work would run
-    beside. Those are reported, with the retry, and every other outcome stands:
-    a runtime that answered, refused, could not be verified, or stopped
-    answering after the send may have done the work.
+    all refuse while they may own the root. Those are reported, with the retry,
+    and every other outcome stands: a runtime that answered, refused, could not
+    be verified, or stopped answering after the send may have done the work.
 
     Raises:
+        RefusalError: No runtime serves the storage root (``UNAVAILABLE``), or
+            the transport refused for another reason.
         CliRefusedBoundaryError: A runtime may own the root but could not be
             reached, or refused admission. Nothing was sent in the first case.
         CliRecordedOperationError: The handler refused the act with a registered
             error, or stopped on a fault with no public facts.
         CliOperationStillRunningError: The connection stopped answering after
             an act that changes records was sent, leaving its outcome unknown.
-        RefusalError: The transport refused for another reason.
     """
     from cadrumo_client.transport.installation_client import (
         installed_connection_presence,
@@ -77,7 +78,7 @@ def run_installation_act_if_runtime[ReplyT: InstallationCompleted](
 
     presence = asyncio.run(installed_connection_presence())
     if presence is EndpointPresence.ABSENT:
-        return None
+        raise RefusalError(RefusalCode.UNAVAILABLE, check="installation_runtime_absent")
     try:
         client = asyncio.run(open_installed_installation_client())
     except RefusalError as refusal:

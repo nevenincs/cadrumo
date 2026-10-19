@@ -10,6 +10,8 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
@@ -26,7 +28,6 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import OperationSchemaBindingV1, operation_public_schema_reference
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts
 from .id_resolution import resolve_transaction_id

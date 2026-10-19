@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-sign-in'
 date: '2026-10-04'
-modified: '2026-10-16'
+modified: '2026-10-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:314e603344ff1409040f153fd8864199619bde8258d721b3f61570933fa5d40f'
+body_hash: 'sha256:51d07a6b7993996bce898e6a41a34985caa930adc75de36b4545f83ca8476d68'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -300,3 +300,9 @@ Renewal extends existing live human roots of the same profile and originating lo
 An uncertain OS observation refuses private work without treating uncertainty as positive logout or destroying otherwise live human leases. Frontends distinguish unavailable authority from actual expiry, clear private presentation when authority cannot be confirmed, and remain open for explicit recovery. Shutdown settles frontend clients before stopping their owned runtime. This acceptance records policy and repair authorization, not successful package verification.
 
 Amended 2026-10-16 under `2026-10-16-idle-churn-adr`, on the operator's ruling that every recurring check is driven by a signal. Frontends and services observe sign-in, leases, attendance and language through pushed invalidation cues followed by one re-read. They do not poll while idle. A lost connection is the fallback: the client reconnects and re-reads. The sentence "Polling remains as a fallback that never extends anything" now covers only reconnection and platforms without an OS notification source. Observation still never extends anything.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "the legacy in-process paths are retired" above is kept as accepted history. It now reads together with this ruling: The Lifetime locators under `src/cadrumo/adapters/persistence/storage/` follow the code into `src/cadrumo_runtime`. The retirement of the legacy in-process paths named under Implementation is completed by `2026-10-18-runtime-authority-boundary-adr`: no CLI or TUI path authenticates, publishes a session or holds a DEK. The desktop's runtime-free profile list is unchanged. Its profile creation command still spawns `aeat config profile create`, which now presents the password to a runtime installation act.

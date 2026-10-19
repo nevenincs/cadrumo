@@ -8,12 +8,8 @@ from contextlib import suppress
 from dataclasses import dataclass
 from uuid import UUID
 
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginInventory
 from cadrumo_client.transport.posix import posix_owner_uid

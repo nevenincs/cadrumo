@@ -35,12 +35,6 @@ from cadrumo.application.aggregation.withholding_recognition import (
 )
 from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave
 from cadrumo.core.period import Period
@@ -51,6 +45,12 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from .test_runtime_invoice_add import password_profile_session

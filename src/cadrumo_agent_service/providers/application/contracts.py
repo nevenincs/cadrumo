@@ -97,6 +97,8 @@ class ProviderStatusEntry(OutputSchema):
     auth_kind: ProviderAuthKind
     consumers: tuple[ProviderConsumer, ...]
     mode: ProviderSettingsMode
+    credential_saved: bool
+    """Whether a direct credential is stored for the lane, whatever the mode; never the credential itself."""
     available: bool
     source: ProviderCredentialSource
     readiness: ProviderReadiness

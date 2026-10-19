@@ -58,7 +58,7 @@ from ..provisioning_fitness import (
     read_fitness_verdict,
     record_fitness_verdict,
 )
-from ..provisioning_runtime import pull_runtime_model, remove_runtime_model
+from ..provisioning_runtime import fetch_runtime_model, remove_runtime_model
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -392,24 +392,21 @@ def _roomy_profile() -> HardwareProfile:
 def test_a_completed_pull_drops_the_recorded_verdict(tmp_path: Path) -> None:
     with _runtime(tmp_path):
         _verify_text(_Probe(RoleFitnessVerdict.FIT))
-        pulled = pull_runtime_model(_VISION, GIB, profile=_roomy_profile())
+        pulled = fetch_runtime_model(_VISION)
         document = json.loads(fitness_verdict_path().read_text(encoding="utf-8"))
 
     assert pulled.pulled is True
     assert document["verdicts"] == []
 
 
-def test_a_refused_pull_keeps_the_recorded_verdict(tmp_path: Path) -> None:
-    starved = probe_hardware_profile(
-        memory=SystemMemoryReading(total_bytes=4 * GIB, free_bytes=1 * GIB),
-        accelerator=AcceleratorReading(kind=AcceleratorKind.NONE),
-    )
+def test_a_failed_fetch_keeps_the_recorded_verdict(tmp_path: Path) -> None:
     with _runtime(tmp_path):
         _verify_text(_Probe(RoleFitnessVerdict.FIT))
-        refused = pull_runtime_model("huge-model:70b", 40 * GIB, profile=starved)
+        with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+            failed = fetch_runtime_model(_VISION)
         _, row = _text_row()
 
-    assert refused.pulled is False
+    assert failed.pulled is False
     assert row.fitness is RoleFitnessState.FIT
 
 

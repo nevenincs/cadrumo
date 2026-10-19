@@ -11,15 +11,16 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.access_management import (
     AutomationDeny,
     ProfileRecoveryPrepare,
     ProfileResume,
     SessionInventory,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.bootstrap import PasswordResetPrepare
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare

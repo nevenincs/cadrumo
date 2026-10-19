@@ -18,25 +18,14 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReviewProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.automation_enrollment import AutomationReviewProjection, EnrollmentStage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.automation_decision import AutomationDecisionRunError, run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient

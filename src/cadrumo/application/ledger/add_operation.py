@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -23,9 +25,6 @@ from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import require_registered_own_account

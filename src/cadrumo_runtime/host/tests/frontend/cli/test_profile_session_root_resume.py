@@ -142,16 +142,14 @@ def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
 
 def _resume(bucket_id: str, *, storage_root: Path) -> ProfileSessionRefusalReason | None:
     """Exercise runtime receipt admission without binding a frontend DEK."""
-    from cadrumo.application.user_profile.login_session import (
-        ProfileReceiptRefusedError,
-        borrow_profile_receipt_key,
-    )
+    from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
+    from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
     from cadrumo_runtime.host.profile_receipt import resume_profile_candidate
 
     _, decode = _profile_contexts_for_test()
     try:
         with (
-            borrow_profile_receipt_key(bucket_id=UUID(bucket_id)) as proof,
+            borrow_receipt_proof(profile_id=UUID(bucket_id)) as proof,
             resume_profile_candidate(
                 bucket_id=UUID(bucket_id),
                 receipt_key=proof,

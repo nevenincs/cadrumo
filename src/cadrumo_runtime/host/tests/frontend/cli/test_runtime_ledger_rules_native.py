@@ -33,7 +33,7 @@ from cadrumo.entrypoints.cli.ledger_rule_results import (
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.entrypoints.tests.ledger_rule_operation_test_support import assert_canonical_ledger_rule_update
 from cadrumo.tests.cli_envelope import unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from .cli_runner import invoke_cached_cli
 

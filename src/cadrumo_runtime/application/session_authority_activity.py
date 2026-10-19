@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 from uuid import UUID
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessDenied, AccessSession, SessionKind
+from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 
 from .session_authority_core import SessionAuthorityCore
 

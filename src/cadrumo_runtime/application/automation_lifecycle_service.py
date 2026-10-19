@@ -15,14 +15,7 @@ from cadrumo.application.user_profile.access_administration import (
     FreshPasswordAuthorization,
     evaluate_access_administration,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    ACCESS_LEASE_MAXIMUM,
-    AccessDenied,
-    ApiKeyRecord,
-    AuthorityState,
-    ProfileAccessBinding,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM, ApiKeyRecord, ProfileAccessBinding
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,
     EnrollmentControlState,
@@ -37,6 +30,9 @@ from cadrumo.application.user_profile.automation_lifecycle import (
 )
 from cadrumo.application.user_profile.automation_password import prove_automation_administration
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo_client.contracts.access_refusals import AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.automation_lifecycle import (
     AutomationResumeReceipt as _AutomationResumeReceipt,
 )

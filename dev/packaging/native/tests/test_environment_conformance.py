@@ -219,7 +219,7 @@ _PLANTED_FACTS: list[tuple[str, _Mutation, str, str]] = [
     ),
     (
         "setting-narrower",
-        _set(("cli", "settings", "CADRUMO_AUTH_TIMEOUT_MS"), "boolean"),
+        _set(("cli", "settings", "CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS"), "boolean"),
         "command-line-names",
         "wider than",
     ),
@@ -455,11 +455,11 @@ _PLANTED_DECLARATIONS: list[tuple[str, _Edit, str, str]] = [
     (
         "kind-wider-than-the-setting",
         _replace(
-            'CADRUMO_AUTH_TIMEOUT_MS = { kind = "integer", role = "operator" }',
-            'CADRUMO_AUTH_TIMEOUT_MS = { kind = "text", role = "operator" }',
+            'CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS = { kind = "integer", role = "operator" }',
+            'CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS = { kind = "text", role = "operator" }',
         ),
         "command-line-names",
-        "CADRUMO_AUTH_TIMEOUT_MS",
+        "CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS",
     ),
     (
         "operator-name-the-command-line-does-not-read",

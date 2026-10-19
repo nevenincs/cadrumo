@@ -13,11 +13,11 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.paths import effective_storage_root
 
+from ..contracts.access_vocabulary import AccessScope
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import deadline_after, remaining_budget
 from ..contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS

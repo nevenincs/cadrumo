@@ -11,6 +11,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
 from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
@@ -25,7 +28,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history import WorkUnitHistory
 from ..history_operation import (

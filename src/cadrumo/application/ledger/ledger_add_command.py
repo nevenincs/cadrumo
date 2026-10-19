@@ -9,6 +9,8 @@ from datetime import date
 from decimal import Decimal
 from typing import NamedTuple, overload
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.iva_deduction_fact import IvaDeductionFactKind
@@ -29,7 +31,6 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ..prorrata_register.service import ProrrataRegisterService
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ledger_add_contracts import LedgerAddRequest, LedgerAddSourceJurisdictionCode
 from .models import ManualLedgerTransactionCommand

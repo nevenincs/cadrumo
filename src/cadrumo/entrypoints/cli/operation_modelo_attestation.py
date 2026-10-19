@@ -5,6 +5,7 @@ from __future__ import annotations
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -14,7 +15,6 @@ from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
-from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.operations import OperationEffect
 
 

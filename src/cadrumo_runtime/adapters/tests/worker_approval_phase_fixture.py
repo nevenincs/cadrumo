@@ -13,9 +13,9 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document, write_secret

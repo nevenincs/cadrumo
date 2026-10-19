@@ -49,6 +49,8 @@ export type ProviderStatus = {
   source: ProviderSource;
   /** Where the app stands, for a command-line way. */
   cliState?: CliState;
+  /** A key is stored for it, kept while it is turned off. */
+  credentialSaved?: boolean;
   /** Why it is not ready, as a stable code, where it says. */
   reason?: string;
   /** The gateway address the person stored, if any. */

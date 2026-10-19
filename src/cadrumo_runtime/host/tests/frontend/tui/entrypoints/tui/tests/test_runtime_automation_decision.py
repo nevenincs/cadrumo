@@ -23,18 +23,14 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.profile_access import AccessRefusal

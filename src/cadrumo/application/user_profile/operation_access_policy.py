@@ -2,6 +2,20 @@
 
 from __future__ import annotations
 
+from cadrumo_client.contracts.access_refusals import (
+    AccessDecision,
+    AccessDenialCode,
+    AccessDenied,
+    OperationResponseScopeAllowed,
+)
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 from cadrumo_client.contracts.session_policy import evaluate_session_authority
 
 from ...core.operations import OperationInteractionKind
@@ -10,20 +24,10 @@ from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.person_acts import is_persons_frontend, operation_is_persons_act
 from ..operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from .access_contracts import (
-    AccessAction,
-    AccessDecision,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
     AutomationGrant,
-    Availability,
-    DisclosureCategory,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    OperationResponseScopeAllowed,
     ProfileAccessState,
     SessionKind,
 )

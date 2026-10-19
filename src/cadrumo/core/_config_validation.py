@@ -173,20 +173,6 @@ def empty_optional_secrets_are_none[ValueT](value: ValueT) -> ValueT | None:
     return value
 
 
-def detail_url_template_has_expediente_id(value: str) -> str:
-    """Reject templates that omit the ``{expediente_id}`` placeholder."""
-    if "{expediente_id}" not in value:
-        raise CoreValidationError(
-            translated_message="errors.integrity.integrity_cadrumo_core_validation",
-            context={
-                "setting": "aeat_status_detail_url_template",
-                "required_placeholder": "{expediente_id}",
-                "placeholder_present": False,
-            },
-        )
-    return value
-
-
 def empty_optional_clave_fields_are_none[ValueT](value: ValueT) -> ValueT | None:
     """Treat blank env vars for optional Cl@ve identity/password fields as unset."""
     if isinstance(value, str) and value.strip() == "":

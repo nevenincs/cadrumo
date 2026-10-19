@@ -13,7 +13,7 @@ supersedes:
   - '2026-10-16-application-distribution-windows-package-identity-adr'
 modified: '2026-10-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:e4b8123a137de64184bf040a71365e9e99dbcdd6ad9c239c9f56ad681e7a5582'
+body_hash: 'sha256:90a8362b11aa150ea0748655d67dc6029a300d5a66b6ac8890068540e5cd20b7'
 ---
 # `single-binary-process-tree` adr: `One Cadrumo binary runs every Cadrumo process` | (**status:** `accepted`)
 
@@ -66,3 +66,9 @@ Same-image nesting is the one grouping mechanism the evidence shows working on t
 - The packaged executable count falls; manifests, version resources and signing cover one image for these roles.
 - Linux and macOS use the same role dispatch.
 - If the proof step shows no grouping, the remaining steps stop and this decision is reconsidered.
+
+## Provider browser hook refinement 2026-10-17
+
+Accepted within the owner's continued authorization to repair GUI provider sign-in. Installed Claude Code 2.1.302 supplies its browser override with exactly one URL argument and does not support an executable plus role arguments. A bounded browser handoff therefore reuses the same Cadrumo executable with one HTTPS URL argument. This is the sole exception to constraint 2's role-prefix shape: URL invocations are claimed before diagnostics, console attachment, webview or normal desktop dispatch, and fail closed without the login attempt's transient loopback port and correlation nonce. They never start a desktop, open a browser, read credentials or log the URL. The single image and existing containment are preserved.
+
+The short-lived bridge sends the bounded URL to the helper that owns the attempt. The agent validates provider origin and correlation, emits its existing browser_action event, and acknowledges; the normal host opens the browser. Listener and bridge have bounded lifetimes, no durable signalling files, and no service registration. The provider still owns OAuth callback, token exchange and persistence. A new packaged helper image and direct provider-owned browser launching were rejected because they would respectively split the image tree or bypass the host-owned browser action. This records implementation scope, not completed authentication evidence.

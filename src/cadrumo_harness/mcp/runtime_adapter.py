@@ -9,9 +9,10 @@ from threading import Event
 from typing import Any, TypeVar
 from uuid import UUID
 
+from pydantic import ValidationError
+
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.async_cleanup import (
     AsyncCloseable,
     AsyncResourceCleanupError,
@@ -19,6 +20,7 @@ from cadrumo.core.async_cleanup import (
     close_async_resources,
 )
 from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, ProfileStatus
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -40,6 +42,7 @@ from .protocol_contract import (
     sign_in_remedy,
     validate_tool_arguments,
 )
+from .request_diagnostics import request_faults
 from .runtime_admission import (
     AdmissionDenial,
     McpAdmission,
@@ -420,6 +423,15 @@ class RuntimeMcpAdapter:
             code = refusal_code(error)
             # A sign-in refusal keeps its reason, binding and wait, as the command line reports them.
             reply: dict[str, Any] = {"outcome": "refused", "code": code, **refusal_facts(error)}
+            if isinstance(error, ValidationError):
+                faults = request_faults(name, error)
+                reply["faults"] = faults
+                _LOGGER.warning(
+                    "MCP request validation failed: tool=%s errors=%s faults=%s",
+                    name,
+                    error.error_count(),
+                    faults,
+                )
             if isinstance(error, FrontendRefusedError) and error.request_faults:
                 # The runtime said why, in a registered error's code and message; every tool passes that on.
                 reply["faults"] = [public_value(fault) for fault in error.request_faults]

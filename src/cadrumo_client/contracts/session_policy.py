@@ -3,16 +3,10 @@
 from __future__ import annotations
 
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAllowed,
-    AccessDecision,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -21,6 +15,9 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.access_policy import scope_is_subset
+
+from .access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
+from .access_vocabulary import AuthorityState, Availability
 
 
 def _session_refusal(

@@ -16,14 +16,6 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
@@ -36,6 +28,14 @@ from cadrumo.application.user_profile.censal_operation import (
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

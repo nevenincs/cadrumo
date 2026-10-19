@@ -115,7 +115,7 @@ The opt-in is enforced at two layers:
    skipped tests.
 
 Google Workspace live tests additionally require
-`AEAT_LIVE_TESTS_GOOGLE=1` and project-owned fixtures provisioned via
+`CADRUMO_LIVE_TESTS_GOOGLE=1` and project-owned fixtures provisioned via
 the Google fixture workflow.
 
 ## Banned Imports

@@ -14,6 +14,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
@@ -49,7 +50,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from .evidence_errors import PurchaseInvoiceEvidenceNotFoundError

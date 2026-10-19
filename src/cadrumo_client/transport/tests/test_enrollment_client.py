@@ -12,14 +12,11 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope, ProfileAccessBinding
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentProposal,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.enrollment_access import (

@@ -9,8 +9,9 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
 from cadrumo.core.config import Settings, override_settings
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginInventory
 

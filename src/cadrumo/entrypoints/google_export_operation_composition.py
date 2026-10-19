@@ -7,7 +7,8 @@ that records every applied plan as a sync run.
 
 from __future__ import annotations
 
-from ..adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
+from cadrumo_client.contracts.google_auth import GoogleAuthClientMetadataUnavailableError
+
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository

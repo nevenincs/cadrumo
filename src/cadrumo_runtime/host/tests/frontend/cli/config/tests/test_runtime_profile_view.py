@@ -13,13 +13,9 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.config import override_settings
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles

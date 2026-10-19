@@ -57,12 +57,6 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_addressing import law_selected_revision_for_work_target
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.config import override_settings
@@ -92,6 +86,12 @@ from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 from cadrumo.tests.optional_extra_absence import optional_extra_absent
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from cadrumo_runtime.host.tests.frontend.cli.test_runtime_invoice_add import password_profile_session

@@ -36,7 +36,6 @@ from cadrumo.application.operations.access_resolution import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -46,6 +45,8 @@ from cadrumo.entrypoints.tests.registered_executor_case_support import (
     model_runtime_for_operation,
     seeded_conformance_operation_submission,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_harness.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 from dev.operation_contract_manifest.tests.test_operation_frontend_parity import _PROBE_PROFILE, _probe_requests
 from dev.runtime_lifecycle.tests.test_operation_mcp_surfaces import (

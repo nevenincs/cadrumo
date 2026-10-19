@@ -12,6 +12,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -67,13 +75,6 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
-from .access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation

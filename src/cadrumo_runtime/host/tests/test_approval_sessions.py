@@ -19,12 +19,13 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
     changed,
 )
-from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM, AuthorityState
+from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_approval_session import ApprovalSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentReceipt, EnrollmentStage
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...application.approval_binding import RuntimeApprovalBinding

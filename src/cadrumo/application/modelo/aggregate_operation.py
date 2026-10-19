@@ -7,6 +7,8 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
@@ -70,9 +72,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .aggregate_contracts import (
     AGGREGATE_COMMIT_PHASE,

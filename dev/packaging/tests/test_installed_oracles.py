@@ -1115,7 +1115,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     )
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+    from cadrumo_client.contracts.automation_codes import AutomationCustodyError
     from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
     from cadrumo_client.transport.framing import VerifiedConnection
     from cadrumo_client.transport.installation import installation

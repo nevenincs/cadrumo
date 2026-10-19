@@ -57,7 +57,7 @@ def _off_host(profile_id: str) -> dict[str, object]:
     return {
         "profile_id": profile_id,
         "evidence_id": _EVIDENCE,
-        "off_host_provider": LLMProvider.ANTHROPIC.value,
+        "off_host_provider": LLMProvider.AGENT.value,
         "acknowledge_off_host": True,
     }
 

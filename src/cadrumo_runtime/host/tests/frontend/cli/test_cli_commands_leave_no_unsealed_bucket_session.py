@@ -13,7 +13,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import curre
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, authenticate_profile_for_invocation
+from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,
@@ -29,6 +29,7 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 from .portable_human_cli_runtime import portable_human_cli_runtime

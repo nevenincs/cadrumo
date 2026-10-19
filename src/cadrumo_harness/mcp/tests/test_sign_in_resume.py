@@ -22,25 +22,22 @@ import pytest
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.attachment_mutation_operation import LEDGER_ATTACH_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    AccessScope,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core import logging as cadrumo_logging
-from cadrumo.core.config import Settings, override_settings
+from cadrumo.core.config import Settings, load_settings, override_settings
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.profile_selection import ActiveProfileReply
+from cadrumo_client.contracts.sign_in import SignInPresence
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .. import main as mcp_main
 from .. import runtime_adapter as mcp_runtime
+from .. import runtime_admission as mcp_admission
 from .. import server as mcp_server
 from ..access_scope import surface_scope
 from ..operation_discovery import operation_summary
@@ -53,6 +50,26 @@ from .admitted_lease import public_descriptions
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _installation_selection() -> ActiveProfileReply:
+    """Answer the runtime's selection question from this test's installation selection."""
+    selected = load_settings().cadrumo_active_profile
+    return ActiveProfileReply(
+        request_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+        selected_profile_id=None if selected is None or selected == "" else UUID(selected),
+        signed_in_profile_id=None,
+        presence=SignInPresence.ABSENT,
+    )
+
+
+@pytest.fixture(autouse=True)
+def _runtime_answers_the_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime is a double here, so its selection answer is the one the test selected."""
+    monkeypatch.setattr(mcp_admission, "_runtime_selection", _installation_selection)
+
 
 _FULL = MCP_SURFACES[McpSurfaceName.FULL]
 _READ_ONLY_LOCAL = MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL]

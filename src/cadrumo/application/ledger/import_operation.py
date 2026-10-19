@@ -11,6 +11,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
@@ -34,7 +36,6 @@ from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import require_registered_own_account
 from .actions_import import (

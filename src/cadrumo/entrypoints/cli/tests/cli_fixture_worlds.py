@@ -12,8 +12,9 @@ from uuid import UUID
 import pytest
 from click.testing import Result
 
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
+
 from ....application.user_profile.automation_custody_port import AutomationSecretStore
-from ....application.user_profile.automation_enrollment import EnrollmentProposal
 from ....tests.cli_fixture_ports import ClickInvokeKwargs, CliInvocation
 
 type BackendKind = Literal["active", "recorded_fx", "inventory", "surface", "validation", "sessionless"]

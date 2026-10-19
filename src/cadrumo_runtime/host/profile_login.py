@@ -17,24 +17,24 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import Profile
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import PersistenceError
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession, SessionKind
+from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.login_session import (
-    ProfileLoginCandidate,
-    ProfileLoginOutcome,
-    ProfileLoginThrottledError,
-    ProfileReceiptRefusedError,
-    authenticate_profile_candidate,
-)
-from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
+from cadrumo.application.user_profile.login_session import ProfileLoginCandidate, authenticate_profile_candidate
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.sign_in_outcomes import (
+    ProfileLoginOutcome,
+    ProfileLoginThrottledError,
+    ProfileReceiptRefusedError,
+    SignInRefusal,
+)
 
 from .profile_receipt import resume_profile_candidate
 
@@ -118,7 +118,9 @@ class ProfileWorkerHumanLogin:
                 ) from None
             except (UnicodeError, ProfileAuthenticationRefusedError):
                 self.cancel()
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED) from None
+                raise ProfileAccessRefusedError(
+                    AccessDenialCode.AUTHENTICATION_REQUIRED, sign_in=SignInRefusal(reason="credential_rejected")
+                ) from None
             except ProfileCustodyRefusedError as error:
                 self.cancel()
                 if error.refusal not in _KDF_UNAVAILABLE:

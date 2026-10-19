@@ -119,7 +119,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.automation_custody_port.AutomationCustodyError",
+        "cadrumo_client.contracts.automation_codes.AutomationCustodyError",
         ErrorCode(
             code="REFUSED_AUTOMATION_CUSTODY",
             category=ErrorCategory.REFUSED,
@@ -734,7 +734,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.login_session.ProfileLoginThrottledError",
+        "cadrumo_client.contracts.sign_in_outcomes.ProfileLoginThrottledError",
         ErrorCode(
             code="REFUSED_PROFILE_LOGIN_THROTTLED",
             category=ErrorCategory.REFUSED,
@@ -744,7 +744,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.login_session.ProfileReceiptRefusedError",
+        "cadrumo_client.contracts.sign_in_outcomes.ProfileReceiptRefusedError",
         ErrorCode(
             code="REFUSED_PROFILE_RECEIPT",
             category=ErrorCategory.REFUSED,

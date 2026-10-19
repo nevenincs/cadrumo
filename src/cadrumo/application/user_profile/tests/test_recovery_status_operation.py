@@ -8,11 +8,13 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.operations import profile_operation_subject
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ..access_contracts import AccessAction, AccessDenialCode, Availability, DisclosureCategory
 from ..access_errors import ProfileAccessRefusedError
 from ..recovery_status_operation import (
     RECOVERY_STATUS_OPERATION_DEFINITION_ID,

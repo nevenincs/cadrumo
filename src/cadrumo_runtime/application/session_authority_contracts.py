@@ -8,7 +8,7 @@ from typing import Protocol
 from uuid import UUID
 
 from cadrumo.application.user_profile.access_contracts import AccessEvaluationContext, AccessSession, ProfileAccessState
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 
 @dataclass(frozen=True)

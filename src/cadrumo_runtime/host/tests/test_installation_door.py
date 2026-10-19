@@ -19,12 +19,13 @@ from pydantic import BaseModel
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, OsLockState
+from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.storage_taxonomy import StorageArea
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_LOG_TAIL_MAX_LINES,

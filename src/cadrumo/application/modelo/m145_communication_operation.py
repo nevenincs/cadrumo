@@ -14,6 +14,8 @@ from collections.abc import Callable
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -49,7 +51,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
 from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,

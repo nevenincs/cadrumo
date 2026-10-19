@@ -12,9 +12,10 @@ from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.profile_session import ProfileSessionRefusalReason
-from .login_session import ProfileLoginOutcome
 from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
 
 if TYPE_CHECKING:

@@ -8,16 +8,15 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import (
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding, SessionKind
+from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
     Availability,
     DisclosureCategory,
     DisclosurePermission,
     EffectiveScopeSummary,
-    ProfileAccessBinding,
-    ProfileAccessStatus,
-    SessionKind,
 )
-from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus, ProfileStatusTransfer, Reply
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SubmissionPayloadChunk

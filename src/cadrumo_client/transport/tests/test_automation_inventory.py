@@ -23,7 +23,6 @@ from cadrumo.application.operations.registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
 )
-from cadrumo.application.user_profile.access_contracts import AuthorityState
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationKeyProjection,
@@ -40,6 +39,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.operation_access import (

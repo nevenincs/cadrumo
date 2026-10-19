@@ -43,6 +43,8 @@ _MCP_PACKAGE_PREFIX = "src/cadrumo_harness/mcp/"
 _TUI_PACKAGE_PREFIX = "src/cadrumo/entrypoints/tui/"
 _RUNTIME_CLI_PACKAGE_PREFIX = "src/cadrumo_runtime/commands/"
 _CLIENT_CLI_PACKAGE_PREFIX = "src/cadrumo_client/commands/"
+_CLIENT_CONTRACTS_PACKAGE_PREFIX = "src/cadrumo_client/contracts/"
+"""The wire vocabulary, where an operation id the runtime names without product code is declared."""
 _RUNTIME_HOST_PACKAGE_PREFIX = "src/cadrumo_runtime/host/"
 _DEFINITION_ID_SUFFIX = "_DEFINITION_ID"
 _NO_IDS = frozenset[str]()
@@ -90,7 +92,7 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = ()
 
 @cache
 def _source_files() -> tuple[str, ...]:
-    """Every Python file under tax, shared/runtime CLI, runtime host/TUI and MCP packages."""
+    """Every Python file under tax, shared/runtime CLI, client contracts, runtime host/TUI and MCP packages."""
     mcp_root = _REPO_ROOT / "src" / "cadrumo_harness" / "mcp"
     paths = tuple(
         path.relative_to(_REPO_ROOT).as_posix()
@@ -98,6 +100,7 @@ def _source_files() -> tuple[str, ...]:
             *package_python_files(include_data=True),
             *python_files_under(_REPO_ROOT / _RUNTIME_CLI_PACKAGE_PREFIX, include_data=True),
             *python_files_under(_REPO_ROOT / _CLIENT_CLI_PACKAGE_PREFIX, include_data=True),
+            *python_files_under(_REPO_ROOT / _CLIENT_CONTRACTS_PACKAGE_PREFIX, include_data=True),
             *python_files_under(_REPO_ROOT / _RUNTIME_HOST_PACKAGE_PREFIX, include_data=True),
             *mcp_root.rglob("*.py"),
         )
@@ -388,6 +391,7 @@ def test_the_census_denominator_is_the_repository_visible_tree() -> None:
                 _TUI_PACKAGE_PREFIX,
                 _RUNTIME_CLI_PACKAGE_PREFIX,
                 _CLIENT_CLI_PACKAGE_PREFIX,
+                _CLIENT_CONTRACTS_PACKAGE_PREFIX,
                 _RUNTIME_HOST_PACKAGE_PREFIX,
             )
         )

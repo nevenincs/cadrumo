@@ -9,10 +9,11 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.models import OperationIdentity, OperationTerminalReceipt
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_mutation import (
     bind_iva_wallet_profile_ports,

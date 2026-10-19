@@ -36,10 +36,11 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import login_session
-from cadrumo.application.user_profile.access_contracts import AccessScope, AccessSession, ProfileAccessBinding
-from cadrumo.application.user_profile.login_session import authenticate_profile_candidate, borrow_profile_receipt_key
+from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding
+from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
 from cadrumo.core.time.clock import now
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.attendance import (
     AttendanceAsk,
     AttendanceDecide,
@@ -62,6 +63,7 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatus, SignI
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
+from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
@@ -178,7 +180,7 @@ class StoredSignInRuntime:
         frontend: OperationFrontendProjection,
     ) -> ProfileStatus | AccessRefusal:
         """Present the stored sign-in's proof from this process's keychain."""
-        with borrow_profile_receipt_key(bucket_id=self.profile_id) as proof:
+        with borrow_receipt_proof(profile_id=self.profile_id) as proof:
             return self.login(connection, "receipt", proof, frontend=frontend)
 
     def session(

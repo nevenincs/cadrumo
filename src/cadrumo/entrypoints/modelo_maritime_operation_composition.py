@@ -5,12 +5,13 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.modelo.maritime_preview import (
     ModeloMaritimeExemptionPreview,
     preview_maritime_exemption_for_active_profile,
 )
 from ..application.modelo.maritime_preview_operation import ModeloMaritimePreviewPorts
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation

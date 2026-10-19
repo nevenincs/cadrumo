@@ -28,15 +28,13 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     publish_test_profile_capsule,
 )
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-from cadrumo.application.user_profile.login_session import (
-    ProfileLoginCandidate,
-    ProfileReceiptRefusedError,
-    borrow_profile_receipt_key,
-)
+from cadrumo.application.user_profile.login_session import ProfileLoginCandidate
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 from cadrumo.core.config import override_settings
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
+from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
 
 from ..profile_receipt import resume_profile_candidate
 
@@ -104,7 +102,7 @@ def test_receipt_admission_preserves_ambient_session_and_deadlines(
             bind_profile_login_session_port(build_profile_login_session_port()),
         ):
             ambient = current_active_bucket_session()
-            with borrow_profile_receipt_key(bucket_id=profile_id) as key:
+            with borrow_receipt_proof(profile_id=profile_id) as key:
                 assert len(key) == 32
                 reads = human_keyring.reads
                 with resume_profile_candidate(
@@ -176,7 +174,7 @@ def test_receipt_admission_preserves_ambient_session_and_deadlines(
                 interrupted_keys: list[bytearray] = []
                 with (
                     pytest.raises(RuntimeError),
-                    borrow_profile_receipt_key(bucket_id=profile_id) as interrupted_key,
+                    borrow_receipt_proof(profile_id=profile_id) as interrupted_key,
                 ):
                     interrupted_keys.append(interrupted_key)
                     raise RuntimeError("protected IPC failed")
@@ -225,7 +223,7 @@ def test_receipt_admission_refuses_without_binding_custody(
         with (
             bind_profile_custody_port(build_profile_custody_port()),
             bind_profile_login_session_port(build_profile_login_session_port()),
-            borrow_profile_receipt_key(bucket_id=profile_id) as key,
+            borrow_receipt_proof(profile_id=profile_id) as key,
         ):
             ambient = current_active_bucket_session()
             reads = human_keyring.reads

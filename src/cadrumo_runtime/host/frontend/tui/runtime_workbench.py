@@ -45,6 +45,7 @@ from cadrumo.entrypoints.tui.operations.catalogue import OperationCatalogueSourc
 from cadrumo.entrypoints.tui.operations.destination import OperationsDestinationV1
 from cadrumo.entrypoints.tui.reconciliation_export import ReconciliationExportScreen
 from cadrumo.entrypoints.tui.reference.destination import reference_screen_factory
+from cadrumo.entrypoints.tui.setup.destination import setup_screen_factory
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.workbench_generation import read_workbench_generation
@@ -312,6 +313,7 @@ class RuntimeWorkbenchRoot:
             "workbench.profile": _available("workbench.profile"),
             "workbench.operations": _available("workbench.operations"),
             "workbench.installation": _available("workbench.installation"),
+            "workbench.setup": _available("workbench.setup"),
             "workbench.reference": _available("workbench.reference"),
             "workbench.ledger": generation.ledger_admission,
             "workbench.declarations": generation.declarations_admission,
@@ -326,6 +328,7 @@ class RuntimeWorkbenchRoot:
         factories = self._base_factories(generation, profile_factory)
         factories["workbench.operations"] = self._operations
         factories["workbench.installation"] = installation_screen_factory
+        factories["workbench.setup"] = setup_screen_factory(self._client)
         factories["workbench.reference"] = reference_screen_factory
         ledger = self._ledger_factory(generation)
         if ledger is not None:

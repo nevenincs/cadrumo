@@ -14,6 +14,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.session_policy import evaluate_session_authority
 
 from ...core.identity.digest import ContentDigest
@@ -21,8 +22,6 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
     AccessSession,
     ApiKeyRecord,

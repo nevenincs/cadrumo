@@ -420,6 +420,28 @@ def assemble(
                 "reason": "Relocated explicit PDFium library path",
             }
         )
+    # Playwright starts its Node driver from beside the package; point that default at
+    # the relocated executable while keeping its own PLAYWRIGHT_NODEJS_PATH override.
+    driver = packages / "playwright/_impl/_driver.py"
+    if driver.is_file():
+        before = digest(driver)
+        source = driver.read_text(encoding="utf-8")
+        old = 'str(driver_path / "node")'
+        node = native / "packages/playwright/driver/node"
+        if source.count(old) != 1 or not node.is_file():
+            raise ValueError("Unrecognized Playwright driver loader")
+        parent = contract["package_root_from_executable"]
+        relative = node.relative_to(root).as_posix()
+        replacement = f"str(Path(sys.executable).parent / {parent!r} / {relative!r})"
+        driver.write_text(source.replace(old, replacement), encoding="utf-8")
+        patches.append(
+            {
+                "file": driver.relative_to(root).as_posix(),
+                "before": before,
+                "after": digest(driver),
+                "reason": "Relocated Playwright Node driver path",
+            }
+        )
     images = [path for path in root.rglob("*") if native_image(path)]
     relocate(images, root, contract)
     return {

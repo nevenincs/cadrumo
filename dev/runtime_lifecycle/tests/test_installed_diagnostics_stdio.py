@@ -47,13 +47,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-    ProfileAccessStatus,
-)
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
@@ -65,6 +58,13 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.entrypoints.diagnostics_operation_composition import build_diagnostics_read_ports
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
 from .test_installed_authenticated_stdio import (

@@ -8,14 +8,15 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from cadrumo.application.user_profile.access_contracts import AccessSession, Availability, OsLoginContext
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo.application.user_profile.access_contracts import AccessSession, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,
     EnrollmentRequester,
     ProtectedEnrollmentRecipient,
 )
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepared
 
 from ..application.enrollment_recipient import VolatileEnrollmentRecipient

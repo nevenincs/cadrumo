@@ -14,6 +14,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.operator_action_enums import NoRecoveryOutcome
@@ -34,11 +37,6 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSt
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_errors import WorkUnitMutationRefusedError
 from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory

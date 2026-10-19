@@ -12,7 +12,7 @@ import pytest
 from cadrumo.application.ledger.actions_import import LedgerProviderID
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.tests.cli_json_support import require_json_object
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from .ledger_ux_support import (
     _FOUR_ROW_CSV,

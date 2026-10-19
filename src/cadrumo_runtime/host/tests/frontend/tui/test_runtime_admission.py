@@ -15,13 +15,6 @@ from textual.pilot import Pilot
 from textual.widgets import Input, Select
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
 from cadrumo.application.user_profile.automation_operations import (
     build_automation_operation_definitions,
     build_automation_operation_registrations,
@@ -31,16 +24,18 @@ from cadrumo.application.user_profile.login_interaction import (
     ProfileLoginInventoryState,
     ProfileLoginInventoryV1,
 )
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from cadrumo.entrypoints import operation_composition
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.transport_cleanup import TransportCleanup

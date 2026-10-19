@@ -29,7 +29,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.provenance import OperationAdmissionProvenance
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessSession
+from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
@@ -38,6 +38,8 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...adapters.profile_worker import ProfileWorkerProcess

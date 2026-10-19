@@ -11,10 +11,8 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .linux_secret_cleanup import close_secret_bus_after_failure
 from .linux_secret_contracts import BUS, BUS_PATH, MAX_REPLY_BYTES, SERVICE, invalid_secret_reply, secret_reply_body
 

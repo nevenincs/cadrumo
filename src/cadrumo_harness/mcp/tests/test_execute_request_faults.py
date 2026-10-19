@@ -29,7 +29,6 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -40,6 +39,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.request_faults import RequestFault
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,

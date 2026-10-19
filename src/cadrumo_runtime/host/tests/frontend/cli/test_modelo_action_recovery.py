@@ -32,7 +32,7 @@ from cadrumo.tests.inventory import REPO_ROOT
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo.tests.storage_scope import relocated_storage_path
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 # Each installed console receives its own bounded password proof. Registration
 # does not grant a later process authority through a saved sign-in.

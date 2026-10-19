@@ -10,15 +10,9 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

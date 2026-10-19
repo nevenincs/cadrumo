@@ -8,9 +8,8 @@ import sys
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from .....application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
+
 from .macos_core_foundation import CoreFoundation, bind_native_function, native_integer
 from .macos_keychain_contracts import (
     AUTHORIZATIONS,

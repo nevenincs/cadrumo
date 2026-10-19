@@ -5,13 +5,12 @@ line budget. :class:`~core.config.Settings` inherits these fields (through the
 mixin) with
 their declared validation and defaults. The path fields declared here are
 normalized and lifecycle-classified on :class:`~core.config.Settings` by name
-through inheritance; the optional API-key secrets are blank-to-``None`` coerced
-there too.
+through inheritance.
 
 See Also:
     :class:`~core.config.Settings`
-        Central environment facade that inherits this mixin, normalizes its path
-        fields, and coerces its optional secret fields.
+        Central environment facade that inherits this mixin and normalizes its path
+        fields.
     :func:`~core.config.load_settings`
         Runtime entry point used by LLM consumers to read these fields.
 """
@@ -20,11 +19,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import Field
 
 from .config_integration_fields import CadrumoIntegrationSettings
 from .config_support import LLMProvider
-from .model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 
 class CadrumoLlmSettings(CadrumoIntegrationSettings):
@@ -32,34 +30,11 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
 
     # ── LLM ─────────────────────────────────────────────────────────────────
     cadrumo_llm_provider: LLMProvider = Field(
-        default=LLMProvider.ANTHROPIC,
-        description="Default LLM provider name",
-    )
-    cadrumo_llm_model: str = Field(
-        default=default_model_runtime_id(ModelRole.TEXT_EXTRACTION, ModelRuntime.CLOUD_ANTHROPIC),
+        default=LLMProvider.LOCAL,
         description=(
-            "Default LLM model identifier -- the last-resort fallback for any request "
-            "that names no model and belongs to no declared role. It previously carried "
-            "a hand-typed frontier-tier identifier, which made it the single point where "
-            "every unrouted call silently reached the most expensive tier available; the "
-            "value is now read from the core model catalogue's lowest-bound capable "
-            "cloud default. Prefer a role-named setting "
-            "(cadrumo_llm_cloud_vision_model and siblings) over this field: a caller "
-            "resolving through a role gets a model chosen for its job, while this one is "
-            "only a floor"
+            "Default LLM provider for a request that names none: LOCAL runs on this "
+            "machine, AGENT asks the agent service to run it on the person's selected lane"
         ),
-    )
-    cadrumo_llm_anthropic_api_key: SecretStr | None = Field(
-        default=None,
-        description="Anthropic API key (env only, never logged)",
-    )
-    cadrumo_llm_openai_api_key: SecretStr | None = Field(
-        default=None,
-        description="OpenAI API key (optional)",
-    )
-    cadrumo_llm_gemini_api_key: SecretStr | None = Field(
-        default=None,
-        description="Google Gemini API key (optional)",
     )
     cadrumo_llm_cache_dir: Path = Field(
         default=Path("cache") / "llm-cache",
@@ -106,10 +81,6 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
     cadrumo_llm_default_timeout_s: int = Field(
         default=60,
         description="Default timeout for LLM provider calls in seconds",
-    )
-    cadrumo_llm_max_retries: int = Field(
-        default=3,
-        description="Maximum retry attempts for retryable LLM failures",
     )
 
 

@@ -1,12 +1,25 @@
-import { Select as SelectPrimitive } from "radix-ui";
+import { useState } from "react";
 import { cn } from "@/components/ui/cn";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Icon } from "@/components/ui/icon";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useStrings } from "../../shell/strings";
 import { ProviderMark } from "./ProviderMark";
-import type { ProviderOption, ProviderWay } from "./types";
+import type { ProviderOption, ProviderTransport, ProviderWay } from "./types";
 
 /** One row of the list: a lane of the catalog, named as the catalog names it
- * and drawn with its provider's own mark. */
+ * and distinguished by how it reaches the provider. */
 type Entry = { provider: ProviderOption; way: ProviderWay };
 
 /** Every lane the catalog serves, in the order it serves them. */
@@ -15,13 +28,32 @@ const entriesOf = (providers: readonly ProviderOption[]): Entry[] =>
     provider.ways.map((way): Entry => ({ provider, way })),
   );
 
+function connectionWords(
+  t: ReturnType<typeof useStrings>,
+  transport: ProviderTransport,
+) {
+  return transport === "api"
+    ? t("desktop.providers.connection_api")
+    : t("desktop.providers.connection_app");
+}
+
+/** Keep an entry whose words hold what was typed, as the provider settings
+ * search does; a fuzzy match would let a short word like "app" match almost
+ * every provider. */
+const containsSearch = (
+  _value: string,
+  search: string,
+  keywords?: string[],
+): number => {
+  const typed = search.trim().toLocaleLowerCase();
+  if (!typed) return 1;
+  return (keywords ?? []).join(" ").toLocaleLowerCase().includes(typed) ? 1 : 0;
+};
+
 /**
- * The provider list: a select with one row for each lane the catalog serves,
- * each with its provider's mark and the name the catalog gives it. A lane that
- * cannot be chosen stays in the list, disabled, saying why. Nothing here
- * words a lane beyond that: where two lanes of one provider carry the same
- * name, the list shows the same name twice. It is a custom list because a
- * platform select cannot draw a mark in a row.
+ * The provider picker: one searchable row for every connection the catalog
+ * serves. Duplicate provider names stay separate, and unavailable choices
+ * remain visible with a plain explanation.
  */
 export function ProviderSelect({
   id,
@@ -37,81 +69,115 @@ export function ProviderSelect({
   onChange: (wayId: string) => void;
 }) {
   const t = useStrings();
+  const [open, setOpen] = useState(false);
   const entries = entriesOf(providers);
   const chosen = entries.find((entry) => entry.way.id === value);
   return (
-    <SelectPrimitive.Root
-      value={value}
-      onValueChange={onChange}
-      disabled={entries.length === 0}
-    >
-      <SelectPrimitive.Trigger
-        id={id}
-        data-slot="provider-select"
-        className="relative flex h-control-sm w-full min-w-0 cursor-pointer items-center rounded-md border border-input bg-card pr-7 pl-2 text-left text-base text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <span className="flex min-w-0 flex-1 items-center gap-2">
-          <SelectPrimitive.Value
-            placeholder={t("desktop.agent.choose_provider")}
-          >
-            {chosen && (
-              <span className="flex min-w-0 items-center gap-2">
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          id={id}
+          type="button"
+          aria-label={
+            chosen
+              ? `${t("desktop.agent.provider")}: ${chosen.provider.name}, ${connectionWords(t, chosen.way.transport)}`
+              : t("desktop.agent.provider")
+          }
+          data-slot="provider-select"
+          disabled={entries.length === 0}
+          className="relative flex h-control-sm w-full min-w-0 cursor-pointer items-center rounded-md border border-input bg-card pr-7 pl-2 text-left text-base text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            {chosen ? (
+              <>
                 <ProviderMark provider={chosen.provider.id} size="md" />
                 <span className="truncate">{chosen.provider.name}</span>
+                <span className="shrink-0 text-sm text-muted-foreground">
+                  {connectionWords(t, chosen.way.transport)}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                {t("desktop.agent.choose_provider")}
               </span>
             )}
-          </SelectPrimitive.Value>
-        </span>
-        <Icon
-          name="chevronDown"
-          className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-faint"
-        />
-      </SelectPrimitive.Trigger>
-      <SelectPrimitive.Portal>
-        <SelectPrimitive.Content
-          position="popper"
-          sideOffset={4}
-          collisionPadding={8}
-          className={cn(
-            "z-(--layer-menu) max-h-(--radix-select-content-available-height) w-(--radix-select-trigger-width) max-w-(--radix-select-content-available-width) origin-(--radix-select-content-transform-origin) overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-overlay",
-            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
-          )}
+          </span>
+          <Icon
+            name="chevronDown"
+            className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-faint"
+          />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        role="dialog"
+        aria-label={t("desktop.agent.provider")}
+        className="w-(--radix-popover-trigger-width) min-w-64 overflow-hidden p-0"
+      >
+        <Command
+          label={t("desktop.providers.search_label")}
+          filter={containsSearch}
+          className="max-h-(--radix-popover-content-available-height)"
         >
-          <SelectPrimitive.Viewport className="p-1">
-            {entries.map(({ provider, way }) => (
-              <SelectPrimitive.Item
-                key={way.id}
-                value={way.id}
-                textValue={provider.name}
-                disabled={!way.selectable}
-                data-way={way.id}
-                className={cn(
-                  "relative flex min-h-control-sm cursor-pointer items-center gap-2 rounded-sm px-2.5 py-1 text-base outline-none select-none",
-                  "data-[disabled]:pointer-events-none data-[disabled]:opacity-60",
-                  "data-[highlighted]:bg-selected data-[highlighted]:text-accent-foreground",
-                  "before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-xs before:bg-brand before:opacity-0 data-[highlighted]:before:opacity-100",
-                  "forced-colors:data-[highlighted]:bg-[Highlight] forced-colors:data-[highlighted]:text-[HighlightText]",
-                )}
-              >
-                <ProviderMark provider={provider.id} size="md" />
-                {/* The row is drawn in the system's highlight colours in a
-                    forced-colours window; its text takes them itself, or the
-                    browser lays a plate of the page colour behind it. */}
-                <span className="grid min-w-0 flex-1 forced-colors:in-data-[highlighted]:forced-color-adjust-none forced-colors:in-data-[highlighted]:text-[HighlightText]">
-                  <SelectPrimitive.ItemText>
-                    {provider.name}
-                  </SelectPrimitive.ItemText>
-                  {!way.selectable && (
-                    <span className="text-sm text-muted-foreground in-data-[highlighted]:text-accent-foreground">
-                      {way.unavailableReason ?? t("desktop.agent.unavailable")}
+          <CommandInput
+            placeholder={t("desktop.providers.search_placeholder")}
+          />
+          <CommandList
+            label={t("desktop.providers.search_label")}
+            className="max-h-(--radix-popover-content-available-height) flex-1"
+          >
+            <CommandEmpty>{t("desktop.providers.search_empty")}</CommandEmpty>
+            <CommandGroup>
+              {entries.map(({ provider, way }) => {
+                const connection = connectionWords(t, way.transport);
+                const reason = way.selectable
+                  ? null
+                  : (way.unavailableReason ?? t("desktop.agent.unavailable"));
+                return (
+                  <CommandItem
+                    key={way.id}
+                    value={way.id}
+                    keywords={[
+                      provider.name,
+                      connection,
+                      ...(reason ? [reason] : []),
+                    ]}
+                    disabled={!way.selectable}
+                    data-way={way.id}
+                    onSelect={() => {
+                      if (!way.selectable) return;
+                      onChange(way.id);
+                      setOpen(false);
+                    }}
+                    className={cn(
+                      "relative cursor-pointer rounded-sm px-2.5 py-1",
+                      "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-60",
+                      "data-[selected=true]:bg-selected data-[selected=true]:text-accent-foreground",
+                    )}
+                  >
+                    <ProviderMark provider={provider.id} size="md" />
+                    <span className="grid min-w-0 flex-1">
+                      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                        <span className="truncate font-medium">
+                          {provider.name}
+                        </span>
+                        <span className="text-sm text-muted-foreground in-data-[selected=true]:text-accent-foreground">
+                          {connection}
+                        </span>
+                      </span>
+                      {reason && (
+                        <span className="text-sm text-muted-foreground in-data-[selected=true]:text-accent-foreground">
+                          {reason}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </span>
-              </SelectPrimitive.Item>
-            ))}
-          </SelectPrimitive.Viewport>
-        </SelectPrimitive.Content>
-      </SelectPrimitive.Portal>
-    </SelectPrimitive.Root>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

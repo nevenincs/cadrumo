@@ -101,17 +101,16 @@ Two extras need a further provisioning step after the install:
   and the first step that fails stops the run. Setup installs the runtime
   only when you pass `--confirm`.
 
-  To go step by step, run the commands one at a time.
-  `aeat config provision install` installs the runtime through `winget` on
-  Windows or Homebrew on macOS, and only with `--confirm`; it does nothing
-  when the runtime is already installed. On Linux, install Ollama with its
-  upstream installer, which needs root. `aeat config provision start` starts
-  an installed runtime that is not answering, and does nothing when it
-  already answers. `aeat config provision pull` downloads every reader role's
-  model, a few GB in total. Narrow it with `--role` to one of
-  `vision_transcription`, `text_extraction`, `column_role_mapping`, or
-  `supply_nature_proposal`. `aeat config provision verify` confirms each model
-  loads and answers.
+  To set up only the local AI, run `aeat config provision pull`. The local AI
+  is one component: the runtime and every reader role's model. The command
+  installs the runtime when it is missing, through `winget` on Windows or
+  Homebrew on macOS, starts it, and downloads the models that are not ready
+  yet, a few GB in total. `--model` names one catalogue model to use instead
+  of the ones Cadrumo chooses. On Linux, install Ollama with its upstream
+  installer, which needs root. `aeat config provision start` starts an
+  installed runtime that is not answering, and does nothing when it already
+  answers. `aeat config provision verify --item local_ai` confirms the runtime
+  answers and each model loads and answers.
 
   The commands work with or without a signed-in profile and with or without a
   running Cadrumo. The same work is also available as the registered operations

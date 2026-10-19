@@ -16,9 +16,9 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-10-14'
+modified: '2026-10-18'
 body_schema: 'body-v1'
-body_hash: 'sha256:ba0190d29a5ba9bebde49140185341532cf6ee09df408fa77796e82a5d7a137b'
+body_hash: 'sha256:41006a5322c71abcf535b0fcd838c7f03552017503cbe735b60258918c50da96'
 ---
 
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
@@ -152,3 +152,9 @@ Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-app
 ### Amendment 2026-10-14: runtime-owned recovery commands
 
 Recovery-code administration is now served by `cadrumo-runtime config profile recovery enable|disable|status`, defined in `cadrumo_runtime.commands.recovery`. Direct `aeat config login`, `aeat config logout`, and `aeat config profile create` remain AEAT commands. This changes the current command owner and source locator only; the recovery proof, storage, and custody rules in this record remain unchanged.
+
+## Amendment 2026-10-18: runtime authority boundary
+
+Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
+
+The wording "This protocol is enforced at the application enrollment boundary" above is kept as accepted history. It now reads together with this ruling: The password envelope, bounded KDF supervision, recovery enrolment and proof, capsule publication transactions, the failed-attempt throttle and the human receipt are implemented and enforced in `src/cadrumo_runtime`. Every Argon2 child is spawned by a runtime-owned process only, and no frontend process generates, wraps or unwraps a DEK. Formats, parameters, throttle rules, recovery independence and deletion scope in this record are unchanged; the move changes code location, not bytes.

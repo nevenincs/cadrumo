@@ -578,58 +578,58 @@ desktop:
     zoom_reset: Reset docs zoom
   automation_access:
     cancel: Cancel
-    cleanup_pending: Revoked. Its stored key is still being removed from this computer.
+    cleanup_pending: Removed. Cadrumo is still deleting the stored key from this computer.
     copied: Copied
-    copy: Copy reference
-    copy_failed: Couldn't copy. Select the reference and copy it yourself.
+    copy: Copy code
+    copy_failed: Couldn't copy. Select the code and copy it yourself.
     done: Done
-    empty: No access keys have been issued for this profile yet.
+    empty: No access keys yet.
     expired_on: Expired {date}
     expires_on: Expires {date}
-    issue: Issue a key
-    issue_lead: This key lets an external application read profile information and
-      operation details, and run all operations available to external applications.
-      You can separately allow it to read tax values below.
-    issue_submit: Issue key
-    issued_lead: Use this reference when setting up the external application. The
-      key itself stays in this computer's secure storage and is never shown.
-    issued_on: Issued {date}
-    issued_once: This is shown once. When you close it, it can't be shown again.
-    issued_title: Key issued
-    issuing: Issuing…
-    key_title: Key {id}
+    issue: Create an access key
+    issue_lead: The app can read your profile details, see the actions it runs, and
+      use every Cadrumo action available to connected apps.
+    issue_submit: Create access key
+    issued_lead: Paste this connection code into the other app when you set it up.
+      The key itself stays safely on this computer.
+    issued_once: Shown only once. After you close this, you can't see it again.
+    issued_title: Access key created
+    issuing: Creating…
+    key_title: Access key created {date}
+    key_title_undated: Access key
     last_used: Last used {date}
-    lead: Access keys let external applications use this profile. Only you can issue
-      or revoke them.
+    lead: Access keys let other AI apps on this computer work with this profile. Only
+      you can create or remove them.
     never_used: Not used yet
-    reference_label: Credential reference
+    reference_label: Connection code
     refresh: Refresh
+    refused_failed: Couldn't complete this. Try again.
     refused_not_found: That key isn't in the list any more.
-    refused_not_signed_in: Sign in to manage keys.
-    refused_outcome_unknown: Cadrumo didn't hear back. The key may or may not have
-      been issued; refresh to check.
-    refused_person_act_required: Keys can only be managed by you, here.
-    refused_profile_locked: This profile is locked.
-    revoke: Revoke
-    revoke_confirm: Revoke this key? Any application using it will lose access immediately.
-      This can't be undone.
-    revoke_confirm_action: Revoke key
-    revoking: Revoking…
-    scope_all_operations: Can run all operations available to external applications
-    scope_no_tax_values: Doesn't read tax values
-    scope_operations_seen: Sees the operations it runs
-    scope_profile_values: Reads profile values
-    scope_some_operations: Runs only some operations
-    scope_tax_values: Reads tax values
+    refused_not_signed_in: Sign in to change these settings.
+    refused_outcome_unknown: Cadrumo couldn't confirm whether the key was created.
+      Refresh to check.
+    refused_person_act_required: Only you can change these settings, from this window.
+    refused_profile_locked: Unlock your profile to change these settings.
+    revoke: Remove
+    revoke_confirm: Remove this key? Apps using it lose access right away. This can't
+      be undone.
+    revoke_confirm_action: Remove key
+    revoking: Removing…
+    scope_all_operations: Can use every Cadrumo action available to connected apps
+    scope_no_tax_values: Doesn't read tax amounts
+    scope_operations_seen: Sees the actions it runs
+    scope_profile_values: Reads profile details
+    scope_some_operations: Can use only some actions
+    scope_tax_values: Reads tax amounts
     standing_active: Active
     standing_expired: Expired
     standing_pending: Waiting for approval
-    standing_revoked: Revoked
+    standing_revoked: Removed
     standing_suspended: Paused
-    tax_values: Also let it read tax values
-    tax_values_note: Includes calculated tax amounts and return details. Leave this
-      off to keep those values from the application.
-    title: Access keys for external applications
+    tax_values: Also let it read tax amounts
+    tax_values_note: Includes calculated taxes and return details. Leave this off
+      to keep them from the app.
+    title: Access keys for other AI apps
   calendar:
     aeat:
       accepted: Accepted
@@ -685,6 +685,21 @@ desktop:
       else works as usual.
     show: Show the docs
     unavailable: The documentation couldn't be opened. Everything else works as usual.
+  google:
+    checking: Checking the Google sign-in…
+    not_in_this_build: This version of Cadrumo can't sign in to Google.
+    palette_sign_in: Authenticate with Google
+    sign_in: Sign in
+    sign_in_label: Sign in to Google
+    sign_out: Sign out
+    sign_out_label: Sign out of Google
+    signed_in: Signed in as {email}.
+    signed_in_plain: Signed in.
+    signed_out: Not signed in.
+    signing_out: Signing out of Google…
+    title: Google account
+    unknown: The Google sign-in couldn't be read right now.
+    waiting: Finish signing in to Google in your browser.
   host:
     failed: This part couldn't load.
     unavailable: This part needs the desktop application.
@@ -804,6 +819,92 @@ desktop:
     terminals: Terminals
     title: Settings
     window: Window
+  setup:
+    advisory_incomplete: Cadrumo setup is not complete. Click here to complete it.
+    advisory_running: Cadrumo setup is running. Click here to see how it's going.
+    approve: Download and set up
+    approve_at_least: Download at least {size} and set up
+    approve_size: Download {size} and set up
+    cancel: Cancel setup
+    cancelling: Stopping after the current step…
+    checking: Checking components…
+    close: Close
+    copy_details: Copy details
+    details: Details
+    hide: Hide
+    lead: Cadrumo needs these components to work.
+    lead_review: Check what will be downloaded and where it goes, then approve it.
+    lead_running: You can close this; setup keeps going and Settings shows how it's
+      doing.
+    not_now: Not now
+    open: Open setup
+    outcome_cancelled: Setup was cancelled. What was already downloaded is kept.
+    outcome_completed: Everything is set up.
+    outcome_failed: Setup didn't finish.
+    outcome_interrupted: Setup stopped before it finished. Resume to continue where
+      it left off.
+    outcome_not_enough_space: There wasn't enough free space, so nothing was downloaded.
+    outcome_nothing_to_do: Everything was already set up.
+    outcome_plan_changed: What's needed changed before setup started. Check the new
+      plan and approve it.
+    outcome_rejected: Nothing was downloaded.
+    overall_progress: Setup progress
+    palette_browser: Set up the browser
+    palette_cancel: Cancel setup
+    palette_check: Check components
+    palette_local_ai: Set up the local AI
+    palette_open: Set up components
+    palette_retry: Retry setup
+    plan_destination: 'Saved in: {folder}'
+    plan_from: 'From: {hosts}'
+    plan_nothing: Nothing to download.
+    plan_outside_program: This installs a separate program on this computer, which
+      may ask for your permission.
+    plan_shared: Downloaded together with {name}.
+    plan_size: '{size} to download.'
+    plan_size_at_least: At least {size} to download.
+    planning: Working out what to download…
+    progress_bytes: '{done} of {total}'
+    progress_item: '{index} of {count}: {name} — {step}'
+    progress_label: Progress of {name}
+    rail_busy: Setting up components
+    rail_incomplete: Setup isn't finished
+    refused_busy: Setup is already running elsewhere. Wait for it to finish.
+    refused_not_cancellable: Setup can't be stopped right now. It will finish shortly.
+    refused_not_pending: That plan is no longer waiting for an answer.
+    refused_not_signed_in: Sign in to your profile first.
+    refused_other: Setup couldn't be reached. Try again in a moment.
+    refused_plan_changed: What's needed changed. Check the new plan, then approve
+      it.
+    refused_unavailable: Cadrumo's services aren't answering. Try again in a moment.
+    reject: Don't download
+    result_already: Already set up
+    result_done: Set up
+    result_not_finished: Didn't finish
+    resume: Resume
+    show_new_plan: Show the new plan
+    size_unknown: Size known once it starts
+    space: Needs {required} of free space; {free} is free.
+    space_short: There isn't enough free space. Free some up, then try again.
+    space_unread: Needs {required} of free space; the free space couldn't be read.
+    start: Set up
+    step_checking: Checking
+    step_connecting: Connecting
+    step_downloading: Downloading
+    step_installing: Installing
+    step_tidying: Tidying up
+    step_waiting: Waiting to start
+    summary_complete: Everything Cadrumo needs is set up.
+    summary_hardware: This computer can't run everything Cadrumo needs; the rest is
+      set up.
+    summary_incomplete: Some of what Cadrumo needs isn't set up yet.
+    summary_running: Setup is running.
+    title: Set up Cadrumo
+    toast_cancelled: Setup cancelled
+    toast_done: Components are set up
+    toast_not_finished: Setup didn't finish
+    try_again: Try again
+    unavailable: Components can't be checked right now. Try again in a moment.
   signin:
     checking: Checking your sign-in…
     choose_profile: Choose a profile
@@ -1240,20 +1341,16 @@ overview:
     The automated retrieval sweep cannot fetch Impuesto sobre Sociedades filing history
     (modelo 200/202); check it directly at the AEAT sede.
 provisioning:
-  condition:
-    role_model_fit_for_role: '%{model} answered the test document, but its answer
-      could not be used to read an invoice. Choose a different text model.'
-    role_model_fitness_verified: 'No fitness check is recorded for the current weights
-      of %{model}. This does not mean the model is unfit: run `aeat config provision
-      verify` to check it.'
-    role_model_fitness_within_timeout: '%{model} did not finish its test answer before
-      the time limit ran out. It may be too slow for this machine; choose a smaller
-      model or raise the LLM timeout, then run `aeat config provision verify` again.'
   model:
     licence:
       non_commercial_advisory: Model %{model} is covered by the %{licence}, which
         does not permit commercial use. You named it explicitly, so Cadrumo will use
         it, but a commercial filing practice needs a separate licence from the publisher.
+  role:
+    column_role_mapping: for table columns
+    supply_nature_proposal: for the kind of sale or purchase
+    text_extraction: for document text
+    vision_transcription: for scanned pages
 review:
   adapters:
     errors:
@@ -2141,6 +2238,7 @@ tui:
     operations: Operations
     profile: Profile
     reference: Reference
+    setup: Components
     withholding: Withholding
   home:
     account_fallback: Account
@@ -3883,6 +3981,7 @@ tui:
       operations: Open Operations
       profile: Open Profile
       reference: Open Reference
+      setup: Open Components
       unknown: Open area
       withholding: Open Withholding
     destination_help:
@@ -3894,6 +3993,7 @@ tui:
       operations: Every operation Cadrumo can run, to search, fill in and run
       profile: This profile's details and the sources that fill them in
       reference: Modelos, casillas, categories, portals and sign-in methods
+      setup: The browser and the local AI
       withholding: Capture and inspect invoice withholding for a selected filing year
     refusal:
       not_composed: Not every area could be read yet.
@@ -3947,3 +4047,46 @@ tui:
         reconciliation_resolved: Resolved
         revision_current: Current
         revision_superseded: Replaced
+  setup:
+    check_again: Check again
+    checking: Checking…
+    column:
+      action: Action
+      item: Component
+      state: State
+    complete: Cadrumo is set up.
+    hardware_limited: This computer does not have enough memory for the local AI.
+    hint: Enter runs the action of the selected row. Setting up shows the plan and
+      asks before anything is downloaded.
+    incomplete: Some components are not ready yet.
+    intro: 'What Cadrumo needs on this computer: the browser for the tax agency website
+      and the local AI. Choose a row to run its action.'
+    outcome:
+      cancelled: You cancelled the setup.
+      completed: Setup finished.
+      interrupted: Setup was interrupted before it finished. Choose Resume to continue.
+      not_enough_space: There is not enough free disk space, so nothing was downloaded.
+      nothing_to_do: Everything is already set up.
+      plan_changed: The plan changed after you approved it, so nothing was downloaded.
+        Start again to see the new plan.
+      rejected: Nothing was downloaded.
+    plan:
+      destination: '  Stored in %{path}'
+      entry: '%{name}: %{size} from %{hosts}'
+      heading: 'Cadrumo will set up:'
+      installs_program: '  This installs a program on this computer. Its installer
+        may ask for your permission.'
+      part: '    %{name}: %{size}'
+      shared: '  Uses the same download as %{name}.'
+      size_unknown: size not known yet
+      total: 'Total download: %{size}.'
+      total_unknown: 'Total download: at least %{size}. Some sizes are only known
+        once the download starts.'
+    set_up_all: Set up everything
+    size:
+      gigabytes: '%{value} GB'
+      megabytes: '%{value} MB'
+    title: Components
+    unavailable: Cadrumo's background service could not be reached, so components
+      cannot be checked or set up right now.
+    working: Preparing the plan…

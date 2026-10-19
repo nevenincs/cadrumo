@@ -7,6 +7,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -33,7 +36,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from .access_contracts import AccessAction, AccessDenialCode, Availability, DisclosureCategory
 from .access_errors import ProfileAccessRefusedError
 from .recovery_custody import profile_recovery_status
 

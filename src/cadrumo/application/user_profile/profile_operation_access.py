@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import profile_operation_subject as _profile_subject
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
@@ -18,7 +20,6 @@ from ..operations.access_resolution import (
     require_period_independent_admission,
 )
 from ..operations.models import OperationRequest
-from .access_contracts import AccessDenialCode
 from .access_errors import ProfileAccessRefusedError
 from .profile_operation_contracts import (
     ProfileBundleExportOperationRequest,

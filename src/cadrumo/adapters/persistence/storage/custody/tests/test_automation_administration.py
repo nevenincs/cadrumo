@@ -24,11 +24,12 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
-from cadrumo.application.user_profile.access_contracts import AuthorityState
 from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 pytestmark = [
     pytest.mark.integration,

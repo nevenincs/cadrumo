@@ -21,6 +21,7 @@ extra fields.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -43,6 +44,20 @@ OPENID_SCOPE: str = _SCOPES.openid
 EMAIL_SCOPE: str = _SCOPES.email
 DRIVE_FILE_SCOPE: str = _SCOPES.drive_file
 REQUIRED_SCOPES: tuple[str, ...] = (OPENID_SCOPE, EMAIL_SCOPE, DRIVE_FILE_SCOPE)
+
+
+def scope_grant_mismatch(granted: Iterable[str]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return the required scopes a grant lacks and the scopes it adds, in that order.
+
+    This is the one rule every sign-in boundary applies: a grant is accepted
+    only when it is exactly :data:`REQUIRED_SCOPES`. A grant that lacks a
+    scope cannot do its job, and one that adds a scope reaches more than
+    Cadrumo asked for, so both are refused.
+    """
+    granted_set = set(granted)
+    missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in granted_set)
+    unexpected = tuple(sorted(granted_set.difference(REQUIRED_SCOPES)))
+    return missing, unexpected
 
 
 class OAuthToken(BaseModel):
@@ -100,19 +115,19 @@ class OAuthMetadata(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_all_scopes(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        """Reject metadata that omits any required scope.
+        """Reject metadata whose grant is not exactly the required scope set.
 
-        The CLI login flow may only persist
+        The login flow may only persist
         :class:`adapters.outbound.google.records.OAuthMetadata` after the consent
-        screen returns every scope in
+        screen returns exactly
         :data:`adapters.outbound.google.records.REQUIRED_SCOPES` (``openid`` +
-        ``email`` + ``drive.file``). Guards against accidental writes that
-        would leave the integration unable to call Sheets, Drive, or display
-        which account is linked.
+        ``email`` + ``drive.file``), by :func:`scope_grant_mismatch`.
         """
-        missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in value)
+        missing, unexpected = scope_grant_mismatch(value)
         if missing:
             raise ValueError(f"granted_scopes missing required scopes: {missing!r}")
+        if unexpected:
+            raise ValueError(f"granted_scopes carries scopes Cadrumo never requests: {unexpected!r}")
         return value
 
 
@@ -151,4 +166,5 @@ __all__ = [
     "DriveConfig",
     "OAuthMetadata",
     "OAuthToken",
+    "scope_grant_mismatch",
 ]

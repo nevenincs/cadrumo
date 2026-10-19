@@ -1,6 +1,7 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 import type {
   ContextMenuItem,
+  DesktopSetup,
   LogBatch,
   ManagerSignal,
   ShellToken,
@@ -132,6 +133,7 @@ export function tauriHost(): Host {
       },
     },
     environment: () => call("desktop_environment", {}),
+    about: () => call("about_info", {}),
     language: {
       read: () => call("desktop_language_read", {}),
       set: (language) => call("desktop_language_set", { language }),
@@ -146,6 +148,33 @@ export function tauriHost(): Host {
         return () => {
           updates.onmessage = () => undefined;
           void call("desktop_language_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+    },
+    setup: {
+      read: () => call("desktop_setup_read", {}),
+      check: (mode) => call("desktop_setup_check", { mode }),
+      verify: (items) => call("desktop_setup_verify", { items }),
+      start: (items, options = {}) =>
+        call("desktop_setup_start", {
+          items,
+          model: options.model ?? null,
+          resume: options.resume ?? false,
+        }),
+      answer: (operationId, planDigest, decision) =>
+        call("desktop_setup_answer", { operationId, planDigest, decision }),
+      cancel: (operationId) => call("desktop_setup_cancel", { operationId }),
+      signInGoogle: () => call("desktop_google_sign_in", {}),
+      signOutGoogle: () => call("desktop_google_sign_out", {}),
+      async observe(listener) {
+        const updates = new Channel<DesktopSetup>();
+        updates.onmessage = listener;
+        const subscription = await call("desktop_setup_observe", { updates });
+        return () => {
+          updates.onmessage = () => undefined;
+          void call("desktop_setup_unobserve", { subscription }).catch(
             () => undefined,
           );
         };
@@ -285,6 +314,11 @@ function tauriProviderSettings(
     },
     turnOff: ({ provider, revision }) =>
       command<ProviderSettingsRecord>("provider_settings_remove", {
+        provider,
+        revision,
+      }),
+    turnOn: ({ provider, revision }) =>
+      command<ProviderSettingsRecord>("provider_settings_turn_on", {
         provider,
         revision,
       }),

@@ -11,12 +11,13 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ...operations.owner import OperationExecutorContext
-from ...user_profile.access_contracts import AccessDenialCode
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..bulk_classify_operation import LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID

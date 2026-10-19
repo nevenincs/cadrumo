@@ -1,16 +1,11 @@
-"""Browser-build provisioning: revision-exact probe and idempotent install.
+"""Browser-build provisioning: the revision-exact probe and the managed browser root.
 
-The probe runs against controlled manifest and cache directories on disk. The
-installer runner is the one injected seam: it stands in for the vendor download
-by writing the cache layout the real installer produces, so the application's
-own re-probe decides success.
+The probe runs against controlled manifest and cache directories on disk.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
-from functools import partial
 from pathlib import Path
 
 import pytest
@@ -18,11 +13,8 @@ import pytest
 from ...core.config import Settings
 from ...core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ..operator_actions.catalogue import lookup_action
-from ..provisioning import DependencyStatus
 from ..provisioning_browser import (
     BROWSER_PROVISION_ACTION_ID,
-    PLAYWRIGHT_BROWSER_INSTALL_TIMEOUT_S,
-    install_playwright_browser,
     playwright_browsers_root,
     probe_playwright_browser,
     required_browser_builds,
@@ -176,111 +168,3 @@ def test_cadrumo_browser_root_override_wins_over_vendor_default(
     monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path / "vendor-cache"))
 
     assert playwright_browsers_root() == (storage_root / "browser-cache").resolve()
-
-
-class _Installer:
-    """Records runs and lays down the cache the vendor installer would write."""
-
-    def __init__(
-        self,
-        cache: Path,
-        *,
-        exit_code: int = 0,
-        writes: tuple[str, ...] = (),
-        error: Exception | None = None,
-    ) -> None:
-        self.cache = cache
-        self.exit_code = exit_code
-        self.writes = writes
-        self.error = error
-        self.timeouts: list[float] = []
-
-    def __call__(self, timeout_s: float) -> int:
-        self.timeouts.append(timeout_s)
-        if self.error is not None:
-            raise self.error
-        for directory in self.writes:
-            _install_build(self.cache, directory)
-        return self.exit_code
-
-
-def _probe(tmp_path: Path) -> tuple[Path, Callable[[], DependencyStatus]]:
-    cache = tmp_path / "cache"
-    return cache, partial(probe_playwright_browser, cache, manifest_path=_manifest(tmp_path))
-
-
-_BOTH = ("chromium-1243", "chromium_headless_shell-1243")
-
-
-def test_install_downloads_missing_builds_and_confirms_them(tmp_path: Path) -> None:
-    cache, probe = _probe(tmp_path)
-    run = _Installer(cache, writes=_BOTH)
-
-    outcome = install_playwright_browser(run=run, probe=probe)
-
-    assert run.timeouts == [PLAYWRIGHT_BROWSER_INSTALL_TIMEOUT_S]
-    assert outcome.installed is True
-    assert outcome.already_installed is False
-    assert outcome.installer_exit_code == 0
-    assert outcome.precondition_verdict is None
-    assert probe_playwright_browser(cache, manifest_path=tmp_path / "browsers.json").available is True
-
-
-def test_install_is_idempotent_when_builds_are_present(tmp_path: Path) -> None:
-    cache, probe = _probe(tmp_path)
-    for directory in _BOTH:
-        _install_build(cache, directory)
-    run = _Installer(cache)
-
-    outcome = install_playwright_browser(run=run, probe=probe)
-
-    assert run.timeouts == []
-    assert outcome.installed is True
-    assert outcome.already_installed is True
-
-
-@pytest.mark.parametrize(
-    ("installer", "expected_facts"),
-    (
-        (partial(_Installer, exit_code=1), {"installer_ran": True, "installer_exit_code": 1}),
-        # A zero exit that leaves a build missing is still a failed install.
-        (partial(_Installer, writes=("chromium-1243",)), {"installer_ran": True, "installer_exit_code": 0}),
-        (
-            partial(_Installer, error=TimeoutError("slow")),
-            {"installer_ran": False, "install_error_type": "TimeoutError"},
-        ),
-        (
-            partial(_Installer, error=OSError("no network")),
-            {"installer_ran": False, "install_error_type": "OSError"},
-        ),
-    ),
-)
-def test_failed_install_is_a_typed_refusal(
-    tmp_path: Path, installer: Callable[[Path], _Installer], expected_facts: dict[str, object]
-) -> None:
-    cache, probe = _probe(tmp_path)
-
-    outcome = install_playwright_browser(run=installer(cache), probe=probe)
-
-    assert outcome.installed is False
-    assert expected_facts.items() <= dict(outcome.facts).items()
-    verdict = outcome.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALL_SUCCEEDED.value
-
-
-def test_install_does_not_run_when_the_manifest_is_unreadable(tmp_path: Path) -> None:
-    cache = tmp_path / "cache"
-    run = _Installer(cache)
-
-    outcome = install_playwright_browser(
-        run=run, probe=partial(probe_playwright_browser, cache, manifest_path=tmp_path / "absent.json")
-    )
-
-    assert run.timeouts == []
-    assert outcome.installed is False
-    assert outcome.precondition_verdict is not None
-    assert (
-        outcome.precondition_verdict.failed_condition_id
-        == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_MANIFEST_READABLE.value
-    )

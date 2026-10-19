@@ -12,6 +12,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -19,7 +22,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import evidence_read_operation as worker
 from ..evidence import MediaKind, PurchaseInvoiceEvidence

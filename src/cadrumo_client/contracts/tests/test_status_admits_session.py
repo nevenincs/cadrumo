@@ -7,14 +7,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    AccessScope,
-    AuthorityState,
-    Availability,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 
 from ..profile_access import status_admits_session
 

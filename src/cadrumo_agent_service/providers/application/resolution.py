@@ -4,8 +4,9 @@ One precedence serves both masked status and the private resolver, so what a
 frontend shows and what a consumer receives cannot disagree:
 
 1. A record that cannot be read refuses; it is never treated as absent.
-2. A removed (``disabled``) credential wins over everything, including the
-   development environment.
+2. A lane turned off (assistant ``disabled``) or a removed (``disabled``)
+   credential wins over everything, including the development environment.
+   Turning a lane off keeps its stored key; it is only not used.
 3. For the assistant, a provider-sign-in choice selects the provider's own CLI
    sign-in. It never erases a stored key, which extraction keeps using.
 4. A stored key or token wins over the environment.
@@ -168,6 +169,14 @@ def status_entry(
     available, source, readiness, reason = _availability(
         entry, read, mode, environment=environment, storage_mode=storage_mode
     )
+    if (
+        mode is not ProviderSettingsMode.DISABLED
+        and (mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
+        and not isinstance(read, UnreadableProviderRecord)
+    ):
+        available = cli_state is CliState.INSTALLED_SIGNED_IN
+        readiness = ProviderReadiness.NOT_VERIFIED if available else ProviderReadiness.SIGN_IN_REQUIRED
+        reason = None if available else ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
     return ProviderStatusEntry(
         id=entry.id,
         provider=entry.provider,
@@ -176,6 +185,7 @@ def status_entry(
         auth_kind=entry.auth_kind,
         consumers=entry.consumers,
         mode=mode,
+        credential_saved=stored is not None and stored.credential is not None,
         available=available,
         source=source,
         readiness=readiness,
@@ -200,7 +210,9 @@ def _availability(
         return False, none, ProviderReadiness.UNUSABLE, ProviderStatusReason.RECORD_UNREADABLE
     if mode is ProviderSettingsMode.DISABLED:
         return False, none, ProviderReadiness.DISABLED, ProviderStatusReason.TURNED_OFF
-    if mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY:
+    if mode is ProviderSettingsMode.PROVIDER_SIGN_IN:
+        return True, none, ProviderReadiness.NOT_VERIFIED, None
+    if entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY:
         return True, none, ProviderReadiness.SIGN_IN_REQUIRED, ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
     if mode in {ProviderSettingsMode.KEY, ProviderSettingsMode.OAUTH}:
         return True, ProviderCredentialSource.PROFILE, ProviderReadiness.NOT_VERIFIED, None

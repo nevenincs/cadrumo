@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from cadrumo.application.user_profile.access_contracts import DisclosurePermission
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialReceipt
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.period import Period
+from cadrumo_client.contracts.access_vocabulary import DisclosurePermission
 
 
 def session_rows(sessions: tuple[PublicAccessSession, ...]) -> str:

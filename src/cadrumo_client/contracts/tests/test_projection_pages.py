@@ -7,9 +7,9 @@ import json
 import pytest
 from pydantic import JsonValue, ValidationError
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ..projection_pages import PROJECTION_PAGE_BYTES, ProjectionPage, ProjectionPageRequest, project_document_page
 

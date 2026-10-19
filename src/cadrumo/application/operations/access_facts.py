@@ -139,6 +139,9 @@ _LOCAL_READS: Final = (
 )
 
 _NETWORK_READS: Final = (
+    # A full check preflights each item's hosts and refreshes the Google sign-in.
+    "dependencies.status",
+    "dependencies.verify",
     # The probe browses once to the tax agency's public landing page and reads its answer.
     "diagnostics.connectivity.probe",
     # The next four ask the local model runtime for its inventory at its
@@ -290,10 +293,10 @@ _LOCAL_WRITES: Final = (
 
 _NETWORK_WRITES: Final = (
     "auth.session.acquire",
-    # The browser build is downloaded.
-    "browser-runtime.provision",
     "config.google.folder.organize",
     "config.google.login",
+    # The only operation that downloads or installs a setup item.
+    "dependencies.setup",
     "config.google.probe",
     "export.google-review",
     "export.google-sheets",

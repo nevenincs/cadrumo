@@ -101,12 +101,9 @@ function refusalWords(t: Translate, code: string): string {
     case "issue_unavailable":
       return t("desktop.agent.unavailable");
     default:
-      return t("desktop.messages.failed", { code });
+      return t("desktop.automation_access.refused_failed");
   }
 }
-
-/** A key has no name of its own, so it is told apart by the start of its id. */
-const shortId = (id: string) => id.slice(0, 8);
 
 /** An instant in the person's language, or null where it cannot be read. */
 function when(locale: string, instant: string, time: boolean): string | null {
@@ -158,10 +155,12 @@ function CredentialRow({
       className="agent-key grid gap-2 border-b py-3 last:border-b-0"
     >
       <div className="flex min-w-0 items-start justify-between gap-2">
+        {/* A key has no name of its own, so it is told apart by when it was
+            created and where it stands. */}
         <h4 id={nameId} className="font-medium text-foreground">
-          {t("desktop.automation_access.key_title", {
-            id: shortId(credential.id),
-          })}
+          {issued
+            ? t("desktop.automation_access.key_title", { date: issued })
+            : t("desktop.automation_access.key_title_undated")}
         </h4>
         <Badge variant={BADGE_LOOK[credential.standing]}>
           {standingWords(t, credential.standing)}
@@ -180,25 +179,24 @@ function CredentialRow({
             : t("desktop.automation_access.scope_some_operations")}
         </li>
       </ul>
-      <p className="text-sm text-muted-foreground">
-        {[
-          issued && t("desktop.automation_access.issued_on", { date: issued }),
-          // A revoked key's own end is no longer what matters.
-          expires &&
-            credential.standing !== "revoked" &&
-            t(
+      <ul className="grid gap-0.5 text-sm text-muted-foreground">
+        {/* A removed key's own end is no longer what matters. */}
+        {expires && credential.standing !== "revoked" && (
+          <li>
+            {t(
               credential.standing === "expired"
                 ? "desktop.automation_access.expired_on"
                 : "desktop.automation_access.expires_on",
               { date: expires },
-            ),
-          used
+            )}
+          </li>
+        )}
+        <li>
+          {used
             ? t("desktop.automation_access.last_used", { date: used })
-            : t("desktop.automation_access.never_used"),
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      </p>
+            : t("desktop.automation_access.never_used")}
+        </li>
+      </ul>
       {outcome?.kind === "revoked_cleanup_pending" && (
         <p
           role="status"

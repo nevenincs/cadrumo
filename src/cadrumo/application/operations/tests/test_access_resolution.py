@@ -10,14 +10,15 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
-from ....core.period import Period
-from ...user_profile.access_contracts import (
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    AccessDenialCode,
     Availability,
     DisclosureCategory,
     OperationAccessRequest,
 )
+
+from ....core.period import Period
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..access_resolution import (
     ADMISSION_ENTRY_ACTIONS,

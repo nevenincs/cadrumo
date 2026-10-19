@@ -14,7 +14,6 @@ from pydantic import TypeAdapter
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
@@ -24,11 +23,20 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
+from cadrumo_client.commands.tests.runtime_target_double import answer_login_targets_locally
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, SignInStatus, SignInStatusReply
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 __all__ = ["_isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _runtime_answers_the_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The runtime client here is a double, so the runtime's selection and target answers are given as it gives them."""
+    answer_login_targets_locally(monkeypatch)
+
 
 _CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 

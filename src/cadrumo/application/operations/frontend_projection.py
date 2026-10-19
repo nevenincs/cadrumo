@@ -46,6 +46,7 @@ class OperationPublicProgressV1(BaseModel):
     completed: NonNegativeInt
     total: Annotated[int, Field(gt=0)]
     unit_code: OperationEventCode | None
+    subject_code: OperationEventCode | None = None
     phase_code: OperationEventCode | None
     event_sequence: OperationEventSequence
     revision: OperationRevision

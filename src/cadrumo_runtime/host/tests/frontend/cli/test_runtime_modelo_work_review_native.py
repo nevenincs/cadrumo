@@ -16,12 +16,6 @@ from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METAD
 from cadrumo.application.modelo.work_review import build_modelo_work_review
 from cadrumo.application.modelo.work_review_contracts import MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
@@ -31,7 +25,16 @@ from cadrumo.entrypoints.adapter_composition import build_modelo_history_ports
 from cadrumo.entrypoints.cli.modelo_results import WorkReviewPayload, WorkReviewResult
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    native_cli_profile_scope,
+)
 
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session

@@ -15,8 +15,8 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import Automa
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import Peer
 from cadrumo_client.contracts.transport import ConnectionContext
 

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.outbound.google.errors import GoogleAuthError
 from cadrumo.adapters.outbound.storage.errors import OutboundStorageError
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo_client.contracts.google_auth import GoogleAuthError
 
 from .errors import CliRefusedBoundaryError
 

@@ -706,7 +706,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
         assert google_session_store.load_token(_BUCKET_B_ID) is None
-        assert cache.read(request, LLMProvider.OPENAI, "gpt-test") is None
+        assert cache.read(request, LLMProvider.AGENT, "gpt-test") is None
         assert usage.load_records() == ()
         assert InventoryLedgerRepository().load().ledgers == ()
         with pytest.raises(ExpedienteNotFoundError):
@@ -725,7 +725,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         )
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        cached = cache.read(request, LLMProvider.OPENAI, "gpt-test")
+        cached = cache.read(request, LLMProvider.AGENT, "gpt-test")
         usage_records = usage.load_records()
         inventory = InventoryLedgerRepository().load().ledgers
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(

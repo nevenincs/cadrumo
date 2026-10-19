@@ -25,7 +25,6 @@ from cadrumo.adapters.persistence.operations.tests.profile_operation_supervisor 
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
 from cadrumo.application.user_profile.censal_certificate_operation import (
     CENSAL_CERTIFICATE_OPERATION_DEFINITION_ID,
     CensalCertificateOperationProjection,
@@ -53,6 +52,7 @@ from cadrumo.tests.command_line_rendering import (
     json_document,
     redacted_as_printed,
 )
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ..censo_results import CensoFactPayload, CensoFileIngestResult
 

@@ -274,7 +274,11 @@ async fn runtime_attendance_subscribe(
         loop {
             let changed = match events.recv().await {
                 Ok(PersonEvent::AttendanceChanged) | Err(RecvError::Lagged(_)) => true,
-                Ok(PersonEvent::LanguageChanged | PersonEvent::Retired) => false,
+                Ok(
+                    PersonEvent::LanguageChanged
+                    | PersonEvent::OperationChanged
+                    | PersonEvent::Retired,
+                ) => false,
                 Err(RecvError::Closed) => return,
             };
             if changed && updates.send(()).is_err() {
@@ -440,7 +444,21 @@ async fn agent_send(
     request: SendRequest,
 ) -> std::result::Result<Value, Refused> {
     blocking(&host, move |host| {
-        host.session.send(&host.supervisor, &request)
+        session::admit_send(&request)?;
+        let gateway = host
+            .supervisor
+            .gateway()
+            .ok_or_else(|| Refused::new("agent_service_not_ready".to_owned()))?;
+        let available = crate::shell::provider_settings::agent_selection_available(
+            host,
+            &request.selection.provider,
+            &request.selection.transport,
+        )
+        .map_err(|error| host.refuse("agent_service_failed", error))?;
+        if !available {
+            return refused("agent_provider_credential_missing");
+        }
+        host.session.send(&host.supervisor, &request, &gateway)
     })
     .await
 }

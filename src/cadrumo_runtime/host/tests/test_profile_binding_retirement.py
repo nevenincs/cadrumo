@@ -20,17 +20,17 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepared
 from cadrumo_client.contracts.installation import Installation

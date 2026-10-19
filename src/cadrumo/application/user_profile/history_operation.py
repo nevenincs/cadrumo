@@ -13,6 +13,9 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability, DisclosureCategory
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
@@ -39,7 +42,6 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from .access_contracts import AccessDenialCode, Availability, DisclosureCategory
 from .access_errors import ProfileAccessRefusedError
 from .history_contracts import (
     ProfileHistoryExecutionResult,

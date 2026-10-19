@@ -6,7 +6,7 @@ import time
 from concurrent.futures import Future
 from threading import Thread
 
-from cadrumo.application.user_profile.access_contracts import Availability
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.transport import ConnectionContext
 

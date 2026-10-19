@@ -12,12 +12,12 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.application.user_profile.access_contracts import AccessSession
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.time.clock import now
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import HumanProof
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationOwner
 

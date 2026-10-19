@@ -10,7 +10,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes, ValidationError
 
-from .....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+
 from .....core.base64_codec import b64_decode_canonical
 from .....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from ..crypto.aead import EncryptedBlob, decrypt_record, encrypt_record

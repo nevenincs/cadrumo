@@ -14,9 +14,6 @@ from contextlib import contextmanager
 from uuid import UUID
 
 from cadrumo.application.user_profile.access_contracts import (
-    AccessDecision,
-    AccessDenialCode,
-    AccessDenied,
     AccessSession,
     ApiKeyRecord,
     AutomationGrant,
@@ -24,16 +21,14 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLockState,
     ProfileAccessBinding,
 )
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyError,
-    AutomationCustodyPort,
-    AutomationCustodySnapshot,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyPort, AutomationCustodySnapshot
 from cadrumo.application.user_profile.automation_enrollment import AutomationKeyIssuer
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.access_refusals import AccessDecision, AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.session_policy import evaluate_session_authority, session_requires_grant
 
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner

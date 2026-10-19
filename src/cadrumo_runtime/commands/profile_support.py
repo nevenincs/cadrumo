@@ -1,4 +1,4 @@
-"""Profile pointer admission helpers for runtime configuration commands."""
+"""Profile admission helpers for runtime configuration commands; the runtime answers which profile is selected."""
 
 from __future__ import annotations
 
@@ -13,11 +13,11 @@ if TYPE_CHECKING:
 
 
 def resolve_active_profile_pointer() -> ProfileBucketPointer | None:
-    """Resolve the selected profile from committed manifest data."""
+    """Resolve the command's bound or the runtime's selected profile from committed manifest data."""
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-    from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+    from cadrumo_client.commands.profile_selection import command_profile_id
 
-    active = resolve_active_bucket_id()
+    active = command_profile_id()
     return None if active is None else read_profile_bucket_by_id(active)
 
 

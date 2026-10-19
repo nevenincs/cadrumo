@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...core.operations import profile_operation_subject as _profile_subject
@@ -17,9 +19,6 @@ from ..operations.access_resolution import (
     require_declared_action,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from .operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID, ProfilePassphraseRotationOperationRequest

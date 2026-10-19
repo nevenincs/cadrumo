@@ -10,11 +10,12 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel
 
 from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession
+from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, remaining_budget
 from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest

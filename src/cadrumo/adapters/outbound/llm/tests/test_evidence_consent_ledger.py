@@ -63,7 +63,7 @@ _COMPLETION_TEXT = "DISTINCTIVE-RESPONSE-TOKEN: 1.234,56 EUR"
 class _CapturingAdapter(ProviderAdapter):
     """An off-host adapter that records the dispatch instead of calling a vendor."""
 
-    provider = LLMProvider.ANTHROPIC
+    provider = LLMProvider.AGENT
     supports_images = True
 
     def __init__(self) -> None:
@@ -109,7 +109,7 @@ def _consented_settings() -> Settings:
 def _evidence_request() -> LLMRequest:
     return LLMRequest(
         prompt=_PROMPT,
-        provider_override=LLMProvider.ANTHROPIC,
+        provider_override=LLMProvider.AGENT,
         model_override="claude-sonnet-4-6",
         evidence_derived=True,
         consent_token=EvidenceConsentToken(surface=_SURFACE, evidence_content_address=_ADDRESS),
@@ -135,7 +135,7 @@ def test_a_consented_off_host_dispatch_reaches_the_adapter_and_lands_one_entry(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.evidence_content_address == _ADDRESS
-    assert entry.provider == LLMProvider.ANTHROPIC.value
+    assert entry.provider == LLMProvider.AGENT.value
     assert entry.model == "claude-sonnet-4-6"
     assert entry.surface == _SURFACE
     assert entry.profile_bucket_id
@@ -196,7 +196,7 @@ def test_save_custody_requires_both_callbacks() -> None:
 
 def test_an_on_host_or_unmarked_request_records_nothing(client: _CapturingClient) -> None:
     """The ledger records off-host EVIDENCE dispatches, not every completion."""
-    asyncio.run(client.complete(LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.ANTHROPIC)))
+    asyncio.run(client.complete(LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT)))
 
     assert len(client.adapter.dispatched) == 1
     assert EvidenceConsentLedger().load_entries() == ()

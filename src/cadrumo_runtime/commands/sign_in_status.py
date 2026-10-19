@@ -8,10 +8,10 @@ from uuid import UUID
 import typer
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo_client.commands.custody_payloads import ConfigSignInStatusResult
+from cadrumo_client.commands.profile_selection import require_runtime_login_target
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatus
 
 from .presentation import activate_subcommand_output_language, emit_envelope
@@ -24,10 +24,9 @@ def config_sign_in_status(ctx: typer.Context, output_language: OutputLanguage | 
 
     profile = runtime_root_context(ctx).profile
     if profile is None:
-        captured = observe_active_profile_pointer()
-        bucket_id = captured.bucket_id
+        bucket_id = observe_active_profile_pointer().bucket_id
     else:
-        target = resolve_login_target(profile)
+        target = require_runtime_login_target(profile)
         bucket_id = str(target.bucket_id)
         root_state = ctx.find_root().ensure_object(dict)
         root_state["cadrumo.runtime.profile_label"] = target.label

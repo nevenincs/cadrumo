@@ -30,18 +30,12 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.user_profile.access_contracts import (
-    AccessScope,
-    ProfileAccessBinding,
-)
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
+from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.installation import installation
@@ -52,11 +46,11 @@ from cadrumo_runtime.adapters.login_policy import compose_runtime_login_policy
 from cadrumo_runtime.adapters.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import (
+from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
     observe_native_runtime_failures,
 )
-from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 from .cli_runner import bind_profile_cli, operator_runtime_scope
 from .runtime_profile_backend import live_session_operator

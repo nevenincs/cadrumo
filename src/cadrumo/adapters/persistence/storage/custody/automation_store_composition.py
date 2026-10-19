@@ -5,12 +5,8 @@ from __future__ import annotations
 import sys
 
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-    NativeSecretBackend,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 
 def installed_automation_secret_store() -> AutomationSecretStore:

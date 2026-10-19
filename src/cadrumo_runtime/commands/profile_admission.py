@@ -11,24 +11,17 @@ import typer
 
 from cadrumo.application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.login_session import ProfileReceiptRefusedError, resolve_login_target
+from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import clear_output_language_cache, tr
 from cadrumo.core.output_rendering import OutputFormat
-from cadrumo.core.profile_session import ProfileSessionRefusalReason as ReceiptRefusalReason
-from cadrumo.core.profile_session import ReceiptBindingRefusal
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
-from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod, ProfileAuthenticationSecrets
-from cadrumo_client.commands.secure_input import (
-    ProfileSecretSelection,
-    prompt_secret_no_echo,
-    read_profile_secret_payload,
-    select_profile_secret_channel,
-    terminal_can_prompt_for_secrets,
-)
+from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod
+from cadrumo_client.commands.secure_input import ProfileSecretSelection, select_profile_secret_channel
+from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_refusal
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
@@ -157,16 +150,32 @@ def _root_profile_source(
     return source.selection, source.method, source.credential_reference
 
 
-def _profile_id(ctx: typer.Context) -> tuple[UUID, str | None]:
+def _profile_id(ctx: typer.Context, *, through_runtime: bool = False) -> tuple[UUID, str | None]:
+    """Return the profile the root ``--profile`` names, or the selected one.
+
+    ``through_runtime`` asks the running runtime to resolve a named profile
+    and the selection, for a command that signs in next and so needs the
+    runtime anyway.
+    """
     raw = runtime_root_context(ctx).profile
     if raw is not None:
         if not isinstance(raw, str) or not raw.strip():
             raise CliRefusedBoundaryError(translated_message="errors.refused.refused_profile_not_found")
-        pointer = resolve_login_target(raw.strip())
-        profile_id = UUID(str(pointer.bucket_id))
-        ctx.find_root().ensure_object(dict)["cadrumo.runtime.profile_label"] = pointer.label
-        return profile_id, pointer.label
-    active = resolve_active_bucket_id()
+        if through_runtime:
+            from cadrumo_client.commands.profile_selection import require_runtime_login_target
+
+            bucket_id, label = require_runtime_login_target(raw.strip())
+        else:
+            pointer = resolve_login_target(raw.strip())
+            bucket_id, label = str(pointer.bucket_id), pointer.label
+        ctx.find_root().ensure_object(dict)["cadrumo.runtime.profile_label"] = label
+        return UUID(bucket_id), label
+    if through_runtime:
+        from cadrumo_client.commands.profile_selection import command_profile_id
+
+        active = command_profile_id()
+    else:
+        active = resolve_active_bucket_id()
     if active is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
@@ -177,84 +186,18 @@ def _profile_id(ctx: typer.Context) -> tuple[UUID, str | None]:
     return UUID(active), label
 
 
-def _password(
-    client: FrontendClient,
-    *,
-    selection: ProfileSecretSelection | None,
-    ctx: typer.Context,
-) -> None:
-    if selection is None:
-        secret = bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")).encode("utf-8"))
-    else:
-        payload = read_profile_secret_payload(ProfileAuthenticationSecrets, selection=selection)
-        try:
-            if payload.profile_passphrase is None:
-                _refuse("profile_secrets_method_mismatch")
-            secret = bytearray(payload.profile_passphrase.get_secret_value().encode("utf-8"))
-        finally:
-            del payload
-    try:
-        admitted = client.login_password(secret)
-    finally:
-        secret[:] = bytes(len(secret))
-    if admitted.human_login is None or not admitted.human_login.session_persisted:
-        from cadrumo.core.json_contract import Notice, NoticeSeverity
+def _stage_invocation_notice(ctx: typer.Context) -> None:
+    """Report a password sign-in the runtime kept for this invocation only, in this executable's notice channel."""
+    from cadrumo.core.json_contract import Notice, NoticeSeverity
 
-        state = ctx.find_root().ensure_object(dict)
-        state.setdefault("cadrumo.runtime.notices", []).append(
-            Notice(
-                code="config.login.session_not_persisted",
-                severity=NoticeSeverity.WARNING,
-                message=tr("cli.config.login.notices.session_invocation_scoped"),
-            )
+    state = ctx.find_root().ensure_object(dict)
+    state.setdefault("cadrumo.runtime.notices", []).append(
+        Notice(
+            code="config.login.session_not_persisted",
+            severity=NoticeSeverity.WARNING,
+            message=tr("cli.config.login.notices.session_invocation_scoped"),
         )
-
-
-def _api_key(client: FrontendClient, *, selection: ProfileSecretSelection) -> None:
-    payload = read_profile_secret_payload(ProfileAuthenticationSecrets, selection=selection)
-    try:
-        if payload.api_key is None:
-            _refuse("profile_secrets_method_mismatch")
-        secret = bytearray(payload.api_key.get_secret_value().encode("utf-8"))
-    finally:
-        del payload
-    try:
-        client.login_api_key(secret)
-    finally:
-        secret[:] = bytes(len(secret))
-
-
-def _session_refusal_key(
-    refusal: ReceiptRefusalReason,
-    binding: ReceiptBindingRefusal | None = None,
-) -> str:
-    if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
-        return "cli.config.errors.profile_session_login_mismatch"
-    if binding is ReceiptBindingRefusal.GENERATION_CHANGED:
-        return "cli.config.errors.profile_session_signed_out"
-    if binding is not None:
-        return "cli.config.errors.profile_session_unreadable"
-    if refusal is ReceiptRefusalReason.CUSTODY_CHANGED:
-        return "cli.config.errors.profile_session_custody_changed"
-    if refusal is ReceiptRefusalReason.SCHEMA_VERSION_MISMATCH:
-        return "cli.config.errors.profile_session_outdated"
-    if refusal in {ReceiptRefusalReason.MALFORMED, ReceiptRefusalReason.TAMPERED}:
-        return "cli.config.errors.profile_session_unreadable"
-    if refusal is ReceiptRefusalReason.KEYRING_UNAVAILABLE:
-        return "errors.auth.auth_storage_keyring_unavailable"
-    if refusal in {ReceiptRefusalReason.ABSENT, ReceiptRefusalReason.KEYCHAIN_ENTRY_MISSING}:
-        return "cli.config.errors.profile_session_absent"
-    return "cli.config.errors.profile_session_expired"
-
-
-def _raise_frontend_refusal(error: FrontendRefusedError) -> None:
-    sign_in = error.sign_in
-    translated_message = None
-    if sign_in is not None and sign_in.reason == "throttled":
-        translated_message = "errors.refused.refused_profile_login_throttled"
-    elif sign_in is not None and isinstance(sign_in.reason, ReceiptRefusalReason):
-        translated_message = _session_refusal_key(sign_in.reason, sign_in.binding)
-    raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=translated_message) from None
+    )
 
 
 def _authenticate(
@@ -264,30 +207,16 @@ def _authenticate(
     selection: ProfileSecretSelection | None,
     method: ProfileAuthenticationMethod,
 ) -> None:
-    if method is ProfileAuthenticationMethod.API_KEY:
-        if selection is None:
-            _refuse("profile_secrets_api_key_requires_channel")
-        _api_key(client, selection=selection)
-        return
-    if selection is not None:
-        _password(client, selection=selection, ctx=ctx)
-        return
-    try:
-        client.resume_receipt()
-    except ProfileReceiptRefusedError as error:
-        if error.reason is ReceiptRefusalReason.KEYRING_UNAVAILABLE and terminal_can_prompt_for_secrets():
-            _password(client, selection=None, ctx=ctx)
-            return
-        key = _session_refusal_key(error.reason, error.binding)
-        raise CliRefusedBoundaryError(
-            translated_message=key,
-            context={
-                "reason": error.reason.value,
-                **({"sign_in_binding": error.binding.value} if error.binding is not None else {}),
-            },
-        ) from None
-    except FrontendRefusedError as error:
-        _raise_frontend_refusal(error)
+    from cadrumo_client.commands.profile_admission import authenticate_profile_client
+
+    label = ctx.find_root().ensure_object(dict).get("cadrumo.runtime.profile_label")
+    authenticate_profile_client(
+        client,
+        root_selection=selection,
+        profile_label=label if isinstance(label, str) else None,
+        method=method,
+        not_persisted=lambda: _stage_invocation_notice(ctx),
+    )
 
 
 def _bind_target(ctx: typer.Context, profile_id: UUID) -> None:
@@ -337,7 +266,7 @@ def _open_authenticated_profile(
         bind_profile_client(ctx, client, profile_id=profile_id)
     except FrontendRefusedError as error:
         client.close()
-        _raise_frontend_refusal(error)
+        raise_connection_refusal(error)
     except BaseException:
         client.close()
         raise
@@ -378,7 +307,7 @@ def preflight_runtime_command(ctx: typer.Context, spec: CommandSpec, arguments: 
     if spec.key == "config_profile_resume":
         if selection is not None or credential_reference is not None:
             _refuse("profile_secrets_inapplicable")
-        profile_id, _ = _profile_id(ctx)
+        profile_id, _ = _profile_id(ctx, through_runtime=True)
         _open_recovery_profile(ctx, profile_id)
         return
     if spec.machine_secret is not None:
@@ -412,7 +341,7 @@ def preflight_runtime_command(ctx: typer.Context, spec: CommandSpec, arguments: 
         _refuse("profile_secrets_api_key_requires_channel")
     if credential_reference is not None and posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
         _refuse("profile_credential_ref_inapplicable")
-    profile_id, _label = _profile_id(ctx)
+    profile_id, _label = _profile_id(ctx, through_runtime=True)
     _open_authenticated_profile(
         ctx,
         profile_id,

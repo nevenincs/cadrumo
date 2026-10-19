@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from pydantic import JsonValue, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationManage,
@@ -24,7 +25,6 @@ from ....application.operations.frontend_requests import (
     OperationResponseRejectRequestV1,
 )
 from ....application.operations.models import OperationId
-from ....application.user_profile.access_contracts import AccessDenialCode
 from ....core.hashing import canonical_json_bytes
 from ....core.time.clock import now
 from .operation_censal_exchange import _exchange

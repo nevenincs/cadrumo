@@ -10,6 +10,7 @@ from functools import partial
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
@@ -23,7 +24,6 @@ from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..operations.registry import operation_public_schema_reference
-from .access_contracts import AccessDenialCode
 from .access_errors import ProfileAccessRefusedError
 from .google_configuration_operation_contracts import (
     GOOGLE_CONFIGURATION_CONTRACTS,

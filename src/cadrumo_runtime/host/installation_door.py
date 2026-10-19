@@ -27,17 +27,15 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, SecretBytes, ValidationError
 
 from cadrumo.application.operations.error_detail import build_operation_error_detail
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.errors.hierarchy import CadrumoError, InternalInvariantError
 from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -214,6 +212,10 @@ class InstallationActExchange:
         if not self._lifecycle.held:
             raise InternalInvariantError("an installation act admitted as a read cannot begin changes")
         self._changes_began = True
+
+    def selection_changed(self) -> None:
+        """Cue every frontend watching the sign-in or the selection to ask again, as a sign-in does."""
+        self._owner.selection_changed()
 
     @property
     def changes_began(self) -> bool:

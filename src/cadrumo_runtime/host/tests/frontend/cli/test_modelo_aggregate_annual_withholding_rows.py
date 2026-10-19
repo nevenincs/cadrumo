@@ -58,12 +58,6 @@ from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.i18n.render import lookup_translation
@@ -77,6 +71,12 @@ from cadrumo.entrypoints.adapter_composition import (
     build_retencion_observation_ports,
 )
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from .test_runtime_invoice_add import password_profile_session

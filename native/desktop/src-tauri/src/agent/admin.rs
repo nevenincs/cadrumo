@@ -115,11 +115,13 @@ impl Endpoint {
         }
         let address = SocketAddr::from(([127, 0, 0, 1], self.port));
         // Login preparation must first reap the running gateway (up to 20 s).
-        // Only the attended start request gets that grace; polling stays short.
-        let bound = Duration::from_secs(if request["action"] == "connect" {
-            60
-        } else {
-            6
+        // Status also runs a contained supplier check: five seconds of execution,
+        // ten for tree cleanup, then output drain and profile-authority reads.
+        // Its deadline must encompass that work. Login polling stays short.
+        let bound = Duration::from_secs(match request["action"].as_str() {
+            Some("connect") => 60,
+            Some("status") => 30,
+            _ => 6,
         });
         let deadline = Instant::now() + bound;
         let mut stream = TcpStream::connect_timeout(&address, bound)

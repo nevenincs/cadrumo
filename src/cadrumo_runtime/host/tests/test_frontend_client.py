@@ -16,13 +16,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     ProfileFieldMutationOperationRequest,
@@ -36,6 +30,8 @@ from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.operation_access import OperationSubmit, OperationSubmitted
 from cadrumo_client.transport.frontend_client import FrontendClient

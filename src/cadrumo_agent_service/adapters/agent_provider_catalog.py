@@ -58,6 +58,13 @@ class _SignInCapabilities(BaseModel):
     providers: tuple[ProviderId, ...] = Field(max_length=MAX_CATALOG_LANES)
 
 
+class _GuiSignInCapabilities(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
+
+    schema_version: Literal[2]
+    providers: dict[ProviderId, tuple[Literal["browser", "device"], ...]] = Field(max_length=MAX_CATALOG_LANES)
+
+
 class AgentProviderCatalogSource(ProviderCatalogSource):
     """Run the agent's offline catalog command and parse what it prints."""
 
@@ -75,7 +82,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         self._lock = Lock()
         self._catalog: ProviderCatalog | None = None
         self._sign_ins: tuple[str, ...] | None = None
-        self._gui_sign_ins: tuple[str, ...] | None = None
+        self._gui_sign_ins: dict[str, tuple[Literal["browser", "device"], ...]] | None = None
 
     @override
     def catalog(self) -> ProviderCatalog:
@@ -111,16 +118,20 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
 
     def gui_sign_in_providers(self) -> tuple[str, ...]:
         """Read GUI support from the agent, separately from terminal handlers."""
+        return tuple(self.gui_sign_in_methods())
+
+    def gui_sign_in_methods(self) -> dict[str, tuple[Literal["browser", "device"], ...]]:
+        """Return the provider-owned methods; the service invents no login capability."""
         with self._lock:
             if self._gui_sign_ins is None:
                 try:
-                    result = _SignInCapabilities.model_validate_json(self._invoke(GUI_AUTH_CAPABILITIES_ARGUMENTS))
-                    if len(set(result.providers)) != len(result.providers):
-                        raise ValueError("duplicate_sign_in_provider")
+                    result = _GuiSignInCapabilities.model_validate_json(self._invoke(GUI_AUTH_CAPABILITIES_ARGUMENTS))
+                    if any(not methods or len(set(methods)) != len(methods) for methods in result.providers.values()):
+                        raise ValueError("invalid_sign_in_methods")
                 except ValueError as error:
                     raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED) from error
                 self._gui_sign_ins = result.providers
-            return self._gui_sign_ins
+            return dict(self._gui_sign_ins)
 
     def _invoke(self, arguments: tuple[str, ...]) -> bytes:
         directory = Path(tempfile.gettempdir())

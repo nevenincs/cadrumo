@@ -41,10 +41,10 @@ from cadrumo.application.storage_management.models import (
     StorageTreeIssue,
     StorageTreeIssueKind,
 )
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.storage_taxonomy import StorageArea
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 
 from ..contracts import RefusalCode, RefusalError
 from ..installation_requests import (
@@ -64,8 +64,10 @@ from ..installation_requests import (
     InstallationReplyTransfer,
     InstallationSecretDelivery,
     InstallationSecretReceipt,
+    ProfileCreateReply,
     ProfileListReply,
     ProfileListRow,
+    RecoveryDisableReply,
     RecoveryEnrollReply,
     RepairLogsReply,
     RepairLogsRequest,
@@ -259,6 +261,14 @@ def _completed_replies() -> dict[InstallationAct, InstallationCompleted]:
             active_profile="Synthetic profile",
             profiles=(ProfileListRow(name="Synthetic profile", bucket_id=_PROFILE, active=True),),
         ),
+        InstallationAct.RECOVERY_DISABLE: _reply(RecoveryDisableReply, profile_id=_PROFILE, changed=True),
+        InstallationAct.PROFILE_CREATE: _reply(
+            ProfileCreateReply,
+            profile_id=_PROFILE,
+            label="Synthetic profile",
+            setup_state="incomplete",
+            selected=True,
+        ),
         InstallationAct.RESET_START: _reply(
             ResetStartReply, operation=ConfigResetOperationPayload.from_operation(reset)
         ),
@@ -362,6 +372,8 @@ def _requests() -> dict[InstallationAct, BaseModel]:
         InstallationAct.ARCHIVE_IMPORT_PREPARE: {"label": "Synthetic profile", "path": _HOST_FILE},
         InstallationAct.ARCHIVE_IMPORT: {"label": "Synthetic profile", "path": _HOST_FILE, "source_digest": _DIGEST},
         InstallationAct.RECOVERY_ENROLL: {"profile_id": UUID(_PROFILE)},
+        InstallationAct.PROFILE_CREATE: {"label": "Synthetic profile"},
+        InstallationAct.RECOVERY_DISABLE: {"profile_id": UUID(_PROFILE)},
         InstallationAct.REPAIR_LOGS: {"lines": 40},
         InstallationAct.REPAIR_PROFILE: {"profile": "Synthetic profile", "clear_active": True, "confirmed": True},
         InstallationAct.REVIEW_PACKAGE_VERIFY: {"package": _HOST_FILE},
@@ -411,14 +423,18 @@ def test_each_act_declares_whether_it_changes_records_and_reaches_the_network() 
         InstallationAct.STORAGE_RECLAIM,
         InstallationAct.RESET_START,
         InstallationAct.RESET_RESUME,
+        InstallationAct.PROFILE_CREATE,
         InstallationAct.ARCHIVE_IMPORT,
         InstallationAct.RECOVERY_ENROLL,
+        InstallationAct.RECOVERY_DISABLE,
         InstallationAct.REPAIR_PROFILE,
     }
     assert not any(contract.facts.reaches_network for contract in INSTALLATION_ACT_CONTRACTS.values())
     assert {act for act, contract in INSTALLATION_ACT_CONTRACTS.items() if contract.takes_secret} == {
+        InstallationAct.PROFILE_CREATE,
         InstallationAct.ARCHIVE_IMPORT,
         InstallationAct.RECOVERY_ENROLL,
+        InstallationAct.RECOVERY_DISABLE,
     }
     assert {act for act, contract in INSTALLATION_ACT_CONTRACTS.items() if contract.delivers_secret} == {
         InstallationAct.RECOVERY_ENROLL

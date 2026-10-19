@@ -18,22 +18,7 @@ from cadrumo.application.user_profile.access_administration import (
     AccessAdministrationRequest,
     evaluate_access_administration,
 )
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAllowed,
-    AccessDenialCode,
-    AccessDenied,
-    AccessSession,
-    ApiKeyRecord,
-    AutomationGrant,
-    Availability,
-    DisclosurePage,
-    DisclosurePageRequest,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    OperationResponseScopeAllowed,
-    ProfileAccessStatus,
-    SessionKind,
-)
+from cadrumo.application.user_profile.access_contracts import AccessSession, ApiKeyRecord, AutomationGrant, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_projections import (
     PublicAccessSession,
@@ -44,6 +29,20 @@ from cadrumo.application.user_profile.access_projections import (
 from cadrumo.application.user_profile.automation_enrollment import AdministrationFacts
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access, evaluate_response_scope
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo_client.contracts.access_refusals import (
+    AccessAllowed,
+    AccessDenialCode,
+    AccessDenied,
+    OperationResponseScopeAllowed,
+    ProfileAccessStatus,
+)
+from cadrumo_client.contracts.access_vocabulary import (
+    Availability,
+    DisclosurePage,
+    DisclosurePageRequest,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 from cadrumo_client.contracts.session_policy import session_requires_grant
 
 from .session_authority_contracts import SessionAuthorityFacts

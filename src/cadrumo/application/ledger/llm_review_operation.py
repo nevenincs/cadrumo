@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+)
+
 from ...core.hashing import sha256_hex
 from ...core.operations import (
     OperationCancellation,
@@ -35,13 +43,6 @@ from ..operations.registry import (
     operation_public_schema_reference,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .llm_review_contracts import (
     LEDGER_LLM_REVIEW_DEFINITION_IDS,

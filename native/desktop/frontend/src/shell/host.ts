@@ -7,9 +7,11 @@
 // the contract's terminal block is published.
 
 import type {
+  AboutInfo,
   ContextMenuItem,
   DesktopEnvironment,
   DesktopLanguage,
+  DesktopSetup,
   LogBatch,
   ManagerStatus,
   ManagerSignal,
@@ -17,6 +19,8 @@ import type {
   SignInSignal,
   SignInResult,
   SignOutResult,
+  SetupCheckMode,
+  SetupItemId,
   WindowAction,
   WindowPresentation,
 } from "../ipc/contract";
@@ -70,6 +74,41 @@ export type TerminalSession = {
   close(): Promise<void>;
 };
 
+/**
+ * Component setup for the signed-in profile: the browser and the local AI.
+ * The profile's Google account rides the same session and snapshot, but is
+ * signed into and out of on its own, never as setup. Every method answers the
+ * current `DesktopSetup`; a refusal rejects with `{ code: SetupRefusalCode }`.
+ * A plan never downloads before `answer` approves it.
+ */
+export type Setup = {
+  read(): Promise<DesktopSetup>;
+  check(mode: SetupCheckMode): Promise<DesktopSetup>;
+  /** A full check of `items`, or of every item when null. */
+  verify(items: SetupItemId[] | null): Promise<DesktopSetup>;
+  /** Plans setup of `items`, or of every item not ready when null. Resume
+   * after an interruption is a new start with `resume`: the unchanged plan
+   * the person approved before needs no second approval. */
+  start(
+    items: SetupItemId[] | null,
+    options?: { model?: string | null; resume?: boolean },
+  ): Promise<DesktopSetup>;
+  /** Answers the plan whose `plan_digest` the review showed. */
+  answer(
+    operationId: string,
+    planDigest: string,
+    decision: "apply" | "reject",
+  ): Promise<DesktopSetup>;
+  cancel(operationId: string): Promise<DesktopSetup>;
+  /** Opens Google's own sign-in page for the profile. */
+  signInGoogle(): Promise<DesktopSetup>;
+  /** Removes the profile's stored Google sign-in. */
+  signOutGoogle(): Promise<DesktopSetup>;
+  /** Calls `listener` with the current state, then on every change, until
+   * the returned function unsubscribes. */
+  observe(listener: (state: DesktopSetup) => void): Promise<() => void>;
+};
+
 export interface Host {
   readonly attendance?: Attendance;
   /** Absent in a browser: native window behavior is never simulated as real. */
@@ -82,6 +121,8 @@ export interface Host {
   /** Whether menus are drawn by the operating system. */
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
+  /** What this installation is, where the host reads it from the package. */
+  about?(): Promise<AboutInfo>;
   readonly language?: {
     read(): Promise<DesktopLanguage>;
     set(language: string): Promise<DesktopLanguage>;
@@ -145,6 +186,9 @@ export interface Host {
   /** The keys the signed-in profile issued to agents outside Cadrumo, which
    * reach it through its MCP server, where this host offers them. */
   readonly agentAccess?: AgentAccess;
+  /** Component setup, where this host offers it. Without it the shell shows
+   * no Components section and no setup actions. */
+  readonly setup?: Setup;
 }
 
 export class HostUnavailable extends Error {

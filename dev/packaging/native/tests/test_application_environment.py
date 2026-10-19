@@ -160,6 +160,31 @@ _MALFORMED = {
         '[base.windows]\nsystem = [\n  "SYSTEMROOT",', '[base.windows]\nsystem = [\n  "SystemRoot",', 1
     ),
     "missing-section": _without(_SOURCE, 'external = "CADRUMO_EXTERNAL_BIN_DIRS"\n'),
+    "external-default-relative-path": _SOURCE.replace(
+        'platform = "posix"\npath = "/usr/local/bin"',
+        'platform = "posix"\npath = "usr/local/bin"',
+        1,
+    ),
+    "external-default-undeclared-variable": _SOURCE.replace(
+        'platform = "posix"\nvariable = "HOME"',
+        'platform = "posix"\nvariable = "PATH"',
+        1,
+    ),
+    "external-default-parent-component": _SOURCE.replace(
+        'platform = "windows"\nvariable = "USERPROFILE"\nsubpaths = [".local", "bin"]',
+        'platform = "windows"\nvariable = "USERPROFILE"\nsubpaths = [".local", ".."]',
+        1,
+    ),
+    "external-default-unknown-platform": _SOURCE.replace(
+        'platform = "macos"\npath = "/opt/homebrew/bin"',
+        'platform = "darwin"\npath = "/opt/homebrew/bin"',
+        1,
+    ),
+    "external-default-nonstring-platform": _SOURCE.replace(
+        'platform = "macos"\npath = "/opt/homebrew/bin"',
+        'platform = ["macos"]\npath = "/opt/homebrew/bin"',
+        1,
+    ),
 }
 
 _FROM = '{ option = "--expect-from", slot = "expected_from", kind = "revision" }'
@@ -252,7 +277,7 @@ def test_generation_fails_on_a_malformed_declaration(tmp_path: Path) -> None:
 _PROFILE_LINE = re.compile(r'^    LaunchProfile \{ name: "([^"]+)", image: "([^"]+)", (.*) \},$')
 
 
-@pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
+@pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64", "macos-arm64"])
 def test_file_contract_json_and_contract_rs_agree(tmp_path: Path, target: str) -> None:
     generate(REPO_ROOT, tmp_path, target=target)
     section = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))["application_environment"]
@@ -262,6 +287,24 @@ def test_file_contract_json_and_contract_rs_agree(tmp_path: Path, target: str) -
     # The file's own reading, independent of the compiler, fixes the expected content.
     document = tomllib.loads(_SOURCE)
     family = "windows" if target.startswith("windows") else "posix"
+    assert section["path"]["entries"] == [
+        {"kind": "package", "value": "."},
+        {"kind": "external", "value": "CADRUMO_EXTERNAL_BIN_DIRS"},
+        {"kind": "package", "value": "bin"},
+        {"kind": "external_defaults", "value": "CADRUMO_EXTERNAL_BIN_DIRS"},
+        {"kind": "system", "value": ""},
+    ]
+    assert section["path"]["external_defaults"] == [
+        {
+            "platform": default["platform"],
+            "variable": default.get("variable"),
+            "path": default.get("path", ""),
+            "subpaths": default.get("subpaths", []),
+        }
+        for default in document["path"]["external_defaults"]
+    ]
+    assert "pub const LAUNCH_EXTERNAL_PATH_DEFAULTS" in generated
+    assert 'platform: "macos", variable: None, path: "/opt/homebrew/bin"' in generated
     assert section["names"] == {name: document["names"][name] for name in sorted(document["names"])}
     assert [profile["name"] for profile in section["profiles"]] == list(document["profiles"])
     for profile in section["profiles"]:

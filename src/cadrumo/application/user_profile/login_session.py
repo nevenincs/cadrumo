@@ -20,16 +20,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
 from uuid import UUID
 
-from pydantic import BaseModel
+from cadrumo_client.contracts.sign_in_outcomes import (
+    ProfileLoginOutcome,
+    ProfileLoginThrottledError,
+    ProfileReceiptRefusedError,
+)
 
 from ...core.config import load_settings
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
-from ...core.errors.hierarchy import CadrumoError
-from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.paths import effective_storage_root
-from ...core.profile_session import KeychainUnavailability, ProfileSessionRefusalReason, ReceiptBindingRefusal
+from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.clock import now as _now
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
@@ -80,71 +81,12 @@ def _refuse_login_candidate(reason: str) -> NoReturn:
     )
 
 
-class ProfileLoginThrottledError(UserProfileError):
-    """Refuse a login attempt while the failed-attempt backoff is in force.
-
-    Raised BEFORE any Argon2id derivation runs, so a caller hammering
-    passphrases cannot use the key-derivation function as a timing
-    oracle. The remaining wait rides in ``context`` so the CLI can render
-    it without re-parsing the message.
-    """
-
-    def __init__(self, *, remaining_seconds: int) -> None:
-        """Initialise the refusal with the operator's remaining wait."""
-        super().__init__(
-            translated_message="errors.refused.refused_profile_login_throttled",
-            context={"seconds": str(remaining_seconds)},
-        )
-        self.remaining_seconds = remaining_seconds
-
-
 class ProfileCustodySessionOwnerEffect(StrEnum):
     """Verified outcome of one local custody session-owner operation."""
 
     REVOKED = "revoked"
     REMOVED = "removed"
     VERIFIED_ABSENT = "verified_absent"
-
-
-class ProfileLoginOutcome(BaseModel):
-    """Typed result of one ``login`` invocation.
-
-    Carries no key material: the unlocked
-    :class:`~cadrumo.adapters.persistence.storage.master_key.bucket_session.BucketSession`
-    is bound to the process through the active-session context variable,
-    never to this record.
-
-    Attributes:
-        bucket_id: Immutable UUID identity of the authenticated profile.
-        label: Operator-facing display label of that profile.
-        authenticated_at: UTC instant the session was established. On an
-            idempotent no-op this is the ORIGINAL login instant, never
-            re-stamped.
-        idle_deadline: Current sliding idle deadline.
-        absolute_deadline: Immutable absolute session cap.
-        session_persisted: ``False`` when the host has no usable OS
-            keychain, or the login ran in-process with no runtime-observed
-            OS login to bind, so the session is process-scoped only.
-        already_authenticated: ``True`` when a still-valid persisted
-            session was resumed as a no-op (no re-prompt, no new record).
-        closed_previous_bucket_id: The profile whose sign-in this login
-            ended, or ``None``. The candidate and invocation authentication
-            doors retire no other profile's sign-in themselves and leave it
-            ``None``; the runtime does, when it admits a person's password
-            sign-in to a profile, because one profile is signed in at a time,
-            and the command that asked for that sign-in reports it here.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: BucketId
-    label: str
-    authenticated_at: datetime
-    idle_deadline: datetime
-    absolute_deadline: datetime
-    session_persisted: bool
-    already_authenticated: bool
-    closed_previous_bucket_id: BucketId | None = None
 
 
 @dataclass(slots=True)
@@ -211,23 +153,6 @@ class ProfileLoginCandidate:
         if self._publish_receipt is None:
             return self.outcome.session_persisted
         return self._publish_receipt(login_id, binding, sign_in, retain_sealing_key)
-
-
-class ProfileReceiptRefusedError(CadrumoError):
-    """A human receipt did not prove the exact current capsule and deadline."""
-
-    def __init__(
-        self,
-        reason: ProfileSessionRefusalReason,
-        *,
-        binding: ReceiptBindingRefusal | None = None,
-        keychain: KeychainUnavailability | None = None,
-    ) -> None:
-        """Preserve the core refusal, and why the keychain could not be used, without receipt material."""
-        self.reason = reason
-        self.binding = binding
-        self.keychain = keychain
-        super().__init__(reason.value)
 
 
 def _bucket_session_windows() -> tuple[int, int]:
@@ -541,42 +466,6 @@ def _persist_candidate_receipt(
         return candidate.receipt_persisted
 
 
-def profile_session_keychain_unavailability() -> KeychainUnavailability | None:
-    """Return why this process cannot keep or present a sign-in, or ``None`` when it can.
-
-    A sign-in that was not persisted, or cannot be followed, is explained by
-    this before anything else: the proof lives in the OS keychain, and a
-    process that cannot read the keychain can neither store nor present one.
-    The probe reads only an account no receipt names.
-    """
-    return _profile_login_sessions().probe_keychain()
-
-
-@contextmanager
-def borrow_profile_receipt_key(*, bucket_id: UUID) -> Generator[bytearray]:
-    """Borrow only the keychain-held proof that the receipt locator names.
-
-    This is a frontend's whole share of a sign-in: it reads no custody
-    envelope, never unwraps or decrypts the receipt, and never deletes either
-    half. The runtime verifies the proof, and deletes a refused receipt. The
-    proof is a secret capability for a protected IPC frame, never a public
-    result. Its buffer is wiped even when the caller's exchange fails.
-    """
-    outcome, key = _profile_login_sessions().borrow_acceleration_receipt_key(
-        storage_root=effective_storage_root(), profile_id=bucket_id
-    )
-    if not outcome.resumed or key is None:
-        if key is not None:
-            _profile_login_sessions().zeroise_owned_buffer(key)
-        raise ProfileReceiptRefusedError(
-            outcome.refusal or ProfileSessionRefusalReason.ABSENT, binding=outcome.binding, keychain=outcome.keychain
-        )
-    try:
-        yield key
-    finally:
-        _profile_login_sessions().zeroise_owned_buffer(key)
-
-
 def authenticate_profile_for_invocation(
     *,
     name: str,
@@ -759,14 +648,9 @@ def _mint_or_warn(
 __all__ = [
     "ProfileCustodySessionOwnerEffect",
     "ProfileLoginCandidate",
-    "ProfileLoginOutcome",
-    "ProfileLoginThrottledError",
-    "ProfileReceiptRefusedError",
     "authenticate_profile_candidate",
     "authenticate_profile_for_invocation",
-    "borrow_profile_receipt_key",
     "close_profile_session_artefacts",
-    "profile_session_keychain_unavailability",
     "publish_created_profile_session",
     "remove_profile_session_acceleration_for_custody_delete",
     "revoke_live_profile_secret_for_custody_delete",

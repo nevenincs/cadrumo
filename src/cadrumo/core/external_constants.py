@@ -429,6 +429,40 @@ class OnlineServicesSection(_Frozen):
     google: GoogleServiceSection
 
 
+class DependencyHostsSection(_Frozen):
+    """Hosts each setup item downloads from, by host group.
+
+    The network preflight reaches exactly these hosts before a setup moves any
+    byte, and a setup plan names them as its sources. A group name is the
+    ``network_host_group`` of a setup item declaration, or of one part of it:
+    the local AI's group is its program's hosts and its model registry's.
+    """
+
+    browser: tuple[str, ...] = Field(min_length=1)
+    model_runtime: tuple[str, ...] = Field(min_length=1)
+    model_registry: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("browser", "model_runtime", "model_registry", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _hosts_from_toml_arrays(cls, value: object) -> object:
+        if is_object_list(value):
+            return tuple(value)
+        return value
+
+    def hosts_for(self, group: str) -> tuple[str, ...]:
+        """Return the hosts of ``group``, refusing a group this registry does not declare."""
+        hosts = {
+            "browser": self.browser,
+            "model_runtime": self.model_runtime,
+            "model_registry": self.model_registry,
+            "local_ai": tuple(dict.fromkeys((*self.model_runtime, *self.model_registry))),
+        }.get(group)
+        if hosts is None:
+            raise KeyError(group)
+        return hosts
+
+
 class ExternalConstants(_Frozen):
     """Top-level registry model mirroring the TOML root.
 
@@ -439,6 +473,7 @@ class ExternalConstants(_Frozen):
 
     aeat: AeatSection
     online_services: OnlineServicesSection
+    dependency_hosts: DependencyHostsSection
 
 
 #: IANA-registered MIME type for PDF document payloads.

@@ -6,6 +6,8 @@ from datetime import date
 
 from pydantic import ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.aggregation import BindingTypedEnumKind
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -19,7 +21,6 @@ from ...domain.calculations.registry.errors import RegistrySnapshotError, Regist
 from ...domain.calculations.registry.rental_reduction import resolve_rental_reduction_art232_tier_catalogue
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .binding_channel_validation import validate_binding_channel_value
 from .query_read_contracts import ModeloBindingOverride, ModeloBindingsResolveProjection, ModeloBindingsResolveRequest

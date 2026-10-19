@@ -9,7 +9,8 @@
 //! notice, a refused stream, a first numbered frame after sequence 1, an
 //! unnumbered chunk, or a chunk at the frame's text cap, which may have been
 //! cut. A reply's text is one message however many tool calls come between
-//! its parts, as cadrumo-agent keeps it.
+//! its parts, as cadrumo-agent keeps it. The agent's own reasoning is passed
+//! on beside it, numbered the same way; what a subagent thinks is not.
 
 use serde::Serialize;
 use serde_json::Value;
@@ -34,6 +35,59 @@ pub const TOOL_KINDS: &[&str] = &[
 ];
 /// cadrumo-agent's `ToolCallStatus`.
 pub const TOOL_STATUSES: &[&str] = &["pending", "in_progress", "completed", "failed"];
+/// cadrumo-agent's bound on a refusal's code and recovery action identifier.
+const REFUSAL_TOKEN_CAP: usize = 128;
+/// The prefix every operator action identifier carries.
+const ACTION_PREFIX: &str = "operator.";
+
+/// Why the product refused a failed tool call, as the agent read it from the
+/// tool's result: the refusal's closed token and, where the refusal names
+/// one, the operator action that recovers from it. Identifiers for routing,
+/// never shown.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ToolRefusal {
+    pub code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recovery_action_id: Option<String>,
+}
+
+/// A refusal token: lower-case letters, digits, `_` and `.`, within the cap.
+fn refusal_token(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= REFUSAL_TOKEN_CAP
+        && value
+            .bytes()
+            .all(|byte| matches!(byte, b'a'..=b'z' | b'0'..=b'9' | b'_' | b'.'))
+}
+
+/// A failed update's refusal, checked again here: anything not exactly the
+/// declared shape is no refusal, and the call is shown without one.
+fn refusal(frame: &Value) -> Option<ToolRefusal> {
+    let refusal = frame.get("refusal")?.as_object()?;
+    if refusal
+        .keys()
+        .any(|key| key != "code" && key != "recovery_action_id")
+    {
+        return None;
+    }
+    let code = refusal
+        .get("code")?
+        .as_str()
+        .filter(|code| refusal_token(code))?;
+    let recovery_action_id = match refusal.get("recovery_action_id") {
+        None => None,
+        Some(action) => Some(action.as_str().filter(|action| {
+            refusal_token(action)
+                && action
+                    .strip_prefix(ACTION_PREFIX)
+                    .is_some_and(|rest| !rest.is_empty())
+        })?),
+    };
+    Some(ToolRefusal {
+        code: code.to_owned(),
+        recovery_action_id: recovery_action_id.map(str::to_owned),
+    })
+}
 
 /// A tool call as the agent reports it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -43,6 +97,9 @@ pub struct ToolCall {
     pub title: String,
     pub tool_kind: String,
     pub status: String,
+    /// Present only on a call that failed because the product refused it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refusal: Option<ToolRefusal>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -101,6 +158,12 @@ pub enum StreamEvent {
         reply_id: String,
     },
     Text {
+        reply_id: String,
+        message_id: String,
+        sequence: u64,
+        delta: String,
+    },
+    Thought {
         reply_id: String,
         message_id: String,
         sequence: u64,
@@ -261,7 +324,9 @@ impl Mapping {
         }
         let mapped = match kind.as_str() {
             "message_chunk" => self.message_chunk(&frame, sequence),
-            "tool_call_start" | "tool_call_update" => self.tool_call(&frame),
+            "thought_chunk" => Ok(self.thought_chunk(&frame, sequence)),
+            "tool_call_start" => self.tool_call(&frame, false),
+            "tool_call_update" => self.tool_call(&frame, true),
             "permission_request" => self.permission(&frame),
             "clarification_pending" => match text(&frame, "request_id") {
                 Some(request) if !request.is_empty() => {
@@ -271,7 +336,7 @@ impl Mapping {
             },
             "thread_terminal" => self.terminal(&frame),
             "progress_dropped" | "stream_rejected" => Err(()),
-            // Snapshots, heartbeats, thoughts, plans, artifacts, agent
+            // Snapshots, heartbeats, plans, artifacts, agent
             // status and errors carry nothing the column shows; a kind
             // nobody declared is the catalog moving ahead.
             _ => Ok(Vec::new()),
@@ -314,7 +379,29 @@ impl Mapping {
         })])
     }
 
-    fn tool_call(&mut self, frame: &Value) -> Result<Vec<Step>, ()> {
+    /// The agent's reasoning, shown only as a preview: a chunk that cannot be
+    /// placed by its sequence, or that a subagent thought, is left out rather
+    /// than ending the stream, and one at the cap is shown as it came.
+    fn thought_chunk(&self, frame: &Value, sequence: Option<u64>) -> Vec<Step> {
+        let (Some(sequence), Some(content)) = (sequence, text(frame, "content")) else {
+            return Vec::new();
+        };
+        let message = text(frame, "message_id").filter(|id| !id.is_empty());
+        let subagent = text(frame, "subagent_id").is_some_and(|id| !id.is_empty());
+        match message {
+            Some(message) if !content.is_empty() && !subagent => {
+                vec![Step::Emit(StreamEvent::Thought {
+                    reply_id: self.reply_id.clone(),
+                    message_id: message.to_owned(),
+                    sequence,
+                    delta: content.to_owned(),
+                })]
+            }
+            _ => Vec::new(),
+        }
+    }
+
+    fn tool_call(&mut self, frame: &Value, update: bool) -> Result<Vec<Step>, ()> {
         let id = text(frame, "tool_call_id")
             .filter(|id| !id.is_empty())
             .ok_or(())?;
@@ -329,6 +416,13 @@ impl Mapping {
             Some(_) => return Err(()),
         };
         let title = text(frame, "title").filter(|title| !title.is_empty());
+        // Only an update that ends the call failed may say the product
+        // refused it.
+        let refused = if update && status == Some("failed") {
+            refusal(frame)
+        } else {
+            None
+        };
         let tool = match self.tools.get_mut(id) {
             Some(tool) => {
                 if let Some(title) = title {
@@ -339,6 +433,7 @@ impl Mapping {
                 }
                 if let Some(status) = status {
                     status.clone_into(&mut tool.status);
+                    tool.refusal.clone_from(&refused);
                 }
                 tool.clone()
             }
@@ -350,6 +445,7 @@ impl Mapping {
                     title: title.ok_or(())?.to_owned(),
                     tool_kind: kind.ok_or(())?.to_owned(),
                     status: status.ok_or(())?.to_owned(),
+                    refusal: refused,
                 };
                 self.tools.insert(id.to_owned(), tool.clone());
                 tool
@@ -374,7 +470,11 @@ impl Mapping {
                 let kind = text(option, "kind")?;
                 if !matches!(
                     kind,
-                    "allow_once" | "allow_always" | "reject_once" | "reject_always"
+                    "allow_once"
+                        | "allow_session"
+                        | "allow_always"
+                        | "reject_once"
+                        | "reject_always"
                 ) {
                     return None;
                 }
@@ -596,6 +696,214 @@ mod tests {
     }
 
     #[test]
+    fn the_agents_own_thoughts_stream_beside_its_text() {
+        let mut mapping = Mapping::new("run-1");
+        let thought = |sequence, fields: Value| {
+            let mut body = json!({"message_id": "m1", "timestamp": 1.5});
+            for (key, value) in fields.as_object().unwrap() {
+                body[key] = value.clone();
+            }
+            frame("thought_chunk", Some(sequence), body)
+        };
+        let mut seen = events(mapping.frame(&thought(1, json!({"content": "Leo el libro."}))));
+        // A subagent's thought and an empty one are left out, and the stream
+        // goes on.
+        seen.extend(events(mapping.frame(&thought(
+            2,
+            json!({"content": "otro", "subagent_id": "sub-1", "parent_tool_call_id": "t1"}),
+        ))));
+        seen.extend(events(mapping.frame(&thought(3, json!({"content": ""})))));
+        seen.extend(events(mapping.frame(&chunk(4, "m2", "Listo."))));
+        assert_eq!(
+            serde_json::to_value(&seen).unwrap(),
+            json!([
+                {"type": "reply_started", "reply_id": "run-1"},
+                {"type": "thought", "reply_id": "run-1", "message_id": "m1", "sequence": 1, "delta": "Leo el libro."},
+                {"type": "text", "reply_id": "run-1", "message_id": "m2", "sequence": 4, "delta": "Listo."},
+            ])
+        );
+        assert!(!mapping.ended());
+    }
+
+    /// The tool event a failed update of `t1` maps to, after its start.
+    fn failed_update(fields: Value) -> Vec<StreamEvent> {
+        let mut mapping = Mapping::new("run-1");
+        mapping.frame(&frame(
+            "tool_call_start",
+            Some(1),
+            json!({"tool_call_id": "t1", "title": "browser_capture", "kind": "fetch", "status": "in_progress"}),
+        ));
+        let mut body = json!({"tool_call_id": "t1", "status": "failed"});
+        for (key, value) in fields.as_object().unwrap() {
+            body[key] = value.clone();
+        }
+        events(mapping.frame(&frame("tool_call_update", Some(2), body)))
+    }
+
+    fn refusal_of(events: &[StreamEvent]) -> Option<ToolRefusal> {
+        match events {
+            [StreamEvent::Tool { tool, .. }] => {
+                assert_eq!(tool.status, "failed");
+                tool.refusal.clone()
+            }
+            other => panic!("expected one tool event, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_refused_tool_call_carries_its_code_and_recovery_action() {
+        let seen = failed_update(json!({
+            "refusal": {"code": "operation_not_successful", "recovery_action_id": "operator.provision.browser"}
+        }));
+        assert_eq!(
+            refusal_of(&seen),
+            Some(ToolRefusal {
+                code: "operation_not_successful".into(),
+                recovery_action_id: Some("operator.provision.browser".into()),
+            })
+        );
+        assert_eq!(
+            serde_json::to_value(&seen[0]).unwrap()["tool"]["refusal"],
+            json!({"code": "operation_not_successful", "recovery_action_id": "operator.provision.browser"})
+        );
+        // A refusal that names no recovery is still a refusal.
+        let bare = failed_update(json!({"refusal": {"code": "person_act_required"}}));
+        assert_eq!(
+            refusal_of(&bare),
+            Some(ToolRefusal {
+                code: "person_act_required".into(),
+                recovery_action_id: None,
+            })
+        );
+        assert_eq!(
+            serde_json::to_value(&bare[0]).unwrap()["tool"]["refusal"],
+            json!({"code": "person_act_required"})
+        );
+    }
+
+    #[test]
+    fn a_failed_tool_call_without_a_refusal_has_none() {
+        let seen = failed_update(json!({}));
+        assert_eq!(refusal_of(&seen), None);
+        assert!(
+            serde_json::to_value(&seen[0]).unwrap()["tool"]
+                .get("refusal")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn a_malformed_refusal_is_dropped_and_the_call_still_shown() {
+        let long = format!("operator.{}", "a".repeat(REFUSAL_TOKEN_CAP));
+        for (name, refusal) in [
+            ("not an object", json!("operator.provision.browser")),
+            (
+                "no code",
+                json!({"recovery_action_id": "operator.provision.browser"}),
+            ),
+            ("empty code", json!({"code": ""})),
+            (
+                "upper-case code",
+                json!({"code": "OPERATION_NOT_SUCCESSFUL"}),
+            ),
+            ("code with a space", json!({"code": "not successful"})),
+            ("code not text", json!({"code": 7})),
+            (
+                "code over the cap",
+                json!({"code": "a".repeat(REFUSAL_TOKEN_CAP + 1)}),
+            ),
+            (
+                "action without the operator prefix",
+                json!({"code": "x", "recovery_action_id": "provision.browser"}),
+            ),
+            (
+                "bare operator prefix",
+                json!({"code": "x", "recovery_action_id": "operator."}),
+            ),
+            (
+                "upper-case action",
+                json!({"code": "x", "recovery_action_id": "operator.Provision.browser"}),
+            ),
+            (
+                "action over the cap",
+                json!({"code": "x", "recovery_action_id": long}),
+            ),
+            (
+                "action null",
+                json!({"code": "x", "recovery_action_id": null}),
+            ),
+            (
+                "undeclared field",
+                json!({"code": "x", "recovery_action_id": "operator.provision.browser", "message": "m"}),
+            ),
+        ] {
+            let seen = failed_update(json!({ "refusal": refusal }));
+            assert_eq!(refusal_of(&seen), None, "{name}");
+        }
+    }
+
+    #[test]
+    fn a_refusal_on_a_call_that_did_not_fail_is_dropped() {
+        let refusal = json!({"code": "operation_not_successful", "recovery_action_id": "operator.provision.model"});
+        for status in ["pending", "in_progress", "completed"] {
+            let mut mapping = Mapping::new("run-1");
+            mapping.frame(&frame(
+                "tool_call_start",
+                Some(1),
+                json!({"tool_call_id": "t1", "title": "x", "kind": "read", "status": "pending"}),
+            ));
+            let seen = events(mapping.frame(&frame(
+                "tool_call_update",
+                Some(2),
+                json!({"tool_call_id": "t1", "status": status, "refusal": refusal}),
+            )));
+            match &seen[..] {
+                [StreamEvent::Tool { tool, .. }] => assert_eq!(tool.refusal, None, "{status}"),
+                other => panic!("{status}: {other:?}"),
+            }
+        }
+        // An update that names no status says nothing about how the call ended.
+        let mut mapping = Mapping::new("run-1");
+        mapping.frame(&frame(
+            "tool_call_start",
+            Some(1),
+            json!({"tool_call_id": "t1", "title": "x", "kind": "read", "status": "pending"}),
+        ));
+        let seen = events(mapping.frame(&frame(
+            "tool_call_update",
+            Some(2),
+            json!({"tool_call_id": "t1", "refusal": refusal}),
+        )));
+        assert!(matches!(&seen[..], [StreamEvent::Tool { tool, .. }] if tool.refusal.is_none()));
+        // A start frame is not where a refusal is carried, even a failed one.
+        let mut mapping = Mapping::new("run-1");
+        let seen = events(mapping.frame(&frame(
+            "tool_call_start",
+            Some(1),
+            json!({"tool_call_id": "t1", "title": "x", "kind": "read", "status": "failed", "refusal": refusal}),
+        )));
+        assert!(matches!(&seen[..], [_, StreamEvent::Tool { tool, .. }] if tool.refusal.is_none()));
+        // A failed call that later reports another status no longer carries it.
+        let mut mapping = Mapping::new("run-1");
+        mapping.frame(&frame(
+            "tool_call_start",
+            Some(1),
+            json!({"tool_call_id": "t1", "title": "x", "kind": "read", "status": "pending"}),
+        ));
+        mapping.frame(&frame(
+            "tool_call_update",
+            Some(2),
+            json!({"tool_call_id": "t1", "status": "failed", "refusal": refusal}),
+        ));
+        let seen = events(mapping.frame(&frame(
+            "tool_call_update",
+            Some(3),
+            json!({"tool_call_id": "t1", "status": "completed"}),
+        )));
+        assert!(matches!(&seen[..], [StreamEvent::Tool { tool, .. }] if tool.refusal.is_none()));
+    }
+
+    #[test]
     fn replayed_frames_are_mapped_once_and_the_cursor_resumes_after_the_last() {
         let mut mapping = Mapping::new("run-1");
         assert_eq!(events(mapping.frame(&chunk(1, "m1", "ab"))).len(), 2);
@@ -754,6 +1062,7 @@ mod tests {
                 "description": "Import the statement",
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
+                    {"option_id": "session", "name": "Allow for this session", "kind": "allow_session"},
                     {"option_id": "never", "kind": "reject_always"},
                     {"option_id": "odd", "name": "Odd", "kind": "sometimes"}
                 ]
@@ -767,6 +1076,7 @@ mod tests {
                 "tool_kind": "edit",
                 "options": [
                     {"option_id": "allow", "name": "Allow once", "kind": "allow_once"},
+                    {"option_id": "session", "name": "Allow for this session", "kind": "allow_session"},
                     {"option_id": "never", "name": null, "kind": "reject_always"}
                 ]
             }})

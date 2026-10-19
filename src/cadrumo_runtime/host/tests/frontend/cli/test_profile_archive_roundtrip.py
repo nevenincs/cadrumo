@@ -47,7 +47,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.privacy_helpers import assert_public_profile_id_not_leaked
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 from .cli_runner import invoke_cached_cli
 

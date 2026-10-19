@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.errors.hierarchy import InternalInvariantError
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 

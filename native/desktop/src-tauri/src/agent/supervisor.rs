@@ -94,6 +94,8 @@ pub struct Status {
 pub enum Allowed {
     /// Serve the profile with this label.
     Serve(String),
+    /// A local sign-in change fences authority until its fresh observation.
+    Pending,
     Refuse(Refusal),
 }
 
@@ -110,6 +112,12 @@ pub struct Observation {
 /// Anything but a present sign-in on a working runtime with a selected
 /// profile stops the agent. A failed read is unknown, and unknown stops it.
 pub fn allowed(observed: &Result<Observation>) -> Allowed {
+    if let Err(error) = observed
+        && error.code == ErrorCode::SessionUnavailable
+        && error.reason.as_deref() == Some("sign_in_mutation_in_progress")
+    {
+        return Allowed::Pending;
+    }
     let Ok(observed) = observed else {
         return Allowed::Refuse(Refusal::RuntimeUnavailable);
     };
@@ -149,6 +157,16 @@ pub struct Gateway {
     pub workspace_root: String,
     /// Which launcher reported it; a later one is another gateway.
     pub generation: u64,
+    /// A controller can replace its gateway without replacing the launcher.
+    /// Retained observations must not authorize that replacement, even if its
+    /// port is reused.
+    instance: Arc<()>,
+}
+
+impl Gateway {
+    pub fn same_instance(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.instance, &other.instance)
+    }
 }
 
 struct Running {
@@ -648,11 +666,13 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
             (Some(_), _) => {
                 let cause = match &allowed {
                     Allowed::Serve(_) => AgentStopCause::ProfileChanged,
+                    Allowed::Pending => AgentStopCause::SignInUnavailable,
                     Allowed::Refuse(Refusal::SignedOut) => AgentStopCause::SignInUnavailable,
                     Allowed::Refuse(_) => AgentStopCause::RuntimeUnavailable,
                 };
                 let _ = stop_running(&shared, None, cause).await;
                 match &allowed {
+                    Allowed::Pending => publish(&shared, State::Stopped),
                     Allowed::Refuse(code) => {
                         if *code == Refusal::SignedOut {
                             retries = RetryBudget::default();
@@ -668,6 +688,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     }
                 }
             }
+            (None, Allowed::Pending) => publish(&shared, State::Stopped),
             (None, Allowed::Refuse(code)) => {
                 // A failed observation is not evidence of a new sign-in. Keep
                 // the same profile's budget through transient runtime failures.
@@ -841,6 +862,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 bearer: gateway_bearer,
                 workspace_root,
                 generation,
+                instance: Arc::new(()),
             });
             shared.diagnostics.service(
                 Some(process),
@@ -867,12 +889,20 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
         }
         Signal::Event(Event::Stopped { reason }) => {
             *lock(&shared.gateway) = None;
-            publish(
-                shared,
-                State::Refused {
-                    code: service_refusal(&reason),
-                },
-            );
+            if reason == "agent_retired" {
+                // The hosted controller was retired for an operation such as
+                // provider sign-in. The service process and its authenticated
+                // admin endpoint remain owned, so this is a neutral stopped
+                // state rather than a service refusal.
+                publish(shared, State::Stopped);
+            } else {
+                publish(
+                    shared,
+                    State::Refused {
+                        code: service_refusal(&reason),
+                    },
+                );
+            }
             false
         }
         Signal::Violation => {
@@ -891,7 +921,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
         Signal::Ended => {
             let unasked = matches!(
                 lock(&shared.status).state,
-                State::Starting | State::Ready { .. }
+                State::Starting | State::Ready { .. } | State::Stopped
             );
             if unasked {
                 publish(
@@ -910,6 +940,23 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn replacing_a_gateway_in_the_same_launcher_invalidates_its_admission() {
+        let first = Gateway {
+            port: 12345,
+            bearer: Arc::new(Zeroizing::new("test-bearer".to_owned())),
+            workspace_root: "workspace".to_owned(),
+            generation: 1,
+            instance: Arc::new(()),
+        };
+        assert!(first.same_instance(&first.clone()));
+        let replacement = Gateway {
+            instance: Arc::new(()),
+            ..first.clone()
+        };
+        assert!(!first.same_instance(&replacement));
+    }
 
     /// Stands in for new sign-in observations: the test's source is read again every `period`.
     fn every(period: Duration) -> Changed {
@@ -944,9 +991,24 @@ mod tests {
                 Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
                 Refusal::RuntimeUnavailable,
             ),
+            (
+                Err(ApplicationError::new(
+                    ErrorCode::SessionUnavailable,
+                    Operation::Cli,
+                )),
+                Refusal::RuntimeUnavailable,
+            ),
         ] {
             assert_eq!(allowed(&status), Allowed::Refuse(refusal));
         }
+        assert_eq!(
+            allowed(&Err(ApplicationError::new(
+                ErrorCode::SessionUnavailable,
+                Operation::Cli
+            )
+            .with_reason("sign_in_mutation_in_progress"))),
+            Allowed::Pending
+        );
         let mut refused = observed(true, true, Some("A")).unwrap();
         refused.refused = true;
         assert_eq!(
@@ -1241,7 +1303,7 @@ mod tests {
     mod live {
         use super::*;
         use crate::agent::runner::tests::{alive, launcher_script, powershell, reported};
-        use crate::shell::sign_in::process::tests::HANG_GUARD;
+        use crate::shell::sign_in::process::tests::{Gate, HANG_GUARD};
         use tauri::ipc::InvokeResponseBody;
         use tokio::sync::watch;
 
@@ -1307,6 +1369,19 @@ mod tests {
             holders: Arc<Mutex<Vec<HolderFixture>>>,
             /// Moves on at each published status and each recorded diagnostic.
             recorded: Arc<watch::Sender<u64>>,
+            /// Holds a retiring launcher at each step the test inspects.
+            gate: Option<Gate>,
+        }
+
+        impl Rig {
+            /// Lets the launcher go on once it has reached `point`.
+            fn release(&mut self, point: &str) {
+                let gate = self.gate.as_mut().expect("this launcher waits at a gate");
+                tokio::task::block_in_place(|| {
+                    gate.reached(point);
+                    gate.go();
+                });
+            }
         }
 
         struct HolderFixture {
@@ -1316,7 +1391,11 @@ mod tests {
 
         /// Controlled holder-protocol evidence over real child pipes, not an
         /// installed runtime or a proof of native person authentication.
-        fn held_protocol_fixture(profile: &str, ignore_end: bool) -> (Prepared, HolderFixture) {
+        fn held_protocol_fixture(
+            profile: &str,
+            ignore_end: bool,
+            retire_at_gate: Option<&str>,
+        ) -> (Prepared, HolderFixture) {
             let profile_id = match profile {
                 "A" => "11111111-1111-4111-8111-111111111111",
                 "B" => "22222222-2222-4222-8222-222222222222",
@@ -1385,7 +1464,18 @@ mod tests {
             // The existing launcher first reads and checks both independently
             // minted startup credentials. Add only the service readiness frame
             // before its existing agent-ready frame and child-tree behavior.
-            let script = launcher_script(ignore_end);
+            let mut script = launcher_script(ignore_end);
+            if let Some(gate) = retire_at_gate {
+                let normal_exit = r#"$null = [Console]::In.ReadToEnd(); [Console]::Out.WriteLine('{"event":"agent_stopped","reason":"agent_host_closed"}'); exit 0"#;
+                assert!(script.contains(normal_exit));
+                // Each step waits for the test, never for an amount of time.
+                script = script.replace(
+                    normal_exit,
+                    &format!(
+                        r#"{gate}Wait-Gate 'ready'; [Console]::Out.WriteLine('{{"event":"agent_stopped","reason":"agent_retired"}}'); [Console]::Out.Flush(); Wait-Gate 'retired'; exit 3"#
+                    ),
+                );
+            }
             let marker = "$grandchild = ";
             assert_eq!(script.matches(marker).count(), 1);
             let script = script.replacen(
@@ -1402,7 +1492,7 @@ mod tests {
             )
         }
 
-        fn rig(ignore_end: bool) -> Rig {
+        fn rig(ignore_end: bool, retire_after_ready: bool) -> Rig {
             let observation = Arc::new(Mutex::new(observed(true, true, Some("A"))));
             let source = observation.clone();
             let observe: Observe = Arc::new(move || {
@@ -1411,8 +1501,11 @@ mod tests {
             });
             let holders = Arc::new(Mutex::new(Vec::new()));
             let witnesses = holders.clone();
+            let gate = retire_after_ready.then(Gate::new);
+            let gate_script = gate.as_ref().map(Gate::script);
             let launch: Launch = Arc::new(move |_, profile| {
-                let (prepared, witness) = held_protocol_fixture(profile, ignore_end);
+                let (prepared, witness) =
+                    held_protocol_fixture(profile, ignore_end, gate_script.as_deref());
                 lock(&witnesses).push(witness);
                 Ok(prepared)
             });
@@ -1449,6 +1542,7 @@ mod tests {
                 diagnostics,
                 holders,
                 recorded,
+                gate,
             }
         }
 
@@ -1608,9 +1702,17 @@ mod tests {
                     Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)),
                     "refused",
                 ),
+                (
+                    "local sign-in mutation in progress",
+                    Err(
+                        ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                            .with_reason("sign_in_mutation_in_progress"),
+                    ),
+                    "stopped",
+                ),
                 ("another profile", observed(true, true, Some("B")), "ready"),
             ] {
-                let rig = rig(false);
+                let rig = rig(false, false);
                 assert_eq!(
                     rig.supervisor.status().lane,
                     None,
@@ -1649,7 +1751,7 @@ mod tests {
                             .any(|w| w[0] == "stopped" && w[1] == "starting"),
                         "{states:?}"
                     );
-                } else {
+                } else if published == "refused" {
                     assert_eq!(
                         after["code"],
                         if trigger.starts_with("sign-out") {
@@ -1667,7 +1769,7 @@ mod tests {
 
         #[tokio::test(flavor = "multi_thread")]
         async fn window_close_stops_the_launcher_even_when_it_ignores_its_input() {
-            let rig = rig(true);
+            let rig = rig(true, false);
             rig.supervisor.status();
             let pids = serving(&rig, 0).await;
             let processes = started(pids);
@@ -1680,6 +1782,193 @@ mod tests {
             rig.supervisor.status();
             tokio::time::sleep(Duration::from_millis(400)).await;
             assert!(lock(&rig.supervisor.shared.running).is_none());
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn controller_retirement_is_neutral_but_owned_service_exit_is_failed_and_retried() {
+            let mut rig = rig(false, true);
+            rig.supervisor.status();
+            serving(&rig, 0).await;
+            let generation = rig.supervisor.gateway().unwrap().generation;
+            let after_ready = rig.statuses.lock().unwrap().len();
+            rig.release("ready");
+
+            // The launcher now waits at its gate: its service is still running.
+            until(&rig, after_ready, "stopped").await;
+            assert!(rig.supervisor.gateway().is_none());
+            assert!(
+                lock(&rig.supervisor.shared.admin)
+                    .as_ref()
+                    .is_some_and(|endpoint| endpoint.generation == generation)
+            );
+            assert!(
+                !rig.diagnostics
+                    .snapshot(u64::MAX)
+                    .events
+                    .iter()
+                    .any(|event| matches!(event.service, Some(ServiceFact::AgentRefused { .. })))
+            );
+
+            let after_retirement = rig.statuses.lock().unwrap().len();
+            rig.release("retired");
+            let refused = until(&rig, after_retirement, "refused").await;
+            assert_eq!(refused["code"], "agent_service_failed");
+            // Refusal is published before process cleanup and retry scheduling.
+            // Observe the completed transition before inspecting its facts.
+            until_seen(
+                &rig,
+                "service exit must finish cleanup and schedule its retry",
+                || {
+                    rig.diagnostics
+                        .snapshot(u64::MAX)
+                        .events
+                        .iter()
+                        .any(|event| {
+                            matches!(
+                                event.service,
+                                Some(ServiceFact::AgentRetryScheduled { delay_ms: 60_000 })
+                            )
+                        })
+                        .then_some(())
+                },
+            )
+            .await;
+            assert!(lock(&rig.supervisor.shared.admin).is_none());
+
+            let facts: Vec<_> = rig
+                .diagnostics
+                .snapshot(u64::MAX)
+                .events
+                .into_iter()
+                .filter_map(|event| event.service)
+                .collect();
+            assert!(facts.iter().any(|fact| matches!(
+                fact,
+                ServiceFact::AgentRefused {
+                    reason: Refusal::ServiceFailed
+                }
+            )));
+            assert!(
+                facts.iter().any(|fact| matches!(
+                    fact,
+                    ServiceFact::AgentRetryScheduled { delay_ms: 60_000 }
+                ))
+            );
+            rig.supervisor.close().await.unwrap();
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn a_retired_agent_is_stopped_until_its_replacement_reports_ready() {
+            let rig = rig(false, false);
+            rig.supervisor.status();
+            serving(&rig, 0).await;
+            let generation = rig.supervisor.gateway().unwrap().generation;
+            let retired = rig.supervisor.gateway().unwrap();
+
+            // The service retires the superseded tree first: nothing serves.
+            assert!(
+                !handle(
+                    &rig.supervisor.shared,
+                    generation,
+                    Signal::Event(Event::Stopped {
+                        reason: "agent_retired".into(),
+                    }),
+                )
+                .await
+            );
+            assert_eq!(rig.supervisor.status().state, State::Stopped);
+            assert!(rig.supervisor.gateway().is_none());
+
+            // A start declined as busy changes nothing it serves.
+            assert!(
+                !handle(
+                    &rig.supervisor.shared,
+                    generation,
+                    Signal::Event(Event::Refused {
+                        code: "busy".into(),
+                    }),
+                )
+                .await
+            );
+            assert_eq!(rig.supervisor.status().state, State::Stopped);
+
+            // The replacement's ready line serves it, through a new gateway.
+            assert!(
+                !handle(
+                    &rig.supervisor.shared,
+                    generation,
+                    Signal::Event(Event::Ready {
+                        gateway_port: 4001,
+                        agent_version: "replacement".into(),
+                        workspace_root: r"C:\lane\workspace".into(),
+                    }),
+                )
+                .await
+            );
+            assert_eq!(
+                rig.supervisor.status().state,
+                State::Ready {
+                    agent_version: "replacement".into()
+                }
+            );
+            let replacement = rig.supervisor.gateway().unwrap();
+            assert_eq!(replacement.port, 4001);
+            assert!(!replacement.same_instance(&retired));
+            rig.supervisor.close().await.unwrap();
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn a_busy_start_leaves_the_serving_agent_ready() {
+            let rig = rig(false, false);
+            rig.supervisor.status();
+            serving(&rig, 0).await;
+            let generation = rig.supervisor.gateway().unwrap().generation;
+            let before = rig.supervisor.status().state;
+            assert!(
+                !handle(
+                    &rig.supervisor.shared,
+                    generation,
+                    Signal::Event(Event::Refused {
+                        code: "busy".into(),
+                    }),
+                )
+                .await
+            );
+            assert_eq!(rig.supervisor.status().state, before);
+            assert!(rig.supervisor.gateway().is_some());
+            rig.supervisor.close().await.unwrap();
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn stopped_reasons_other_than_controller_retirement_remain_refusals() {
+            let rig = rig(false, false);
+            rig.supervisor.status();
+            serving(&rig, 0).await;
+            let generation = rig.supervisor.gateway().unwrap().generation;
+
+            assert!(
+                !handle(
+                    &rig.supervisor.shared,
+                    generation,
+                    Signal::Event(Event::Stopped {
+                        reason: "agent_signed_out".into(),
+                    }),
+                )
+                .await
+            );
+            assert_eq!(
+                rig.supervisor.status().state,
+                State::Refused {
+                    code: Refusal::SignedOut
+                }
+            );
+            assert!(rig.supervisor.gateway().is_none());
+            assert!(
+                lock(&rig.supervisor.shared.admin)
+                    .as_ref()
+                    .is_some_and(|endpoint| endpoint.generation == generation)
+            );
+            rig.supervisor.close().await.unwrap();
         }
 
         #[tokio::test(flavor = "multi_thread")]

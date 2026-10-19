@@ -9,6 +9,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -32,12 +35,6 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..state_projection_ports import StateProjectionReadPorts
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,

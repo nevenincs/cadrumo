@@ -22,10 +22,11 @@ from cadrumo.adapters.persistence.storage.master_key.bucket_session import Bucke
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessAllowed
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo_client.contracts.access_refusals import AccessAllowed
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ExitReason, RefusalError
 from cadrumo_client.contracts.profile_access import HumanProof
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest

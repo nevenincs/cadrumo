@@ -27,7 +27,8 @@ from __future__ import annotations
 import os
 import stat
 import sys
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
 from enum import StrEnum
 from functools import cache
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
@@ -590,10 +591,37 @@ def authority_root_setting_names() -> frozenset[str]:
 
 
 def relayed_setting_names() -> frozenset[str]:
-    """Return the settings an ``OPERATOR`` child takes from its parent: its locations and its authority root."""
+    """Return the settings an ``OPERATOR`` child takes from its parent: locations, authority root and proxy.
+
+    The proxy settings reach the child so the downloads it starts follow the
+    operator's network route; the child withholds them from its own children
+    (:func:`withheld_child_settings`). The password setting is not relayed: a
+    proxy password crosses a process boundary only inside the proxy address.
+    """
     from .config import Settings
 
-    return Settings.storage_env_var_names() | authority_root_setting_names()
+    proxy = Settings.proxy_env_var_names(secret_fields=False)
+    return Settings.storage_env_var_names() | authority_root_setting_names() | proxy
+
+
+@contextmanager
+def withheld_child_settings() -> Generator[None]:
+    """Remove the credential-bearing proxy settings from this process's environment for the block.
+
+    Enter it once this process's settings already hold the values. Every child
+    process inherits ``os.environ``, and a proxy address may carry a user name
+    and password; the download tools that need the proxy receive it explicitly
+    in their own environment instead.
+    """
+    from .config import Settings
+
+    names = {name for name in os.environ if name.upper() in Settings.proxy_env_var_names()}
+    withheld = {name: os.environ.pop(name) for name in names}
+    try:
+        yield
+    finally:
+        for name, value in withheld.items():
+            os.environ.setdefault(name, value)
 
 
 def child_environment(

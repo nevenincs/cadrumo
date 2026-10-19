@@ -14,20 +14,17 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello, ServerHello
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_runtime.adapters.tests.test_enrollment_framing import MemoryChannel
+from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

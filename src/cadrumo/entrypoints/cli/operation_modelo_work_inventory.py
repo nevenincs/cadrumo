@@ -10,6 +10,7 @@ from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ...application.modelo.work_inventory_operation import (
@@ -17,7 +18,6 @@ from ...application.modelo.work_inventory_operation import (
     ModeloWorkListProjection,
     ModeloWorkListRequest,
 )
-from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState

@@ -15,13 +15,15 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessAllowed, AccessDenied, Availability, DisclosureCategory
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import review_package_exchange_operation as module
 from .. import review_package_signing as signing_module

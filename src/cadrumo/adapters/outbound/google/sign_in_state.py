@@ -15,13 +15,14 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
-from ....core.config_google_client import OAuthClient
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from .errors import (
+from cadrumo_client.contracts.google_auth import (
     GoogleAuthPreconditionCondition,
     GoogleAuthSignInRequiredError,
     google_auth_no_action_verdict,
 )
+
+from ....core.config_google_client import OAuthClient
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .records import OAuthMetadata, OAuthToken
 
 _ENDED_GRANT_ERROR = "invalid_grant"
@@ -38,7 +39,7 @@ def load_token_minted_for(profile: str, client: OAuthClient) -> OAuthToken | Non
         The stored token, or ``None`` when the profile has never signed in.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`:
             When a token is stored but names another client, or was stored in
             a shape that names none. No earlier shape is read.
     """
@@ -77,7 +78,7 @@ def load_sign_in_record(profile: str) -> OAuthMetadata | None:
     """Return what the profile's sign-in recorded, or ``None`` when it never signed in.
 
     Raises:
-        :exc:`adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`:
             When a record is stored in a shape this version does not read.
             Signing in again replaces it.
     """
@@ -95,6 +96,25 @@ def load_sign_in_record(profile: str) -> OAuthMetadata | None:
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ),
         ) from None
+
+
+def load_usable_sign_in(profile: str, client: OAuthClient) -> tuple[OAuthMetadata, OAuthToken] | None:
+    """Return the profile's sign-in record with its token, or ``None`` unless both are stored.
+
+    A sign-in counts only when the record of it and the token it produced are
+    both present and the token was minted by ``client``. A record whose token
+    row is gone is not a sign-in: nothing could be sent to Google with it.
+
+    Raises:
+        :exc:`cadrumo_client.contracts.google_auth.GoogleAuthSignInRequiredError`:
+            When either record is in a shape this version does not read, or
+            the token names another client or none.
+    """
+    metadata = load_sign_in_record(profile)
+    token = load_token_minted_for(profile, client)
+    if metadata is None or token is None:
+        return None
+    return metadata, token
 
 
 def ended_grant_refusal(error: Exception, *, action: str) -> GoogleAuthSignInRequiredError | None:
@@ -132,4 +152,4 @@ def ended_grant_refusal(error: Exception, *, action: str) -> GoogleAuthSignInReq
     )
 
 
-__all__ = ["ended_grant_refusal", "load_sign_in_record", "load_token_minted_for"]
+__all__ = ["ended_grant_refusal", "load_sign_in_record", "load_token_minted_for", "load_usable_sign_in"]

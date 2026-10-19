@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 
 from ...contracts import deadline_budget
 from ...contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS

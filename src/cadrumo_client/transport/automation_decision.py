@@ -14,11 +14,9 @@ from cadrumo.application.operations.frontend_requests import OperationResultProj
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     AutomationReviewProjection,
-    EnrollmentKind,
     EnrollmentStage,
 )
 from cadrumo.application.user_profile.automation_operations import (
@@ -30,7 +28,9 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 
+from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import bounded_deadline_after, remaining_budget
 from .frontend_client import FrontendClient

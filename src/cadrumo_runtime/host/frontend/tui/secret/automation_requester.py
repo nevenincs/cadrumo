@@ -14,14 +14,15 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Input, Label, Select, SelectionList, Static
 
 from cadrumo.application.operations.registry import OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import GRANT_DEFAULT_VALIDITY, AccessAction
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
-from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentKind
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.theme import tokenised
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+from cadrumo_client.contracts.enrollment_proposal import GRANT_DEFAULT_VALIDITY, EnrollmentKind
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from . import automation_requester_cleanup as _requester_cleanup

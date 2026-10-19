@@ -7,9 +7,10 @@ from typing import override
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
 from ...core.hashing import content_hash_hex
 from ...core.operations import OperationLifecycle
-from ..user_profile.access_contracts import AccessAction
 from ._supervisor_host import SupervisorHost
 from .capabilities import OperationRequestStoragePolicy
 from .models import OperationId, OperationIdentity, OperationRequest, new_operation_id

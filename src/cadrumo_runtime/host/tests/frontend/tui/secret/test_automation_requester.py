@@ -14,31 +14,25 @@ import pytest
 from textual.widgets import Button, Checkbox, Input, Select, SelectionList
 
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessScope,
-    Availability,
-    DisclosureCategory,
-    EffectiveScopeSummary,
-    ProfileAccessStatus,
-)
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
-from cadrumo.application.user_profile.automation_enrollment import (
-    AutomationReceiptProjection,
-    EnrollmentKind,
-    EnrollmentStage,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    Availability,
+    DisclosureCategory,
+    EffectiveScopeSummary,
+)
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
 from cadrumo_client.transport.frontend_client import FrontendClient

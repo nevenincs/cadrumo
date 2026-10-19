@@ -16,7 +16,7 @@ from cadrumo.core.i18n.render import clear_output_language_cache
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs, CliInvocation
 from cadrumo.tests.env import temporary_env
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .cli_runner import bind_public_cli_runner, invoke_cached_cli, operator_runtime_scope
 

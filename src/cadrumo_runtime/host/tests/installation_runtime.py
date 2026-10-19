@@ -18,14 +18,10 @@ from uuid import uuid4
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryEnrollment, enroll_profile_recovery
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_LOG_TAIL_MAX_LINES,
     InstallationPassphrase,

@@ -10,6 +10,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
@@ -32,7 +35,6 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .censal_access import bind_whole_profile_censal_access
 from .cotejo_apply import apply_cotejo

@@ -8,9 +8,11 @@ related:
   - '[[2026-10-13-provider-settings-adr]]'
   - '[[2026-10-13-native-agent-adr]]'
   - '[[2026-10-05-desktop-design-system-adr]]'
-modified: '2026-10-17'
+  - '[[2026-10-13-canonical-environment-application-internals-adr]]'
+  - '[[2026-10-17-single-binary-process-tree-adr]]'
+modified: '2026-10-18'
 body_schema: body-v2
-body_hash: 'sha256:38fffb220f18e83efb0bd2cb1ae1fd7359013afc798a199afaf1eb9360367cee'
+body_hash: 'sha256:5d93160e7f404acc10a4920fc4182d81e7273e2cdd7e3793c418d9d95041582b'
 ---
 
 # `provider-sign-in` plan
@@ -29,6 +31,10 @@ Discovery: Luna max readers mapped service.py preparation, AgentHost.administer,
 - [x] `S02` - Connect token-checked native commands to the localized provider sign-in dialog; `native/desktop and src/cadrumo_agent_service/locales`.
 - [ ] `S03` - Verify integration and document evidence and remaining live-account gates; `tests and native/CONTRACT.md`.
 - [x] `S04` - Repair the Windows local profile login prerequisite exposed by packaged sign-in verification and verify the real GUI flow; `native Windows manifests and session admission and provider catalog compatibility and frontend capability display and localization and external debug storage and packaged GUI verification`.
+- [x] `S05` - Repair normal-launch provider sign-in, enable declared Claude browser support and surface actionable failures; `provider executable discovery and transient browser handoff and auth diagnostics and provider sign-in UI and packaged verification`.
+- [ ] `S06` - Make successful provider sign-in clear and restore the agent after the intentional authentication pause; `provider sign-in completion UI and agent service lifecycle and native supervisor integration and packaged verification`.
+- [x] `S07` - Simplify provider settings with search, expandable provider groups, visible icons, clear states and plain localized messages; `native/desktop frontend provider settings and picker and packaged icon generation and four canonical provider locales and focused UI verification`.
+- [x] `S08` - Present provider authentication failures with a settings action and no internal failure prose; `native/desktop frontend agent failure presentation and focused scenario tests and packaged verification`.
 
 ## Parallelization
 

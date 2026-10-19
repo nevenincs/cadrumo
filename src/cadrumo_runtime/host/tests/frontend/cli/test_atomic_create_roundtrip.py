@@ -32,7 +32,7 @@ from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import native_cli_profile_server
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
 from .cli_runner import invoke_unbound_cli
 from .profile_password_cli import invoke_with_profile_password

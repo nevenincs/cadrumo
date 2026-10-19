@@ -56,7 +56,6 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings, load_settings
@@ -69,6 +68,8 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

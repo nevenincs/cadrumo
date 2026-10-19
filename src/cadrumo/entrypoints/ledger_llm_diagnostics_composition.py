@@ -10,12 +10,13 @@ from datetime import date
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..application.ledger.llm_diagnostics_ports import (
     LlmDiagnosticsPorts,
     LlmDiagnosticsReadError,
     LlmUsageDiagnosticRecord,
 )
-from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation

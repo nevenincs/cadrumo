@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_envelope import unwrap_cli_result as _json
 from cadrumo.tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years, render_borrador_pdf
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

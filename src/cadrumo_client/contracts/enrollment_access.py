@@ -9,11 +9,12 @@ from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
+
+from .automation_codes import AutomationCustodyCode
 
 
 class EnrollmentPrepare(BaseModel):

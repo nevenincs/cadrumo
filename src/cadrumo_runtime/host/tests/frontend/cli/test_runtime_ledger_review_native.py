@@ -45,7 +45,7 @@ from cadrumo.tests.loopback_llm import (
 )
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_runtime.adapters import profile_worker
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 from ._ledger_llm_support import _PROFILE_FACTS
 from .cli_runner import invoke_cached_cli

@@ -10,12 +10,11 @@ import typer
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import profile_pointer
-from cadrumo.application.workflow import profile_bucket_scan
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import OutputSchema
 from cadrumo.core.output_rendering import OutputFormat
-from cadrumo_client.commands import custody
+from cadrumo_client.commands import custody, profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigSignInStatusResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.contracts.sign_in import (
@@ -131,8 +130,8 @@ def test_runtime_parser_reports_the_selected_profile_without_borrowing_proof(
 def test_refused_global_sign_out_closes_connection_without_clearing_pointer(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _ObservationClient()
     pointer = BucketPointer.selected(bucket_id=str(client.profile_id), transition_revision=1)
-    monkeypatch.setattr(custody, "observe_active_profile_pointer", lambda: pointer)
-    monkeypatch.setattr(profile_bucket_scan, "read_profile_bucket", lambda _: None)
+    monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: pointer.bucket_id)
+    monkeypatch.setattr(profile_selection, "runtime_login_target", lambda _: None)
     monkeypatch.setattr(custody, "_activate_subcommand_output_language", lambda *_: None)
     monkeypatch.setattr(
         profile_pointer, "active_profile_pointer_transaction", lambda *_: pytest.fail("premature clear")

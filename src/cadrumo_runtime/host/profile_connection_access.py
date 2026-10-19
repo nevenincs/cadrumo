@@ -6,10 +6,8 @@ import time
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessDenied, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_administration import reconcile_automation_receipt
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.access_management import (
     AccessManagementRequest,
     AutomationDeny,
@@ -17,6 +15,9 @@ from cadrumo_client.contracts.access_management import (
     ProfileResume,
     SessionInventory,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.enrollment_access import (
     EnrollmentPrepare,

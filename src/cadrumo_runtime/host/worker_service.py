@@ -17,11 +17,11 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.application.operations.drain import OperationDrainResult
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.extension_records import ProfileWorkerExtensionRecordRequest
 from cadrumo_client.transport.frame_io import read_secret, write_document

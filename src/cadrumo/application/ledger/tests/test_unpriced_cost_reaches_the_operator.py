@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _record(
     cost: Decimal | None,
     *,
-    provider: LLMProvider = LLMProvider.ANTHROPIC,
+    provider: LLMProvider = LLMProvider.AGENT,
 ) -> LlmUsageDiagnosticRecord:
     return LlmUsageDiagnosticRecord(
         provider=provider.value,
@@ -75,13 +75,13 @@ def test_an_unpriced_provider_does_not_hide_a_priced_one() -> None:
         row.provider: row
         for row in _aggregate_usage(
             [
-                _record(Decimal("1.50"), provider=LLMProvider.ANTHROPIC),
-                _record(None, provider=LLMProvider.ANTHROPIC),
-                _record(Decimal("4.00"), provider=LLMProvider.OPENAI),
+                _record(Decimal("1.50"), provider=LLMProvider.AGENT),
+                _record(None, provider=LLMProvider.AGENT),
+                _record(Decimal("4.00"), provider=LLMProvider.AGENT),
             ],
         )
     }
 
-    assert rows[LLMProvider.ANTHROPIC.value].cost_estimate_usd is None
-    assert rows[LLMProvider.OPENAI.value].cost_estimate_usd == Decimal("4.00")
-    assert rows[LLMProvider.OPENAI.value].unpriced_calls == 0
+    assert rows[LLMProvider.AGENT.value].cost_estimate_usd is None
+    assert rows[LLMProvider.AGENT.value].cost_estimate_usd == Decimal("4.00")
+    assert rows[LLMProvider.AGENT.value].unpriced_calls == 0

@@ -33,7 +33,6 @@ from cadrumo.application.state_projection import (
     ModeloProfileRefusalCause,
     ProjectionModeloReadiness,
 )
-from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
 from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import profile_operation_subject
@@ -46,6 +45,7 @@ from cadrumo.domain.calculations.registry.binding_value_contract import (
 )
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

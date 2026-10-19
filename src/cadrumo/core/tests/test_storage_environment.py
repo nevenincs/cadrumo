@@ -25,6 +25,7 @@ from ..storage_environment import (
     relayed_setting_names,
     storage_directory,
     tool_storage_environment,
+    withheld_child_settings,
 )
 from ..storage_taxonomy import (
     STORAGE_ROOT_SETTINGS_FIELD,
@@ -151,7 +152,8 @@ def test_location_settings_are_separate_from_development_tools() -> None:
     assert not {"XDG_CACHE_HOME", "UV_CACHE_DIR"} & (product | development)
     assert not any(name.startswith("CADRUMO_UV_") for name in development)
     assert not {"UV_CACHE_DIR", "UV_PYTHON_INSTALL_DIR", "UV_TOOL_DIR", "UV_TOOL_BIN_DIR"} & set(TOOL_STORAGE_LOCATIONS)
-    assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"}
+    proxy = {"CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"}
+    assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"} | proxy
 
 
 def test_uv_global_paths_remain_owned_by_the_machine_and_uv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -193,7 +195,7 @@ def _received(tmp_path: Path) -> dict[str, str]:
         "CADRUMO_UV_CACHE_DIR": str(tmp_path / "uv"),
         "CADRUMO_SECRET_PASSPHRASE": "must-not-cross",
         "CADRUMO_LLM_OPENAI_API_KEY": "must-not-cross",
-        "AEAT_STATUS_DETAIL_URL_TEMPLATE": "must-not-cross",
+        "AEAT_SEDE_EXPEDIENTES_PATH": "must-not-cross",
         "PYTHONPATH": "must-not-cross",
         "LD_PRELOAD": "must-not-cross",
         "VIRTUAL_ENV": "must-not-cross",
@@ -320,3 +322,37 @@ def test_child_environment_uses_platform_variable_case_rules(tmp_path: Path, pla
         assert environment["Path"] == "ambient"
         assert "CADRUMO_AUTHORITY_ROOT" not in environment
         assert environment["TEMP"] == str(root / "tmp")
+
+
+def test_operator_child_follows_the_operators_proxy_but_never_receives_the_password_setting(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    proxy = {
+        "CADRUMO_PROXY_URL": "http://lane:synthetic-proxy-word@127.0.0.1:3128",
+        "CADRUMO_PROXY_USERNAME": "lane",
+        "CADRUMO_PROXY_BYPASS": "example.invalid",
+        "CADRUMO_PROXY_PASSWORD_SECRET": "must-not-cross",
+    }
+    received = {**_received(tmp_path), **proxy}
+    operator = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform="win32")
+    assert {name: operator.get(name) for name in proxy} == {
+        **proxy,
+        "CADRUMO_PROXY_PASSWORD_SECRET": None,
+    }
+    strict = child_environment(ChildEnvironmentProfile.STRICT, root, received=received, sys_platform="win32")
+    assert not any(name.startswith("CADRUMO_PROXY_") for name in strict)
+    assert "CADRUMO_PROXY_URL" in relayed_setting_names()
+    assert "CADRUMO_PROXY_PASSWORD_SECRET" not in relayed_setting_names()
+
+
+def test_a_process_holding_the_proxy_withholds_it_from_the_environment_its_children_inherit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    word = "synthetic-proxy-word"
+    monkeypatch.setenv("CADRUMO_PROXY_URL", f"http://lane:{word}@127.0.0.1:3128")
+    monkeypatch.setenv("CADRUMO_PROXY_PASSWORD_SECRET", word)
+    monkeypatch.setenv("CADRUMO_LOG_DIR", "kept")
+    with withheld_child_settings():
+        assert not any(name.upper().startswith("CADRUMO_PROXY_") for name in os.environ)
+        assert os.environ["CADRUMO_LOG_DIR"] == "kept"
+    assert os.environ["CADRUMO_PROXY_URL"] == f"http://lane:{word}@127.0.0.1:3128"
+    assert os.environ["CADRUMO_PROXY_PASSWORD_SECRET"] == word

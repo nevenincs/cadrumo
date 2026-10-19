@@ -18,12 +18,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationProjection,
@@ -35,6 +30,7 @@ from cadrumo.application.user_profile.view_operation import ProfileViewFactItem,
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import UserProfileRecord
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

@@ -53,11 +53,11 @@ export const personTurns = (target: Page) =>
     name: label("desktop.agent.you_said"),
   });
 
-/** The rows of the tools the agent called: the list items that hold no
- * message. */
+/** The rows of the tools the agent called: the conversation's own list items
+ * that hold no message, and not the items of a list the agent wrote. */
 export const toolRows = (target: Page) =>
   conversation(target)
-    .getByRole("listitem")
+    .locator("li:not(article li)")
     .filter({ hasNot: target.getByRole("article") });
 
 /** The row of the tool called `title`. */

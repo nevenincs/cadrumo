@@ -17,8 +17,8 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
     ChannelWake,

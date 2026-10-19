@@ -25,20 +25,11 @@ from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
-    AccessAction,
-    AccessDenialCode,
-    AccessDenied,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
     ApiKeyRecord,
-    AuthorityState,
     AutomationGrant,
-    Availability,
-    DisclosurePermission,
     LoginEligibility,
-    OperationAccessPolicy,
-    OperationAccessRequest,
     OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
@@ -49,6 +40,16 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_policy import intersect_scopes
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    AccessScope,
+    AuthorityState,
+    Availability,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
 from cadrumo_harness.mcp.access_scope import surface_scope
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
 from cadrumo_harness.mcp.surface_facts import operation_surface_facts

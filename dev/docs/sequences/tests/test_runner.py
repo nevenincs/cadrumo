@@ -32,7 +32,6 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import pr
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
@@ -44,6 +43,7 @@ from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 

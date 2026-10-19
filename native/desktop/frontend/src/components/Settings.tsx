@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { LanguageSelect, type LanguageControl } from "./LanguageSelect";
@@ -49,19 +49,28 @@ function Choice<T extends string>({
   );
 }
 
-/** Window presentation settings and the shared output language. */
+/** Window presentation settings and the shared output language; above them,
+ * while Cadrumo is not fully set up, the one line that leads into setup;
+ * after them, the signed-in profile's Google account. */
 export function Settings({
   prefs,
   setPrefs,
   language,
   onReset,
   close,
+  advisory,
+  account,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
   language: LanguageControl;
   onReset: () => void;
   close: () => void;
+  /** The setup advisory, first under the title; absent, or rendering
+   * nothing, when there is nothing to finish. */
+  advisory?: ReactNode;
+  /** The profile's Google account, after the window's section. */
+  account?: ReactNode;
 }) {
   const t = useStrings();
   const windowId = useId();
@@ -109,6 +118,7 @@ export function Settings({
         }}
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
+        {advisory}
         <section className="grid gap-3" aria-labelledby={windowId}>
           <h3
             id={windowId}
@@ -172,6 +182,7 @@ export function Settings({
             {t("desktop.settings.reset_layout")}
           </Button>
         </section>
+        {account}
       </PopoverContent>
     </Popover>
   );

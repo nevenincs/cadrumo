@@ -10,17 +10,12 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, RootModel, SecretBytes, model_validator
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-    OperationResponseScopeAllowed,
-)
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo_client.contracts.access_refusals import AccessAllowed, OperationResponseScopeAllowed
+from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy, OperationAccessRequest
 from cadrumo_client.contracts.profile_access import AccessRefusal
 
 from .worker_enrollment import (

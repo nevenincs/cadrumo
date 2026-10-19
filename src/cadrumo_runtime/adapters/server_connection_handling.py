@@ -60,6 +60,12 @@ from cadrumo_client.contracts.profile_access import (
     SessionRequest,
     SessionsLocked,
 )
+from cadrumo_client.contracts.profile_selection import (
+    ActiveProfileReply,
+    ActiveProfileRequest,
+    LoginTargetReply,
+    LoginTargetRequest,
+)
 from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceConnect
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -78,6 +84,8 @@ type _ProfileConnectionRequest = (
     | PasswordResetPrepare
     | PasswordReset
     | SignInStatusRequest
+    | ActiveProfileRequest
+    | LoginTargetRequest
     | SessionRequest
     | ProfileDisclosurePageRequest
     | AttendanceAsk
@@ -241,6 +249,8 @@ class RuntimeConnectionHandling:
         | ProfileDisclosurePage
         | SessionsLocked
         | SignInStatusReply
+        | ActiveProfileReply
+        | LoginTargetReply
         | HumanSignedOut
         | AttendancePending
         | AttendanceInventory
@@ -301,6 +311,8 @@ class RuntimeConnectionHandling:
             | SessionRequest
             | ProfileDisclosurePageRequest
             | SignInStatusRequest
+            | ActiveProfileRequest
+            | LoginTargetRequest
             | AttendanceAsk
             | AttendanceDecide,
         ):

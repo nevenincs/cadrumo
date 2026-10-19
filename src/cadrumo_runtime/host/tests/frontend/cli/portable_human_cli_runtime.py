@@ -38,24 +38,21 @@ from cadrumo.adapters.persistence.storage.master_key.bucket_session import Bucke
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.access_contracts import (
-    AccessDenialCode,
     AccessSession,
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
 )
-from cadrumo.application.user_profile.automation_custody_port import (
-    AutomationCustodyCode,
-    AutomationCustodyError,
-    AutomationSecretStore,
-)
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
     ChannelWake,

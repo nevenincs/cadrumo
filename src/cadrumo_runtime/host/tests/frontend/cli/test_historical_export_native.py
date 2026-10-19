@@ -23,7 +23,7 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_verification_report
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .review_export_native_support import invoke_native_review, native_review_profile
 

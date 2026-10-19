@@ -7,6 +7,8 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -29,9 +31,6 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
-)
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .verification_report_read_contracts import (

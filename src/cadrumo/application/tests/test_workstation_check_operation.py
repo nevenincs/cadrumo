@@ -12,6 +12,14 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+
 from ...core.capabilities import ServiceCapability
 from ...core.config import override_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -36,14 +44,6 @@ from ..operations.registry import OperationFrontendProjection, OperationRegistry
 from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ..preflight import HealthSeverity, PreflightCheck
 from ..provisioning import DependencyStatus
-from ..user_profile.access_contracts import (
-    AccessAction,
-    AccessAllowed,
-    AccessDenied,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.capabilities import CapabilityDecision, CapabilitySource
 from ..workstation_check import WorkstationCheckReport

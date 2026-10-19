@@ -22,11 +22,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import p
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import (
-    AccessAction,
     AccessEvaluationContext,
-    AccessScope,
     AccessSession,
-    Availability,
     LoginEligibility,
     OsLockState,
     OsLoginContext,
@@ -36,16 +33,16 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,
-    EnrollmentKind,
-    EnrollmentProposal,
     EnrollmentRecord,
     EnrollmentRequester,
     ProtectedEnrollmentRecipient,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 
 NOW = datetime(2026, 9, 26, tzinfo=UTC)
 PROFILE_INPUT = "synthetic-enrollment-password"

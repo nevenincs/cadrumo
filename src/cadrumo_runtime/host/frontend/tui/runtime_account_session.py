@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.operations import OperationEffect
 from cadrumo.core.time.clock import now
@@ -16,6 +15,7 @@ from cadrumo.entrypoints.tui.account import (
     AccountSessionReaderV1,
     AccountSessionUnavailableError,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

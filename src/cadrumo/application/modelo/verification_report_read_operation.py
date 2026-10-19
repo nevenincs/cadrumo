@@ -6,6 +6,8 @@ from functools import partial
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.operations import profile_operation_subject
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
@@ -15,9 +17,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .verification_report_read_access import resolve_verification_report_read_access
 from .verification_report_read_capture import capture_verification_report_list, capture_verification_report_view

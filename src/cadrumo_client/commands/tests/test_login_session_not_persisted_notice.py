@@ -15,10 +15,10 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.errors import KeyringUnavailableError
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.profile_session import KeychainUnavailability
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 from .. import custody
 

@@ -14,7 +14,6 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -39,6 +38,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 
+from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import bounded_deadline_after
 from .frontend_client import FrontendClient

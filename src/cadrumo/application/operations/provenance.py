@@ -6,10 +6,12 @@ from typing import TYPE_CHECKING, Literal, Self
 
 from pydantic import BaseModel, model_validator
 
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, OperationAccessRequest
+
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ..user_profile.access_contracts import AccessAction, AccessScope, OperationAccessRequest, ProfileAccessBinding
+from ..user_profile.access_contracts import ProfileAccessBinding
 from .models import OperationIdentity, OperationRequest
 
 if TYPE_CHECKING:

@@ -32,26 +32,20 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-from cadrumo.application.user_profile.login_session import (
-    ProfileReceiptRefusedError,
-    authenticate_profile_candidate,
-    borrow_profile_receipt_key,
-)
+from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.installed_client import open_installed_client
+from cadrumo_client.transport.receipt_proof import borrow_receipt_proof
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
@@ -227,7 +221,7 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
                     assert json.loads(shown.stdout)["result"]["display_name"] == "Receipt profile B"
                     # A human sign-in retires other saved human proofs, while independent API authority survives.
                     assert not first_receipt.exists()
-                    with pytest.raises(ProfileReceiptRefusedError), borrow_profile_receipt_key(bucket_id=first_id):
+                    with pytest.raises(ProfileReceiptRefusedError), borrow_receipt_proof(profile_id=first_id):
                         pytest.fail("another profile's revoked saved sign-in remained usable")
                     assert second_receipt.read_bytes() == before_second
                     proofs_unchanged = keyring.entries == second_keyring

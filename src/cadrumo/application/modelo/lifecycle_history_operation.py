@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period, PeriodError
 from ...domain.buckets.event import bucket_event_order_key
@@ -28,9 +30,6 @@ from ..operations.profile_guard import require_access_request_profile_payload, r
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import assemble_modelo_lifecycle_history
 from .history_ports import ModeloHistoryPortsFactory

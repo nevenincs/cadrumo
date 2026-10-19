@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.cli.tests.modelo_review_package_support import seed_exportable_modelo_revision
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo_runtime.commands.tests.runtime_profile_cli_fixture import NativeCliProfileFixture
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .review_export_native_support import invoke_native_review, native_review_profile
 

@@ -1,11 +1,9 @@
 """Supervised operation for provisioning the local document reader from any frontend.
 
-One definition, ``local-reader.provision``, carries every action a status area
-or the command line offers -- install, start, pull, load, verify, remove, and
-the one-shot setup that runs the first five in order -- so a TUI button and
-``aeat config provision <verb>`` run the same implementation. Installing runs
-a package manager and therefore requires ``consent`` on the request; every
-frontend gathers that consent explicitly before submitting.
+One definition, ``local-reader.provision``, carries the local-reader actions
+that download nothing -- start, load, verify and remove -- so a TUI button and
+``aeat config provision <verb>`` run the same implementation. Installing the
+local model program and fetching models belong to ``dependencies.setup``.
 
 Process control is injected. The application layer never spawns a process
 itself; the entrypoint composition binds the outbound adapters.
@@ -16,6 +14,9 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.operation_ids import LOCAL_READER_OPERATION_DEFINITION_ID
 
 from ..core.operations import (
     OperationCancellation,
@@ -30,16 +31,13 @@ from .local_reader import (
 )
 from .local_reader_contracts import (
     LOCAL_READER_EXECUTE_PHASE,
-    LOCAL_READER_OPERATION_DEFINITION_ID,
     LOCAL_READER_OPERATION_SUBJECT,
     LOCAL_READER_PREFLIGHT_PHASE,
     LOCAL_READER_SETTLEMENT_PHASE,
     LocalReaderProvisionAction,
     LocalReaderProvisionOutcome,
-    LocalReaderProvisionPublicResultV2,
+    LocalReaderProvisionPublicResultV3,
     LocalReaderProvisionRequest,
-    LocalReaderSetupStep,
-    local_reader_setup_phase,
     project_local_reader_result,
 )
 from .local_reader_provisioning import LocalReaderProvisionExecutor, RuntimeServerOwnerStart
@@ -67,11 +65,7 @@ from .operations.registry import (
     OperationSchemaBindingV1,
 )
 from .operations.subject_reference import OperationSubjectReferenceV1
-from .provisioning_host import (
-    InstallerRunner,
-    RuntimeSpawner,
-)
-from .user_profile.access_contracts import AccessDenialCode
+from .provisioning_host import RuntimeSpawner
 from .user_profile.access_errors import ProfileAccessRefusedError
 
 __all__ = [
@@ -83,13 +77,12 @@ __all__ = [
     "resolve_local_reader_provision_access",
 ]
 
-LOCAL_READER_REQUEST_SCHEMA_VERSION = 2
-LOCAL_READER_RESULT_SCHEMA_VERSION = 2
+LOCAL_READER_REQUEST_SCHEMA_VERSION = 3
+LOCAL_READER_RESULT_SCHEMA_VERSION = 3
 
 _PHASES = (
     LOCAL_READER_PREFLIGHT_PHASE,
     LOCAL_READER_EXECUTE_PHASE,
-    *(local_reader_setup_phase(step) for step in LocalReaderSetupStep),
     LOCAL_READER_SETTLEMENT_PHASE,
 )
 
@@ -97,7 +90,6 @@ _PHASES = (
 def build_local_reader_operation_definition(
     *,
     spawn: RuntimeSpawner | RuntimeServerOwnerStart,
-    run_installer: InstallerRunner,
     text_probe: TextExtractionFitnessProbe,
 ) -> OperationDefinition:
     """Bind the injected process and fitness ports to the canonical provisioning operation.
@@ -107,7 +99,7 @@ def build_local_reader_operation_definition(
     """
 
     def build() -> LocalReaderProvisionExecutor:
-        return LocalReaderProvisionExecutor(spawn=spawn, run_installer=run_installer, text_probe=text_probe)
+        return LocalReaderProvisionExecutor(spawn=spawn, text_probe=text_probe)
 
     return OperationDefinition(
         definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
@@ -131,8 +123,8 @@ def build_local_reader_operation_definition(
             sensitive_input=OperationSensitiveInputPolicy.NONE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
-            # Pulling several models, or a setup that installs and then stops
-            # at a later step, commits only part of what was asked.
+            # Loading or removing several models can commit only part of
+            # what was asked.
             permitted_effects=frozenset(OperationEffect),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
@@ -154,7 +146,7 @@ def build_local_reader_operation_registration(
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=f"{LOCAL_READER_OPERATION_DEFINITION_ID}.result",
             schema_version=LOCAL_READER_RESULT_SCHEMA_VERSION,
-            model_type=LocalReaderProvisionPublicResultV2,
+            model_type=LocalReaderProvisionPublicResultV3,
         ),
         result_projector=project_local_reader_result,
         access_resolver=resolve_local_reader_provision_access,
@@ -196,8 +188,8 @@ def resolve_local_reader_provision_access(
 ) -> ResolvedOperationAccess:
     """Bind access to the machine's reader, with COMMIT for every action but verify.
 
-    Verify measures and changes nothing; every other action can install,
-    start, load or remove something.
+    Verify measures and changes nothing; every other action can start, load or
+    remove something.
     """
     return bind_machine_provisioning_access(
         request,

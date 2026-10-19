@@ -45,7 +45,7 @@ def session_refusal_context(
 
 def raise_connection_refusal(error: FrontendRefusedError) -> None:
     """Project a wire admission refusal into its operator-facing boundary error."""
-    from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+    from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
     sign_in = error.sign_in
     key: str | None = None

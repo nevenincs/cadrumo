@@ -7,7 +7,7 @@ from uuid import UUID
 
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
-from cadrumo.application.user_profile.access_contracts import DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import DisclosureCategory
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from . import automation_requester_contracts as _contracts

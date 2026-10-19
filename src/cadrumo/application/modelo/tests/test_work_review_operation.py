@@ -12,6 +12,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -20,7 +23,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
 from ..work_review_contracts import (

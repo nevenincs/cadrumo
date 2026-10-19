@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLoginContext
+
+from .access_vocabulary import Availability
 
 
 class LoginEvidence(Protocol):

@@ -13,10 +13,11 @@ import pytest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
 from cadrumo.core.bucket_pointer import BucketPointer
+from cadrumo_client.commands import profile_selection
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport import installed_client
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_runtime.commands import activity, presentation
+from cadrumo_runtime.commands import presentation
 
 from .runtime_cli import invoke_runtime_cli
 
@@ -45,7 +46,7 @@ class _UncomposedClient(FrontendClient):
 def _invoke(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
     client = _UncomposedClient()
     pointer = BucketPointer.selected(bucket_id=str(client.profile_id), transition_revision=1)
-    monkeypatch.setattr(activity, "observe_active_profile_pointer", lambda: pointer)
+    monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: pointer.bucket_id)
 
     async def open_client(*, profile_id: object, frontend: OperationFrontendProjection) -> FrontendClient:
         assert profile_id == client.profile_id and frontend is OperationFrontendProjection.CLI

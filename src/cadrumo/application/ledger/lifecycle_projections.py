@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -16,7 +18,6 @@ from ..operations.models import (
     refused_receipt_references_hold,
     require_succeeded_terminal_receipt,
 )
-from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .actions_manual import ledger_transaction_result_payload

@@ -24,12 +24,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import (
-    Availability,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
-)
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportTransport,
@@ -41,6 +36,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+
 from ..ledger.read_access import resolve_ledger_read_access
 from ..modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
@@ -15,9 +17,6 @@ from ..operations.registry import (
     OperationResultProjector,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import (
-    AccessDenialCode,
-)
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import operation_requests as _requests
 from . import result_contracts as _result_contracts

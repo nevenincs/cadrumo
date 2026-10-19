@@ -12,6 +12,7 @@ import type {
   AgentProviderLane,
   AgentSelectionRecord,
 } from "./agentSession";
+import type { AgentRanWith } from "./agentViews";
 import type { Translate } from "./strings";
 
 // The agent column's choices, deduced from cadrumo-agent's provider catalog
@@ -71,10 +72,10 @@ const effortChoice = (t: Translate, effort: AgentEffort): Choice => ({
   name: effortWords(t, effort),
 });
 
+/** The capabilities a person chooses a provider by, in words; the agent's
+ * own machinery (tools, subagents) is not one of them. */
 function capabilityWords(t: Translate, capability: string): string | undefined {
   switch (capability) {
-    case "tool_access":
-      return t("desktop.agent.can_use_tools");
     case "writing":
       return t("desktop.agent.can_write");
     case "web_retrieval":
@@ -83,10 +84,6 @@ function capabilityWords(t: Translate, capability: string): string | undefined {
       return t("desktop.agent.can_read_images");
     case "pdf_reading":
       return t("desktop.agent.can_read_pdfs");
-    case "subagents":
-      return t("desktop.agent.can_run_subagents");
-    case "subagent_cancel":
-      return t("desktop.agent.can_stop_subagent");
     default:
       return undefined;
   }
@@ -124,6 +121,23 @@ function laneHeldBy(t: Translate, lane: AgentProviderLane): string {
   if (health.catalog === "unavailable" || health.catalog === "unknown")
     return t("desktop.agent.lane_no_catalog");
   return t("desktop.agent.unavailable");
+}
+
+/** Authentication and saved configuration are independent of a provider's
+ * capability proof. The agent's `selectable` remains the authority for
+ * admission and execution policy; this extra check keeps an installed or
+ * selected CLI from becoming runnable without live authentication evidence. */
+function hasRunAuthentication(lane: AgentProviderLane): boolean {
+  const { health } = lane;
+  const authenticated =
+    health.authentication === "authenticated" ||
+    health.authentication === "not_applicable";
+  return (
+    health.configured === "available" &&
+    health.transport === "available" &&
+    health.catalog === "available" &&
+    authenticated
+  );
 }
 
 const writesModel = (lane: AgentProviderLane) =>
@@ -195,6 +209,7 @@ export function catalogChoices(
         models[wayId(lane)] = listed;
         const usable =
           lane.health.selectable &&
+          hasRunAuthentication(lane) &&
           lane.executable &&
           (writesModel(lane) || listed.length > 0);
         return {
@@ -257,28 +272,54 @@ export function startingSelection(
   return { providerId: provider.id, wayId: way.id, modelId: model.id };
 }
 
+/** The way and model `selection` names, where the catalog offers a way that
+ * can be chosen and, unless the person writes the model, that model in it. */
+function offeredParts(choices: CatalogChoices, selection: AgentSelection) {
+  const provider = choices.providers.find(
+    (held) => held.id === selection.providerId,
+  );
+  const way = provider?.ways.find((held) => held.id === selection.wayId);
+  const model = choices.models[selection.wayId]?.find(
+    (held) => held.id === selection.modelId,
+  );
+  if (!way?.selectable || !(way.modelWritten || model)) return null;
+  return { efforts: way.modelWritten?.efforts ?? model?.efforts ?? [] };
+}
+
 /** `selection` where the catalog still offers it, else where the first way
  * that can be chosen starts; null when none can. */
 export function offeredSelection(
   choices: CatalogChoices,
   selection: AgentSelection | null,
 ): AgentSelection | null {
-  if (selection) {
-    const provider = choices.providers.find(
-      (held) => held.id === selection.providerId,
-    );
-    const way = provider?.ways.find((held) => held.id === selection.wayId);
-    const model = choices.models[selection.wayId]?.find(
-      (held) => held.id === selection.modelId,
-    );
-    const efforts = way?.modelWritten?.efforts ?? model?.efforts;
-    if (
-      way?.selectable &&
-      (way.modelWritten || model) &&
-      (selection.effort === undefined ||
-        efforts?.some((effort) => effort.id === selection.effort))
-    )
+  return restoredSelection(choices, [selection], false);
+}
+
+/**
+ * The first of `held` the catalog still offers, else where the first way
+ * that can be chosen starts; null when none can. A choice kept from before,
+ * such as the last one made or the one a conversation ran with, can name an
+ * effort its model no longer takes: with `dropEffort` that effort is left
+ * out and the rest of the choice kept, so the provider's default applies.
+ */
+export function restoredSelection(
+  choices: CatalogChoices,
+  held: readonly (AgentSelection | null | undefined)[],
+  dropEffort = true,
+): AgentSelection | null {
+  for (const selection of held) {
+    if (!selection) continue;
+    const parts = offeredParts(choices, selection);
+    if (!parts) continue;
+    const { effort } = selection;
+    if (effort === undefined || parts.efforts.some((one) => one.id === effort))
       return selection;
+    if (!dropEffort) continue;
+    return {
+      providerId: selection.providerId,
+      wayId: selection.wayId,
+      modelId: selection.modelId,
+    };
   }
   for (const provider of choices.providers) {
     for (const way of provider.ways) {
@@ -328,4 +369,25 @@ export function selectionRecord(
   if (!entry) return null;
   const effort = entry.efforts?.find((held) => held === selection.effort);
   return { ...base, model: entry.model, ...(effort ? { effort } : {}) };
+}
+
+/** The choice a run was made with, as the column holds it: the inverse of
+ * `selectionRecord`. Null where the catalog no longer has its lane, or no
+ * longer lists its model. */
+export function ranSelection(
+  catalog: AgentProviderCatalog,
+  ran: AgentRanWith,
+): AgentSelection | null {
+  const lane = catalog.providers?.find(
+    (held) =>
+      understood(held) &&
+      held.provider_id === ran.provider &&
+      held.transport === ran.transport,
+  );
+  if (!lane) return null;
+  const effort = ran.effort ? { effort: ran.effort } : {};
+  const base = { providerId: lane.provider_id, wayId: wayId(lane) };
+  if (writesModel(lane)) return { ...base, modelId: ran.model, ...effort };
+  const entry = lane.catalog.models?.find((held) => held.model === ran.model);
+  return entry ? { ...base, modelId: entry.entry_id, ...effort } : null;
 }

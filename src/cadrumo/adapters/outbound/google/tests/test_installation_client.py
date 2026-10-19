@@ -8,9 +8,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo_client.contracts.google_auth import (
+    GoogleAuthClientMetadataUnavailableError,
+    GoogleAuthPreconditionCondition,
+)
+
 from .....core.config import Settings, override_settings, reset_settings_cache
 from .....core.config_google import GoogleOAuthClientSettings
-from ..errors import GoogleAuthClientMetadataUnavailableError, GoogleAuthPreconditionCondition
 from ..installation_client import load_installation_client
 from .installation_client_support import (
     SYNTHETIC_CLIENT_CREDENTIAL,
