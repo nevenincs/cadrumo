@@ -168,8 +168,3 @@ def _refusal(reply: ExtensionRecordReply) -> StoreRefusal | None:
     if reply.refusal in {"signed_out", "authentication_required", "session_inactive", "lease_inactive"}:
         return StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
     return _unknown()
-
-
-def build_provider_settings_store(*, client: InstalledServiceClient) -> SecureProviderSettingsStore:
-    """Construct the service's opaque runtime custody adapter."""
-    return SecureProviderSettingsStore(client=client)

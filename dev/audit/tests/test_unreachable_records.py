@@ -90,7 +90,7 @@ values = [kind.value for kind in Kind]
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         outside=(OutsideCorpus(label, outside),),
     )

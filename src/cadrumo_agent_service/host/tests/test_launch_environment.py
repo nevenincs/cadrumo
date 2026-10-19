@@ -17,7 +17,6 @@ from ..launch_environment import (
     ADVERTISED_VARIABLES,
     AGENT_LOG_LEVEL_VARIABLE,
     AGENT_SLOTS,
-    DIAGNOSTIC_VARIABLES,
     EXTERNAL_BIN_DIRECTORIES_VARIABLE,
     FORWARD_VARIABLE,
     GATEWAY_PORT_VARIABLE,
@@ -342,9 +341,9 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
         sys_platform=platform,
         profile_id=UUID("6e4a0f5c-9b8d-4c7e-8f2a-1b0c9d8e7f6a"),
     )
-    assert {
-        name for name in environment if name.startswith("CADRUMO_AGENT_")
-    } == AGENT_SLOTS | ADVERTISED_VARIABLES | DIAGNOSTIC_VARIABLES
+    assert {name for name in environment if name.startswith("CADRUMO_AGENT_")} == AGENT_SLOTS | ADVERTISED_VARIABLES | {
+        AGENT_LOG_LEVEL_VARIABLE
+    }
     assert {HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE} == AGENT_SLOTS
     assert AGENT_SLOTS | {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_PROFILE_ROOT"} == GATEWAY_SLOTS
     assert set(environment) >= GATEWAY_SLOTS

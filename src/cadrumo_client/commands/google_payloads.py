@@ -8,8 +8,9 @@ module covers. Validated results enter
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`.
 
-Field sets match the production payload dicts constructed in ``_google.py``,
-and ``_google_folder.py`` at their emit sites. All
+Field sets match the results built at their emit sites:
+:mod:`cadrumo_runtime.commands.google` for login, status and logout, and
+:mod:`cadrumo.entrypoints.cli.config.google` for the sync probe. All
 sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
@@ -20,10 +21,10 @@ owned by :mod:`google`, Drive mirror state by
 :mod:`calc_sheets`.
 
 See Also:
-    :mod:`google`
-        Google OAuth, status, and Drive mirror emit sites.
-    :mod:`_google_folder`
-        Drive root-folder configuration emit sites.
+    :mod:`cadrumo_runtime.commands.google`
+        Google login, status, and logout emit sites.
+    :mod:`cadrumo.entrypoints.cli.config.google`
+        Google sync-probe emit site.
 """
 
 from __future__ import annotations

@@ -153,7 +153,7 @@ def _planted_tree(root: Path, *, with_writer: bool, with_namesake: bool = False)
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -273,7 +273,7 @@ def test_a_lost_anchor_refuses_rather_than_reporting_clean(tmp_path: Path) -> No
     """
     spec = _planted_tree(tmp_path, with_writer=False)
 
-    result = scan_write_path_coverage(spec, PersistenceSurfaceSpec(spec.package + ".snapshot_base", ("Renamed",)))
+    result = scan_write_path_coverage(spec, PersistenceSurfaceSpec(spec.packages[0] + ".snapshot_base", ("Renamed",)))
 
     assert result.outcome is WritePathOutcome.ERROR
     assert not result.is_green

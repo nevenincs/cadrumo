@@ -54,6 +54,7 @@ def filter_by_confidence(result: UnreachableCodeResult, tier: Confidence) -> Unr
     return UnreachableCodeResult(
         outcome=outcome,
         roots=result.roots,
+        packages=result.packages,
         shipped_modules=result.shipped_modules,
         reachable_modules=result.reachable_modules,
         modules=modules,
@@ -79,6 +80,7 @@ def render_console_report(result: UnreachableCodeResult, *, full: bool = False, 
     out = [f"unreachable code: {result.headline()}"]
     if result.outcome is UnreachableCodeOutcome.ERROR:
         return out[0]
+    out.append(f"  audited packages: {', '.join(result.packages)}")
     out.append(f"  roots: {', '.join(result.roots)}")
     if result.data_cleared:
         out.append(f"  {result.data_cleared} data-shaped member(s) cleared by the shipped registry/locale payloads")
@@ -123,6 +125,7 @@ def result_as_json(result: UnreachableCodeResult) -> str:
             "outcome": result.outcome.value,
             "headline": result.headline(),
             "roots": list(result.roots),
+            "packages": list(result.packages),
             "shipped_modules": result.shipped_modules,
             "reachable_modules": result.reachable_modules,
             "data_cleared": result.data_cleared,

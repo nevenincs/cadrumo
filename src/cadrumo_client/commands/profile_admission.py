@@ -22,7 +22,6 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_p
 from cadrumo_client.commands.profile_authentication import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
-    parsed_root_profile_source,
 )
 from cadrumo_client.commands.profile_authentication_notice import stage_profile_session_not_persisted_notice
 from cadrumo_client.commands.profile_binding import bind_profile_client, subscribe_profile_notices
@@ -42,16 +41,6 @@ from cadrumo_client.transport.credentials import open_installed_credential_clien
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
-
-
-def require_automation_change_credential_reference(ctx: typer.Context) -> UUID:
-    """Return only the exact protected reference admitted for own-grant change."""
-    source = parsed_root_profile_source(ctx)
-    if source.method is not ProfileAuthenticationMethod.API_KEY or source.credential_reference is None:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.automation_change_credential_ref_required"
-        )
-    return source.credential_reference
 
 
 def _password(
@@ -211,31 +200,6 @@ def activate_profile(
         raise
 
 
-def activate_profile_recovery(
-    ctx: typer.Context,
-    *,
-    target_bucket_id: str | None,
-    root_selection: ProfileSecretSelection | None,
-) -> None:
-    """Bind a fresh exact-profile native connection for separate recovery proof.
-
-    The resume leaf owns its one-shot password payload. Root authentication
-    would create a different session journey and is therefore inapplicable.
-    """
-    if root_selection is not None:
-        raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_inapplicable")
-    bucket_id = target_bucket_id or profile_selection.command_profile_id()
-    if bucket_id is None:
-        raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
-    client = asyncio.run(open_installed_client(profile_id=UUID(bucket_id), frontend=OperationFrontendProjection.CLI))
-    try:
-        bind_profile_target(ctx, bucket_id=bucket_id)
-        bind_profile_client(ctx, client, profile_id=UUID(bucket_id))
-    except BaseException:
-        client.close()
-        raise
-
-
 def _open_profile_credential_client(
     bucket_id: str,
     credential_reference: UUID,
@@ -268,8 +232,6 @@ def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:
 
 __all__ = [
     "activate_profile",
-    "activate_profile_recovery",
     "authenticate_profile_client",
     "bind_profile_target",
-    "require_automation_change_credential_reference",
 ]

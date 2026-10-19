@@ -9,8 +9,8 @@ facade remains authoritative for
 :class:`TaxationComparisonResult`; this module only
 documents the CLI transport shape that enters
 :class:`SchemaEnvelope` through
-:func:`emit_envelope`. The parent :mod:`_modelo_payloads` module re-exports
-these split schemas so modelo emitters keep one payload import surface.
+:func:`emit_envelope`. The reconcile commands import these schemas directly,
+and :mod:`modelo_results` nests the reconcile payloads it carries.
 """
 
 from __future__ import annotations

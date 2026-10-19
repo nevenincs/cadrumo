@@ -45,8 +45,6 @@ WORKER_PORT_VARIABLE: Final = "CADRUMO_AGENT_WORKER_PORT"
 AGENT_LOG_LEVEL_VARIABLE: Final = "CADRUMO_AGENT_LOG_LEVEL"
 EXTERNAL_BIN_DIRECTORIES_VARIABLE: Final = "CADRUMO_EXTERNAL_BIN_DIRS"
 """The native package's admitted directories for external provider executables."""
-DIAGNOSTIC_VARIABLES: Final = frozenset({AGENT_LOG_LEVEL_VARIABLE})
-"""Capture agent diagnostics independently of the operator view filter."""
 
 AUTH_BROWSER_EXECUTABLE_VARIABLE: Final = "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE"
 """The packaged browser handoff executable, supplied only to the login helper."""

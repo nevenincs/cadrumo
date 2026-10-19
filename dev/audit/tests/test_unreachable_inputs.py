@@ -24,7 +24,7 @@ def _spec(root: Path) -> ShippedTreeSpec:
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         outside=(OutsideCorpus("dev", root / "dev"),),
         data_globs=("_data/**/*.json",),
@@ -92,30 +92,104 @@ def test_a_same_named_function_in_another_module_is_not_a_console_entrypoint(tmp
     assert {(finding.module, finding.name) for finding in result.symbols} == {("pkg.work", "main")}
 
 
-def test_a_cohort_without_a_console_script_supplies_edges_without_becoming_a_root(tmp_path: Path) -> None:
-    sources = {
-        "src/cadrumo/__init__.py": "",
-        "src/cadrumo/cli.py": "from cadrumo_client.bridge import run\ndef main(): run()\n",
-        "src/cadrumo/facts.py": "def active(): pass\ndef orphan(): pass\n",
-        "src/cadrumo_client/__init__.py": "",
-        "src/cadrumo_client/bridge.py": "from cadrumo.facts import active\ndef run(): active()\n",
-        "conftest.py": "",
-        "pyproject.toml": (
-            '[project]\nname = "example"\n[project.scripts]\nexample = "cadrumo.cli:main"\n'
-            "[tool.hatch.build.targets.wheel]\nexclude = []\n"
-        ),
-    }
+def _write_repository(root: Path, sources: dict[str, str]) -> None:
     for relative, source in sources.items():
-        path = tmp_path / relative
+        path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(source, encoding="utf-8")
-    (tmp_path / "dev").mkdir()
+    (root / "dev").mkdir(exist_ok=True)
+
+
+def _pyproject(script: str) -> str:
+    return (
+        f'[project]\nname = "example"\n[project.scripts]\nexample = "{script}"\n'
+        "[tool.hatch.build.targets.wheel]\nexclude = []\n"
+    )
+
+
+def test_every_source_package_is_audited_and_a_scriptless_one_supplies_edges(tmp_path: Path) -> None:
+    """A package without a console script is both a consumer and a subject of the audit."""
+    _write_repository(
+        tmp_path,
+        {
+            "src/cadrumo/__init__.py": "",
+            "src/cadrumo/cli.py": "from cadrumo_client.bridge import run\ndef main(): run()\n",
+            "src/cadrumo/facts.py": "def active(): pass\ndef orphan(): pass\n",
+            "src/cadrumo_client/__init__.py": "",
+            "src/cadrumo_client/bridge.py": (
+                "from cadrumo.facts import active\ndef run(): active()\ndef stray(): pass\n"
+            ),
+            "src/cadrumo_client/idle.py": "def never(): pass\n",
+            "conftest.py": "",
+            "pyproject.toml": _pyproject("cadrumo.cli:main"),
+        },
+    )
 
     spec = ShippedTreeSpec.from_repository(tmp_path)
-    client = next(companion for companion in spec.companions if companion.package == "cadrumo_client")
-    assert client.entry_points == ()
     result = scan_unreachable_code(spec)
 
+    assert spec.packages == ("cadrumo", "cadrumo_client")
+    assert result.packages == ("cadrumo", "cadrumo_client")
     assert result.outcome is UnreachableCodeOutcome.FINDINGS
     assert result.roots == ("cadrumo.cli:main",)
-    assert {(finding.module, finding.name) for finding in result.symbols} == {("cadrumo.facts", "orphan")}
+    assert result.shipped_modules == 6
+    assert {finding.module for finding in result.modules} == {"cadrumo_client.idle"}
+    assert {(finding.module, finding.name) for finding in result.symbols} == {
+        ("cadrumo.facts", "orphan"),
+        ("cadrumo_client.bridge", "stray"),
+    }
+
+
+def test_each_audited_package_reads_its_own_shipped_payloads(tmp_path: Path) -> None:
+    """A locale catalogue of the second package clears that package's data-shaped member."""
+    from ..unreachable_references import _data_tokens
+
+    _write_repository(
+        tmp_path,
+        {
+            "src/first/__init__.py": "",
+            "src/first/locales/es.json": '{"key": "first_token"}\n',
+            "src/second/__init__.py": "",
+            "src/second/locales/es.json": '{"key": "second_token"}\n',
+        },
+    )
+    spec = ShippedTreeSpec(
+        repo_root=tmp_path,
+        src_root=tmp_path / "src",
+        packages=("first", "second"),
+        entry_points=(),
+        data_globs=("locales/**/*.json",),
+    )
+
+    assert {"first_token", "second_token"} <= _data_tokens(spec)
+
+
+def test_a_package_outside_the_declared_source_scope_is_refused(tmp_path: Path) -> None:
+    """Auditing around an undeclared package would understate where the gate stops."""
+    _write_repository(
+        tmp_path,
+        {
+            "src/cadrumo/__init__.py": "",
+            "src/cadrumo/cli.py": "def main(): pass\n",
+            "src/stowaway/__init__.py": "",
+            "pyproject.toml": _pyproject("cadrumo.cli:main"),
+        },
+    )
+
+    with pytest.raises(ValueError, match="stowaway"):
+        ShippedTreeSpec.from_repository(tmp_path)
+
+
+def test_a_console_script_outside_the_audited_packages_is_refused(tmp_path: Path) -> None:
+    """A root the walk cannot load would silently shrink the reachable set."""
+    _write_repository(
+        tmp_path,
+        {
+            "src/cadrumo/__init__.py": "",
+            "src/cadrumo/cli.py": "def main(): pass\n",
+            "pyproject.toml": _pyproject("cadrumo_harness.mcp.main:main"),
+        },
+    )
+
+    with pytest.raises(ValueError, match=r"cadrumo_harness\.mcp\.main:main"):
+        ShippedTreeSpec.from_repository(tmp_path)

@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from cadrumo.core.storage_environment import StorageMode
 
-from ...providers.application.contracts import ProviderCredentialSource
-from ...providers.application.tests.synthetic_catalog import (
+from ...domain.catalog import ProviderConsumer
+from ..contracts import ProviderCredentialSource
+from ..ports import ProviderCatalogSource
+from ..resolution import ProviderCredentialResolver, ResolvedDirectCredential
+from .memory_store import MemoryProviderSettingsStore
+from .synthetic_catalog import (
     BARE_GATEWAY_LANE,
     DEFAULTED_KEY_LANE,
     GATEWAY_DEFAULT_URL,
@@ -20,16 +26,32 @@ from ...providers.application.tests.synthetic_catalog import (
     UnavailableCatalogSource,
     development_variable,
 )
-from ..development_fallback import development_fallback
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _direct_credential(
+    provider_id: str,
+    *,
+    catalog_source: ProviderCatalogSource,
+    environment: Mapping[str, str],
+    storage_mode: StorageMode,
+) -> ResolvedDirectCredential | None:
+    """Resolve the assistant credential of a provider whose record is unset."""
+    resolved = ProviderCredentialResolver(
+        store=MemoryProviderSettingsStore(),
+        catalog_source=catalog_source,
+        environment=environment,
+        storage_mode=storage_mode,
+    ).resolve(provider_id, ProviderConsumer.ASSISTANT)
+    return resolved if isinstance(resolved, ResolvedDirectCredential) else None
 
 
 @pytest.mark.parametrize("storage_mode", [StorageMode.DEVELOPMENT, StorageMode.INSTALLED])
 def test_unset_provider_environment_fallback_respects_storage_mode(storage_mode: StorageMode) -> None:
     environment = {development_variable(KEY_LANE): "synthetic-development-key"}
 
-    credential = development_fallback(
+    credential = _direct_credential(
         KEY_LANE, catalog_source=StaticCatalogSource(), environment=environment, storage_mode=storage_mode
     )
 
@@ -44,7 +66,7 @@ def test_unset_provider_environment_fallback_respects_storage_mode(storage_mode:
 def test_the_variable_name_is_constructed_from_the_provider_id() -> None:
     environment = {development_variable(GATEWAY_LANE): "synthetic-gateway-key"}
 
-    credential = development_fallback(
+    credential = _direct_credential(
         GATEWAY_LANE,
         catalog_source=StaticCatalogSource(),
         environment=environment,
@@ -60,7 +82,7 @@ def test_the_variable_name_is_constructed_from_the_provider_id() -> None:
 def test_an_api_key_lane_takes_the_agents_declared_default_endpoint() -> None:
     environment = {development_variable(DEFAULTED_KEY_LANE): "synthetic-key"}
 
-    credential = development_fallback(
+    credential = _direct_credential(
         DEFAULTED_KEY_LANE,
         catalog_source=StaticCatalogSource(),
         environment=environment,
@@ -81,7 +103,7 @@ def test_unset_provider_without_a_usable_development_key_is_unavailable(lane: st
     }
 
     assert (
-        development_fallback(
+        _direct_credential(
             lane, catalog_source=StaticCatalogSource(), environment=environment, storage_mode=StorageMode.DEVELOPMENT
         )
         is None
@@ -92,7 +114,7 @@ def test_an_agent_that_cannot_report_its_providers_supplies_no_fallback() -> Non
     environment = {development_variable(KEY_LANE): "synthetic-development-key"}
 
     assert (
-        development_fallback(
+        _direct_credential(
             KEY_LANE,
             catalog_source=UnavailableCatalogSource(),
             environment=environment,

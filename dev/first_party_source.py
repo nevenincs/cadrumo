@@ -22,10 +22,15 @@ Named scopes
     * :data:`FIRST_PARTY_ROOTS` -- complexity, and any detector whose subject
       may appear in any maintained code (the regulatory-prose parser channel),
       reads every root, tooling included.
-    * :data:`PRODUCT_SOURCE_ROOTS` -- dead code, copy-paste and semantic
-      duplication, and the stock security scan measure the shipped product.
-      Development tooling exists to verify the product, so its debt would be
-      misreported as product risk in those numbers.
+    * :data:`SOURCE_PACKAGES` -- every package under ``src/``: the
+      application cohort, harness and agent service. Lint and code-health
+      gates (reachability, symbol and export use, write paths, docstring
+      references, dead code, copy-paste and semantic duplication, and the
+      stock security scan) measure all shipped code. Development tooling
+      exists to verify it, so its debt would be misreported as product risk
+      in those numbers.
+    * :data:`PRODUCT_SOURCE_ROOTS` -- the application cohort the separately
+      shipped harness and agent service build on.
     * :data:`DEPENDENCY_DECLARATION_ROOTS` -- the code whose third-party
       imports must be satisfied by declared, non-development dependencies: the
       application cohort, harness, separate agent service, and registry
@@ -68,6 +73,13 @@ FIRST_PARTY_ROOTS: Final[tuple[str, ...]] = (
     SERVICE_PACKAGE,
     DEVELOPMENT_TOOLING,
     PACKAGING_HOOKS,
+)
+SOURCE_PACKAGES: Final[tuple[str, ...]] = (
+    PRODUCT_PACKAGE,
+    CLIENT_PACKAGE,
+    RUNTIME_PACKAGE,
+    HARNESS_PACKAGE,
+    SERVICE_PACKAGE,
 )
 DEPENDENCY_DECLARATION_ROOTS: Final[tuple[str, ...]] = (
     PRODUCT_PACKAGE,

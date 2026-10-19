@@ -24,9 +24,9 @@ The application layer remains authoritative for
 :class:`LedgerTransactionResultPayload`,
 :class:`LedgerPreflightReport`.  Adjacent
 surfaces that split out of this module keep their own transport schemas in
-:mod:`_ledger_rule_payloads`,
+:mod:`ledger_rule_results`,
 :mod:`_ledger_llm_payloads`,
-:mod:`_ledger_catalogue_invoice_payloads`, and
+:mod:`ledger_catalogue_invoice_results`, and
 :mod:`ledger_business_payloads` (the invoice / inventory / evidence
 sub-app payload families).
 """

@@ -2,8 +2,8 @@
 
 These strict :class:`OutputSchema` subclasses
 are referenced as deferred public schema targets by production-authored CommandSpec
-and re-exported by :mod:`_modelo_payloads` so audit, work-history and
-workflow-run emitters keep one payload import surface. Validated results enter
+and imported directly by the audit, work-history and workflow-run emitters;
+:mod:`modelo_results` nests the shared rows it needs. Validated results enter
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`.
 
@@ -52,8 +52,8 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
     :class:`WithholdingClaveBreakdown`: the
     ``clave`` keeps its typed, registry-projected :class:`RetencionClave`
     token (the AEAT clave-de-percepción axis) and the magnitudes are
-    rendered as canonical decimal strings. Re-exported through
-    :mod:`_modelo_payloads` so the
+    rendered as canonical decimal strings. Imported by
+    :mod:`modelo_results` so the
     :class:`ModeloAggregateResult`
     envelope can carry the breakdown that lets an operator reconcile an annual
     summary's retención totals, such as Modelo 190's, against the per-clave

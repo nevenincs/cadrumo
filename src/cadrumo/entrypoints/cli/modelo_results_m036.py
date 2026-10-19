@@ -1,12 +1,10 @@
 """M036 declaration, reconcile-history, and IVA-wallet-correction payloads.
 
-Split from :mod:`_modelo_payloads` to keep each module
+Split from :mod:`modelo_results` to keep each module
 within the line budget. Each class is a strict
 :class:`OutputSchema` subclass referenced through
-CommandSpec schema authority and re-exported through
-:mod:`_modelo_payloads` so the public ``--json``
-payload import surface is
-unchanged. Validated results enter
+CommandSpec schema authority and imported directly by the M036, reconcile
+and IVA-wallet commands. Validated results enter
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`.
 

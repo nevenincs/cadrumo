@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
+from dev.first_party_source import SOURCE_PACKAGES
 
 from ..security import (
     _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
@@ -102,7 +103,8 @@ def test_command_uses_json_not_the_text_report() -> None:
 
     assert "--json" in command
     assert "--quiet" in command
-    assert "src/cadrumo" in command
+    assert set(SOURCE_PACKAGES) <= set(command), "every package under src/ is one semgrep scope"
+    assert {"src/cadrumo_harness", "src/cadrumo_agent_service"} <= set(command)
     assert not any("\\" in arg for arg in command), f"a backslash path reached semgrep: {command}"
 
 

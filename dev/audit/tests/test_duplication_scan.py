@@ -48,7 +48,7 @@ def test_real_clean_subtree_scan_observes_zero() -> None:
     This still requires a real subprocess to inspect nonempty source.
     """
     _require_npx()
-    result = run_duplication_scan(REPO_ROOT, source_root=Path("dev/audit/security.py"))
+    result = run_duplication_scan(REPO_ROOT, source_roots=(Path("dev/audit/security.py"),))
 
     assert result.outcome is DuplicationOutcome.OBSERVED_ZERO, result.headline()
     assert result.is_green is True
@@ -59,7 +59,22 @@ def test_real_clean_subtree_scan_observes_zero() -> None:
 def test_real_bad_source_path_is_unavailable_not_green() -> None:
     """A real scan of a path that matches nothing must refuse to claim cleanliness."""
     _require_npx()
-    result = run_duplication_scan(REPO_ROOT, source_root=Path("src/cadrumo/no-such-directory"))
+    result = run_duplication_scan(REPO_ROOT, source_roots=(Path("src/cadrumo/no-such-directory"),))
+
+    assert result.outcome is DuplicationOutcome.UNAVAILABLE
+    assert result.is_green is False
+
+
+def test_a_missing_root_beside_a_real_one_is_unavailable_not_a_smaller_scope() -> None:
+    """One lost package must not let the surviving roots pose as the whole scope.
+
+    The real root alone observes zero (see above), so the unavailable verdict
+    here is attributable to the missing root alone.
+    """
+    _require_npx()
+    result = run_duplication_scan(
+        REPO_ROOT, source_roots=(Path("dev/audit/security.py"), Path("src/cadrumo/no-such-directory"))
+    )
 
     assert result.outcome is DuplicationOutcome.UNAVAILABLE
     assert result.is_green is False

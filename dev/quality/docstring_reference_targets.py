@@ -12,10 +12,14 @@ a sentence about where code used to live, or why two paths were merged.
 Rewriting one turns a true statement about history into a false one about the
 present, so read each row before touching it.
 
-Only names this package could own are checked. A reference rooted at the
-package must resolve to a module or a symbol the tree defines. A bare name is
-checked only when the tree neither defines nor imports it anywhere, which keeps
-third-party names out of the report without an allowlist to maintain.
+The screen reads every package under ``src/`` (``SOURCE_PACKAGES``) as one
+corpus, because a docstring in one package legitimately names another's
+symbol -- a runtime module citing the ``cadrumo_client`` contract it
+implements. Only names these packages could own are checked. A reference
+rooted at any of them must resolve to a module or a symbol the corpus defines.
+A bare name is checked only when the corpus neither defines nor imports it
+anywhere, which keeps third-party names out of the report without an
+allowlist to maintain.
 
 The scanner's CLI is the gate: it exits non-zero whenever it finds a dangling
 target and zero only after inspecting the shipped tree and finding none.
@@ -34,7 +38,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from dev.first_party_source import DEVELOPMENT_TOOLING, HARNESS_PACKAGE, PRODUCT_PACKAGE
+from dev.first_party_source import DEVELOPMENT_TOOLING, SOURCE_PACKAGES
 
 __all__ = [
     "DanglingReference",
@@ -45,13 +49,13 @@ __all__ = [
 ]
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PACKAGE_ROOT = _REPO_ROOT / PRODUCT_PACKAGE
+_SOURCE_ROOTS: tuple[Path, ...] = tuple(_REPO_ROOT / package for package in SOURCE_PACKAGES)
 
 #: Trees that are not scanned for findings but whose module names a docstring
 #: may legitimately reference. A gate in `src` naming its counterpart in
 #: `dev/tests` is citing something real; reporting it would be an artefact of
 #: where this screen happens to look.
-_SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / DEVELOPMENT_TOOLING, _REPO_ROOT / HARNESS_PACKAGE)
+_SIBLING_TREES: tuple[Path, ...] = (_REPO_ROOT / DEVELOPMENT_TOOLING,)
 
 #: Sphinx roles that name a code object. ``:ref:`` and ``:doc:`` name document
 #: anchors instead and are not this screen's business.
@@ -190,7 +194,7 @@ def docstring_references(root: Path) -> list[tuple[str, str]]:
             tree = ast.parse(source)
         except SyntaxError:
             continue
-        module = path.relative_to(root).as_posix()
+        module = path.relative_to(root.parent).as_posix()
         for node in ast.walk(tree):
             _collect_node_docstring_references(node, module, found)
     return found
@@ -239,9 +243,21 @@ def _subscript_names(target: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(names))
 
 
-def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
-    """Report each cross-reference naming something the package does not define."""
-    defined, imported, modules = collect_defined_names(root)
+def dangling_references(roots: tuple[Path, ...]) -> tuple[DanglingReference, ...]:
+    """Report each cross-reference naming something no package under ``roots`` defines."""
+    defined: set[str] = set()
+    imported: set[str] = set()
+    modules: set[str] = set()
+    for root in roots:
+        if not root.is_dir():
+            # An absent package would drop its definitions from the corpus and
+            # report every reference to them as dangling, or none of its own.
+            raise DocstringReferenceScanError(f"docstring reference screen source root is unavailable: {root}")
+        root_defined, root_imported, root_modules = collect_defined_names(root)
+        defined |= root_defined
+        imported |= root_imported
+        modules |= root_modules
+    owned = frozenset(root.name for root in roots)
     for sibling in _SIBLING_TREES:
         if sibling.exists():
             # MODULE names only. Pulling in every symbol these trees define
@@ -256,20 +272,21 @@ def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
     leaves = {name.rsplit(".", 1)[-1] for name in modules}
     known = defined | imported | leaves | set(dir(builtins))
     findings: list[DanglingReference] = []
-    for module, raw in docstring_references(root):
-        # A long reference wraps across lines inside its backticks; the halves
-        # of a dotted path rejoin with no space, which is how Sphinx reads it.
-        _collect_dangling_reference(module, raw, known, modules, findings)
+    for root in roots:
+        for module, raw in docstring_references(root):
+            # A long reference wraps across lines inside its backticks; the halves
+            # of a dotted path rejoin with no space, which is how Sphinx reads it.
+            _collect_dangling_reference(module, raw, known, modules, findings, owned)
     return tuple(findings)
 
 
-def main(argv: list[str] | None = None, *, root: Path = _PACKAGE_ROOT) -> int:
+def main(argv: list[str] | None = None, *, roots: tuple[Path, ...] = _SOURCE_ROOTS) -> int:
     """Print one greppable row per dangling reference and enforce live zero."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--limit", type=int, default=0, help="show at most this many rows")
     args = parser.parse_args(argv)
 
-    findings = dangling_references(root)
+    findings = dangling_references(roots)
     rows = findings[: args.limit] if args.limit else findings
     for finding in rows:
         sys.stdout.write(f"dangling target={finding.target} module={finding.module}\n")
@@ -289,15 +306,25 @@ def _collect_node_docstring_references(node: ast.AST, module: str, found: list[t
 
 
 def _collect_dangling_reference(
-    module: str, raw: str, known: set[str], modules: set[str], findings: list[DanglingReference]
+    module: str,
+    raw: str,
+    known: set[str],
+    modules: set[str],
+    findings: list[DanglingReference],
+    owned: frozenset[str],
 ) -> None:
-    """Collect dangling reference."""
+    """Collect dangling reference.
+
+    A dotted target is first-party when its first segment is one of the
+    scanned packages. Matching only ``cadrumo.`` let a reference to a
+    ``cadrumo_client`` or ``cadrumo_runtime`` symbol pass as third-party.
+    """
     target = _REWRAP.sub("", raw).lstrip("~.").split("(")[0].strip()
     if not target:
         return
     if _collect_generic_reference(target, module, raw, known, modules, findings):
         return
-    rooted = target.startswith("cadrumo.")
+    rooted = "." in target and target.split(".", 1)[0] in owned
     _collect_plain_reference(target, module, raw, known, modules, findings, rooted)
 
 

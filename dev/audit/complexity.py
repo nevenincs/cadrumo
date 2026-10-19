@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """Report every live code-complexity hotspot against fixed detector semantics.
 
-Every first-party source root -- the product package, the agent harness, the
-development tooling, and the packaging build hooks -- is measured directly
+Every first-party source root -- each package under ``src/``, the development
+tooling, and the packaging build hooks -- is measured directly
 with Radon cyclomatic complexity, Radon maintainability index, and Complexipy
 cognitive complexity. There is no baseline, allowlist, disposition, or
 development-state partition: every hit is a current finding and an empty hit
@@ -38,7 +38,7 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev.exit_codes import ADVISORY_BROKEN, OK
 from dev.first_party_source import (
     FIRST_PARTY_ROOTS,
-    PRODUCT_PACKAGE,
+    SOURCE_PACKAGES,
     is_bundled_data,
     is_production_source,
     is_test_source,
@@ -277,11 +277,11 @@ def scan_complexity(
     """Measure one source scope and return its live findings.
 
     The production scope covers every root in ``roots``, all first-party roots
-    by default; the test scope covers the product package's test surface. Each
-    root must exist and yield source files, so a dropped or renamed root fails
-    the scan instead of silently shrinking it.
+    by default; the test scope covers the test surface of every package under
+    ``src/``. Each root must exist and yield source files, so a dropped or
+    renamed root fails the scan instead of silently shrinking it.
     """
-    scope = roots if roots is not None else ((PRODUCT_PACKAGE,) if tests else FIRST_PARTY_ROOTS)
+    scope = roots if roots is not None else (SOURCE_PACKAGES if tests else FIRST_PARTY_ROOTS)
     return measure_population(source_population(scope, tests=tests), cognitive_threshold=cognitive_threshold)
 
 
@@ -301,7 +301,11 @@ def main() -> int:
     except (OSError, RuntimeError) as exc:
         print(f"complexity audit unavailable: {exc}", file=sys.stderr)
         return ADVISORY_BROKEN
-    scope = f"test files in {PRODUCT_PACKAGE}" if args.tests else f"production code in {', '.join(FIRST_PARTY_ROOTS)}"
+    scope = (
+        f"test files in {', '.join(SOURCE_PACKAGES)}"
+        if args.tests
+        else f"production code in {', '.join(FIRST_PARTY_ROOTS)}"
+    )
     print(f"complexity ({scope}): {scan.finding_count} current hotspot(s)")
     for line in scan.rendered_findings():
         print(f"  {line}")

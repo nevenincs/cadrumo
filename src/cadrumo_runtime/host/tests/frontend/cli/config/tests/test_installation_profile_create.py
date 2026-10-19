@@ -23,6 +23,7 @@ from cadrumo.application.user_profile.custody_ports import (
 from cadrumo.application.user_profile.registration import ProfileRegistrationError
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo_client.contracts.installation_requests import (
     InstallationAct,
     InstallationRefused,
@@ -31,7 +32,7 @@ from cadrumo_client.contracts.installation_requests import (
     ProfileListReply,
     ProfileListRequest,
 )
-from cadrumo_client.transport.installation_client import InstallationClient, installation_new_passphrase_document
+from cadrumo_client.transport.installation_client import InstallationClient
 
 from .installation_profile_support import PROFILE_INPUT, PROFILE_LABEL, installation_client, serving_profile_acts
 
@@ -55,8 +56,11 @@ def _create(
     passphrase: str = PROFILE_INPUT,
     confirmation: str | None = None,
 ) -> ProfileCreateReply | InstallationRefused:
-    secret = installation_new_passphrase_document(
-        bytearray(passphrase, "utf-8"), bytearray(passphrase if confirmation is None else confirmation, "utf-8")
+    # The desktop is the frontend that sends this act; its secret frame carries both entries for the runtime to compare.
+    secret = bytearray(
+        canonical_json_bytes(
+            {"passphrase": passphrase, "passphrase_confirmation": passphrase if confirmation is None else confirmation}
+        )
     )
     reply = client.perform(
         ProfileCreateRequest(request_id=uuid4(), frontend=_CLI, label=label), ProfileCreateReply, secret=secret

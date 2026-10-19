@@ -51,7 +51,7 @@ def _module_findings(
     importers: Mapping[str, frozenset[str]],
 ) -> tuple[ModuleFinding, ...]:
     findings: list[ModuleFinding] = []
-    audited = frozenset(name for name in modules if name == spec.package or name.startswith(spec.package + "."))
+    audited = frozenset(name for name in modules if spec.audits(name))
     unreachable = audited - full_reach
     for name, spanned in _collapse_packages(unreachable, modules):
         findings.append(_unreachable_module_finding(name, spanned, spec, modules, outside, importers))
@@ -99,7 +99,7 @@ def _symbol_findings(
     consumes the symbol. Folding them into one number under the data name
     would misreport both.
     """
-    entries = spec.entry_points + tuple(entry for companion in spec.companions for entry in companion.entry_points)
+    entries = spec.entry_points
     member_names: set[str] = set()
     literal_tokens: set[str] = set()
     resolved_uses: set[tuple[str, str]] = {(entry.module, entry.attribute) for entry in entries}
@@ -125,9 +125,7 @@ def _symbol_findings(
     findings: list[SymbolFinding] = []
     data_cleared = 0
     dev_cleared = 0
-    audited_reach = sorted(
-        name for name in runtime_reach if name == spec.package or name.startswith(spec.package + ".")
-    )
+    audited_reach = sorted(name for name in runtime_reach if spec.audits(name))
     for name in audited_reach:
         module = modules[name]
         for definition in _definitions(module.tree, contracts.get(name)):
@@ -208,15 +206,16 @@ def _test_findings(
     module_findings: tuple[ModuleFinding, ...],
     symbol_findings: tuple[SymbolFinding, ...],
 ) -> tuple[TestFinding, ...]:
-    """Test modules under the package whose every shipped subject is already a finding."""
+    """Test modules under the audited packages whose every shipped subject is already a finding."""
     dead_roots = tuple(f.module for f in module_findings if f.reach is ModuleReach.UNREACHABLE)
     dead_symbols = {(f.module, f.name): f.confidence for f in symbol_findings}
     findings: list[TestFinding] = []
     support_cache: dict[Path, tuple[frozenset[str], frozenset[tuple[str, str]]]] = {}
-    for path in iter_python_files(spec.src_root / spec.package):
-        finding = _test_finding_for_path(path, spec, known, support_cache, dead_roots, dead_symbols)
-        if finding is not None:
-            findings.append(finding)
+    for root in spec.package_roots:
+        for path in iter_python_files(root):
+            finding = _test_finding_for_path(path, spec, known, support_cache, dead_roots, dead_symbols)
+            if finding is not None:
+                findings.append(finding)
     return tuple(findings)
 
 

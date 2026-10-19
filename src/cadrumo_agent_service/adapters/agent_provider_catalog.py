@@ -17,7 +17,6 @@ from __future__ import annotations
 import os
 import tempfile
 from collections.abc import Mapping
-from functools import cache
 from pathlib import Path
 from threading import Lock
 from typing import Final, Literal, override
@@ -164,10 +163,4 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         return completed.standard_output
 
 
-@cache
-def process_provider_catalog_source() -> AgentProviderCatalogSource:
-    """Return the process's shared source, so one process runs the agent's declaration once."""
-    return AgentProviderCatalogSource()
-
-
-__all__ = ["CATALOG_ARGUMENTS", "AgentProviderCatalogSource", "process_provider_catalog_source"]
+__all__ = ["CATALOG_ARGUMENTS", "AgentProviderCatalogSource"]

@@ -4,17 +4,12 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo.core.transport_locus import TransportLocus, TransportRole, TransportShape
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    LiteralValue,
-    ParameterConstraint,
-    ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    ValueContract,
 )
 from cadrumo_client.commands.shared_contracts import translation_key as _key
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
@@ -48,38 +43,6 @@ def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
         SchemaState.TARGET,
         target=DeferredTarget(_HANDLER_MODULES[module], name, __package__),
         identity=identity,
-    )
-
-
-def _option(
-    name: str,
-    declarations: tuple[str, ...],
-    value: ValueContract,
-    help_key: str,
-    *,
-    required: bool = False,
-    default: LiteralValue | tuple[LiteralValue, ...] = None,
-    flag: bool = False,
-    multiple: bool = False,
-    minimum: int | None = None,
-    maximum: int | None = None,
-    transport_locus: TransportLocus = TransportLocus.NONE,
-    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
-    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
-) -> OptionSpec:
-    return OptionSpec(
-        name=name,
-        declarations=declarations,
-        value=value,
-        default=ParameterDefault.required() if required else ParameterDefault.value(default),
-        help_key=_key(help_key),
-        is_flag=flag,
-        flag_value=True if flag else None,
-        multiple=multiple,
-        constraint=ParameterConstraint(minimum=minimum, maximum=maximum),
-        transport_locus=transport_locus,
-        transport_shape=transport_shape,
-        transport_role=transport_role,
     )
 
 

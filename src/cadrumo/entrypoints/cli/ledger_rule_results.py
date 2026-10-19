@@ -7,11 +7,11 @@ command JSON-contract surface carried by
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`. These schemas are the CLI projection of the secure,
 profile-local rule engine: persisted :class:`LedgerClassificationRule` records
-are listed and added through :mod:`_ledger_rules_cli`, while
+are listed and added through :mod:`ledger_rules_commands`, while
 :func:`~cadrumo.application.ledger.actions_classification.plan_classification_rules`
-plans the registered executor's mutation. The parent
-:mod:`_ledger_payloads` module re-exports these split schemas so existing ledger
-command emitters keep one payload import surface.
+plans the registered executor's mutation. The ledger rule and read commands
+import these schemas directly, and :mod:`ledger_results` nests the shared
+rule payloads in its own results.
 """
 
 from __future__ import annotations

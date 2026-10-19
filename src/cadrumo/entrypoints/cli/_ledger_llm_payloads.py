@@ -2,7 +2,7 @@
 
 Strict :class:`OutputSchema` subclasses for the
 LLM decision terminals, split out of
-:mod:`._ledger_payloads` to keep that registry within its
+:mod:`ledger_results` to keep that registry within its
 size budget. These nested branch payloads share the graph-declared
 :class:`LedgerClassifySingleResult`
 ``ledger.classify`` command key, and validated instances enter

@@ -142,7 +142,6 @@
         "cadrumo_runtime.host.frontend.tui.modelo.runtime_lifecycle",
         "cadrumo_runtime.host.frontend.tui.modelo.runtime_work_create",
         "cadrumo_runtime.host.frontend.tui.modelo.runtime_workbench_reads",
-        "cadrumo_runtime.host.frontend.tui.modelo.workbench",
         "cadrumo_runtime.host.frontend.tui.operations",
         "cadrumo_runtime.host.frontend.tui.operations.runtime_profile_session",
         "cadrumo_runtime.host.frontend.tui.profile",

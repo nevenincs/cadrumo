@@ -330,8 +330,8 @@ check-registry-gate:
     @uv run --no-sync python -m dev.registry.conformance integrity
 
 # Verify every Sphinx cross-reference in a docstring names a symbol that
-# still exists; a dangling target fails the build.
-[doc('Verify every docstring cross-reference resolves to a real symbol.')]
+# still exists, across every package under src/; a dangling target fails the build.
+[doc('Verify every src/ docstring cross-reference resolves to a real symbol.')]
 [group('check')]
 check-docstring-references:
     @uv run --no-sync python -m dev.quality.docstring_reference_targets
@@ -368,27 +368,27 @@ check-import-boundaries:
 check-dependency-declarations:
     @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_client src/cadrumo_runtime src/cadrumo_harness src/cadrumo_agent_service dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party cadrumo_agent_service --known-first-party cadrumo_client --known-first-party cadrumo_runtime --known-first-party dev --non-dev-dependency-groups registry --extend-exclude '(?:^|[\\/])test_.*[.]py$' --extend-exclude '(?:^|[\\/])_test_.*[.]py$' --extend-exclude '.*[\\/]tests[\\/].*' --extend-exclude '(?:^|[\\/])_data[\\/]' --extend-exclude '(?:^|[\\/])conftest[.]py$'
 
-[doc('Verify product module reachability; read-only and blocking.')]
+[doc('Verify every src/ package module is reachable from a shipped entrypoint; read-only and blocking.')]
 [group('check')]
 check-module-reachability:
     @uv run --no-sync python -m dev.quality.unreachable_module_coverage
 
-[doc('Verify production symbol usage; read-only and blocking.')]
+[doc('Verify every src/ package symbol is used by shipped code or dev/; read-only and blocking.')]
 [group('check')]
 check-symbol-usage:
     @uv run --no-sync python -m dev.quality.unused_symbol_coverage
 
-[doc('Verify exported names are consumed by production code; read-only and blocking.')]
+[doc('Verify every src/ package export is consumed by production code; read-only and blocking.')]
 [group('check')]
 check-export-consumption:
     @uv run --no-sync python -m dev.quality.unconsumed_export_coverage
 
-[doc('Verify every secure store has a production write path; read-only and blocking.')]
+[doc('Verify every src/ secure store has a production write path; read-only and blocking.')]
 [group('check')]
 check-secure-store-write-paths:
     @uv run --no-sync python -m dev.quality.secure_store_write_path
 
-[doc('Verify every readable persistence surface has a production writer; read-only and blocking.')]
+[doc('Verify every readable live snapshot surface has a writer in any src/ package; read-only and blocking.')]
 [group('check')]
 check-persistence-write-paths:
     @uv run --no-sync python -m dev.quality.write_path_coverage
@@ -1408,13 +1408,17 @@ audit-code *ARGS:
 audit-types:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-types -- uv run --no-sync python -m dev.quality.types --full
 
-# Run the advisory complexity scanner for production code. Findings are
+# Run the advisory complexity scanner for production code in every first-party
+# root (each src/ package, dev/ and packaging/); `python -m dev.audit.complexity
+# --tests` measures the test surface of every src/ package. Findings are
 # non-blocking; unavailable scanner data remains visible as a broken audit.
 [doc('Run the advisory complexity scanner; findings are non-blocking and unavailable data is reported.')]
 [group('audit')]
 audit-complexity:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-complexity -- uv run --no-sync python -m dev.audit.complexity
 
+# Both scans cover every package under src/ (the tax application, client,
+# runtime, MCP harness and agent service), excluding tests and bundled data.
 # Scan for dead code. Findings are advisory and unavailable data is reported.
 # The whitelist clears individually-justified
 # false positives (contract-fixed signature params); see its docstring.
@@ -1430,6 +1434,8 @@ audit-complexity:
 audit-dead-weight:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label audit-dead-weight --signal audit-dead-weight -- uv run --no-sync python -m dev.audit.dead_weight
 
+# Scan every package under src/ with Semgrep's stock security rules;
+# .semgrepignore removes their tests and bundled data.
 [doc('Scan code security posture with the normalized semgrep runner; advisory and non-blocking.')]
 [group('audit')]
 audit-code-security:
@@ -1440,7 +1446,7 @@ audit-code-security:
 # Finding-bearing product reports retain their scanner exit contracts:
 # reachability and persistence reports exit 3 on findings, 1 when analysis is
 # unavailable, and 0 only after a clean scan. They are never aggregate members.
-[doc('Report unreachable product modules and persist run evidence; exit 3 on findings, 1 if unavailable, 0 when clean.')]
+[doc('Report unreachable modules and unused symbols across every src/ package and persist run evidence; exit 3 on findings, 1 if unavailable, 0 when clean.')]
 [group('report')]
 report-product-reachability *ARGS:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label report-product-reachability -- uv run --no-sync python -m dev.audit.unreachable_code {{ARGS}}

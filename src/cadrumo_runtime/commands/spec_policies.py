@@ -38,7 +38,6 @@ def _policy(
 
 
 STATE_FREE = _policy(frozenset({"state-free"}), frozenset({"none"}), "metadata")
-LOCAL_READ = _policy(frozenset({"state-free"}), frozenset({"none"}), "local-io")
 PROFILE_READ = _policy(frozenset({"profile-custody"}), frozenset({"none"}), "local-io")
 ENCRYPTED_READ = _policy(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io")
 PROFILE_DESTRUCTIVE = _policy(
@@ -85,25 +84,6 @@ GOOGLE_DESTRUCTIVE = _policy(
     write_route=CommandWriteRoute.PROFILE_BOUND,
     destructive=True,
 )
-CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
-# Reads a network endpoint and changes nothing, locally or at the endpoint.
-NETWORK_READ = _policy(frozenset({"network"}), frozenset({"none"}), "external-io")
-# Changes state at a network endpoint and records nothing locally.
-NETWORK_REMOTE_EFFECT = _policy(frozenset({"network"}), frozenset({"network"}), "external-io")
-NETWORK_WRITE = _policy(frozenset({"network"}), frozenset({"network", "local-state"}), "external-io")
-NETWORK_DESTRUCTIVE = _policy(
-    frozenset({"network"}),
-    frozenset({"network", "local-state"}),
-    "external-io",
-    destructive=True,
-)
-LIVE_PROFILE_WRITE = _policy(
-    frozenset({"aeat", "network", "encrypted-facts", "profile-custody"}),
-    frozenset({"network", "local-state"}),
-    "external-io",
-    write_route=CommandWriteRoute.PROFILE_BOUND,
-)
-BROWSER_CONNECTIVITY = _policy(frozenset({"aeat", "browser"}), frozenset({"browser"}), "interactive")
 # Opens an AEAT session for the active profile through the Sede browser client.
 AEAT_SESSION_WRITE = _policy(
     frozenset({"aeat", "encrypted-facts", "profile-custody"}),
@@ -117,20 +97,12 @@ __all__ = [
     "AEAT_SESSION_WRITE",
     "BOOTSTRAP_DESTRUCTIVE",
     "BOOTSTRAP_WRITE",
-    "BROWSER_CONNECTIVITY",
-    "CALCULATION_READ",
     "ENCRYPTED_DESTRUCTIVE",
     "ENCRYPTED_READ",
     "ENCRYPTED_WRITE",
     "GOOGLE_DESTRUCTIVE",
     "GOOGLE_READ",
     "GOOGLE_WRITE",
-    "LIVE_PROFILE_WRITE",
-    "LOCAL_READ",
-    "NETWORK_DESTRUCTIVE",
-    "NETWORK_READ",
-    "NETWORK_REMOTE_EFFECT",
-    "NETWORK_WRITE",
     "PROFILE_DESTRUCTIVE",
     "PROFILE_READ",
     "STATE_FREE",

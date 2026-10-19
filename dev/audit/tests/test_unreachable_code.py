@@ -13,11 +13,13 @@ from __future__ import annotations
 
 import ast
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
+from dev.first_party_source import SOURCE_PACKAGES
 
 from ..unreachable_code import scan_unreachable_code
 from ..unreachable_models import Confidence, ModuleReach, SymbolKind, UnreachableCodeOutcome, UnreachableCodeResult
@@ -234,7 +236,7 @@ def _build_tree(root: Path) -> ShippedTreeSpec:
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         module_roots=("pkg.tool.__main__",),
         exclude_globs=_EXCLUDES,
@@ -279,18 +281,18 @@ def test_a_module_execution_entrypoint_is_a_walk_root(result: UnreachableCodeRes
 
 
 def test_repository_discovers_its_module_execution_roots() -> None:
-    """Tax roots are derived independently of a sibling runtime's executable surface."""
+    """Every audited package contributes its own ``python -m`` surfaces, and only those."""
     from ..unreachable_tree import is_module_execution_surface
 
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
-    assert spec.package == "cadrumo"
-    assert all(module.startswith("cadrumo.") for module in spec.module_roots)
-    assert "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap" not in spec.module_roots
-    assert is_module_execution_surface(REPO_ROOT / "src/cadrumo_runtime/host/frontend/cli/windows_secret_bootstrap.py")
-    runtime = next(companion for companion in spec.companions if companion.package == "cadrumo_runtime")
-    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
-    assert is_module_execution_surface(REPO_ROOT / "src/cadrumo_runtime/host/frontend/tui/__main__.py")
+    assert "cadrumo.adapters.persistence.storage.custody._kdf_worker" in spec.module_roots
+    assert "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap" in spec.module_roots
+    assert "cadrumo_runtime.host.frontend.tui.__main__" in spec.module_roots
+    assert all(spec.audits(module) for module in spec.module_roots)
+    for module in spec.module_roots:
+        path = REPO_ROOT / "src" / Path(*module.split("."))
+        assert is_module_execution_surface(path.with_suffix(".py"))
 
 
 def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(tmp_path: Path) -> None:
@@ -676,7 +678,7 @@ def test_clean_tree_is_green(tmp_path: Path) -> None:
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -696,7 +698,7 @@ def test_development_tests_cannot_clear_a_product_member(tmp_path: Path) -> None
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         outside=(OutsideCorpus(label="dev", root=tmp_path / "dev"),),
     )
@@ -733,7 +735,7 @@ def test_outside_relative_import_is_credited_at_every_nesting_depth(tmp_path: Pa
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
         outside=(
@@ -756,7 +758,7 @@ def test_unparseable_shipped_module_is_an_error_not_a_verdict(tmp_path: Path) ->
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -775,7 +777,7 @@ def test_missing_entry_point_module_is_an_error(tmp_path: Path) -> None:
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.absent", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -836,13 +838,15 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
     """Roots come from ``[project.scripts]``, never from a restated list."""
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
-    assert spec.package == "cadrumo"
-    # Tax script roots and sibling consumer scripts retain separate ownership.
-    runtime = next(companion for companion in spec.companions if companion.package == "cadrumo_runtime")
-    assert "cadrumo_runtime.host.frontend.cli.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
-    assert "cadrumo_runtime.host.bootstrap:main" in {entry.spec for entry in runtime.entry_points}
+    pyproject = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    declared = set(pyproject["project"]["scripts"].values())
+
+    assert spec.packages == tuple(PurePosixPath(root).name for root in SOURCE_PACKAGES)
+    assert {entry.spec for entry in spec.entry_points} == declared
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
     assert {corpus.label for corpus in spec.outside} == {"tests", "dev"}
+    # Every audited package's own tests are read, so their labels name real use.
+    assert {corpus.root for corpus in spec.outside if corpus.test_modules_only} == set(spec.package_roots)
     assert spec.data_globs
 
 
@@ -882,7 +886,7 @@ def _spawn_tree(root: Path, *, flag: str) -> ShippedTreeSpec:
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         module_roots=("pkg.session.__main__",),
         exclude_globs=_EXCLUDES,
@@ -930,7 +934,7 @@ def _importer_tree(root: Path) -> ShippedTreeSpec:
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -966,7 +970,7 @@ def test_importers_exclude_a_findings_own_span(tmp_path: Path) -> None:
     spec = ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
-        package="pkg",
+        packages=("pkg",),
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
@@ -1063,7 +1067,7 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
     spec = ShippedTreeSpec(
         repo_root=tmp_path,
         src_root=tmp_path / "src",
-        package="cadrumo",
+        packages=("cadrumo",),
         entry_points=(),
         data_globs=("_data/registry/**/*.json",),
     )

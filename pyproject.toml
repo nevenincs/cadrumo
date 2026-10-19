@@ -1390,28 +1390,21 @@ exclude = 'tests|test_'
 # the dashboard tracks code that is plausibly dead in production paths.
 [tool.vulture]
 min_confidence = 80
-paths = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime"]
+paths = ["src/cadrumo", "src/cadrumo_client", "src/cadrumo_runtime", "src/cadrumo_harness", "src/cadrumo_agent_service"]
+# The test surface and bundled data of every package under src/, as
+# dev.first_party_source classifies them. fnmatch's `*` crosses separators, so
+# one pattern per shape covers every package and nesting depth.
 exclude = [
-  "*/src/cadrumo/tests/*",
-  "*\\src\\cadrumo\\tests\\*",
-  "*/src/cadrumo/*/tests/*",
-  "*\\src\\cadrumo\\*\\tests\\*",
-  "*/src/cadrumo/_data/*",
-  "*\\src\\cadrumo\\_data\\*",
-  "*/src/cadrumo/*/_data/*",
-  "*\\src\\cadrumo\\*\\_data\\*",
-  "*/src/cadrumo/test_*.py",
-  "*\\src\\cadrumo\\test_*.py",
-  "*/src/cadrumo/*/test_*.py",
-  "*\\src\\cadrumo\\*\\test_*.py",
-  "*/src/cadrumo/_test_*.py",
-  "*\\src\\cadrumo\\_test_*.py",
-  "*/src/cadrumo/*/_test_*.py",
-  "*\\src\\cadrumo\\*\\_test_*.py",
-  "*/src/cadrumo/conftest.py",
-  "*\\src\\cadrumo\\conftest.py",
-  "*/src/cadrumo/*/conftest.py",
-  "*\\src\\cadrumo\\*\\conftest.py",
+  "*/src/*/tests/*",
+  "*\\src\\*\\tests\\*",
+  "*/src/*/_data/*",
+  "*\\src\\*\\_data\\*",
+  "*/src/*/test_*.py",
+  "*\\src\\*\\test_*.py",
+  "*/src/*/_test_*.py",
+  "*\\src\\*\\_test_*.py",
+  "*/src/*/conftest.py",
+  "*\\src\\*\\conftest.py",
 ]
 ignore_decorators = [
   "@app.command",

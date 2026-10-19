@@ -27,7 +27,6 @@ from cadrumo_client.commands.secure_input import (
     MachineSecretSelection,
     read_machine_secret_payload,
     select_machine_secret_channel,
-    stage_machine_secret_payload,
 )
 from cadrumo_client.contracts.deadline_budget import remaining_budget
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
@@ -94,13 +93,6 @@ def _matching_change_payload(payload: AutomationChangeInput, kind: object) -> En
     if payload.proposal.kind is not _required_change_kind(kind):
         raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.automation_change_kind_mismatch")
     return payload.proposal
-
-
-def stage_automation_change_input(*, selection: MachineSecretSelection, kind: object) -> None:
-    """Refuse a mismatched protected proposal before native root admission."""
-    payload = read_machine_secret_payload(AutomationChangeInput, selection=selection)
-    _matching_change_payload(payload, kind)
-    stage_machine_secret_payload(payload)
 
 
 type _CreateProposal = Callable[[UUID], EnrollmentProposal]
@@ -256,5 +248,4 @@ __all__ = [
     "automation_change",
     "automation_create",
     "refuse_missing_create_proposal",
-    "stage_automation_change_input",
 ]

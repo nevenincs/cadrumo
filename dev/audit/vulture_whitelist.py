@@ -25,6 +25,11 @@ consumed in the body:
   ``InstallationAreaFactory`` Protocol
   (:mod:`cadrumo.entrypoints.tui.installation.area_factory`). The stub body is
   ``...``; the runtime's installed-session implementation calls it.
+* ``eventmask`` — the positional-only parameter of ``register`` on the
+  ``_ParentPoll`` Protocol stub
+  (:mod:`cadrumo_runtime.host.linux_worker_guardian`), which mirrors
+  ``select.poll().register(fd, eventmask)``; the guardian passes the real
+  ``select.poll()`` object. The stub body is ``...``.
 
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears all findings with that name across the scan,
@@ -65,3 +70,8 @@ def _command_group_get_command(cmd_name: object) -> object:
 def _installation_area_factory_call(report_change: object) -> object:
     """Mirror ``InstallationAreaFactory.__call__`` structural signature."""
     return report_change
+
+
+def _parent_poll_register(eventmask: object) -> object:
+    """Mirror ``_ParentPoll.register`` structural signature."""
+    return eventmask

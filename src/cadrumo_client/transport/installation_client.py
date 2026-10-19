@@ -73,23 +73,6 @@ def installation_passphrase_document(passphrase: bytearray) -> bytearray:
         passphrase[:] = bytes(len(passphrase))
 
 
-def installation_new_passphrase_document(passphrase: bytearray, confirmation: bytearray) -> bytearray:
-    """Build the one secret frame of an act that sets a profile's first passphrase.
-
-    Both buffers are consumed and wiped. The runtime compares them, so a
-    mistyped confirmation is refused there as it is on every frontend.
-    """
-    try:
-        return bytearray(
-            canonical_json_bytes(
-                {"passphrase": passphrase.decode("utf-8"), "passphrase_confirmation": confirmation.decode("utf-8")}
-            )
-        )
-    finally:
-        passphrase[:] = bytes(len(passphrase))
-        confirmation[:] = bytes(len(confirmation))
-
-
 class InstallationClient:
     """Own one verified connection for acts that name no profile session.
 

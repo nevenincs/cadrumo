@@ -286,11 +286,6 @@ def _parameter(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver) -> ins
     )
 
 
-def compile_parameter(spec: ArgumentSpec | OptionSpec, *, resolver: TargetResolver) -> inspect.Parameter:
-    """Materialize one public command-graph parameter through the Typer adapter."""
-    return _parameter(spec, resolver)
-
-
 def _invoke_deferred_target(
     target_ref: DeferredTarget, arguments: Mapping[str, object], resolver: TargetResolver
 ) -> object:
@@ -547,7 +542,6 @@ __all__ = [
     "GOVERNED_FACT_SCOPE_CAPABILITIES",
     "CommandSpecTyperGroup",
     "build_command_app",
-    "compile_parameter",
     "refuse_declared_live_write",
     "runs_in_governed_fact_scope",
 ]

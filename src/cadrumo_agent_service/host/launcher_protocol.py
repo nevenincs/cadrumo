@@ -16,9 +16,6 @@ from typing import Final
 
 from .controller import AgentHostError, AgentHostRefusal
 
-LAUNCHER_LANE: Final = "development"
-"""The one lane this launcher serves today: an agent run from its source tree."""
-
 
 class AgentLauncherRefusal(StrEnum):
     """The launcher protocol's closed refusal codes."""
@@ -30,14 +27,6 @@ class AgentLauncherRefusal(StrEnum):
     PROVIDER_CREDENTIAL_MISSING = "agent_provider_credential_missing"
     ROOT_UNMARKED = "agent_root_unmarked"
     SERVICE_FAILED = "agent_service_failed"
-
-
-class AgentStoppedReason(StrEnum):
-    """Why a served agent stopped, as the launcher reports it."""
-
-    INPUT_CLOSED = "input_closed"
-    SESSION_ENDED = "session_ended"
-    RUNTIME_UNAVAILABLE = "runtime_unavailable"
 
 
 # Hosting-protocol refusal codes that mean this agent build does not speak the

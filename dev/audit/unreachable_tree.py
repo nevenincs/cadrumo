@@ -9,7 +9,7 @@ from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
-from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_SOURCE_ROOTS, is_test_source
+from dev.first_party_source import DEVELOPMENT_TOOLING, SOURCE_PACKAGES, is_test_source
 from dev.quality.source_import_analysis import (
     is_shipped_module,
     module_name_for,
@@ -82,34 +82,19 @@ class OutsideCorpus:
 
 
 @dataclass(frozen=True)
-class CompanionPackage:
-    """A sibling workspace distribution that depends on the audited package.
-
-    Its modules are not the audit's subject, but they are real consumers: an
-    installed user running its console script executes them, and whatever they
-    import from the audited package is reached. Walking them is the difference
-    between "nothing in the product calls this" and "nothing in this one
-    distribution calls this".
-
-    Args:
-        package: Top-level import name, for example ``cadrumo_harness``.
-        src_root: Source root its modules are named relative to.
-        entry_points: Its own ``[project.scripts]``.
-    """
-
-    package: str
-    src_root: Path
-    entry_points: tuple[EntryPoint, ...]
-
-
-@dataclass(frozen=True)
 class ShippedTreeSpec:
     """Everything the scan needs to know about one distribution.
 
+    Every package of the distribution is audited in one walk. They ship in
+    one wheel and import one another, so a module is alive when any console
+    script or ``python -m`` surface of the distribution reaches it, whichever
+    package defines the caller.
+
     Args:
         repo_root: Paths in findings are rendered relative to this.
-        src_root: The ``src/`` directory the package lives under.
-        package: The top-level import name of the shipped package.
+        src_root: The ``src/`` directory the packages live under.
+        packages: The top-level import names of the shipped packages, each of
+            which is the audit's subject.
         entry_points: The console scripts the walk starts from.
         module_roots: Modules executable as ``python -m <module>``, discovered
             from shipped ``__main__.py`` files and exact top-level main guards.
@@ -117,20 +102,27 @@ class ShippedTreeSpec:
             packaging declaration.
         exclude_globs: Wheel exclude globs; a module they match is unshipped.
         outside: Non-shipped trees whose references label findings.
-        data_globs: Shipped non-Python payloads, relative to the package root,
+        data_globs: Shipped non-Python payloads, relative to each package root,
             whose identifier tokens clear a data-shaped member.
-        companions: Sibling workspace distributions that consume this package.
     """
 
     repo_root: Path
     src_root: Path
-    package: str
+    packages: tuple[str, ...]
     entry_points: tuple[EntryPoint, ...]
     module_roots: tuple[str, ...] = ()
     exclude_globs: tuple[str, ...] = ()
     outside: tuple[OutsideCorpus, ...] = ()
     data_globs: tuple[str, ...] = ()
-    companions: tuple[CompanionPackage, ...] = ()
+
+    @property
+    def package_roots(self) -> tuple[Path, ...]:
+        """The directory of every audited package."""
+        return tuple(self.src_root / package for package in self.packages)
+
+    def audits(self, module: str) -> bool:
+        """Whether the dotted ``module`` belongs to an audited package."""
+        return any(module == package or module.startswith(f"{package}.") for package in self.packages)
 
     @classmethod
     def from_repository(cls, repo_root: Path = REPO_ROOT, *, extra_roots: tuple[str, ...] = ()) -> ShippedTreeSpec:
@@ -138,70 +130,77 @@ class ShippedTreeSpec:
 
         Console scripts and wheel excludes are read from ``pyproject.toml``
         rather than restated, so the audit keeps following the distribution
-        as the packaging changes. ``extra_roots`` adds ``module:attribute``
-        roots the packaging does not declare, such as a ``python -m`` surface,
-        so a campaign can ask "what is dead even if that surface counts?".
+        as the packaging changes. The audited packages are the declared
+        :data:`~dev.first_party_source.SOURCE_PACKAGES` present in the tree.
+        ``extra_roots`` adds ``module:attribute`` roots the packaging does not
+        declare, such as a ``python -m`` surface, so a campaign can ask "what
+        is dead even if that surface counts?".
         """
         pyproject, scripts = _repository_console_scripts(repo_root)
         src_root = repo_root / "src"
-        package = "cadrumo"
-        excludes = wheel_exclude_globs(pyproject)
-        companions = _sibling_console_packages(src_root, scripts, audited_package=package)
-        entry_points = tuple(
-            EntryPoint.parse(spec) for spec in scripts.values() if spec.partition(":")[0].split(".")[0] == package
-        ) + tuple(EntryPoint.parse(spec) for spec in extra_roots)
+        packages = _source_packages(repo_root, src_root)
+        excludes = tuple(wheel_exclude_globs(pyproject))
+        declared = tuple(EntryPoint.parse(spec) for spec in scripts.values())
+        outside_scripts = sorted(entry.spec for entry in declared if entry.module.split(".")[0] not in packages)
+        if outside_scripts:
+            msg = f"console script(s) target no audited source package: {', '.join(outside_scripts)}"
+            raise ValueError(msg)
         module_roots = tuple(
             sorted(
                 module_name_for(path, src_root=src_root)
+                for package in packages
                 for path in (src_root / package).rglob("*.py")
                 if _SKIPPED_DIRS.isdisjoint(path.parts)
                 and not is_test_source(path, root=src_root)
-                and is_shipped_module(path, src_root=src_root, exclude_globs=tuple(excludes))
+                and is_shipped_module(path, src_root=src_root, exclude_globs=excludes)
                 and is_module_execution_surface(path)
             ),
         )
         return cls(
             repo_root=repo_root,
             src_root=src_root,
-            package=package,
-            entry_points=entry_points,
+            packages=packages,
+            entry_points=declared + tuple(EntryPoint.parse(spec) for spec in extra_roots),
             module_roots=module_roots,
-            exclude_globs=tuple(excludes),
+            exclude_globs=excludes,
             outside=(
-                OutsideCorpus(label="tests", root=src_root / package, test_modules_only=True),
+                *(
+                    OutsideCorpus(label="tests", root=src_root / package, test_modules_only=True)
+                    for package in packages
+                ),
                 OutsideCorpus(label="tests", root=repo_root / "conftest.py"),
                 OutsideCorpus(label=_DEV_LABEL, root=repo_root / DEVELOPMENT_TOOLING),
             ),
             data_globs=_DATA_GLOBS,
-            companions=companions,
         )
 
 
-def _sibling_console_packages(
-    src_root: Path, scripts: dict[str, str], *, audited_package: str
-) -> tuple[CompanionPackage, ...]:
-    """Load the application cohort and group its declared console entrypoints.
+def _source_packages(repo_root: Path, src_root: Path) -> tuple[str, ...]:
+    """The declared source packages present under ``src/``, refusing an undeclared one.
 
-    A shared package without a console script still supplies real import edges;
-    loading it does not make any of its modules an execution root. A
-    script whose package is not present under ``src/`` is skipped: it cannot be
-    walked, and guessing would silently shrink the reachable set.
+    A declared package absent from the tree is not audited: there is nothing
+    to walk. A package present under ``src/`` but missing from the declared
+    scope is refused, because auditing around it would report its consumers'
+    code reachable or dead without the audit ever saying it stopped short.
     """
-    grouped: dict[str, list[EntryPoint]] = {}
-    for source_root in PRODUCT_SOURCE_ROOTS:
-        package = Path(source_root).name
-        if package != audited_package and (src_root / package).is_dir():
-            grouped[package] = []
-    for spec in scripts.values():
-        entry = EntryPoint.parse(spec)
-        package = entry.module.split(".")[0]
-        if package == audited_package or not (src_root / package).is_dir():
-            continue
-        grouped.setdefault(package, []).append(entry)
-    return tuple(
-        CompanionPackage(package=package, src_root=src_root, entry_points=tuple(entries))
-        for package, entries in sorted(grouped.items())
+    packages: list[str] = []
+    for source_root in SOURCE_PACKAGES:
+        directory = repo_root / source_root
+        if directory.parent != src_root:
+            raise ValueError(f"source package {source_root} does not live directly under {src_root}")
+        if directory.is_dir():
+            packages.append(directory.name)
+    present = (
+        sorted(child.name for child in src_root.iterdir() if (child / "__init__.py").is_file())
+        if src_root.is_dir()
+        else []
     )
+    undeclared = [name for name in present if name not in packages]
+    if undeclared:
+        raise ValueError(f"src/ holds package(s) outside the declared source scope: {', '.join(undeclared)}")
+    if not packages:
+        raise ValueError(f"no declared source package exists under {src_root}")
+    return tuple(packages)
 
 
 def iter_python_files(root: Path) -> Iterator[Path]:
@@ -267,12 +266,10 @@ def _load_package(root: Path, src_root: Path, *, exclude_globs: tuple[str, ...])
 
 
 def shipped_modules(spec: ShippedTreeSpec) -> dict[str, ShippedModule]:
-    """Every module in the audited package, plus the companion distributions that consume it."""
-    modules = _load_package(spec.src_root / spec.package, spec.src_root, exclude_globs=spec.exclude_globs)
-    for companion in spec.companions:
-        modules.update(
-            _load_package(companion.src_root / companion.package, companion.src_root, exclude_globs=()),
-        )
+    """Every shipped module of every audited package."""
+    modules: dict[str, ShippedModule] = {}
+    for root in spec.package_roots:
+        modules.update(_load_package(root, spec.src_root, exclude_globs=spec.exclude_globs))
     return modules
 
 
