@@ -44,7 +44,6 @@ fn service_refusal(code: &str) -> Refusal {
         "signed_out" => Refusal::SignedOut,
         "credentials_unavailable" | "credentials_invalid" => Refusal::ProviderCredentialMissing,
         "agent_incompatible" | "stores_newer" => Refusal::ServiceIncompatible,
-        "root_unmarked" => Refusal::RootUnmarked,
         _ => Refusal::from_launcher(code),
     }
 }
@@ -1135,11 +1134,6 @@ mod tests {
             .unwrap(),
             serde_json::json!({"state": "refused", "code": "agent_service_absent"})
         );
-        // Preserve the launcher's actionable root-admission refusal.
-        assert_eq!(
-            Refusal::from_launcher("agent_root_unmarked"),
-            Refusal::RootUnmarked
-        );
         assert_eq!(
             Refusal::from_launcher("agent_signed_out"),
             Refusal::SignedOut
@@ -1398,7 +1392,7 @@ mod tests {
                 Ok(Prepared {
                     person: None,
                     command: powershell(
-                        "$null = [Console]::In.ReadLine(); Start-Sleep -Milliseconds 500; [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_root_unmarked\"}'); exit 3",
+                        "$null = [Console]::In.ReadLine(); Start-Sleep -Milliseconds 500; [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_service_incompatible\"}'); exit 3",
                     ),
                 })
             });
@@ -1415,7 +1409,7 @@ mod tests {
                 loop {
                     if supervisor.status().state
                         == (State::Refused {
-                            code: Refusal::RootUnmarked,
+                            code: Refusal::ServiceIncompatible,
                         })
                         && lock(&supervisor.shared.running).is_none()
                     {
@@ -2107,7 +2101,7 @@ mod tests {
                 Ok(Prepared {
                     person: None,
                     command: powershell(
-                        "$null = [Console]::In.ReadLine(); [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_root_unmarked\"}'); exit 3",
+                        "$null = [Console]::In.ReadLine(); [Console]::Out.WriteLine('{\"event\":\"agent_refused\",\"code\":\"agent_service_incompatible\"}'); exit 3",
                     ),
                 })
             });
@@ -2123,7 +2117,7 @@ mod tests {
             let deadline = Instant::now() + Duration::from_secs(30);
             while supervisor.status().state
                 != (State::Refused {
-                    code: Refusal::RootUnmarked,
+                    code: Refusal::ServiceIncompatible,
                 })
             {
                 assert!(Instant::now() < deadline);

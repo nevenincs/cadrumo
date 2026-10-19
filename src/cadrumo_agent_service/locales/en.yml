@@ -155,8 +155,6 @@ desktop:
     service_failed: The agent stopped working.
     service_incompatible: This version of the agent doesn't work with this version
       of Cadrumo. Reinstall Cadrumo.
-    service_root_unmarked: Your conversations couldn't be opened. Restart Cadrumo
-      and try again.
     service_runtime_unavailable: Cadrumo isn't ready yet. Restart it and try again.
     service_signed_out: Sign in to talk to the agent.
     service_starting: Starting the agent…

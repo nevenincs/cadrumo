@@ -156,8 +156,6 @@ desktop:
     service_failed: Az ügynök leállt.
     service_incompatible: Az ügynök ezen verziója nem működik a Cadrumo ezen verziójával.
       Telepítsd újra a Cadrumót.
-    service_root_unmarked: Nem sikerült megnyitni a beszélgetéseidet. Indítsd újra
-      a Cadrumót, és próbáld újra.
     service_runtime_unavailable: A Cadrumo még nem áll készen. Indítsd újra, és próbáld
       újra.
     service_signed_out: Jelentkezz be, hogy beszélhess az ügynökkel.

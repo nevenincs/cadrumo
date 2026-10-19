@@ -108,8 +108,6 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.service_runtime_unavailable");
     case "agent_provider_credential_missing":
       return t("desktop.agent.service_credential_missing");
-    case "agent_root_unmarked":
-      return t("desktop.agent.service_root_unmarked");
     case "agent_service_failed":
       return t("desktop.agent.service_failed");
     case "agent_service_busy":

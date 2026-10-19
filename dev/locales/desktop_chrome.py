@@ -319,7 +319,6 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.agent.service_credential_missing",
         "desktop.agent.service_failed",
         "desktop.agent.service_incompatible",
-        "desktop.agent.service_root_unmarked",
         "desktop.agent.service_runtime_unavailable",
         "desktop.agent.service_signed_out",
         "desktop.agent.service_starting",

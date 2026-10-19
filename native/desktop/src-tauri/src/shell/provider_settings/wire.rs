@@ -29,7 +29,6 @@ pub enum Refusal {
     PersonActRequired,
     UnsupportedFlow,
     Busy,
-    RootUnmarked,
     Unknown,
 }
 

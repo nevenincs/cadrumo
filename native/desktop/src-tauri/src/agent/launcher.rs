@@ -195,9 +195,9 @@ mod tests {
             })
         );
         assert_eq!(
-            decode(b"{\"event\":\"agent_refused\",\"code\":\"agent_root_unmarked\"}\r"),
+            decode(b"{\"event\":\"agent_refused\",\"code\":\"agent_service_incompatible\"}\r"),
             Ok(Event::Refused {
-                code: "agent_root_unmarked".into()
+                code: "agent_service_incompatible".into()
             })
         );
         assert_eq!(
