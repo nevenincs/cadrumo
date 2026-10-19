@@ -73,7 +73,7 @@ from ..runtime_lifecycle.caller_owned_root import (
     run_runtime_cli,
 )
 from .containment import LaneJob
-from .freshness import host_sources, newer_source, package_sources
+from .freshness import host_part, package_parts, stale_parts
 from .package import stage_lane_package
 from .scans import (
     ProcessRecord,
@@ -306,25 +306,31 @@ def test_host(served: bool) -> TestHost:
 
 
 def require_current(host: TestHost) -> None:
-    """Refuse a staged package or test host that is older than a source it is built from."""
+    """Refuse when any staged binary or the test host is older than a source it is built from.
+
+    The refusal names every stale part and the smallest targets that rebuild
+    them and update the package in place.
+    """
+    from ..packaging.native.layout import load_layout
+
     configuration = host.configuration
-    stamp = host.package.parent / "ready"
-    if not stamp.is_file():
+    target = json.loads((_BUILD / "generated" / "identity.json").read_text(encoding="utf-8"))["target"]
+    parts = [
+        *package_parts(host.package, load_layout(target), _BUILD, _REPOSITORY),
+        host_part(host.record, _REPOSITORY),
+    ]
+    stale, missing = stale_parts(parts)
+    if missing:
         raise UnavailableError(
-            f"the {configuration} package was not staged to completion; "
-            f"stage it with: just build-native {configuration} bundle"
+            f"the {configuration} package has no staged {', '.join(missing)}; "
+            f"stage it with: just build-native {configuration} app-payload"
         )
-    for artifact, sources, target in (
-        # The staged desktop image is built from the same crates as the test host.
-        (stamp, [*package_sources(_BUILD), *host_sources(_REPOSITORY)], "bundle"),
-        (host.record, host_sources(_REPOSITORY), "desktop-packaged-host"),
-    ):
-        stale = newer_source(artifact, sources)
-        if stale is not None:
-            raise UnavailableError(
-                f"{stale.artifact} is older than {stale.source}, which it is built from; "
-                f"rebuild it with: just build-native {configuration} {target}"
-            )
+    if stale:
+        named = "; ".join(f"the {part.part} {part.artifact} is older than {part.source}" for part in stale)
+        commands = "; ".join(
+            f"just build-native {configuration} {target}" for target in dict.fromkeys(part.target for part in stale)
+        )
+        raise UnavailableError(f"{named}; rebuild with: {commands}")
 
 
 def stage_package(host: TestHost, destination: Path) -> Path:

@@ -1,24 +1,35 @@
-"""Refuse a lane run on a staged package or test host older than what it is built from.
+"""Refuse a lane run on any staged binary or the test host when it is older than its sources.
 
 A run against stale bytes proves nothing about the sources it appears to test.
-The staged package is built from the inputs CMake declares for it, which name
-the bundled agent's own project files too, and lists in its binary directory;
-the test host is built from the desktop crate, the crates it names by path,
-the interpreter host sources it compiles, and the shell it embeds. Test-only
-files are not built into either, so editing a spec or a unit test leaves both
-current.
+Each part of the staged package is checked on its own, so the refusal names the
+one that is stale and the smallest target that rebuilds it and updates the
+package in place:
+
+- the desktop image, from the desktop crate, the crates it names by path, the
+  interpreter host sources it compiles and the shell it embeds;
+- the background-services manager, from its crate and the crates it names;
+- the interpreter hosts and entry points, from their C sources;
+- the Python product and the bundled agent, from the inputs CMake declares for
+  each in its binary directory, which name the agent's own project files;
+- and the remote-debugging test host, from the same sources as the desktop image.
+
+Test-only files are built into none of them, so editing a spec or a unit test
+leaves every part current. The documentation is never a source of anything the
+lane runs.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
+from typing import Any
 
+from ..packaging.native.layout import entrypoint_files
 from ..source_tree import repository_files
 
-#: What the test host build copies and compiles, relative to the checkout; it
-#: mirrors the members the host's source snapshot takes from ``native``.
+#: What the desktop image and the test host are compiled from; it mirrors the
+#: members the host's source snapshot takes from ``native``, plus the shell.
 HOST_SOURCES = (
     "native/desktop/src-tauri/Cargo.toml",
     "native/desktop/src-tauri/Cargo.lock",
@@ -37,6 +48,8 @@ HOST_SOURCES = (
     "native/interpreter/launch_profile.h",
     "native/desktop/frontend",
 )
+MANAGER_SOURCES = ("native/manager", "native/application", "native/platform", "native/installer")
+INTERPRETER_SOURCES = ("native/interpreter", "native/platform", "native/launch_guard")
 
 _TEST_DIRECTORIES = frozenset({"tests", "testing", "__tests__"})
 
@@ -57,13 +70,15 @@ def built_from(relative: str) -> bool:
 
 @dataclass(frozen=True)
 class Staleness:
-    """The newest source an artifact is older than."""
+    """A built part, the newest source it is older than, and the target that rebuilds it."""
 
+    part: str
     artifact: Path
     source: Path
+    target: str
 
 
-def newer_source(artifact: Path, sources: Iterable[Path]) -> Staleness | None:
+def newer_source(artifact: Path, sources: Iterable[Path]) -> Path | None:
     """The newest of ``sources`` changed after ``artifact`` was written, if any."""
     built = artifact.stat().st_mtime_ns
     newest: tuple[int, Path] | None = None
@@ -74,21 +89,106 @@ def newer_source(artifact: Path, sources: Iterable[Path]) -> Staleness | None:
             continue
         if changed > built and (newest is None or changed > newest[0]):
             newest = (changed, source)
-    return None if newest is None else Staleness(artifact, newest[1])
+    return None if newest is None else newest[1]
 
 
-def host_sources(repository: Path) -> list[Path]:
-    """The checkout files the test host is built from."""
+def checkout_sources(repository: Path, under: Iterable[str]) -> list[Path]:
+    """The checkout files below ``under`` that are built into a product."""
+    return [repository / relative for relative in repository_files(repository, under=under) if built_from(relative)]
+
+
+def declared_inputs(build: Path, listing: str, repository: Path) -> list[Path]:
+    """The inputs a CMake action declares in ``inputs-<listing>.txt``, test-only files aside."""
+    path = build / f"inputs-{listing}.txt"
+    if not path.is_file():
+        return []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    # Another action's output in the binary directory is not a source; its own sources are checked.
+    # The repository's build tooling shapes how a part is made, not the bytes it stages.
+    outputs = build.resolve()
+    tooling = (repository / "dev").resolve()
     return [
-        repository / relative for relative in repository_files(repository, under=HOST_SOURCES) if built_from(relative)
+        Path(line)
+        for line in lines
+        if line.strip()
+        and built_from(Path(line).as_posix())
+        and not Path(line).resolve().is_relative_to(outputs)
+        and not Path(line).resolve().is_relative_to(tooling)
     ]
 
 
-def package_sources(build: Path) -> list[Path]:
-    """The inputs CMake declares for the staged package, the bundled agent's included."""
-    sources: list[Path] = []
-    for listing in sorted(build.glob("inputs-*.txt")):
-        for line in listing.read_text(encoding="utf-8").splitlines():
-            if line.strip() and built_from(Path(line).as_posix()):
-                sources.append(Path(line))
-    return sources
+@dataclass(frozen=True)
+class Part:
+    """One separately built part: where its bytes are, what they come from, what rebuilds them."""
+
+    name: str
+    artifacts: Callable[[], list[Path]]
+    sources: Callable[[], list[Path]]
+    target: str
+
+
+def stale_parts(parts: Iterable[Part]) -> tuple[list[Staleness], list[str]]:
+    """Each part older than one of its sources, and each part with nothing built to check."""
+    stale: list[Staleness] = []
+    missing: list[str] = []
+    for part in parts:
+        artifacts = [artifact for artifact in part.artifacts() if artifact.is_file()]
+        if not artifacts:
+            missing.append(part.name)
+            continue
+        oldest = min(artifacts, key=lambda artifact: artifact.stat().st_mtime_ns)
+        source = newer_source(oldest, part.sources())
+        if source is not None:
+            stale.append(Staleness(part.name, oldest, source, part.target))
+    return stale, missing
+
+
+def package_parts(package: Path, layout: dict[str, Any], build: Path, repository: Path) -> list[Part]:
+    """The separately built parts of a staged package and the in-place targets that refresh them."""
+    packages = package / layout["paths"]["packages"]
+    images = [
+        package / layout["paths"]["executable"],
+        *(package / image for image in entrypoint_files(layout).values()),
+    ]
+    return [
+        Part(
+            "desktop image",
+            lambda: [package / "cadrumo.exe"],
+            lambda: checkout_sources(repository, HOST_SOURCES),
+            "app-native",
+        ),
+        Part(
+            "background-services manager",
+            lambda: [package / "cadrumo-manager.exe"],
+            lambda: checkout_sources(repository, MANAGER_SOURCES),
+            "app-native",
+        ),
+        Part(
+            "interpreter hosts and entry points",
+            lambda: images,
+            lambda: checkout_sources(repository, INTERPRETER_SOURCES),
+            "app-native",
+        ),
+        Part(
+            "Python product",
+            lambda: sorted(packages.glob("cadrumo-*.dist-info/RECORD")),
+            lambda: declared_inputs(build, "product", repository),
+            "app-payload",
+        ),
+        Part(
+            "bundled agent",
+            lambda: sorted(packages.glob("cadrumo_agent-*.dist-info/RECORD")),
+            lambda: declared_inputs(build, "agent", repository),
+            "app-agent",
+        ),
+    ]
+
+
+def host_part(record: Path, repository: Path) -> Part:
+    """The remote-debugging test host, by the record its build writes last."""
+    return Part(
+        "test host",
+        lambda: [record],
+        lambda: checkout_sources(repository, HOST_SOURCES),
+        "desktop-packaged-host",
+    )
