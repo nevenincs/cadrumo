@@ -107,15 +107,17 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         endpoint: Callable[[], BackgroundRunEndpoint | None],
         bearer: bytearray,
         host_token: bytearray,
+        run_ids: Callable[[], str] = lambda: uuid4().hex,
     ) -> None:
         """Bind the ready agent's endpoint and the two secrets this service holds for its gateway.
 
         Both buffers stay owned, and wiped, by the service; a wiped one makes
-        every run refuse as unavailable.
+        every run refuse as unavailable. ``run_ids`` names each new run.
         """
         self._endpoint = endpoint
         self._bearer = bearer
         self._host_token = host_token
+        self._run_ids = run_ids
 
     @override
     def accepted_media(self, lane: ModelRunLane) -> tuple[ModelRunMediaKind, ...] | None:
@@ -162,7 +164,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
                 return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
             data = base64.b64decode(attachment.base64_data, validate=True)
             files.append((f"input-{index}{extension}", hashlib.sha256(data).hexdigest(), data))
-        run_id = uuid4().hex
+        run_id = self._run_ids()
         uploaded = False
         started = False
         try:
