@@ -247,15 +247,23 @@ class AgentHostController:
         return ready
 
     def published(self) -> AgentReady | None:
-        """Return the running agent only while its generations are still current."""
+        """Return the running agent only while its generations are still current.
+
+        A tree whose generations went stale is withheld, not retired: retiring
+        waits on the tree's exit, and that belongs to the lifecycle owner, which
+        replaces the tree and says so, never to whichever reader noticed first.
+        """
         with self._lock:
             ready = self._ready
-        if ready is None:
-            return None
-        if self._credentials.current_generations() != ready.generations:
-            self.stop()
+        if ready is None or self._credentials.current_generations() != ready.generations:
             return None
         return ready
+
+    def superseded(self) -> bool:
+        """Whether a ready tree runs under generations that are no longer current."""
+        with self._lock:
+            ready = self._ready
+        return ready is not None and self._credentials.current_generations() != ready.generations
 
     def stop(self) -> None:
         """Close admission, signal the agent to stop, then end the tree if it overruns."""
@@ -275,11 +283,6 @@ class AgentHostController:
             return process.contains_process_id(process_id)
         except Exception:
             return True
-
-    def restart(self) -> AgentReady:
-        """Retire the current tree and start a new one from the committed credentials."""
-        self._retire()
-        return self.start()
 
     def _start(self) -> AgentReady:
         resolved = self._credentials.resolve_for_agent()

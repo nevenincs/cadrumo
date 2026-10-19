@@ -71,6 +71,8 @@ from .providers.persistence.store import SecureProviderSettingsStore
 
 _LOGGER = get_logger(__name__)
 HOSTED_CERTIFICATION_CACHE_SECONDS = 5.0
+LIFECYCLE_ADMISSION_SECONDS = 2.0
+"""How long a request waits for tree lifecycle work, well inside the desktop's shortest exchange bound."""
 
 
 def service_failure(error: Exception) -> dict[str, Any]:
@@ -174,17 +176,28 @@ class AgentService:
         secret: bytearray | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
-        with self._guard:
-            return self._admin(
-                action,
-                provider=provider,
-                expected_revision=expected_revision,
-                base_url=base_url,
-                choice=choice,
-                method=method,
-                attempt_id=attempt_id,
-                secret=secret,
-            )
+        arguments: dict[str, Any] = {
+            "provider": provider,
+            "expected_revision": expected_revision,
+            "base_url": base_url,
+            "choice": choice,
+            "method": method,
+            "attempt_id": attempt_id,
+            "secret": secret,
+        }
+        if action in {"catalog", "start"}:
+            # Neither changes the tree here: the catalogue reads the published
+            # agent or the declared one, and a start is handed to its own thread.
+            return self._admin(action, **arguments)
+        # Retiring or launching a tree holds the lifecycle lock for as long as
+        # the tree takes; a request answers that it is busy instead of waiting
+        # for its caller's deadline.
+        if not self._guard.acquire(timeout=LIFECYCLE_ADMISSION_SECONDS):
+            return {"kind": "refused", "code": "busy"}
+        try:
+            return self._admin(action, **arguments)
+        finally:
+            self._guard.release()
 
     def _admin(
         self,
@@ -244,12 +257,8 @@ class AgentService:
         if self._auth_attempt is not None and self._auth_attempt.active and action != "stop":
             return {"kind": "refused", "code": "busy"}
         if action == "start":
-            with self._start_request_guard:
-                if self._closing.is_set():
-                    return {"kind": "refused", "code": "service_stopping"}
-                if self._start_thread is None or not self._start_thread.is_alive():
-                    self._start_thread = Thread(target=self._background_start, name="agent-service-start")
-                    self._start_thread.start()
+            if not self._schedule_start():
+                return {"kind": "refused", "code": "service_stopping"}
             return {"kind": "starting"}
         if action == "stop":
             if self._auth_attempt is not None:
@@ -283,7 +292,9 @@ class AgentService:
             )
         else:
             return {"kind": "refused", "code": "invalid_request"}
-        # Startup and background observation revalidate the committed generation.
+        # A tree started under the settings this change superseded is replaced
+        # on the start thread, which retires it and publishes what follows.
+        self._replace_superseded()
         return result.model_dump(mode="json")
 
     def _prepare_sign_in(self, provider: str, *, expected_revision: str, gui: bool = False) -> dict[str, Any]:
@@ -438,6 +449,28 @@ class AgentService:
             self._emit(event)
             return event
 
+    def _schedule_start(self) -> bool:
+        """Hand a start to the start thread unless one is running; ``False`` once the service is closing."""
+        with self._start_request_guard:
+            if self._closing.is_set():
+                return False
+            if self._start_thread is None or not self._start_thread.is_alive():
+                self._start_thread = Thread(target=self._background_start, name="agent-service-start")
+                self._start_thread.start()
+        return True
+
+    def _replace_superseded(self) -> bool:
+        """Start a replacement for a ready tree whose generations moved on while the profile stays signed in.
+
+        The start retires the superseded tree, which publishes ``stopped``, and
+        then publishes the new tree's ready line or the refusal that kept it
+        from starting, so the desktop never keeps showing a retired agent.
+        """
+        controller = self._controller
+        if controller is None or not controller.superseded() or self._credentials.current_generations() is None:
+            return False
+        return self._schedule_start()
+
     def _background_start(self) -> None:
         try:
             result = self.start()
@@ -554,11 +587,11 @@ class AgentService:
         self._store.invalidate_generations()
 
     def observe(self) -> bool:
-        """Revalidate exact generations and synchronously retire any stale tree."""
+        """Revalidate exact generations: replace a superseded tree, or answer ``False`` for the caller to retire it."""
         with self._guard:
             if self._controller is None:
                 return self._store.observe_generations() is not None
-            return self._controller.published() is not None
+            return self._controller.published() is not None or self._replace_superseded()
 
     def stop(self) -> None:
         """Confirm contained shutdown before releasing the tree's ownership."""

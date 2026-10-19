@@ -7,6 +7,7 @@ import json
 import logging
 import sys
 import threading
+import time
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -167,16 +168,29 @@ def test_a_sign_out_while_starting_retires_the_tree_instead_of_publishing_it(tmp
     assert isinstance(grandchild, int) and not _alive(grandchild, within=5)
 
 
-def test_a_key_change_after_start_withdraws_the_published_agent(tmp_path: Path) -> None:
+def test_a_key_change_after_start_withdraws_the_published_agent_and_leaves_its_retirement_to_the_owner(
+    tmp_path: Path,
+) -> None:
     source = _CredentialSource()
     controller = _controller(tmp_path, "ready", source)
     controller.start()
+    grandchild = _received(tmp_path)["grandchild"]
+    assert isinstance(grandchild, int)
     try:
+        assert not controller.superseded()
         source.generations = AgentGenerations(sign_in="login-1", provider_settings="settings-2")
+        started = time.monotonic()
         assert controller.published() is None
-        assert controller.state is AgentHostState.DETACHED
+        # Reading the published agent neither waits on the tree nor ends it.
+        assert time.monotonic() - started < 1
+        assert controller.superseded()
+        assert controller.state is AgentHostState.READY
+        assert _alive(grandchild)
     finally:
         controller.stop()
+    assert controller.state is AgentHostState.DETACHED
+    assert not controller.superseded()
+    assert not _alive(grandchild, within=5)
 
 
 def test_an_agent_speaking_another_hosting_contract_is_not_published(tmp_path: Path) -> None:
