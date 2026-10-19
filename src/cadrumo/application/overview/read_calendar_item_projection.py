@@ -169,6 +169,8 @@ class OverviewCalendarEntrySnapshot(BaseModel):
     local_work_unit_id: WorkUnitId | None
     local_work_unit_name: str | None
     local_work_unit_revision_id: str | None
+    profile_confirmation_required: bool = False
+    missing_profile_information: tuple[str, ...] = ()
 
     @model_validator(mode="after")
     def _canonical(self) -> Self:
@@ -176,13 +178,21 @@ class OverviewCalendarEntrySnapshot(BaseModel):
         return self
 
     @classmethod
-    def from_entry(cls, value: OverviewCalendarEntry) -> Self:
+    def from_entry(
+        cls,
+        value: OverviewCalendarEntry,
+        *,
+        profile_confirmation_required: bool = False,
+        missing_profile_information: tuple[str, ...] = (),
+    ) -> Self:
         """Copy the canonical row while replacing its custom period and actions."""
         data = value.model_dump(mode="python", exclude={"period", "filing_evidence", "recovery", "recovery_action"})
         return cls.model_validate(
             data
             | {
                 "period": str(value.period),
+                "profile_confirmation_required": profile_confirmation_required,
+                "missing_profile_information": missing_profile_information,
                 "filing_evidence": OverviewFilingEvidenceSnapshot.from_evidence(value.filing_evidence),
                 "recovery": OverviewRecoverySnapshot.from_recovery(value.recovery) if value.recovery else None,
                 "recovery_action": PipelineNextActionSnapshot.from_action(value.recovery_action)
@@ -194,7 +204,17 @@ class OverviewCalendarEntrySnapshot(BaseModel):
     def to_entry(self) -> OverviewCalendarEntry:
         """Revalidate deadlines, user state, evidence and recovery consistency."""
         return OverviewCalendarEntry.model_validate(
-            self.model_dump(mode="python", exclude={"period", "filing_evidence", "recovery", "recovery_action"})
+            self.model_dump(
+                mode="python",
+                exclude={
+                    "period",
+                    "filing_evidence",
+                    "recovery",
+                    "recovery_action",
+                    "profile_confirmation_required",
+                    "missing_profile_information",
+                },
+            )
             | {
                 "period": _period(self.period),
                 "filing_evidence": self.filing_evidence.to_evidence(),

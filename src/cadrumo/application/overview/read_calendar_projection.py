@@ -5,12 +5,20 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Self
 
-from pydantic import BaseModel, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt, model_validator
 
+from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.deadlines.models import ObligationStatus
 from .agenda import OverviewAgenda
 from .backlog import OverviewBacklog
-from .calendar_models import CalendarCompleteness, OverviewCalendar, OverviewCalendarRange
+from .calendar_models import (
+    CalendarCompleteness,
+    CalendarWarning,
+    OverviewCalendar,
+    OverviewCalendarEntry,
+    OverviewCalendarRange,
+)
 from .coverage import ObligationCoverageReport
 from .read_calendar_item_projection import (
     OverviewCalendarEntrySnapshot,
@@ -18,6 +26,21 @@ from .read_calendar_item_projection import (
     OverviewCalendarWarningSnapshot,
     OverviewSuppressedEntrySnapshot,
 )
+
+
+def _entry(
+    row: OverviewCalendarEntry, completeness: CalendarCompleteness, warnings: tuple[CalendarWarning, ...]
+) -> OverviewCalendarEntrySnapshot:
+    """Put existing completeness evidence beside the date it qualifies; infer no new tax rule."""
+    return OverviewCalendarEntrySnapshot.from_entry(
+        row,
+        profile_confirmation_required=row.modelo in completeness.defaulted_modelos,
+        missing_profile_information=tuple(
+            tr(warning.message)
+            for warning in warnings
+            if warning.code in completeness.defaulted_keys and row.modelo in warning.affected_modelos
+        ),
+    )
 
 
 class OverviewCalendarSnapshot(BaseModel):
@@ -36,6 +59,15 @@ class OverviewCalendarSnapshot(BaseModel):
     suppressed_entries: tuple[OverviewSuppressedEntrySnapshot, ...]
     events: tuple[OverviewCalendarEventSnapshot, ...]
     coverage: ObligationCoverageReport
+    late_count: NonNegativeInt | None = None
+
+    @model_validator(mode="after")
+    def _late_count_matches_entries(self) -> Self:
+        if self.late_count is not None and self.late_count != sum(
+            row.status is ObligationStatus.OVERDUE for row in self.entries
+        ):
+            raise ValueError("calendar late_count must count only overdue entries")
+        return self
 
     @classmethod
     def from_calendar(cls, value: OverviewCalendar) -> Self:
@@ -43,7 +75,7 @@ class OverviewCalendarSnapshot(BaseModel):
         return cls(
             range=value.range,
             evaluated_on=value.evaluated_on,
-            entries=tuple(OverviewCalendarEntrySnapshot.from_entry(row) for row in value.entries),
+            entries=tuple(_entry(row, value.completeness, value.warnings) for row in value.entries),
             generated_at=value.generated_at,
             warnings=tuple(OverviewCalendarWarningSnapshot.from_warning(row) for row in value.warnings),
             completeness=value.completeness,
@@ -54,6 +86,7 @@ class OverviewCalendarSnapshot(BaseModel):
             ),
             events=tuple(OverviewCalendarEventSnapshot.from_event(row) for row in value.events),
             coverage=value.coverage,
+            late_count=sum(row.status is ObligationStatus.OVERDUE for row in value.entries),
         )
 
     def to_calendar(self) -> OverviewCalendar:
@@ -97,10 +130,10 @@ class OverviewAgendaSnapshot(BaseModel):
         return cls(
             as_of=value.as_of,
             horizon_days=value.horizon_days,
-            next_due=OverviewCalendarEntrySnapshot.from_entry(value.next_due) if value.next_due else None,
-            due_today=tuple(OverviewCalendarEntrySnapshot.from_entry(row) for row in value.due_today),
-            due_soon=tuple(OverviewCalendarEntrySnapshot.from_entry(row) for row in value.due_soon),
-            overdue=tuple(OverviewCalendarEntrySnapshot.from_entry(row) for row in value.overdue),
+            next_due=_entry(value.next_due, value.completeness, value.warnings) if value.next_due else None,
+            due_today=tuple(_entry(row, value.completeness, value.warnings) for row in value.due_today),
+            due_soon=tuple(_entry(row, value.completeness, value.warnings) for row in value.due_soon),
+            overdue=tuple(_entry(row, value.completeness, value.warnings) for row in value.overdue),
             generated_at=value.generated_at,
             warnings=tuple(OverviewCalendarWarningSnapshot.from_warning(row) for row in value.warnings),
             completeness=value.completeness,
@@ -149,7 +182,7 @@ class OverviewBacklogSnapshot(BaseModel):
         return cls(
             range=value.range,
             as_of=value.as_of,
-            items=tuple(OverviewCalendarEntrySnapshot.from_entry(row) for row in value.items),
+            items=tuple(_entry(row, value.completeness, value.warnings) for row in value.items),
             late_count=value.late_count,
             generated_at=value.generated_at,
             warnings=tuple(OverviewCalendarWarningSnapshot.from_warning(row) for row in value.warnings),
