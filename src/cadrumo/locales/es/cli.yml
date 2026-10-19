@@ -4001,9 +4001,28 @@ cli:
       applicability_evidence_disagreement: Tu respuesta en el perfil y tus facturas
         registradas no coinciden sobre si estas obligaciones aplican; las filas siguen
         visibles hasta que corrijas una de las dos.
+      art109_activity_income_withholding_ge_70pct_unset: En tu perfil aún no consta
+        si al menos el 70% de los ingresos de tu actividad empresarial o profesional
+        están sujetos a retención.
+      estimacion_objetiva_unset: En tu perfil aún no consta qué régimen de estimación
+        del IRPF se aplica a tu actividad.
+      has_employees_unset: En tu perfil aún no consta si tienes empleados.
+      intracomunitario_unset: En tu perfil aún no consta si compras o vendes bienes
+        o servicios entre países de la UE.
+      iva_regime_unset: En tu perfil aún no consta qué régimen de IVA se aplica a
+        tu actividad.
       m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
         cálculo forfait del régimen simplificado aún no está disponible; revisa las
         casillas del régimen simplificado antes de presentar.
+      retencion_arrendamientos_unset: En tu perfil aún no consta si pagas alquileres
+        y practicas retenciones sobre ellos.
+      retencion_capital_unset: En tu perfil aún no consta si pagas rendimientos del
+        capital sujetos a retención.
+      retencion_profesionales_unset: En tu perfil aún no consta si pagas honorarios
+        a profesionales y practicas retenciones.
+      terceros_threshold_unset: En tu perfil aún no consta si las operaciones con
+        algún cliente o proveedor superan el umbral anual de declaración del Modelo
+        347.
     year_help: Año de declaración para --period (p. ej. 2024).
   review:
     app_help: 'Tu cola de revisión: clasifica movimientos de tus registros, justificantes

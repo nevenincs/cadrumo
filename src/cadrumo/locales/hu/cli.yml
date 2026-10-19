@@ -3937,9 +3937,28 @@ cli:
       applicability_evidence_disagreement: A profilban adott válaszod és a rögzített
         számláid eltérnek abban, hogy ezek a kötelezettségek vonatkoznak-e rád; a
         sorok láthatók maradnak, amíg a kettő közül az egyiket ki nem javítod.
+      art109_activity_income_withholding_ge_70pct_unset: A profilodban még nem szerepel,
+        hogy vállalkozói vagy szakmai tevékenységed bevételének legalább 70%-ából
+        vonnak-e le adóelőleget.
+      estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
+        melyik személyijövedelemadó-megállapítási rendszer vonatkozik.
+      has_employees_unset: A profilodban még nem szerepel, hogy foglalkoztatsz-e alkalmazottakat.
+      intracomunitario_unset: A profilodban még nem szerepel, hogy vásárolsz vagy
+        értékesítesz-e árut vagy szolgáltatást uniós országok között.
+      iva_regime_unset: A profilodban még nem szerepel, hogy tevékenységedre melyik
+        áfarendszer vonatkozik.
       m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de a simplificado
         forfait számítási motor még nem elérhető; beadás előtt ellenőrizd az egyszerűsített
         rezsim rovatait.
+      retencion_arrendamientos_unset: A profilodban még nem szerepel, hogy fizetsz-e
+        olyan bérleti díjat, amelyből adóelőleget vonsz le.
+      retencion_capital_unset: A profilodban még nem szerepel, hogy fizetsz-e adólevonással
+        járó tőkejövedelmet.
+      retencion_profesionales_unset: A profilodban még nem szerepel, hogy fizetsz-e
+        szakembereknek olyan díjat, amelyből adóelőleget vonsz le.
+      terceros_threshold_unset: A profilodban még nem szerepel, hogy valamely ügyfeleddel
+        vagy beszállítóddal folytatott ügyleteid meghaladják-e a Modelo 347 éves adatszolgáltatási
+        értékhatárát.
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
   review:
     app_help: 'A felülvizsgálati sorod: a nyilvántartás tranzakcióinak, a beérkezett

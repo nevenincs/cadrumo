@@ -8,12 +8,14 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.config import override_settings
+from ....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.models import ObligationStatus
 from ..agenda import build_overview_agenda
 from ..backlog import build_overview_backlog
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
+from ..calendar_warnings import _PROFILE_FIELD_WARNING_META
 from ..read_calendar_projection import OverviewAgendaSnapshot, OverviewBacklogSnapshot, OverviewCalendarSnapshot
 from .calendar_test_support import profile
 
@@ -26,6 +28,12 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
 ) -> None:
     raw: dict[str, object] = {
         "iva.regime": "GENERAL",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": False,
+        "iva.cash_accounting_regime_enrolled": False,
+        "iva.voluntary_sii_enrolled": False,
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": False,
         "irpf.estimation_regime": "directa_normal",
         "has_employees": False,
         "pays_professionals_with_retencion": False,
@@ -60,6 +68,7 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
             assert all(not text.startswith("cli.") for text in row.missing_profile_information)
             if not answered:
                 assert "70" in " ".join(row.missing_profile_information)
+                assert row.missing_profile_information[0].startswith("Your profile does not yet record")
         assert all(not row.profile_confirmation_required for row in rows if row.modelo == "303")
 
     assert captured.to_calendar() == calendar
@@ -71,3 +80,16 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
     data["late_count"] = len(captured.entries)
     with pytest.raises(ValidationError, match="late_count"):
         OverviewCalendarSnapshot.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    ("language", "prefix"),
+    [("en", "Your profile"), ("es", "En tu perfil"), ("ca", "Al teu perfil"), ("hu", "A profilodban")],
+)
+def test_every_profile_gap_has_real_prose_in_every_supported_language(language: str, prefix: str) -> None:
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        for message_key, _action in _PROFILE_FIELD_WARNING_META.values():
+            assert tr(message_key, locale=language).startswith(prefix)
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
