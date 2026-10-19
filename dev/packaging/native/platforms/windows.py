@@ -241,7 +241,7 @@ def resources(
     sys.path.insert(0, str(tools))
     renderer = importlib.import_module("resvg_py")
     png = renderer.svg_to_bytes(
-        svg_path=str(REPO_ROOT / "docs/_static/cadrumo-favicon.svg"), width=256, height=256, skip_system_fonts=True
+        svg_path=str(REPO_ROOT / "docs/_static/cadrumo-icon.svg"), width=256, height=256, skip_system_fonts=True
     )
     with Image.open(io.BytesIO(png)) as icon:
         output = io.BytesIO()

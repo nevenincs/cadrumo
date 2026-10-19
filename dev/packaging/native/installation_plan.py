@@ -113,7 +113,7 @@ def project(payload: Path, identity_file: Path, desktop: str | None, control_roo
             "StartupNotify=true\n"
         ).encode()
         controls[f"usr/share/icons/hicolor/scalable/apps/{value['application_id']}.svg"] = (
-            control_root / "docs/_static/cadrumo-favicon.svg"
+            control_root / "docs/_static/cadrumo-icon.svg"
         ).read_bytes()
     if target.startswith("macos-"):
         plist = {

@@ -70,6 +70,7 @@ inputs.push(
   ...readdirSync(resolve(desktop, "../../docs/_static"))
     .filter((name) => name.endsWith(".woff2"))
     .map((name) => resolve(desktop, "../../docs/_static", name)),
+  resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
   resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
   resolve(desktop, "development-server.json"),
   buildPath("desktop_frontend_generated"),

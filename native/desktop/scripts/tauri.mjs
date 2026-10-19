@@ -131,7 +131,7 @@ contentBuild(
     inputs: [
       process.execPath,
       fileURLToPath(import.meta.url),
-      resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+      resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
       ...readdirSync(resolve(desktop, "frontend/node_modules/@tauri-apps"))
         .filter((name) => name === "cli" || name.startsWith("cli-"))
         .map((name) =>
@@ -150,7 +150,7 @@ contentBuild(
   () =>
     run([
       "icon",
-      resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+      resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
       "--output",
       icons,
     ]),

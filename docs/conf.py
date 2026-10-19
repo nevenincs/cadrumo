@@ -779,7 +779,7 @@ ogp_site_name = _SITE_LABELS["meta_short_title"]
 ogp_site_url = html_baseurl
 ogp_description_length = _DESCRIPTION_LENGTH
 ogp_type = "website"
-ogp_image = "_static/cadrumo-mark-light.svg"
+ogp_image = "_static/cadrumo-icon-square.png"
 
 # ── Syntax highlighting ─────────────────────────────────────────────────────
 # Bare code fences are overwhelmingly operator command transcripts; lexing them

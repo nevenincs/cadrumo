@@ -842,7 +842,7 @@ supplies both explicitly. A staged package's exact bytes are identified by the
 SHA-256 of its `data/package-manifest.json`, which hashes every file. The version belongs to
 `pyproject.toml`. The executable banner, Windows version/icon resources and
 `data/build.json` carry the same identity. The icon derives from the existing
-`docs/_static/cadrumo-favicon.svg`.
+`docs/_static/cadrumo-icon.svg`.
 
 The Windows preset scopes `TEMP`, `TMP` and `TMPDIR` to its build tree before
 compiler discovery and builds. The host embeds a long-path-aware Windows manifest

@@ -201,7 +201,7 @@ function build(variant) {
   };
   run([
     "icon",
-    resolve(desktop, "../../docs/_static/cadrumo-favicon.svg"),
+    resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
     "--output",
     paths.icons,
   ]);

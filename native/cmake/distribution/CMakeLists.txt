@@ -59,7 +59,7 @@ set(installation_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.insta
 include(../CachedCommand.cmake)
 set(installation_inputs "${CADRUMO_PAYLOAD}" "${CADRUMO_PATH_GENERATED}/identity.json"
   "${CMAKE_BINARY_DIR}/build-paths.json" "${CADRUMO_SOURCE_ROOT}/LICENSE" "${CADRUMO_SOURCE_ROOT}/NOTICE"
-  "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-favicon.svg")
+  "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-icon.svg")
 foreach(helper installation installation_plan installation_currency installation_filesystem installation_reuse distribution_prepare build_paths hashing layout package_inventory docs_stage macos_launchagent linux_desktop_runtime)
   list(APPEND installation_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
 endforeach()

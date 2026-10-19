@@ -33,7 +33,7 @@ set(application_manifests "${CONTRACT_DIR}/process-release.manifest" "${CONTRACT
 set(process_manifest "${CONTRACT_DIR}/process-$<IF:$<CONFIG:Debug>,development,release>.manifest")
 cadrumo_cached_command(metadata_command native_metadata SHARED
   INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
-    "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${CADRUMO_PATH_TOOLS}/ready"
+    "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-icon.svg" "${CADRUMO_PATH_TOOLS}/ready"
     "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"
     "${CMAKE_CURRENT_SOURCE_DIR}/desktop/src-tauri/windows/desktop.manifest"
   OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"

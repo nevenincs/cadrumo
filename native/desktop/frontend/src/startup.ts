@@ -1,5 +1,5 @@
 import { tauriStartup } from "./shell/tauriStartup";
-import mark from "../../../../docs/_static/cadrumo-favicon.svg";
+import mark from "../../../../docs/_static/cadrumo-icon.svg";
 import { identity } from "virtual:desktop-content";
 import catalogue from "virtual:desktop-strings";
 import "./styles/startup.css";

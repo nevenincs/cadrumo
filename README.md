@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/_static/readme/cadrumo-logo.svg" alt="Cadrumo logo" width="136">
+  <img src="docs/_static/cadrumo-icon.svg" alt="Cadrumo logo" width="136">
 </p>
 
 # Cadrumo
