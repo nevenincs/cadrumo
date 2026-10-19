@@ -1297,7 +1297,7 @@ eval-agent-live SCENARIO="modelo_130_dr130" RUNS="3" *FLAGS:
 [doc('Run the shared agent specs against the packaged desktop window on a fresh lane root (signed-in Windows desktop).')]
 [group('test')]
 desktop-agent-live *ARGS:
-    uv run --no-sync python -m dev.desktop_agent_live {{ARGS}}
+    uv run --no-sync --env-file env/.env python -m dev.desktop_agent_live {{ARGS}}
 
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]
