@@ -8,7 +8,7 @@ import subprocess
 import sys
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from .....core.child_console import child_console_creation_flags
 from .....core.package_interpreter import interpreter_command
@@ -19,6 +19,9 @@ from ._kdf_worker_limits import (
     PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,
     PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,
 )
+
+#: ABOVE_NORMAL_PRIORITY_CLASS, spelled as a literal so the value is defined on every platform.
+WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS: Final = 0x00008000
 
 
 def launch_worker(
@@ -115,7 +118,12 @@ def worker_command(
         common["startupinfo"] = startupinfo
         # A supervised runtime's stop is a console Ctrl+C; its own console keeps
         # the worker out of that event so the runtime alone decides its end.
-        common["creationflags"] = child_console_creation_flags()
+        # Argon2 lanes meet at a barrier on every slice, so on a host saturated
+        # by normal-priority work each pass waits on its most-starved lane and a
+        # sub-second derivation stretches to tens of seconds. The person is
+        # waiting on this one bounded child, so it is scheduled ahead of
+        # background work; its Job Object CPU-time limit still bounds it.
+        common["creationflags"] = child_console_creation_flags() | WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS
         command.extend(("--request-handle", str(request_handle), "--result-handle", str(result_handle)))
     else:
         descriptor_bound = os.sysconf("SC_OPEN_MAX")
@@ -211,6 +219,7 @@ def terminate_process_tree(process: subprocess.Popen[bytes], job: _WindowsJob | 
 
 
 __all__ = [
+    "WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS",
     "apply_posix_worker_limits",
     "clear_worker_handle_inheritance",
     "launch_worker",

@@ -19,6 +19,7 @@ import pytest
 
 from ......core.config import Settings, override_settings
 from ......core.pid_liveness import pid_is_alive
+from .. import kdf_supervision
 from .._kdf_attestation import (
     expected_kdf_worker_limits,
     kdf_worker_platform,
@@ -642,6 +643,94 @@ def test_a_correct_password_waits_out_another_derivation_holding_the_permit(tmp_
 
     assert unlock.dek == _DEK
     assert waited >= _PERMIT_HELD_SECONDS - 1
+
+
+def _stall(process: subprocess.Popen[bytes]) -> None:
+    """Stop a live child without ending it, as a starved host stops a derivation."""
+    if sys.platform == "win32":
+        import ctypes
+
+        ntdll = ctypes.WinDLL("ntdll")
+        status = ntdll.NtSuspendProcess(ctypes.c_void_p(int(cast(Any, process)._handle)))
+        assert status == 0, hex(status & 0xFFFFFFFF)
+    else:
+        import signal
+
+        os.kill(process.pid, signal.SIGSTOP)
+
+
+def _permit_is_free(settings: Settings) -> bool:
+    """Take and release the installation's KDF permit without waiting for it."""
+    if not kdf_supervision._KDF_THREAD_LEASE.acquire(blocking=False):
+        return False
+    try:
+        root = settings.cadrumo_local_storage_root.resolve(strict=True)
+        descriptor = os.open(root / "profile-kdf.v1.lock", os.O_RDWR | getattr(os, "O_BINARY", 0))
+        try:
+            if sys.platform == "win32":
+                import msvcrt
+
+                try:
+                    msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+                except OSError:
+                    return False
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                try:
+                    fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except OSError:
+                    return False
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+            return True
+        finally:
+            os.close(descriptor)
+    finally:
+        kdf_supervision._KDF_THREAD_LEASE.release()
+
+
+def test_a_stalled_derivation_releases_its_permit_child_and_pipes_so_the_retry_proceeds(tmp_path: Path) -> None:
+    """A child that stops after attesting times out, and leaves nothing held behind it.
+
+    This is a sign-in on a saturated host: the prewarmed child has proved its
+    limits and taken the request, then makes no progress until the unwrap's
+    deadline. The refusal must release the installation's permit, the child
+    and its pipes before it returns, so the person's immediate retry derives in
+    a fresh child under the full budget. The stall is a real suspended
+    process, so the short budget here decides only when the refusal comes.
+    """
+    envelope, sentinel = _unlock_inputs()
+    settings = _settings(tmp_path)
+    prewarm = kdf_supervision.ProfileKdfPrewarm(settings=settings)
+    # The launch returns only once the spare has attested its limits.
+    prewarm._launch()
+    stalled = prewarm._spare
+    assert stalled is not None
+    stalled_process = stalled._process
+    assert stalled_process is not None
+    try:
+        _stall(stalled_process)
+
+        with prewarm.bound(), pytest.raises(ProfileCustodyRefusedError) as captured:
+            unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, timeout_seconds=2.0)
+
+        assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
+        assert stalled_process.returncode is not None
+        assert stalled._process is None and stalled._job is None
+        assert stalled._request_fd is None and stalled._result_fd is None
+        assert stalled._neutral_directory is None
+        assert _permit_is_free(settings)
+
+        with prewarm.bound():
+            unlock = unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings)
+        assert unlock.dek == _DEK
+    finally:
+        prewarm.close()
+        if stalled_process.poll() is None:
+            stalled_process.kill()
+            stalled_process.wait(timeout=10)
 
 
 def test_a_budget_spent_waiting_for_the_permit_is_refused_as_a_resource_limit(tmp_path: Path) -> None:
