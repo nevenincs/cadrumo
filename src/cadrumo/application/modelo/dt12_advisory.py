@@ -24,21 +24,22 @@ if TYPE_CHECKING:
 
 
 _DT12_TRABAJO_INGRESO_ROLE = "irpf_rendimiento_trabajo_importe_integro_dinerario"
-_DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
+DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _DT12_LARGE_TRABAJO_THRESHOLD = Decimal("20000")
 
 
 # Registry authority: selected DT12 declarations are consumed through the pinned operation and dated mapping fact
-def _registry_dt12_declaration(
+def resolve_dt12_verification_mapping(
     revision: object,
     *,
     operation: PinnedAuthorityOperation,
+    fact_id: str,
 ) -> ResolvedMappingFact:
-    """Resolve selected Modelo 100 context and the dated DT12 mapping fact."""
+    """Resolve one DT12 verification mapping fact dated at the selected revision's end."""
     effective_date = getattr(revision, "valid_to", None) or today_madrid()
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
-            fact_id="lirpf-dt12-reduction-verification-mapping",
+            fact_id=fact_id,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
         ),
@@ -68,7 +69,7 @@ def dt12_reduccion_advisory_finding(
         )
         reduccion_id = casilla_id_for_unique_revision_semantic_role(
             revision,
-            _DT12_TRABAJO_REDUCCION_ROLE,
+            DT12_TRABAJO_REDUCCION_ROLE,
         )
     except AmbiguousSemanticRoleCasillaError as exc:
         raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
@@ -81,7 +82,9 @@ def dt12_reduccion_advisory_finding(
     if ingreso_value <= _DT12_LARGE_TRABAJO_THRESHOLD or reduccion_value != Decimal(0):
         return None
 
-    declaration = _registry_dt12_declaration(revision, operation=operation)
+    declaration = resolve_dt12_verification_mapping(
+        revision, operation=operation, fact_id="lirpf-dt12-reduction-verification-mapping"
+    )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.WARNING,
@@ -97,4 +100,4 @@ def dt12_reduccion_advisory_finding(
     )
 
 
-__all__ = ["dt12_reduccion_advisory_finding"]
+__all__ = ["DT12_TRABAJO_REDUCCION_ROLE", "dt12_reduccion_advisory_finding", "resolve_dt12_verification_mapping"]

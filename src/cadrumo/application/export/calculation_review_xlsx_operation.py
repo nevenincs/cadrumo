@@ -13,17 +13,12 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.external_constants import OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -32,16 +27,9 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ..ledger.read_access import resolve_ledger_commit_access
-from ..modelo.export_sink import LocalFileExportSink
+from ..modelo.export_sink import LocalFileExportReceipt, LocalFileExportSink
+from ..modelo.local_file_export_publication import LOCAL_FILE_EXPORT_CAPABILITIES, publish_local_file_export
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
 from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationIdentity,
@@ -167,31 +155,30 @@ class CalculationReviewXlsxExecutor:
         )
         data = await asyncio.to_thread(ports.materialize, plan)
 
-        async def publish() -> str:
-            async with context.cancellation.irreversible_section():
-                require_operation_profile(request, context, payload.profile_id)
-                sink.require_writable()
-                await context.events.effect(OperationEffect.UNKNOWN)
-                receipt = await asyncio.to_thread(sink.write, data)
-                await context.events.effect(OperationEffect.UPDATED)
-                result = CalculationReviewXlsxResult(
-                    profile_id=payload.profile_id,
-                    calculation_revision_id=payload.calculation_revision_id,
-                    work_unit_id=selection.work_unit_id,
-                    output_path=str(receipt.path),
-                    byte_size=receipt.byte_size,
-                    file_sha256=receipt.sha256,
-                    snapshot_digest=snapshot.snapshot_digest,
-                    title=plan.metadata.title,
-                    calculation_state=lifecycle.state,
-                    review_status=snapshot.status,
-                )
-                return await context.operands.put(
-                    CalculationReviewXlsxExecutionResult(identity=context.identity, result=result),
-                    written_at=now(),
-                )
+        def published_result(receipt: LocalFileExportReceipt) -> CalculationReviewXlsxExecutionResult:
+            result = CalculationReviewXlsxResult(
+                profile_id=payload.profile_id,
+                calculation_revision_id=payload.calculation_revision_id,
+                work_unit_id=selection.work_unit_id,
+                output_path=str(receipt.path),
+                byte_size=receipt.byte_size,
+                file_sha256=receipt.sha256,
+                snapshot_digest=snapshot.snapshot_digest,
+                title=plan.metadata.title,
+                calculation_state=lifecycle.state,
+                review_status=snapshot.status,
+            )
+            return CalculationReviewXlsxExecutionResult(identity=context.identity, result=result)
 
-        return await await_cancellation_complete(publish(), task_name="calculation-review-xlsx-publication")
+        return await publish_local_file_export(
+            request,
+            context,
+            profile_id=payload.profile_id,
+            sink=sink,
+            data=data,
+            result=published_result,
+            task_name="calculation-review-xlsx-publication",
+        )
 
 
 def build_calculation_review_xlsx_definition(factory: CalculationReviewXlsxPortsFactory) -> OperationDefinition:
@@ -203,19 +190,7 @@ def build_calculation_review_xlsx_definition(factory: CalculationReviewXlsxPorts
         result_type=CalculationReviewXlsxExecutionResult,
         executor_type=CalculationReviewXlsxExecutor,
         build=lambda: CalculationReviewXlsxExecutor(factory),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.REQUEST_BOUND,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=LOCAL_FILE_EXPORT_CAPABILITIES,
     )
 
 

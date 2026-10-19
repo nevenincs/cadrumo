@@ -7,12 +7,7 @@ from dataclasses import replace
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
+from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy
 
 from ...core.operations import (
     OperationCancellation,
@@ -37,6 +32,7 @@ from ..operations.capabilities import (
 from ..operations.interactions import OperationInteractionRequest
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.projection_disclosure import profile_and_tax_value_projection_disclosures
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -68,21 +64,7 @@ def resolve_google_review_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    disclosures = resolved.policy.disclosures
-    if context.action in {AccessAction.RESULT, AccessAction.REVIEW, AccessAction.RESPOND}:
-        schema = (
-            context.contract.result_schema
-            if context.action is AccessAction.RESULT
-            else context.contract.review_projection_schema
-        )
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id, projection_id=schema.schema_id, category=category
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
+    disclosures = profile_and_tax_value_projection_disclosures(context, resolved.policy.disclosures)
     return replace(
         resolved,
         policy=OperationAccessPolicy.model_validate(

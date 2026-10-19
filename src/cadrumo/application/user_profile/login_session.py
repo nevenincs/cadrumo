@@ -378,14 +378,7 @@ def authenticate_profile_candidate(
     target = resolve_login_target(str(bucket_id))
     if target.bucket_id != str(bucket_id):
         _refuse_login_candidate("candidate target differs from the requested profile")
-    evaluation = _profile_login_sessions().evaluate_throttle(
-        storage_root=storage_root,
-        bucket_id=target.bucket_id,
-        now=instant,
-    )
-    if evaluation.throttled:
-        raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
-    candidate = _authenticate_candidate_or_record_failure(
+    candidate = _authenticate_unthrottled_candidate(
         bucket_id=target.bucket_id,
         storage_root=storage_root,
         now=instant,
@@ -393,7 +386,6 @@ def authenticate_profile_candidate(
         profile_decode_context=profile_decode_context,
     )
     try:
-        _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=target.bucket_id)
         yield ProfileLoginCandidate(
             outcome=ProfileLoginOutcome(
                 bucket_id=target.bucket_id,
@@ -483,16 +475,7 @@ def authenticate_profile_for_invocation(
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(name)
-
-    evaluation = _profile_login_sessions().evaluate_throttle(
-        storage_root=storage_root,
-        bucket_id=target.bucket_id,
-        now=instant,
-    )
-    if evaluation.throttled:
-        raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
-
-    candidate = _authenticate_candidate_or_record_failure(
+    candidate = _authenticate_unthrottled_candidate(
         bucket_id=target.bucket_id,
         storage_root=storage_root,
         now=instant,
@@ -500,7 +483,6 @@ def authenticate_profile_for_invocation(
         profile_decode_context=profile_decode_context,
     )
     try:
-        _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=target.bucket_id)
         previous_live = _profile_login_sessions().current_session()
         if previous_live is not None and previous_live.bucket_id != candidate.bucket_id:
             previous_live.close()
@@ -520,6 +502,36 @@ def authenticate_profile_for_invocation(
         already_authenticated=False,
         closed_previous_bucket_id=None,
     )
+
+
+def _authenticate_unthrottled_candidate(
+    *,
+    bucket_id: str,
+    storage_root: Path,
+    now: datetime,
+    passphrase_callback: Callable[[], str] | None,
+    profile_decode_context: ProfileDecodeContext,
+) -> _CandidateProfileLogin:
+    """Refuse a throttled profile, prove the password, then clear its failure count.
+
+    A candidate whose throttle reset fails is closed before the error propagates.
+    """
+    evaluation = _profile_login_sessions().evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
+    if evaluation.throttled:
+        raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+    candidate = _authenticate_candidate_or_record_failure(
+        bucket_id=bucket_id,
+        storage_root=storage_root,
+        now=now,
+        passphrase_callback=passphrase_callback,
+        profile_decode_context=profile_decode_context,
+    )
+    try:
+        _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
+    except BaseException:
+        candidate.close()
+        raise
+    return candidate
 
 
 def _resolve_login_password(callback: Callable[[], str] | None) -> str:

@@ -8,12 +8,7 @@ from dataclasses import replace
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-)
+from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy
 
 from ...core.operations import (
     OperationCancellation,
@@ -36,6 +31,7 @@ from ..operations.capabilities import (
 )
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.projection_disclosure import profile_and_tax_value_projection_disclosures
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -96,21 +92,7 @@ def resolve_google_configuration_access(
         actions |= {AccessAction.COMMIT}
     if request.definition_id == GOOGLE_LOGIN_OPERATION_DEFINITION_ID:
         actions |= {AccessAction.REVIEW, AccessAction.RESPOND}
-    disclosures = resolved.policy.disclosures
-    if context.action in {AccessAction.RESULT, AccessAction.REVIEW, AccessAction.RESPOND}:
-        schema = (
-            context.contract.result_schema
-            if context.action is AccessAction.RESULT
-            else context.contract.review_projection_schema
-        )
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id, projection_id=schema.schema_id, category=category
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
+    disclosures = profile_and_tax_value_projection_disclosures(context, resolved.policy.disclosures)
     return replace(
         resolved,
         policy=OperationAccessPolicy.model_validate(
