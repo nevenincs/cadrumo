@@ -32,7 +32,7 @@ import os
 import sqlite3
 import threading
 import time
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from pathlib import Path
 from typing import Final
 
@@ -47,6 +47,9 @@ _SCHEMA = """
 CREATE TABLE IF NOT EXISTS digests (
     path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL,
     ino TEXT NOT NULL, hashed INTEGER NOT NULL, sha256 TEXT NOT NULL
+) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS transformed (
+    raw TEXT NOT NULL, treatment TEXT NOT NULL, sha256 TEXT NOT NULL, PRIMARY KEY (raw, treatment)
 ) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS meta (name TEXT PRIMARY KEY, value INTEGER NOT NULL) WITHOUT ROWID;
 DROP TABLE IF EXISTS entries;
@@ -64,6 +67,8 @@ class _Cache:
     def __init__(self, file: Path) -> None:
         self.file = file
         self.recorded: dict[str, tuple[int, int, str, int, str]] = {}
+        self.transformed: dict[tuple[str, str], str] = {}
+        self.new_transformed = False
         self.guard = threading.Lock()
         self._connection: sqlite3.Connection | None = None
 
@@ -110,14 +115,41 @@ class _Cache:
                 self.recorded[name] = (*key, hashed, value)
         return value
 
+    def transformed_digest(self, raw: str, treatment: str) -> str | None:
+        with self.guard:
+            known = self.transformed.get((raw, treatment))
+            if known is not None:
+                return known
+            try:
+                row = (
+                    self._connect()
+                    .execute("SELECT sha256 FROM transformed WHERE raw = ? AND treatment = ?", (raw, treatment))
+                    .fetchone()
+                )
+            except sqlite3.Error:
+                return None
+        return None if row is None else str(row[0])
+
+    def record_transformed(self, raw: str, treatment: str, value: str) -> None:
+        with self.guard:
+            self.transformed[(raw, treatment)] = value
+            self.new_transformed = True
+
+
     def flush(self) -> None:
         """Write this process's new rows, keeping the newest row per path; nothing when none is new."""
         with self.guard:
             recorded, self.recorded = self.recorded, {}
-            if not recorded:
+            transformed = self.transformed if self.new_transformed else {}
+            self.new_transformed = False
+            if not recorded and not transformed:
                 return
             connection = self._connect()
             with connection:
+                connection.executemany(
+                    "INSERT OR IGNORE INTO transformed (raw, treatment, sha256) VALUES (?, ?, ?)",
+                    [(raw, treatment, value) for (raw, treatment), value in transformed.items()],
+                )
                 connection.executemany(
                     "INSERT INTO digests (path, size, mtime, ino, hashed, sha256) VALUES (?, ?, ?, ?, ?, ?) "
                     "ON CONFLICT(path) DO UPDATE SET size = excluded.size, mtime = excluded.mtime, "
@@ -176,6 +208,26 @@ def digest(path: Path) -> str:
     """Hash one build input or delivered file: the lowercase hex SHA-256 of its bytes."""
     cache = _current()
     return _hash(path) if cache is None else cache.digest(path)
+
+
+def transformed_digest(path: Path, treatment: str, transform: Callable[[bytes], bytes]) -> str:
+    """The SHA-256 of ``transform`` applied to the file's bytes, ``treatment`` naming what it does.
+
+    A transformation is a pure function of the bytes it is given, so inside the
+    cache its result is reused for any file with the same raw digest and the
+    same treatment, without reading the file. The bytes it is computed from are
+    the bytes it is recorded for, even when the file changes meanwhile.
+    """
+    cache = _current()
+    if cache is not None:
+        known = cache.transformed_digest(cache.digest(path), treatment)
+        if known is not None:
+            return known
+    raw = path.read_bytes()
+    value = hashlib.sha256(transform(raw)).hexdigest()
+    if cache is not None:
+        cache.record_transformed(hashlib.sha256(raw).hexdigest(), treatment, value)
+    return value
 
 
 @contextlib.contextmanager

@@ -11,6 +11,7 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from contextlib import nullcontext
+from functools import partial
 from importlib.metadata import version
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -22,7 +23,7 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev._paths import AUTHORITY_ROOT_ENV, REPO_ROOT
 from dev.first_party_source import PYTEST_CONFTEST
-from dev.source_tree import content_digest, member_content_digest, normalised_contents, repository_files, snapshot
+from dev.source_tree import line_ending_policies, normalise_with, repository_files, snapshot
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
@@ -32,7 +33,7 @@ from .build_directory import require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .build_toolchain import selected_uv
-from .hashing import digest
+from .hashing import digest, digest_cache, transformed_digest
 from .target import uv_environment, uv_platform
 
 BUNDLED_EXTRAS: tuple[str, ...] = ("llm", "browser")
@@ -116,6 +117,28 @@ def _membership_changed(detail: str) -> RuntimeError:
     )
 
 
+def _normalised_digest(root: Path, relative: str, policy: str) -> str:
+    """The digest of one source file's content as the repository records it."""
+    return transformed_digest(root / relative, f"line-endings:{policy}", partial(normalise_with, policy))
+
+
+def _framed_digest(digests: Mapping[str, str]) -> str:
+    """Frame member digests exactly as ``source_tree.member_content_digest`` frames member bytes."""
+    framed = hashlib.sha256()
+    for relative in sorted(digests):
+        framed.update(relative.encode("utf-8"))
+        framed.update(b"\0")
+        framed.update(bytes.fromhex(digests[relative]))
+        framed.update(b"\n")
+    return framed.hexdigest()
+
+
+def _source_digest(root: Path, files: tuple[str, ...]) -> str:
+    """``source_tree.content_digest`` of ``files``, answered from the digest cache where it can be."""
+    policies = line_ending_policies(root, files)
+    return _framed_digest({relative: _normalised_digest(root, relative, policies[relative]) for relative in files})
+
+
 def _capture_product_source_snapshot(root: Path, destination: Path, inputs: Path | None) -> None:
     """Capture and verify one coherent, enrolled source set before building any wheel."""
     root = root.resolve()
@@ -140,10 +163,10 @@ def _capture_product_source_snapshot(root: Path, destination: Path, inputs: Path
             raise _membership_changed(f"{missing[0]} is absent from inputs-product.txt")
         enrolled = set(file_members & manifest_members)
     enrolled_members = tuple(sorted(enrolled))
-    before = content_digest(root, enrolled_members)
+    before = _source_digest(root, enrolled_members)
 
     _sync_source_snapshot(root, files, destination)
-    captured = member_content_digest(enrolled_members, lambda name: (destination / name).read_bytes())
+    captured = _framed_digest({name: digest(destination / name) for name in enrolled_members})
     captured_package_members = frozenset(
         name for name in repository_files(destination, under=source_roots) if not _excluded_product_input(name)
     )
@@ -161,7 +184,7 @@ def _capture_product_source_snapshot(root: Path, destination: Path, inputs: Path
         if missing:
             raise _membership_changed(f"{missing[0]} is absent from inputs-product.txt")
 
-    after = content_digest(root, enrolled_members)
+    after = _source_digest(root, enrolled_members)
     if before != captured or captured != after:
         raise RuntimeError(
             "Enrolled product source content changed while capturing the wheel inputs; "
@@ -194,12 +217,14 @@ def _sync_source_snapshot(root: Path, files: tuple[str, ...], destination: Path)
         if relative not in expected:
             path.unlink()
     # The line-ending rules are read once for every file, not once per file.
-    for relative, content in normalised_contents(root, files):
+    policies = line_ending_policies(root, files)
+    for relative in files:
         path = destination / relative
-        if path.is_file() and path.read_bytes() == content:
+        expected = _normalised_digest(root, relative, policies[relative])
+        if path.is_file() and digest(path) == expected:
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(content)
+        path.write_bytes(normalise_with(policies[relative], (root / relative).read_bytes()))
         shutil.copystat(root / relative, path)
     for directory in sorted(destination.rglob("*"), reverse=True):
         if directory.is_dir() and not any(directory.iterdir()):
@@ -304,7 +329,8 @@ def build_product(
     dependencies = dependencies.resolve(strict=True)
     uv = selected_uv(build_toolchain, executable=uv_executable)
     source = output / "source"
-    with timings.phase("source-snapshot") if timings is not None else nullcontext():
+    # The binary directory's digest cache answers for every unchanged source file.
+    with timings.phase("source-snapshot") if timings is not None else nullcontext(), digest_cache(output.parent):
         _capture_product_source_snapshot(REPO_ROOT, source, inputs)
     with timings.phase("published-authority-staging") if timings is not None else nullcontext():
         _stage_product_authority(REPO_ROOT, source)
