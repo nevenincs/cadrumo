@@ -97,7 +97,7 @@ pub struct AboutInfo {
 fn desktop() -> Desktop {
     Desktop {
         version: option_env!("CADRUMO_ID_VERSION").map(str::to_owned),
-        build_id: option_env!("CADRUMO_BUILD_ID").map(str::to_owned),
+        build_id: option_env!("CADRUMO_DESKTOP_BUILD_ID").map(str::to_owned),
         build_type: if cfg!(debug_assertions) {
             "debug"
         } else {
@@ -216,8 +216,9 @@ fn read(about: &About) -> Result<AboutInfo> {
         .as_ref()
         .ok_or_else(unavailable)?
         .under(&about.root);
-    let bytes = std::fs::read(&path)
-        .map_err(|e| ApplicationError::new(ErrorCode::ReadFailed, Operation::Package).caused_by(e))?;
+    let bytes = std::fs::read(&path).map_err(|e| {
+        ApplicationError::new(ErrorCode::ReadFailed, Operation::Package).caused_by(e)
+    })?;
     let manifest: Value = serde_json::from_slice(&bytes).map_err(|e| unavailable().caused_by(e))?;
     if !manifest.is_object() {
         return Err(unavailable());
@@ -274,7 +275,10 @@ mod tests {
             ),
             host(),
         );
-        assert_eq!(info.display_version.as_deref(), Some("0.6.0+2026101903.debug"));
+        assert_eq!(
+            info.display_version.as_deref(),
+            Some("0.6.0+2026101903.debug")
+        );
         assert_eq!(info.build_id.as_deref(), Some("2026101903"));
         assert_eq!(info.build_type.as_deref(), Some("debug"));
         assert_eq!(info.channel.as_deref(), Some("stable"));
@@ -305,7 +309,9 @@ mod tests {
     #[test]
     fn keys_the_manifest_does_not_state_stay_absent() {
         let info = project(
-            &manifest(r#"{"build": {"version": "0.6.0"}, "python": "3.13.11", "distributions": {}}"#),
+            &manifest(
+                r#"{"build": {"version": "0.6.0"}, "python": "3.13.11", "distributions": {}}"#,
+            ),
             host(),
         );
         assert_eq!(info.version.as_deref(), Some("0.6.0"));
@@ -348,7 +354,11 @@ mod tests {
         let own = desktop();
         assert_eq!(
             own.build_type,
-            if cfg!(debug_assertions) { "debug" } else { "release" }
+            if cfg!(debug_assertions) {
+                "debug"
+            } else {
+                "release"
+            }
         );
     }
 
@@ -363,6 +373,9 @@ mod tests {
             root: PathBuf::new(),
             manifest: None,
         };
-        assert_eq!(read(&without).unwrap_err().code, ErrorCode::PackageUnavailable);
+        assert_eq!(
+            read(&without).unwrap_err().code,
+            ErrorCode::PackageUnavailable
+        );
     }
 }

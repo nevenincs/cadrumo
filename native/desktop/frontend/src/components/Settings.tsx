@@ -1,4 +1,6 @@
 import { useId, useRef, useState, type ReactNode } from "react";
+import { identity } from "virtual:desktop-content";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { LanguageSelect, type LanguageControl } from "./LanguageSelect";
@@ -12,6 +14,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
+import { versionLine, type AboutState } from "../shell/about";
 import { terminalFontPx } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 
@@ -60,6 +63,7 @@ export function Settings({
   close,
   advisory,
   account,
+  about,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
@@ -71,6 +75,9 @@ export function Settings({
   advisory?: ReactNode;
   /** The profile's Google account, after the window's section. */
   account?: ReactNode;
+  /** The installation's version row, which opens the About dialog; absent
+   * where the host cannot say what is installed. */
+  about?: { state: AboutState | null; onOpen: () => void };
 }) {
   const t = useStrings();
   const windowId = useId();
@@ -183,6 +190,30 @@ export function Settings({
           </Button>
         </section>
         {account}
+        {about && (
+          <button
+            type="button"
+            data-about-open
+            className="flex min-w-0 items-center justify-between gap-2 rounded-md px-1 py-1 text-left text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            title={t("desktop.about.settings_hint")}
+            onClick={about.onOpen}
+          >
+            <span className="min-w-0 break-words">
+              {t("desktop.about.version_row", {
+                version:
+                  (about.state?.status === "ready"
+                    ? versionLine(about.state.info)
+                    : null) ?? identity.version,
+              })}
+            </span>
+            {about.state?.status === "ready" &&
+              about.state.info.build_type === "debug" && (
+                <Badge variant="warning">
+                  {t("desktop.about.debug_badge")}
+                </Badge>
+              )}
+          </button>
+        )}
       </PopoverContent>
     </Popover>
   );

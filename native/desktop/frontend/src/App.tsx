@@ -62,8 +62,10 @@ import { SetupDialog } from "./components/setup/SetupDialog";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
 import { liveRun, needsSetup, setupTargetOf, useSetup } from "./shell/setup";
+import { useAbout } from "./shell/about";
 import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
+import { AboutDialog } from "./components/AboutDialog";
 import { AccountMenu } from "./components/AccountMenu";
 import { Titlebar } from "./components/Titlebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -240,6 +242,8 @@ export function App({ host }: { host: Host }) {
   });
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const about = useAbout(host);
   const [menu, setMenu] = useState<OpenMenu | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   // The sign-in dialog opens by itself whenever the TUI becomes gated; a
@@ -1277,6 +1281,18 @@ export function App({ host }: { host: Host }) {
         run: () => setSettingsOpen((open) => !open),
       },
       {
+        id: "about.open",
+        label: t("desktop.about.open"),
+        group: "general",
+        icon: "info",
+        keywords: "version build",
+        enabled: () => about !== null,
+        run: () => {
+          setSettingsOpen(false);
+          setAboutOpen(true);
+        },
+      },
+      {
         id: "setup.open",
         label: t("desktop.setup.palette_open"),
         group: "setup",
@@ -1517,6 +1533,7 @@ export function App({ host }: { host: Host }) {
     ],
     [
       t,
+      about,
       agentVisible,
       tuiVisible,
       docsVisible,
@@ -2414,6 +2431,14 @@ export function App({ host }: { host: Host }) {
               }}
               onSignOut={signOut}
               onCreate={askNewProfile}
+              onAbout={
+                about
+                  ? () => {
+                      setSettingsOpen(false);
+                      setAboutOpen(true);
+                    }
+                  : undefined
+              }
             />
           </Titlebar>
           <div
@@ -2671,6 +2696,17 @@ export function App({ host }: { host: Host }) {
                 setPrefs={setPrefs}
                 language={languageControl}
                 close={() => setSettingsOpen(false)}
+                about={
+                  about
+                    ? {
+                        state: about,
+                        onOpen: () => {
+                          setSettingsOpen(false);
+                          setAboutOpen(true);
+                        },
+                      }
+                    : undefined
+                }
                 onReset={() => {
                   setPrefs(DEFAULT_PREFS);
                   setLayout(DEFAULT_LAYOUT);
@@ -2697,6 +2733,12 @@ export function App({ host }: { host: Host }) {
                 }
               />
             )}
+            <AboutDialog
+              open={aboutOpen && about !== null}
+              onOpenChange={setAboutOpen}
+              state={about}
+              onCopy={copy}
+            />
             {paletteOpen && (
               <CommandPalette
                 actions={actions}

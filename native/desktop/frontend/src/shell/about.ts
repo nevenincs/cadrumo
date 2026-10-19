@@ -62,12 +62,7 @@ export function aboutReport(t: Translate, info: AboutInfo): string {
     (component) => component.role !== "desktop",
   );
   const describe = (c: AboutInfo["components"][number]) =>
-    [
-      field(t, c.name),
-      field(t, c.version),
-      c.build_id,
-      c.build_type,
-    ]
+    [field(t, c.name), field(t, c.version), c.build_id, c.build_type]
       .filter((part) => part !== null)
       .join(" ");
   for (const c of components.filter((c) => c.role === "interpreter"))

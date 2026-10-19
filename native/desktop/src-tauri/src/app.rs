@@ -542,6 +542,7 @@ mod tests {
             logs::commands(),
             shell::commands(),
             shell::window_controls::commands(),
+            shell::about::commands(),
             shell::sign_in::commands(),
             shell::provider_settings::commands(),
             shell::agent_access::commands(),

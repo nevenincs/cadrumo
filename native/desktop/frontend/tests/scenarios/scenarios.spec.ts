@@ -1920,7 +1920,12 @@ test("no-profile: the pane, the header and the palette do not offer to set a pro
     .click();
   const menu = target.locator(".account-menu");
   await expect(menu).toContainText(label("desktop.account.no_profile"));
-  await expect(menu.getByRole("menuitem")).toHaveCount(0);
+  // Nothing to set up or sign in to; the About entry is not a profile action.
+  await expect(
+    menu.getByRole("menuitem").filter({
+      hasNotText: label("desktop.about.open"),
+    }),
+  ).toHaveCount(0);
   await target.keyboard.press("Escape");
   await target
     .getByRole("button", { name: label("desktop.rail.search") })

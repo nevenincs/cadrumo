@@ -20,11 +20,14 @@ export function AccountMenu({
   onSignIn,
   onSignOut,
   onCreate,
+  onAbout,
 }: {
   account: SignInController;
   onSignIn: () => void;
   onSignOut: () => void;
   onCreate: () => void;
+  /** Opens the About dialog, where the host can say what is installed. */
+  onAbout?: () => void;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
@@ -58,7 +61,8 @@ export function AccountMenu({
     signedIn ||
     choices.length > 0 ||
     account.canSignIn ||
-    (account.offering && account.canCreate);
+    (account.offering && account.canCreate) ||
+    !!onAbout;
   return (
     <DropdownMenu
       modal={false}
@@ -165,6 +169,15 @@ export function AccountMenu({
                   {t("desktop.account.new_profile")}
                 </DropdownMenuItem>
               )}
+            </>
+          )}
+          {onAbout && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => transfer(onAbout)}>
+                <Icon name="info" />
+                {t("desktop.about.open")}
+              </DropdownMenuItem>
             </>
           )}
         </div>
