@@ -1,4 +1,4 @@
-"""The lane admits a stage by its build records, reports later edits, and refuses an outdated test host."""
+"""The lane admits a stage and its test host by their build records, and reports later edits."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from ..freshness import STAGED_COMPONENTS, built_from, host_part, newer_source, stage_verdict, stale_parts
+from ..freshness import STAGED_COMPONENTS, stage_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -24,33 +24,6 @@ def _write(path: Path, *, at: int) -> Path:
     path.write_bytes(b"x")
     os.utime(path, ns=(at, at))
     return path
-
-
-@pytest.mark.parametrize(
-    ("relative", "built"),
-    [
-        ("native/desktop/src-tauri/src/manager.rs", True),
-        ("native/desktop/frontend/src/App.tsx", True),
-        ("Y:/code/agent/src/cadrumo_agent/service.py", True),
-        ("native/desktop/src-tauri/src/manager/tests.rs", False),
-        ("native/desktop/src-tauri/src/shell/setup/track_tests.rs", False),
-        ("native/desktop/frontend/tests/live/attach.live.ts", False),
-        ("native/desktop/frontend/src/components/Rail.stories.tsx", False),
-        ("native/desktop/frontend/src/shell/agentCatalog.test.ts", False),
-        ("src/cadrumo/core/tests/test_hashing.py", False),
-    ],
-)
-def test_only_files_built_into_the_product_count_as_its_sources(relative: str, built: bool) -> None:
-    assert built_from(relative) is built
-
-
-def test_the_newest_source_changed_after_the_artifact_is_named(tmp_path: Path) -> None:
-    artifact = _write(tmp_path / "image.exe", at=_BUILT)
-    older = _write(tmp_path / "a.rs", at=_BUILT - _SECOND)
-    newer = _write(tmp_path / "b.rs", at=_BUILT + _SECOND)
-    newest = _write(tmp_path / "c.rs", at=_BUILT + 2 * _SECOND)
-    assert newer_source(artifact, [older]) is None
-    assert newer_source(artifact, [older, newer, newest, tmp_path / "removed.rs"]) == newest
 
 
 class _Stage:
@@ -138,13 +111,9 @@ def test_a_component_with_no_record_is_refused(tmp_path: Path) -> None:
     assert stage.verdict().refusals == ["manager has no build record; rebuild with: just build-native Debug app-native"]
 
 
-def test_the_test_host_is_refused_when_older_than_its_sources(tmp_path: Path) -> None:
-    repository = tmp_path / "checkout"
-    record = _write(tmp_path / "build" / "desktop" / "testing" / "packaged" / "host.json", at=_BUILT)
-    source = _write(repository / "native/desktop/src-tauri/src/app.rs", at=_OLD)
-    _write(repository / "native/desktop/src-tauri/src/app/tests.rs", at=_NEW)
-    assert stale_parts([host_part(record, repository)]) == ([], [])
-    os.utime(source, ns=(_NEW, _NEW))
-    stale, missing = stale_parts([host_part(record, repository)])
-    assert missing == []
-    assert [(part.part, part.source, part.target) for part in stale] == [("test host", source, "desktop-packaged-host")]
+def test_the_test_host_is_judged_by_its_own_record(tmp_path: Path) -> None:
+    stage = _Stage(tmp_path)
+    del stage.records["desktop-test-host"]
+    assert stage.verdict().refusals == [
+        "desktop-test-host has no build record; rebuild with: just build-native Debug desktop-packaged-host"
+    ]

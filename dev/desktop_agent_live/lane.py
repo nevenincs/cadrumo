@@ -61,7 +61,7 @@ import psutil
 from ..packaging.command_execution import run_command
 from ..runtime_lifecycle.caller_owned_root import AcceptanceError, require
 from .containment import LaneJob
-from .freshness import StageVerdict, host_part, stage_verdict, stale_parts
+from .freshness import StageVerdict, stage_verdict
 from .package import stage_lane_package
 from .scans import (
     ProcessRecord,
@@ -513,7 +513,7 @@ def test_host(served: bool) -> TestHost:
 
 
 def require_current(host: TestHost) -> StageVerdict:
-    """Refuse a stage whose build records do not vouch for its bytes, or a test host older than its sources.
+    """Refuse a stage or test host whose build records do not vouch for its bytes.
 
     Inputs edited since the stage was built do not refuse the run: the verdict
     names the build each component's bytes come from and what was edited since,
@@ -523,12 +523,6 @@ def require_current(host: TestHost) -> StageVerdict:
     verdict = stage_verdict(_BUILD, configuration)
     if verdict.refusals:
         raise UnavailableError("; ".join(verdict.refusals))
-    stale, missing = stale_parts([host_part(host.record, _REPOSITORY)])
-    if missing or stale:
-        raise UnavailableError(
-            "the test host is older than its sources; rebuild with: "
-            f"just build-native {configuration} desktop-packaged-host"
-        )
     return verdict
 
 
