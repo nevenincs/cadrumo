@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -74,6 +75,9 @@ import type {
 // What the composer is given while nothing serves it: nothing. Sending,
 // adding files and choosing a model each say they are not available yet.
 const NO_PROVIDERS: ProviderOption[] = [];
+/** How often, and after how long a first pause, a busy service is asked for its catalog again. */
+const CATALOG_BUSY_RETRIES = 3;
+const CATALOG_BUSY_PAUSE_MS = 2_000;
 const NO_MODELS: Record<string, ModelOption[]> = {};
 const NO_SELECTION: AgentSelection = {
   providerId: "",
@@ -298,7 +302,35 @@ export function AgentColumn({
   // Read again after each saved change to the provider settings, so a
   // provider turned off leaves the list and one turned on comes back.
   const [catalogAgain, setCatalogAgain] = useState(0);
-  const catalog = useAgentRead(readCatalog, catalogAgain);
+  // Reads asked for while the service was busy, apart from the settings'
+  // count, which `catalogAgain` follows.
+  const [busyReads, setBusyReads] = useState(0);
+  const catalog = useAgentRead(readCatalog, catalogAgain + busyReads);
+  // A service still busy starting the agent answers the catalog late. The
+  // column says the agent is still starting and asks again at the service's
+  // next published status; a few reads, each after a longer pause, are the
+  // bounded fallback when it publishes none.
+  const catalogBusy =
+    catalog.kind === "failed" && catalog.code === "agent_service_busy";
+  const busyCatalogReads = useRef(0);
+  const statusAtBusyRead = useRef(status);
+  useEffect(() => {
+    if (catalog.kind === "ready") busyCatalogReads.current = 0;
+    if (!catalogBusy) return;
+    if (statusAtBusyRead.current !== status) {
+      statusAtBusyRead.current = status;
+      setBusyReads((count) => count + 1);
+      return;
+    }
+    if (busyCatalogReads.current >= CATALOG_BUSY_RETRIES) return;
+    const pause = CATALOG_BUSY_PAUSE_MS * 2 ** busyCatalogReads.current;
+    busyCatalogReads.current += 1;
+    const again = window.setTimeout(
+      () => setBusyReads((count) => count + 1),
+      pause,
+    );
+    return () => window.clearTimeout(again);
+  }, [catalog, catalogBusy, status]);
   const offer = useMemo(
     () => (catalog.kind === "ready" ? catalogChoices(t, catalog.value) : null),
     [catalog, t],
@@ -632,11 +664,13 @@ export function AgentColumn({
         !offer.providers.some((provider) => provider.selectable)));
   const notice = incompatible
     ? t("desktop.agent.service_incompatible")
-    : noProvider
-      ? t("desktop.agent.no_provider")
-      : status
-        ? serviceWords(t, status)
-        : null;
+    : catalogBusy
+      ? t("desktop.agent.service_starting")
+      : noProvider
+        ? t("desktop.agent.no_provider")
+        : status
+          ? serviceWords(t, status)
+          : null;
 
   return (
     <>

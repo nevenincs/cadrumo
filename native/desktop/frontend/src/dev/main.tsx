@@ -81,6 +81,10 @@ function readParams() {
     agentSkills: (["bundled", "many", "failed", "unavailable"] as const).find(
       (skills) => skills === params.get("skills"),
     ),
+    // How the service answers the agent's catalog.
+    agentCatalog: (["served", "busy"] as const).find(
+      (catalog) => catalog === params.get("catalog"),
+    ),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
   };
@@ -134,6 +138,7 @@ function Scenarios() {
       agentAsks: initial.agentAsks,
       agentDocuments: initial.agentDocuments,
       agentSkills: initial.agentSkills,
+      agentCatalog: initial.agentCatalog,
       setup: initial.setup,
       language: run.language,
       latencyMs: initial.latencyMs,

@@ -712,6 +712,56 @@ def attached(endpoint: str, entry: str) -> Generator[Any]:
                 page.evaluate("() => { delete window.__CADRUMO_LANE_TOKEN__; }")
 
 
+_ACKNOWLEDGE_SECONDS: Final = 5 * 60.0
+"""How long the window waits for the person to read why the run ended, a person's time."""
+
+#: Covers the window with why the test run ended, and a button that closes it.
+_ENDED: Final = """({title, why, close}) => {
+    const cover = document.createElement('div');
+    cover.setAttribute('role', 'alertdialog');
+    cover.setAttribute('aria-label', title);
+    cover.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;'
+        + 'justify-content:center;background:rgba(0,0,0,.55);font:14px system-ui,sans-serif';
+    const card = document.createElement('div');
+    card.style.cssText = 'max-width:42rem;background:#fff;color:#111;padding:1.5rem;border-radius:.75rem';
+    const heading = document.createElement('h2');
+    heading.textContent = title;
+    const text = document.createElement('p');
+    text.style.whiteSpace = 'pre-wrap';
+    text.textContent = why;
+    const button = document.createElement('button');
+    button.textContent = close;
+    button.addEventListener('click', () => { window.__CADRUMO_LANE_ACKNOWLEDGED__ = true; });
+    card.append(heading, text, button);
+    cover.append(card);
+    document.body.append(cover);
+    button.focus();
+}"""
+
+
+def tell_person(endpoint: str, entry: str, why: str) -> None:
+    """Show the person why the test run ended in the window, and wait for them to close it.
+
+    The lane closes the window when it ends; without this the window would
+    just vanish on a failure. The wait is the person's and is bounded, so an
+    unattended run still ends.
+    """
+    print(json.dumps({"step": "telling_person", "reason": why}), flush=True)
+    with attached(endpoint, entry) as page:
+        page.evaluate(
+            _ENDED,
+            {
+                "title": "The Cadrumo test run ended without passing",
+                "why": f"{why}\n\nThis test window closes when you press the button below.",
+                "close": "Close the test window",
+            },
+        )
+        with suppress(Exception):
+            page.wait_for_function(
+                "() => window.__CADRUMO_LANE_ACKNOWLEDGED__ === true", timeout=_ACKNOWLEDGE_SECONDS * 1000
+            )
+
+
 def scan_written_since(directories: Sequence[Path], since: float) -> ScanResult:
     """Scan every file below ``directories`` written at or after ``since``, following no link."""
     results: list[ScanResult] = []
@@ -800,6 +850,10 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
                     print(json.dumps({"step": "conversations_deleted", "count": len(created)}), flush=True)
                 except Exception as error:  # A conversation left behind is the person's to see.
                     failures.append(f"the run's conversations were not cleaned up: {error}")
+            if endpoint is not None and (failures or absent is not None):
+                why = "; ".join(failures) or str(absent)
+                with suppress(Exception):
+                    tell_person(endpoint, host.entry, why)
             failures.extend(_settle(desktop, watch))
     scan = merge(
         *watch.command_lines,

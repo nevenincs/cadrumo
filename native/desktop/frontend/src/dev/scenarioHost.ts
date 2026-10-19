@@ -22,6 +22,7 @@ import type { ProfileViews } from "../shell/views";
 import {
   fixtureAgent,
   type FixtureAsks,
+  type FixtureCatalog,
   type FixtureDocuments,
   type FixtureStream,
 } from "./agentFixtureHost";
@@ -89,6 +90,8 @@ export type ScenarioHostOptions = {
   agentDocuments?: FixtureDocuments;
   /** How the agent serves its skills to `/`. */
   agentSkills?: FixtureSkills;
+  /** How the service answers the agent's catalog. */
+  agentCatalog?: FixtureCatalog;
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
@@ -120,6 +123,8 @@ declare global {
     };
     /** Controls for synthetic, presentation-only provider sign-in attempts. */
     __scenarioProviderSignIn?: ProviderSignInFixtureControls;
+    /** Publishes the fixture agent's status, as its service does when ready. */
+    __scenarioAgentPublishStatus?: () => void;
   }
 }
 
@@ -282,7 +287,11 @@ export function scenarioHost(
   // The agent goes with the profile's views: offered, empty, refused or not
   // offered together. Its conversations are read as the signed-in
   // profile's too.
-  const { agent, session: agentSession } = fixtureAgent({
+  const {
+    agent,
+    session: agentSession,
+    publishStatus,
+  } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
     readable,
@@ -293,7 +302,14 @@ export function scenarioHost(
     turnedOff: providerFixture.turnedOffLanes,
     documents: options.agentDocuments ?? "stored",
     skills: options.agentSkills ?? "bundled",
+    catalog: options.agentCatalog ?? "served",
   });
+  // Every host this page made publishes, as one service would for each.
+  const publishedBefore = window.__scenarioAgentPublishStatus;
+  window.__scenarioAgentPublishStatus = () => {
+    publishedBefore?.();
+    publishStatus();
+  };
 
   const providerSettings = providerFixture.settings;
   window.__scenarioProviderSignIn = providerFixture.signInControls;

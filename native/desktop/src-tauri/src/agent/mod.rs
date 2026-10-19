@@ -311,6 +311,31 @@ async fn blocking<T: Send + 'static>(
     .map_err(|_| Refused::new("agent_host_failed".to_owned()))?
 }
 
+/// What an administration failure tells the column: a service that did not
+/// answer in time, or let a connection go while it was busy, is busy and
+/// can be asked again; anything else failed.
+fn admin_refusal(
+    error: &cadrumo_application::error::application::ApplicationError,
+) -> &'static str {
+    use cadrumo_application::error::application::ErrorCode;
+    use std::io::ErrorKind;
+    let transient = error.code == ErrorCode::TimedOut
+        || matches!(
+            error.io_kind,
+            Some(ErrorKind::TimedOut | ErrorKind::ConnectionReset | ErrorKind::ConnectionAborted)
+        );
+    if transient {
+        "agent_service_busy"
+    } else {
+        "agent_service_failed"
+    }
+}
+
+/// Whether the service answered that it is still working on the request.
+fn catalog_busy(answer: &Value) -> bool {
+    answer["kind"] == "refused" && answer["code"] == "busy"
+}
+
 fn refused<T>(code: &str) -> std::result::Result<T, Refused> {
     Err(Refused::new(code.to_owned()))
 }
@@ -356,8 +381,15 @@ async fn agent_provider_catalog(
     host: State<'_, Arc<AgentHost>>,
 ) -> std::result::Result<Value, Refused> {
     blocking(&host, |host| {
-        host.administer(serde_json::json!({"action":"catalog"}), None)
-            .map_err(|error| host.refuse("agent_service_failed", error))
+        let catalog = host
+            .administer(serde_json::json!({"action":"catalog"}), None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        // The service still working on it answers busy and keeps the answer
+        // for the next read, which the column makes.
+        if catalog_busy(&catalog) {
+            return refused("agent_service_busy");
+        }
+        Ok(catalog)
     })
     .await
 }
@@ -616,4 +648,40 @@ async fn agent_attach<R: Runtime>(
         Ok(picked)
     })
     .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn an_admin_exchange_that_ran_out_of_time_is_busy_and_can_be_asked_again() {
+        let io = |kind: std::io::ErrorKind| {
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("admin_catalog")
+                .caused_by(
+                    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                        .with_reason("admin_read")
+                        .caused_by(std::io::Error::from(kind)),
+                )
+        };
+        for kind in [
+            std::io::ErrorKind::TimedOut,
+            std::io::ErrorKind::ConnectionReset,
+            std::io::ErrorKind::ConnectionAborted,
+        ] {
+            assert_eq!(admin_refusal(&io(kind)), "agent_service_busy", "{kind:?}");
+        }
+        let queued = ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)
+            .with_reason("admin_queue_elapsed");
+        assert_eq!(admin_refusal(&queued), "agent_service_busy");
+        assert_eq!(
+            admin_refusal(&io(std::io::ErrorKind::ConnectionRefused)),
+            "agent_service_failed"
+        );
+        let parse = ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+            .with_reason("admin_document_parse");
+        assert_eq!(admin_refusal(&parse), "agent_service_failed");
+    }
 }

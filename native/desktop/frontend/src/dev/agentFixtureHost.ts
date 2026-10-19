@@ -73,6 +73,9 @@ export type FixtureAsks = "questions" | "approval" | "review";
 /** What the conversations have stored: the fixture documents, nothing at
  * all, storage the host does not serve, or storage that cannot be read. */
 export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
+/** How the service answers the catalog: served, or busy starting the agent
+ * until the scenario publishes the agent's status. */
+export type FixtureCatalog = "served" | "busy";
 
 /** How many stored documents one listing page holds here: few enough that
  * the fixture's longest list is read in several. */
@@ -404,6 +407,7 @@ export function fixtureAgent({
   turnedOff = () => new Set<string>(),
   documents = "stored",
   skills = "bundled",
+  catalog = "served",
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -420,7 +424,15 @@ export function fixtureAgent({
   documents?: FixtureDocuments;
   /** How the agent serves its skills to `/`. */
   skills?: FixtureSkills;
-}): { agent: AgentViews; session: AgentSession } {
+  catalog?: FixtureCatalog;
+}): {
+  agent: AgentViews;
+  session: AgentSession;
+  /** Publishes the agent's status, as the service does once it is ready. */
+  publishStatus: () => void;
+} {
+  let catalogBusy = catalog === "busy";
+  const statusListeners = new Set<(status: AgentServiceStatus) => void>();
   const inventory = skills === "many" ? MANY_FIXTURE_SKILLS : FIXTURE_SKILLS;
   const knownSkill = (name: string) => {
     const held = inventory.find((one) => one.name === name);
@@ -944,13 +956,17 @@ export function fixtureAgent({
       say("agentStatusResolved");
       return answer;
     },
-    observeStatus() {
+    observeStatus(listener) {
       say("agentObserveStatus");
-      return Promise.resolve(() => undefined);
+      statusListeners.add(listener);
+      return Promise.resolve(() => {
+        statusListeners.delete(listener);
+      });
     },
     async providerCatalog() {
       say("agentProviderCatalog");
       await check();
+      if (catalogBusy) throw coded("agent_service_busy");
       say("agentProviderCatalogResolved");
       // A lane turned off in the settings is not offered, as the service
       // leaves it out of the catalog it serves.
@@ -1263,5 +1279,9 @@ export function fixtureAgent({
     },
   };
 
-  return { agent, session };
+  const publishStatus = () => {
+    catalogBusy = false;
+    for (const listener of statusListeners) listener(status());
+  };
+  return { agent, session, publishStatus };
 }

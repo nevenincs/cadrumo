@@ -841,6 +841,7 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                 port: admin_port,
                 bearer,
                 generation,
+                gate: Default::default(),
             });
             false
         }
