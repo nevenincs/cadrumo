@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
+import shutil
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -24,6 +27,136 @@ from .hashing import digest
 from .layout import backend, load_layout
 from .product import BUNDLED_EXTRAS
 from .target import toolchain_for_target, uv_environment, uv_platform
+
+WHEEL_CACHE = "wheel-installs"
+"""Beside the runtime inputs: one installed tree per pinned requirement, kept across builds."""
+
+
+def _uv_install(uv: str, target: str, pin: str, requirements: Path, into: Path) -> None:
+    result = run_command(
+        [
+            uv,
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--python-version",
+            pin,
+            "--python-platform",
+            uv_platform(target),
+            "--require-hashes",
+            "--target",
+            str(into),
+            "--only-binary",
+            ":all:",
+            "--no-deps",
+            "--link-mode",
+            "copy",
+            "-r",
+            str(requirements),
+        ],
+        cwd=REPO_ROOT,
+        environment=uv_environment(target),
+    )
+    if result.returncode:
+        raise RuntimeError(result.stderr)
+
+
+def tree_files(root: Path) -> dict[str, str]:
+    """Every regular file below ``root`` by its root-relative path, with its digest."""
+    found: dict[str, str] = {}
+    for directory, _names, files in os.walk(root):
+        for name in files:
+            path = Path(directory, name)
+            if not path.is_symlink():
+                found[path.relative_to(root).as_posix()] = digest(path)
+    return dict(sorted(found.items()))
+
+
+class InstalledWheels:
+    """Install each hash-pinned requirement once into its own tree, and reuse it while its bytes are intact.
+
+    A tree is keyed by its requirement line, which names the wheel by its
+    hashes, and by what shapes an install: the target platform, the Python pin
+    and the interpreter. A tree whose files no longer match what was installed
+    is removed and installed again.
+    """
+
+    def __init__(
+        self,
+        cache: Path,
+        *,
+        uv: str,
+        target: str,
+        pin: str,
+        install: Callable[[str, str, str, Path, Path], None] | None = None,
+    ) -> None:
+        """Keep installed trees in ``cache`` for one target, Python pin and uv; ``install`` runs one install."""
+        self.cache, self.uv, self.target, self.pin = cache, uv, target, pin
+        self.install = _uv_install if install is None else install
+        self.installed = self.reused = 0
+
+    def key(self, line: str) -> str:
+        """The cache name of one requirement line's installed tree."""
+        context = json.dumps([line.strip(), self.target, self.pin, uv_platform(self.target), sys.executable])
+        return hashlib.sha256(context.encode("utf-8")).hexdigest()[:32]
+
+    def intact(self, tree: Path, manifest: Path) -> dict[str, str] | None:
+        """The tree's files when they are exactly the ones its install recorded, else ``None``."""
+        try:
+            recorded = json.loads(manifest.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+        if not isinstance(recorded, dict) or not recorded or not tree.is_dir():
+            return None
+        files = {str(name): str(value) for name, value in recorded.items()}
+        return files if tree_files(tree) == files else None
+
+    def tree(self, line: str) -> tuple[Path, dict[str, str]]:
+        """The installed tree of one requirement line, installed now unless an intact one is kept."""
+        key = self.key(line)
+        tree, manifest = self.cache / key, self.cache / f"{key}.json"
+        files = self.intact(tree, manifest)
+        if files is not None:
+            self.reused += 1
+            return tree, files
+        manifest.unlink(missing_ok=True)
+        if tree.exists():
+            shutil.rmtree(tree)
+        staging = self.cache / f"{key}.installing-{os.getpid()}"
+        if staging.exists():
+            shutil.rmtree(staging)
+        staging.mkdir(parents=True)
+        requirement = self.cache / f"{key}.requirement-{os.getpid()}.txt"
+        requirement.write_text(line.strip() + "\n", encoding="utf-8")
+        try:
+            self.install(self.uv, self.target, self.pin, requirement, staging)
+        finally:
+            requirement.unlink(missing_ok=True)
+        files = tree_files(staging)
+        # Published whole: a tree is either complete with its manifest or absent.
+        os.replace(staging, tree)
+        manifest.write_text(json.dumps(files, sort_keys=True), encoding="utf-8")
+        self.installed += 1
+        return tree, files
+
+
+def compose(dependencies: Path, trees: list[tuple[Path, dict[str, str]]]) -> None:
+    """Make the fresh ``dependencies`` the union of the installed trees, a later tree's file replacing an earlier one's.
+
+    Files are linked from the trees, so an unchanged wheel keeps its bytes and
+    file identities from one build to the next.
+    """
+    dependencies.mkdir(parents=True)
+    for tree, files in trees:
+        for name in files:
+            source, destination = tree / name, dependencies / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.unlink(missing_ok=True)
+            try:
+                os.link(source, destination)
+            except OSError:
+                shutil.copy2(source, destination)
 
 
 def provisioning_tools(target: str, build_toolchain: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -90,61 +223,12 @@ def provision(
     dependencies = destination / "dependencies"
     if dependencies.exists():
         raise FileExistsError("Use a fresh dependency destination")
-    result = run_command(
-        [
-            uv,
-            "pip",
-            "install",
-            "--python",
-            sys.executable,
-            "--python-version",
-            pin,
-            "--python-platform",
-            uv_platform(target),
-            "--require-hashes",
-            "--target",
-            str(dependencies),
-            "--only-binary",
-            ":all:",
-            "--no-deps",
-            "--link-mode",
-            "copy",
-            "-r",
-            str(requirements),
-        ],
-        cwd=REPO_ROOT,
-        environment=uv_environment(target),
-    )
-    if result.returncode:
-        raise RuntimeError(result.stderr)
+    lines = requirements.read_text(encoding="utf-8").splitlines()
     if agent_requirements:
-        result = run_command(
-            [
-                uv,
-                "pip",
-                "install",
-                "--python",
-                sys.executable,
-                "--python-version",
-                pin,
-                "--python-platform",
-                uv_platform(target),
-                "--require-hashes",
-                "--target",
-                str(dependencies),
-                "--only-binary",
-                ":all:",
-                "--no-deps",
-                "--link-mode",
-                "copy",
-                "-r",
-                str(agent_dependencies / AGENT_DEPENDENCIES),
-            ],
-            cwd=REPO_ROOT,
-            environment=uv_environment(target),
-        )
-        if result.returncode:
-            raise RuntimeError(result.stderr)
+        # The agent's resolution comes after, so a distribution it names wins.
+        lines += (agent_dependencies / AGENT_DEPENDENCIES).read_text(encoding="utf-8").splitlines()
+    install = InstalledWheels(destination.parent / WHEEL_CACHE, uv=uv, target=target, pin=pin)
+    compose(dependencies, [install.tree(line) for line in lines if line.strip()])
     record = json.loads((agent_dependencies / AGENT_DEPENDENCY_RECORD).read_text(encoding="utf-8"))
     (destination / "runtime-inputs.json").write_text(
         json.dumps(
@@ -170,7 +254,7 @@ def provision(
         f"installed {len(wheels)} hash-pinned runtime wheels and {len(agent_requirements)} agent dependencies "
         f"for {target} into {display_path(dependencies)}"
     )
-    log.verbose(result.stderr.strip())
+    log.verbose(f"{install.installed} wheels installed, {install.reused} reused from {display_path(install.cache)}")
 
 
 if __name__ == "__main__":
