@@ -25,7 +25,6 @@ class AgentLauncherRefusal(StrEnum):
     SERVICE_ABSENT = "agent_service_absent"
     SERVICE_INCOMPATIBLE = "agent_service_incompatible"
     PROVIDER_CREDENTIAL_MISSING = "agent_provider_credential_missing"
-    ROOT_UNMARKED = "agent_root_unmarked"
     SERVICE_FAILED = "agent_service_failed"
 
 

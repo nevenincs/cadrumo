@@ -70,13 +70,11 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
     def __init__(
         self,
         *,
-        agent_source: str | None = None,
         received: Mapping[str, str] | None = None,
         runner: AgentInvocationRunner | None = None,
     ) -> None:
-        """Bind the agent to run: the package's image, or the named development source tree."""
+        """Bind the agent to run: the package's image."""
         self._runner: AgentInvocationRunner = WindowsAgentInvocationRunner() if runner is None else runner
-        self._agent_source = agent_source
         self._received = os.environ if received is None else received
         # One lock per document: a first sign-in capability read runs the
         # agent, and the catalog, already read at start, must not wait for it.
@@ -139,7 +137,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
     def _invoke(self, arguments: tuple[str, ...]) -> bytes:
         directory = Path(tempfile.gettempdir())
         try:
-            image = agent_image(self._agent_source, agent_root=directory, received=self._received)
+            image = agent_image(agent_root=directory, received=self._received)
         except AgentProgramRefusalError as error:
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND) from error
         try:

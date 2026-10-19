@@ -50,7 +50,7 @@ def _cohort_modules() -> dict[str, Any]:
         raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND) from error
 
 
-def declared_provider_catalog_response(*, agent_source: str | None) -> dict[str, Any]:
+def declared_provider_catalog_response() -> dict[str, Any]:
     """Return actual model/control declarations with explicitly unobserved host readiness.
 
     This does not instantiate agent settings, resolve credentials, read provider
@@ -58,8 +58,6 @@ def declared_provider_catalog_response(*, agent_source: str | None) -> dict[str,
     validates every returned field. Readiness and capability evidence remain
     unknown until the running agent observes them.
     """
-    if agent_source is not None:
-        raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND)
     modules = _cohort_modules()
     schema = modules["cadrumo_agent.api.schemas.provider_catalog"]
     catalogs = modules["cadrumo_agent.providers.served_catalog"]

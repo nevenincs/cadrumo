@@ -1,9 +1,8 @@
 """Locate the service's packaged agent image, advertised programs and private roots.
 
-The native service launch profile fixes absolute packaged program paths. An
-explicit marked development lane can select an agent source environment;
-installed service launches always use the bundled image. No program is
-resolved by a bare name on PATH.
+The native service launch profile fixes absolute packaged program paths, and
+the agent always runs as the bundled image. No program is resolved by a bare
+name on PATH.
 """
 
 from __future__ import annotations
@@ -139,35 +138,21 @@ def hosted_python(*, received: Mapping[str, str] | None = None, interpreter: Pat
     return _located_program(PACKAGE_PYTHON_VARIABLE, checkout, received)
 
 
-def agent_image(agent_source: str | None, *, agent_root: Path, received: Mapping[str, str] | None = None) -> AgentImage:
-    """Return how to start the agent gateway: the package's agent image, or a named source tree's environment.
+def agent_image(*, agent_root: Path, received: Mapping[str, str] | None = None) -> AgentImage:
+    """Return how to start the agent gateway: the package's agent image.
 
-    The installed form runs the bundled ``bin/cadrumo-agent`` image the
-    service's environment names, with the gateway invocation, in the agent's
-    root. Outside a package there is no bundled agent. The development lane
-    names an absolute cadrumo-agent source tree instead, and the agent runs
-    from that tree's own environment.
+    It runs the bundled ``bin/cadrumo-agent`` image the service's
+    environment names, with the gateway invocation, in the agent's root.
+    Outside a package there is no bundled agent.
     """
-    if agent_source is None:
-        environment = os.environ if received is None else received
-        declared = environment.get(PACKAGE_AGENT_VARIABLE)
-        if declared is None:
-            raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_ABSENT)
-        image = Path(declared)
-        if not image.is_absolute() or not image.is_file():
-            raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
-        return AgentImage(image, GATEWAY_ARGUMENTS, agent_root)
-    if storage_mode().mode is not StorageMode.DEVELOPMENT:
+    environment = os.environ if received is None else received
+    declared = environment.get(PACKAGE_AGENT_VARIABLE)
+    if declared is None:
         raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_ABSENT)
-    source = Path(agent_source)
-    if not source.is_absolute():
-        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_ABSENT)
-    interpreter = (
-        source / ".venv" / "Scripts" / "python.exe" if sys.platform == "win32" else source / ".venv" / "bin" / "python"
-    )
-    if not source.is_dir() or not interpreter.is_file():
-        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_ABSENT)
-    return AgentImage(interpreter, GATEWAY_ARGUMENTS, source)
+    image = Path(declared)
+    if not image.is_absolute() or not image.is_file():
+        raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)
+    return AgentImage(image, GATEWAY_ARGUMENTS, agent_root)
 
 
 def profile_agent_root(storage_root: Path, profile_id: UUID) -> Path:

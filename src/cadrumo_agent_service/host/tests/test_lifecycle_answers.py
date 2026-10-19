@@ -8,7 +8,9 @@ request is answered as soon as the work is admitted, and the end is the
 
 The tree here is a real hosted cadrumo-agent gateway with its worker, run from
 the checkout ``CADRUMO_DEV_AGENT_CHECKOUT`` names, inside the service's own
-kill-on-close job. The sign-in helper is that checkout's real ``auth connect``.
+kill-on-close job. The sign-in helper is that checkout's real ``auth connect``,
+which the service reaches through its package agent variable as it would the
+bundled image.
 What the runtime would supply - the profile's lease and its encrypted provider
 settings - is the in-memory store the service's own tests use.
 """
@@ -31,7 +33,7 @@ from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
-from ...adapters.agent_programs import AGENT_COMMAND_LINE, GATEWAY_ARGUMENTS
+from ...adapters.agent_programs import AGENT_COMMAND_LINE, GATEWAY_ARGUMENTS, PACKAGE_AGENT_VARIABLE
 from ...providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from ...providers.application.ports import StoreGenerations
 from ...providers.application.resolution import ProviderCredentialResolver
@@ -45,7 +47,6 @@ from ..controller import (
     AgentLaunch,
     ResolvedAgentCredentials,
 )
-from ..lane_root import write_lane_mark
 from ..launch_environment import (
     GATEWAY_PORT_VARIABLE,
     HOSTED_ROOT_VARIABLE,
@@ -151,14 +152,13 @@ def _running_tree(checkout: Path, root: Path) -> AgentHostController:
     return controller
 
 
-def _service(storage_root: Path, events: _Events, *, agent_source: str | None = None) -> AgentService:
+def _service(storage_root: Path, events: _Events) -> AgentService:
     client = SimpleNamespace(
         lease=SimpleNamespace(profile_id=uuid4(), lease_id=uuid4()), connection=SimpleNamespace(close=lambda: None)
     )
     return AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=storage_root,
-        agent_source=agent_source,
         gateway_bearer=bytearray(secrets.token_urlsafe(32), "ascii"),
         emit=events,
     )
@@ -190,15 +190,14 @@ def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(tmp
 
 
 def test_a_sign_in_is_answered_starting_while_the_tree_retires_and_its_helper_then_runs(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     checkout = _checkout()
-    assert storage_mode().mode.value == "development"
-    storage_root = tmp_path / "lane"
+    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(_interpreter(checkout)))
+    storage_root = tmp_path / "storage"
     storage_root.mkdir()
-    write_lane_mark(storage_root)
     events = _Events()
-    service = _service(storage_root, events, agent_source=str(checkout))
+    service = _service(storage_root, events)
     store = _SignedInStore()
     resolver = ProviderCredentialResolver(
         store=store, catalog_source=service._catalog, environment={}, storage_mode=storage_mode().mode

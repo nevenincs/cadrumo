@@ -10,9 +10,9 @@ related:
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-13-provider-settings-reference]]'
-modified: '2026-10-14'
+modified: '2026-10-19'
 body_schema: body-v2
-body_hash: 'sha256:80e3860d998207dc57509a90e5884d9c2997cb6d1f1cffffcca0616ee4b9d7b6'
+body_hash: 'sha256:a96f47a687ad87b8b8a1a66e2c6cf10cbf45b341cc81d4a1cb47dc1c1276e61b'
 ---
 
 # `provider-settings` plan
@@ -76,8 +76,8 @@ Delivers one resolver bound to the exact profile, login and settings generations
 Delivers the app-owned controller that starts a contained cadrumo-agent tree and hands it credentials once on a bounded standard-input frame.
 
 - [ ] `P04.S13` - Host the agent tree in the runtime's profile host, bound to the requesting session, in a kill-on-close job, and launch its cadrumo-mcp relay as the bundle's executable by absolute path with the pinned storage root, never a bare name, so a lane agent can never resolve the per-user default root; test that the relay's root is the pinned one; `src/cadrumo/application/agent_host/, src/cadrumo/adapters/local_runtime/, src/cadrumo/entrypoints/runtime/`.
-- [ ] `P04.S14` - Write the credentials and the gateway bearer once on a bounded standard-input frame behind one seam, keep keys out of environment blocks, argv, files and the cadrumo-mcp relay, and guard the development lane: refuse agent_root_unmarked unless the root the runtime serves is a marked lane root (.cadrumo-agent-lane.json), and always refuse the per-user default root; `src/cadrumo/application/agent_host/`.
-- [ ] `P04.S15` - Implement aeat app agent serve to the desktop-agent-host plan's Launcher protocol: argv --agent-source, stdin {"bearer"} held open with EOF as stop, stdout agent_ready, agent_refused with its seven codes and agent_stopped, ephemeral loopback ports; publish only for the current generation and restart from committed values on a credential change; `src/cadrumo/entrypoints/cli/, src/cadrumo/application/agent_host/`.
+- [ ] `P04.S14` - Write the credentials and the gateway bearer once on a bounded standard-input frame behind one seam, and keep keys out of environment blocks, argv, files and the cadrumo-mcp relay; the development-lane root guard (agent_root_unmarked, .cadrumo-agent-lane.json) is retired with source-checkout agent mode by operator ruling 2026-10-19; `src/cadrumo/application/agent_host/`.
+- [ ] `P04.S15` - Implement aeat app agent serve to the desktop-agent-host plan's Launcher protocol: no source argument (--agent-source is retired by operator ruling 2026-10-19), stdin {"bearer"} held open with EOF as stop, stdout agent_ready, agent_refused with its six codes and agent_stopped, ephemeral loopback ports; publish only for the current generation and restart from committed values on a credential change; `src/cadrumo/entrypoints/cli/, src/cadrumo/application/agent_host/`.
 
 ### Phase `P05` - Lifecycle barrier
 

@@ -35,9 +35,8 @@ class _Statuses(BaseModel):
 class AgentProviderAuthStatusProbe:
     """Cache bounded, masked observations under the exact live profile authority."""
 
-    def __init__(self, *, agent_source: str | None, context: Callable[[], tuple[Path, str] | None]) -> None:
+    def __init__(self, *, context: Callable[[], tuple[Path, str] | None]) -> None:
         """Bind the supplier invocation to a current profile authority callback."""
-        self._agent_source = agent_source
         self._context = context
         self._lock = Lock()
         self._cached: tuple[tuple[Path, str], float, dict[str, CliState]] | None = None
@@ -62,7 +61,7 @@ class AgentProviderAuthStatusProbe:
 
     def _read(self, root: Path) -> dict[str, CliState]:
         try:
-            image = agent_image(self._agent_source, agent_root=root)
+            image = agent_image(agent_root=root)
             environment = system_environment(os.environ)
             environment[HOSTED_ROOT_VARIABLE] = str(root)
             external = agent_binary_directories(python=hosted_python(), received=os.environ)

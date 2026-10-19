@@ -57,7 +57,6 @@ def test_the_launcher_protocol_stays_the_desktops_closed_set() -> None:
         "agent_service_absent",
         "agent_service_incompatible",
         "agent_provider_credential_missing",
-        "agent_root_unmarked",
         "agent_service_failed",
     }
 

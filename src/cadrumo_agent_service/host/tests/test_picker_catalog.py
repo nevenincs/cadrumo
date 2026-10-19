@@ -54,7 +54,6 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, store: MemoryProvi
     service = AgentService(
         client=cast(InstalledServiceClient, SimpleNamespace(lease=object())),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=lambda _event: None,
     )
@@ -64,7 +63,7 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, store: MemoryProvi
         environment={},
         storage_mode=StorageMode.INSTALLED,
     )
-    monkeypatch.setattr(service_module, "declared_provider_catalog_response", lambda *, agent_source: _document())
+    monkeypatch.setattr(service_module, "declared_provider_catalog_response", _document)
     return service
 
 

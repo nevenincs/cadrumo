@@ -77,7 +77,6 @@ def _running_service(tmp_path: Path, source: _CredentialSource) -> tuple[AgentSe
     service = AgentService(
         client=cast(InstalledServiceClient, SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=events.append,
     )

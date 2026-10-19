@@ -147,7 +147,6 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
         service = AgentService(
             client=client,
             storage_root=runtime.root,
-            agent_source=None,
             gateway_bearer=gateway,
             emit=lambda _event: None,
         )

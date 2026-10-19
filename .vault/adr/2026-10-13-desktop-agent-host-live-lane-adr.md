@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-agent-host'
 date: '2026-10-13'
-modified: '2026-10-17'
+modified: '2026-10-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:225ccc95dceaeea08678473b99ab809aa91eaaef6f2148ce56246b207f62a5e5'
+body_hash: 'sha256:c3d136af34e0e8023065fe38747086c7ee87e155586094cf03ae1c1be2694205'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-12-desktop-agent-host-reference]]"
@@ -211,3 +211,16 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > - The person review door and the person-frontend predicate are new runtime authority. They need owner acceptance through the mcp-parity amendment.
 > - The lane waits on hosted start: the first recorded tool-access proof, and a packaged host that passes the agent its environment (`2026-10-13-canonical-environment-application-internals-adr`).
 > - The key frame is a cadrumo-agent change: a frame read in `agent:api/app.py` main(), and the worker's pipe in place of `DEVNULL`. Stage 1 waits on it.
+
+## Retirement amendment 2026-10-19
+
+Basis: operator ruling 2026-10-19: retire source-checkout agent mode, relayed by the desktop session. Original status, dated rulings, quotations and the 2026-10-14 boundary amendment remain unchanged.
+
+The service no longer has a source-checkout agent mode. Nothing launched it: the desktop starts `cadrumo-agent-service serve --profile-id` only, and every development tool runs the packaged agent image, so the lane-mark guard never ran.
+
+- `cadrumo-agent-service serve` takes no `--agent-source` argument. `agent_image` in `src/cadrumo_agent_service/adapters/agent_programs.py` resolves only the package's `CADRUMO_PACKAGE_AGENT_EXECUTABLE` image, so the catalog, the sign-in helper, the status probe and the hosted start all run the bundled agent.
+- The service lane marker (`host/lane_root.py`, `.cadrumo-agent-lane.json`) is removed. The **Root** constraint's service lane marker, and the plans' `agent_root_unmarked` refusal, no longer exist: `service.py` refuses no start or sign-in as `root_unmarked`, and the launcher protocol's closed set drops `agent_root_unmarked`. Its localized string `desktop.agent.service_root_unmarked` is removed from the service catalogues.
+- Disposable synthetic roots, runtime-owned marked-root policy and the runtime's generic development marker are unaffected; only the service's own source-mode lane mark is retired.
+- The desktop's matching variants and string declaration (`supervisor.rs`, `launcher.rs`, `wire.rs`, the application diagnostics, `agentSession.ts`, `AgentColumn.tsx`, `dev/locales/desktop_chrome.py`) are removed by the desktop side in the same pass.
+
+This amendment records a removal; it is not evidence of packaged or live acceptance.

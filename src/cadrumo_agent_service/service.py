@@ -56,7 +56,6 @@ from .host.controller import (
     ResolvedAgentCredentials,
 )
 from .host.credential_frame import wipe
-from .host.lane_root import is_marked_lane_root
 from .host.launch_environment import (
     AUTH_BROWSER_EXECUTABLE_VARIABLE,
     EXTERNAL_BIN_DIRECTORIES_VARIABLE,
@@ -149,7 +148,6 @@ class AgentService:
         *,
         client: InstalledServiceClient,
         storage_root: Path,
-        agent_source: str | None,
         gateway_bearer: bytearray,
         emit: Callable[[dict[str, Any]], None],
         wake: Callable[[], None] | None = None,
@@ -157,7 +155,6 @@ class AgentService:
         """Bind provider custody and process ownership to the verified service connection."""
         self.client = client
         self._root = storage_root
-        self._agent_source = agent_source
         self._guard = RLock()
         self._closing = Event()
         self._start_request_guard = Lock()
@@ -167,7 +164,7 @@ class AgentService:
         # Minted here and handed only to the agent's start frame; it admits
         # background requests, which the desktop's bearer alone cannot.
         self._host_token = bytearray(secrets.token_urlsafe(32), "ascii")
-        self._catalog = AgentProviderCatalogSource(agent_source=agent_source)
+        self._catalog = AgentProviderCatalogSource()
         self._store = SecureProviderSettingsStore(client=client)
         resolver = ProviderCredentialResolver(
             store=self._store, catalog_source=self._catalog, environment=os.environ, storage_mode=storage_mode().mode
@@ -185,7 +182,7 @@ class AgentService:
                 endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
             ),
         )
-        self._login_status = AgentProviderAuthStatusProbe(agent_source=agent_source, context=self._login_context)
+        self._login_status = AgentProviderAuthStatusProbe(context=self._login_context)
         self._providers = ProviderSettingsService(
             store=self._store,
             catalog_source=self._catalog,
@@ -365,7 +362,7 @@ class AgentService:
                 self._remember_hosted_certifications(controller, ready, document)
                 return self._picker_catalog(document)
         self._clear_hosted_certifications()
-        return self._picker_catalog(declared_provider_catalog_response(agent_source=self._agent_source))
+        return self._picker_catalog(declared_provider_catalog_response())
 
     def _forget_reads(self) -> None:
         """Serve no kept catalog or status once what they were read from has changed."""
@@ -390,11 +387,7 @@ class AgentService:
         status = observed.model_dump(mode="json")
         status["hosted_certifications"] = self._hosted_certifications()
         try:
-            methods = (
-                {}
-                if self._agent_source is not None and not is_marked_lane_root(self._root)
-                else self._catalog.gui_sign_in_methods()
-            )
+            methods = self._catalog.gui_sign_in_methods()
             status["sign_in_providers"] = list(methods)
             status["sign_in_methods"] = {provider: list(choices) for provider, choices in methods.items()}
         except ProviderCatalogUnavailableError:
@@ -425,10 +418,8 @@ class AgentService:
                 not in (self._catalog.gui_sign_in_providers() if gui else self._catalog.sign_in_providers())
             ):
                 return {"kind": "refused", "code": "sign_in_unavailable"}
-            if gui and self._agent_source is not None and not is_marked_lane_root(self._root):
-                return {"kind": "refused", "code": "root_unmarked"}
             root = profile_agent_root(self._root, lease.profile_id)
-            image = agent_image(self._agent_source, agent_root=root)
+            image = agent_image(agent_root=root)
             if gui and not self._owned:
                 try:
                     self._ownership.enter_context(exclusive_file_lock(root / "service-owner", timeout=0))
@@ -526,8 +517,6 @@ class AgentService:
             lease = self.client.lease
             if lease is None or self._credentials.current_generations() is None:
                 return {"event": "refused", "code": "signed_out"}
-            if self._agent_source is not None and not is_marked_lane_root(self._root):
-                return {"event": "refused", "code": "root_unmarked"}
             if self._controller is not None:
                 ready = self._controller.published()
                 if ready is not None:
@@ -546,7 +535,7 @@ class AgentService:
             Thread(target=self._prefetch_catalog, name="agent-service-catalog-prefetch", daemon=True).start()
             owned = monotonic()
             self._workspace = profile_agent_workspace(agent_root)
-            image = agent_image(self._agent_source, agent_root=agent_root)
+            image = agent_image(agent_root=agent_root)
             launch = AgentLaunch(
                 executable=image.executable,
                 arguments=image.arguments,

@@ -33,7 +33,7 @@ def _program(path: Path) -> Path:
 def test_the_package_agent_image_starts_the_gateway_invocation_in_the_agents_root(tmp_path: Path) -> None:
     image = _program(tmp_path / "package" / "bin" / "cadrumo-agent.exe")
     agent_root = tmp_path / "agent"
-    started = agent_image(None, agent_root=agent_root, received={PACKAGE_AGENT_VARIABLE: str(image)})
+    started = agent_image(agent_root=agent_root, received={PACKAGE_AGENT_VARIABLE: str(image)})
     assert started.executable == image
     assert started.arguments == ("-m", "cadrumo_agent.cli.main", "serve")
     assert started.directory == agent_root
@@ -41,39 +41,15 @@ def test_the_package_agent_image_starts_the_gateway_invocation_in_the_agents_roo
 
 def test_outside_a_package_there_is_no_bundled_agent(tmp_path: Path) -> None:
     with pytest.raises(AgentProgramRefusalError) as refused:
-        agent_image(None, agent_root=tmp_path, received={})
+        agent_image(agent_root=tmp_path, received={})
     assert refused.value.code is AgentLauncherRefusal.SERVICE_ABSENT
 
 
 @pytest.mark.parametrize("declared", ["bin/cadrumo-agent.exe", "{root}/missing/cadrumo-agent.exe", "{root}"])
 def test_an_agent_image_the_package_names_but_cannot_start_is_a_service_failure(tmp_path: Path, declared: str) -> None:
     with pytest.raises(AgentProgramRefusalError) as refused:
-        agent_image(
-            None, agent_root=tmp_path, received={PACKAGE_AGENT_VARIABLE: declared.format(root=tmp_path.as_posix())}
-        )
+        agent_image(agent_root=tmp_path, received={PACKAGE_AGENT_VARIABLE: declared.format(root=tmp_path.as_posix())})
     assert refused.value.code is AgentLauncherRefusal.SERVICE_FAILED
-
-
-def test_a_named_source_tree_runs_from_its_own_environment_with_the_same_invocation(tmp_path: Path) -> None:
-    source = tmp_path / "agent-source"
-    interpreter = _program(
-        source / ".venv" / "Scripts" / "python.exe" if sys.platform == "win32" else source / ".venv" / "bin" / "python"
-    )
-    image = _program(tmp_path / "package" / "bin" / "cadrumo-agent.exe")
-    started = agent_image(str(source), agent_root=tmp_path / "agent", received={PACKAGE_AGENT_VARIABLE: str(image)})
-    assert (started.executable, started.arguments, started.directory) == (
-        interpreter,
-        ("-m", "cadrumo_agent.cli.main", "serve"),
-        source,
-    )
-
-
-def test_a_source_tree_without_its_environment_is_absent(tmp_path: Path) -> None:
-    (tmp_path / "agent-source").mkdir()
-    for source in (str(tmp_path / "agent-source"), "agent-source"):
-        with pytest.raises(AgentProgramRefusalError) as refused:
-            agent_image(source, agent_root=tmp_path, received={})
-        assert refused.value.code is AgentLauncherRefusal.SERVICE_ABSENT
 
 
 def test_the_package_relay_is_the_one_the_runtime_environment_names(tmp_path: Path) -> None:

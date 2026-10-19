@@ -41,7 +41,6 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=lambda _event: None,
     )

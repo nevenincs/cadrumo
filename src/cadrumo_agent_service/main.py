@@ -60,7 +60,6 @@ def _serve() -> None:
     parser = argparse.ArgumentParser(prog=SERVICE_ID, description=__doc__)
     parser.add_argument("command", choices=("serve",))
     parser.add_argument("--profile-id", required=True, type=UUID)
-    parser.add_argument("--agent-source")
     args = parser.parse_args()
     bearer = bytearray()
     gateway_bearer = bytearray()
@@ -88,7 +87,6 @@ def _serve() -> None:
         service = AgentService(
             client=client,
             storage_root=effective_storage_root(),
-            agent_source=args.agent_source,
             gateway_bearer=gateway_bearer,
             emit=_publish,
             wake=wake.set,

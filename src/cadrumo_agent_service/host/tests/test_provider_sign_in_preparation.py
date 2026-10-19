@@ -63,7 +63,6 @@ def _entry() -> ProviderStatusEntry:
         "unsupported",
         "api_lane",
         "gui_unsupported",
-        "gui_unmarked",
     ),
 )
 def test_sign_in_preparation_preserves_authority_and_never_claims_login(
@@ -73,7 +72,6 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(b"synthetic-gateway"),
         emit=lambda _event: None,
     )
@@ -103,8 +101,6 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     monkeypatch.setattr(
         service._catalog, "gui_sign_in_providers", lambda: () if outcome == "gui_unsupported" else ("example",)
     )
-    if outcome == "gui_unmarked":
-        service._agent_source = str(tmp_path / "source")
     calls: list[str] = []
 
     def select_mode(provider: str, **_kwargs: object) -> ProviderSettingsActionAccepted | ProviderSettingsRefusal:
@@ -126,11 +122,6 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
         expected_revision="0" * 64,
         method="browser",
     )
-    if outcome == "gui_unmarked":
-        assert answer == {"kind": "refused", "code": "root_unmarked"}
-        assert calls == []
-        assert list(tmp_path.iterdir()) == []
-        return
     if outcome in {"unsupported", "api_lane", "gui_unsupported"}:
         assert calls == []
         assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
@@ -164,7 +155,6 @@ def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
     service = AgentService(
         client=cast(InstalledServiceClient, SimpleNamespace(lease=None)),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
     )
@@ -181,7 +171,6 @@ def test_status_preserves_refusal_without_adding_success_metadata(
     service = AgentService(
         client=cast(InstalledServiceClient, SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
     )

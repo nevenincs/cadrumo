@@ -23,7 +23,6 @@ def test_settlement_consumes_resume_only_under_original_authority(
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
     )

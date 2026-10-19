@@ -39,7 +39,6 @@ def test_settings_read_reports_lost_authority_while_the_gateway_is_stopping(tmp_
     service = AgentService(
         client=cast(InstalledServiceClient, SimpleNamespace(lease=None)),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
     )
@@ -71,7 +70,6 @@ def test_existing_attempt_is_observed_without_the_gateway_lifecycle_lock(
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
-        agent_source=None,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
     )
