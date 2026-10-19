@@ -280,12 +280,15 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "The contract and the request schema are not in a row: pass a small limit, then describe the operation "
         f"you pick. A page holds {SEARCH_PAGE_DEFAULT} rows when limit is omitted and at most {SEARCH_PAGE_MAX}: "
         "pass a returned next_cursor as cursor for the next page, and family to narrow to one definition "
-        "family. The rows cover the operations in this session's scope",
+        "family. Prefer describe directly for a known definition_id. Exact-id queries and mode=names "
+        "rank the admitted names and fetch only the page's contracts; mode=semantic (default) searches "
+        "schema vocabulary and may read every contract in the selected family. The rows cover this session's scope",
         _schema(
             {},
             {
                 "query": _TEXT,
                 "family": _TEXT,
+                "mode": {"type": "string", "enum": ["names", "semantic"]},
                 "limit": {"type": "integer", "minimum": 1, "maximum": SEARCH_PAGE_MAX},
                 "cursor": _TEXT,
             },
@@ -331,6 +334,10 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "not settled, and holder_operation_id names it; signing in again changes nothing, so report it to the "
         "person with that id rather than retrying. "
         "Every call submits a new operation, so two identical calls run twice. "
+        "Use wait_seconds=2 for short work: wait on runtime cues and include completion (the authorized "
+        "result envelope) when settled. Otherwise retain the receipt and follow next_call; pending human "
+        "interaction is never answered automatically. The wait bounds idle waiting, not an in-flight "
+        "runtime exchange. start=false does not wait. Never resubmit to obtain a result. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "
         "unless it carried an idempotency_key, and then repeat it only with that same key",
@@ -340,6 +347,7 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
                 "subject_ref": _TEXT,
                 "idempotency_key": _TEXT,
                 "start": {"type": "boolean"},
+                "wait_seconds": {"type": "integer", "minimum": 0, "maximum": 5},
             },
         ),
         # Some registered operation deletes records, and some reads a remote host.
@@ -561,7 +569,7 @@ def _reply_contains_refusal(reply: dict[str, Any]) -> bool:
     return False
 
 
-_EXECUTE_STEPS: Final = ("start",)
+_EXECUTE_STEPS: Final = ("start", "completion")
 """The steps an execute reply reports beside its receipt, each with an outcome of its own."""
 
 UNKNOWN_OUTCOME_MEMBER: Final = "unknown_outcome"
@@ -607,8 +615,8 @@ def unknown_outcome_instruction(value: dict[str, Any]) -> str | None:
     ]
     if unsettled:
         return (
-            f"The operation was recorded under receipt.operation_id, and whether {' and '.join(unsettled)} took "
-            f"effect is not known. {_NEVER_REPEAT}, because a repeat submits a second operation: read this one "
+            f"The operation was recorded under receipt.operation_id; the outcome of {' and '.join(unsettled)} "
+            f"is not known. {_NEVER_REPEAT}, because a repeat submits a second operation: read this one "
             "with observe, and with result once it has settled, before any control action."
         )
     projection = _observed_projection(value)
@@ -638,9 +646,9 @@ def has_refusal(value: dict[str, Any]) -> bool:
         return True
     for step in _EXECUTE_STEPS:
         taken = _result_object(value.get(step))
-        if taken is not None and taken.get("outcome") == "refused":
+        if taken is not None and has_refusal(taken):
             return True
-    if value.get("outcome") != "reply":
+    if value.get("outcome") not in {"reply", "submitted"}:
         return False
     reply = _result_object(value.get("reply"))
     if reply is not None and _reply_contains_refusal(reply):

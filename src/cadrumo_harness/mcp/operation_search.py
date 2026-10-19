@@ -13,6 +13,27 @@ from cadrumo.application.operations.registry import OperationPublicDefinitionDes
 _IDENTIFIER_SEPARATORS = re.compile(r"[._-]+")
 
 
+def rank_operation_names(query: str, definition_ids: Sequence[str]) -> tuple[str, ...]:
+    """Rank the admitted identifier index without fetching request schemas."""
+    if not definition_ids:
+        return ()
+    index = build_command_index(
+        CommandDoc(
+            command_key=definition_id,
+            tool_name="execute",
+            key_and_name=f"{definition_id} {_split_identifier(definition_id)}",
+            description="",
+            aliases="",
+            help="",
+        )
+        for definition_id in definition_ids
+    )
+    try:
+        return tuple(hit.command_key for hit in index.search(query, limit=len(definition_ids)))
+    finally:
+        index.close()
+
+
 def rank_operations(
     query: str, permitted: Sequence[OperationPublicDefinitionDescriptionV1]
 ) -> tuple[OperationPublicDefinitionDescriptionV1, ...]:

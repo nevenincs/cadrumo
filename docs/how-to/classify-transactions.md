@@ -174,7 +174,9 @@ workflow; keep the census facts in your profile correct first - see
 For bulk review, `classify --file` reads a CSV with columns
 `transaction_id`, `classification`, and optional classification facts such as
 `category_id`, `business_pct`, `usage_ratio_id`, taxable-base and VAT columns,
-`iva_category`, and `irpf_category`. Prepare a narrow CSV holding only the rows
+`iva_category`, `irpf_category`, and `notes`. Use notes to record why the category
+fits; quote cells containing commas. Blank optional cells preserve saved values.
+Prepare a narrow CSV holding only the rows
 you mean to change, one row per transaction:
 
 ```text
@@ -202,8 +204,10 @@ from their descriptions, counterparties, and supporting documents. Keep a copy o
 the file. It gives you a record of how you classified that period if you are
 later asked to justify your return. The CSV has no column for the deduction
 kind; set it with `classify` or `add` on each purchase row. This path does not
-batch-update amounts, descriptions, notes, attachments, deduction kinds, or
+batch-update payment amounts, descriptions, attachments, deduction kinds, or
 split/merge state; use the transaction workflow for those row-level edits.
+Check the applied/skipped counts and every failed row. A batch can partially
+succeed; correct only the failed rows rather than repeating the whole file.
 
 ## Apply stored rules automatically
 

@@ -16,6 +16,18 @@ def operation_guidance(tool: str, value: dict[str, Any], *, compact: bool = Fals
     """
     if tool == "execute" and value.get("outcome") == "submitted":
         operation_id = value["receipt"]["operation_id"]
+        observed = value.get("reply")
+        if isinstance(observed, dict):
+            guided = operation_guidance("observe", {"outcome": "reply", "reply": observed}, compact=True)
+            value = {**value, "reply": guided["reply"]}
+            completion = value.get("completion")
+            if isinstance(completion, dict) and completion.get("outcome") == "reply":
+                return value
+            if "next_call" in guided:
+                return {**value, "next_call": guided["next_call"]}
+            # A pending interaction or refused observation needs a decision,
+            # never an automatic response or another submission.
+            return value
         return {**value, "next_call": _observe_call(operation_id)}
     if tool != "observe" or value.get("outcome") != "reply":
         return value

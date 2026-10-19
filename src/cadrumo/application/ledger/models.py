@@ -846,7 +846,7 @@ class BulkClassifyRow(BaseModel):
     Required columns: ``transaction_id``, ``classification``.
     Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
     ``taxable_base``, ``iva_rate``, ``iva_amount``, ``iva_category``,
-    ``irpf_category``.
+    ``irpf_category``, ``notes``. Blank optional cells preserve existing values.
     Unknown column names are rejected pre-persistence to protect against
     silent field mis-mapping. The IVA facts (``taxable_base``, ``iva_rate``,
     ``iva_amount``) are typed ``Decimal`` exactly as the single-classify path
@@ -864,6 +864,7 @@ class BulkClassifyRow(BaseModel):
     transaction_id: TransactionIdReference
     classification: BusinessClassification
     category_id: str | None = None
+    notes: str | None = None
     business_pct: Decimal | None = None
     usage_ratio_id: str | None = None
     taxable_base: Decimal | None = None
@@ -912,6 +913,7 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "iva_amount",
         "iva_category",
         "irpf_category",
+        "notes",
     },
 )
 

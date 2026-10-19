@@ -67,6 +67,10 @@ class LedgerBulkClassifyRequest(BaseModel):
     The shared submission protocol bounds the complete encoded UTF-8 request.
     CSV rows remain governed by the canonical classification service. The
     operand is the classification table itself, never a path to one.
+    Columns: transaction_id, classification (required); category_id, business_pct,
+    usage_ratio_id, taxable_base, iva_rate, iva_amount, iva_category, irpf_category,
+    notes (optional). Blank optional cells preserve existing values. Results
+    report applied/skipped counts and each failed row; a batch is not atomic.
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.

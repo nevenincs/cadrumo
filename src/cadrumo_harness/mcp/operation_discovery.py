@@ -20,7 +20,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .operation_contract_cache import OperationContractCache
-from .operation_search import rank_operations
+from .operation_search import rank_operation_names, rank_operations
 from .protocol_contract import SEARCH_PAGE_DEFAULT, refusal_code
 from .runtime_admission import McpAdmission, require_exact_admitted_status
 from .surfaces import McpSurface
@@ -87,12 +87,42 @@ def search_operations(
     limit = args.get("limit", SEARCH_PAGE_DEFAULT)
     cursor = args.get("cursor")
     if args.get("query", "").strip():
+        query = args["query"].strip()
+        if query in scope or args.get("mode") == "names":
+            ranked = (query,) if query in scope else rank_operation_names(query, scope)
+            return _named_page(client, contracts, ranked, cursor, limit, deadline)
         return _ranked_page(client, contracts, scope, args["query"], cursor, limit, deadline)
     return _listed_page(client, contracts, scope, cursor, limit, deadline)
 
 
 def _in_family(definition_id: str, family: str) -> bool:
     return not family or definition_id == family or definition_id.startswith(f"{family}.")
+
+
+def _named_page(
+    client: FrontendClient,
+    contracts: OperationContractCache,
+    ranked: Sequence[str],
+    cursor: str | None,
+    limit: int,
+    deadline: float,
+) -> dict[str, Any]:
+    """Read only this page's contracts; descriptions remain runtime-authorized."""
+    offset = _offset(cursor)
+    rows: list[OperationPublicDefinitionDescriptionV1] = []
+    unavailable: list[dict[str, str]] = []
+    examined = offset
+    for definition_id in ranked[offset:]:
+        if len(rows) >= limit or (examined > offset and time.monotonic() >= deadline):
+            break
+        description = _described(client, contracts, definition_id, unavailable)
+        examined += 1
+        if description is not None:
+            rows.append(description)
+    page = {**_found(rows, unavailable), "search_mode": "names"}
+    if examined < len(ranked):
+        page["next_cursor"] = str(examined)
+    return page
 
 
 def _listed_page(

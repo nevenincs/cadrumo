@@ -269,6 +269,28 @@ def test_nonrevision_catalogue_port_refuses_before_mutation(subject: BulkClassif
     assert subject.repository.loads == 0 and subject.repository.write_attempts == 0
 
 
+def test_bulk_notes_record_reasons_and_blank_cells_preserve_them(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,notes\n"
+        f'{first.transaction_id},BUSINESS,"Paper and ink, consulting only"\n'
+        f"{second.transaction_id},PERSONAL,Family gift\n"
+    )
+    executor = operation.LedgerBulkClassifyExecutor(subject.compose)
+    asyncio.run(executor.execute(_request(source), subject.context))
+    result = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1]).projection.result
+    assert result is not None and result.applied == 2 and not result.failures
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id].notes == "Paper and ink, consulting only"
+    assert stored[second.transaction_id].notes == "Family gift"
+    source = f"transaction_id,classification,notes\n{first.transaction_id},BUSINESS,\n"
+    asyncio.run(executor.execute(_request(source), subject.context))
+    assert subject.repository.current.transactions[first.transaction_id].notes == "Paper and ink, consulting only"
+
+
 def _declared_irpf_category(authority: PinnedAuthorityOperation) -> str:
     return ledger_irpf_category_catalogue(authority=authority)[0].id
 

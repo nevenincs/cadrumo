@@ -48,6 +48,7 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.operation_changes import OperationChanges
 
 from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
@@ -259,7 +260,54 @@ def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], de
     response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
     if args.get("start", True):
         response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
+        if args.get("wait_seconds", 0) and response["start"].get("outcome") != "unresolved":
+            _complete_short_operation(client, binding, response, args["wait_seconds"], deadline)
     return response
+
+
+def _complete_short_operation(
+    client: FrontendClient, binding: _Binding, response: dict[str, Any], wait_seconds: int, deadline: float
+) -> None:
+    """Wait on runtime cues and disclose a settled result without another model turn.
+
+    The wait budget never shortens an in-flight wire exchange, which would close
+    the admitted connection. An interaction or elapsed wait returns the original
+    receipt and latest observation. Any read failure retains that receipt too:
+    submission already happened and must never be mistaken for a failed write.
+    """
+    operation_id = response["receipt"]["operation_id"]
+    until = min(deadline, time.monotonic() + wait_seconds)
+    try:
+        with OperationChanges(client) as changes:
+            while time.monotonic() < until:
+                if changes.armed:
+                    changes.arm()
+                observed = _observe(
+                    client,
+                    binding,
+                    {"observation": {"operation_id": operation_id, "after_cursor": 0, "page_limit": 1}},
+                    deadline,
+                )
+                response["reply"] = observed["reply"]
+                observation = observed["reply"].get("observation", {})
+                projection = observation.get("projection", {})
+                if observation.get("outcome") != "success":
+                    return
+                if projection.get("operation_id") != operation_id:
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                if projection.get("lifecycle") == "terminal":
+                    response["completion"] = _result(
+                        client, binding, {"result": {"operation_id": operation_id}}, deadline
+                    )
+                    return
+                if projection.get("pending_interaction", {}).get("disposition") != "none":
+                    return
+                if not changes.armed:
+                    changes.arm()
+                    continue
+                changes.wait(max(0, until - time.monotonic()))
+    except Exception as error:
+        response["completion"] = {"outcome": "unresolved", "code": refusal_code(error)}
 
 
 _FAULTS_COVER: Final = (

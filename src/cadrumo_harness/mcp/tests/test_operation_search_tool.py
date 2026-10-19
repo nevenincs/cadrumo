@@ -151,6 +151,24 @@ def _definition_ids(result: dict[str, object]) -> list[str]:
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
+    "query,mode", [(LEDGER_ATTACH_OPERATION_DEFINITION_ID, "semantic"), ("ledger attach", "names")]
+)
+async def test_name_search_describes_only_the_selected_page(query: str, mode: str) -> None:
+    profile_id = uuid4()
+    client = _AdmittedClient(profile_id, _registry())
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
+    try:
+        async with connected_server_and_client_session(build_server(adapter)) as sdk:
+            found = await sdk.call_tool("search", {"query": query, "mode": mode, "limit": 1})
+        assert found.structured_content is not None
+        assert _definition_ids(found.structured_content) == [LEDGER_ATTACH_OPERATION_DEFINITION_ID]
+        assert client.described == [LEDGER_ATTACH_OPERATION_DEFINITION_ID]
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
     ("query", "expected"),
     (
         # Request field vocabulary, not the definition id, carries these terms.
@@ -183,9 +201,12 @@ async def test_search_ranks_admitted_contracts_with_the_command_ranker(query: st
             assert row["interaction_kinds"] == sorted(kind.value for kind in contract.interaction_kinds)
             assert row["ephemeral_secret_required"] is contract.ephemeral_secret_required
             assert row["subject_kind"] == contract.subject_reference.kind.value
-        assert sorted(client.described) == sorted(
-            {definition.definition_id for definition in registry.definitions} | {_DENIED_DEFINITION_ID}
-        )
+        if query == AUTH_READ_OPERATION_DEFINITION_ID:
+            assert client.described == [AUTH_READ_OPERATION_DEFINITION_ID]
+        else:
+            assert sorted(client.described) == sorted(
+                {definition.definition_id for definition in registry.definitions} | {_DENIED_DEFINITION_ID}
+            )
     finally:
         await adapter.close()
     assert client.closed

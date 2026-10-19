@@ -39,7 +39,7 @@ from .models import (
 # The CSV columns that carry a value single classification also takes; the rest of the
 # columns are the row's identity, its classification and the usage ratio.
 _BULK_WIRE_COLUMNS = frozenset(
-    {"business_pct", "category_id", "taxable_base", "iva_rate", "iva_amount", "iva_category", "irpf_category"}
+    {"business_pct", "category_id", "taxable_base", "iva_rate", "iva_amount", "iva_category", "irpf_category", "notes"}
 )
 
 
