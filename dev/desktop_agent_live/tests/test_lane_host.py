@@ -34,6 +34,7 @@ def test_the_package_follows_the_host_configuration(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, configuration: str
 ) -> None:
     monkeypatch.setattr(lane, "_BUILD", tmp_path)
+    monkeypatch.setattr(lane, "_TESTING", tmp_path / "desktop" / "testing")
     monkeypatch.setattr(lane, "_STAGE", tmp_path / "stage")
     _record(tmp_path, configuration=configuration)
     host = lane.test_host(served=False)
@@ -46,6 +47,7 @@ def test_a_host_record_without_a_known_configuration_is_unavailable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, configuration: object
 ) -> None:
     monkeypatch.setattr(lane, "_BUILD", tmp_path)
+    monkeypatch.setattr(lane, "_TESTING", tmp_path / "desktop" / "testing")
     fields = {} if configuration is None else {"configuration": configuration}
     _record(tmp_path, **fields)
     with pytest.raises(lane.UnavailableError, match="build configuration"):

@@ -116,9 +116,9 @@ export const test = base.test.extend<object, { liveBrowser: Browser }>({
       configurable: true,
       writable: true,
     });
-    // The lane's fresh root has none of the optional components set up, so
-    // the shell offers setup once per load. The specs drive the agent, so the
-    // person answers "Not now" whenever the offer covers the window.
+    // A profile without every optional component set up is offered setup
+    // once per load. The specs drive the agent, so the person answers "Not
+    // now" whenever the offer covers the window.
     const setupOffer = page.getByRole("dialog", {
       name: label("desktop.setup.title"),
     });

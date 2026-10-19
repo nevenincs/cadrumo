@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from ..scans import (
-    KEY_PREFIX,
+    KEY_PREFIXES,
     READ_CHUNK_BYTES,
     ProcessRecord,
     descendants,
@@ -25,9 +25,9 @@ from ..scans import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _planted() -> str:
-    """A fake key: the real prefix and a random tail no finding may repeat."""
-    return f"{KEY_PREFIX}test-{secrets.token_hex(12)}"
+def _planted(prefix: str = KEY_PREFIXES[0]) -> str:
+    """A fake key: a real provider prefix and a random tail no finding may repeat."""
+    return f"{prefix}test-{secrets.token_hex(12)}"
 
 
 def test_a_clean_tree_passes(tmp_path: Path) -> None:
@@ -49,8 +49,16 @@ def test_a_planted_key_in_a_log_fails_and_is_not_repeated(tmp_path: Path) -> Non
     location = result.findings[0].location
     assert str(log) in location
     assert location.endswith("at byte 26")
-    tail = key.removeprefix(KEY_PREFIX)
+    tail = key.removeprefix(KEY_PREFIXES[0])
     assert all(tail not in finding.location for finding in result.findings)
+
+
+@pytest.mark.parametrize("prefix", KEY_PREFIXES)
+def test_every_providers_key_prefix_is_found(tmp_path: Path, prefix: str) -> None:
+    # The lane holds no key, so it cannot know which provider's is stored.
+    (tmp_path / "trace.log").write_text(f"value={_planted(prefix)}\n", encoding="utf-8")
+    result = scan_tree([tmp_path])
+    assert [finding.location for finding in result.findings] == [f"file {tmp_path / 'trace.log'} at byte 6"]
 
 
 def test_a_key_stored_as_utf16_is_found(tmp_path: Path) -> None:
@@ -140,7 +148,7 @@ def test_a_planted_key_on_a_command_line_names_only_the_process() -> None:
     assert [finding.location for finding in result.findings] == [
         f"command line of process {planted} ({_record(table, planted).name})"
     ]
-    assert key.removeprefix(KEY_PREFIX) not in result.findings[0].location
+    assert key.removeprefix(KEY_PREFIXES[0]) not in result.findings[0].location
 
 
 @pytest.mark.windows_only

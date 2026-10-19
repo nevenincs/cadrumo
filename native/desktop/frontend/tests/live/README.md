@@ -22,39 +22,41 @@ in `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`, and the lane sets that variable only
 for the desktop it starts. Chromium binds the DevTools port to the loopback
 address, and the lane refuses a port that listens anywhere else.
 
+The lane runs on your own profile, in the storage root the installed desktop
+uses, with the provider settings you stored in Settings > Providers. It handles
+no provider key and no password, and never creates, signs in or signs out a
+profile. Close the Cadrumo desktop first: the desktop runs once per account,
+and the lane never stops yours.
+
 The lane:
 
-- creates a fresh, marked storage root under `build/acceptance`;
-- creates a synthetic profile through the package's `aeat` command line;
-- signs the profile in with the password on standard input;
 - starts the desktop in a kill-on-close Job;
-- stores your provider key through the desktop's authenticated service
-  administration channel, using a separate bounded secret frame;
+- waits for your sign-in: the desktop resumes a stored one, and otherwise you
+  sign in in its window while the lane waits;
+- reads the agent's provider catalog and requires a lane it reports ready;
 - runs this project;
-- signs out and closes the window;
+- deletes every conversation the run created, with the documents stored for
+  it, and no other;
+- closes the window;
 - fails if any process it started is still running;
-- scans for the provider key prefix in the command lines of those processes,
-  in every file under the run's directory, and in the Playwright traces and
-  screenshots.
+- scans for every provider key prefix in the command lines of those processes,
+  in every file under the run's directory, in the logs and agent files written
+  during the run, and in the Playwright traces and screenshots.
 
 Exit 0 means every spec passed and both checks were clean, 1 means a failure,
-and 3 means a prerequisite is absent.
+and 3 means a prerequisite is absent, such as an open desktop, no sign-in, or
+no provider lane ready; the lane names what is missing.
 
-The lane takes `--provider ID` and reads your key only from its own
-environment, as `CADRUMO_LLM_<ID>_API_KEY`, with the id in upper case. It exits
-3 naming that variable when it is unset. It writes the key once to the set command's standard input. The key is
-never placed on a command line, in a file, a log or another process's
-environment.
+The specs read the window's words in your profile's language.
 
 Options, passed as `just desktop-agent-live <options>`:
 
-| Option          | Meaning                                                                        |
-| --------------- | ------------------------------------------------------------------------------ |
-| `--provider ID` | Use the provider with this id; its key is read from `CADRUMO_LLM_<ID>_API_KEY` |
-| `--attach-only` | Run only the attachment check, `attach.live.ts`                                |
-| `--served`      | Load the shell from `just dev`, with hot reload                                |
-| `--keep`        | Keep the run directory after a pass                                            |
-| `-- <args>`     | Pass the remaining arguments to Playwright, such as `-g ...`                   |
+| Option          | Meaning                                                      |
+| --------------- | ------------------------------------------------------------ |
+| `--attach-only` | Run only the attachment check, `attach.live.ts`              |
+| `--served`      | Load the shell from `just dev`, with hot reload              |
+| `--keep`        | Keep the run directory after a pass                          |
+| `-- <args>`     | Pass the remaining arguments to Playwright, such as `-g ...` |
 
 `--served` uses a second test host. Its shell is the development server's
 address, so a change to the shell needs no rebuild while the Rust host, the

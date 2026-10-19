@@ -382,6 +382,16 @@ pub fn admit_title(title: &str) -> Result<String, Refused> {
     Ok(title.to_owned())
 }
 
+/// Whether the agent's answer to a conversation's deletion says every run of
+/// it is gone. A partial deletion is finished by asking again.
+pub fn deletion_complete(answer: &Value) -> Result<(), Refused> {
+    match answer.get("complete").and_then(Value::as_bool) {
+        Some(true) => Ok(()),
+        Some(false) => Err(refused("agent_conversation_delete_incomplete")),
+        None => Err(refused("agent_gateway_unreadable")),
+    }
+}
+
 /// The questionnaires and approvals a run waits on, from its status and its
 /// history, which alone lists pending permissions.
 pub fn pending_of(run: &str, status: &Value, history: &Value) -> Value {
@@ -805,6 +815,26 @@ impl Session {
         client.rename_conversation(conversation, &title).map(|_| ())
     }
 
+    /// Deletes the conversation: every run of it and the documents stored for
+    /// it, which the agent removes. One not sent yet is only forgotten here.
+    pub fn delete(&self, supervisor: &Supervisor, conversation: &str) -> Result<(), Refused> {
+        let client = Client::new(&Self::gateway(supervisor)?);
+        let chain = self.chain(&client, conversation)?;
+        lock(&self.reserved).retain(|(id, _)| id != conversation);
+        lock(&self.named).remove(conversation);
+        if chain.is_empty() {
+            return Ok(());
+        }
+        let answer = client.delete_conversation(conversation)?;
+        {
+            let mut known = lock(&self.known);
+            for run in &chain {
+                known.remove(&run.id);
+            }
+        }
+        deletion_complete(&answer)
+    }
+
     pub fn history(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
         let client = Client::new(&Self::gateway(supervisor)?);
         let runs = self
@@ -1126,6 +1156,22 @@ mod tests {
             "text": "\n  ¿Cuánto IVA declaré?\nen 2025",
             "selection": {"provider": "claude", "transport": "api", "model": "m1", "effort": "high"}
         })
+    }
+
+    #[test]
+    fn a_deletion_is_done_only_once_every_run_is_gone() {
+        assert!(deletion_complete(&json!({"complete": true, "runs_removed": 2})).is_ok());
+        let partial = deletion_complete(&json!({"complete": false, "runs_remaining": 1}));
+        assert_eq!(
+            partial.unwrap_err().code,
+            "agent_conversation_delete_incomplete"
+        );
+        for answer in [json!({}), json!({"complete": "yes"}), Value::Null] {
+            assert_eq!(
+                deletion_complete(&answer).unwrap_err().code,
+                "agent_gateway_unreadable"
+            );
+        }
     }
 
     #[test]

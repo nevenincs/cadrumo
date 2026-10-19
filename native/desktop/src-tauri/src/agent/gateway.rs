@@ -197,6 +197,16 @@ impl Client {
         self.post("/runs", body, None)
     }
 
+    /// `POST /v1/conversations/chain/delete`: every run of the conversation
+    /// whose first run is `root`, and the documents stored for it.
+    pub fn delete_conversation(&self, root: &str) -> Result<Value, Refused> {
+        self.post(
+            "/conversations/chain/delete",
+            &serde_json::json!({ "run_id": root }),
+            None,
+        )
+    }
+
     /// `PATCH /v1/conversations/{root}`: the conversation's title, kept on its
     /// first run.
     pub fn rename_conversation(&self, root: &str, title: &str) -> Result<Value, Refused> {

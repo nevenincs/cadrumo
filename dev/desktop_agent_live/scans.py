@@ -5,9 +5,11 @@ time for the survivor check, and the command line for the key scan. A command
 line is scanned as soon as it is read and never kept. Process environment
 blocks are not read.
 
-The key scan looks for the provider key prefix, in UTF-8 and in UTF-16LE, in
-every file below the given directories and inside the ZIP archives among them,
-which is how Playwright writes traces. A finding names where the prefix was
+The key scan looks for the providers' key prefixes, in UTF-8 and in UTF-16LE,
+in every file below the given directories and inside the ZIP archives among
+them, which is how Playwright writes traces. The lane holds no key, so it
+cannot know the prefix of the one stored in the profile: it looks for every
+prefix the providers give their keys. A finding names where a prefix was
 found, never what followed it. A file that cannot be read is reported as such,
 because an unread file is not a clean one.
 """
@@ -23,10 +25,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any, Final
 
-KEY_PREFIX: Final = "sk-ant-"
-"""The prefix every Anthropic API key starts with."""
+KEY_PREFIXES: Final = (
+    "sk-ant-",  # Anthropic
+    "sk-proj-",  # OpenAI project keys
+    "sk-svcacct-",  # OpenAI service account keys
+    "sk-admin-",  # OpenAI admin keys
+    "sk-or-v1-",  # OpenRouter
+    "AIzaSy",  # Google API keys
+    "gsk_",  # Groq
+)
+"""The prefixes providers give their API keys, each distinctive enough that text carries it only in a key."""
 
-_PATTERNS: Final = ((KEY_PREFIX.encode("ascii"), "utf-8"), (KEY_PREFIX.encode("utf-16-le"), "utf-16-le"))
+_PATTERNS: Final = tuple(
+    (prefix.encode(encoding), encoding) for prefix in KEY_PREFIXES for encoding in ("utf-8", "utf-16-le")
+)
 READ_CHUNK_BYTES: Final = 1 << 20
 _OVERLAP: Final = max(len(pattern) for pattern, _encoding in _PATTERNS) - 1
 _ZIP_DEPTH: Final = 3
@@ -134,7 +146,8 @@ def scan_command_lines(processes: Iterable[ProcessRecord]) -> ScanResult:
         if process is None or str(row["CreationDate"] or "") != process.created:
             continue
         # WMI decodes the command line, so it is searched as text, once.
-        if KEY_PREFIX in str(row.pop("CommandLine") or ""):
+        command_line = str(row.pop("CommandLine") or "")
+        if any(prefix in command_line for prefix in KEY_PREFIXES):
             findings.append(KeyFinding(f"command line of process {process.pid} ({process.name})", "text"))
     return ScanResult(tuple(findings), ())
 

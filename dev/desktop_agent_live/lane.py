@@ -1,43 +1,40 @@
-"""Run the shared agent specs against the packaged desktop, on a fresh marked storage root.
+"""Run the shared agent specs against the packaged desktop, on the person's own signed-in profile.
 
-The lane drives a built package the way a person does, through its own
-programs, and the desktop window through its WebView2 DevTools endpoint:
+The lane drives a built package the way a person does, through the desktop
+window's WebView2 DevTools endpoint, against the profile the installed desktop
+uses, with the provider settings the person stored in Settings. It holds no
+provider key and no password, and never creates, signs in or signs out a
+profile:
 
-1. creates a fresh empty storage root under ``build/acceptance`` and marks it;
-2. creates a synthetic profile through the package's ``aeat`` command line and
-   sets its language to English, the language the shared specs read;
-3. starts the remote-debugging desktop test host, as the desktop image of a
-   mirror of its configuration's staged package, in a kill-on-close Job, with
-   ``CADRUMO_LOCAL_STORAGE_ROOT`` and the workspace window's DevTools port in
+1. refuses to run while a Cadrumo desktop is open: the person's own is never
+   stopped, and only a test-build desktop whose lane is gone is;
+2. starts the remote-debugging desktop test host, as the desktop image of a
+   mirror of its configuration's staged package, in a kill-on-close Job, on
+   the per-user installed storage root the canonical environment definition
+   names, with the workspace window's DevTools port in
    ``CADRUMO_DEV_DESKTOP_DEVTOOLS_PORT``, and requires the DevTools endpoint to
-   listen on loopback only; its attach
-   button takes the run's synthetic files from ``CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR``
-   in place of its native dialog, a seam only the test host has;
-4. signs the profile in through the command line, the password on its standard
-   input only, and requires the sign-in to be stored so the desktop resumes it;
-5. stores the developer's provider key through the desktop's service
-   administration channel and reads back its masked committed status;
-6. runs the live Playwright project, which attaches to the window;
-7. signs out, closes the window and requires every process the run started to
-   have ended;
-8. scans the started processes' command lines, the run's files and logs, and the
-   Playwright traces and screenshots for the provider key prefix.
+   listen on loopback only; its attach button takes the run's synthetic files
+   from ``CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR`` in place of its native dialog, a
+   seam only the test host has;
+3. waits for the profile's sign-in: the desktop resumes a stored one, and
+   otherwise the person signs in in the window while the lane waits;
+4. waits for the agent service and reads the agent's own provider catalog,
+   requiring a lane that reports ready;
+5. records the agent's conversations, runs the live Playwright project, which
+   attaches to the window, and deletes every conversation the run created,
+   with the documents stored for it, and nothing else;
+6. closes the window and requires every process the run started to have ended;
+7. scans the started processes' command lines, the run's files, the logs and
+   agent files written during the run, and the Playwright traces and
+   screenshots for every provider key prefix.
 
 Exit 0 means every step held and every spec passed. Exit 1 names what failed.
 Exit 3 means a prerequisite is absent: the test host, the package, an
-interactive desktop, a credential store that keeps the sign-in, the
-admitted desktop service channel, or the developer's key in this
-lane's own environment. ``--attach-only`` runs only the attachment check
-and always ends incomplete. ``--served`` loads the shell from the development
-server (``just dev``) for iterating on it; the host, launcher and agent stay
-real.
-
-The provider is named on the command line with ``--provider ID``, as the agent
-names it (``claude``). The key comes only from this lane's own environment, which
-the recipe loads from ``env/.env``, under the vendor's name that
-``env/.env.example`` declares for that provider (``CADRUMO_LLM_ANTHROPIC_API_KEY``).
-It crosses the desktop's raw credential channel once and never enters a command
-line, file, log or child environment.
+interactive desktop, a closed desktop, a profile, the person's sign-in, or a
+provider lane the agent reports ready. ``--attach-only`` runs only the
+attachment check and always ends incomplete. ``--served`` loads the shell from
+the development server (``just dev``) for iterating on it; the host, launcher
+and agent stay real.
 """
 
 from __future__ import annotations
@@ -51,31 +48,21 @@ import sys
 import threading
 import time
 import traceback
-from collections.abc import Callable, Generator, Mapping
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
-from uuid import UUID
 
 import httpx
 import psutil
 
 from ..packaging.command_execution import run_command
-from ..runtime_lifecycle.caller_owned_root import (
-    AcceptanceError,
-    Programs,
-    consumer_environment,
-    error_code,
-    require,
-    run_cli,
-    run_runtime_cli,
-)
+from ..runtime_lifecycle.caller_owned_root import AcceptanceError, require
 from .containment import LaneJob
 from .freshness import host_part, package_parts, stale_parts
 from .package import stage_lane_package
-from .provider_key import declared_key_variables, provider_key_variable
 from .scans import (
     ProcessRecord,
     ScanResult,
@@ -83,6 +70,7 @@ from .scans import (
     merge,
     process_table,
     scan_command_lines,
+    scan_file,
     scan_tree,
     survivors,
 )
@@ -91,21 +79,23 @@ _REPOSITORY: Final = Path(__file__).resolve().parents[2]
 _FRONTEND: Final = _REPOSITORY / "native" / "desktop" / "frontend"
 _BUILD: Final = _REPOSITORY / "build" / "windows-x64"
 _STAGE: Final = _BUILD / "stage"
-_PROFILE: Final = "desktop-agent-live"
+_TESTING: Final = _BUILD / "desktop" / "testing"
 _PACKAGED_ENTRY: Final = "http://tauri.localhost/index.html"
 _DEVTOOLS_SECONDS: Final = 120.0
 _RUNTIME_SECONDS: Final = 120.0
+_SIGN_IN_SECONDS: Final = 15 * 60.0
+"""How long the person has to sign in in the window, a person's time and not the machine's."""
 _CLOSE_SECONDS: Final = 60.0
-_SETTLE_SECONDS: Final = 10.0
 _WATCH_SECONDS: Final = 1.0
+_DELETE_ATTEMPTS: Final = 3
 _DESKTOP_UNAVAILABLE: Final = 69
 """The desktop host's exit when the logon has no interactive desktop for its window."""
 _DEVTOOLS_PORT_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_DEVTOOLS_PORT"
 """Where the packaged test host's workspace window, and only it, serves DevTools."""
 _ATTACH_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR"
 """Where the packaged test host's attach button takes its files from, in place of its dialog."""
-_KEY_AUTH_KINDS: Final = frozenset({"api_key", "api_key_with_base_url"})
-"""The ways a provider lane authenticates that take the developer's key."""
+_AMBIENT_EXCLUDED: Final = ("CADRUMO_", "PYTHON", "VIRTUAL_ENV", "UV_", "WEBVIEW2_")
+"""Settings of this checkout's own environment that the packaged desktop must not inherit."""
 
 LANE_ATTACHMENTS: Final[Mapping[str, bytes]] = {
     # Stored, and read by the agent: the word is what its reply must name.
@@ -142,7 +132,17 @@ class TestHost:
     @property
     def lane_package(self) -> Path:
         """Where the run's package mirrors :attr:`package` with this host as its desktop image."""
-        return _BUILD / "desktop" / "testing" / "agent-live-package" / self.configuration / "app"
+        return _TESTING / "agent-live-package" / self.configuration / "app"
+
+
+@dataclass(frozen=True, slots=True)
+class Desktop:
+    """One Cadrumo desktop process running for this account."""
+
+    pid: int
+    executable: Path | None
+    test_build: bool
+    orphaned: bool
 
 
 @dataclass(slots=True)
@@ -185,21 +185,93 @@ class Watch:
         self.observe()
 
 
-def mark_lane_root(root: Path) -> None:
-    """Mark the freshly created, empty storage root with the agent lane's own mark."""
-    from cadrumo_agent_service.host.lane_root import write_lane_mark
+def person_storage_root() -> Path:
+    """The per-user storage root the installed desktop uses, as the canonical environment definition names it."""
+    from cadrumo.core.storage_environment import host_installed_default_root
 
     try:
-        write_lane_mark(root)
+        root = host_installed_default_root(os.environ)
     except (OSError, ValueError) as refused:
-        raise AcceptanceError(f"the lane root could not be marked: {refused}") from refused
+        raise UnavailableError(f"this account has no installed storage root: {refused}") from refused
+    if not root.is_dir():
+        raise UnavailableError(f"no Cadrumo profile is stored at {root}; create one in the desktop first")
+    return root
 
 
-def is_lane_root(root: Path) -> bool:
-    """Whether ``root`` carries the agent lane's mark for exactly that root."""
-    from cadrumo_agent_service.host.lane_root import is_marked_lane_root
+def person_environment(root: Path, package: Path) -> dict[str, str]:
+    """The ambient environment without this checkout's settings, on the person's root and the run's package.
 
-    return is_marked_lane_root(root)
+    No secret store is pinned: the desktop reads the sign-in it resumes from
+    the account's own credential store, as the installed desktop does.
+    """
+    environment = {name: value for name, value in os.environ.items() if not name.upper().startswith(_AMBIENT_EXCLUDED)}
+    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+    environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] = str(package)
+    return environment
+
+
+def _under(path: Path, directory: Path) -> bool:
+    return os.path.normcase(str(path)).startswith(os.path.normcase(str(directory)) + os.sep)
+
+
+def classify_desktops(processes: Iterable[Mapping[str, Any]], testing: Path) -> list[Desktop]:
+    """The desktop processes among ``processes``, each with whether it is a test build and its lane is gone.
+
+    A ``cadrumo.exe`` that runs a ``--role`` is one of the package's own
+    commands, not a desktop. A process whose image cannot be read is taken for
+    the person's own.
+    """
+    found: list[Desktop] = []
+    for process in processes:
+        if str(process.get("name") or "").lower() != "cadrumo.exe":
+            continue
+        if "--role" in (process.get("cmdline") or ()):
+            continue
+        image = process.get("exe")
+        executable = Path(image) if image else None
+        test_build = executable is not None and _under(executable, testing)
+        found.append(Desktop(int(process["pid"]), executable, test_build, not process.get("parent_alive", True)))
+    return found
+
+
+def _desktop_processes() -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for process in psutil.process_iter(["pid", "name", "exe", "cmdline", "ppid", "create_time"]):
+        info = dict(process.info)
+        try:
+            parent = psutil.Process(int(info["ppid"])) if info.get("ppid") else None
+            info["parent_alive"] = parent is not None and parent.create_time() <= float(info["create_time"] or 0)
+        except psutil.Error:
+            info["parent_alive"] = False
+        rows.append(info)
+    return rows
+
+
+def require_no_desktop() -> None:
+    """Refuse while the person's desktop runs, and stop a test-build desktop whose lane is gone.
+
+    The desktop is one instance per account, so the run's own would only hand
+    its window to the one already open.
+    """
+    for desktop in classify_desktops(_desktop_processes(), _TESTING):
+        if not desktop.test_build:
+            raise UnavailableError(
+                f"the Cadrumo desktop is open (process {desktop.pid}); close it, then run the lane again"
+            )
+        if not desktop.orphaned:
+            raise UnavailableError(
+                f"another run's test desktop is open (process {desktop.pid}, {desktop.executable}); let it end first"
+            )
+        with suppress(psutil.NoSuchProcess):
+            process = psutil.Process(desktop.pid)
+            tree = [*process.children(recursive=True), process]
+            for member in tree:
+                with suppress(psutil.NoSuchProcess):
+                    member.kill()
+            _gone, alive = psutil.wait_procs(tree, timeout=_CLOSE_SECONDS)
+            if alive:
+                raise UnavailableError(f"a leftover test desktop (process {desktop.pid}) did not end")
+            print(json.dumps({"step": "leftover_test_desktop_stopped", "pid": desktop.pid}), flush=True)
 
 
 #: Run in each new shell document after the host's own script: it takes the
@@ -247,95 +319,170 @@ def shell_page(browser: Any, entry: str, deadline: float) -> Any:
     return page
 
 
-#: Resolves once the desktop reports its agent service ready, and fails with
-#: the last status it reported when the bound passes first. The host keeps
-#: one status subscriber, the shell's own, so the lane asks the status again
-#: on each rendered frame instead of subscribing.
-_AGENT_READY: Final = """async ({boundMs}) => {
+#: Calls one desktop command with the lane's copy of the shell token.
+_INVOKE: Final = """async ({command, args}) => {
     const token = window.__CADRUMO_LANE_TOKEN__;
     if (!token) throw new Error('desktop token unavailable');
+    try {
+        return {ok: await window.__TAURI_INTERNALS__.invoke(command, {...args, token})};
+    } catch (error) {
+        return {refused: error};
+    }
+}"""
+
+#: Resolves with the status a desktop command reports once the named condition
+#: holds of it, and with the last one when the bound passes first. The host keeps one
+#: subscriber for each status, the shell's own, so the lane asks again on each
+#: rendered frame instead of subscribing.
+_STATUS_UNTIL: Final = """async ({command, until, boundMs}) => {
+    const token = window.__CADRUMO_LANE_TOKEN__;
+    if (!token) throw new Error('desktop token unavailable');
+    const conditions = {
+        sign_in_observed: (status) => Boolean(status && status.runtimeAvailable && status.state !== 'unknown'),
+        signed_in: (status) => Boolean(status && status.state === 'present'),
+        agent_ready: (status) => Boolean(status && status.state === 'ready'),
+    };
+    const holds = conditions[until];
+    if (!holds) throw new Error(`unknown condition ${until}`);
     const bound = Date.now() + boundMs;
     let status = null;
-    while (Date.now() < bound) {
-        status = await window.__TAURI_INTERNALS__.invoke('agent_status', {token});
-        if (status.state === 'ready') return status.state;
+    for (;;) {
+        try { status = await window.__TAURI_INTERNALS__.invoke(command, {token}); }
+        catch (error) { status = {unreadable: error}; }
+        if (holds(status)) return {held: true, status};
+        if (Date.now() >= bound) return {held: false, status};
         await new Promise((frame) => requestAnimationFrame(frame));
     }
-    throw new Error(`agent not ready: ${JSON.stringify(status)}`);
 }"""
 
 
-def provision_provider_key(endpoint: str, shell_entry: str, provider_id: str) -> None:
-    """Store a developer credential through the live desktop's service channel."""
-    from playwright.sync_api import sync_playwright
+def invoke(page: Any, command: str, **args: Any) -> Any:
+    """The result of one desktop command, or a failure naming its refusal."""
+    answer = page.evaluate(_INVOKE, {"command": command, "args": args})
+    if "refused" in answer:
+        raise AcceptanceError(f"{command}: {json.dumps(answer['refused'])}")
+    return answer.get("ok")
 
-    secret = bytearray()
-    try:
-        with sync_playwright() as driver:
-            browser = driver.chromium.connect_over_cdp(endpoint)
-            page = shell_page(browser, shell_entry, time.monotonic() + _DEVTOOLS_SECONDS)
-            # The service channel answers only once the agent service runs for the signed-in person.
-            page.evaluate(_AGENT_READY, {"boundMs": _RUNTIME_SECONDS * 1000})
-            status = page.evaluate("""async () => {
-                const token = window.__CADRUMO_LANE_TOKEN__;
-                if (!token) throw new Error('desktop token unavailable');
-                return await window.__TAURI_INTERNALS__.invoke('provider_settings_status', {token}).catch((error) => {
-                    throw new Error(`provider_settings_status: ${JSON.stringify(error)}`);
-                });
-            }""")
-            entries = status.get("providers", []) if isinstance(status, dict) else []
-            # Each provider has a lane per transport; the key is the one its API lane takes.
-            entry = next(
-                (
-                    item
-                    for item in entries
-                    if isinstance(item, dict)
-                    and item.get("provider") == provider_id
-                    and item.get("auth_kind") in _KEY_AUTH_KINDS
-                ),
-                None,
+
+def status_until(page: Any, command: str, until: str, seconds: float) -> tuple[bool, Any]:
+    """Whether ``command``'s status came to satisfy the named condition within ``seconds``, and the last status read."""
+    answer = page.evaluate(_STATUS_UNTIL, {"command": command, "until": until, "boundMs": seconds * 1000})
+    return bool(answer["held"]), answer["status"]
+
+
+def wait_for_sign_in(page: Any) -> str:
+    """Wait for the person's sign-in, prompting them once when the desktop has none to resume; return the profile."""
+    settled, status = status_until(page, "sign_in_status", "sign_in_observed", _RUNTIME_SECONDS)
+    if not settled:
+        raise AcceptanceError(f"the desktop's runtime did not report the sign-in: {json.dumps(status)}")
+    if not status.get("active_profile") and status.get("state") != "present":
+        raise UnavailableError("no profile is selected; create or select one in the Cadrumo desktop first")
+    if status.get("state") != "present":
+        print(
+            json.dumps(
+                {
+                    "step": "waiting_for_sign_in",
+                    "prompt": f"Sign in to {status.get('active_profile')} in the Cadrumo test window; the lane waits.",
+                }
+            ),
+            flush=True,
+        )
+        signed_in, status = status_until(page, "sign_in_status", "signed_in", _SIGN_IN_SECONDS)
+        if not signed_in:
+            raise UnavailableError(f"nobody signed in within {_SIGN_IN_SECONDS / 60:.0f} minutes")
+    print(json.dumps({"step": "signed_in"}), flush=True)
+    return str(status.get("active_profile"))
+
+
+def lane_problems(lane: Mapping[str, Any]) -> list[str]:
+    """What keeps a provider lane from serving a run, as the agent column judges it; empty when it is ready."""
+    health = lane.get("health") or {}
+    problems = [
+        f"{facet} {health.get(facet)}"
+        for facet in ("configured", "transport", "catalog")
+        if health.get(facet) != "available"
+    ]
+    if health.get("authentication") not in ("authenticated", "not_applicable"):
+        problems.append(f"authentication {health.get('authentication')}")
+    if health.get("selectable") is not True:
+        problems.append("not selectable" + (f" ({', '.join(health['reasons'])})" if health.get("reasons") else ""))
+    if lane.get("executable") is not True:
+        problems.append("not executable")
+    if lane.get("model_source") != "declared" and not (lane.get("catalog") or {}).get("models"):
+        problems.append("no models")
+    return problems
+
+
+def ready_lanes(catalog: Mapping[str, Any]) -> tuple[list[str], dict[str, list[str]]]:
+    """The ready lanes in the order the agent column offers them, and what each other lane lacks.
+
+    The column groups lanes by provider in the order they were served, the
+    API before the command-line app, and starts on the first ready one.
+    """
+    served = [lane for lane in catalog.get("providers") or () if isinstance(lane, Mapping)]
+    providers = list(dict.fromkeys(str(lane.get("provider_id")) for lane in served))
+    ordered = sorted(
+        served,
+        key=lambda lane: (providers.index(str(lane.get("provider_id"))), lane.get("transport") == "cli"),
+    )
+    ready: list[str] = []
+    missing: dict[str, list[str]] = {}
+    for lane in ordered:
+        name = f"{lane.get('provider_id')}/{lane.get('transport')}"
+        problems = lane_problems(lane)
+        if problems:
+            missing[name] = problems
+        else:
+            ready.append(name)
+    return ready, missing
+
+
+def require_ready_lane(page: Any) -> str:
+    """Wait for the agent service, then require a provider lane its catalog reports ready; return it."""
+    ready, status = status_until(page, "agent_status", "agent_ready", _RUNTIME_SECONDS)
+    if not ready:
+        raise UnavailableError(f"the agent service is not ready: {json.dumps(status)}")
+    catalog = invoke(page, "agent_provider_catalog")
+    if not isinstance(catalog, Mapping):
+        raise AcceptanceError(f"the agent's provider catalog is unreadable: {json.dumps(catalog)}")
+    lanes, missing = ready_lanes(catalog)
+    if not lanes:
+        lacking = "; ".join(f"{name}: {', '.join(problems)}" for name, problems in missing.items()) or "none served"
+        raise UnavailableError(
+            f"no provider lane is ready ({lacking}); "
+            "store a key in Settings > Providers, or sign in to a provider there"
+        )
+    print(json.dumps({"step": "provider_lane", "lane": lanes[0], "ready": lanes}), flush=True)
+    return lanes[0]
+
+
+def conversation_ids(page: Any) -> set[str]:
+    """The ids of every conversation the agent column lists."""
+    records = invoke(page, "agent_conversations")
+    require(isinstance(records, list), f"the conversations are unreadable: {json.dumps(records)}")
+    return {str(record["id"]) for record in records if isinstance(record, Mapping) and "id" in record}
+
+
+def created_during(before: set[str], after: set[str]) -> set[str]:
+    """The conversations the run created: listed after it and not before it."""
+    return after - before
+
+
+def delete_conversations(page: Any, created: set[str]) -> None:
+    """Delete the run's conversations, with their documents, asking again while a deletion is partial."""
+    for conversation in sorted(created):
+        for attempt in range(_DELETE_ATTEMPTS):
+            answer = page.evaluate(
+                _INVOKE, {"command": "agent_conversation_delete", "args": {"conversationId": conversation}}
             )
-            declared = sorted(str(item.get("id")) for item in entries if isinstance(item, dict))
-            require(
-                isinstance(entry, dict),
-                f"the service catalogue has no key lane for provider {provider_id!r}; it declares {declared}",
-            )
-            if not isinstance(entry, dict):
-                raise AcceptanceError("provider catalogue entry unavailable")
-            template = _REPOSITORY / "env" / ".env.example"
-            default_base_url = entry.get("default_base_url")
-            variable = provider_key_variable(
-                provider_id,
-                default_base_url if isinstance(default_base_url, str) else None,
-                declared_key_variables(template),
-            )
-            if variable is None:
-                raise UnavailableError(f"{template} declares no key variable for provider {provider_id!r}")
-            secret[:] = os.environ.get(variable, "").encode("utf-8")
-            if not secret:
-                raise UnavailableError(f"no provider key: set {variable} in env/.env")
-            changed = page.evaluate(
-                """async ({provider, revision, secret}) => {
-                const token = window.__CADRUMO_LANE_TOKEN__;
-                if (!token) throw new Error('desktop token unavailable');
-                const bytes = new TextEncoder().encode(secret);
-                try {
-                    return await window.__TAURI_INTERNALS__.invoke('provider_settings_set', bytes, {
-                        headers: {'x-cadrumo-token': token, 'x-cadrumo-provider': provider,
-                            'x-cadrumo-revision': revision}
-                    }).catch((error) => { throw new Error(`provider_settings_set: ${JSON.stringify(error)}`); });
-                } finally { bytes.fill(0); }
-            }""",
-                {"provider": entry["id"], "revision": entry["revision"], "secret": secret.decode("utf-8")},
-            )
-            require(
-                isinstance(changed, dict) and changed.get("available") is True and changed.get("source") == "profile",
-                "service did not verify its committed provider record",
-            )
-            page.evaluate("() => { delete window.__CADRUMO_LANE_TOKEN__; }")
-            print(json.dumps({"step": "provider_key_stored", "readiness": changed.get("readiness")}), flush=True)
-    finally:
-        secret[:] = bytes(len(secret))
+            if "refused" not in answer:
+                break
+            refused = answer["refused"]
+            partial = isinstance(refused, Mapping) and refused.get("code") == "agent_conversation_delete_incomplete"
+            if not partial or attempt == _DELETE_ATTEMPTS - 1:
+                raise AcceptanceError(f"the run's conversation {conversation} was not deleted: {json.dumps(refused)}")
+    left = created & conversation_ids(page)
+    require(not left, f"the run's conversations remain after deletion: {sorted(left)}")
 
 
 def test_host(served: bool) -> TestHost:
@@ -343,7 +490,7 @@ def test_host(served: bool) -> TestHost:
     import hashlib
 
     variant = "served" if served else "packaged"
-    record = _BUILD / "desktop" / "testing" / variant / "host.json"
+    record = _TESTING / variant / "host.json"
     build = (
         "node native/desktop/tests/packaged/host.mjs --served (with CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG "
         "and CADRUMO_NATIVE_CONTRACT set)"
@@ -464,6 +611,8 @@ def devtools_endpoint(port: int, host: Any, deadline: float) -> str:
         code = _exit_code(host)
         if code == _DESKTOP_UNAVAILABLE:
             raise UnavailableError("this logon has no interactive desktop for the window; run the lane from it")
+        if code == 0:
+            raise UnavailableError("another Cadrumo desktop took the window; close it, then run the lane again")
         if code is not None:
             raise AcceptanceError(f"the desktop exited with {code} before its DevTools endpoint answered")
         if time.monotonic() > deadline:
@@ -478,17 +627,6 @@ def devtools_endpoint(port: int, host: Any, deadline: float) -> str:
     }
     require(bool(listening) and listening <= {"127.0.0.1", "::1"}, f"DevTools listens beyond loopback: {listening}")
     return endpoint
-
-
-def wait_for_runtime(programs: Programs, environment: Mapping[str, str], deadline: float) -> None:
-    """Wait until the desktop's runtime serves the lane root."""
-    while True:
-        code, envelope = run_runtime_cli(programs, environment, "config", "sign-in-status")
-        if code == 0:
-            return
-        if time.monotonic() > deadline:
-            raise AcceptanceError(f"no runtime served the lane root: {code} {error_code(envelope)}")
-        time.sleep(1)
 
 
 def close_windows(pid: int) -> int:
@@ -519,16 +657,16 @@ def close_windows(pid: int) -> int:
     return len(windows)
 
 
-def playwright(entry: str, endpoint: str, results: Path, arguments: list[str]) -> int:
+def playwright(entry: str, endpoint: str, results: Path, language: str, arguments: list[str]) -> int:
     """Run the live project as a child of this lane and return its exit status."""
-    environment = {
-        name: value for name, value in os.environ.items() if not name.upper().startswith(("CADRUMO_", "WEBVIEW2_"))
-    }
+    environment = {name: value for name, value in os.environ.items() if not name.upper().startswith(_AMBIENT_EXCLUDED)}
     environment |= {
         "CADRUMO_CMAKE_BINARY_DIR": str(_BUILD),
         "CADRUMO_DEV_DESKTOP_LIVE_ENDPOINT": endpoint,
         "CADRUMO_DEV_DESKTOP_LIVE_ENTRY": entry,
         "CADRUMO_DEV_DESKTOP_LIVE_RESULTS": str(results),
+        # The window speaks the profile's language, so the specs read its words.
+        "CADRUMO_DEV_DESKTOP_LIVE_LANGUAGE": language,
     }
     npx = shutil.which("npx.cmd") or shutil.which("npx")
     if npx is None:
@@ -559,7 +697,43 @@ def lane_desktop(executable: Path, environment: Mapping[str, str], directory: Pa
         scope.terminate(timeout=30)
 
 
-def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: bool, arguments: list[str]) -> list[str]:
+@contextmanager
+def attached(endpoint: str, entry: str) -> Generator[Any]:
+    """The shell page, with the lane's copy of its token, for the block; the lane lets go of the window after."""
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as driver:
+        browser = driver.chromium.connect_over_cdp(endpoint)
+        page = shell_page(browser, entry, time.monotonic() + _DEVTOOLS_SECONDS)
+        try:
+            yield page
+        finally:
+            with suppress(Exception):
+                page.evaluate("() => { delete window.__CADRUMO_LANE_TOKEN__; }")
+
+
+def scan_written_since(directories: Sequence[Path], since: float) -> ScanResult:
+    """Scan every file below ``directories`` written at or after ``since``, following no link."""
+    results: list[ScanResult] = []
+    unreadable: list[str] = []
+
+    def unlisted(error: OSError) -> None:
+        unreadable.append(f"directory {error.filename}")
+
+    for directory in directories:
+        if not directory.is_dir():
+            continue
+        for place, _subdirectories, files in os.walk(directory, followlinks=False, onerror=unlisted):
+            for name in files:
+                path = Path(place, name)
+                with suppress(OSError):
+                    if path.is_symlink() or not path.is_file() or path.stat().st_mtime < since:
+                        continue
+                results.append(scan_file(path))
+    return merge(*results, ScanResult((), tuple(unreadable)))
+
+
+def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list[str]) -> list[str]:
     """Run the lane in ``run_directory``; return what it could not prove."""
     if sys.platform != "win32":
         raise UnavailableError("the lane drives the Windows desktop")
@@ -573,68 +747,43 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
             f"stage it with: just build-native {host.configuration} bundle"
         )
     require_current(host)
+    require_no_desktop()
+    root = person_storage_root()
     package = host.lane_package
     desktop_image = stage_package(host, package)
-    programs = Programs.of(package)
-    root, secret_store, results = run_directory / "storage", run_directory / "secrets", run_directory / "playwright"
-    for directory in (root, secret_store, results):
-        directory.mkdir(parents=True)
+    results = run_directory / "playwright"
+    results.mkdir(parents=True)
     attachments = write_lane_attachments(run_directory / "attach")
-    mark_lane_root(root)
-    environment = consumer_environment(root, secret_store)
-    environment = {name: value for name, value in environment.items() if not name.upper().startswith("WEBVIEW2_")}
-    environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] = str(package)
-
-    password = secrets.token_urlsafe(32)
-    code, envelope = run_cli(
-        programs,
-        environment,
-        *("config", "profile", "create", _PROFILE, "--quiet", "--secrets-stdin"),
-        secret={"passphrase": password, "passphrase_confirmation": password},
-    )
-    require(code == 0, f"profile create: {code} {error_code(envelope)}")
-    print(json.dumps({"step": "profile_created"}), flush=True)
+    environment = person_environment(root, package)
+    print(json.dumps({"step": "storage_root", "root": str(root)}), flush=True)
 
     started_before = descendants(process_table(), [os.getpid()])
     require(not started_before, f"processes already run under the lane: {sorted(p.pid for p in started_before)}")
     watch = Watch(roots=[os.getpid()])
     port = free_port()
-    signed_in = False
     absent: UnavailableError | None = None
     failures: list[str] = []
+    started_at = time.time()
     # Only the desktop is told where the attach button's files are.
     desktop_environment = {**environment, _ATTACH_VARIABLE: str(attachments)}
     with lane_desktop(desktop_image, desktop_environment, run_directory, port) as (scope, desktop):
         watch.members = scope.active_process_ids
         watch.start()
+        endpoint: str | None = None
+        before: set[str] | None = None
         try:
             endpoint = devtools_endpoint(port, desktop, time.monotonic() + _DEVTOOLS_SECONDS)
             print(json.dumps({"step": "desktop_attached", "endpoint": endpoint}), flush=True)
-            wait_for_runtime(programs, environment, time.monotonic() + _RUNTIME_SECONDS)
-            code, envelope = run_cli(
-                programs,
-                environment,
-                *("--profile-secrets-stdin", "config", "profile", "edit", "--quiet", "--output-language", "en"),
-                secret={"profile_passphrase": password},
-            )
-            require(code == 0, f"profile language: {code} {error_code(envelope)}")
-            code, envelope = run_cli(
-                programs, environment, "config", "login", _PROFILE, "--secrets-stdin", secret={"passphrase": password}
-            )
-            require(code == 0, f"sign-in: {code} {error_code(envelope)}")
-            signed_in = True
-            if envelope.get("result", {}).get("session_persisted") is not True:
-                raise UnavailableError(
-                    "this logon's credential store did not keep the sign-in, so the desktop cannot resume it; "
-                    "run the lane from the signed-in Windows desktop"
-                )
-            print(json.dumps({"step": "signed_in"}), flush=True)
-            if attach_only:
-                unproven.append("agent specs: --attach-only ran only the attachment check")
-                arguments = [*arguments, "tests/live/attach.live.ts"]
-            else:
-                provision_provider_key(endpoint, host.entry, provider_id)
-            status = playwright(host.entry, endpoint, results, arguments)
+            with attached(endpoint, host.entry) as page:
+                wait_for_sign_in(page)
+                language = str((invoke(page, "desktop_language_read") or {}).get("language") or "en")
+                if attach_only:
+                    unproven.append("agent specs: --attach-only ran only the attachment check")
+                    arguments = [*arguments, "tests/live/attach.live.ts"]
+                else:
+                    require_ready_lane(page)
+                before = conversation_ids(page)
+            status = playwright(host.entry, endpoint, results, language, arguments)
             print(json.dumps({"step": "playwright", "exit_code": status}), flush=True)
             if status != 0:
                 failures.append(f"the live project failed with exit {status}; report: {results / 'results.json'}")
@@ -643,9 +792,20 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
         except AcceptanceError as error:
             failures.append(str(error))
         finally:
-            failures.extend(_settle(programs, environment, desktop, watch, signed_in=signed_in))
-    _delete_stored_sign_in(root)
-    scan = merge(*watch.command_lines, scan_tree([run_directory]))
+            if endpoint is not None and before is not None:
+                try:
+                    with attached(endpoint, host.entry) as page:
+                        created = created_during(before, conversation_ids(page))
+                        delete_conversations(page, created)
+                    print(json.dumps({"step": "conversations_deleted", "count": len(created)}), flush=True)
+                except Exception as error:  # A conversation left behind is the person's to see.
+                    failures.append(f"the run's conversations were not cleaned up: {error}")
+            failures.extend(_settle(desktop, watch))
+    scan = merge(
+        *watch.command_lines,
+        scan_tree([run_directory]),
+        scan_written_since([root / "logs", root / "agent"], started_at),
+    )
     failures.extend(f"provider key prefix in the {finding.location} ({finding.encoding})" for finding in scan.findings)
     failures.extend(f"not scanned, unreadable: {place}" for place in scan.unreadable)
     if scan.clean:
@@ -659,42 +819,36 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
     return unproven
 
 
-def _settle(
-    programs: Programs, environment: Mapping[str, str], desktop: Any, watch: Watch, *, signed_in: bool
-) -> list[str]:
-    """Sign out, close the window, and return what the run left behind."""
+def _wait_for_exit(started: Iterable[ProcessRecord]) -> None:
+    """Wait on the started processes that still run until they end or the close bound passes."""
+    running: list[psutil.Process] = []
+    for record in started:
+        with suppress(psutil.Error):
+            process = psutil.Process(record.pid)
+            if process.ppid() == record.parent:
+                running.append(process)
+    psutil.wait_procs(running, timeout=_CLOSE_SECONDS)
+
+
+def _settle(desktop: Any, watch: Watch) -> list[str]:
+    """Close the window, and return what the run left behind."""
     failures: list[str] = []
     with suppress(Exception):
         watch.observe()
-    if signed_in:
-        code, envelope = run_cli(programs, environment, "config", "logout")
-        if code != 0:
-            failures.append(f"sign-out: {code} {error_code(envelope)}")
     if _exit_code(desktop) is None:
         close_windows(desktop.pid)
         with suppress(Exception):
             desktop.wait(timeout=_CLOSE_SECONDS)
     if _exit_code(desktop) is None:
         failures.append(f"the desktop did not close within {_CLOSE_SECONDS:.0f}s of its close request")
-    time.sleep(_SETTLE_SECONDS)
     watch.stop()
+    _wait_for_exit(watch.started)
     left = survivors(watch.started, process_table())
     if left:
         failures.append("processes the run started survive it: " + ", ".join(f"{p.pid}:{p.name}" for p in left))
     else:
         print(json.dumps({"step": "no_surviving_processes", "started": len(watch.started)}), flush=True)
     return failures
-
-
-def _delete_stored_sign_in(root: Path) -> None:
-    """Remove the profile's stored sign-in from the credential store, if sign-out left it."""
-    from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
-    from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
-
-    with suppress(Exception):
-        selected = observe_active_profile_pointer(root).bucket_id
-        if selected is not None:
-            delete_profile_session(storage_root=root, profile_id=UUID(selected))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -718,9 +872,6 @@ def main(argv: list[str] | None = None) -> int:
 def _main(argv: list[str] | None) -> int:
     """Run the lane; exit 0 on pass, 1 on a failure, 3 when a prerequisite is absent."""
     parser = argparse.ArgumentParser(prog="desktop-agent-live", description=(__doc__ or "").splitlines()[0])
-    parser.add_argument(
-        "--provider", required=True, metavar="ID", help="The provider id whose developer key is stored."
-    )
     parser.add_argument("--served", action="store_true", help="Load the shell from the development server.")
     parser.add_argument("--attach-only", action="store_true", help="Run only the attachment check.")
     parser.add_argument("--keep", action="store_true", help="Keep the run directory after a pass.")
@@ -733,17 +884,14 @@ def _main(argv: list[str] | None) -> int:
     try:
         unproven = run(
             run_directory,
-            provider_id=options.provider,
             served=options.served,
             attach_only=options.attach_only,
             arguments=options.playwright,
         )
     except UnavailableError as absent:
-        # Nothing ran that a kept root would explain, so only --keep keeps it.
-        if not options.keep and is_lane_root(run_directory / "storage"):
+        # Nothing ran that a kept directory would explain, so only --keep keeps it.
+        if not options.keep:
             _remove_run(run_directory, base)
-        elif not any(run_directory.iterdir()):
-            run_directory.rmdir()
         print(json.dumps({"step": "unavailable", "reason": str(absent)}), flush=True)
         return 3
     except AcceptanceError as failure:
@@ -759,10 +907,8 @@ def _main(argv: list[str] | None) -> int:
 
 
 def _remove_run(run_directory: Path, base: Path) -> None:
-    """Remove a run directory this lane created and marked, and nothing else."""
+    """Remove a run directory this lane created, and nothing else."""
     resolved = run_directory.resolve()
     if resolved.parent != base.resolve() or not resolved.name.startswith("desktop-agent-live-"):
         raise AcceptanceError(f"refusing to remove {resolved}: not a lane run directory")
-    if not is_lane_root(resolved / "storage"):
-        raise AcceptanceError(f"refusing to remove {resolved}: its root carries no lane mark")
     shutil.rmtree(resolved)

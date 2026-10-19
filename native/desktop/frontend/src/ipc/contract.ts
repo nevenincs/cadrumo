@@ -991,6 +991,13 @@ export interface HostCommands {
     args: Authorized<{ conversationId: string; title: string }>;
     result: null;
   };
+  /** Deletes the conversation, every run of it and the documents stored
+   * for it; `agent_conversation_delete_incomplete` when some remain, which a
+   * repeated request finishes. */
+  agent_conversation_delete: {
+    args: Authorized<{ conversationId: string }>;
+    result: null;
+  };
   /** Opens the host's file picker and stores what is picked in the
    * conversation's storage, following each upload on `updates`. */
   agent_attach: {

@@ -205,6 +205,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_skill_verify,
         agent_conversation_start,
         agent_conversation_rename,
+        agent_conversation_delete,
         agent_send,
         agent_cancel,
         agent_pending,
@@ -417,6 +418,18 @@ async fn agent_conversation_rename(
     blocking(&host, move |host| {
         host.session
             .rename(&host.supervisor, &conversation_id, &title)
+    })
+    .await
+}
+
+/// Deletes a conversation with every run of it and the documents stored for it.
+#[tauri::command]
+async fn agent_conversation_delete(
+    host: State<'_, Arc<AgentHost>>,
+    conversation_id: String,
+) -> std::result::Result<(), Refused> {
+    blocking(&host, move |host| {
+        host.session.delete(&host.supervisor, &conversation_id)
     })
     .await
 }
