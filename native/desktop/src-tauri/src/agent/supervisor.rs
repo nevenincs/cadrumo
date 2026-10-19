@@ -176,6 +176,7 @@ struct Running {
     bearer: Arc<Zeroizing<String>>,
     gateway_bearer: Arc<Zeroizing<String>>,
     person: Option<super::person::HeldPerson>,
+    person_failure: Option<tokio::sync::watch::Receiver<Option<ApplicationError>>>,
     started: Instant,
 }
 
@@ -359,12 +360,13 @@ impl Supervisor {
     }
 
     pub fn person_request(&self, request: serde_json::Value) -> Result<serde_json::Value> {
+        self.begin();
         let person = lock(&self.shared.running)
             .as_ref()
             .and_then(|running| running.person.clone())
             .ok_or_else(|| {
-                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                    .with_reason("person_bridge_unavailable")
+                ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                    .with_reason("agent_service_unavailable")
             })?;
         lock(&person).exchange(request)
     }
@@ -514,10 +516,17 @@ async fn start(
     let launch = launch.clone();
     let prepare_bearer = bearer.clone();
     let prepare_profile = profile.clone();
-    let Prepared { command, person } =
-        tauri::async_runtime::spawn_blocking(move || launch(&prepare_bearer, &prepare_profile))
-            .await
-            .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    let (Prepared { command, person }, person_failure) =
+        tauri::async_runtime::spawn_blocking(move || {
+            let prepared = launch(&prepare_bearer, &prepare_profile)?;
+            let failure = prepared
+                .person
+                .as_ref()
+                .map(|person| lock(person).failures());
+            Ok::<_, ApplicationError>((prepared, failure))
+        })
+        .await
+        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
     let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
     shared
         .diagnostics
@@ -550,6 +559,7 @@ async fn start(
                 bearer,
                 gateway_bearer,
                 person,
+                person_failure,
                 started: Instant::now(),
             });
             None
@@ -624,6 +634,8 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         tokio::pin!(changed);
         let observation = observe();
         tokio::pin!(observation);
+        let failed_person = person_failed(&shared);
+        tokio::pin!(failed_person);
         // CLI status reads can take seconds. Launcher refusal/exit must clear
         // the gateway and publish its cause while that read is still pending.
         let observed = loop {
@@ -639,6 +651,12 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     if handle(&shared, generation, signal).await {
                         retries.failed(&shared);
                     }
+                }
+                (generation, error) = &mut failed_person => {
+                    if retire_failed_person(&shared, generation, error).await {
+                        retries.failed(&shared);
+                    }
+                    continue 'supervision;
                 }
                 observed = &mut observation => break observed,
             }
@@ -731,6 +749,9 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         // observation, an explicit wake, a launcher failure, or the one
         // deadline this round set (a retry, or a start that must have finished).
         let due = next_due(&shared, &retries);
+        // Starting this round may have installed a different held session.
+        let failed_person = person_failed(&shared);
+        tokio::pin!(failed_person);
         let deadline = async move {
             match due {
                 Some(at) => tokio::time::sleep_until(at.into()).await,
@@ -743,6 +764,12 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 _ = &mut wake => break,
                 () = &mut changed => break,
                 () = &mut deadline => break,
+                (generation, error) = &mut failed_person => {
+                    if retire_failed_person(&shared, generation, error).await {
+                        retries.failed(&shared);
+                    }
+                    break;
+                }
                 Some((generation, signal)) = received.recv() => {
                     if handle(&shared, generation, signal).await {
                         retries.failed(&shared);
@@ -753,6 +780,51 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         }
     }
     let _ = stop_running(&shared, None, AgentStopCause::WindowClosing).await;
+}
+
+/// A failed shared profile read must retire the service it admitted promptly,
+/// without waiting for the busy bridge child or another sign-in observation.
+async fn person_failed(shared: &Shared) -> (u64, ApplicationError) {
+    let held = lock(&shared.running).as_ref().and_then(|running| {
+        running
+            .person_failure
+            .clone()
+            .map(|failure| (running.generation, failure))
+    });
+    let Some((generation, mut failure)) = held else {
+        return std::future::pending().await;
+    };
+    loop {
+        if let Some(error) = failure.borrow_and_update().clone() {
+            return (generation, error);
+        }
+        if failure.changed().await.is_err() {
+            return std::future::pending().await;
+        }
+    }
+}
+
+async fn retire_failed_person(
+    shared: &Arc<Shared>,
+    generation: u64,
+    error: ApplicationError,
+) -> bool {
+    if lock(&shared.running)
+        .as_ref()
+        .map(|running| running.generation)
+        != Some(generation)
+    {
+        return false;
+    }
+    shared.diagnostics.host_failure(HostStage::Agent, error);
+    publish(
+        shared,
+        State::Refused {
+            code: Refusal::ServiceFailed,
+        },
+    );
+    let _ = stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
+    true
 }
 
 /// The one moment this round must look again without a new observation: when
@@ -1683,6 +1755,54 @@ mod tests {
                 started.iter().all(|process| !running.contains(process)),
                 "a started process survived: {running:?}"
             );
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn a_shared_person_failure_retires_a_ready_service_and_allows_a_fresh_start() {
+            let rig = rig(false, false);
+            serving(&rig, 0).await;
+            let original = rig.supervisor.gateway().unwrap();
+            let person = lock(&rig.supervisor.shared.running)
+                .as_ref()
+                .unwrap()
+                .person
+                .clone()
+                .unwrap();
+            // This holder deliberately cannot answer a background language
+            // request. Its launcher stays alive until the supervisor stops it.
+            let error = tauri::async_runtime::spawn_blocking(move || {
+                lock(&person)
+                    .exchange(serde_json::json!({"action":"language_read"}))
+                    .unwrap_err()
+            })
+            .await
+            .unwrap();
+            until(&rig, 0, "refused").await;
+            until_seen(&rig, "failed service not retired", || {
+                let stopped = lock(&rig.supervisor.shared.running).is_none();
+                stopped.then_some(())
+            })
+            .await;
+            assert!(rig.supervisor.gateway().is_none());
+            assert!(
+                rig.diagnostics
+                    .snapshot(u64::MAX)
+                    .events
+                    .iter()
+                    .any(|event| {
+                        event
+                            .failure
+                            .as_ref()
+                            .is_some_and(|failure| failure.reason == error.reason)
+                    })
+            );
+            // A new start gets its own admitted session. It does not retry
+            // the background request that lost the old one.
+            let from = lock(&rig.statuses).len();
+            rig.supervisor.retry();
+            serving(&rig, from).await;
+            assert!(!original.same_instance(&rig.supervisor.gateway().unwrap()));
+            rig.supervisor.close().await.unwrap();
         }
 
         #[tokio::test(flavor = "multi_thread")]

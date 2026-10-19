@@ -429,9 +429,10 @@ export function fixtureAgent({
   agent: AgentViews;
   session: AgentSession;
   /** Publishes the agent's status, as the service does once it is ready. */
-  publishStatus: () => void;
+  publishStatus: (status?: AgentServiceStatus) => void;
 } {
   let catalogBusy = catalog === "busy";
+  let publishedStatus: AgentServiceStatus | null = null;
   const statusListeners = new Set<(status: AgentServiceStatus) => void>();
   const inventory = skills === "many" ? MANY_FIXTURE_SKILLS : FIXTURE_SKILLS;
   const knownSkill = (name: string) => {
@@ -494,7 +495,11 @@ export function fixtureAgent({
   };
   const status = (): AgentServiceStatus =>
     readable()
-      ? { state: "ready", agent_version: "0.0.0-fixture", lane: "development" }
+      ? (publishedStatus ?? {
+          state: "ready",
+          agent_version: "0.0.0-fixture",
+          lane: "development",
+        })
       : { state: "refused", code: "agent_signed_out", lane: "development" };
 
   /** Runs `steps` one after another from now, as the reply's stream. */
@@ -1279,7 +1284,8 @@ export function fixtureAgent({
     },
   };
 
-  const publishStatus = () => {
+  const publishStatus = (next?: AgentServiceStatus) => {
+    publishedStatus = next ?? null;
     catalogBusy = false;
     for (const listener of statusListeners) listener(status());
   };

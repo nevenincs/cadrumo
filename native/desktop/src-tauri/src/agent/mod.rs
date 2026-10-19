@@ -304,11 +304,22 @@ async fn blocking<T: Send + 'static>(
     let host = host.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         host.require_person()
-            .map_err(|error| host.refuse("agent_signed_out", error))?;
+            .map_err(|error| host.refuse(person_refusal(&error), error))?;
         work(&host)
     })
     .await
     .map_err(|_| Refused::new("agent_host_failed".to_owned()))?
+}
+
+/// A service still starting or recovering does not mean the person signed out.
+fn person_refusal(
+    error: &cadrumo_application::error::application::ApplicationError,
+) -> &'static str {
+    match error.reason.as_deref() {
+        Some("agent_service_unavailable") => "agent_service_busy",
+        Some("person_not_signed_in" | "person_request_refused") => "agent_signed_out",
+        _ => "agent_service_failed",
+    }
 }
 
 /// What an administration failure tells the column: a service that did not
@@ -654,6 +665,20 @@ async fn agent_attach<R: Runtime>(
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn a_service_start_or_lost_bridge_is_not_reported_as_sign_out() {
+        for (reason, expected) in [
+            ("agent_service_unavailable", "agent_service_busy"),
+            ("person_bridge_closed", "agent_service_failed"),
+            ("person_reply_timeout", "agent_service_failed"),
+            ("person_not_signed_in", "agent_signed_out"),
+        ] {
+            let error = ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                .with_reason(reason);
+            assert_eq!(person_refusal(&error), expected, "{reason}");
+        }
+    }
 
     #[test]
     fn an_admin_exchange_that_ran_out_of_time_is_busy_and_can_be_asked_again() {

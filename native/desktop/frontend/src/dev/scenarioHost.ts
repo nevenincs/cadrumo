@@ -17,6 +17,7 @@ import type {
   SignInStatus,
 } from "../ipc/contract";
 import type { Host } from "../shell/host";
+import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
 import {
@@ -124,7 +125,7 @@ declare global {
     /** Controls for synthetic, presentation-only provider sign-in attempts. */
     __scenarioProviderSignIn?: ProviderSignInFixtureControls;
     /** Publishes the fixture agent's status, as its service does when ready. */
-    __scenarioAgentPublishStatus?: () => void;
+    __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
   }
 }
 
@@ -306,9 +307,9 @@ export function scenarioHost(
   });
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;
-  window.__scenarioAgentPublishStatus = () => {
-    publishedBefore?.();
-    publishStatus();
+  window.__scenarioAgentPublishStatus = (status) => {
+    publishedBefore?.(status);
+    publishStatus(status);
   };
 
   const providerSettings = providerFixture.settings;

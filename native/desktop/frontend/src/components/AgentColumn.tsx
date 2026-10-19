@@ -112,6 +112,8 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.service_root_unmarked");
     case "agent_service_failed":
       return t("desktop.agent.service_failed");
+    case "agent_service_busy":
+      return t("desktop.agent.service_starting");
     case "agent_reply_in_progress":
       return t("desktop.agent.reply_in_progress");
     case "agent_gateway_attachment_not_found":
@@ -229,6 +231,11 @@ export function AgentColumn({
     setView((held) => ({ ...held, ...next }));
 
   const readable = agent !== undefined && reader !== null && shown;
+  const status = useAgentStatus(session, readable);
+  const ready = status?.state === "ready";
+  // A signed-in profile can precede its agent service. Reopening this gate
+  // also refreshes reads after the service has recovered.
+  const serviceReadable = readable && (!session || ready);
   // The conversations are read while the history is open, and while one of
   // them is shown, for its title. Opening the history asks again, so it is
   // never the list from the last time.
@@ -236,10 +243,10 @@ export function AgentColumn({
   const wanted = historyOpen || conversationId !== null;
   const readConversations = useMemo(
     () =>
-      readable && agent && (historyOpen || wanted)
+      serviceReadable && agent && (historyOpen || wanted)
         ? () => agent.conversations()
         : null,
-    [readable, agent, historyOpen, wanted],
+    [serviceReadable, agent, historyOpen, wanted],
   );
   // Asked again once a reply has finished, for a title the agent gave.
   const conversations = useAgentRead(readConversations, revision);
@@ -254,7 +261,7 @@ export function AgentColumn({
     views: agent,
     session,
     conversationId,
-    enabled: readable && conversationShown,
+    enabled: serviceReadable && conversationShown,
     onSettled,
     onToolRefused,
   });
@@ -283,8 +290,6 @@ export function AgentColumn({
     untitled: t("desktop.agent.unavailable"),
   });
 
-  // The service, and what it can run, while the column could send.
-  const status = useAgentStatus(session, readable);
   // cadrumo-agent's skills, which `/` lists, and the skill command shown.
   const skills = useSkillInventory(session);
   const reviewSkill = useMemo(() => session?.skill?.bind(session), [session]);
@@ -293,7 +298,6 @@ export function AgentColumn({
     [session],
   );
   const [skillShown, setSkillShown] = useState<SkillCommand | null>(null);
-  const ready = status?.state === "ready";
   // What it can run is the agent's own catalog, every lane of it.
   const readCatalog = useMemo(
     () => (ready && session ? () => session.providerCatalog() : null),

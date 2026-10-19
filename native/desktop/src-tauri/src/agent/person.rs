@@ -75,6 +75,7 @@ pub struct Person {
     events: Arc<Mutex<Option<PersonEvents>>>,
     // Whether the last exchange's error was a refusal of that very request.
     refused_in_step: bool,
+    failure: tokio::sync::watch::Sender<Option<ApplicationError>>,
     reply_limit: Duration,
     pub identity: Value,
 }
@@ -188,6 +189,7 @@ impl Person {
             stderr_closed,
             events,
             refused_in_step: false,
+            failure: tokio::sync::watch::Sender::new(None),
             reply_limit,
             identity: Value::Null,
         };
@@ -267,16 +269,28 @@ impl Person {
         self.stdin.is_some() && matches!(self.child.try_wait(), Ok(None))
     }
 
+    /// Shared consumers must stop using a failed exchange even while the
+    /// bridge child is still finishing its last request.
+    pub fn failures(&self) -> tokio::sync::watch::Receiver<Option<ApplicationError>> {
+        self.failure.subscribe()
+    }
+
     pub fn exchange(&mut self, mut document: Value) -> Result<Value> {
+        if let Some(error) = self.failure.borrow().as_ref() {
+            return Err(failed("person_bridge_closed").caused_by(error.clone()));
+        }
         self.refused_in_step = false;
         let reply = self.exchange_once(&mut document);
-        if reply.is_err() && !self.refused_in_step {
+        if let Err(error) = &reply
+            && !self.refused_in_step
+        {
             // A missed or malformed reply loses this half-duplex bridge. No
             // later call may replay a decision or consume its delayed reply.
             // A refusal of this very request leaves it in step: a hold that
             // survives one, as for an uncertain OS observation, keeps the
             // person's session, and one that ends is seen closed.
             drop(self.stdin.take());
+            self.failure.send_replace(Some(error.clone()));
         }
         reply
     }
@@ -743,6 +757,43 @@ mod failure_tests {
         assert_eq!(refusal.code.as_deref(), Some("unavailable"));
         assert_eq!(refusal.trace_id, None);
         assert!(person.is_open());
+        assert!(person.failures().borrow().is_none());
+    }
+
+    #[test]
+    fn a_timed_out_exchange_notifies_shared_owners_and_keeps_its_original_cause() {
+        let session = "22345678-1234-4234-8234-123456789abc";
+        let identity = format!(
+            r#"{{"kind":"session_held","profile_id":"{PROFILE}","session_id":"{session}","runtime_boot_id":"{session}","connection_id":"{session}"}}"#
+        );
+        // Withhold the reply until EOF. Any replay would instead reach this
+        // child's second read and make it exit unsuccessfully.
+        let script = format!(
+            "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
+             $null = [Console]::In.ReadLine(); \
+             if ($null -ne [Console]::In.ReadLine()) {{ exit 9 }}; exit 0 }}"
+        );
+        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        person.reply_limit = Duration::from_millis(50);
+        let failure = person.failures();
+        assert!(failure.borrow().is_none());
+        let error = person
+            .exchange(json!({"action": "language_read"}))
+            .unwrap_err();
+        assert_eq!(error.reason.as_deref(), Some("person_reply_timeout"));
+        assert_eq!(failure.borrow().as_ref().unwrap().reason, error.reason);
+        assert!(!person.is_open());
+        let later = person.exchange(json!({"action": "activity"})).unwrap_err();
+        assert_eq!(later.reason.as_deref(), Some("person_bridge_closed"));
+        assert!(matches!(
+            &later.causes[..],
+            [Cause::Application { code: ErrorCode::TimedOut, reason: Some(reason), .. }, Cause::TimedOut]
+                if reason == "person_reply_timeout"
+        ));
+        assert!(
+            person.child.wait().unwrap().success(),
+            "no request was replayed"
+        );
     }
 
     #[test]
