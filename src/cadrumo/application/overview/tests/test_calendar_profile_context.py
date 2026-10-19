@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -14,8 +14,9 @@ from ....domain.deadlines.models import ObligationStatus
 from ..agenda import build_overview_agenda
 from ..backlog import build_overview_backlog
 from ..calendar import build_overview_calendar
-from ..calendar_models import OverviewCalendarRange
+from ..calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..calendar_warnings import _PROFILE_FIELD_WARNING_META
+from ..coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ..read_calendar_projection import OverviewAgendaSnapshot, OverviewBacklogSnapshot, OverviewCalendarSnapshot
 from .calendar_test_support import profile
 
@@ -74,6 +75,13 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
     assert captured.to_calendar() == calendar
     assert agenda_capture.to_agenda() == agenda
     assert backlog_capture.to_backlog() == backlog
+    for snapshot in (captured, agenda_capture, backlog_capture):
+        expected = tuple(
+            row.modelo
+            for row in snapshot.coverage.advised
+            if row.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING
+        )
+        assert snapshot.applicable_modelos_without_deadline == expected
     assert captured.late_count == sum(row.status is ObligationStatus.OVERDUE for row in calendar.entries)
     assert any(row.status is ObligationStatus.DUE_SOON for row in captured.entries)
     data = captured.model_dump(mode="python")
@@ -93,3 +101,22 @@ def test_every_profile_gap_has_real_prose_in_every_supported_language(language: 
             assert tr(message_key, locale=language).startswith(prefix)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
+
+
+def test_undated_obligations_are_not_hidden_among_undetermined_or_excluded_forms() -> None:
+    calendar = OverviewCalendar(
+        range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        evaluated_on=date(2026, 10, 19),
+        generated_at=datetime(2026, 10, 19, tzinfo=UTC),
+        entries=(),
+        coverage=ObligationCoverageReport(
+            advised=(
+                AdvisedObligation(modelo="100", reason=CoverageAdviceReason.APPLICABLE_WINDOW_MISSING),
+                AdvisedObligation(modelo="111", reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED),
+            ),
+            confidently_excluded=("200",),
+        ),
+    )
+    snapshot = OverviewCalendarSnapshot.from_calendar(calendar)
+    assert snapshot.applicable_modelos_without_deadline == ("100",)
+    assert snapshot.to_calendar() == calendar

@@ -19,7 +19,7 @@ from .calendar_models import (
     OverviewCalendarEntry,
     OverviewCalendarRange,
 )
-from .coverage import ObligationCoverageReport
+from .coverage import CoverageAdviceReason, ObligationCoverageReport
 from .read_calendar_item_projection import (
     OverviewCalendarEntrySnapshot,
     OverviewCalendarEventSnapshot,
@@ -43,6 +43,10 @@ def _entry(
     )
 
 
+def _without_deadlines(coverage: ObligationCoverageReport) -> tuple[str, ...]:
+    return tuple(row.modelo for row in coverage.advised if row.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING)
+
+
 class OverviewCalendarSnapshot(BaseModel):
     """Full current calendar output without private input records."""
 
@@ -60,6 +64,7 @@ class OverviewCalendarSnapshot(BaseModel):
     events: tuple[OverviewCalendarEventSnapshot, ...]
     coverage: ObligationCoverageReport
     late_count: NonNegativeInt | None = None
+    applicable_modelos_without_deadline: tuple[str, ...] | None = None
 
     @model_validator(mode="after")
     def _late_count_matches_entries(self) -> Self:
@@ -87,6 +92,7 @@ class OverviewCalendarSnapshot(BaseModel):
             events=tuple(OverviewCalendarEventSnapshot.from_event(row) for row in value.events),
             coverage=value.coverage,
             late_count=sum(row.status is ObligationStatus.OVERDUE for row in value.entries),
+            applicable_modelos_without_deadline=_without_deadlines(value.coverage),
         )
 
     def to_calendar(self) -> OverviewCalendar:
@@ -123,6 +129,7 @@ class OverviewAgendaSnapshot(BaseModel):
     coverage: ObligationCoverageReport
     taxpayer_model_declared: bool
     incomplete_reason: str | None
+    applicable_modelos_without_deadline: tuple[str, ...] | None = None
 
     @classmethod
     def from_agenda(cls, value: OverviewAgenda) -> Self:
@@ -140,6 +147,7 @@ class OverviewAgendaSnapshot(BaseModel):
             coverage=value.coverage,
             taxpayer_model_declared=value.taxpayer_model_declared,
             incomplete_reason=value.incomplete_reason,
+            applicable_modelos_without_deadline=_without_deadlines(value.coverage),
         )
 
     def to_agenda(self) -> OverviewAgenda:
@@ -175,6 +183,7 @@ class OverviewBacklogSnapshot(BaseModel):
     coverage: ObligationCoverageReport
     taxpayer_model_declared: bool
     incomplete_reason: str | None
+    applicable_modelos_without_deadline: tuple[str, ...] | None = None
 
     @classmethod
     def from_backlog(cls, value: OverviewBacklog) -> Self:
@@ -190,6 +199,7 @@ class OverviewBacklogSnapshot(BaseModel):
             coverage=value.coverage,
             taxpayer_model_declared=value.taxpayer_model_declared,
             incomplete_reason=value.incomplete_reason,
+            applicable_modelos_without_deadline=_without_deadlines(value.coverage),
         )
 
     def to_backlog(self) -> OverviewBacklog:
