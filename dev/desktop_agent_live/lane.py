@@ -61,7 +61,7 @@ import psutil
 from ..packaging.command_execution import run_command
 from ..runtime_lifecycle.caller_owned_root import AcceptanceError, require
 from .containment import LaneJob
-from .freshness import host_part, package_parts, stale_parts
+from .freshness import StageVerdict, host_part, stage_verdict, stale_parts
 from .package import stage_lane_package
 from .scans import (
     ProcessRecord,
@@ -512,32 +512,39 @@ def test_host(served: bool) -> TestHost:
     return TestHost(executable, f"{shell}index.html" if served and shell else _PACKAGED_ENTRY, configuration, record)
 
 
-def require_current(host: TestHost) -> None:
-    """Refuse when any staged binary or the test host is older than a source it is built from.
+def require_current(host: TestHost) -> StageVerdict:
+    """Refuse a stage whose build records do not vouch for its bytes, or a test host older than its sources.
 
-    The refusal names every stale part and the smallest targets that rebuild
-    them and update the package in place.
+    Inputs edited since the stage was built do not refuse the run: the verdict
+    names the build each component's bytes come from and what was edited since,
+    for the run to report with its results.
     """
-    from ..packaging.native.layout import load_layout
-
     configuration = host.configuration
-    target = json.loads((_BUILD / "generated" / "identity.json").read_text(encoding="utf-8"))["target"]
-    parts = [
-        *package_parts(host.package, load_layout(target), _BUILD, _REPOSITORY),
-        host_part(host.record, _REPOSITORY),
-    ]
-    stale, missing = stale_parts(parts)
-    if missing:
+    verdict = stage_verdict(_BUILD, configuration)
+    if verdict.refusals:
+        raise UnavailableError("; ".join(verdict.refusals))
+    stale, missing = stale_parts([host_part(host.record, _REPOSITORY)])
+    if missing or stale:
         raise UnavailableError(
-            f"the {configuration} package has no staged {', '.join(missing)}; "
-            f"stage it with: just build-native {configuration} app-payload"
+            "the test host is older than its sources; rebuild with: "
+            f"just build-native {configuration} desktop-packaged-host"
         )
-    if stale:
-        named = "; ".join(f"the {part.part} {part.artifact} is older than {part.source}" for part in stale)
-        commands = "; ".join(
-            f"just build-native {configuration} {target}" for target in dict.fromkeys(part.target for part in stale)
-        )
-        raise UnavailableError(f"{named}; rebuild with: {commands}")
+    return verdict
+
+
+def snapshot_report(verdict: StageVerdict) -> dict[str, object]:
+    """What the run's results are for: each component's build, and the inputs edited since it."""
+    edited = sorted({name for names in verdict.changed.values() for name in names})
+    return {
+        "snapshot": verdict.snapshot,
+        "newer_edits": len(edited),
+        "edited_since": edited,
+        "summary": (
+            "results are for snapshot "
+            + ", ".join(f"{component} {build}" for component, build in verdict.snapshot.items())
+            + (f"; {len(edited)} inputs changed since" if edited else "; no input changed since")
+        ),
+    }
 
 
 def stage_package(host: TestHost, destination: Path) -> Path:
@@ -796,7 +803,8 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
             f"no {host.configuration} package is staged at {host.package}; "
             f"stage it with: just build-native {host.configuration} bundle"
         )
-    require_current(host)
+    snapshot = snapshot_report(require_current(host))
+    print(json.dumps({"step": "stage_snapshot", **snapshot}), flush=True)
     require_no_desktop()
     root = person_storage_root()
     package = host.lane_package
@@ -864,6 +872,8 @@ def run(run_directory: Path, *, served: bool, attach_only: bool, arguments: list
     failures.extend(f"not scanned, unreadable: {place}" for place in scan.unreadable)
     if scan.clean:
         print(json.dumps({"step": "key_scan_clean", "processes": len(watch.started)}), flush=True)
+    # Whatever the outcome, it is the outcome for this snapshot.
+    print(json.dumps({"step": "results_snapshot", "summary": snapshot["summary"]}), flush=True)
     if failures:
         if absent is not None:
             failures.insert(0, f"unavailable: {absent}")

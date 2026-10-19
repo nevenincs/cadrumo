@@ -1,31 +1,27 @@
-"""Refuse a lane run on any staged binary or the test host when it is older than its sources.
+"""Admit a lane run on a staged package by the build records of what was staged, and the test host by its sources.
 
-A run against stale bytes proves nothing about the sources it appears to test.
-Each part of the staged package is checked on its own, so the refusal names the
-one that is stale and the smallest target that rebuilds it and updates the
-package in place:
+Each staged component (the interpreter hosts and entry points, the
+background-services manager, the desktop image, the Python product and the
+bundled agent) has a build record its build writes when it completes: the
+fingerprint of the inputs it was built from, whether those inputs stayed
+unchanged throughout (``settled``), and the digest of every artifact it staged.
+A run is refused when a record is missing or unsettled, or when the staged
+bytes are not the ones it records. Inputs edited after the build do not make
+the stage stale for the run; they are reported as newer edits since the
+snapshot the results are for. Modification times never decide it, so a rebuild
+that leaves an output unchanged leaves it current.
 
-- the desktop image, from the desktop crate, the crates it names by path, the
-  interpreter host sources it compiles and the shell it embeds;
-- the background-services manager, from its crate and the crates it names;
-- the interpreter hosts and entry points, from their C sources;
-- the Python product and the bundled agent, from the inputs CMake declares for
-  each in its binary directory, which name the agent's own project files;
-- and the remote-debugging test host, from the same sources as the desktop image.
-
-Test-only files are built into none of them, so editing a spec or a unit test
-leaves every part current. The documentation is never a source of anything the
-lane runs.
+The remote-debugging test host has no build record; it is still refused when it
+is older than a source it is built from. Test-only files are built into nothing.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from ..packaging.native.layout import entrypoint_files
 from ..source_tree import repository_files
 
 #: What the desktop image and the test host are compiled from; it mirrors the
@@ -48,9 +44,6 @@ HOST_SOURCES = (
     "native/interpreter/launch_profile.h",
     "native/desktop/frontend",
 )
-MANAGER_SOURCES = ("native/manager", "native/application", "native/platform", "native/installer")
-INTERPRETER_SOURCES = ("native/interpreter", "native/platform", "native/launch_guard")
-
 _TEST_DIRECTORIES = frozenset({"tests", "testing", "__tests__"})
 
 
@@ -97,26 +90,6 @@ def checkout_sources(repository: Path, under: Iterable[str]) -> list[Path]:
     return [repository / relative for relative in repository_files(repository, under=under) if built_from(relative)]
 
 
-def declared_inputs(build: Path, listing: str, repository: Path) -> list[Path]:
-    """The inputs a CMake action declares in ``inputs-<listing>.txt``, test-only files aside."""
-    path = build / f"inputs-{listing}.txt"
-    if not path.is_file():
-        return []
-    lines = path.read_text(encoding="utf-8").splitlines()
-    # Another action's output in the binary directory is not a source; its own sources are checked.
-    # The repository's build tooling shapes how a part is made, not the bytes it stages.
-    outputs = build.resolve()
-    tooling = (repository / "dev").resolve()
-    return [
-        Path(line)
-        for line in lines
-        if line.strip()
-        and built_from(Path(line).as_posix())
-        and not Path(line).resolve().is_relative_to(outputs)
-        and not Path(line).resolve().is_relative_to(tooling)
-    ]
-
-
 @dataclass(frozen=True)
 class Part:
     """One separately built part: where its bytes are, what they come from, what rebuilds them."""
@@ -143,47 +116,6 @@ def stale_parts(parts: Iterable[Part]) -> tuple[list[Staleness], list[str]]:
     return stale, missing
 
 
-def package_parts(package: Path, layout: dict[str, Any], build: Path, repository: Path) -> list[Part]:
-    """The separately built parts of a staged package and the in-place targets that refresh them."""
-    packages = package / layout["paths"]["packages"]
-    images = [
-        package / layout["paths"]["executable"],
-        *(package / image for image in entrypoint_files(layout).values()),
-    ]
-    return [
-        Part(
-            "desktop image",
-            lambda: [package / "cadrumo.exe"],
-            lambda: checkout_sources(repository, HOST_SOURCES),
-            "app-native",
-        ),
-        Part(
-            "background-services manager",
-            lambda: [package / "cadrumo-manager.exe"],
-            lambda: checkout_sources(repository, MANAGER_SOURCES),
-            "app-native",
-        ),
-        Part(
-            "interpreter hosts and entry points",
-            lambda: images,
-            lambda: checkout_sources(repository, INTERPRETER_SOURCES),
-            "app-native",
-        ),
-        Part(
-            "Python product",
-            lambda: sorted(packages.glob("cadrumo-*.dist-info/RECORD")),
-            lambda: declared_inputs(build, "product", repository),
-            "app-payload",
-        ),
-        Part(
-            "bundled agent",
-            lambda: sorted(packages.glob("cadrumo_agent-*.dist-info/RECORD")),
-            lambda: declared_inputs(build, "agent", repository),
-            "app-agent",
-        ),
-    ]
-
-
 def host_part(record: Path, repository: Path) -> Part:
     """The remote-debugging test host, by the record its build writes last."""
     return Part(
@@ -192,3 +124,75 @@ def host_part(record: Path, repository: Path) -> Part:
         lambda: checkout_sources(repository, HOST_SOURCES),
         "desktop-packaged-host",
     )
+
+
+STAGED_COMPONENTS: Mapping[str, str] = {
+    "interpreter": "app-native",
+    "manager": "app-native",
+    "desktop": "app-native",
+    "app-payload": "app-payload",
+    "app-agent": "app-agent",
+}
+"""Each component whose staged bytes the lane runs, and the target that rebuilds and records it."""
+
+
+@dataclass(frozen=True)
+class StageVerdict:
+    """Why a stage cannot be run, the build each component's bytes come from, and what was edited since."""
+
+    refusals: list[str]
+    snapshot: dict[str, str]
+    changed: dict[str, list[str]]
+
+
+def stage_verdict(
+    build: Path,
+    configuration: str,
+    *,
+    read_record: Callable[[Path, str], dict[str, Any] | None] | None = None,
+    changed_inputs: Callable[[Path, str], list[str]] | None = None,
+) -> StageVerdict:
+    """Judge the ``configuration`` stage of ``build`` by its components' build records."""
+    from ..packaging.native import build_stamp
+    from ..packaging.native.hashing import digest, digest_cache
+
+    read = build_stamp.read_record if read_record is None else read_record
+    edited = build_stamp.changed_inputs if changed_inputs is None else changed_inputs
+    refusals: list[str] = []
+    snapshot: dict[str, str] = {}
+    changed: dict[str, list[str]] = {}
+    with digest_cache(build):
+        for component, target in STAGED_COMPONENTS.items():
+            rebuild = f"rebuild with: just build-native {configuration} {target}"
+            record = read(build, component)
+            if record is None:
+                refusals.append(f"{component} has no build record; {rebuild}")
+                continue
+            if record.get("state") != "settled":
+                refusals.append(f"{component}'s build is {record.get('state')}, not settled; {rebuild}")
+                continue
+            staged = (record.get("staged") or {}).get(configuration)
+            if not isinstance(staged, Mapping) or not staged.get("artifacts"):
+                refusals.append(f"{component} records nothing staged for {configuration}; {rebuild}")
+                continue
+            package = build / str(staged["package"])
+            differing = sorted(
+                str(member)
+                for member, expected in staged["artifacts"].items()
+                if not (package / member).is_file() or digest(package / member) != expected
+            )
+            if differing:
+                refusals.append(
+                    f"{component}'s staged bytes are not the ones build {record.get('build_id')} recorded "
+                    f"({len(differing)}, first {differing[0]}); {rebuild}"
+                )
+                continue
+            snapshot[component] = str(record.get("build_id"))
+            try:
+                newer = edited(build, component)
+            except FileNotFoundError:
+                refusals.append(f"{component}'s build records no inputs; {rebuild}")
+                continue
+            if newer:
+                changed[component] = newer
+    return StageVerdict(refusals, snapshot, changed)
