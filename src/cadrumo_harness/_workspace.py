@@ -107,12 +107,8 @@ _MCP_REQUIRED_VERSION_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_REQUIRED_
 _CLAUDE_PLUGIN_ROOT = "${CLAUDE_PLUGIN_ROOT}"
 _PLUGIN_ARTIFACTS_SUBDIR = Path("artifacts") / "python"
 _PLUGIN_COHORT_MANIFEST = "plugin-python-cohort.json"
-_PYTHON_COHORT_WHEELS = (
-    "cadrumo",
-    "cadrumo-data-manuals",
-    "cadrumo-data-official",
-)
-_PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v2"
+_PYTHON_COHORT_WHEELS = PRODUCT_IDENTITY.cohort_distributions
+_PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v3"
 _RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v3"
 _RUNTIME_WHEELHOUSE_MANIFEST = "runtime-wheelhouse.json"
 _RUNTIME_WHEELHOUSE_PREFIX = "wheels/"
@@ -185,6 +181,9 @@ class _PluginPythonCohort(Protocol):
 
     @property
     def official_wheel(self) -> Path: ...
+
+    @property
+    def normatives_wheel(self) -> Path: ...
 
     @property
     def sha256(self) -> Mapping[str, str]: ...
@@ -325,6 +324,7 @@ def _cohort_wheels(cohort: _PluginPythonCohort) -> dict[str, Path]:
         "cadrumo": cohort.root_wheel,
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-official": cohort.official_wheel,
+        "cadrumo-data-normatives": cohort.normatives_wheel,
     }
 
 
@@ -342,11 +342,12 @@ def _mcp_args(cohort: _PluginPythonCohort) -> list[str]:
         f"{root}/{_RUNTIME_WHEELHOUSE_SUBDIR}",
         "--no-python-downloads",
         "--from",
-        f"{root}/{wheels['cadrumo'].name}",
-        "--with",
-        f"{root}/{wheels['cadrumo-data-manuals'].name}",
-        "--with",
-        f"{root}/{wheels['cadrumo-data-official'].name}",
+        f"{root}/{wheels[PRODUCT_IDENTITY.distribution].name}",
+        *(
+            argument
+            for companion in PRODUCT_IDENTITY.companion_distributions
+            for argument in ("--with", f"{root}/{wheels[companion].name}")
+        ),
         _MCP_CONSOLE_SCRIPT,
         "--profile-id",
         "${user_config.profile_id}",

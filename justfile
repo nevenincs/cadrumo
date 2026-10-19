@@ -544,6 +544,14 @@ test-python-compatibility:
 build-packaging-cohort: test-packaging-source
     @uv run --no-sync python -B -m dev.packaging.python_cohort build --output build/packaging-smoke-cohort/python
 
+# The Claude plugin is generated from one sealed cohort, reused only while it
+# still verifies and matches the current source. The tree is a local candidate:
+# nothing here installs it into a client, publishes a marketplace or uploads.
+[doc('Generate and verify the Claude plugin tree in build/claude-plugin/plugin from a current Python cohort; local only.')]
+[group('build')]
+build-claude-plugin:
+    @uv run --no-sync python -B -m dev.packaging.claude_plugin --output build/claude-plugin/plugin --cohort-dir build/claude-plugin/cohort
+
 # Own the rest of the serial contracts in this directory. The preflight lane
 # selects `not serial` because these must not run concurrently, and the oracle
 # lane above names one module, so without this recipe the remaining serial

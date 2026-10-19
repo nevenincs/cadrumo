@@ -151,6 +151,8 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
         f"${{CLAUDE_PLUGIN_ROOT}}/artifacts/python/{plugin_cohort.manuals_wheel.name}",
         "--with",
         f"${{CLAUDE_PLUGIN_ROOT}}/artifacts/python/{plugin_cohort.official_wheel.name}",
+        "--with",
+        f"${{CLAUDE_PLUGIN_ROOT}}/artifacts/python/{plugin_cohort.normatives_wheel.name}",
         "cadrumo-mcp",
         "--profile-id",
         "${user_config.profile_id}",
@@ -167,14 +169,16 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
         "source_digest",
         "version",
     }
-    assert retained["schema"] == "cadrumo.plugin-python-cohort.v2"
+    assert retained["schema"] == "cadrumo.plugin-python-cohort.v3"
     assert retained["artifacts"] == {
         "cadrumo": plugin_cohort.root_wheel.name,
         "cadrumo-data-manuals": plugin_cohort.manuals_wheel.name,
         "cadrumo-data-official": plugin_cohort.official_wheel.name,
+        "cadrumo-data-normatives": plugin_cohort.normatives_wheel.name,
     }
     assert retained["sha256"] == {
-        name: plugin_cohort.sha256[name] for name in ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official")
+        name: plugin_cohort.sha256[name]
+        for name in ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives")
     }
     assert retained["source_digest"] == plugin_cohort.source_digest
     assert retained["version"] == plugin_cohort.version
@@ -229,7 +233,9 @@ def test_materialiser_has_no_cohortless_or_version_override_compatibility() -> N
     assert "version" not in parameters
 
 
-@pytest.mark.parametrize("distribution", ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"])
+@pytest.mark.parametrize(
+    "distribution", ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives"]
+)
 def test_foreign_product_wheel_bytes_are_refused(
     tmp_path: Path, plugin_cohort: PluginTestCohort, distribution: str
 ) -> None:
@@ -237,6 +243,7 @@ def test_foreign_product_wheel_bytes_are_refused(
         "cadrumo": plugin_cohort.root_wheel,
         "cadrumo-data-manuals": plugin_cohort.manuals_wheel,
         "cadrumo-data-official": plugin_cohort.official_wheel,
+        "cadrumo-data-normatives": plugin_cohort.normatives_wheel,
     }
     wheels[distribution].write_bytes(b"foreign product wheel")
     with pytest.raises(ValueError, match=f"digest mismatch for '{distribution}'"):
