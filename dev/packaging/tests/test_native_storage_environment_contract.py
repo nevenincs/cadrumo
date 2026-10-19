@@ -11,6 +11,7 @@ import pytest
 from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR
 from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
 from cadrumo.core.storage_environment import (
     STORAGE_PATH_RULES,
     STORAGE_ROOT,
@@ -56,7 +57,10 @@ def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> Non
         "log_backups": components["log_backups"],
         "output_language": components["language_default"],
         "output_language_variable": components["language_variable"],
+        "profile_variable": components["profile_variable"],
     }
+    # The desktop withholds the profile folder the command line's launchers derive, under the same name.
+    assert components["profile_variable"] == PROFILE_ROOT_VARIABLE
     # The desktop reads the command line's log and language without asking Python, so both state the same values.
     assert components["logs"] == STORAGE_TAXONOMY[StorageCategory.LOGS].subpath
     assert components["log_file"] == STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath

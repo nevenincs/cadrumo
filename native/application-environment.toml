@@ -336,6 +336,9 @@ log_max_bytes = 10485760
 log_backups = 5
 language_variable = "CADRUMO_OUTPUT_LANGUAGE"
 language_default = "es"
+# The profile-folder slot. The desktop serves whichever profile is signed in, so it
+# relays no received value to the children it starts; their own launchers derive it.
+profile_variable = "CADRUMO_PROFILE_ROOT"
 
 # ---------------------------------------------------------------------------
 # The storage root: its variable, the per-platform installed default under the

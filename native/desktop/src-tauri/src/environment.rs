@@ -43,6 +43,10 @@ struct DesktopDefaults {
     log_backups: u32,
     output_language: String,
     output_language_variable: String,
+    /// The folder of the one profile a process serves. The desktop serves
+    /// whichever profile is signed in, so no child inherits it from the desktop;
+    /// each child's own launcher derives it from the profile it starts for.
+    profile_variable: String,
 }
 #[derive(Deserialize)]
 struct Layout {
@@ -269,6 +273,11 @@ fn native_projection(
         .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(std::io::Error::other(e)))?;
     let environment: BTreeMap<String, String> = environment
         .into_iter()
+        // A profile folder the desktop received names no profile it serves.
+        .filter(|(key, _)| {
+            !key.to_str()
+                .is_some_and(|key| key.eq_ignore_ascii_case(&defaults.profile_variable))
+        })
         .map(|(key, value)| {
             Ok((
                 key.into_string()
@@ -436,6 +445,38 @@ mod tests {
         };
         let projection = project().unwrap();
         assert_eq!(projection.log_level, Level::Info);
+        // A profile folder handed to the desktop reaches none of its children,
+        // though the package image would keep it as a valid slot.
+        let profile_variable = &contract.desktop_defaults.profile_variable;
+        let mut handed = parent.clone_for_test();
+        handed
+            .environment
+            .retain(|(key, _)| !key.to_string_lossy().eq_ignore_ascii_case(profile_variable));
+        let other_profile = storage.join("buckets").join("other-profile");
+        std::fs::create_dir_all(&other_profile).unwrap();
+        handed
+            .environment
+            .push((profile_variable.into(), other_profile.into_os_string()));
+        assert!(
+            cadrumo_platform::prepared_environment(&executable, &handed.environment)
+                .unwrap()
+                .iter()
+                .any(|(key, _)| key.to_string_lossy().eq_ignore_ascii_case(profile_variable)),
+            "the package image keeps the slot, so only the desktop's own filter withholds it"
+        );
+        let withheld = native_projection(
+            &executable,
+            &handed,
+            &contract.desktop_defaults,
+            &contract.application_environment.location_names,
+        )
+        .unwrap();
+        assert!(
+            !withheld
+                .environment
+                .keys()
+                .any(|key| key.eq_ignore_ascii_case(profile_variable))
+        );
         for (value, expected) in [
             ("DEBUG", Level::Debug),
             ("info", Level::Info),

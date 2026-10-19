@@ -282,6 +282,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "log_backups": components["log_backups"],
             "output_language": components["language_default"],
             "output_language_variable": components["language_variable"],
+            "profile_variable": components["profile_variable"],
         },
     }
     package_strings = {

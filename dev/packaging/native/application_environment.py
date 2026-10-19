@@ -570,6 +570,7 @@ _COMPONENT_VALUES = (
     "log_backups",
     "language_variable",
     "language_default",
+    "profile_variable",
 )
 
 
@@ -588,6 +589,8 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
     language = entry["language_default"]
     if not isinstance(language, str) or not re.fullmatch(r"[a-z]{2}", language):
         raise _fail("components.language_default must be a two-letter lower-case language")
+    if names.get(entry["profile_variable"]) != {"kind": "directory", "role": "slot"}:
+        raise _fail("components.profile_variable must name a declared directory slot")
     components.update(
         log_variable=entry["log_variable"],
         log_format=entry["log_format"],
@@ -595,6 +598,7 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
         log_backups=_integer(entry["log_backups"], "components.log_backups", minimum=0),
         language_variable=entry["language_variable"],
         language_default=language,
+        profile_variable=entry["profile_variable"],
     )
     return components
 
