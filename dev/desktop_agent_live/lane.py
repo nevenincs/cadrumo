@@ -103,6 +103,8 @@ _DEVTOOLS_PORT_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_DEVTOOLS_PORT"
 """Where the packaged test host's workspace window, and only it, serves DevTools."""
 _ATTACH_VARIABLE: Final = "CADRUMO_DEV_DESKTOP_LIVE_ATTACH_DIR"
 """Where the packaged test host's attach button takes its files from, in place of its dialog."""
+_KEY_AUTH_KINDS: Final = frozenset({"api_key", "api_key_with_base_url"})
+"""The ways a provider lane authenticates that take the developer's key."""
 
 LANE_ATTACHMENTS: Final[Mapping[str, bytes]] = {
     # Stored, and read by the agent: the word is what its reply must name.
@@ -204,12 +206,26 @@ def is_lane_root(root: Path) -> bool:
     return is_marked_lane_root(root)
 
 
-def shell_page(browser: Any, entry: str, deadline: float) -> Any:
-    """The desktop's shell page, once it has published its shell token.
+#: Run in each new shell document after the host's own script: it takes the
+#: one-read token, keeps it for the lane, and re-arms the read for the shell.
+_SHELL_GRANT_COPIER: Final = """(() => {
+    const shell = window.__CADRUMO_SHELL__;
+    if (!shell) return;
+    const token = shell.token;
+    if (!token) return;
+    Object.defineProperty(shell, "token", {configurable: true, get() { delete shell.token; return token; }});
+    Object.defineProperty(window, "__CADRUMO_LANE_TOKEN__", {configurable: true, value: token});
+})()"""
 
-    The workspace window opens after the loading window, and its token is set
-    by the page's own initialization script, so this waits for both: for the
-    page on the shell's origin to appear, then for the token in that page.
+
+def shell_page(browser: Any, entry: str, deadline: float) -> Any:
+    """The desktop's shell page, reloaded so the lane holds its shell token.
+
+    The host gives the token to the shell document once, and the shell reads
+    it as it starts, so the lane reloads the page with a script that keeps a
+    copy before the shell reads it, then waits for that copy. It waits on the
+    page on the shell's origin to appear first, since the workspace window
+    opens after the loading window.
     """
     from urllib.parse import urlsplit
 
@@ -226,11 +242,31 @@ def shell_page(browser: Any, entry: str, deadline: float) -> Any:
         context.wait_for_event("page", timeout=remaining * 1000)
     require(len(pages) == 1, "the live desktop must expose one shell page")
     page = pages[0]
+    page.add_init_script(_SHELL_GRANT_COPIER)
+    page.reload(wait_until="domcontentloaded", timeout=max(deadline - time.monotonic(), 0) * 1000)
     page.wait_for_function(
-        "() => Boolean(window.__CADRUMO_SHELL__?.token)",
+        "() => Boolean(window.__CADRUMO_LANE_TOKEN__)",
         timeout=max(deadline - time.monotonic(), 0) * 1000,
     )
     return page
+
+
+#: Resolves once the desktop reports its agent service ready, and fails with
+#: the last status it reported when the bound passes first. The host keeps
+#: one status subscriber, the shell's own, so the lane asks the status again
+#: on each rendered frame instead of subscribing.
+_AGENT_READY: Final = """async ({boundMs}) => {
+    const token = window.__CADRUMO_LANE_TOKEN__;
+    if (!token) throw new Error('desktop token unavailable');
+    const bound = Date.now() + boundMs;
+    let status = null;
+    while (Date.now() < bound) {
+        status = await window.__TAURI_INTERNALS__.invoke('agent_status', {token});
+        if (status.state === 'ready') return status.state;
+        await new Promise((frame) => requestAnimationFrame(frame));
+    }
+    throw new Error(`agent not ready: ${JSON.stringify(status)}`);
+}"""
 
 
 def provision_provider_key(endpoint: str, shell_entry: str, provider_id: str) -> None:
@@ -245,34 +281,53 @@ def provision_provider_key(endpoint: str, shell_entry: str, provider_id: str) ->
         with sync_playwright() as driver:
             browser = driver.chromium.connect_over_cdp(endpoint)
             page = shell_page(browser, shell_entry, time.monotonic() + _DEVTOOLS_SECONDS)
+            # The service channel answers only once the agent service runs for the signed-in person.
+            page.evaluate(_AGENT_READY, {"boundMs": _RUNTIME_SECONDS * 1000})
             status = page.evaluate("""async () => {
-                const token = window.__CADRUMO_SHELL__?.token;
+                const token = window.__CADRUMO_LANE_TOKEN__;
                 if (!token) throw new Error('desktop token unavailable');
-                return await window.__TAURI_INTERNALS__.invoke('provider_settings_status', {token});
+                return await window.__TAURI_INTERNALS__.invoke('provider_settings_status', {token}).catch((error) => {
+                    throw new Error(`provider_settings_status: ${JSON.stringify(error)}`);
+                });
             }""")
             entries = status.get("providers", []) if isinstance(status, dict) else []
-            entry = next((item for item in entries if item.get("id") == provider_id), None)
-            require(isinstance(entry, dict), "the service catalogue does not declare the selected provider")
+            # Each provider has a lane per transport; the key is the one its API lane takes.
+            entry = next(
+                (
+                    item
+                    for item in entries
+                    if isinstance(item, dict)
+                    and item.get("provider") == provider_id
+                    and item.get("auth_kind") in _KEY_AUTH_KINDS
+                ),
+                None,
+            )
+            declared = sorted(str(item.get("id")) for item in entries if isinstance(item, dict))
+            require(
+                isinstance(entry, dict),
+                f"the service catalogue has no key lane for provider {provider_id!r}; it declares {declared}",
+            )
             if not isinstance(entry, dict):
                 raise AcceptanceError("provider catalogue entry unavailable")
             changed = page.evaluate(
                 """async ({provider, revision, secret}) => {
-                const token = window.__CADRUMO_SHELL__?.token;
+                const token = window.__CADRUMO_LANE_TOKEN__;
                 if (!token) throw new Error('desktop token unavailable');
                 const bytes = new TextEncoder().encode(secret);
                 try {
                     return await window.__TAURI_INTERNALS__.invoke('provider_settings_set', bytes, {
                         headers: {'x-cadrumo-token': token, 'x-cadrumo-provider': provider,
                             'x-cadrumo-revision': revision}
-                    });
+                    }).catch((error) => { throw new Error(`provider_settings_set: ${JSON.stringify(error)}`); });
                 } finally { bytes.fill(0); }
             }""",
-                {"provider": provider_id, "revision": entry["revision"], "secret": secret.decode("utf-8")},
+                {"provider": entry["id"], "revision": entry["revision"], "secret": secret.decode("utf-8")},
             )
             require(
                 isinstance(changed, dict) and changed.get("available") is True and changed.get("source") == "profile",
                 "service did not verify its committed provider record",
             )
+            page.evaluate("() => { delete window.__CADRUMO_LANE_TOKEN__; }")
             print(json.dumps({"step": "provider_key_stored", "readiness": changed.get("readiness")}), flush=True)
     finally:
         secret[:] = bytes(len(secret))
