@@ -7,12 +7,21 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 from .build_directory import require_enrolled_output
 from .hashing import digest
+
+
+def _redirects(status: os.stat_result) -> bool:
+    """Whether a member's own status marks it as a link, a junction or another reparse point."""
+    if stat.S_ISLNK(status.st_mode):
+        return True
+    attributes = getattr(status, "st_file_attributes", 0)
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
 
 
 def sysroot_inventory(
@@ -42,6 +51,18 @@ def sysroot_inventory(
             entries += 1
             if entries > 250_000:
                 raise ValueError("Sysroot exceeds the bounded SDK inventory limit")
+            status = member.lstat()
+            # A member that is no link, junction or other reparse point of a canonical
+            # directory is its own resolution: only links need resolving and containing.
+            if not _redirects(status):
+                if stat.S_ISDIR(status.st_mode):
+                    visit(member, ancestors | {canonical})
+                elif stat.S_ISREG(status.st_mode):
+                    if lexical not in files:
+                        files[lexical] = digest(member)
+                else:
+                    raise ValueError("Sysroot contains a special filesystem member")
+                continue
             resolved = member.resolve(strict=True)
             if not resolved.is_relative_to(root):
                 raise ValueError("Sysroot link escapes the selected SDK")
