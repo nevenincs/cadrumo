@@ -117,16 +117,16 @@ def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermar
             id="drive-config",
         ),
         pytest.param(
-            "google_oauth_token",
-            b"oauth refresh token that must never reach the remote mirror",
+            "modelo_edit_receipt",
+            b"edit receipt that must never reach the remote mirror",
             "1b6da8e1-3c2f-4d5a-8e7b-9f0a1c2d3e4f",
-            id="oauth-token",
+            id="edit-receipt",
         ),
         pytest.param(
-            "google_oauth_metadata",
-            b"operator metadata that must never reach the remote mirror",
+            "application_evidence_bundles",
+            b"evidence bundle that must never reach the remote mirror",
             "2c7eb9f2-4d3a-4e6b-9f8c-0a1b2c3d4e5f",
-            id="oauth-metadata",
+            id="evidence-bundle",
         ),
     ),
 )

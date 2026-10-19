@@ -16,7 +16,7 @@ _BUCKET_ID = "1a92e8a0-9da5-4712-8b71-a8aadd4eed42"  # was 'google-session'
 
 
 def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: Path) -> None:
-    profile = "operator-google"
+    profile = _BUCKET_ID
     issued_at = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
     opaque_refresh_token = " 1//refresh-token\t"
     token = OAuthToken(

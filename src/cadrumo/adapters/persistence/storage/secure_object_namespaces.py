@@ -874,6 +874,10 @@ GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    # A profile's Google sign-in stays in that profile's folder: never mirrored to a remote store.
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
 )
 GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_metadata",
@@ -884,6 +888,10 @@ GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{profile}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    # A profile's Google sign-in stays in that profile's folder: never mirrored to a remote store.
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
 )
 GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_drive_config",

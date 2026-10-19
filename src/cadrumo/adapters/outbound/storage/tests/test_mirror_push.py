@@ -46,8 +46,8 @@ def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects
         repository = profile.repository
         plaintext_by_key = {
             "google_drive_config": b"push-path-drive-config-plaintext",
-            "google_oauth_token": b"push-path-refresh-token-plaintext",
-            "google_oauth_metadata": b"push-path-metadata-plaintext",
+            "modelo_edit_receipt": b"push-path-edit-receipt-plaintext",
+            "application_evidence_bundles": b"push-path-evidence-bundle-plaintext",
         }
         for namespace_key, plaintext in plaintext_by_key.items():
             namespace_definition = lookup_namespace_definition(namespace_key)
@@ -102,7 +102,7 @@ def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects
 def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifest(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="91284810-5de7-4586-8555-673b5384139b") as profile:
         repository = profile.repository
-        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("modelo_edit_receipt")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -144,7 +144,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
 def test_google_sync_push_reports_partial_download_before_repairing_remote_object(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="17252893-3010-4568-acfe-927ca590bc5b") as profile:
         repository = profile.repository
-        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("modelo_edit_receipt")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -178,7 +178,7 @@ def test_google_sync_push_reports_partial_download_before_repairing_remote_objec
 def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="448f713f-d59d-4478-a993-738d4e6e1521") as profile:
         repository = profile.repository
-        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("modelo_edit_receipt")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -233,7 +233,7 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
 def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_object(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="884c2da3-26bb-4317-89fb-8e6ab3d539b8") as profile:
         repository = profile.repository
-        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("modelo_edit_receipt")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -336,7 +336,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="24b3f89e-6752-49e1-b93b-b25e81e9294a") as profile:
         repository = profile.repository
-        tampered_definition = lookup_namespace_definition("google_oauth_metadata")
+        tampered_definition = lookup_namespace_definition("modelo_edit_receipt")
         tampered_namespace = tampered_definition.namespace
         repository.save(
             namespace=tampered_namespace,
@@ -559,7 +559,7 @@ def test_google_sync_push_retains_objects_when_a_later_upload_fails(tmp_path: Pa
     """A real interrupted write cannot authorize deleting an earlier mirror object."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="db940db3-b347-4518-861b-e67c8dee653b") as profile:
         repository = profile.repository
-        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("modelo_edit_receipt")
         namespace = namespace_definition.namespace
         for object_key, payload in (
             ("natural-key-first", b"first-row-plaintext"),

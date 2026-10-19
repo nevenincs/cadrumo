@@ -591,8 +591,8 @@ def test_auth_session_cache_namespace_registration_coverage_is_present() -> None
     } <= registered_keys
 
 
-_LOCAL_ONLY_NAMESPACE_KEYS = frozenset({"provider_settings"})
-"""Production namespaces that must never reach a remote mirror."""
+_LOCAL_ONLY_NAMESPACE_KEYS = frozenset({"provider_settings", "google_oauth_token", "google_oauth_metadata"})
+"""Production namespaces that must never reach a remote mirror: provider keys and each profile's Google sign-in."""
 
 
 def test_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
@@ -631,6 +631,17 @@ def test_provider_credentials_are_never_mirrored_or_carried() -> None:
     assert provider_settings.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
     for profile in StorageCustodyProfile:
         assert provider_settings not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
+
+
+def test_a_profiles_google_sign_in_stays_in_its_profile_folder() -> None:
+    """A refresh token and its sign-in record never mirror remotely and never travel in a custody carry."""
+    for key in ("google_oauth_token", "google_oauth_metadata"):
+        definition = lookup_namespace_definition(key)
+        assert definition.remote_mirror_policy is StorageRemoteMirrorPolicy.LOCAL_ONLY
+        assert definition.scope is StorageNamespaceScope.PROFILE_LOCAL
+        assert definition.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+        for profile in StorageCustodyProfile:
+            assert definition not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
 
 
 def test_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
