@@ -18,7 +18,7 @@ from .build_directory import require_enrolled_build
 from .build_log import BuildLog, command_line, display_path
 from .build_timing import measure_build
 from .build_toolchain import sysroot_inventory
-from .hashing import digest
+from .hashing import digest, digest_cache
 
 
 def inventory(paths: list[str]) -> dict[str, Any]:
@@ -73,7 +73,12 @@ def run_cached(build: Path, spec_file: Path, command: list[str]) -> bool:
     key = hashlib.sha256(json.dumps(sorted(spec["outputs"])).encode()).hexdigest()[:16]
     log = BuildLog(spec["name"])
     outputs = ", ".join(map(display_path, spec["outputs"]))
-    with measure_build(root, spec["name"], log=log) as timings, action_lock(root, f"cached-{key}", timings=timings):
+    with (
+        measure_build(root, spec["name"], log=log) as timings,
+        action_lock(root, f"cached-{key}", timings=timings),
+        # The inventories, and the producer this starts, share the binary directory's digest cache.
+        digest_cache(root),
+    ):
         identity = {
             "schema": 1,
             "inputs": {},
