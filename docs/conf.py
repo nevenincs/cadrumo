@@ -685,6 +685,9 @@ html_context = {
         },
     ],
     "cadrumo_footer_note": _SITE_LABELS["footer_note"],
+    # The packaged copy serves neither .ico nor .webmanifest, and a desktop
+    # frame shows no tab or home-screen icon, so only the web site links them.
+    "cadrumo_web_icons": not _DESKTOP_FLAVOR,
 }
 if _USER_SCOPE:
     # The header nav carries an "API" entry pointing at the excluded api/index
@@ -779,7 +782,7 @@ ogp_site_name = _SITE_LABELS["meta_short_title"]
 ogp_site_url = html_baseurl
 ogp_description_length = _DESCRIPTION_LENGTH
 ogp_type = "website"
-ogp_image = "_static/cadrumo-icon-square.png"
+ogp_image = "_static/cadrumo-icon-square-512.png"
 
 # ── Syntax highlighting ─────────────────────────────────────────────────────
 # Bare code fences are overwhelmingly operator command transcripts; lexing them

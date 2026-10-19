@@ -1016,11 +1016,8 @@ def test_the_live_preview_build_is_classified_as_a_whole_site_build(tmp_path: Pa
     assert read_set == {**_EVERY_SURFACE, "api": scope == "full"}, (argv, read_set)
 
 
-def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
-    """A real focused HTML build and shipped SVGs expose the canonical identity."""
-    from bs4 import BeautifulSoup
-    from defusedxml import ElementTree
-
+def _render_focused_index(tmp_path: Path, flavor: str) -> Path:
+    """Build only the index page of one documentation flavor and return its output root."""
     docs_source = tmp_path / "docs-source"
     shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "api", "cli"))
     output = tmp_path / "html"
@@ -1037,6 +1034,7 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         # their dedicated gates and are not part of this page's assertions.
         "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
         "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
+        "CADRUMO_DOCS_FLAVOR": flavor,
     }
     result = subprocess.run(
         [
@@ -1058,7 +1056,16 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+    return output
 
+
+def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
+    """A real focused HTML build and shipped SVGs expose the canonical identity."""
+    from bs4 import BeautifulSoup
+    from defusedxml import ElementTree
+    from PIL import Image
+
+    output = _render_focused_index(tmp_path, "web")
     rendered = BeautifulSoup((output / "index.html").read_text(encoding="utf-8"), "html.parser")
     assert rendered.title is not None
     assert rendered.title.get_text(strip=True) == "Cadrumo documentation - local Spanish tax preparation"
@@ -1083,6 +1090,45 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
     favicon = ElementTree.parse(_DOCS / "_static" / "cadrumo-favicon.svg").getroot()
     assert favicon is not None
     assert favicon.attrib["aria-label"] == "Cadrumo mark"
+
+    # Every icon the web head links is shipped at the size it declares.
+    icons = {
+        (link.get("href"), " ".join(link.get("rel", [])), link.get("sizes"))
+        for link in rendered.find_all("link", rel=["icon", "apple-touch-icon", "manifest"])
+    }
+    assert icons >= {
+        ("_static/cadrumo-favicon.ico", "icon", "32x32"),
+        ("_static/cadrumo-favicon.svg", "icon", None),
+        ("_static/cadrumo-icon-square-180.png", "apple-touch-icon", None),
+        ("_static/cadrumo.webmanifest", "manifest", None),
+    }
+    with Image.open(output / "_static" / "cadrumo-favicon.ico") as ico:
+        assert ico.format == "ICO"
+        assert ico.info["sizes"] == {(16, 16), (32, 32), (48, 48)}
+    with Image.open(output / "_static" / "cadrumo-icon-square-180.png") as touch:
+        assert touch.size == (180, 180)
+    manifest = json.loads((output / "_static" / "cadrumo.webmanifest").read_text(encoding="utf-8"))
+    for icon in manifest["icons"]:
+        with Image.open(output / "_static" / icon["src"]) as image:
+            assert f"{image.width}x{image.height}" == icon["sizes"]
+    og_image = rendered.find("meta", property="og:image")
+    assert og_image is not None
+    assert og_image.get("content", "").endswith("_static/cadrumo-icon-square-512.png")
+
+
+def test_desktop_flavor_links_only_icons_the_package_serves(tmp_path: Path) -> None:
+    """The packaged copy's head names no favicon or manifest file the documentation scheme refuses."""
+    from bs4 import BeautifulSoup
+
+    from dev.packaging.native.docs_stage import scan_page, served_media_types
+    from dev.packaging.native.layout import load_layout
+
+    output = _render_focused_index(tmp_path, "desktop")
+    page = (output / "index.html").read_text(encoding="utf-8")
+    rendered = BeautifulSoup(page, "html.parser")
+    icons = [link.get("href") for link in rendered.find_all("link", rel=["icon", "apple-touch-icon", "manifest"])]
+    assert icons == ["_static/cadrumo-favicon.svg"]
+    assert scan_page(page, served_media_types(load_layout()["user_docs"])).refused == []
 
 
 # ---------------------------------------------------------------------------
