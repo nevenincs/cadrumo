@@ -258,17 +258,23 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(provision, "backend", unexpected_sdk)
 
     def install(command: list[str], **kwargs: object) -> SimpleNamespace:
-        # Provisioning runs uv twice into one --target: the locked closure, then the agent's resolved additions.
+        # Each pinned requirement installs into its own --target; the wheel a pin names decides its files.
         dependencies = Path(command[command.index("--target") + 1])
+        requirement = Path(command[command.index("-r") + 1]).read_text(encoding="utf-8")
         dependencies.mkdir(exist_ok=True)
-        (dependencies / "fixture.py").write_text(wheel.version, encoding="utf-8")
+        if requirement.startswith("fixture "):
+            (dependencies / "fixture.py").write_text(wheel.version, encoding="utf-8")
+        else:
+            (dependencies / "agent_only.py").write_text("agent", encoding="utf-8")
         return SimpleNamespace(returncode=0, stderr="")
 
     monkeypatch.setattr(provision, "run_command", install)
     for version in ("2", "3"):
+        # A new version is new bytes, so its pin names a new hash.
         wheel = LockedWheel(
-            "fixture", version, f"fixture-{version}-py3-none-any.whl", "https://example.test/w", "c" * 64, 1
+            "fixture", version, f"fixture-{version}-py3-none-any.whl", "https://example.test/w", version * 64, 1
         )
         cmake_build.build_action(tmp_path, argparse.Namespace(action="provision", target="windows-x86-64"))
         assert (paths["runtime"] / "dependencies/fixture.py").read_text(encoding="utf-8") == version
+        assert (paths["runtime"] / "dependencies/agent_only.py").read_text(encoding="utf-8") == "agent"
         assert _outputs(sdk) == baseline
