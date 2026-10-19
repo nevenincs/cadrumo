@@ -22,20 +22,12 @@ from pathlib import Path
 from pydantic import Field
 
 from .config_integration_fields import CadrumoIntegrationSettings
-from .config_support import LLMProvider
 
 
 class CadrumoLlmSettings(CadrumoIntegrationSettings):
     """Settings for the LLM provider, its on-disk caches, and retention windows."""
 
     # ── LLM ─────────────────────────────────────────────────────────────────
-    cadrumo_llm_provider: LLMProvider = Field(
-        default=LLMProvider.LOCAL,
-        description=(
-            "Default LLM provider for a request that names none: LOCAL runs on this "
-            "machine, AGENT asks the agent service to run it on the person's selected lane"
-        ),
-    )
     cadrumo_llm_cache_dir: Path = Field(
         default=Path("cache") / "llm-cache",
         description="Directory for on-disk LLM cache entries",

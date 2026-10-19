@@ -35,7 +35,6 @@ _TOKEN = EvidenceConsentToken(surface="runtime:ledger.evidence.extract", evidenc
 
 def _settings(tmp_path: Path, *, cloud_upload_permitted: bool = True) -> EnvFileFreeSettings:
     return EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",

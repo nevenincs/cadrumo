@@ -368,7 +368,7 @@ class TestExtractorPinsTheHostByDefault:
     provenance stamp read ``configured`` because no model was pinned.
 
     Both were written when carrying no override looked like neutrality. It is
-    not neutral: ``cadrumo_llm_provider`` defaults to a cloud vendor, so pinning
+    not neutral: the provider setting then defaulted to a cloud vendor, so pinning
     NOTHING meant a taxpayer's invoice text left the host by default, with no
     consent gate, no default-off posture, and nothing at the call site saying
     so. The tests asserted exactly the property that produced that exposure, and

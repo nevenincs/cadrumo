@@ -382,7 +382,6 @@ def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper
     case does not depend on whether this host's accelerator can be read.
     """
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
         cadrumo_llm_ollama_chat_url=endpoint,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
@@ -422,7 +421,6 @@ def test_an_explicitly_pinned_model_outranks_the_role(tmp_path: Path) -> None:
     has to be reachable without editing this module.
     """
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",

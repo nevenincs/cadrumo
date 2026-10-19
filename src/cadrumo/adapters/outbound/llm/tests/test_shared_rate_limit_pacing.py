@@ -86,7 +86,7 @@ def _serve(*, rate_limited: bool) -> Generator[tuple[str, list[float]]]:
 
 def _client(tmp_path: Path, *, attempts: int = 1) -> LLMClient:
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",
@@ -183,7 +183,7 @@ def test_the_shared_wait_is_bounded_by_the_retry_budget(tmp_path: Path) -> None:
     single dispatch blocks longer than the budget it was given.
     """
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
+        cadrumo_llm_ollama_text_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_record_dir=tmp_path / "run-record",

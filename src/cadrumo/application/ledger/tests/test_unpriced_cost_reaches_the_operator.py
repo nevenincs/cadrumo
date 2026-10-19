@@ -77,11 +77,11 @@ def test_an_unpriced_provider_does_not_hide_a_priced_one() -> None:
             [
                 _record(Decimal("1.50"), provider=LLMProvider.AGENT),
                 _record(None, provider=LLMProvider.AGENT),
-                _record(Decimal("4.00"), provider=LLMProvider.AGENT),
+                _record(Decimal("4.00"), provider=LLMProvider.LOCAL),
             ],
         )
     }
 
     assert rows[LLMProvider.AGENT.value].cost_estimate_usd is None
-    assert rows[LLMProvider.AGENT.value].cost_estimate_usd == Decimal("4.00")
-    assert rows[LLMProvider.AGENT.value].unpriced_calls == 0
+    assert rows[LLMProvider.LOCAL.value].cost_estimate_usd == Decimal("4.00")
+    assert rows[LLMProvider.LOCAL.value].unpriced_calls == 0

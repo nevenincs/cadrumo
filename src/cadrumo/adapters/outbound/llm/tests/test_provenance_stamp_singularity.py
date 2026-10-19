@@ -165,10 +165,10 @@ def test_a_stamp_built_here_is_readable_by_the_parser_that_classifies_it() -> No
     from .....core.provenance_stamp import provenance_stamp_transport
 
     local = build_provenance_stamp(provider=LLMProvider.LOCAL, reader="text-extract", model="m")
-    cloud = build_provenance_stamp(provider=LLMProvider.AGENT, reader="text-extract", model="gpt-4.1")
+    cloud = build_provenance_stamp(provider=LLMProvider.AGENT, reader="text-extract", model="example/api/m")
 
     assert provenance_stamp_transport(local) == "local"
-    assert provenance_stamp_transport(cloud) == "openai"
+    assert provenance_stamp_transport(cloud) == "agent"
     assert provenance_stamp_transport(local) != provenance_stamp_transport(cloud)
 
 

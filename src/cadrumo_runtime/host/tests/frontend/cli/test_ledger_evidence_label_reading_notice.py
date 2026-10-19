@@ -52,7 +52,6 @@ from cadrumo.adapters.persistence.llm.run_records import LLMRunRecorder
 from cadrumo.adapters.persistence.llm.usage import UsageRecorder
 from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.model_catalogue import model_candidate
 from cadrumo.tests.fixtures.settings import EnvFileFreeSettings
 from cadrumo.tests.loopback_llm import (
@@ -374,8 +373,8 @@ def _start_holding_read(tmp_path: Path) -> tuple[threading.Thread, list[object]]
     """
     root = tmp_path / "holding-read"
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProvider.LOCAL,
         cadrumo_llm_ollama_chat_url=load_settings().cadrumo_llm_ollama_chat_url,
+        cadrumo_llm_ollama_text_model=_UNASSESSED_MODEL,
         cadrumo_llm_cache_dir=root / "cache",
         cadrumo_llm_usage_dir=root / "usage",
         cadrumo_llm_run_record_dir=root / "run-record",

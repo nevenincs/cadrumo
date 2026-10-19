@@ -19,7 +19,7 @@ from ....core.model_catalogue import ModelRole
 from ..model_runs import current_model_run_port, operation_model_run_port, run_with_model_runs
 from ..models import OperationIdentity
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="ledger.evidence.extract", subject_ref="profile:x")
 _LANE = ModelRunLane(provider_id="example", transport="cli", model="m")

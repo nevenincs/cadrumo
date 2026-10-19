@@ -943,19 +943,10 @@ class LLMClient:
         except LLMCacheError:
             _LOGGER.debug("llm run-record write failed; continuing without it", exc_info=True)
 
-    def _default_provider(self) -> LLMProvider:
-        raw_provider = self.settings.cadrumo_llm_provider
-        try:
-            return LLMProvider(raw_provider)
-        except ValueError as exc:
-            raise LLMConfigError(
-                context={"configured_provider": raw_provider, "provider_selection_valid": False},
-                precondition_verdict=llm_no_recovery_verdict(
-                    LLMPreconditionCondition.PROVIDER_SELECTION_VALID,
-                    facts={"configured_provider": raw_provider, "provider_selection_valid": False},
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                ),
-            ) from exc
+    @staticmethod
+    def _default_provider() -> LLMProvider:
+        """A request that names no provider runs on this machine; leaving it is always stated."""
+        return LLMProvider.LOCAL
 
     def _default_model(self, provider: LLMProvider) -> str:
         if provider is LLMProvider.LOCAL:

@@ -38,7 +38,6 @@ class LLMPreconditionCondition(StrEnum):
     EVIDENCE_TRANSCRIPTION_NONEMPTY = "llm.evidence.transcription_nonempty"
     LOCAL_INFERENCE_SLOT_AVAILABLE = "llm.local_inference.slot_available"
     PROMPT_DEFINITION_ID_VALID = "llm.prompt_definition.id_valid"
-    PROVIDER_SELECTION_VALID = "llm.provider.selection_valid"
     REQUEST_PROMPT_NONEMPTY = "llm.request.prompt_nonempty"
     VISION_INPUT_SUPPORTED = "llm.vision.input_supported"
 
