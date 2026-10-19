@@ -89,8 +89,9 @@ BRIDGE_EXPORT int BRIDGE_CALL cadrumo_python_main(int argc, BRIDGE_CHAR **argv, 
     }
     CHECK(Py_InitializeFromConfig(&config));
     PyConfig_Clear(&config);
-    PyObject *build = Py_BuildValue("{s:s,s:s,s:s,s:i}", "version", CADRUMO_VERSION,
-        "build_number", CADRUMO_BUILD_NUMBER, "build_date", CADRUMO_BUILD_DATE, "development", development);
+    PyObject *build = Py_BuildValue("{s:s,s:s,s:s,s:s,s:s,s:s,s:i}", "version", CADRUMO_VERSION,
+        "build_number", CADRUMO_BUILD_NUMBER, "build_id", CADRUMO_BUILD_ID, "build_type", CADRUMO_BUILD_TYPE,
+        "display_version", CADRUMO_DISPLAY_VERSION, "build_date", CADRUMO_BUILD_DATE, "development", development);
     if (!build || PySys_SetObject("cadrumo_build", build) < 0) {
         Py_XDECREF(build);
         PyErr_Print();
@@ -103,7 +104,7 @@ BRIDGE_EXPORT int BRIDGE_CALL cadrumo_python_main(int argc, BRIDGE_CHAR **argv, 
         return 122;
     }
     if (banner) fprintf(stderr, "CADRUMO %s build %s (%s), Python %s [%s]\n",
-        CADRUMO_VERSION, CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
+        CADRUMO_DISPLAY_VERSION, CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
         development ? "development" : "production");
     return Py_RunMain();
 fail:

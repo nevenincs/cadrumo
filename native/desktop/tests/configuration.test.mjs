@@ -11,6 +11,7 @@ import test from "node:test";
 import { buildPath } from "../scripts/build-paths.mjs";
 import { developmentServer } from "../scripts/development-server.mjs";
 import {
+  buildStamp,
   docsOrigin,
   frontendDirectory,
   identity,
@@ -244,5 +245,32 @@ test("the frontend directory is emitted relative to the Tauri configuration", ()
   assert.throws(
     () => frontendDirectory(configDirectory, unreachable),
     /relative to the Tauri configuration/,
+  );
+});
+
+test("the build stamp gives the desktop its own identity and display version", () => {
+  const desktop = JSON.parse(
+    readFileSync(
+      resolve(buildPath("generated"), "component-identity", "desktop.json"),
+      "utf8",
+    ),
+  );
+  const { version } = identity();
+  for (const debug of [true, false]) {
+    const selected = buildStamp(debug);
+    assert.equal(
+      selected.displayVersion,
+      `${version}+${desktop.build_id}${debug ? ".debug" : ""}`,
+    );
+    assert.deepEqual(selected.environment, {
+      CADRUMO_IMAGE_COMPONENT: "desktop",
+      CADRUMO_DESKTOP_BUILD_ID: desktop.build_id,
+      CADRUMO_DESKTOP_BUILD_SEQUENCE: String(desktop.build_sequence),
+      CADRUMO_DESKTOP_BUILD_DATE: desktop.build_date,
+    });
+  }
+  assert.equal(
+    buildStamp(false, { version: "1.2.3" }).displayVersion,
+    `1.2.3+${desktop.build_id}`,
   );
 });

@@ -14,7 +14,9 @@ set(CADRUMO_MSI_ADAPTER
   "${CADRUMO_INSTALLER_TARGET_DIR}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo_installer.dll")
 set(CADRUMO_MSI_RUNNER
   "${CADRUMO_INSTALLER_TARGET_DIR}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo-msi-maintenance.exe")
-cadrumo_cargo_command(installer_cargo)
+# The version resources of the DLL and the runner name the product and this build.
+cadrumo_cargo_command(installer_cargo --build-identity installer
+  --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}" --env "CADRUMO_ID_NAME=${CADRUMO_ID_NAME}")
 cadrumo_build_step(installer_comment rust_installer GROUP native
   SUMMARY "compile the installer-only MSI adapter and maintenance runner"
   OUTPUTS "${CADRUMO_MSI_ADAPTER}" "${CADRUMO_MSI_RUNNER}")

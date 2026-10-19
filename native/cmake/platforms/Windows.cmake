@@ -32,7 +32,7 @@ set(application_manifests "${CONTRACT_DIR}/process-release.manifest" "${CONTRACT
   "${CONTRACT_DIR}/desktop-release.manifest" "${CONTRACT_DIR}/desktop-development.manifest")
 set(process_manifest "${CONTRACT_DIR}/process-$<IF:$<CONFIG:Debug>,development,release>.manifest")
 cadrumo_cached_command(metadata_command native_metadata SHARED
-  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
+  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json" "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json"
     "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-icon.svg" "${CADRUMO_PATH_TOOLS}/ready"
     "${CMAKE_CURRENT_SOURCE_DIR}/interpreter/windows/host.manifest"
     "${CMAKE_CURRENT_SOURCE_DIR}/desktop/src-tauri/windows/desktop.manifest"
@@ -41,14 +41,17 @@ cadrumo_cached_command(metadata_command native_metadata SHARED
 cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
   OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
+cadrumo_identity_command(interpreter_identity interpreter)
 add_custom_target(native_metadata
+  ${interpreter_identity}
   COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
-    --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
+    --identity "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
-  BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
+  BYPRODUCTS "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
     "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources} ${application_manifests}
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(native_metadata native_build_tools)
+# The interpreter fingerprint covers the generated contract the hosts compile in.
+add_dependencies(native_metadata native_build_tools native_contract)
 
 # The root project resolved Rust and the MSVC/SDK versions at or above their floors.
 cmake_host_system_information(RESULT sdk_root QUERY WINDOWS_REGISTRY
@@ -62,7 +65,12 @@ endif()
 message(CHECK_PASS "found")
 set(rust_profile "$<IF:$<CONFIG:Debug>,debug,release>")
 set(CADRUMO_RUST_ENVIRONMENT_NAMES RUSTFLAGS CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER LIB INCLUDE
-  "CC_${CADRUMO_PIN_rust_target}" "AR_${CADRUMO_PIN_rust_target}" VSTEL_MSBuildProjectFullPath)
+  "CC_${CADRUMO_PIN_rust_target}" "AR_${CADRUMO_PIN_rust_target}" VSTEL_MSBuildProjectFullPath CADRUMO_RC_COMPILER)
+# The desktop build script recompiles Tauri's version resource with the selected SDK's compiler.
+set(CADRUMO_RUST_ENV_CADRUMO_RC_COMPILER "${sdk_root}/bin/${windows_sdk_version}/x64/rc.exe")
+if(NOT EXISTS "${CADRUMO_RUST_ENV_CADRUMO_RC_COMPILER}")
+  message(FATAL_ERROR "The selected Windows SDK has no resource compiler at ${CADRUMO_RUST_ENV_CADRUMO_RC_COMPILER}")
+endif()
 # MSBuild sets VSTEL_MSBuildProjectFullPath to the running .vcxproj, a different value for each CMake
 # target. The cc build script of ring tracks it, so without a constant value every switch between
 # Cargo targets in one target directory rebuilds ring and every crate above it. cc only tests whether
@@ -203,6 +211,8 @@ foreach(target ${host_targets} platform_static_consumer)
 endforeach()
 foreach(target ${host_targets} cadrumo_python_bridge)
   add_dependencies(${target} native_metadata)
+  # Selects the build type in the shared build_metadata.h and in the version resources (RC too).
+  target_compile_definitions(${target} PRIVATE "CADRUMO_BUILD_DEBUG=$<CONFIG:Debug>")
 endforeach()
 target_link_libraries(platform_dll_consumer PRIVATE "${platform_import}")
 add_dependencies(platform_dll_consumer rust_platform_shared)

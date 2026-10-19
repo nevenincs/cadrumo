@@ -19,6 +19,7 @@ from ..runtime_wheel_selection import marker_environment
 from ..runtime_wheelhouse_contract import target_platform
 from ..wheel_metadata import read_wheel_metadata
 from .agent import agent_wheel, validate_wheel_dependencies
+from .assemble import agent_closure, record_staging, stamp_package
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
@@ -120,7 +121,11 @@ def update(build: Path, config: str) -> None:
     }
     if changed:
         quiesce(build.resolve(), target)
-    backups = {member: (root / member).read_bytes() if (root / member).is_file() else None for member in changed}
+    build_member = contract["files"]["build_metadata"]
+    backups = {
+        member: (root / member).read_bytes() if (root / member).is_file() else None
+        for member in (changed | {build_member} if changed else changed)
+    }
     try:
         for member in changed:
             path = root / member
@@ -132,9 +137,30 @@ def update(build: Path, config: str) -> None:
         for member in previous:
             manifest["files"].pop(member)
         manifest["files"].update({member: hashlib.sha256(content).hexdigest() for member, content in prepared.items()})
-        manifest["agent"] = {"bundled": True, **receipt}
+        closure = agent_closure(manifest["distributions"], resolved)
+        manifest["agent"] = {"bundled": True, **receipt, "dependencies": closure}
         manifest["inputs"]["agent"] = receipt
+        staged_records = None
+        if changed:
+            # New staged content is a new package: re-key its identity; components keep theirs.
+            record, components, staged_records = stamp_package(
+                build,
+                root,
+                manifest["build"],
+                manifest["files"],
+                [(component["role"], component["path"]) for component in manifest.get("components", [])],
+                kind=manifest["kind"],
+                build_type=manifest["build"]["build_type"],
+                build_member=build_member,
+                descriptors=contract["files"].get("service_descriptors"),
+                packages=contract["paths"]["packages"],
+            )
+            (root / build_member).write_text(json.dumps(record, indent=2), encoding="utf-8")
+            manifest["files"][build_member] = digest(root / build_member)
+            manifest["build"], manifest["components"] = record, components
         publish(manifest_path, manifest)
+        if staged_records is not None:
+            record_staging(build, staged_records)
     except BaseException:
         for member, content in backups.items():
             path = root / member

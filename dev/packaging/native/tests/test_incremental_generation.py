@@ -19,9 +19,11 @@ from PIL import Image
 
 from dev._paths import REPO_ROOT
 
+from ... import runtime_wheel_selection
 from ...command_execution import run_command
 from ...runtime_wheelhouse_contract import LockedWheel
-from .. import cmake_build, provision
+from .. import cmake_build, layout, provision
+from ..build_stamp import BuildStamp
 from ..build_timing import measure_build
 from ..cmake_build import action_toolchain
 from ..generate import generate
@@ -107,11 +109,11 @@ def test_metadata_change_preserves_unaffected_icon(tmp_path: Path, monkeypatch: 
     png = io.BytesIO()
     Image.new("RGBA", (256, 256), "blue").save(png, format="PNG")
     monkeypatch.setitem(sys.modules, "resvg_py", SimpleNamespace(svg_to_bytes=lambda **kwargs: png.getvalue()))
-    generate_metadata(tmp_path, 1, "2026-10-07", tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     baseline = _freeze_outputs(tmp_path)
-    generate_metadata(tmp_path, 1, "2026-10-07", tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100701", 1, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     assert _outputs(tmp_path) == baseline
-    generate_metadata(tmp_path, 2, "2026-10-07", tmp_path, target="windows-x86-64")
+    generate_metadata(tmp_path, BuildStamp("2026100702", 2, "2026-10-07T00:00:00Z"), tmp_path, target="windows-x86-64")
     after = _outputs(tmp_path)
     assert after["cadrumo.ico"] == baseline["cadrumo.ico"]
     assert after["interpreter.rc"][0] != baseline["interpreter.rc"][0]
@@ -211,7 +213,7 @@ def test_cargo_crate_types_and_consumer_preserve_sibling_artifacts(tmp_path: Pat
 def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A runtime dependency update neither calls SDK acquisition nor touches SDK bytes."""
     wheel = LockedWheel("fixture", "1", "fixture-1-py3-none-any.whl", "https://example.test/one", "a" * 64, 1)
-    monkeypatch.setattr(cmake_build, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
+    monkeypatch.setattr(runtime_wheel_selection, "plan_target_wheels", lambda *args, **kwargs: (wheel,))
     sdk_identity = action_toolchain({}, "sdk", "windows-x86-64")
     dependency_identity = action_toolchain({}, "provision", "windows-x86-64")
     wheel = LockedWheel("fixture", "2", "fixture-2-py3-none-any.whl", "https://example.test/two", "b" * 64, 1)
@@ -245,7 +247,7 @@ def test_changed_wheel_closure_reuses_sdk(tmp_path: Path, monkeypatch: pytest.Mo
     sdk.mkdir(parents=True)
     (sdk / "python.h").write_text("stable SDK bytes", encoding="utf-8")
     baseline = _freeze_outputs(sdk)
-    monkeypatch.setattr(cmake_build, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
+    monkeypatch.setattr(layout, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
     monkeypatch.setattr(provision, "load_layout", lambda target: {"sdk": {"root": "sdk"}})
     monkeypatch.setattr(provision, "selected_uv", lambda *args, **kwargs: "configured-uv")
     monkeypatch.setattr(provision, "plan_target_wheels", lambda *args, **kwargs: (wheel,))

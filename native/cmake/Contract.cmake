@@ -58,3 +58,29 @@ add_custom_target(native_contract
     --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${contract_comment}" VERBATIM)
+# Each native component resolves its own build identity just before it compiles
+# (dev/packaging/native/build_stamp.py): a content fingerprint of its inputs keys the
+# identity, so an unchanged component keeps its number and its generated identity file,
+# and nothing that embeds it rebuilds. The registry persists in the generated directory;
+# no clean target removes it. Frozen cache values reach every allocation through this file.
+set(CADRUMO_BUILD_STAMP "${CONTRACT_DIR}/build-stamp.json")
+# The compile steps read component-identity/<component>.json; build-identity/ holds the build
+# records for readers outside the build (dev/packaging/native/build_stamp.py, read_record).
+set(CADRUMO_BUILD_IDENTITY_DIR "${CONTRACT_DIR}/component-identity")
+# The component fingerprints read each target's effective compile and link settings from the
+# CMake file API reply this query requests at every generate.
+file(CONFIGURE OUTPUT "${CMAKE_BINARY_DIR}/.cmake/api/v1/query/client-cadrumo/query.json"
+  CONTENT "{\"requests\":[{\"kind\":\"codemodel\",\"version\":2}]}\n" @ONLY)
+string(JSON build_freeze SET "{}" number "\"${CADRUMO_BUILD_NUMBER}\"")
+string(JSON build_freeze SET "${build_freeze}" id "\"${CADRUMO_BUILD_ID}\"")
+string(JSON build_freeze SET "${build_freeze}" date "\"${CADRUMO_BUILD_DATE}\"")
+file(CONFIGURE OUTPUT "${CONTRACT_DIR}/build-freeze.json" CONTENT "@build_freeze@\n" @ONLY)
+# Prefix a target's commands with this to publish component-identity/<component>.json first.
+function(cadrumo_identity_command output)
+  set(command "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}" ${CADRUMO_HELPER} run --build "${CMAKE_BINARY_DIR}"
+    -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_stamp --build "${CMAKE_BINARY_DIR}")
+  foreach(component IN LISTS ARGN)
+    list(APPEND command --component "${component}")
+  endforeach()
+  set(${output} COMMAND ${command} PARENT_SCOPE)
+endfunction()

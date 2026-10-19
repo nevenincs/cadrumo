@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import os
 import shutil
 from collections.abc import Callable, Iterable, Mapping
 from contextlib import nullcontext
+from dataclasses import dataclass
 from pathlib import Path, PurePath, PurePosixPath
 from typing import Any
 
+from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
@@ -25,6 +28,19 @@ from .assembly_transaction import AssemblyReuse, assembly_candidate
 from .build_directory import require_enrolled_build, require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
+from .build_stamp import (
+    ACTION_COMPONENTS,
+    BUILD_TYPES,
+    SETTLED,
+    BuildStamp,
+    ComponentIdentity,
+    display_version,
+    native_settled,
+    package_identity,
+    read_identity,
+    read_record,
+    settle_record,
+)
 from .build_timing import BuildTimings
 from .docs_stage import verified_stage
 from .hashing import digest
@@ -158,6 +174,276 @@ def native_assembly_layout(contract: dict[str, Any], provenance: Mapping[str, An
     return projected
 
 
+ROLE_COMPONENTS = {
+    "interpreter": "interpreter",
+    "development-interpreter": "interpreter",
+    "bridge": "interpreter",
+    "entrypoint": "interpreter",
+    "bundled-image": "interpreter",
+}
+"""The interpreter hosts share one component; an application image is the component of its role."""
+
+
+def component_of(role: str) -> str:
+    """Name the build component whose identity a staged binary of ``role`` embeds."""
+    return ROLE_COMPONENTS.get(role, role)
+
+
+def package_binaries(
+    contract: Mapping[str, Any], *, interpreter: bool, development: bool, images: Iterable[ApplicationImage]
+) -> list[tuple[str, str]]:
+    """Return ``(role, package path)`` of every Cadrumo-built native binary the package stages."""
+    paths, files = contract["paths"], contract["files"]
+    native = paths["native"]
+    entries = [("interpreter", paths["executable"]), ("bridge", f"{native}/{files['bridge']}")]
+    if development:
+        entries.append(("development-interpreter", files["development_executable"]))
+    if not interpreter:
+        entries += [("entrypoint", path) for path in entrypoint_files(dict(contract)).values()]
+        entries += [("bundled-image", path) for path in bundled_image_files(dict(contract)).values()]
+        entries += [
+            ("desktop" if image.desktop else image.name.removeprefix("cadrumo-"), image.package_path)
+            for image in images
+        ]
+    return sorted(entries, key=lambda entry: entry[1])
+
+
+def package_components(
+    binaries: Iterable[tuple[str, str]], identities: Mapping[str, ComponentIdentity], build_type: str
+) -> list[dict[str, Any]]:
+    """Name every staged Cadrumo-built binary with the identity of the component it was compiled as.
+
+    Each component has its own build id and sequence, which change only when its inputs do.
+    The bundled CPython runtime and extension modules are reported through ``python`` and
+    ``distributions`` instead.
+    """
+    entries = []
+    for role, path in binaries:
+        identity = identities[component_of(role)]
+        entries.append(
+            {
+                "name": PurePosixPath(path).stem,
+                "role": role,
+                "path": path,
+                "component": identity.component,
+                "version": identity.version,
+                "build_id": identity.stamp.build_id,
+                "build_sequence": identity.stamp.build_sequence,
+                "build_date": identity.stamp.build_date,
+                "build_type": build_type,
+                "display_version": display_version(identity.version, identity.stamp.build_id, build_type),
+            }
+        )
+    return entries
+
+
+def component_identities(binary_dir: Path, binaries: Iterable[tuple[str, str]]) -> dict[str, ComponentIdentity]:
+    """Read the published identity of every component the staged binaries belong to."""
+    return {name: read_identity(binary_dir, name) for name in sorted({component_of(role) for role, _ in binaries})}
+
+
+def _logical_descriptors(document: Any, tokens: Mapping[str, str]) -> Any:
+    """Name each image a service descriptor binds by its logical token, without derived digests."""
+    if isinstance(document, list):
+        return [_logical_descriptors(item, tokens) for item in document]
+    if isinstance(document, dict):
+        return {
+            key: tokens.get(value, value) if key == "image_digest" else _logical_descriptors(value, tokens)
+            for key, value in document.items()
+            if key != "descriptor_digest"
+        }
+    return document
+
+
+def logical_inventory(
+    root: Path,
+    files: Mapping[str, str],
+    binaries: Iterable[tuple[str, str]],
+    identities: Mapping[str, ComponentIdentity],
+    *,
+    descriptors: str | None,
+) -> dict[str, str]:
+    """Return the staged inventory with every native binary named by the component it was built from.
+
+    A component fingerprint determines its images, while their linked bytes need not be
+    reproducible; the service descriptors, which bind those bytes, are compared through the
+    same names. Every other staged file keeps its content hash.
+    """
+    content = dict(files)
+    tokens: dict[str, str] = {}
+    for role, path in binaries:
+        identity = identities[component_of(role)]
+        token = f"{identity.component}:{identity.fingerprint}"
+        if path in content:
+            tokens[content[path]] = token
+            content[path] = token
+    if descriptors is not None and descriptors in content:
+        document = _logical_descriptors(json.loads((root / descriptors).read_bytes()), tokens)
+        content[descriptors] = hashlib.sha256(json.dumps(document, sort_keys=True).encode("utf-8")).hexdigest()
+    return content
+
+
+def package_fingerprint(
+    files: Mapping[str, str],
+    identities: Mapping[str, ComponentIdentity],
+    *,
+    kind: str,
+    build_type: str,
+    payload: Mapping[str, str] | None = None,
+) -> str:
+    """Hash the logical staged inventory and the component fingerprints: the content a package identity names.
+
+    ``payload`` names the fingerprints of the Python payload producers the stage holds.
+    """
+    document = {
+        "kind": kind,
+        "build_type": build_type,
+        "files": dict(sorted(files.items())),
+        "components": {name: identity.fingerprint for name, identity in sorted(identities.items())},
+        "payload": dict(sorted((payload or {}).items())),
+    }
+    return hashlib.sha256(json.dumps(document, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
+class StagedRecords:
+    """What one staging tells each component's build record, applied once the stage is published."""
+
+    configuration: str
+    package: str
+    artifacts: Mapping[str, Mapping[str, str]]
+    settled: Mapping[str, bool]
+
+
+def _distribution(record: str) -> str:
+    """Name the distribution whose ``*.dist-info/RECORD`` this package path is."""
+    return canonicalize_name(PurePosixPath(record).parent.name.removesuffix(".dist-info").rpartition("-")[0])
+
+
+def staged_artifacts(
+    files: Mapping[str, str], binaries: Iterable[tuple[str, str]], *, packages: str
+) -> dict[str, dict[str, str]]:
+    """Group the staged artifact digests by the component that produced them.
+
+    Native components own their images; the product payload owns the distribution
+    RECORDs of the product cohort, and the agent payload its own RECORD.
+    """
+    artifacts: dict[str, dict[str, str]] = {}
+    for role, path in binaries:
+        if path in files:
+            artifacts.setdefault(component_of(role), {})[path] = files[path]
+    cohort = {canonicalize_name(name) for name in PRODUCT_IDENTITY.cohort_distributions}
+    for path, value in files.items():
+        if PurePosixPath(path).parent.parent.as_posix() != packages or not path.endswith(".dist-info/RECORD"):
+            continue
+        name = _distribution(path)
+        if name == "cadrumo-agent":
+            artifacts.setdefault(ACTION_COMPONENTS["agent"], {})[path] = value
+        elif name in cohort:
+            artifacts.setdefault(ACTION_COMPONENTS["product"], {})[path] = value
+    return artifacts
+
+
+def record_staging(binary_dir: Path, staged: StagedRecords) -> None:
+    """Settle the build records of everything a published stage holds, with its artifact digests.
+
+    A native component settles when its inputs still give the fingerprint it was compiled
+    from; a payload producer keeps the state its own build recorded.
+    """
+    for component, artifacts in sorted(staged.artifacts.items()):
+        if component in staged.settled:
+            settled = staged.settled[component]
+        else:
+            record = read_record(binary_dir, component)
+            if record is None:
+                continue
+            settled = record["state"] == SETTLED
+        settle_record(
+            binary_dir,
+            component,
+            settled=settled,
+            configuration=staged.configuration,
+            package=staged.package,
+            artifacts=artifacts,
+        )
+
+
+def package_build_record(shared: Mapping[str, Any], stamp: BuildStamp, build_type: str) -> dict[str, Any]:
+    """Return the staged build record: the shared metadata plus this package's own identity and build type.
+
+    ``shared`` keeps the interpreter hosts' identity under ``interpreter``; the top-level
+    identity is the package's, allocated at staging time and compiled into no binary.
+    """
+    if build_type not in BUILD_TYPES.values():
+        raise ValueError(f"Unknown build type: {build_type!r}")
+    return {
+        **shared,
+        "build_id": stamp.build_id,
+        "build_sequence": stamp.build_sequence,
+        "build_number": stamp.build_sequence,
+        "build_date": stamp.build_date,
+        "build_type": build_type,
+        "display_version": display_version(shared["version"], stamp.build_id, build_type),
+    }
+
+
+def stamp_package(
+    binary_dir: Path,
+    root: Path,
+    shared: Mapping[str, Any],
+    files: Mapping[str, str],
+    binaries: Iterable[tuple[str, str]],
+    *,
+    kind: str,
+    build_type: str,
+    build_member: str,
+    descriptors: str | None,
+    packages: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]], StagedRecords]:
+    """Return the package's build record, components and staged records, keyed on its logical content.
+
+    ``files`` is the package inventory of the stage at ``root``; the build record itself and
+    the package manifest are left out, since they carry the result. Restaging the same
+    logical content, including a rebuild of unchanged components, keeps the identity. The
+    staged records are applied with :func:`record_staging` once the stage is published.
+    """
+    staged = list(binaries)
+    identities = component_identities(binary_dir, staged)
+    content = logical_inventory(
+        root,
+        {member: value for member, value in files.items() if member != build_member},
+        staged,
+        identities,
+        descriptors=descriptors,
+    )
+    payload = {
+        name: record["fingerprint"]
+        for name in ACTION_COMPONENTS.values()
+        if (record := read_record(binary_dir, name)) is not None and kind == "application"
+    }
+    stamp = package_identity(
+        binary_dir, package_fingerprint(content, identities, kind=kind, build_type=build_type, payload=payload)
+    )
+    configuration = next(name for name, value in BUILD_TYPES.items() if value == build_type)
+    package = (build_paths(binary_dir)["stage"] / configuration / "app").resolve()
+    records = StagedRecords(
+        configuration=configuration,
+        package=package.relative_to(binary_dir.resolve()).as_posix(),
+        artifacts=staged_artifacts(files, staged, packages=packages),
+        settled=native_settled(binary_dir, sorted(identities)),
+    )
+    return (
+        package_build_record(shared, stamp, build_type),
+        package_components(staged, identities, build_type),
+        records,
+    )
+
+
+def agent_closure(distributions: Mapping[str, str], requirements: Iterable[str]) -> list[dict[str, str]]:
+    """Return the agent's resolved runtime closure as installed, sorted by name."""
+    return [{"name": name, "version": distributions[name]} for name in sorted(requirements)]
+
+
 def _shortest_first(parts: list[str]) -> tuple[int, list[str]]:
     return len(parts), parts
 
@@ -210,6 +496,7 @@ def assemble(
     *,
     images: Mapping[str, Path],
     binary_dir: Path,
+    build_type: str,
     development: bool = False,
     interpreter: bool = False,
     target: str,
@@ -228,7 +515,7 @@ def assemble(
     with assembly_candidate(
         destination, contract["files"]["package_manifest"], rewrite_native=contract["backend"] != "windows"
     ) as (candidate, reuse):
-        _assemble_candidate(
+        staged_records = _assemble_candidate(
             python,
             dependencies,
             build,
@@ -237,6 +524,7 @@ def assemble(
             user_docs,
             images=images,
             binary_dir=binary_dir,
+            build_type=build_type,
             development=development,
             interpreter=interpreter,
             target=target,
@@ -246,6 +534,8 @@ def assemble(
             timings=timings,
             reuse=reuse,
         )
+    # The stage is published; its build records now name what it holds.
+    record_staging(binary_dir, staged_records)
 
 
 def _assemble_candidate(
@@ -258,6 +548,7 @@ def _assemble_candidate(
     *,
     images: Mapping[str, Path],
     binary_dir: Path,
+    build_type: str,
     development: bool,
     interpreter: bool,
     target: str,
@@ -266,8 +557,10 @@ def _assemble_candidate(
     agent_dependencies: Path | None,
     timings: BuildTimings | None,
     reuse: AssemblyReuse,
-) -> None:
+) -> StagedRecords:
     """Relocate native modules while retaining their qualified import names."""
+    if build_type not in BUILD_TYPES.values():
+        raise ValueError(f"Unknown build type: {build_type!r}")
     root = destination.resolve()
     contract = load_layout(target)
     build_identity = json.loads(metadata.read_text(encoding="utf-8"))
@@ -285,6 +578,7 @@ def _assemble_candidate(
         else active_requirements(REPO_ROOT, target_platform(target), build_identity["python"], extras=BUNDLED_EXTRAS)
     )
     allowed.update(requirements)
+    agent_requirements: dict[str, Requirement] = {}
     if not interpreter:
         if agent_dependencies is None:
             raise ValueError("Application assembly requires the agent's resolved dependencies")
@@ -376,17 +670,20 @@ def _assemble_candidate(
             packages.mkdir(parents=True)
         else:
             copy_tree(dependencies, packages, ignore=omit_development, copy_function=reuse.copy)
+    tools: dict[str, str] = {}
     if agent_runtime is not None:
         with timings.phase("agent-runtime-copy") if timings is not None else nullcontext():
             source = agent_metadata.get("source")
             if not isinstance(source, str):
                 raise ValueError("Agent build provenance names no source project")
+            declaration = load_runtime_declaration(Path(source))
             stage_agent_runtime(
                 agent_runtime,
                 packages.parent,
-                declaration=load_runtime_declaration(Path(source)),
+                declaration=declaration,
                 copy_function=reuse.copy,
             )
+            tools["node"] = declaration["node_version"]
     pruned = []
     for exclusion in [] if interpreter else contract.get("package_exclusions", []):
         matches = list(packages.glob(exclusion["pattern"]))
@@ -455,7 +752,6 @@ def _assemble_candidate(
         encoding="utf-8",
     )
     stage_sdk_licenses(root, python, contract)
-    shutil.copy2(metadata, root / files["build_metadata"])
     with timings.phase("dependency-bytecode") if timings is not None else nullcontext():
         reuse_bytecode = reuse.manifest.get("assembly", {}).get("bytecode") == assembly_identity["bytecode"]
         compile_packages_bytecode(
@@ -488,6 +784,22 @@ def _assemble_candidate(
             for relative in (p.relative_to(root).as_posix() for p in sorted(root.rglob("*")) if p.is_file())
             if relative == docs_manifest or not relative.startswith(f"{docs_prefix}/")
         }
+    binaries = package_binaries(contract, interpreter=interpreter, development=development, images=staged_images)
+    build_identity, components, staged_records = stamp_package(
+        binary_dir,
+        root,
+        build_identity,
+        inventoried_files,
+        binaries,
+        kind="interpreter" if interpreter else "application",
+        build_type=build_type,
+        build_member=files["build_metadata"],
+        descriptors=service_descriptors,
+        packages=layout["packages"],
+    )
+    (root / files["build_metadata"]).write_text(json.dumps(build_identity, indent=2), encoding="utf-8")
+    inventoried_files[files["build_metadata"]] = digest(root / files["build_metadata"])
+    inventoried_files = dict(sorted(inventoried_files.items(), key=lambda item: root / item[0]))
     manifest = {
         "assembly": assembly_identity,
         "kind": "interpreter" if interpreter else "application",
@@ -499,7 +811,10 @@ def _assemble_candidate(
         "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip(),
         "lock_sha256": digest(REPO_ROOT / "uv.lock"),
         "inputs": dict(provenance or {}),
-        "agent": {"bundled": not interpreter, **agent_metadata},
+        "agent": {"bundled": not interpreter, **agent_metadata}
+        | ({} if interpreter else {"dependencies": agent_closure(distributions, agent_requirements)}),
+        "components": components,
+        "tools": tools,
         "relocation": relocation,
         "patches": patches,
         "pruned": pruned,
@@ -514,6 +829,7 @@ def _assemble_candidate(
         raise ValueError("Assembled files differ from the package inventory")
     (root / files["package_manifest"]).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     BuildLog("assemble").status(f"assembled {display_path(root)}: {len(modules)} relocated extension modules")
+    return staged_records
 
 
 if __name__ == "__main__":
@@ -532,6 +848,7 @@ if __name__ == "__main__":
     parser.add_argument("--image", action="append", default=[], help="FILE=ARTIFACT for each staged application image")
     parser.add_argument("--binary-dir", type=require_enrolled_build, required=True)
     parser.add_argument("--target", required=True)
+    parser.add_argument("--config", choices=tuple(BUILD_TYPES), required=True)
     args = parser.parse_args()
     if not args.destination.is_relative_to(args.binary_dir) or not args.build.is_relative_to(args.binary_dir):
         parser.error("Assembly inputs and destination must belong to the selected binary directory")
@@ -544,6 +861,7 @@ if __name__ == "__main__":
         args.user_docs,
         images=dict(image_artifact(item) for item in args.image),
         binary_dir=args.binary_dir,
+        build_type=BUILD_TYPES[args.config],
         development=args.development,
         target=args.target,
         agent_runtime=args.agent_runtime,

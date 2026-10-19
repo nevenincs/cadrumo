@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     }
 #if !defined(CADRUMO_ENTRYPOINT) && !defined(CADRUMO_BUNDLED_IMAGE)
     if (argc == 2 && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-V"))) {
-        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
+        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_DISPLAY_VERSION,
             CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
             CADRUMO_DEVELOPMENT ? "development" : "production");
         result = 0;

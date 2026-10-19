@@ -43,6 +43,15 @@ fn main() {
         .include(&interpreter)
         .include(interpreter.join("windows"))
         .define("CADRUMO_LINKED_HOST", None)
+        // Cargo's profile directory is the build type, as the CMake configuration is for the C hosts.
+        .define(
+            "CADRUMO_BUILD_DEBUG",
+            if env::var("PROFILE").as_deref() == Ok("debug") {
+                "1"
+            } else {
+                "0"
+            },
+        )
         .define("WINVER", "0x0A00")
         .define("_WIN32_WINNT", "0x0A00")
         .std("c17")

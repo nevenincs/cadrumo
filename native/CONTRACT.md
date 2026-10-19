@@ -834,14 +834,103 @@ enrolled name elsewhere, stops with the enrolled names.
 | `user-docs/build/`, `user-docs/work/` | The language roots one documentation compile wrote, with its log and private storage |
 | `user-docs/stage/` | Shippable documentation subset and its manifest, copied into each staged package |
 
-ZIP names are `CADRUMO-<version>-b<build>-windows-x64-<Config>.zip`, with one
-matching top-level folder. `CADRUMO_BUILD_NUMBER` defaults to 1, and
-`CADRUMO_BUILD_DATE` is a UTC timestamp cached at first configure, respecting
-`SOURCE_DATE_EPOCH`; neither changes on a later local rebuild, so a release
-supplies both explicitly. A staged package's exact bytes are identified by the
-SHA-256 of its `data/package-manifest.json`, which hashes every file. The version belongs to
-`pyproject.toml`. The executable banner, Windows version/icon resources and
-`data/build.json` carry the same identity. The icon derives from the existing
+Build identities move only on real change, and only for what changed
+(`dev/packaging/native/build_stamp.py`, `dev/packaging/native/build_fingerprint.py`).
+Each component has its own identity:
+
+| Component | Images or outputs | Declared inputs beyond the shared ones |
+|---|---|---|
+| `interpreter` | `python`, `python_d`, the console entrypoints, bundled images and the CPython bridge | `native/interpreter/` (less its staged Python), the `platform` and `launch_guard` crates with their path dependencies, `native/platforms/`, the layout, `CompilePolicy.cmake`, `LaunchGuard.cmake`, the icon and resource generators; the file-API settings of the host targets |
+| `installer` | MSI adapter DLL and maintenance runner | the `installer` crate closure, `manager/version_resource.rs`, `interpreter/windows/host.manifest`, `Installer.cmake` |
+| `manager` | `cadrumo-manager` | the `manager` crate closure (with the installer library on Windows), `interpreter/windows/host.manifest`, the embedded desktop dispatcher, `Manager.cmake` |
+| `desktop` | `cadrumo` | the `desktop/src-tauri` crate closure, the built frontend bundle, the frontend package and lock files, the desktop CMake and Tauri driver scripts, the C host sources its linked host compiles, the icon, and the interpreter fingerprint (its linked host carries that identity) |
+| `desktop-test-host` | the remote-debugging `cadrumo` the packaged tests drive | the desktop's inputs plus `tests/packaged/host.mjs`, the `webview2-remote-debugging` feature, and the desktop fingerprint |
+| `app-payload` | the product wheels | every input `inputs-product.txt` enrolls, with the selected builder tools |
+| `app-agent` | the bundled agent and its Node/ACP runtime | every input `inputs-agent.txt` enrolls from `CADRUMO_PACKAGE_AGENT_SOURCE_DIR`, with the selected builder tools |
+
+Every native component also fingerprints `native/toolchain.json`, `native/CMakeLists.txt`,
+`Rust.cmake`, `RustLinker.cmake`, `WindowsToolchain.cmake`, the platform adapters, the
+generated `contract.rs`, `contract.h`, `contract.json` and `identity.json`, the selected
+toolchain (`generated/build-toolchain.json`: compiler, linker, archiver, Rust and, for the
+desktop, Node and npm executables by hash; the tool versions; the target configuration;
+the CMake generator), the effective build settings (each host target's per-configuration
+compile flags, defines, includes, sources and link fragments from the CMake file API reply,
+and the Rust target and compiler environment every Cargo command receives,
+`generated/rust-environment.json`), and every checkout file the previous build actually
+read for it (Cargo dependency records and MSVC compiler read logs), so an undeclared input
+still moves the identity. A fingerprint is a SHA-256 of contents, never timestamps;
+`tests/` directories, `target/`, `node_modules/`, bytecode and prose are not inputs, and a
+crate linked as a library contributes its library sources, not its own executables
+(`src/main.rs`, `src/bin/`, declared `[[bin]]` paths). The `native.identity-coverage` test
+fails when the last build compiled a checkout file a component does not declare.
+
+Just before a component compiles, its build step resolves the fingerprint in the build
+directory's registry (`generated/build-stamp.json`, shared by Debug and Release, kept by
+every clean target): a known fingerprint returns the identity first allocated for it (the
+registry remembers the last 64 per component, so reverting an edit returns its earlier
+identity), and an unseen one allocates the next. The compile steps read
+`generated/component-identity/<component>.json`, rewritten only when that identity changes.
+The lookup and allocation run under one file lock, so builds that resolve the same inputs at
+once (parallel `cmake --build` runs, MSBuild nodes, Debug and Release together) share one
+identity. `native_metadata` resolves `interpreter`, the manager and installer Cargo commands
+resolve their own component (`cmake_build run --build-identity <component>`), the desktop
+targets resolve `desktop`, and the payload producers resolve `app-payload` and `app-agent`
+from the identity their completion receipt binds.
+
+- `build_id` is the UTC date of the identity's allocation `YYYYMMDD` plus a per-day
+  iteration from `01` (`2026101903`; past 99 it keeps growing, `20261019100`).
+- `build_sequence` counts every identity allocated in the directory, 1 to 65535. It is
+  the fourth Windows FILEVERSION field and the `build_number`.
+- `build_date` is the ISO UTC time of the allocation; `SOURCE_DATE_EPOCH` replaces it.
+- `build_type` is `debug` for the Debug configuration, otherwise `release`, and
+  `display_version` is `<version>+<build_id>`, with `.debug` appended for debug.
+
+Each image embeds only its own component's identity. The C hosts read it from
+`build_metadata.h` and their version resources (the desktop's linked interpreter host
+reads the same header). A Cargo command that builds a component's images sets
+`CADRUMO_IMAGE_COMPONENT=<component>` and `CADRUMO_<COMPONENT>_BUILD_ID`,
+`_BUILD_SEQUENCE` and `_BUILD_DATE` (`CADRUMO_MANAGER_*`, `CADRUMO_INSTALLER_*`,
+`CADRUMO_DESKTOP_*`) beside `CADRUMO_ID_VERSION`. The manager and installer build scripts
+read their identity only when `CADRUMO_IMAGE_COMPONENT` names their own component, and the
+manager's identity constants live in its executable, so the libraries linked into another
+image read no identity: an unchanged component recompiles and relinks nothing, and a change
+to one binary's sources rebuilds that binary and only what links its changed code. The
+interpreter banner and `--version`, the manager's `--version`, the desktop's About entry and
+the Windows version resources (`FileVersion` `<display_version>`, `BuildId`, `BuildType`,
+FILEVERSION `<major>.<minor>.<patch>.<build_sequence>`) carry the component identity; the
+desktop build script restamps Tauri's generated version resource with the sequence and
+recompiles it with the selected SDK's `rc.exe`.
+
+Each component also has a build record for readers outside the build,
+`generated/build-identity/<component>.json` with its input inventory
+`<component>.inputs.json` beside it; `read_record` and `changed_inputs` in
+`build_stamp.py` read them. A record opens in state `building` when a build of a new
+fingerprint begins, becomes `settled` once the component is built and staged from inputs
+that still give that fingerprint, or `unsettled` when they moved while it ran, and lists per
+configuration the SHA-256 of every artifact the stage holds for it.
+
+The package has its own identity, allocated when `app-payload` (or `app-native` /
+`app-agent`) stages it, keyed on the logical staged content: every staged file by content
+hash, except the native images, which count by the fingerprint of the component that built
+them (the service descriptors that bind their bytes are compared the same way), plus the
+configuration and the component and payload fingerprints. Restaging the same content,
+including relinked but unchanged images, keeps the package identity; it lives only in data,
+so it never forces a recompile. `data/build.json` and the manifest's `build` carry the
+package's `build_id`, `build_sequence`, `build_number`, `build_date`, `build_type` and
+`display_version`, and the interpreter hosts' identity under `build.interpreter`, which the
+bootstrap compares with the running host to refuse a mixed build. The manifest lists each
+Cadrumo-built binary under `components` (name, role, path, component, version, build id,
+sequence, date, type and display version of its own component), the agent's installed
+closure under `agent.dependencies`, and the staged agent Node version under `tools.node`.
+
+A release freezes the id, sequence or date of every component and package with
+`-DCADRUMO_BUILD_NUMBER=<n>`, `-DCADRUMO_BUILD_ID=<id>` or
+`-DCADRUMO_BUILD_DATE=<timestamp>` (written to `generated/build-freeze.json` at
+configure time); an empty value allocates by content. ZIP names are
+`CADRUMO-<version>-windows-x64-<Config>.zip`, or `CADRUMO-<version>-b<n>-...` with a
+frozen number, with one matching top-level folder. A staged package's exact bytes are
+identified by the SHA-256 of its `data/package-manifest.json`, which hashes every file.
+The version belongs to `pyproject.toml`. The icon derives from the existing
 `docs/_static/cadrumo-icon.svg`.
 
 The Windows preset scopes `TEMP`, `TMP` and `TMPDIR` to its build tree before
@@ -868,7 +957,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
 | `setup-native-builder` | Validate the existing development interpreter without installing tools |
 | `registry_authority` | Validate the existing publication and its source currency; refuse a missing or stale one without publishing |
-| `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts and executable resources |
+| `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts, resolve the interpreter hosts' build identity, and generate executable resources |
 | `rust_platform_static`, `rust_platform_shared`, `rust_platform_consumer` | Build one platform library format or its Rust consumer; `rust_platform` groups the libraries |
 | `rust_application`, `rust_manager`, `desktop-host-build` | Build each application library, manager executable or desktop executable |
 | `python`, `python_d` | Build a runnable standalone interpreter at `stage/<Config>/app`, including `python.zip`, native libraries and site-packages; `python_d` also includes the development executable. Uses the application package layout and assembler without product wheels, application images or user documentation |

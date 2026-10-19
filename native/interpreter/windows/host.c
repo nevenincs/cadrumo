@@ -114,7 +114,7 @@ static int host_main(const host_role *role, int argc, wchar_t **argv) {
         goto done;
     }
     if (interpreter && argc == 2 && (!wcscmp(argv[1], L"--version") || !wcscmp(argv[1], L"-V"))) {
-        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
+        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_DISPLAY_VERSION,
             CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
             CADRUMO_DEVELOPMENT ? "development" : "production");
         result = 0;

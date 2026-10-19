@@ -16,17 +16,21 @@ if(entrypoint_count GREATER 0)
   endforeach()
 endif()
 cadrumo_cached_command(metadata_command native_metadata SHARED
-  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
+  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json" "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json"
   OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json")
 cadrumo_build_step(step_comment native_metadata GROUP contract
   SUMMARY "generate the build metadata the native hosts embed"
   OUTPUTS "${CONTRACT_DIR}/build.json" "${CONTRACT_DIR}/build_metadata.h")
+cadrumo_identity_command(interpreter_identity interpreter)
 add_custom_target(native_metadata
+  ${interpreter_identity}
   COMMAND ${metadata_command} ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
-    --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
+    --identity "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" --tools "${CADRUMO_PATH_TOOLS}"
     --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
-  BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
+  BYPRODUCTS "${CADRUMO_BUILD_IDENTITY_DIR}/interpreter.json" "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
+# The interpreter fingerprint covers the generated contract the hosts compile in.
+add_dependencies(native_metadata native_contract)
 
 set(rust_profile "$<IF:$<CONFIG:Debug>,debug,release>")
 string(TOUPPER "${CADRUMO_PIN_rust_target}" cargo_target)
@@ -149,6 +153,8 @@ foreach(target ${host_targets} cadrumo_python_bridge)
   cadrumo_compile_policy(${target})
   target_include_directories(${target} PRIVATE "${CONTRACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
   add_dependencies(${target} native_contract native_metadata)
+  # Selects the build type in the shared build_metadata.h.
+  target_compile_definitions(${target} PRIVATE "CADRUMO_BUILD_DEBUG=$<CONFIG:Debug>")
 endforeach()
 foreach(target ${host_targets})
   target_link_libraries(${target} PRIVATE "${platform_static}" ${CMAKE_DL_LIBS} pthread m)

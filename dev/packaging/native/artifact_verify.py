@@ -103,8 +103,10 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
                 if result.returncode:
                     raise AssertionError(result.stdout + result.stderr)
             if arguments == ["--version"]:
-                for key in ("version", "build_number", "build_date"):
-                    if str(manifest["build"][key]) not in result.stdout:
+                # The banner reports the interpreter hosts' own build, not the package's.
+                hosts = next(item for item in manifest["components"] if item["role"] == "interpreter")
+                for key in ("version", "display_version", "build_sequence", "build_id", "build_date"):
+                    if str(hosts[key]) not in result.stdout:
                         raise AssertionError(f"Missing interpreter banner metadata: {key}")
     with timings.phase("platform-acceptance"):
         verify(package, target=target, product=True, build_root=destination, already_relocated=True)

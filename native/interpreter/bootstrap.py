@@ -98,8 +98,13 @@ def _delegated_inventory(root, manifest):
 
 
 def _require_build(identity):
-    for key in ("version", "build_number", "build_date"):
-        if str(identity[key]) != str(vars(sys)["cadrumo_build"][key]):
+    # The package record names the interpreter hosts' own build, which this image compiled in.
+    compiled = vars(sys)["cadrumo_build"]
+    hosts = identity["interpreter"]
+    if str(identity["version"]) != str(compiled["version"]):
+        raise ImportError("Incompatible CADRUMO package build: version")
+    for key in ("build_number", "build_id", "build_date"):
+        if str(hosts[key]) != str(compiled[key]):
             raise ImportError(f"Incompatible CADRUMO package build: {key}")
     if identity["python"] != ".".join(map(str, sys.version_info[:3])):
         raise ImportError("Incompatible CADRUMO CPython version")

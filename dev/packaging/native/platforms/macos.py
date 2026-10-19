@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from ...runtime_wheelhouse_contract import target_platform
+from ..build_stamp import BuildStamp
 from ..identity import DistributionIdentity
 from .posix import (
     acquire_sdk,
@@ -204,8 +205,7 @@ def external_probe(destination: Path) -> list[str]:
 def resources(
     destination: Path,
     version: str,
-    number: int,
-    date: str,
+    stamp: BuildStamp,
     tools: Path,
     entrypoints: dict[str, str],
     product: DistributionIdentity,

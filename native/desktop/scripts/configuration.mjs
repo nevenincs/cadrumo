@@ -19,6 +19,47 @@ export function identity() {
   return value;
 }
 
+// The desktop component's build identity, resolved by the identity step of each desktop
+// target (component-identity/desktop.json). Only the desktop crate reads it, through its own
+// CADRUMO_DESKTOP_BUILD_* variables; CADRUMO_IMAGE_COMPONENT tells the manager and installer
+// crates it links that they are libraries here and read no identity of their own. The Tauri
+// version carries the id as semantic-version build metadata, so an unchanged desktop changes
+// nothing Cargo or Vite sees.
+export function componentIdentity(component) {
+  const value = JSON.parse(
+    readFileSync(
+      resolve(buildPath("generated"), "component-identity", `${component}.json`),
+      "utf8",
+    ),
+  );
+  if (
+    value.component !== component ||
+    typeof value.build_id !== "string" ||
+    !/^[0-9]{10,}$/.test(value.build_id) ||
+    !Number.isInteger(value.build_sequence) ||
+    value.build_sequence < 1 ||
+    value.build_sequence > 65535 ||
+    typeof value.build_date !== "string"
+  )
+    throw new Error(
+      `Generated ${component} build identity is invalid; build a desktop target, which resolves it first`,
+    );
+  return value;
+}
+
+export function buildStamp(debug, product = identity()) {
+  const desktop = componentIdentity("desktop");
+  return {
+    displayVersion: `${product.version}+${desktop.build_id}${debug ? ".debug" : ""}`,
+    environment: {
+      CADRUMO_IMAGE_COMPONENT: "desktop",
+      CADRUMO_DESKTOP_BUILD_ID: desktop.build_id,
+      CADRUMO_DESKTOP_BUILD_SEQUENCE: String(desktop.build_sequence),
+      CADRUMO_DESKTOP_BUILD_DATE: desktop.build_date,
+    },
+  };
+}
+
 export function server() {
   const value = JSON.parse(
     readFileSync(

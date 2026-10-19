@@ -32,7 +32,7 @@ if(WIN32)
   endif()
   set(manager_process_manifest --env "CADRUMO_PROCESS_MANIFEST=${process_manifest}")
 endif()
-cadrumo_cargo_command(manager_cargo ${manager_process_manifest}
+cadrumo_cargo_command(manager_cargo --build-identity manager ${manager_process_manifest}
   --env "CADRUMO_TEST_PYTHON=${CADRUMO_DEV_PYTHON}"
   --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
   --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}"

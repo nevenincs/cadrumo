@@ -47,6 +47,9 @@ string(JSON desktop_server SET "${desktop_server}" host "\"${CADRUMO_DESKTOP_BIN
 file(CONFIGURE OUTPUT "${CADRUMO_PATH_GENERATED}/desktop-server.json" CONTENT "@desktop_server@\n" @ONLY)
 set(CADRUMO_NATIVE_CONTRACT "${CADRUMO_PATH_GENERATED}/contract.json" CACHE FILEPATH "Generated native package contract")
 set(desktop_host_contracts native_contract)
+# The desktop resolves its own build identity (with the manager, installer and interpreter
+# hosts it links) before Tauri compiles it; an unchanged fingerprint changes no variable.
+cadrumo_identity_command(desktop_identity desktop)
 if(WIN32)
   # Cargo embeds the generated Windows manifests, including the compatibility
   # claim required by the runtime role's native login observations.
@@ -171,7 +174,7 @@ foreach(generator IN ITEMS chrome palette icons)
     OUTPUTS "${desktop_generated}/${desktop_${generator}_output}")
   add_custom_target(desktop-frontend-${generator}
     COMMAND "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/content-build.mjs"
-      --record "${CADRUMO_PATH_DESKTOP_CACHE}/${generator}-build.json"
+      --record "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-${generator}-build.json"
       --output "${desktop_generated}/${desktop_${generator}_output}" --inputs-file "${generator_input_file}"
       -- ${desktop_generator} ${desktop_${generator}_module} --output "${desktop_generated}/${desktop_${generator}_output}"
         ${desktop_${generator}_arguments}
@@ -212,6 +215,7 @@ cadrumo_build_step(step_comment desktop-host-build GROUP desktop
   SUMMARY "compile the desktop host image around the frontend bundle"
   OUTPUTS "${CADRUMO_DESKTOP_HOST_EXECUTABLE}")
 add_custom_target(desktop-host-build
+  ${desktop_identity}
   COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
     ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
@@ -226,6 +230,7 @@ cadrumo_build_step(step_comment desktop-host-prepare GROUP desktop
   SUMMARY "prepare the desktop host project and its icons"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_HOST}" "${CADRUMO_PATH_DESKTOP_ICONS}")
 add_custom_target(desktop-host-prepare
+  ${desktop_identity}
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" prepare
@@ -276,6 +281,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
   cadrumo_build_step(step_comment desktop-host-${action} GROUP verification SUMMARY "${host_summary}")
   add_custom_target(desktop-host-${action}
     ${host_fixture_check}
+    ${desktop_identity}
     COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
       ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
@@ -313,10 +319,25 @@ add_custom_target(desktop-headless-test
 cadrumo_build_step(step_comment desktop-packaged-host GROUP verification
   SUMMARY "compile the remote-debugging desktop host for packaged end-to-end tests (never shipped)"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_TESTING}")
+# The test host has its own build record (desktop-test-host): the desktop's inputs and identity
+# with one more feature. It is opened before the host builds and settled from the host.json
+# the build writes, with the image's digest.
+cadrumo_identity_command(desktop_test_host_identity desktop-test-host)
+set(desktop_test_host_record "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/host.json")
+set(desktop_resource_environment)
+if(WIN32)
+  get_directory_property(desktop_resource_compiler DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
+    DEFINITION CADRUMO_RUST_ENV_CADRUMO_RC_COMPILER)
+  set(desktop_resource_environment "CADRUMO_RC_COMPILER=${desktop_resource_compiler}")
+endif()
 add_custom_target(desktop-packaged-host
+  ${desktop_test_host_identity}
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
-    "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+    "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}" ${desktop_resource_environment}
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
+  COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}" ${CADRUMO_HELPER} run --build "${CMAKE_BINARY_DIR}"
+    -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_stamp --build "${CMAKE_BINARY_DIR}"
+    --settle-test-host "${desktop_test_host_record}"
   DEPENDS desktop-frontend-build
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 add_dependencies(desktop-packaged-host ${desktop_host_contracts})
@@ -367,7 +388,7 @@ cadrumo_register_clean(TARGET desktop-frontend-build PATHS
 foreach(generator IN ITEMS chrome palette icons)
   cadrumo_register_clean(TARGET desktop-frontend-${generator} PATHS
     "${desktop_generated}/${desktop_${generator}_output}"
-    "${CADRUMO_PATH_DESKTOP_CACHE}/${generator}-build.json")
+    "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-${generator}-build.json")
 endforeach()
 cadrumo_register_clean(TARGET desktop-frontend-generated DEPENDS
   desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons)

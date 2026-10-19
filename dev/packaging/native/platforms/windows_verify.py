@@ -240,6 +240,7 @@ def verify_application_images(
     """
     layout, files = manifest["layout"], manifest["files"]
     version = str(manifest["build"]["version"])
+    components = manifest.get("components", [])
     observed: dict[str, Any] = {}
     for image in application_images(layout):
         path = destination / image.package_path
@@ -258,6 +259,14 @@ def verify_application_images(
                 f"Application image {image.file} did not report version {version}: exit {result.returncode}, "
                 f"{result.stdout!r} {result.stderr!r}"
             )
+        # An image that reports a display version must report the build the manifest records for it.
+        recorded = next((item for item in components if item["path"] == image.package_path), None)
+        if recorded is not None and f"{version}+" in result.stdout:
+            reported = f"{version}+{recorded['build_id']}"
+            if not re.search(rf"(?<![\w.]){re.escape(reported)}(?![\w])", result.stdout):
+                raise AssertionError(
+                    f"Application image {image.file} did not report build {recorded['build_id']}: {result.stdout!r}"
+                )
         observed[image.file] = {
             "staged": True,
             "location": image.package_path,

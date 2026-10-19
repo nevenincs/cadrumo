@@ -13,6 +13,7 @@ import { buildPath, readBuildPaths } from "./build-paths.mjs";
 import { snapshotHostSources } from "./backend-snapshot.mjs";
 import { contentBuild, writeStable } from "./content-build.mjs";
 import {
+  buildStamp,
   identity as readIdentity,
   profile,
   artifactFile,
@@ -52,6 +53,7 @@ if (!contract || !isAbsolute(contract))
   throw new Error(
     "Set CADRUMO_NATIVE_CONTRACT to the generated native contract.json.",
   );
+const stamp = buildStamp(selectedProfile.debug, identity);
 const environment = {
   ...process.env,
   ...selectedProfile.environment,
@@ -70,6 +72,7 @@ const environment = {
   CADRUMO_ID_VERSION: identity.version,
   CADRUMO_ID_MANAGER_ID: identity.manager_id,
   CADRUMO_ID_MANAGER_NAME: identity.manager_name,
+  ...stamp.environment,
 };
 if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
   const pathKey =
@@ -120,7 +123,7 @@ const config = tauriConfig(
   JSON.parse(
     readFileSync(resolve(desktop, "src-tauri/tauri.conf.json.in"), "utf8"),
   ),
-  identity,
+  { ...identity, version: stamp.displayVersion },
   { configDirectory, frontend, icons },
 );
 const configFile = resolve(configDirectory, "tauri.conf.json");

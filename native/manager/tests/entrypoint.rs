@@ -17,7 +17,7 @@ fn retry_support_metadata_is_silent_and_does_not_require_admission() {
 }
 
 #[test]
-fn version_reports_the_projected_manager_name_and_version() {
+fn version_reports_the_projected_manager_name_and_display_version() {
     let output = Command::new(MANAGER)
         .arg("--version")
         .output()
@@ -26,7 +26,11 @@ fn version_reports_the_projected_manager_name_and_version() {
     assert!(output.stderr.is_empty(), "{output:?}");
     assert_eq!(
         String::from_utf8(output.stdout).expect("UTF-8 version line"),
-        format!("{} {}\n", identity::MANAGER_NAME, identity::VERSION)
+        format!(
+            "{} {}\n",
+            identity::MANAGER_NAME,
+            env!("CADRUMO_DISPLAY_VERSION")
+        )
     );
 }
 

@@ -132,7 +132,7 @@ cadrumo_assembly_product_inputs(assembly_product_inputs "${CADRUMO_PATH_PRODUCT}
 set(assembly_inputs "${CADRUMO_PATH_RUNTIME}/runtime-inputs.json" "${CADRUMO_PATH_PYTHON_SDK}" ${assembly_product_inputs}
   "${CADRUMO_PATH_AGENT}/runtime"
   "${CADRUMO_PATH_GENERATED}/build.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json"
-  "${package_bootstrap}" ${contract_inputs})
+  "${CADRUMO_BUILD_IDENTITY_DIR}" "${package_bootstrap}" ${contract_inputs})
 foreach(target cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${development_target})
   list(APPEND assembly_inputs "$<TARGET_FILE:${target}>")
 endforeach()
@@ -145,7 +145,7 @@ if(CADRUMO_PACKAGE_USER_DOCS)
   list(APPEND assembly_inputs "${CADRUMO_PATH_USER_DOCS_STAGE}")
 endif()
 # These helpers own assembly; unrelated native build/test helpers are not inputs.
-foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command build_timing agent_runtime)
+foreach(helper assemble assembly_transaction service_descriptors stdlib package_inventory layout hashing build_paths docs_stage cmake_build cached_command build_timing agent_runtime build_stamp build_fingerprint)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/${helper}.py")
 endforeach()
 cadrumo_assembly_backend_inputs(assembly_backend_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
@@ -205,6 +205,7 @@ add_custom_target(app-native
   COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.update_images
     --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${application_image_args}
   DEPENDS cadrumo_python cadrumo_python_bridge ${CADRUMO_ENTRYPOINT_TARGETS} ${application_image_dependencies}
+    ${development_target} native_metadata
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_custom_target(app-recover
   COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.update_images
@@ -224,7 +225,8 @@ if(WIN32 AND desktop_image_staged)
     "runner::bootstrap::tests::assembled_kit_admits_both_scopes_and_refuses_wrong_native_role_without_installing")
   get_directory_property(installer_target_dir DIRECTORY "${PROJECT_SOURCE_DIR}/native"
     DEFINITION CADRUMO_INSTALLER_TARGET_DIR)
-  cadrumo_cargo_command(installer_bootstrap_cargo
+  cadrumo_cargo_command(installer_bootstrap_cargo --build-identity installer
+    --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}" --env "CADRUMO_ID_NAME=${CADRUMO_ID_NAME}"
     --env "CADRUMO_BOOTSTRAP_TEST_PACKAGE=${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     --env "CADRUMO_NATIVE_CONTRACT=${CADRUMO_PATH_GENERATED}/contract.json")
   add_test(NAME bundle.installer-bootstrap
@@ -333,7 +335,13 @@ set(CPACK_PACKAGE_HOMEPAGE_URL "${CADRUMO_ID_HOMEPAGE}")
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
 set(CPACK_PACKAGE_DIRECTORY "${CADRUMO_PATH_PACKAGES}")
-set(CADRUMO_ARTIFACT_STEM "${CADRUMO_ID_PACKAGE_NAME}-${CADRUMO_VERSION}-b${CADRUMO_BUILD_NUMBER}-${CADRUMO_PLATFORM}")
+# Archive names are fixed at configure time: a frozen build number names its build, while an
+# allocated one is recorded only inside the package (data/build.json).
+if(CADRUMO_BUILD_NUMBER STREQUAL "")
+  set(CADRUMO_ARTIFACT_STEM "${CADRUMO_ID_PACKAGE_NAME}-${CADRUMO_VERSION}-${CADRUMO_PLATFORM}")
+else()
+  set(CADRUMO_ARTIFACT_STEM "${CADRUMO_ID_PACKAGE_NAME}-${CADRUMO_VERSION}-b${CADRUMO_BUILD_NUMBER}-${CADRUMO_PLATFORM}")
+endif()
 configure_file("${PROJECT_SOURCE_DIR}/native/cmake/CPackProject.cmake.in"
   "${PROJECT_BINARY_DIR}/CPackProject.cmake" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/native/cmake/Artifact.cmake.in"

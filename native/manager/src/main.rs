@@ -20,6 +20,28 @@ use std::{
 const USAGE_ERROR: u8 = 2;
 const STARTUP_FAILED: u8 = 69;
 
+// The manager component's build identity belongs to this image alone: the library the desktop
+// links never reads it, so a manager change never rebuilds the desktop.
+/// Build id of the manager component, `YYYYMMDD` and an iteration; it changes only when the
+/// manager's inputs do.
+const BUILD_ID: &str = env!(
+    "CADRUMO_MANAGER_BUILD_ID",
+    "CADRUMO_MANAGER_BUILD_ID must come from the manager component's build identity"
+);
+/// Per-build-directory sequence of that identity, the fourth Windows file-version field.
+const BUILD_SEQUENCE: &str = env!(
+    "CADRUMO_MANAGER_BUILD_SEQUENCE",
+    "CADRUMO_MANAGER_BUILD_SEQUENCE must come from the manager component's build identity"
+);
+/// `debug` or `release`, from the Cargo profile that compiled this image.
+const BUILD_TYPE: &str = env!("CADRUMO_BUILD_TYPE");
+/// `{VERSION}+{BUILD_ID}`, with a `.debug` suffix for a debug build.
+const DISPLAY_VERSION: &str = env!("CADRUMO_DISPLAY_VERSION");
+const _: () = assert!(
+    !BUILD_ID.is_empty() && !BUILD_SEQUENCE.is_empty(),
+    "the manager component's build identity is empty"
+);
+
 fn start(
     diagnostics: Arc<Diagnostics>,
     breakaway_attempted: bool,
@@ -240,7 +262,7 @@ fn main() -> ExitCode {
                 io::stdout(),
                 "{} {}",
                 identity::MANAGER_NAME,
-                identity::VERSION
+                DISPLAY_VERSION
             ) {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(_) => ExitCode::FAILURE,
@@ -251,5 +273,40 @@ fn main() -> ExitCode {
             let _ = writeln!(io::stderr(), "usage: cadrumo-manager [--version | --retry]");
             ExitCode::from(USAGE_ERROR)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_version_names_the_build_and_its_type() {
+        let release = format!("{}+{BUILD_ID}", identity::VERSION);
+        let expected = if BUILD_TYPE == "debug" {
+            format!("{release}.debug")
+        } else {
+            release
+        };
+        assert_eq!(DISPLAY_VERSION, expected);
+        assert_eq!(
+            BUILD_TYPE,
+            if cfg!(debug_assertions) {
+                "debug"
+            } else {
+                "release"
+            }
+        );
+    }
+
+    #[test]
+    fn build_id_is_a_utc_day_and_an_iteration() {
+        assert!(BUILD_ID.len() >= 10, "{BUILD_ID}");
+        assert!(
+            BUILD_ID.bytes().all(|byte| byte.is_ascii_digit()),
+            "{BUILD_ID}"
+        );
+        let sequence: u16 = BUILD_SEQUENCE.parse().expect("a 16-bit build sequence");
+        assert!(sequence > 0);
     }
 }

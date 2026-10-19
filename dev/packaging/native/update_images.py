@@ -13,9 +13,10 @@ from pathlib import Path
 from packaging.utils import canonicalize_name
 from pydantic import JsonValue, TypeAdapter
 
-from .assemble import image_artifact, named_application_images
+from .assemble import image_artifact, named_application_images, package_binaries, record_staging, stamp_package
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
+from .build_stamp import build_type
 from .hashing import digest
 from .layout import bundled_image_files, entrypoint_files, load_layout
 from .process_quiescence import quiesce
@@ -134,9 +135,11 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
         *entrypoint_files(contract).values(),
         *bundled_image_files(contract).values(),
         f"{contract['paths']['native']}/{contract['files']['bridge']}",
+        contract["files"]["development_executable"],
     ]:
         source = paths["bin"] / config / Path(member).name
-        if source.is_file():
+        staged = member != contract["files"]["development_executable"] or (root / member).is_file()
+        if source.is_file() and staged:
             replacements[member] = source
     if manifest_path.is_file():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -166,7 +169,39 @@ def update(build: Path, config: str, artifacts: dict[str, Path], *, recovery: bo
     if changed:
         refresh_service_image_digests(root, descriptor_member)
         inventory[descriptor_member] = digest(root / descriptor_member)
+    # The staged record names the interpreter hosts' identity, which the interpreter checks at
+    # start, and the package's own identity, keyed on the staged content and the components.
+    shared = json.loads((paths["generated"] / "build.json").read_text(encoding="utf-8"))
+    staged = TypeAdapter(dict[str, JsonValue]).validate_python(manifest["build"], strict=True)
+    for key in ("version", "target", "layout_abi", "python"):
+        if shared[key] != staged[key]:
+            raise ValueError(f"Native update cannot change the package {key}; build app-payload")
+    build_member = contract["files"]["build_metadata"]
+    binaries = package_binaries(
+        contract,
+        interpreter=manifest.get("kind") == "interpreter",
+        development=contract["files"]["development_executable"] in inventory,
+        images=images,
+    )
+    record, components, staged_records = stamp_package(
+        build,
+        root,
+        shared,
+        TypeAdapter(dict[str, str]).validate_python(inventory, strict=True),
+        binaries,
+        kind=str(manifest.get("kind", "application")),
+        build_type=build_type(config),
+        build_member=build_member,
+        descriptors=descriptor_member,
+        packages=contract["paths"]["packages"],
+    )
+    if record != staged:
+        (root / build_member).write_text(json.dumps(record, indent=2), encoding="utf-8")
+        inventory[build_member] = digest(root / build_member)
+        manifest["build"] = record
+    manifest["components"] = TypeAdapter(JsonValue).validate_python(components)
     publish(manifest_path, manifest)
+    record_staging(build, staged_records)
     print(f"Native images updated: {len(changed)}; Python payload preserved", flush=True)
 
 

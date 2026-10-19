@@ -22,6 +22,7 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from dev._paths import REPO_ROOT
 
+from ..build_stamp import BuildStamp, display_version
 from ..hashing import digest
 from ..identity import DistributionIdentity
 from ..stable_output import write_bytes, write_text
@@ -212,15 +213,14 @@ def provision_sdk(destination: Path, pin: str, tools: dict[str, Any], contract: 
 def resources(
     destination: Path,
     version: str,
-    number: int,
-    date: str,
+    stamp: BuildStamp,
     tools: Path,
     entrypoints: dict[str, str],
     product: DistributionIdentity,
 ) -> None:
     """Render the icon, one PE version resource per native executable and the process manifests."""
-    if not 0 <= number <= 65535:
-        raise ValueError("Windows resource build number must be between 0 and 65535")
+    if not 0 <= stamp.build_sequence <= 65535:
+        raise ValueError("Windows resource build sequence must be between 0 and 65535")
     for image, source in APPLICATION_MANIFESTS.items():
         authored = source.read_bytes()
         for build_kind, publisher in (
@@ -247,12 +247,12 @@ def resources(
         output = io.BytesIO()
         icon.save(output, format="ICO", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
         write_bytes(destination / "cadrumo.ico", output.getvalue())
-    numeric = ",".join([*version.split(".")[:3], str(number)])
+    numeric = ",".join([*version.split(".")[:3], str(stamp.build_sequence)])
     descriptions = {"interpreter": "Cadrumo controlled Python interpreter"} | {
         f"entrypoint-{name}": description for name, description in entrypoints.items()
     }
     for stem, description in descriptions.items():
-        resource = _version_resource(destination, numeric, version, number, date, publisher, _rc_string(description))
+        resource = _version_resource(destination, numeric, version, stamp, publisher, _rc_string(description))
         write_text(destination / f"{stem}.rc", resource)
 
 
@@ -283,8 +283,11 @@ def _rc_string(value: str) -> str:
 
 
 def _version_resource(
-    destination: Path, numeric: str, version: str, number: int, date: str, publisher: str, description: str
+    destination: Path, numeric: str, version: str, stamp: BuildStamp, publisher: str, description: str
 ) -> str:
+    """Render one VERSIONINFO; the compiler's ``CADRUMO_BUILD_DEBUG`` selects the build type strings."""
+    release = _rc_string(display_version(version, stamp.build_id, "release"))
+    debug = _rc_string(display_version(version, stamp.build_id, "debug"))
     return f'''#include <winver.h>
 1 ICON "{(destination / "cadrumo.ico").as_posix()}"
 1 VERSIONINFO
@@ -306,9 +309,16 @@ BEGIN
    VALUE "CompanyName", {publisher}
    VALUE "ProductName", "CADRUMO\\0"
    VALUE "FileDescription", {description}
-   VALUE "FileVersion", "{version}.{number}\\0"
+#if CADRUMO_BUILD_DEBUG
+   VALUE "FileVersion", {debug}
+   VALUE "BuildType", "debug\\0"
+#else
+   VALUE "FileVersion", {release}
+   VALUE "BuildType", "release\\0"
+#endif
    VALUE "ProductVersion", "{version}\\0"
-   VALUE "BuildDate", "{date}\\0"
+   VALUE "BuildId", "{stamp.build_id}\\0"
+   VALUE "BuildDate", "{stamp.build_date}\\0"
   END
  END
  BLOCK "VarFileInfo"
