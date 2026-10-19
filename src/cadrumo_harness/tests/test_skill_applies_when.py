@@ -14,12 +14,15 @@ so the gate is not tautological.
 from __future__ import annotations
 
 import pytest
+from pydantic import BaseModel, ValidationError
+
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 
 from .._skill_metadata import (
+    ProfileFactPredicate,
     SkillAppliesWhen,
     SkillMetadataError,
     parse_skill_metadata,
-    profile_fact_names,
 )
 from ..resources import iter_skill_documents, iter_skill_metadata
 
@@ -60,16 +63,42 @@ def test_every_predicate_declares_at_least_one_axis() -> None:
         assert gated, f"skill '{entry.name}' declares an empty applies_when predicate"
 
 
+def _is_taxpayer_field(fact: str) -> bool:
+    """Whether a dotted fact names a field of the live profile model, at most one sub-model deep."""
+    head, _, rest = fact.partition(".")
+    field = TaxpayerProfile.model_fields.get(head)
+    if field is None:
+        return False
+    if not rest:
+        return True
+    nested = next(
+        (arm for arm in (field.annotation, *getattr(field.annotation, "__args__", ())) if isinstance(arm, type)),
+        None,
+    )
+    return nested is not None and issubclass(nested, BaseModel) and rest in nested.model_fields
+
+
 def test_every_profile_fact_predicate_names_a_real_taxpayer_fact() -> None:
-    valid_facts = profile_fact_names()
     offenders: list[str] = []
     for entry in iter_skill_metadata():
         if entry.applies_when is None:
             continue
         for predicate in entry.applies_when.profile_facts:
-            if predicate.fact not in valid_facts:
+            # The predicate validator is the production vocabulary; the model's own fields are the oracle.
+            try:
+                ProfileFactPredicate.model_validate(predicate.model_dump(mode="json"))
+            except ValidationError:
+                offenders.append(f"{entry.name}: '{predicate.fact}' (refused by the predicate validator)")
+                continue
+            if not _is_taxpayer_field(predicate.fact):
                 offenders.append(f"{entry.name}: '{predicate.fact}'")
     assert not offenders, "skills name profile facts that are not TaxpayerProfile fields:\n" + "\n".join(offenders)
+
+
+def test_the_predicate_validator_refuses_a_fact_the_profile_model_lacks() -> None:
+    assert not _is_taxpayer_field("not_a_real_fact")
+    with pytest.raises(ValidationError):
+        ProfileFactPredicate.model_validate({"fact": "not_a_real_fact", "match": "present"})
 
 
 def test_invalid_applies_when_is_rejected() -> None:
