@@ -143,14 +143,23 @@ def _run_json(
         check=False,
         creationflags=_NO_WINDOW,
     )
-    # The envelope is the last line: a runtime command writes its startup
-    # diagnostics on standard error before it.
-    text = result.stdout.strip() or result.stderr.strip()
-    try:
-        envelope = json.loads(text.splitlines()[-1] if text else "{}")
-    except ValueError:
-        envelope = {"unparsed_output": True}
-    return result.returncode, envelope if isinstance(envelope, dict) else {}
+    return result.returncode, parse_envelope(result.stdout, result.stderr)
+
+
+def parse_envelope(stdout: str, stderr: str) -> dict[str, Any]:
+    """Read a command's JSON envelope: its whole output, or the last line after startup diagnostics.
+
+    An envelope may span several lines; a runtime command writes its startup
+    diagnostics on standard error before a one-line envelope.
+    """
+    text = stdout.strip() or stderr.strip()
+    for candidate in (text, text.splitlines()[-1] if text else "{}"):
+        try:
+            envelope = json.loads(candidate or "{}")
+        except ValueError:
+            continue
+        return envelope if isinstance(envelope, dict) else {}
+    return {"unparsed_output": True}
 
 
 def notice_codes(envelope: Mapping[str, Any]) -> list[str]:

@@ -60,7 +60,8 @@ struct Attempt {
 }
 
 pub struct ManagerStart {
-    package_root: Result<Option<PathBuf>>,
+    /// The package to supervise, or the reason this image does not supervise one.
+    package_root: Result<std::result::Result<PathBuf, &'static str>>,
     child: ChildConfiguration,
     storage_root: PathBuf,
     diagnostics: Arc<Diagnostics>,
@@ -81,8 +82,10 @@ pub struct ManagerStart {
 impl ManagerStart {
     pub fn new(launch: &Launch) -> Self {
         Self {
-            package_root: managed(launch)
-                .map(|managed| managed.then(|| launch.package_root.clone())),
+            package_root: unmanaged(launch).map(|reason| match reason {
+                None => Ok(launch.package_root.clone()),
+                Some(reason) => Err(reason),
+            }),
             child: launch.child.clone(),
             storage_root: launch.working_directory.clone(),
             diagnostics: launch.diagnostics.clone(),
@@ -420,10 +423,13 @@ impl ManagerStart {
         }
         #[cfg(windows)]
         {
-            let Some(package_root) = self.package_root.as_ref().map_err(Clone::clone)? else {
-                return Err(failure(ErrorCode::ManagerUnavailable));
-            };
-            let package_root = package_root.clone();
+            let package_root = self
+                .package_root
+                .as_ref()
+                .map_err(Clone::clone)?
+                .as_ref()
+                .map_err(|reason| failure(ErrorCode::ManagerUnavailable).with_reason(reason))?
+                .clone();
             let default_root =
                 cadrumo_manager::supervision::environment::ManagedLocations::for_host(
                     &std::env::current_exe()
@@ -510,7 +516,7 @@ impl ManagerStart {
     }
 
     async fn install_target(&self, scope: InstallScope) -> Result<Selection> {
-        let Some(package) = self.package_root.as_ref().map_err(Clone::clone)? else {
+        let Ok(package) = self.package_root.as_ref().map_err(Clone::clone)? else {
             return Err(installation_failure(ErrorCode::InstallationRefused));
         };
         let package = package.clone();
@@ -794,8 +800,10 @@ fn target_from(
         })
 }
 
+/// Why this image supervises no package: only the installed image of the selected
+/// package, serving that package's own resolved storage root, supervises.
 #[cfg(windows)]
-fn managed(launch: &Launch) -> Result<bool> {
+fn unmanaged(launch: &Launch) -> Result<Option<&'static str>> {
     use cadrumo_platform::storage::{self, Mode};
     if storage::authority_override_present(std::env::vars_os()) {
         return Err(failure(ErrorCode::EnvironmentFailed));
@@ -805,26 +813,27 @@ fn managed(launch: &Launch) -> Result<bool> {
     let evidence =
         storage::detect_mode(&executable).map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
     if evidence.mode != Mode::Installed {
-        return Ok(false);
+        return Ok(Some("image_not_installed"));
     }
     let actual_package = std::fs::canonicalize(&evidence.package)
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     let selected_package = std::fs::canonicalize(&launch.package_root)
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     if actual_package != selected_package {
-        return Ok(false);
+        return Ok(Some("image_outside_selected_package"));
     }
     let resolved = storage::resolve_storage_root(&evidence)
         .map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
-    Ok(std::fs::canonicalize(&resolved.root)
+    let own_root = std::fs::canonicalize(&resolved.root)
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?
         == std::fs::canonicalize(&launch.working_directory)
-            .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?)
+            .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?;
+    Ok((!own_root).then_some("storage_root_not_package_root"))
 }
 
 #[cfg(not(windows))]
-fn managed(_: &Launch) -> Result<bool> {
-    Ok(false)
+fn unmanaged(_: &Launch) -> Result<Option<&'static str>> {
+    Ok(Some("unsupported_platform"))
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {

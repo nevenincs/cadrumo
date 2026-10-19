@@ -6,7 +6,8 @@ programs, and the desktop window through its WebView2 DevTools endpoint:
 1. creates a fresh empty storage root under ``build/acceptance`` and marks it;
 2. creates a synthetic profile through the package's ``aeat`` command line and
    sets its language to English, the language the shared specs read;
-3. starts the remote-debugging desktop test host in a kill-on-close Job, with
+3. starts the remote-debugging desktop test host, as the desktop image of a
+   mirror of its configuration's staged package, in a kill-on-close Job, with
    ``CADRUMO_LOCAL_STORAGE_ROOT`` and exactly one
    ``--remote-debugging-port=<port>`` in ``WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS``,
    and requires the DevTools endpoint to listen on loopback only; its attach
@@ -70,6 +71,8 @@ from ..runtime_lifecycle.caller_owned_root import (
     run_cli,
     run_runtime_cli,
 )
+from .containment import LaneJob
+from .package import stage_lane_package
 from .scans import (
     ProcessRecord,
     ScanResult,
@@ -130,8 +133,13 @@ class TestHost:
 
     @property
     def package(self) -> Path:
-        """The staged package of the host's own configuration, which the run starts the desktop against."""
+        """The staged package of the host's own configuration, which the run's package mirrors."""
         return _STAGE / self.configuration / "app"
+
+    @property
+    def lane_package(self) -> Path:
+        """Where the run's package mirrors :attr:`package` with this host as its desktop image."""
+        return _BUILD / "desktop" / "testing" / "agent-live-package" / self.configuration / "app"
 
 
 @dataclass(slots=True)
@@ -265,6 +273,19 @@ def test_host(served: bool) -> TestHost:
     return TestHost(executable, f"{shell}index.html" if served and shell else _PACKAGED_ENTRY, configuration)
 
 
+def stage_package(host: TestHost, destination: Path) -> Path:
+    """Mirror the host's staged package into ``destination`` with the host as its desktop; return its image."""
+    from ..packaging.native.layout import load_layout
+
+    target = json.loads((_BUILD / "generated" / "identity.json").read_text(encoding="utf-8"))["target"]
+    try:
+        image = stage_lane_package(load_layout(target), host.package, host.executable, destination)
+    except (OSError, ValueError) as refused:
+        raise UnavailableError(f"the lane package could not be staged from {host.package}: {refused}") from refused
+    print(json.dumps({"step": "package_staged", "package": str(destination)}), flush=True)
+    return image
+
+
 def require_served_shell(entry: str) -> None:
     """Require the development server to answer and to be this checkout's own."""
     port = int(entry.split(":")[2].split("/")[0])
@@ -351,7 +372,11 @@ def wait_for_runtime(programs: Programs, environment: Mapping[str, str], deadlin
 
 
 def close_windows(pid: int) -> int:
-    """Ask every top-level window of ``pid`` to close, as the title bar's close does; return how many."""
+    """Ask every application window of ``pid`` to close, as the title bar's close does; return how many.
+
+    Tool windows are not the person's to close: the window toolkit's own event
+    target is one, and closing it would end the event loop that exits the desktop.
+    """
     import win32con
     import win32gui
     import win32process
@@ -359,7 +384,12 @@ def close_windows(pid: int) -> int:
     windows: list[int] = []
 
     def collect(handle: int, _extra: object) -> bool:
-        if win32process.GetWindowThreadProcessId(handle)[1] == pid and win32gui.IsWindowVisible(handle):
+        if (
+            win32process.GetWindowThreadProcessId(handle)[1] == pid
+            and win32gui.IsWindowVisible(handle)
+            and not win32gui.GetWindowLong(handle, win32con.GWL_EXSTYLE) & win32con.WS_EX_TOOLWINDOW
+            and not win32gui.GetWindow(handle, win32con.GW_OWNER)
+        ):
             windows.append(handle)
         return True
 
@@ -392,14 +422,14 @@ def playwright(entry: str, endpoint: str, results: Path, arguments: list[str]) -
 
 
 @contextmanager
-def lane_desktop(host: TestHost, environment: Mapping[str, str], directory: Path, port: int) -> Generator[Any]:
+def lane_desktop(executable: Path, environment: Mapping[str, str], directory: Path, port: int) -> Generator[Any]:
     """Run the desktop in a kill-on-close Job for the block; the Job is reaped however the block ends."""
     from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
     try:
         process = scope.launch(
-            executable=host.executable,
+            executable=executable,
             arguments=("--gui",),
             directory=directory,
             environment={**environment, "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS": f"--remote-debugging-port={port}"},
@@ -422,7 +452,9 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
             f"no {host.configuration} package is staged at {host.package}; "
             f"stage it with: just build-native {host.configuration} bundle"
         )
-    programs = Programs.of(host.package)
+    package = host.lane_package
+    desktop_image = stage_package(host, package)
+    programs = Programs.of(package)
     root, secret_store, results = run_directory / "storage", run_directory / "secrets", run_directory / "playwright"
     for directory in (root, secret_store, results):
         directory.mkdir(parents=True)
@@ -430,7 +462,7 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
     mark_lane_root(root)
     environment = consumer_environment(root, secret_store)
     environment = {name: value for name, value in environment.items() if not name.upper().startswith("WEBVIEW2_")}
-    environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] = str(host.package)
+    environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] = str(package)
 
     password = secrets.token_urlsafe(32)
     code, envelope = run_cli(
@@ -451,7 +483,7 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
     failures: list[str] = []
     # Only the desktop is told where the attach button's files are.
     desktop_environment = {**environment, _ATTACH_VARIABLE: str(attachments)}
-    with lane_desktop(host, desktop_environment, run_directory, port) as (scope, desktop):
+    with lane_desktop(desktop_image, desktop_environment, run_directory, port) as (scope, desktop):
         watch.members = scope.active_process_ids
         watch.start()
         try:
@@ -498,6 +530,8 @@ def run(run_directory: Path, *, provider_id: str, served: bool, attach_only: boo
     if scan.clean:
         print(json.dumps({"step": "key_scan_clean", "processes": len(watch.started)}), flush=True)
     if failures:
+        if absent is not None:
+            failures.insert(0, f"unavailable: {absent}")
         raise AcceptanceError("; ".join(failures))
     if absent is not None:
         raise absent
@@ -543,6 +577,18 @@ def _delete_stored_sign_in(root: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the lane in its own kill-on-close Job; a process that outlives the run fails it."""
+    job = LaneJob() if sys.platform == "win32" else None
+    code = _main(argv)
+    left = job.others() if job is not None else ()
+    if left:
+        reason = f"processes outlived the run and end with the lane: {sorted(left)}"
+        print(json.dumps({"step": "failed", "reason": reason}), flush=True)
+        return 1
+    return code
+
+
+def _main(argv: list[str] | None) -> int:
     """Run the lane; exit 0 on pass, 1 on a failure, 3 when a prerequisite is absent."""
     parser = argparse.ArgumentParser(prog="desktop-agent-live", description=(__doc__ or "").splitlines()[0])
     parser.add_argument(
