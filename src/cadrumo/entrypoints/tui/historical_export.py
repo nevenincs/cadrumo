@@ -25,17 +25,18 @@ from ...application.modelo.filing_record_view_operation import (
     ModeloFilingRecordViewProjection,
     ModeloFilingRecordViewRequest,
 )
+from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.modelo_export_artefact import ModeloExportArtefact
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import profile_operation_subject
 from .components.language import localized, refresh_localized_widgets
 from .modelo.export_result import ModeloExportResultScreen
 from .modelo.workbench.export import WorkbenchExportScreen
 from .modelo.workbench.ports import WorkbenchExportOffer, WorkbenchExportRequest
-from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
+from .operations.settled_submission import submit_watched_profile_operation
 
 
 async def read_filing_view(client: FrontendClient, filing_record_id: str) -> ModeloFilingRecordViewProjection:
@@ -117,38 +118,30 @@ class HistoricalFilingExportScreen(Screen[None]):
         if revision_id is None:
             self._notice(tr("cli.app.modelo.filing_record.export_missing"))
             return
-        try:
-            controller = await OperationController.submit(
-                client,
-                definition_id=CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
-                subject_ref=profile_operation_subject(str(client.profile_id)),
-                payload=CalculationReviewXlsxRequest(
-                    profile_id=client.profile_id,
-                    calculation_revision_id=revision_id,
-                    filing_record_id=self._filing_record_id,
-                    output_path=str(Path(request.output_path).resolve()),
-                    replace_existing=request.replace_existing,
-                    report_language=OutputLanguage(output_language()),
-                ),
-                expected_session_id=client.session_id,
-            )
-            await controller.start()
-        except CadrumoError as error:
-            self._notice(resolve_error_message(error))
-            return
 
-        def settled(outcome: object) -> None:
-            if isinstance(outcome, OperationModalSettledOutcomeV1):
-                self.run_worker(self._show_result(controller, outcome, revision_id), group="historical-export-result")
+        async def show_result(controller: OperationController, projection: OperationPublicProjectionV1) -> None:
+            await self._show_result(controller, projection, revision_id)
 
-        self.app.push_screen(OperationModal(controller), settled)
+        await submit_watched_profile_operation(
+            self,
+            client,
+            definition_id=CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
+            payload=CalculationReviewXlsxRequest(
+                profile_id=client.profile_id,
+                calculation_revision_id=revision_id,
+                filing_record_id=self._filing_record_id,
+                output_path=str(Path(request.output_path).resolve()),
+                replace_existing=request.replace_existing,
+                report_language=OutputLanguage(output_language()),
+            ),
+            notice=self._notice,
+            read_succeeded=show_result,
+            result_group="historical-export-result",
+        )
 
     async def _show_result(
-        self, controller: OperationController, outcome: OperationModalSettledOutcomeV1, revision_id: str
+        self, controller: OperationController, projection: OperationPublicProjectionV1, revision_id: str
     ) -> None:
-        projection = outcome.view_model.projection
-        if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-            return
         try:
             result = await controller.read_settled_result(projection, CalculationReviewXlsxResult, result_version=1)
             if result.profile_id != self._client.profile_id or result.calculation_revision_id != revision_id:

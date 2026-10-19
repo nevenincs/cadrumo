@@ -17,18 +17,18 @@ from ...application.modelo.reconciliation_export_operation import (
     ReconciliationExportXlsxProjection,
     ReconciliationExportXlsxRequest,
 )
+from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.modelo_export_artefact import ModeloExportArtefact
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from .components.language import localized, refresh_localized_widgets
 from .modelo.workbench.ports import WorkbenchExportRequest
-from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
+from .operations.settled_submission import submit_watched_profile_operation
 
 
 class ReconciliationDestinationScreen(ModalScreen[WorkbenchExportRequest | None]):
@@ -109,35 +109,23 @@ class ReconciliationExportScreen(Screen[None]):
 
     async def _publish(self, request: WorkbenchExportRequest) -> None:
         client = self._client
-        try:
-            controller = await OperationController.submit(
-                client,
-                definition_id=RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
-                subject_ref=profile_operation_subject(str(client.profile_id)),
-                payload=ReconciliationExportXlsxRequest(
-                    profile_id=client.profile_id,
-                    work_unit_id=self._work_unit_id,
-                    output_path=str(Path(request.output_path).resolve()),
-                    replace_existing=request.replace_existing,
-                    report_language=OutputLanguage(output_language()),
-                ),
-                expected_session_id=client.session_id,
-            )
-            await controller.start()
-        except CadrumoError as error:
-            self._notice(resolve_error_message(error))
-            return
+        await submit_watched_profile_operation(
+            self,
+            client,
+            definition_id=RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
+            payload=ReconciliationExportXlsxRequest(
+                profile_id=client.profile_id,
+                work_unit_id=self._work_unit_id,
+                output_path=str(Path(request.output_path).resolve()),
+                replace_existing=request.replace_existing,
+                report_language=OutputLanguage(output_language()),
+            ),
+            notice=self._notice,
+            read_succeeded=self._show_result,
+            result_group="reconciliation-export-result",
+        )
 
-        def settled(outcome: object) -> None:
-            if isinstance(outcome, OperationModalSettledOutcomeV1):
-                self.run_worker(self._show_result(controller, outcome), group="reconciliation-export-result")
-
-        self.app.push_screen(OperationModal(controller), settled)
-
-    async def _show_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
-        projection = outcome.view_model.projection
-        if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-            return
+    async def _show_result(self, controller: OperationController, projection: OperationPublicProjectionV1) -> None:
         try:
             result = await controller.read_settled_result(
                 projection, ReconciliationExportXlsxProjection, result_version=1

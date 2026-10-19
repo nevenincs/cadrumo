@@ -30,6 +30,7 @@ from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ..components.account_chrome import AccountChromeScreen
+from ..components.language import reword_navigation
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -654,15 +655,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
     async def refresh_language(self) -> None:
         """Reword navigation without replacing forms or restarting their workers."""
         await super().refresh_language()
-        navigation = self.query("#ledger-navigation")
-        if navigation:
-            table = cast("DataTable[str]", navigation.first())
-            key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
-            table.clear(columns=True)
-            self.populate_navigation()
-            row = next((index for index, item in enumerate(table.ordered_rows) if item.key.value == key), None)
-            if row is not None:
-                table.move_cursor(row=row, animate=False, scroll=False)
+        reword_navigation(self, "#ledger-navigation", self.populate_navigation)
 
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""

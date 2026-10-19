@@ -604,21 +604,11 @@ class AuthTestPayload(AuthStatusPayload):
         """Project the deeper application probe onto the CLI wire contract."""
         if (result.active_profile_precondition_verdict is None) is not (active_profile_precondition_action is None):
             raise ValueError("auth test precondition action must match the application verdict")
+        status = AuthStatusPayload.from_result(
+            result, active_profile_precondition_action=active_profile_precondition_action
+        )
         return cls(
-            provider=result.provider,
-            configured=result.configured,
-            authenticated=result.authenticated,
-            available=result.available,
-            active_profile=result.active_profile,
-            active_profile_status=result.active_profile_status,
-            active_profile_registered=result.active_profile_registered,
-            active_profile_record_present=result.active_profile_record_present,
-            active_profile_precondition_action=active_profile_precondition_action,
-            backend_configured=result.backend_configured,
-            backend_available=result.backend_available,
-            certificate_path=result.certificate_path,
-            health_severity=result.health_severity,
-            health_summary=result.health_summary,
+            **dict(status),
             persisted_session_present=result.persisted_session_present,
             persisted_session_expired=result.persisted_session_expired,
             persisted_session_state=result.persisted_session_state,

@@ -71,6 +71,7 @@ from .runtime_ledger_classification import (
 )
 from .runtime_ledger_import import compose_runtime_ledger_import_door
 from .runtime_own_accounts import compose_runtime_own_account_door
+from .runtime_profile_language import RuntimeProfileLanguage
 
 if TYPE_CHECKING:
     from cadrumo.application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
@@ -199,7 +200,7 @@ class _DeclarationDestination:
         )(context)
 
 
-class RuntimeWorkbenchRoot:
+class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
     """Keep one exact client's capture and refresh doors without local custody.
 
     Construction and ``load`` run off the UI loop. Screen factories consume
@@ -225,15 +226,13 @@ class RuntimeWorkbenchRoot:
         """
         if client.frontend is not OperationFrontendProjection.TUI:
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        super().__init__(client.profile_id, output_language)
         self._client = client
         self._operations = OperationsDestinationV1(client, OperationCatalogueSourceV1(operation_registry))
-        self._profile_id, self._session_id = client.profile_id, client.session_id
-        self._label, self._language = profile_label, output_language
+        self._session_id = client.session_id
+        self._label = profile_label
         self._open_recovery_client = open_recovery_client
         self._requester_factory = requester_factory
-        self._language_guard = Lock()
-        self._language_epoch = 0
-        self._latest_profile: ProfileOverview | None = None
 
     def set_output_language(self, language: OutputLanguage) -> None:
         """Update future requests and profile panes through one canonical read off-loop."""
@@ -246,14 +245,6 @@ class RuntimeWorkbenchRoot:
         profile = read_profile_overview(self._client, profile_label=self._label, output_language=language)
         self._require_binding()
         self._adopt_language_profile(profile, epoch)
-
-    def _adopt_language_profile(self, profile: ProfileOverview, epoch: int) -> None:
-        """Fence the result and keep any newer same-epoch read cached during I/O."""
-        with self._language_guard:
-            if epoch != self._language_epoch or profile.profile_id != str(self._profile_id):
-                raise RefusalError(RefusalCode.UNAVAILABLE)
-            if self._latest_profile is None or profile.record_revision >= self._latest_profile.record_revision:
-                self._latest_profile = profile
 
     def _require_binding(self) -> None:
         try:
@@ -296,13 +287,9 @@ class RuntimeWorkbenchRoot:
         read_runtime_account_session(
             self._client, profile_id=self._profile_id, session_id=self._session_id, profile_label=self._label
         )
-        if generation.home.projection is None or profile.profile_id != str(self._profile_id):
+        if generation.home.projection is None:
             raise RefusalError(RefusalCode.UNAVAILABLE)
-        with self._language_guard:
-            if epoch != self._language_epoch:
-                raise RefusalError(RefusalCode.UNAVAILABLE)
-            if self._latest_profile is None or profile.record_revision >= self._latest_profile.record_revision:
-                self._latest_profile = profile
+        self._adopt_language_profile(profile, epoch)
         return _Capture(generation, profile, epoch)
 
     def _destinations(

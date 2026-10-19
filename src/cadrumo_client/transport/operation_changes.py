@@ -19,36 +19,18 @@ class OperationCueSource(Protocol):
         ...
 
 
-class OperationChanges:
-    """Wake an observation loop when an operation its session observes may have advanced.
-
-    Nothing is subscribed until :meth:`arm` first runs, so an operation already
-    settled at its first observation costs no subscription. Arm before each
-    later observation, then wait after it: a cue that arrives while that
-    observation is in flight still ends the wait. A lost connection wakes the
-    wait too, and the next observation is refused at once.
-    """
+class _OperationCueSubscription:
+    """The client's operation cue, subscribed on first arm and held until closed."""
 
     def __init__(self, client: OperationCueSource) -> None:
         """Bind to the client whose operation cue the first arm subscribes to."""
         self._client = client
-        self._changed = Event()
         self._unsubscribe: Callable[[], None] | None = None
 
     @property
     def armed(self) -> bool:
         """Whether the cue is subscribed, so a wait can end on it."""
         return self._unsubscribe is not None
-
-    def arm(self) -> None:
-        """Subscribe on first use, then forget earlier cues; call before the observation the next wait follows."""
-        if self._unsubscribe is None:
-            self._unsubscribe = self._client.subscribe_operation_changes(self._changed.set)
-        self._changed.clear()
-
-    def wait(self, timeout: float) -> None:
-        """Block until a cue since the last arm, or until ``timeout`` seconds pass; an unbounded wait has none."""
-        self._changed.wait(timeout if isfinite(timeout) else None)
 
     def close(self) -> None:
         """Stop receiving cues."""
@@ -70,7 +52,33 @@ class OperationChanges:
         self.close()
 
 
-class AsyncOperationChanges:
+class OperationChanges(_OperationCueSubscription):
+    """Wake an observation loop when an operation its session observes may have advanced.
+
+    Nothing is subscribed until :meth:`arm` first runs, so an operation already
+    settled at its first observation costs no subscription. Arm before each
+    later observation, then wait after it: a cue that arrives while that
+    observation is in flight still ends the wait. A lost connection wakes the
+    wait too, and the next observation is refused at once.
+    """
+
+    def __init__(self, client: OperationCueSource) -> None:
+        """Bind to the client whose operation cue the first arm subscribes to."""
+        super().__init__(client)
+        self._changed = Event()
+
+    def arm(self) -> None:
+        """Subscribe on first use, then forget earlier cues; call before the observation the next wait follows."""
+        if self._unsubscribe is None:
+            self._unsubscribe = self._client.subscribe_operation_changes(self._changed.set)
+        self._changed.clear()
+
+    def wait(self, timeout: float) -> None:
+        """Block until a cue since the last arm, or until ``timeout`` seconds pass; an unbounded wait has none."""
+        self._changed.wait(timeout if isfinite(timeout) else None)
+
+
+class AsyncOperationChanges(_OperationCueSubscription):
     """:class:`OperationChanges` for an event loop: the connection's reader thread wakes the loop.
 
     The first :meth:`arm` subscribes and binds the running loop, so it must
@@ -79,15 +87,9 @@ class AsyncOperationChanges:
 
     def __init__(self, client: OperationCueSource) -> None:
         """Bind to the client whose operation cue the first arm subscribes to."""
-        self._client = client
+        super().__init__(client)
         self._changed: asyncio.Event | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
-        self._unsubscribe: Callable[[], None] | None = None
-
-    @property
-    def armed(self) -> bool:
-        """Whether the cue is subscribed, so a wait can end on it."""
-        return self._unsubscribe is not None
 
     def arm(self) -> None:
         """Subscribe on first use, then forget earlier cues; call before the observation the next wait follows."""
@@ -112,22 +114,3 @@ class AsyncOperationChanges:
             raise RuntimeError("arm before waiting")
         with suppress(TimeoutError):
             await asyncio.wait_for(changed.wait(), timeout if isfinite(timeout) else None)
-
-    def close(self) -> None:
-        """Stop receiving cues."""
-        if self._unsubscribe is not None:
-            self._unsubscribe()
-            self._unsubscribe = None
-
-    def __enter__(self) -> Self:
-        """Hold the subscription for a block."""
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Release the subscription."""
-        self.close()

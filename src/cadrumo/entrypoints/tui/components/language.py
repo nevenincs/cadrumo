@@ -54,6 +54,23 @@ def refresh_localized_widgets(scope: Widget) -> None:
         _COPY[widget] = (key, values, text)
 
 
+def reword_navigation(scope: Widget, selector: str, populate: Callable[[], None]) -> None:
+    """Repopulate a mounted navigation table in the current language, keeping its selected row.
+
+    Only the table is rebuilt; forms and workers elsewhere in ``scope`` are untouched.
+    """
+    navigation = scope.query(selector)
+    if not navigation:
+        return
+    table = cast("DataTable[str]", navigation.first())
+    key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
+    table.clear(columns=True)
+    populate()
+    row = next((index for index, item in enumerate(table.ordered_rows) if item.key.value == key), None)
+    if row is not None:
+        table.move_cursor(row=row, animate=False, scroll=False)
+
+
 def repaint_tables(scope: Widget, paint: Callable[[], None]) -> None:
     """Repaint projection tables while retaining semantic cursors and focus."""
     tables = tuple(scope.query(DataTable))

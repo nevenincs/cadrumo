@@ -15,9 +15,10 @@ from ....application.modelo.declarations_workspace_contracts import (
 )
 from ....core.i18n.render import tr
 from ....domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, FilingOrigin
-from ..components.language import localized, repaint_tables
+from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
+    DeclarationsProjectionScreen,
     DeclarationsWorkspaceController,
     DeclarationsWorkspaceScreen,
     evidence_label,
@@ -129,7 +130,7 @@ def _restore_filing_history_focus(
         table.focus()
 
 
-class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
+class DeclarationsFilingHistoryScreen(DeclarationsProjectionScreen):
     """Show local record currency separately from external AEAT evidence."""
 
     def __init__(self, controller: DeclarationsWorkspaceController) -> None:
@@ -167,19 +168,9 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
                 ),
                 "cli.app.modelo.spreadsheet.publish_button",
             )
-            yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
-            yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
+            yield from self.compose_notices()
 
     @override
-    async def refresh_language(self) -> None:
-        """Reword the existing projection, preserving semantic cursors and controls."""
-        await super().refresh_language()
-        repaint_tables(self, self._populate_view)
-
-    def on_mount(self) -> None:
-        """Populate the initially mounted projection."""
-        self._populate_view()
-
     def _populate_view(self) -> None:
         """Populate separate local and external filing axes."""
         self.populate_navigation()

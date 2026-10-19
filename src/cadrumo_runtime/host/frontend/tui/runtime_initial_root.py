@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from threading import Lock
 from typing import TYPE_CHECKING
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -29,6 +28,7 @@ from .runtime_account_session import (
     runtime_account_activity_reporter,
     runtime_account_session_reader,
 )
+from .runtime_profile_language import RuntimeProfileLanguage
 
 if TYPE_CHECKING:
     from cadrumo.application.operations.registry import OperationRegistry
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 _LOGGER = get_logger(__name__)
 
 
-class RuntimeInitialRoot:
+class RuntimeInitialRoot(RuntimeProfileLanguage):
     """Retain one admitted client while deferring all generation reads until Home."""
 
     def __init__(
@@ -61,17 +61,15 @@ class RuntimeInitialRoot:
         """Pin the admitted client and defer operational composition."""
         if client.frontend is not OperationFrontendProjection.TUI:
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        super().__init__(client.profile_id, output_language)
         self._client = client
-        self._profile_id, self._session_id = client.profile_id, client.session_id
-        self._label, self._language = profile_label, output_language
+        self._session_id = client.session_id
+        self._label = profile_label
         self._open_recovery_client = open_recovery_client
         self._operation_registry = operation_registry
         self._requester_factory = requester_factory
         self._workbench_binding: RootBindingV1 | None = None
         self._workbench_root: RuntimeWorkbenchRoot | None = None
-        self._language_guard = Lock()
-        self._language_epoch = 0
-        self._latest_profile: ProfileOverview | None = None
 
     def _set_output_language(self, language: OutputLanguage) -> None:
         """Refresh future captures off the UI loop without replacing mounted screens."""
@@ -87,14 +85,6 @@ class RuntimeInitialRoot:
         profile = read_profile_overview(self._client, profile_label=self._label, output_language=language)
         self._session()
         self._adopt_language_profile(profile, epoch)
-
-    def _adopt_language_profile(self, profile: ProfileOverview, epoch: int) -> None:
-        """Fence the result and keep any newer same-epoch read cached during I/O."""
-        with self._language_guard:
-            if epoch != self._language_epoch or profile.profile_id != str(self._profile_id):
-                raise RefusalError(RefusalCode.UNAVAILABLE)
-            if self._latest_profile is None or profile.record_revision >= self._latest_profile.record_revision:
-                self._latest_profile = profile
 
     def _session(self) -> HomeAccountSession:
         return read_runtime_account_session(

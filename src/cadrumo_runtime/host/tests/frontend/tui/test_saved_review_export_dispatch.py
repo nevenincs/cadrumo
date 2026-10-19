@@ -21,6 +21,7 @@ from cadrumo.core.refund_election import RefundElection
 from cadrumo.entrypoints.tui import historical_export, reconciliation_export
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.modelo.workbench.ports import WorkbenchExportRequest
+from cadrumo.entrypoints.tui.operations import settled_submission
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport import operation_reads
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -48,15 +49,14 @@ async def test_selected_history_export_submits_exact_saved_identity(
             submitted.append(kwargs)
             return cls()
 
-    module = historical_export if historical else reconciliation_export
     screen_type = (
         historical_export.HistoricalFilingExportScreen
         if historical
         else reconciliation_export.ReconciliationExportScreen
     )
     monkeypatch.setattr(screen_type, "on_mount", lambda _self: None)
-    monkeypatch.setattr(module, "OperationController", Controller)
-    monkeypatch.setattr(module, "OperationModal", lambda _controller: Screen())
+    monkeypatch.setattr(settled_submission, "OperationController", Controller)
+    monkeypatch.setattr(settled_submission, "OperationModal", lambda _controller: Screen())
     screen = screen_type(cast(FrontendClient, client), "a" * 64)
     if isinstance(screen, historical_export.HistoricalFilingExportScreen):
         screen._revision_id = "b" * 64

@@ -8,18 +8,18 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
 from ....core.i18n.render import tr
-from ..components.language import localized, repaint_tables
+from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
+    DeclarationsProjectionScreen,
     DeclarationsWorkspaceController,
-    DeclarationsWorkspaceScreen,
     natural_address,
     revision_state_label,
     timestamp_label,
 )
 
 
-class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
+class DeclarationsRevisionsScreen(DeclarationsProjectionScreen):
     """Distinguish calculation revision identity from registry revision vocabulary."""
 
     def __init__(self, controller: DeclarationsWorkspaceController) -> None:
@@ -40,19 +40,9 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
                 "tui.declarations.revisions.explanation",
             )
             yield ContentDataTable[str](id="declarations-revisions", cursor_type="row", zebra_stripes=True)
-            yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
-            yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
+            yield from self.compose_notices()
 
     @override
-    async def refresh_language(self) -> None:
-        """Reword the existing projection, preserving semantic cursors and controls."""
-        await super().refresh_language()
-        repaint_tables(self, self._populate_view)
-
-    def on_mount(self) -> None:
-        """Populate the initially mounted projection."""
-        self._populate_view()
-
     def _populate_view(self) -> None:
         """Populate calculation revisions from the safe projection."""
         self.populate_navigation()

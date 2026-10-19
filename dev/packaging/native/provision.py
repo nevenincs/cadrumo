@@ -77,8 +77,8 @@ class InstalledWheels:
     """Install each hash-pinned requirement once into its own tree, and reuse it while its bytes are intact.
 
     A tree is keyed by its requirement line, which names the wheel by its
-    hashes, and by what shapes an install: the target platform, the Python pin,
-    the interpreter and the uv that installs it. A tree whose files no longer match what was installed
+    hashes, and by what shapes an install: the target platform, the Python pin
+    and the interpreter. A tree whose files no longer match what was installed
     is removed and installed again.
     """
 
@@ -98,9 +98,7 @@ class InstalledWheels:
 
     def key(self, line: str) -> str:
         """The cache name of one requirement line's installed tree."""
-        # The installer is part of what shapes a tree: a changed uv installs it again.
-        installer = digest(Path(self.uv)) if Path(self.uv).is_file() else self.uv
-        context = json.dumps([line.strip(), self.target, self.pin, uv_platform(self.target), sys.executable, installer])
+        context = json.dumps([line.strip(), self.target, self.pin, uv_platform(self.target), sys.executable])
         return hashlib.sha256(context.encode("utf-8")).hexdigest()[:32]
 
     def intact(self, tree: Path, manifest: Path) -> dict[str, str] | None:

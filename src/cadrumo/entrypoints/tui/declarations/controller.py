@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import date, datetime
 from typing import ClassVar, Final, cast, override
 
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.message import Message
 from textual.widgets import DataTable, Static
@@ -40,6 +41,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ..action_target import require_action_target
 from ..components.account_chrome import AccountChromeScreen
+from ..components.language import repaint_tables, reword_navigation
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiScreenContextV1
@@ -258,15 +260,7 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
     async def refresh_language(self) -> None:
         """Reword navigation without replacing forms or restarting their workers."""
         await super().refresh_language()
-        navigation = self.query("#declarations-navigation")
-        if navigation:
-            table = cast("DataTable[str]", navigation.first())
-            key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
-            table.clear(columns=True)
-            self.populate_navigation()
-            row = next((index for index, item in enumerate(table.ordered_rows) if item.key.value == key), None)
-            if row is not None:
-                table.move_cursor(row=row, animate=False, scroll=False)
+        reword_navigation(self, "#declarations-navigation", self.populate_navigation)
 
     def populate_navigation(self) -> None:
         """Populate every closed internal destination exactly once."""
@@ -343,6 +337,29 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         from .routes import resolve_declarations_screen
 
         replace_workspace_body(self.app, resolve_declarations_screen(self.controller, event.target))
+
+
+class DeclarationsProjectionScreen(DeclarationsWorkspaceScreen):
+    """A Declarations body whose tables are painted entirely from the safe projection."""
+
+    def compose_notices(self) -> ComposeResult:
+        """Yield the muted empty line and the warning line this shell writes to."""
+        yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
+        yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the existing projection, preserving semantic cursors and controls."""
+        await super().refresh_language()
+        repaint_tables(self, self._populate_view)
+
+    def on_mount(self) -> None:
+        """Populate the initially mounted projection."""
+        self._populate_view()
+
+    def _populate_view(self) -> None:
+        """Paint navigation and this body's tables from the current projection."""
+        raise NotImplementedError
 
 
 class DeclarationsRouteRequested(Message):
@@ -528,6 +545,7 @@ def calendar_aeat_label(value: OverviewAeatSubmissionState | None) -> str:
 
 __all__ = [
     "DeclarationsCalendarController",
+    "DeclarationsProjectionScreen",
     "DeclarationsRouteRequested",
     "DeclarationsWorkspaceController",
     "DeclarationsWorkspaceScreen",
