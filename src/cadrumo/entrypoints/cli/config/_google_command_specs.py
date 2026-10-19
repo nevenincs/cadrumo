@@ -4,28 +4,19 @@ from __future__ import annotations
 
 from typing import Final
 
-from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.execution_policies import GOOGLE_READ, GOOGLE_WRITE, state_free_group_spec
+from cadrumo_client.commands.leaf_specs import ModuleLeafBuilder
+from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
-    DeferredTarget,
-    LazyBinding,
     LiteralValue,
     ParameterConstraint,
     ParameterDefault,
-    ResultSchemaSpec,
-    SchemaState,
     ValueContract,
 )
 from cadrumo_client.commands.shared_contracts import translation_key as _key
-from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ._spec_policies import (
-    GOOGLE_READ,
-    GOOGLE_WRITE,
-    state_free_group_spec,
-)
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
 # The path used to be built with an f-string, which meant no static reader -- grep,
@@ -38,18 +29,7 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_google_folder_payloads": ".google_folder_results",
     "_google_payloads": "cadrumo_client.commands.google_payloads",
 }
-
-
-def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
-
-
-def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget(_HANDLER_MODULES[module], name, __package__),
-        identity=identity,
-    )
+_leaf = ModuleLeafBuilder(_HANDLER_MODULES, __package__).leaf
 
 
 def _option(
@@ -81,35 +61,6 @@ def _option(
         transport_locus=transport_locus,
         transport_shape=transport_shape,
         transport_role=transport_role,
-    )
-
-
-def _leaf(
-    key: str,
-    parent: str,
-    token: str,
-    help_key: str,
-    module: str,
-    handler: str,
-    schema_module: str,
-    schema_name: str,
-    policy: ExecutionPolicySpec,
-    parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
-    *,
-    identity: str | None = None,
-) -> CommandSpec:
-    return CommandSpec(
-        key=key,
-        parent_key=parent,
-        token=token,
-        kind=CommandNodeKind.LEAF,
-        help_key=_key(help_key),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=parameters,
-        policy=policy,
-        handler=_handler(module, handler),
-        result_schema=_schema(schema_module, schema_name, identity or key.replace("_", ".")),
     )
 
 

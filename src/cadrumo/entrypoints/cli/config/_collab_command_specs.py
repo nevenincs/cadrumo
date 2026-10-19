@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import (
+    ENCRYPTED_DESTRUCTIVE,
+    ENCRYPTED_READ,
+    ENCRYPTED_WRITE,
+    STATE_FREE,
+)
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     TEXT_VALUE,
@@ -14,8 +20,6 @@ from cadrumo_client.commands.shared_contracts import (
 )
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
-
-from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
 _RECIPIENT_ID = ArgumentSpec(
     name="recipient_id",

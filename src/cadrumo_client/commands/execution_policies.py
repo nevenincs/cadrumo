@@ -1,13 +1,13 @@
-"""Import-light execution policies owned by the config command specifications."""
+"""The shared execution-policy vocabulary for command specifications.
+
+The tax CLI and the runtime executable each declared this vocabulary in their
+own policy module, copied value for value. A policy names what a command may
+touch and what it may change, so both executables must mean the same thing by
+the same name; one module now defines every named policy they use.
+"""
 
 from __future__ import annotations
 
-from cadrumo_client.commands.shared_contracts import (
-    ResultSchemaSpec,
-    SchemaState,
-    translation_key,
-)
-from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import (
     Capability,
     CommandNodeKind,
@@ -16,6 +16,9 @@ from cadrumo_client.contracts.command_ports import (
     PerformanceClass,
     SideEffect,
 )
+
+from .shared_contracts import ResultSchemaSpec, SchemaState, translation_key
+from .spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 
 def _policy(
@@ -38,8 +41,10 @@ def _policy(
 
 
 STATE_FREE = _policy(frozenset({"state-free"}), frozenset({"none"}), "metadata")
+LOCAL_READ = _policy(frozenset({"state-free"}), frozenset({"none"}), "local-io")
 PROFILE_READ = _policy(frozenset({"profile-custody"}), frozenset({"none"}), "local-io")
 ENCRYPTED_READ = _policy(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io")
+CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
 PROFILE_DESTRUCTIVE = _policy(
     frozenset({"profile-custody"}),
     frozenset({"local-state"}),
@@ -91,21 +96,33 @@ AEAT_SESSION_WRITE = _policy(
     "local-io",
     write_route=CommandWriteRoute.PROFILE_BOUND,
 )
+LIVE_PROFILE_WRITE = _policy(
+    frozenset({"aeat", "network", "encrypted-facts", "profile-custody"}),
+    frozenset({"network", "local-state"}),
+    "external-io",
+    write_route=CommandWriteRoute.PROFILE_BOUND,
+)
+BROWSER_CONNECTIVITY = _policy(frozenset({"aeat", "browser"}), frozenset({"browser"}), "interactive")
 
 
 __all__ = [
     "AEAT_SESSION_WRITE",
     "BOOTSTRAP_DESTRUCTIVE",
     "BOOTSTRAP_WRITE",
+    "BROWSER_CONNECTIVITY",
+    "CALCULATION_READ",
     "ENCRYPTED_DESTRUCTIVE",
     "ENCRYPTED_READ",
     "ENCRYPTED_WRITE",
     "GOOGLE_DESTRUCTIVE",
     "GOOGLE_READ",
     "GOOGLE_WRITE",
+    "LIVE_PROFILE_WRITE",
+    "LOCAL_READ",
     "PROFILE_DESTRUCTIVE",
     "PROFILE_READ",
     "STATE_FREE",
+    "state_free_group_spec",
 ]
 
 
@@ -113,8 +130,7 @@ def state_free_group_spec(key: str, parent: str, token: str, help_key: str) -> C
     """Return the spec for a state-free group command.
 
     A group command carries no parameters, no handler and no result schema: it
-    exists to hold subcommands and print help. Two config spec modules each built
-    that same eleven-field construction, so two places decided what a group is.
+    exists to hold subcommands and print help, so its policy is ``STATE_FREE``.
     """
     return CommandSpec(
         key=key,

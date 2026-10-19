@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import CALCULATION_READ, STATE_FREE
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_VALUE
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
@@ -15,17 +17,9 @@ from cadrumo_client.commands.shared_contracts import (
     ValueContract,
 )
 from cadrumo_client.commands.shared_contracts import translation_key as _key
-from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from cadrumo_client.contracts.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
-_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_READ = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
-)
-_LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODULE = ".overview_commands"
 _PAYLOADS = ".overview_results"
 
@@ -64,7 +58,7 @@ def _leaf(
         None,
         InvocationSpec(context_parameter="ctx"),
         parameters,
-        _READ,
+        CALCULATION_READ,
         LazyBinding.available(DeferredTarget(_MODULE, key.removeprefix("app_"), __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
@@ -84,7 +78,7 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         None,
         InvocationSpec(no_args_is_help=True),
         (),
-        _METADATA,
+        STATE_FREE,
         None,
         ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
@@ -131,7 +125,7 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "output_language",
                 ("--output-language", "--language"),
-                _LANG,
+                OUTPUT_LANGUAGE_VALUE,
                 "cli.config.auth.output_language_help",
             ),
         ),

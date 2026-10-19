@@ -56,7 +56,7 @@ All 40 assigned files are linked below.
 - `src/cadrumo/entrypoints/cli/config/_repair_profile.py`
 - `src/cadrumo/entrypoints/cli/config/_reset_command_specs.py`
 - `src/cadrumo/entrypoints/cli/config/_profile_mutation.py`
-- `src/cadrumo/entrypoints/cli/config/_spec_policies.py`
+- `src/cadrumo_client/commands/execution_policies.py`
 - `src/cadrumo/entrypoints/cli/config/_storage_command_specs.py`
 - `src/cadrumo/entrypoints/cli/config/archive_reconcile.py`
 - `src/cadrumo/entrypoints/cli/config/capabilities_payloads.py`

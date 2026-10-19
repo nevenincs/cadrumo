@@ -2,30 +2,17 @@
 
 from __future__ import annotations
 
-from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.execution_policies import CALCULATION_READ, PROFILE_READ
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _OUTPUT_LANGUAGE_OPTION
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
-
-from ._spec_policies import CALCULATION_READ, PROFILE_READ
-
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
-_OUTPUT_LANGUAGE_OPTION = OptionSpec(
-    name="output_language",
-    declarations=("--output-language", "--language"),
-    value=_OUTPUT_LANGUAGE,
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.auth.output_language_help"),
-)
-
 
 PROFILE_INVENTORY_COMMAND_SPECS = (
     CommandSpec(

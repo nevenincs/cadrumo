@@ -2,41 +2,25 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import CALCULATION_READ, STATE_FREE
+from cadrumo_client.commands.language_options import ROOT_LANGUAGE_OPTION
 from cadrumo_client.commands.parameters import OptionSpec
-from cadrumo_client.commands.secret_contracts import MachineSecretFieldSpec, ProfileSecretChannelKind, ProfileSecretSpec
+from cadrumo_client.commands.root_options import (
+    ROOT_OUTPUT_OPTIONS,
+    ROOT_PROFILE_OPTIONS,
+    profile_authentication_secret,
+)
 from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
-    TEXT_VALUE,
-    WHOLE_NUMBER_VALUE,
     DeferredTarget,
     LazyBinding,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
-from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from cadrumo_client.contracts.command_ports import (
-    CommandNodeKind,
-    CommandWriteRoute,
-)
-
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
-_OUTPUT_FORMAT = ValueContract(DeferredTarget("...core.output_rendering", "OutputFormat", __package__))
-_STATE_FREE = ExecutionPolicySpec(
-    capabilities=frozenset({"state-free"}),
-    side_effects=frozenset({"none"}),
-    performance="metadata",
-    write_route=CommandWriteRoute.NONE,
-)
-_ROOT_STATUS = ExecutionPolicySpec(
-    capabilities=frozenset({"calculation", "encrypted-facts"}),
-    side_effects=frozenset({"none"}),
-    performance="compute",
-    write_route=CommandWriteRoute.NONE,
-)
-
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 
 ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -54,52 +38,8 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             terminal_behavior="introspection",
         ),
         parameters=(
-            OptionSpec(
-                name="language",
-                declarations=("--language", "--lang"),
-                value=_OUTPUT_LANGUAGE,
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.root.language_help"),
-                eager=True,
-            ),
-            OptionSpec(
-                name="profile",
-                declarations=("--profile",),
-                value=TEXT_VALUE,
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.root.profile_help"),
-            ),
-            OptionSpec(
-                name="profile_secrets_stdin",
-                declarations=("--profile-secrets-stdin",),
-                value=FLAG_VALUE,
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.config.custody.profile_secrets_stdin_help"),
-                is_flag=True,
-                profile_secret_channel=ProfileSecretChannelKind.STDIN,
-            ),
-            OptionSpec(
-                name="profile_secrets_fd",
-                declarations=("--profile-secrets-fd",),
-                value=WHOLE_NUMBER_VALUE,
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.custody.profile_secrets_fd_help"),
-                profile_secret_channel=ProfileSecretChannelKind.FILE_DESCRIPTOR,
-            ),
-            OptionSpec(
-                name="profile_auth_method",
-                declarations=("--profile-auth-method",),
-                value=ValueContract(DeferredTarget("builtins", "str"), choices=("password", "api-key")),
-                default=ParameterDefault.value("password"),
-                help_key=TranslationKey("cli.config.custody.profile_auth_method_help"),
-            ),
-            OptionSpec(
-                name="profile_credential_ref",
-                declarations=("--profile-credential-ref",),
-                value=ValueContract(DeferredTarget("uuid", "UUID")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.config.custody.profile_credential_ref_help"),
-            ),
+            ROOT_LANGUAGE_OPTION,
+            *ROOT_PROFILE_OPTIONS,
             OptionSpec(
                 name="version",
                 declarations=("--version", "-V"),
@@ -127,53 +67,16 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=True,
                 eager=True,
             ),
-            OptionSpec(
-                name="format_",
-                declarations=("--format",),
-                value=_OUTPUT_FORMAT,
-                default=ParameterDefault.value("text"),
-                help_key=TranslationKey("cli.root.format_help"),
-            ),
-            OptionSpec(
-                name="quiet",
-                declarations=("--quiet",),
-                value=FLAG_VALUE,
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.root.quiet_help"),
-                is_flag=True,
-            ),
-            OptionSpec(
-                name="verbose",
-                declarations=("--verbose",),
-                value=FLAG_VALUE,
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.root.verbose_help"),
-                is_flag=True,
-            ),
-            OptionSpec(
-                name="debug",
-                declarations=("--debug",),
-                value=FLAG_VALUE,
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.root.debug_help"),
-                is_flag=True,
-            ),
+            *ROOT_OUTPUT_OPTIONS,
         ),
-        policy=_ROOT_STATUS,
+        policy=CALCULATION_READ,
         handler=LazyBinding.available(DeferredTarget(".root_commands", "root_command", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".root_results", "RootStatusResult", __package__),
             identity="root.status",
         ),
-        profile_secret=ProfileSecretSpec(
-            fields=(MachineSecretFieldSpec("profile_passphrase"), MachineSecretFieldSpec("api_key")),
-            model=DeferredTarget(
-                "cadrumo_client.commands.profile_authentication",
-                "ProfileAuthenticationSecrets",
-            ),
-            windows_handle_bootstrap="cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap",
-        ),
+        profile_secret=profile_authentication_secret("cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap"),
     ),
     CommandSpec(
         "app",
@@ -199,7 +102,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 eager=True,
             ),
         ),
-        policy=_STATE_FREE,
+        policy=STATE_FREE,
         handler=LazyBinding.available(DeferredTarget(".root_commands", "app_root", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -216,7 +119,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
-        policy=_STATE_FREE,
+        policy=STATE_FREE,
         handler=LazyBinding.available(DeferredTarget(".tui_request", "launch_tui", __package__)),
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
@@ -245,7 +148,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 eager=True,
             ),
         ),
-        policy=_STATE_FREE,
+        policy=STATE_FREE,
         handler=LazyBinding.available(DeferredTarget(".config.root_cli", "config_root", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

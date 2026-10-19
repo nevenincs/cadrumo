@@ -8,23 +8,23 @@ import typer
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.output_rendering import OutputFormat
+from cadrumo_client.commands.execution_policies import STATE_FREE, state_free_group_spec
 from cadrumo_client.commands.graph import CommandSpecGraph
-from cadrumo_client.commands.parameters import OptionSpec
-from cadrumo_client.commands.secret_contracts import MachineSecretFieldSpec, ProfileSecretChannelKind, ProfileSecretSpec
+from cadrumo_client.commands.language_options import ROOT_LANGUAGE_OPTION
+from cadrumo_client.commands.root_options import (
+    ROOT_OUTPUT_OPTIONS,
+    ROOT_PROFILE_OPTIONS,
+    profile_authentication_secret,
+)
 from cadrumo_client.commands.shared_contracts import (
-    FLAG_VALUE,
-    TEXT_VALUE,
-    WHOLE_NUMBER_VALUE,
     DeferredTarget,
     LazyBinding,
-    ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
-from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
-from cadrumo_client.contracts.command_ports import CommandNodeKind, CommandWriteRoute
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
 from cadrumo_runtime.commands.command_targets import resolve_deferred_target
 
 from .access_management_specs import RUNTIME_ACCESS_MANAGEMENT_COMMAND_SPECS
@@ -33,102 +33,9 @@ from .custody_specs import RUNTIME_CUSTODY_COMMAND_SPECS
 from .google_auth_specs import RUNTIME_GOOGLE_AUTH_COMMAND_SPECS
 from .recovery_specs import RUNTIME_RECOVERY_COMMAND_SPECS
 
-_PROFILE_SECRET = ProfileSecretSpec(
-    fields=(MachineSecretFieldSpec("profile_passphrase"), MachineSecretFieldSpec("api_key")),
-    model=DeferredTarget("cadrumo_client.commands.profile_authentication", "ProfileAuthenticationSecrets"),
-    windows_handle_bootstrap="cadrumo_runtime.host.windows_secret_bootstrap",
-)
+_PROFILE_SECRET = profile_authentication_secret("cadrumo_runtime.host.windows_secret_bootstrap")
 
-_ROOT_PARAMETERS = (
-    OptionSpec(
-        name="language",
-        declarations=("--language", "--lang"),
-        value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage", __package__)),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.root.language_help"),
-        eager=True,
-    ),
-    OptionSpec(
-        name="profile",
-        declarations=("--profile",),
-        value=TEXT_VALUE,
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.root.profile_help"),
-    ),
-    OptionSpec(
-        name="profile_secrets_stdin",
-        declarations=("--profile-secrets-stdin",),
-        value=FLAG_VALUE,
-        default=ParameterDefault.value(False),
-        help_key=TranslationKey("cli.config.custody.profile_secrets_stdin_help"),
-        is_flag=True,
-        flag_value=True,
-        profile_secret_channel=ProfileSecretChannelKind.STDIN,
-    ),
-    OptionSpec(
-        name="profile_secrets_fd",
-        declarations=("--profile-secrets-fd",),
-        value=WHOLE_NUMBER_VALUE,
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.config.custody.profile_secrets_fd_help"),
-        profile_secret_channel=ProfileSecretChannelKind.FILE_DESCRIPTOR,
-    ),
-    OptionSpec(
-        name="profile_auth_method",
-        declarations=("--profile-auth-method",),
-        value=ValueContract(DeferredTarget("builtins", "str"), choices=("password", "api-key")),
-        default=ParameterDefault.value("password"),
-        help_key=TranslationKey("cli.config.custody.profile_auth_method_help"),
-    ),
-    OptionSpec(
-        name="profile_credential_ref",
-        declarations=("--profile-credential-ref",),
-        value=ValueContract(DeferredTarget("uuid", "UUID")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.config.custody.profile_credential_ref_help"),
-    ),
-    OptionSpec(
-        name="format_",
-        declarations=("--format",),
-        value=ValueContract(DeferredTarget("cadrumo.core.output_rendering", "OutputFormat", __package__)),
-        default=ParameterDefault.value("text"),
-        help_key=TranslationKey("cli.root.format_help"),
-    ),
-    OptionSpec(
-        name="quiet",
-        declarations=("--quiet",),
-        value=FLAG_VALUE,
-        default=ParameterDefault.value(False),
-        help_key=TranslationKey("cli.root.quiet_help"),
-        is_flag=True,
-        flag_value=True,
-    ),
-    OptionSpec(
-        name="verbose",
-        declarations=("--verbose",),
-        value=FLAG_VALUE,
-        default=ParameterDefault.value(False),
-        help_key=TranslationKey("cli.root.verbose_help"),
-        is_flag=True,
-        flag_value=True,
-    ),
-    OptionSpec(
-        name="debug",
-        declarations=("--debug",),
-        value=FLAG_VALUE,
-        default=ParameterDefault.value(False),
-        help_key=TranslationKey("cli.root.debug_help"),
-        is_flag=True,
-        flag_value=True,
-    ),
-)
-
-_STATE_FREE = ExecutionPolicySpec(
-    capabilities=frozenset({"state-free"}),
-    side_effects=frozenset({"none"}),
-    performance="metadata",
-    write_route=CommandWriteRoute.NONE,
-)
+_ROOT_PARAMETERS = (ROOT_LANGUAGE_OPTION, *ROOT_PROFILE_OPTIONS, *ROOT_OUTPUT_OPTIONS)
 
 
 def runtime_root_callback(
@@ -177,39 +84,15 @@ _ROOT = CommandSpec(
         terminal_behavior="executable",
     ),
     parameters=_ROOT_PARAMETERS,
-    policy=_STATE_FREE,
+    policy=STATE_FREE,
     handler=LazyBinding.available(DeferredTarget(".command_specs", "runtime_root_callback", __package__)),
     result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     profile_secret=_PROFILE_SECRET,
 )
 
-_CONFIG = CommandSpec(
-    "config",
-    "root",
-    "config",
-    kind=CommandNodeKind.GROUP,
-    help_key=TranslationKey("cli.config.help"),
-    short_help_key=None,
-    invocation=InvocationSpec(no_args_is_help=True),
-    parameters=(),
-    policy=_STATE_FREE,
-    handler=None,
-    result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
-)
+_CONFIG = state_free_group_spec("config", "root", "config", "cli.config.help")
 
-_PROFILE = CommandSpec(
-    "config_profile",
-    "config",
-    "profile",
-    kind=CommandNodeKind.GROUP,
-    help_key=TranslationKey("cli.config.profile.help"),
-    short_help_key=None,
-    invocation=InvocationSpec(no_args_is_help=True),
-    parameters=(),
-    policy=_STATE_FREE,
-    handler=None,
-    result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
-)
+_PROFILE = state_free_group_spec("config_profile", "config", "profile", "cli.config.profile.help")
 
 RUNTIME_COMMAND_GRAPH = CommandSpecGraph(
     (

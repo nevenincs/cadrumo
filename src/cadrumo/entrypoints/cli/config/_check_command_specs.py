@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import ENCRYPTED_READ
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -11,8 +12,6 @@ from cadrumo_client.commands.shared_contracts import (
 )
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind
-
-from ._spec_policies import ENCRYPTED_READ
 
 CONFIG_CHECK_COMMAND_SPECS = (
     CommandSpec(

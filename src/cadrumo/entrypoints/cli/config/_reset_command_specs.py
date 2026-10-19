@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, STATE_FREE
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
@@ -16,8 +17,6 @@ from cadrumo_client.commands.shared_contracts import (
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.commands.spec_schema import config_payload_schema as _schema
 from cadrumo_client.contracts.command_ports import CommandNodeKind
-
-from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, STATE_FREE
 
 _YES = OptionSpec(
     name="yes",

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from typing import NamedTuple
 
@@ -108,8 +109,62 @@ def prepare_windows_secret_argv(
     return argv, descriptors
 
 
+def dispatch_with_inherited_handles(
+    *,
+    bootstrap_module: str,
+    program: str,
+    tail_description: str,
+    dispatch: Callable[[], None],
+) -> None:
+    """Parse one isolated HANDLE bootstrap invocation and dispatch its command once.
+
+    ``bootstrap_module`` is the ``python -I -m`` module the parent launched,
+    ``program`` the executable name written into the rebuilt argv, and
+    ``tail_description`` names the required command tail in the usage error.
+    ``dispatch`` imports and runs the executable's entrypoint; it runs inside
+    the cleanup scope, so the adopted descriptors close even if that import fails.
+    """
+    parser = argparse.ArgumentParser(prog=f"python -I -m {bootstrap_module}")
+    if not sys.flags.isolated:
+        parser.error("inherited HANDLE bootstrap requires isolated Python; invoke with -I")
+    parser.add_argument("--profile-handle", type=int)
+    parser.add_argument("--secrets-handle", type=int)
+    parser.add_argument("--recovery-handoff-handle", type=int)
+    parser.add_argument("--recovery-verification-handle", type=int)
+    parser.add_argument("command", nargs=argparse.REMAINDER)
+    parsed = parser.parse_args()
+    command = parsed.command
+    if command[:1] == ["--"]:
+        command = command[1:]
+    if not command:
+        parser.error(f"{tail_description} is required after --")
+    handles = (
+        parsed.profile_handle,
+        parsed.secrets_handle,
+        parsed.recovery_handoff_handle,
+        parsed.recovery_verification_handle,
+    )
+    if all(handle is None for handle in handles):
+        parser.error("at least one inherited HANDLE option is required")
+
+    argv, descriptors = prepare_windows_secret_argv(
+        program=program,
+        profile_handle=parsed.profile_handle,
+        secrets_handle=parsed.secrets_handle,
+        recovery_handoff_handle=parsed.recovery_handoff_handle,
+        recovery_verification_handle=parsed.recovery_verification_handle,
+        command=command,
+    )
+    sys.argv[:] = argv
+    try:
+        dispatch()
+    finally:
+        close_secret_descriptors(descriptors)
+
+
 __all__ = [
     "close_secret_descriptors",
     "descriptor_from_inherited_handle",
+    "dispatch_with_inherited_handles",
     "prepare_windows_secret_argv",
 ]

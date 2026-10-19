@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import CALCULATION_READ, ENCRYPTED_READ, STATE_FREE
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_VALUE
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
@@ -21,20 +23,12 @@ from cadrumo_client.contracts.command_ports import (
     CommandWriteRoute,
 )
 
-_METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_CALCULATION_READ = ExecutionPolicySpec(
-    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
-)
-_MODEL_READ = ExecutionPolicySpec(
-    frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE
-)
 _CALCULATION_WRITE = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}),
     frozenset({"local-state"}),
     "compute",
     CommandWriteRoute.PROFILE_BOUND,
 )
-_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
     click_type=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
@@ -114,7 +108,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         None,
         InvocationSpec(no_args_is_help=True),
         (),
-        _METADATA,
+        STATE_FREE,
         None,
         ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
@@ -132,11 +126,11 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "output_language",
                 ("--output-language",),
-                _LANGUAGE,
+                OUTPUT_LANGUAGE_VALUE,
                 "cli.app.modelo.work.output_language_help",
             ),
         ),
-        _CALCULATION_READ,
+        CALCULATION_READ,
         ".modelo_reconcile_results",
         "WorkCompareTaxationResult",
         "modelo.work.compare_taxation",
@@ -158,11 +152,11 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "output_language",
                 ("--output-language", "--language"),
-                _LANGUAGE,
+                OUTPUT_LANGUAGE_VALUE,
                 "cli.config.auth.output_language_help",
             ),
         ),
-        _MODEL_READ,
+        ENCRYPTED_READ,
         ".modelo_aux_payloads",
         "WorkHistoryResult",
         "modelo.work.history",
@@ -232,7 +226,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.history.year_help"),
             _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.history.period_help"),
         ),
-        _MODEL_READ,
+        ENCRYPTED_READ,
         ".modelo_results",
         "ModeloHistoryResult",
         "modelo.history",

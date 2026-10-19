@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import PROFILE_DESTRUCTIVE, PROFILE_READ
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _LANGUAGE
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.secret_contracts import (
     MachineSecretFieldSpec,
@@ -21,15 +23,7 @@ from cadrumo_client.commands.shared_contracts import (
 )
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind, ProfileAuthenticationPosture
-from cadrumo_runtime.commands.spec_policies import PROFILE_DESTRUCTIVE, PROFILE_READ
 
-_LANGUAGE = OptionSpec(
-    name="output_language",
-    declarations=("--output-language", "--language"),
-    value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage", __package__)),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.auth.output_language_help"),
-)
 _UUID = ValueContract(DeferredTarget("uuid", "UUID"))
 
 

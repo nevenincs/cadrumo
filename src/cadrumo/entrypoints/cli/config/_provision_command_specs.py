@@ -9,6 +9,7 @@ network rather than the profile-free pair that would skip the session.
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import STATE_FREE
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
@@ -21,8 +22,6 @@ from cadrumo_client.commands.shared_contracts import (
 )
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import Capability, CommandNodeKind, CommandWriteRoute
-
-from ._spec_policies import STATE_FREE
 
 _STORAGE_AND_NETWORK: frozenset[Capability] = frozenset({"local-storage", "network"})
 # Reads installation storage and the network and changes nothing.

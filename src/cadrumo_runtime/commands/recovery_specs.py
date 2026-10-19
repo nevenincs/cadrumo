@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+from cadrumo_client.commands.execution_policies import ENCRYPTED_DESTRUCTIVE, PROFILE_READ, state_free_group_spec
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _OUTPUT_LANGUAGE
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.secret_contracts import (
-    MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
     RecoveryHandoffSpec,
 )
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
-    FLAG_VALUE,
     WHOLE_NUMBER_VALUE,
     DeferredTarget,
     LazyBinding,
@@ -19,41 +20,11 @@ from cadrumo_client.commands.shared_contracts import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    ValueContract,
 )
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandNodeKind, ProfileAuthenticationPosture
 
-from .spec_policies import ENCRYPTED_DESTRUCTIVE, PROFILE_READ, state_free_group_spec
-
-_OUTPUT_LANGUAGE = OptionSpec(
-    name="output_language",
-    declarations=("--output-language", "--language"),
-    value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.auth.output_language_help"),
-)
-
-_SECRET_OPTIONS = (
-    OptionSpec(
-        name="secrets_stdin",
-        declarations=("--secrets-stdin",),
-        value=FLAG_VALUE,
-        default=ParameterDefault.value(False),
-        help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
-        is_flag=True,
-        flag_value=True,
-        machine_secret_channel=MachineSecretChannelKind.STDIN,
-    ),
-    OptionSpec(
-        name="secrets_fd",
-        declarations=("--secrets-fd",),
-        value=WHOLE_NUMBER_VALUE,
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
-        machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
-    ),
-)
+_SECRET_OPTIONS = (MACHINE_SECRET_STDIN_OPTION, MACHINE_SECRET_FD_OPTION)
 
 _RECOVERY_HANDOFF = RecoveryHandoffSpec(
     handoff_parameter="recovery_handoff_fd",

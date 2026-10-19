@@ -5,6 +5,19 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Final
 
+from cadrumo_client.commands.execution_policies import (
+    BOOTSTRAP_DESTRUCTIVE,
+    BOOTSTRAP_WRITE,
+    CALCULATION_READ,
+    ENCRYPTED_DESTRUCTIVE,
+    ENCRYPTED_READ,
+    ENCRYPTED_WRITE,
+    GOOGLE_WRITE,
+    LIVE_PROFILE_WRITE,
+    PROFILE_DESTRUCTIVE,
+    PROFILE_READ,
+    STATE_FREE,
+)
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.secret_contracts import (
     MachineSecretChannelKind,
@@ -36,19 +49,6 @@ from cadrumo_client.contracts.command_ports import (
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ._spec_policies import (
-    BOOTSTRAP_DESTRUCTIVE,
-    BOOTSTRAP_WRITE,
-    CALCULATION_READ,
-    ENCRYPTED_DESTRUCTIVE,
-    ENCRYPTED_READ,
-    ENCRYPTED_WRITE,
-    GOOGLE_WRITE,
-    LIVE_PROFILE_WRITE,
-    PROFILE_DESTRUCTIVE,
-    PROFILE_READ,
-    STATE_FREE,
-)
 
 if TYPE_CHECKING:
     pass

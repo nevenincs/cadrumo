@@ -6,6 +6,7 @@ import inspect
 
 import pytest
 
+from cadrumo_client.commands.execution_policies import BOOTSTRAP_DESTRUCTIVE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
 from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.secret_contracts import MachineSecretChannelKind
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
@@ -16,7 +17,6 @@ from cadrumo_runtime.commands.passphrase import (
     passphrase_change,
     passphrase_reset,
 )
-from cadrumo_runtime.commands.spec_policies import BOOTSTRAP_DESTRUCTIVE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

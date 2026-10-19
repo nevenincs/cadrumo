@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.execution_policies import (
+    BOOTSTRAP_DESTRUCTIVE,
+    BOOTSTRAP_WRITE,
+    ENCRYPTED_DESTRUCTIVE,
+    PROFILE_READ,
+    state_free_group_spec,
+)
+from cadrumo_client.commands.language_options import OUTPUT_LANGUAGE_OPTION as _OUTPUT_LANGUAGE
+from cadrumo_client.commands.parameters import ArgumentSpec
 from cadrumo_client.commands.secret_contracts import (
-    MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
 )
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -24,58 +32,12 @@ from cadrumo_client.contracts.command_ports import (
     CommandNodeKind,
     ProfileAuthenticationPosture,
 )
-from cadrumo_runtime.commands.spec_policies import (
-    BOOTSTRAP_DESTRUCTIVE,
-    BOOTSTRAP_WRITE,
-    ENCRYPTED_DESTRUCTIVE,
-    PROFILE_READ,
-    STATE_FREE,
-)
 
-_OUTPUT_LANGUAGE = OptionSpec(
-    name="output_language",
-    declarations=("--output-language", "--language"),
-    value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage", __package__)),
-    default=ParameterDefault.value(None),
-    help_key=TranslationKey("cli.config.auth.output_language_help"),
-)
-
-_MACHINE_SECRET_OPTIONS: tuple[OptionSpec, OptionSpec] = (
-    OptionSpec(
-        name="secrets_stdin",
-        declarations=("--secrets-stdin",),
-        value=ValueContract(DeferredTarget("builtins", "bool")),
-        default=ParameterDefault.value(False),
-        help_key=TranslationKey("cli.config.custody.secrets_stdin_help"),
-        is_flag=True,
-        flag_value=True,
-        machine_secret_channel=MachineSecretChannelKind.STDIN,
-    ),
-    OptionSpec(
-        name="secrets_fd",
-        declarations=("--secrets-fd",),
-        value=ValueContract(DeferredTarget("builtins", "int")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.config.custody.secrets_fd_help"),
-        machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
-    ),
-)
+_MACHINE_SECRET_OPTIONS = (MACHINE_SECRET_STDIN_OPTION, MACHINE_SECRET_FD_OPTION)
 
 
 RUNTIME_CUSTODY_COMMAND_SPECS = (
-    CommandSpec(
-        "config_passphrase",
-        "config",
-        "passphrase",
-        kind=CommandNodeKind.GROUP,
-        help_key=TranslationKey("cli.config.passphrase.help"),
-        short_help_key=None,
-        invocation=InvocationSpec(no_args_is_help=True),
-        parameters=(),
-        policy=STATE_FREE,
-        handler=None,
-        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
-    ),
+    state_free_group_spec("config_passphrase", "config", "passphrase", "cli.config.passphrase.help"),
     CommandSpec(
         "config_passphrase_change",
         "config_passphrase",
