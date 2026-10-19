@@ -33,7 +33,7 @@ See Also:
     :func:`~domain.iva.establishment.territorial_scope_for_spanish_postal_code`
         The territorial derivation this module delegates to; it owns the
         five-digit judgment and refuses an unreadable code to ``None``.
-    :class:`~domain.iva.classification.IvaTerritorialScope`
+    :class:`~domain.iva.schema.IvaTerritorialScope`
         The closed territorial classification a resolved fact produces.
     :func:`~application.user_profile.projections.fact_value`
         The canonical single-fact reader on a
@@ -105,7 +105,7 @@ def resolve_filer_territorial_scope(
             the Spanish postal territory.
 
     Returns:
-        :class:`~domain.iva.classification.IvaTerritorialScope`: The filer's own territory.
+        :class:`~domain.iva.schema.IvaTerritorialScope`: The filer's own territory.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When the profile carries no readable

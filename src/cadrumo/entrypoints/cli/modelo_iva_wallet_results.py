@@ -2,14 +2,13 @@
 
 These strict :class:`~core.json_contract.OutputSchema` subclasses are
 referenced as deferred public schema targets by production-authored CommandSpec and
-re-exported by :mod:`~entrypoints.cli._modelo_payloads` so the IVA wallet CLI
-keeps one payload import surface. The application/calculations facade remains
+imported directly by the IVA wallet CLI. The application/calculations facade remains
 authoritative for wallet balance queries; the application/modelo facade remains
 authoritative for seed and override behavior. This module only pins the JSON
 transport shapes.
 
 See Also:
-    :mod:`~entrypoints.cli._modelo_iva_wallet_cli`
+    :mod:`~entrypoints.cli.modelo_iva_wallet_commands`
         Typer command group that emits these payload classes.
     :func:`~application.calculations.iva_wallet_balance.query_iva_wallet_balance`
         Application query that supplies :class:`IvaWalletBalanceResult`.

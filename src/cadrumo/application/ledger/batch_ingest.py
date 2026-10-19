@@ -28,7 +28,7 @@ re-run: there is no journal format to invent, and no progress file to leave on
 disk.
 
 See Also:
-    :class:`~domain.iva.classification.InvoiceKind`
+    :class:`~domain.iva.schema.InvoiceKind`
         The declared direction that, with the content address, forms identity.
     :class:`~domain.attachments.models.Attachment`
         Where the content address comes from: the SHA-256 of the stored bytes.

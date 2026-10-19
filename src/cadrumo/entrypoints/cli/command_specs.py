@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecFamily, CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import DeferredTarget
 
 from ._root_command_specs import ROOT_COMMAND_SPECS
+from .command_targets import resolve_deferred_target
 
 
 def _family(mount_key: str, module: str, qualname: str) -> CommandSpecFamily:

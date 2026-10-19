@@ -67,7 +67,7 @@ def test_root_executable_targets_are_public_behavior_only_functions() -> None:
         assert spec.handler.target is not None
         assert callable(resolve_deferred_target(spec.handler.target))
 
-    module_path = Path(__file__).parents[1] / "_root_cli.py"
+    module_path = Path(__file__).parents[1] / "root_commands.py"
     tree = ast.parse(module_path.read_text(encoding="utf-8"))
     functions = {
         node.name: node

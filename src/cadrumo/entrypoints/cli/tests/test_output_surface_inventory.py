@@ -81,9 +81,6 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "Click-generated help text (ctx.get_help()), composed by click from "
         "static command metadata. It carries no operator data to redact."
     ),
-    ("entrypoints/cli/_app_diagnostics.py", "diagnostics_root", "typer.echo"): (
-        "Group help fallback: renders the click-generated help text verbatim, not operator data subject to redaction."
-    ),
     ("entrypoints/cli/_root_support.py", "emit_version_report_and_exit", "typer.echo"): (
         "Product identity and version string only. It is emitted on the "
         "--version short-circuit, before an app root or renderer context exists."

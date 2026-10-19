@@ -184,7 +184,7 @@ class InvoiceReviewFilterKey(StrEnum):
         STATUS: Lifecycle state of the invoice (``pending`` /
             ``reviewed`` / ``matched``).
         KIND: Issued-vs-received discriminator. Values come from
-            :class:`domain.iva.classification.InvoiceKind`.
+            :class:`domain.iva.schema.InvoiceKind`.
     """
 
     STATUS = "status"
@@ -282,7 +282,7 @@ def _enum_value_or_raise[E: StrEnum](
             clause value is compared against the enum members ignoring
             case, so an operator may type either case on the command
             line. Used for lowercase-valued enums
-            (:class:`domain.iva.classification.InvoiceKind`, ``issued`` /
+            (:class:`domain.iva.schema.InvoiceKind`, ``issued`` /
             ``received``) and for uppercase-valued enums
             (:class:`cadrumo.domain.transactions.enums.BusinessClassification`
             ``BUSINESS``, :class:`~cadrumo.domain.transactions.enums.TransactionDirection`
@@ -591,7 +591,7 @@ class InvoiceReviewFilterSpec(BaseModel):
     Attributes:
         clauses: Raw clauses in input order.
         status: Resolved :class:`InvoiceReviewStatus`.
-        kind: Resolved :class:`domain.iva.classification.InvoiceKind`
+        kind: Resolved :class:`domain.iva.schema.InvoiceKind`
             (``issued`` / ``received``).
     """
 

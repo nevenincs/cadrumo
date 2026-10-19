@@ -44,13 +44,17 @@ from ...application.dependency_setup_operation import (
 )
 from ...application.operations.models import OperationIdentity
 from ...core.config import override_settings
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from ...tests.env_scope import scoped_env_var
 from ..dependency_operation_composition import build_dependency_registry_factory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[4]
-_PROVISIONED_BROWSERS: Final = _REPOSITORY_ROOT / "var" / "storage" / "components" / "playwright"
+_PROVISIONED_BROWSERS: Final = (
+    _REPOSITORY_ROOT / "var" / "storage" / storage_location(StorageCategory.PLAYWRIGHT_BROWSERS).relative_path()
+)
 #: Requests that would make the local AI program load, run or download a model.
 _MODEL_WORK_PATHS: Final = ("/api/generate", "/api/chat", "/api/pull", "/api/embed", "/api/create")
 
@@ -216,7 +220,10 @@ def test_quick_check_on_a_clean_root_answers_every_item_inside_the_bound(storage
     """A clean root answers every item at once, with no network traffic and no model work."""
     with _observed_boundaries() as (observed, proxy_url, program_url):
         rows, elapsed = _quick_rows(
-            storage, browsers=storage / "components" / "playwright", proxy_url=proxy_url, program_url=program_url
+            storage,
+            browsers=storage / storage_location(StorageCategory.PLAYWRIGHT_BROWSERS).relative_path(),
+            proxy_url=proxy_url,
+            program_url=program_url,
         )
     findings = bound_findings(rows, elapsed_s=elapsed, expected_items=len(dependency_item_declarations()))
     assert not findings, "\n".join(findings)

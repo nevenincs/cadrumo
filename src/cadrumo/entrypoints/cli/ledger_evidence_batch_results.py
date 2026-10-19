@@ -7,7 +7,7 @@ payload is, rather than being an untyped dict assembled at the emit site.
 Split into its own module rather than added to
 :mod:`~entrypoints.cli.ledger_business_payloads`, following the same pattern
 that module's own docstring documents for
-:mod:`~entrypoints.cli._ledger_rule_payloads` and
+:mod:`~entrypoints.cli.ledger_rule_results` and
 :mod:`~entrypoints.cli._ledger_llm_payloads`: one transport family per module,
 each under its owning surface.
 

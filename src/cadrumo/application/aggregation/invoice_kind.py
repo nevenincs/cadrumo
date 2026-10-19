@@ -11,7 +11,7 @@ independently maintained.
 Home
 ----
 This lives in the application layer rather than beside
-:class:`~cadrumo.domain.iva.classification.InvoiceKind`, deliberately. The mapping joins a
+:class:`~cadrumo.domain.iva.schema.InvoiceKind`, deliberately. The mapping joins a
 :class:`~cadrumo.domain.transactions.enums.TransactionDirection` to an
 ``InvoiceKind``, and ``domain.iva`` imports nothing from ``domain.transactions``
 today. Placing it there would mint a new cross-domain edge to host a function
@@ -57,7 +57,7 @@ def invoice_kind_for_direction(direction: TransactionDirection | None) -> Invoic
             could not resolve one from a persisted evidence row.
 
     Returns:
-        The corresponding :class:`~cadrumo.domain.iva.classification.InvoiceKind`, or ``None``
+        The corresponding :class:`~cadrumo.domain.iva.schema.InvoiceKind`, or ``None``
         for any direction that is not an IVA settlement flow —
         ``INTERNAL_TRANSFER`` and the unresolved case — so the caller can reject
         the row rather than guess at a treatment for it.

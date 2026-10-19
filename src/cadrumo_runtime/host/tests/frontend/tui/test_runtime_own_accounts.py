@@ -64,6 +64,8 @@ class _Client:
 
 class _Controller:
     operation_id = _OPERATION_ID
+    # The client it was submitted through, as the real controller keeps it.
+    client: _Client
 
     def __init__(
         self,
@@ -199,6 +201,7 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Cont
     ) -> _Controller:
         assert received_client is client
         submissions.append(kwargs)
+        controller.client = client
         return controller
 
     monkeypatch.setattr(OperationController, "submit", classmethod(submit))

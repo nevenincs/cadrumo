@@ -199,7 +199,7 @@ def test_changed_planned_source_refuses_before_any_custody_write(subject: Subjec
     assert not subject.store.blobs and not subject.evidence.rows
 
 
-def test_complete_batch_tracks_draft_then_replay_manifest_even_when_row_is_no_op(
+def test_complete_batch_tracks_draft_then_replays_the_stored_reading_without_writing(
     subject: Subject, tmp_path: Path
 ) -> None:
     path = tmp_path / "invoice.pdf"
@@ -218,7 +218,7 @@ def test_complete_batch_tracks_draft_then_replay_manifest_even_when_row_is_no_op
     second = subject.operands.values[1]
     assert isinstance(second, LedgerEvidenceBatchExecutionResult)
     assert second.projection.run.items[0].status == "no_op"
-    assert second.projection.effect is OperationEffect.UPDATED and second.projection.write_count == 1
+    assert second.projection.effect is OperationEffect.NONE and second.projection.write_count == 0
     assert len(subject.shared_events.load().events) == 1
 
 

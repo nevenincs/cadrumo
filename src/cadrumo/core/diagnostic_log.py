@@ -14,8 +14,6 @@ from datetime import UTC, datetime
 from typing import Literal, cast, override
 from uuid import uuid4
 
-from .errors.failure_report import failure_chain
-
 type DiagnosticValue = str | int | float | bool | None
 type DiagnosticProcessRole = Literal[
     "python", "tui", "runtime", "profile_worker", "extension_service", "external_client"
@@ -228,6 +226,10 @@ def diagnostic_error_fields(error: BaseException) -> dict[str, DiagnosticValue]:
             trace = trace.tb_next
         code = trace.tb_frame.f_code
         fields["error_origin"] = f"{code.co_filename}:{trace.tb_lineno}:{code.co_name}"
+    # Logging is configured on every entry import; the error vocabulary loads
+    # only once an error is actually being described.
+    from .errors.failure_report import failure_chain
+
     links = failure_chain(error)
     reason = next((link.reason for link in links if link.reason is not None), None)
     if reason is not None:

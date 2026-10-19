@@ -83,7 +83,7 @@ See Also:
         The fourth rung, and the store an operator's answer persists into.
     :class:`~application.ledger.classification_assembly.DeclaredFacts`
         The one channel a resolved scope reaches the criteria assembly through.
-    :class:`~domain.iva.classification.IvaTerritorialScope`
+    :class:`~domain.iva.schema.IvaTerritorialScope`
         The closed target every rung resolves into.
 """
 

@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for the modelo ``bindings`` sub-app.
 
-Extracted from :mod:`~entrypoints.cli._modelo_payloads` to keep that
+Extracted from :mod:`~entrypoints.cli.modelo_results` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`), following the split pattern already
 established by :mod:`~entrypoints.cli.modelo_aux_payloads`,
@@ -14,11 +14,11 @@ bindings-resolve command JSON-contract surface.
 
 Per `aeat-registry-bindings`, every row here carries the binding's
 regulatory grounding (``legal_refs`` / ``source_refs``) at parity with the
-casilla-side payloads (``CasillaRowPayload`` in
-:mod:`~entrypoints.cli._modelo_payloads`).
+casilla-side payloads
+(:class:`~application.reference_catalogue_contracts.CasillaRowPayload`).
 
 See Also:
-    :mod:`~entrypoints.cli._modelo_payloads`
+    :mod:`~entrypoints.cli.modelo_results`
         Holds the remaining modelo payload families; bindings payloads are
         consumed directly from this focused module.
 """

@@ -41,6 +41,8 @@ from cryptography.x509.oid import NameOID
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from ..dependency_contracts import DependencySetupStep
 from ..dependency_transfer import (
     DEPENDENCY_RETRY_POLICY,
@@ -669,7 +671,9 @@ def test_a_full_disk_refuses_before_the_transfer_and_names_both_sizes(tmp_path: 
     """Too little room is the disk-full refusal with the required and the measured size, before any byte moves."""
     free = shutil.disk_usage(tmp_path).free
     with pytest.raises(DependencyTransferError) as refused:
-        require_free_space(tmp_path / "components" / "playwright", download_bytes=free)
+        require_free_space(
+            tmp_path / storage_location(StorageCategory.PLAYWRIGHT_BROWSERS).relative_path(), download_bytes=free
+        )
     assert refused.value.category is DependencyFailureCategory.DISK_FULL
     assert refused.value.facts["required_bytes"] == -(-free * 6 // 5) + 1024**3
     assert isinstance(refused.value.facts["free_bytes"], int)

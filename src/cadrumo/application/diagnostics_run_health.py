@@ -53,7 +53,7 @@ See Also:
         Timing/outcome-only record projected into each diagnostic report.
     :func:`~application.auth.operator.test_operator_auth`
         Local auth-session probe folded into the run-health report.
-    :mod:`~entrypoints.cli._app_diagnostics`
+    :mod:`~entrypoints.cli.app_diagnostics_commands`
         CLI transport for the run-health, runs, latency, errors, and
         llm-usage verbs.
 """

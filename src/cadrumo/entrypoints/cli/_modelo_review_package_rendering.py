@@ -1,10 +1,10 @@
 """Output projection helpers for Modelo review-package CLI commands.
 
 See Also:
-    :mod:`~entrypoints.cli._modelo_review_package_cli`
+    :mod:`~entrypoints.cli.modelo_review_package_commands`
         Typer verb registrar that calls these projection helpers before emitting
         CLI envelopes.
-    :mod:`~entrypoints.cli._modelo_review_package_payloads`
+    :mod:`~entrypoints.cli.modelo_review_package_results`
         Strict result schemas populated by this module for build, verify,
         signing, recipient encryption, and feedback flows.
     :func:`~application.modelo.review_package.build_review_package`

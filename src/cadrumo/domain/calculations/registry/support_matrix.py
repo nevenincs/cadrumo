@@ -31,7 +31,7 @@ See Also:
         typed rows.
     :class:`~domain.calculations.registry.query_reports.ModeloSupportMatrixReport`
         Query-service envelope returned by
-        :meth:`~entrypoints.cli._modelo_discovery_cli.support_matrix`.
+        :meth:`~entrypoints.cli.modelo_discovery_commands.support_matrix`.
     :func:`~application.modelo.registry_discovery.registry_support_matrix`
         Application query used by CLI discovery without re-reading registry
         authority directly.

@@ -5,9 +5,9 @@ application Modelo 145 records, validation reports, and export results into the
 central CLI envelope format for both text and JSON output.
 
 See Also:
-    :mod:`~entrypoints.cli._modelo_m145_cli`
+    :mod:`~entrypoints.cli.modelo_m145_commands`
         Typer command group that calls these emitters.
-    :mod:`~entrypoints.cli._modelo_payloads_m145`
+    :mod:`~entrypoints.cli.modelo_results_m145`
         Typed payload classes returned by the JSON envelope.
     :func:`~entrypoints.cli.common.emit_envelope`
         Shared CLI output path used by each emitter in this module.

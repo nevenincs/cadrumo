@@ -78,10 +78,10 @@ def passphrase_change(
 ) -> None:
     """Rotate the active profile's passphrase without replacing its data key."""
     _activate_subcommand_output_language(ctx, output_language)
-    from cadrumo.core.bucket_pointer import resolve_active_bucket_id
     from cadrumo_client.commands.payloads import ConfigPassphraseChangeResult
+    from cadrumo_client.commands.profile_selection import command_profile_id
 
-    active = resolve_active_bucket_id()
+    active = command_profile_id()
     if active is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.passphrase.no_active_profile")
     profile_id = UUID(active)

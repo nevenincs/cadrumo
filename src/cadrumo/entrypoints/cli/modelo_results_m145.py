@@ -8,7 +8,7 @@ local communication state.
 See Also:
     CommandSpec schema authority
         Each operation's CommandSpec owns its lazy public OutputSchema target.
-    :mod:`~entrypoints.cli._modelo_m145_cli`
+    :mod:`~entrypoints.cli.modelo_m145_commands`
         Behavior handlers that emit these payloads.
     :mod:`~entrypoints.cli._modelo_m145_rendering`
         Renderer that converts application results into these payload classes.

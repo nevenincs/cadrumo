@@ -186,6 +186,8 @@ def _terminal_refused_observation() -> OperationObservationSuccessV1:
 
 class _AttestationController:
     operation_id = _OPERATION_ID
+    # The client it was submitted through, as the real controller keeps it.
+    client: SimpleNamespace
 
     def __init__(self, *, start_error: RefusalError | None = None) -> None:
         self.start_error = start_error
@@ -213,6 +215,7 @@ def _bind_controller_submit(monkeypatch: pytest.MonkeyPatch, controller: _Attest
         assert kwargs["definition_id"] == MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID
         assert kwargs["subject_ref"] == _WORK_UNIT_ID
         assert kwargs["expected_session_id"] == client.session_id
+        controller.client = client
         return controller
 
     monkeypatch.setattr(OperationController, "submit", submit)

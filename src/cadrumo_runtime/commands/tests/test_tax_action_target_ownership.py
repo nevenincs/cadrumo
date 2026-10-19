@@ -32,6 +32,7 @@ def test_external_operator_actions_resolve_to_the_runtime_graph_definitions() ->
         "config.auth.configure",
         "config.auth.diagnostics.view",
         "config.auth.login",
+        "config.google.login",
     }
     for target in targets:
         node = RUNTIME_COMMAND_GRAPH.find_schema_identity(target.command_key)

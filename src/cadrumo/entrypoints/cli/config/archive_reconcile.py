@@ -16,7 +16,7 @@ encrypted local secure-object storage.
 
 This module presents the exact-profile result of the registered archive
 reconciliation operation. It emits
-:class:`~entrypoints.cli.config._archive_reconcile_payloads.ProfileBundleReconcileResult`
+:class:`~entrypoints.cli.config.archive_reconcile_results.ProfileBundleReconcileResult`
 through :func:`emit_envelope`, and reports both halves of the outcome through
 the typed :class:`Notice` channel per ``aeat-cli-contract``.
 """

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import threading
 import time
@@ -21,6 +20,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hardware import AcceleratorKind, ContentionCause
+from ..core.hashing import sha256_hex
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_path
@@ -1447,7 +1447,7 @@ def read_stored_weights(model: str, settings: Settings | None = None) -> StoredW
         return StoredWeights(state=StoredWeightsState.ABSENT)
     except OSError:
         return StoredWeights(state=StoredWeightsState.UNREADABLE)
-    digest = hashlib.sha256(payload).hexdigest()
+    digest = sha256_hex(payload)
     try:
         manifest = json.loads(payload)
     except ValueError:

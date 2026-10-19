@@ -25,8 +25,8 @@ from cadrumo.tests.entry_import_floor_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-#: The CLI entry imports the declarative command graph and the vocabulary it is
-#: declared in; Typer, the error boundary and every command module load when
+#: The CLI entry imports the declarative command graph, the vocabulary it is
+#: declared in and the tax resolver the graph is built with; Typer, the error boundary and every command module load when
 #: the app is built or a command runs.
 _CLI_MAIN_ALLOWED: frozenset[str] = frozenset(
     {
@@ -52,6 +52,7 @@ _CLI_MAIN_ALLOWED: frozenset[str] = frozenset(
         "cadrumo.entrypoints.cli.command_shared_contracts",
         "cadrumo.entrypoints.cli.command_spec",
         "cadrumo.entrypoints.cli.command_specs",
+        "cadrumo.entrypoints.cli.command_targets",
         "cadrumo.entrypoints.cli.main",
     }
 )

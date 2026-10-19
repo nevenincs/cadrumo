@@ -1,26 +1,24 @@
 """Typed ``--json`` payload schemas for the ledger invoice/inventory/evidence sub-apps.
 
-Extracted from :mod:`~entrypoints.cli._ledger_payloads` to keep that
+Extracted from :mod:`~entrypoints.cli.ledger_results` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`); follows the same split pattern the
 module's own docstring documents for
-:mod:`~entrypoints.cli._ledger_rule_payloads`,
+:mod:`~entrypoints.cli.ledger_rule_results`,
 :mod:`~entrypoints.cli._ledger_llm_payloads`, and
-:mod:`~entrypoints.cli._ledger_catalogue_invoice_payloads`.
+:mod:`~entrypoints.cli.ledger_catalogue_invoice_results`.
 Covers two CLI sub-app payload families:
 
 * P07 -- the ``inventory`` sub-app.
 * P08 -- the purchase-invoice ``evidence`` sub-app.
 
 The ``invoice`` noun-group is *not* here: every invoice payload lives in
-:mod:`~entrypoints.cli._ledger_catalogue_invoice_payloads`, which projects the
+:mod:`~entrypoints.cli.ledger_catalogue_invoice_results`, which projects the
 sole invoice aggregate.
 
 Each class is a strict :class:`~core.json_contract.OutputSchema` subclass and
 a deferred public schema target referenced by production-authored CommandSpec.
-Re-imported into
-:mod:`~entrypoints.cli._ledger_payloads` so existing ``from ._ledger_payloads import
-InventoryLedgerPayload`` (etc.) call sites keep resolving unchanged.
+Consumers import these schemas from this defining module.
 """
 
 from __future__ import annotations

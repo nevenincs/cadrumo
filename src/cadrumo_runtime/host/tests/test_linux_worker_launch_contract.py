@@ -163,8 +163,12 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     opened: list[int] = []
     closed: list[int] = []
     launched: list[tuple[str, ...]] = []
-    forwarded_names = Settings.storage_env_var_names() | {"CADRUMO_AUTHORITY_ROOT", "TEMP", "TMP", "TMPDIR"}
-    expected_environment = _ENVIRONMENT | {name: value for name, value in os.environ.items() if name in forwarded_names}
+    # A fixed parent environment keeps the launch contract independent of the operator's shell.
+    inherited = {
+        "CADRUMO_LOCAL_STORAGE_ROOT": "/managed/storage",
+        "CADRUMO_PROXY_PASSWORD_SECRET": "must-not-cross-worker-boundary",
+    }
+    expected_environment = _ENVIRONMENT | {"CADRUMO_LOCAL_STORAGE_ROOT": "/managed/storage"}
     native_stat = Path.stat
 
     def stat(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
@@ -227,7 +231,7 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     monkeypatch.setattr(
         linux_worker_guardian,
         "os",
-        SimpleNamespace(getuid=lambda: 1001, close=closed.append, environ=os.environ),
+        SimpleNamespace(getuid=lambda: 1001, close=closed.append, environ=inherited),
     )
     monkeypatch.setattr(linux_worker_guardian, "select", SimpleNamespace(poll=Poller, POLLIN=1, POLLERR=2, POLLHUP=4))
     monkeypatch.setattr(linux_worker_guardian, "subprocess", SimpleNamespace(Popen=launch, DEVNULL=-3))

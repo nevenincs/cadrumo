@@ -97,6 +97,8 @@ class _Client:
 
 class _Controller:
     operation_id = _OPERATION_ID
+    # The client it was submitted through, as the real controller keeps it.
+    client: _Client
 
     def __init__(self, request: BaseModel, *, definition_id: str, result: BaseModel, effect: OperationEffect) -> None:
         self.request = request
@@ -300,6 +302,7 @@ def _install_runtime(
         assert kwargs["definition_id"] == definition_id
         request = cast(BaseModel, kwargs["payload"])
         controller = _Controller(request, definition_id=definition_id, result=result, effect=effect)
+        controller.client = client
         submissions.append(kwargs)
         controllers.append(controller)
         return controller

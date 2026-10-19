@@ -88,4 +88,3 @@ def test_installed_composition_and_native_journeys_are_runtime_owned() -> None:
     assert (host / "frontend" / "tui" / "installed_session.py").is_file()
     assert (host / "frontend" / "cli" / "app.py").is_file()
     assert (host / "tests" / "frontend" / "tui" / "test_profile_wizard_native.py").is_file()
-    assert (host / "tests" / "frontend" / "cli" / "test_censo_credentials_native.py").is_file()

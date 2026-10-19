@@ -28,7 +28,7 @@ See Also:
     degraded.
     :mod:`application.wizard.status` supplies semantic profile/auth
     readiness once the workflow state has loaded.
-    :mod:`entrypoints.cli.config._repair_cli` wires these reports into
+    :mod:`entrypoints.cli.config.repair_commands` wires these reports into
     ``aeat config repair`` commands.
 """
 

@@ -8,7 +8,7 @@ for the evidence-bundle audit payloads) so the review-package CLI surface has
 one dedicated payload home.
 
 See Also:
-    :mod:`~entrypoints.cli._modelo_review_package_cli`
+    :mod:`~entrypoints.cli.modelo_review_package_commands`
         CLI transport that populates these result payloads.
     :func:`~application.modelo.review_package.build_review_package`
         Application build primitive represented by

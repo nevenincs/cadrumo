@@ -17,7 +17,7 @@ retry is named by an info notice rather than by a field.
 See Also:
     :class:`~application.ledger.counterparty_establishment.ConfirmedCounterpartyFacts`
         The persisted record these payloads project.
-    :class:`~domain.iva.classification.IvaTerritorialScope`
+    :class:`~domain.iva.schema.IvaTerritorialScope`
         The closed territory axis the answer settles.
 """
 

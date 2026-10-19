@@ -41,6 +41,10 @@ def _contract() -> OperationPublicDefinitionContractV1:
     return build_modelo_work_revision_registration(definition, unavailable_repositories).contract
 
 
+def _revision_request(profile_id: UUID) -> ModeloWorkRevisionRequest:
+    return ModeloWorkRevisionRequest(profile_id=profile_id, work_unit_id="0123456789ab")
+
+
 class _InterruptedClient(FrontendClient):
     """Return one real typed receipt, then lose only the control exchange."""
 
@@ -76,7 +80,7 @@ class _InterruptedClient(FrontendClient):
 def test_revision_read_retains_submitted_identity_when_control_connection_is_lost() -> None:
     client = _InterruptedClient()
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        read_modelo_work_revision(client, ModeloWorkRevisionRequest(profile_id=client.profile_id))
+        read_modelo_work_revision(client, _revision_request(client.profile_id))
     assert isinstance(client.requests[0], OperationSubmit)
     assert refused.value.context == {
         "operation_id": client.operation_id,
@@ -89,12 +93,12 @@ def test_wrong_public_contract_refuses_before_submission() -> None:
     client = _InterruptedClient()
     client.wrong_contract = True
     with pytest.raises(RefusalError, match=RefusalCode.INVALID_FRAME.value):
-        read_modelo_work_revision(client, ModeloWorkRevisionRequest(profile_id=client.profile_id))
+        read_modelo_work_revision(client, _revision_request(client.profile_id))
     assert client.requests == []
 
 
 def test_foreign_profile_cannot_be_selected_on_the_borrowed_connection() -> None:
     client = _InterruptedClient()
     with pytest.raises(RefusalError, match=RefusalCode.INVALID_FRAME.value):
-        read_modelo_work_revision(client, ModeloWorkRevisionRequest(profile_id=uuid4()))
+        read_modelo_work_revision(client, _revision_request(uuid4()))
     assert client.requests == []

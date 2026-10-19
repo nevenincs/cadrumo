@@ -47,7 +47,7 @@ See Also:
         This module produces a member of it and opens no second route.
     :func:`~application.ledger.identity_roles.canonical_identity_token`
         The identifier authority the counterparty key is derived from.
-    :class:`~domain.iva.classification.IvaTerritorialScope`
+    :class:`~domain.iva.schema.IvaTerritorialScope`
         The territory a confirmed fact carries.
 """
 

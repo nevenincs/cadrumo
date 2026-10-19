@@ -30,7 +30,7 @@ def _row_to_payload(row: ReviewQueueRowProjection) -> ReviewQueueRowPayload:
     """Project the application-side ``ReviewQueueRow`` onto the typed CLI payload.
 
     Keeps the CLI JSON contract pinned to the registered
-    :class:`~entrypoints.cli._review_payloads.ReviewQueueRowPayload`
+    :class:`~entrypoints.cli.review_results.ReviewQueueRowPayload`
     shape; downstream JSON consumers
     rely on the registry rather than the application-side record.
     """

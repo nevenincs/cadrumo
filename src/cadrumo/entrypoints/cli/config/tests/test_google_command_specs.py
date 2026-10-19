@@ -47,7 +47,7 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
     package = Path(__file__).parents[1]
     modules = (
         "google.py",
-        "_google_folder.py",
+        "google_folder_commands.py",
     )
 
     for module in modules:

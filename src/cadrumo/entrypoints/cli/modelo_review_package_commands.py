@@ -33,7 +33,7 @@ See Also:
         X25519 confidentiality primitive wired by ``encrypt-for-recipient``.
     :class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`
         Trusted-recipient public-key capability used before encryption.
-    :mod:`~entrypoints.cli._modelo_review_package_payloads`
+    :mod:`~entrypoints.cli.modelo_review_package_results`
         Typed JSON payload schemas emitted by this CLI group.
     :mod:`~entrypoints.cli.config.collab`
         Configuration surface that registers recipient fingerprints.

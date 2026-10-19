@@ -311,6 +311,21 @@ def _keep_the_installation_google_client_out_of_tests(tmp_path_factory: pytest.T
         reset_settings_cache()
 
 
+@pytest.fixture(autouse=True)
+def _restore_no_color_after_textual_consumes_it() -> Iterator[None]:
+    """Put back the ``NO_COLOR`` a Textual app popped from the process environment.
+
+    Textual's ``App.__init__`` removes ``NO_COLOR`` from ``os.environ`` as it
+    reads it, so every test that builds an app would otherwise strip the
+    bridged ``env/.env`` value from the rest of its worker, and a later test
+    passed or failed by the order it ran in.
+    """
+    before = os.environ.get("NO_COLOR")
+    yield
+    if before is not None:
+        os.environ["NO_COLOR"] = before
+
+
 # These product-backed fixtures live at the repository test-host boundary.
 # ``cadrumo.tests.pytest_plugin`` remains core-only shared support, so the
 # package does not acquire an application dependency through its test helpers.

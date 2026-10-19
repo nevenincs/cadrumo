@@ -15,9 +15,9 @@ See Also:
         Builder of every report class defined here.
     :mod:`~application.modelo.registry_discovery`
         Application facade used by CLI discovery commands.
-    :mod:`~entrypoints.cli._modelo_discovery_cli`
+    :mod:`~entrypoints.cli.modelo_discovery_commands`
         Typer command group that renders these reports to text and JSON.
-    :mod:`~entrypoints.cli._modelo_payloads`
+    :mod:`~entrypoints.cli.modelo_results`
         CLI-side ``OutputSchema`` projections for discovery command envelopes.
     :class:`~domain.calculations.registry.schema.ModeloRevision`
         Revision record from which casilla, binding, and formula rows are

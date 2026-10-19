@@ -16,18 +16,18 @@ LLM run record is read from encrypted local secure-object storage and the
 auth probe reads only the locally persisted session token's metadata.
 
 This module presents reports returned by the exact-profile registered
-diagnostics operation. It emits :class:`~entrypoints.cli._diagnostics_payloads.RunHealthResult`,
-:class:`~entrypoints.cli._diagnostics_payloads.RunsListResult`,
-:class:`~entrypoints.cli._diagnostics_payloads.LatencyResult`,
-:class:`~entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`,
-and :class:`~entrypoints.cli._diagnostics_payloads.LlmUsageResult`
+diagnostics operation. It emits :class:`~entrypoints.cli.diagnostics_results.RunHealthResult`,
+:class:`~entrypoints.cli.diagnostics_results.RunsListResult`,
+:class:`~entrypoints.cli.diagnostics_results.LatencyResult`,
+:class:`~entrypoints.cli.diagnostics_results.ErrorsBreakdownResult`,
+and :class:`~entrypoints.cli.diagnostics_results.LlmUsageResult`
 through :func:`emit_envelope`.
 
 See Also:
     :mod:`~application.diagnostics_run_health`
         Application service layer that builds the local-only diagnostic
         reports exposed by this CLI group.
-    :mod:`~entrypoints.cli._diagnostics_payloads`
+    :mod:`~entrypoints.cli.diagnostics_results`
         Typed JSON payload schemas emitted by these diagnostics commands.
     :func:`~entrypoints.diagnostics_run_health_composition.compose_diagnostics_run_health_port`
         Outer composition binding for the application diagnostics read port.
@@ -42,7 +42,7 @@ import typer
 
 from ...core.i18n.render import tr
 from ._decimal_parsing import optional_decimal_text
-from .common import emit_envelope
+from .common import emit_envelope, emit_help_text
 from .diagnostics_results import (
     ErrorKindCountPayload,
     ErrorsBreakdownResult,
@@ -90,7 +90,7 @@ def diagnostics_root(ctx: typer.Context) -> None:
     Click Group even while only one verb is materialized.
     """
     if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
+        emit_help_text(ctx)
         raise typer.Exit()
 
 

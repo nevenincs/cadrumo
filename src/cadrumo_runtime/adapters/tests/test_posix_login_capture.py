@@ -403,7 +403,7 @@ def test_missing_kernel_option_refuses_without_numeric_pid_fallback(monkeypatch:
             assert level == socket.SOL_SOCKET and option == 77
             raise OSError(errno.ENOPROTOOPT, "synthetic unavailable facility")
 
-    monkeypatch.setattr(posix_channel, "_linux_peer_pidfd_option", lambda: 77)
+    monkeypatch.setattr(posix_channel, "linux_peer_pidfd_socket_option", lambda: 77)
     with pytest.raises(RefusalError) as refused:
         posix_channel._linux_peer_pidfd(cast(socket.socket, MissingKernelOption()))
     assert refused.value.reason is RefusalCode.UNAVAILABLE

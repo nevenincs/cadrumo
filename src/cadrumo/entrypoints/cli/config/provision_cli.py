@@ -30,7 +30,6 @@ Core types:
 from __future__ import annotations
 
 import json
-import sys
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, Literal
@@ -108,6 +107,7 @@ from ....core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionA
 from ....core.model_catalogue import ModelRole
 from ....core.operations import OperationTerminalCondition
 from ....core.output_rendering import OutputFormat
+from ....core.tty import stderr_is_tty, stdin_is_tty
 from ..common import emit_envelope, format_of, resolve_cli_precondition_action
 from ..errors import write_stderr as draw_stderr
 from .provision_payloads import (
@@ -329,7 +329,7 @@ class _SetupDecision:
 
 
 def _can_ask(ctx: typer.Context) -> bool:
-    return format_of(ctx) is OutputFormat.TEXT and bool(sys.stdin.isatty()) and bool(sys.stderr.isatty())
+    return format_of(ctx) is OutputFormat.TEXT and stdin_is_tty() and stderr_is_tty()
 
 
 def _plan_lines(review: DependencySetupReviewV2) -> list[str]:
@@ -454,7 +454,7 @@ def _setup(
     result_type: type[ProvisionSetupResult],
 ) -> None:
     decision = _SetupDecision()
-    progress = SetupProgressLine(json_mode=format_of(ctx) is OutputFormat.JSON, interactive=sys.stderr.isatty())
+    progress = SetupProgressLine(json_mode=format_of(ctx) is OutputFormat.JSON, interactive=stderr_is_tty())
     try:
         completed = run_registered_operation(
             bound_profile_client(ctx),

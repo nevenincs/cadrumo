@@ -11,7 +11,7 @@ See Also:
         CLI-only parsing helpers for casilla assignments and actor labels.
     :mod:`~entrypoints.cli._modelo_m145_rendering`
         Text/JSON envelope emitters for the graph-declared commands.
-    :mod:`~entrypoints.cli._modelo_payloads_m145`
+    :mod:`~entrypoints.cli.modelo_results_m145`
         Typed JSON payload schemas declared for Modelo 145 CLI operations.
 """
 

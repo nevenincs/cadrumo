@@ -67,9 +67,9 @@ def test_ledger_read_handlers_do_not_load_execution_or_export_dependencies() -> 
     completed = _run_python(
         """
         import json, sys
-        from cadrumo.entrypoints.cli import _ledger_read_cli
-        assert callable(_ledger_read_cli.ledger_list)
-        assert callable(_ledger_read_cli.ledger_history)
+        from cadrumo.entrypoints.cli import ledger_read_commands
+        assert callable(ledger_read_commands.ledger_list)
+        assert callable(ledger_read_commands.ledger_history)
         forbidden = ('cadrumo.application', 'cadrumo.adapters', 'cadrumo.domain', 'pydantic')
         print(json.dumps(sorted(name for name in sys.modules
               if any(name == prefix or name.startswith(prefix + '.') for prefix in forbidden))))

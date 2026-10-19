@@ -10,7 +10,7 @@ schemas project :class:`~application.diagnostics_run_health.RunHealthReport`,
 JSON contract.
 
 See Also:
-    :mod:`~entrypoints.cli._app_diagnostics`
+    :mod:`~entrypoints.cli.app_diagnostics_commands`
         CLI transport that populates the local-only diagnostics payloads.
     :mod:`~application.diagnostics_run_health`
         Application report models mirrored by the run-health payload family.
