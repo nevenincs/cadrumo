@@ -748,8 +748,15 @@ test("a conversation with a reply going cannot be archived, and the history says
 test("an agent that cannot serve says why, and nothing can be sent", async ({
   page: target,
 }) => {
-  scenarioOnly("only the scenario host can be signed out");
-  await open(target, "views-refused");
+  scenarioOnly("only the scenario host can publish a service refusal");
+  await open(target);
+  await target.evaluate(() =>
+    window.__scenarioAgentPublishStatus?.({
+      state: "refused",
+      code: "agent_signed_out",
+      lane: "development",
+    }),
+  );
   await expect(column(target).getByRole("note")).toBeVisible();
   await expect(column(target).getByRole("status")).toContainText(
     label("desktop.agent.service_signed_out"),

@@ -401,6 +401,7 @@ type Waiting =
 export function fixtureAgent({
   say,
   wait,
+  signedIn,
   readable,
   empty,
   stream,
@@ -413,13 +414,15 @@ export function fixtureAgent({
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
-  /** A profile is signed in that the conversations belong to. */
+  /** A profile is signed in, independently of whether a read succeeds. */
+  signedIn: () => boolean;
+  /** The profile's read requests succeed. */
   readable: () => boolean;
   /** The profile has no conversations yet. */
   empty: boolean;
   stream: FixtureStream;
   asks: FixtureAsks | null;
-  /** Thrown by a read while nobody is signed in. */
+  /** Thrown when a read cannot be served. */
   refused: () => unknown;
   /** The lanes the profile turned off, as `<provider>_<transport>`. */
   turnedOff?: () => ReadonlySet<string>;
@@ -496,7 +499,7 @@ export function fixtureAgent({
     if (!readable()) throw refused();
   };
   const status = (): AgentServiceStatus =>
-    readable()
+    signedIn()
       ? (publishedStatus ?? {
           state: "ready",
           agent_version: "0.0.0-fixture",

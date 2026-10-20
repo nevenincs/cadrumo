@@ -256,9 +256,9 @@ export function scenarioHost(
   // A view belongs to a signed-in profile; without one it is refused.
   // Where the platform signs in inside the TUI the host cannot tell, and
   // the fixture session stands for a signed-in one.
-  const readable = () =>
-    scenario.views !== "refused" &&
-    (presence === "present" || !scenario.signIn.status.supported);
+  const signedIn = () =>
+    presence === "present" || !scenario.signIn.status.supported;
+  const readable = () => scenario.views !== "refused" && signedIn();
   const views: ProfileViews = {
     async notifications() {
       say("notifications");
@@ -295,6 +295,7 @@ export function scenarioHost(
   } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
+    signedIn,
     readable,
     empty: scenario.views === "empty",
     stream: options.agentStream ?? "steady",

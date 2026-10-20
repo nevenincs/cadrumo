@@ -317,8 +317,13 @@ test("a refused read of the history says so, never that there are none", async (
   page: target,
 }) => {
   await open(target, "views-refused");
+  await expect
+    .poll(() => target.evaluate(() => window.__fixtureAgentSession?.status()))
+    .toMatchObject({ state: "ready" });
   await agentButton(target, "desktop.agent.history").click();
   const body = target.locator(".agent-body");
-  await expect(body.getByRole("alert")).toBeVisible();
+  await expect(body.getByRole("alert")).toHaveText(
+    label("desktop.agent.read_failed"),
+  );
   await expect(body).not.toContainText(label("desktop.agent.history_empty"));
 });
