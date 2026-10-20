@@ -133,18 +133,20 @@ pub fn dispatch_newest(
         // Restoration can select an older image whose activation grammar predates Retry.
         crate::activation_probe::require_retry_support(&selected.manager, &selected.package)?;
     }
-    Command::new(selected.manager)
-        .args(intent.argument())
-        .env_clear()
-        .envs(cadrumo_platform::storage::strict_host_environment(
-            std::env::vars_os(),
-        ))
-        .current_dir(selected.package)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .creation_flags(0x0800_0000)
-        .spawn()?;
+    cadrumo_application::process::creation::run(|| {
+        Command::new(selected.manager)
+            .args(intent.argument())
+            .env_clear()
+            .envs(cadrumo_platform::storage::strict_host_environment(
+                std::env::vars_os(),
+            ))
+            .current_dir(selected.package)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .creation_flags(0x0800_0000)
+            .spawn()
+    })?;
     Ok(DispatchOutcome::Dispatched)
 }
 

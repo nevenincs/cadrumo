@@ -433,7 +433,7 @@ impl Children {
             }
             measurement.timing.outcome = HelperOutcome::SpawnFailed;
             let spawn_started = Instant::now();
-            let spawned = command.spawn();
+            let spawned = cadrumo_application::process::creation::run(|| command.spawn());
             measurement.timing.spawn_ms = Some(milliseconds(spawn_started.elapsed()));
             let child = match spawned {
                 Ok(child) => child,

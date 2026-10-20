@@ -404,21 +404,23 @@ impl Tray {
             .collect(),
         )
         .map_err(io::Error::other)?;
-        let mut helper = child
-            .command()
-            .args([
-                std::ffi::OsStr::new("-I"),
-                std::ffi::OsStr::new("-c"),
-                std::ffi::OsStr::new(include_str!(
-                    "../../desktop/src-tauri/src/python/manager_dispatch.py"
-                )),
-                desktop.as_os_str(),
-            ])
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .creation_flags(0x0800_0000)
-            .spawn()?;
+        let mut helper = cadrumo_application::process::creation::run(|| {
+            child
+                .command()
+                .args([
+                    std::ffi::OsStr::new("-I"),
+                    std::ffi::OsStr::new("-c"),
+                    std::ffi::OsStr::new(include_str!(
+                        "../../desktop/src-tauri/src/python/manager_dispatch.py"
+                    )),
+                    desktop.as_os_str(),
+                ])
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .creation_flags(0x0800_0000)
+                .spawn()
+        })?;
         match crate::activation_probe::wait_exit(&mut helper, Duration::from_secs(60)) {
             Ok(status) if status.success() => Ok(()),
             Ok(_) => Err(io::ErrorKind::Other.into()),

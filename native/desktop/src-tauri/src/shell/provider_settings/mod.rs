@@ -1,9 +1,10 @@
 //! Provider administration through the dedicated service's authenticated endpoint.
-mod wire;
+pub(crate) mod wire;
 use crate::{agent::AgentHost, shell::sign_in::wire::Outcome};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
 use serde_json::{Value, json};
 use std::sync::Arc;
+use std::time::Duration;
 use tauri::{
     State,
     ipc::{InvokeBody, Request},
@@ -56,16 +57,33 @@ pub(crate) fn agent_selection_available(
     host: &AgentHost,
     provider: &str,
     transport: &str,
-) -> Result<bool, ApplicationError> {
-    let answer = host.administer(json!({"action":"status"}), None)?;
-    match wire::status(outcome(answer)) {
-        Ok(status) => Ok(status.permits_agent(provider, transport)),
-        Err(CommandFailure::Host(error)) => Err(error),
-        Err(CommandFailure::Refused(_)) => {
-            Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                .with_reason("provider_settings_unavailable"))
+) -> Result<bool, CommandFailure> {
+    read_status(
+        || host.administer(json!({"action":"status"}), None),
+        Duration::from_millis(250),
+    )
+    .map(|status| status.permits_agent(provider, transport))
+}
+
+/// A cold sign-in probe outlives the service's bounded status exchange. Its
+/// work continues after `busy`, and the next read collects that result.
+/// Retry only this read and only that explicit response, never a mutation
+/// or an exchange whose outcome is unknown.
+fn read_status(
+    mut request: impl FnMut() -> Result<Value, ApplicationError>,
+    pause: Duration,
+) -> Result<Status, CommandFailure> {
+    for attempt in 0..4 {
+        match wire::status(outcome(request()?)) {
+            Err(CommandFailure::Refused(wire::Refused {
+                code: Refusal::Busy,
+            })) if attempt < 3 => {
+                std::thread::sleep(pause);
+            }
+            result => return result,
         }
     }
+    unreachable!("the last attempt returns its result")
 }
 async fn execute(
     host: &State<'_, Arc<AgentHost>>,
@@ -94,7 +112,15 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 pub async fn provider_settings_status(
     state: State<'_, Arc<AgentHost>>,
 ) -> Result<Status, CommandFailure> {
-    wire::status(execute(&state, json!({"action":"status"}), None).await?)
+    let host = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        read_status(
+            || host.administer(json!({"action":"status"}), None),
+            Duration::from_millis(250),
+        )
+    })
+    .await
+    .map_err(|_| invalid())?
 }
 #[tauri::command]
 pub async fn provider_settings_set(
@@ -208,4 +234,73 @@ async fn change(
     let mut request = target(provider, revision)?;
     request["action"] = json!(action);
     wire::changed(execute(state, request, None).await?, provider)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_slow_status_read_is_collected_without_restarting_its_work() {
+        let mut calls = 0;
+        let status = read_status(
+            || {
+                calls += 1;
+                Ok(if calls < 3 {
+                    json!({"kind":"refused","code":"busy"})
+                } else {
+                    json!({"development":false,"providers":[]})
+                })
+            },
+            Duration::ZERO,
+        )
+        .unwrap();
+        assert_eq!(calls, 3);
+        assert!(status.providers.is_empty());
+    }
+
+    #[test]
+    fn status_retries_are_bounded_and_preserve_the_refusal() {
+        let mut calls = 0;
+        let result = read_status(
+            || {
+                calls += 1;
+                Ok(json!({"kind":"refused","code":"busy"}))
+            },
+            Duration::ZERO,
+        );
+        assert_eq!(calls, 4);
+        assert!(matches!(
+            result,
+            Err(CommandFailure::Refused(wire::Refused {
+                code: Refusal::Busy
+            }))
+        ));
+        for code in ["signed_out", "profile_locked", "catalog_unavailable"] {
+            calls = 0;
+            let result = read_status(
+                || {
+                    calls += 1;
+                    Ok(json!({"kind":"refused","code":code}))
+                },
+                Duration::ZERO,
+            );
+            assert!(result.is_err());
+            assert_eq!(calls, 1);
+        }
+    }
+
+    #[test]
+    fn a_failed_status_exchange_is_not_replayed() {
+        let mut calls = 0;
+        let result = read_status(
+            || {
+                calls += 1;
+                Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli))
+            },
+            Duration::ZERO,
+        );
+        assert!(matches!(result, Err(CommandFailure::Host(_))));
+        assert_eq!(calls, 1);
+    }
 }

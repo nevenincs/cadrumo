@@ -721,6 +721,104 @@ fn a_child_that_exits_while_input_is_idle_settles_the_session() {
     session.stop().unwrap();
 }
 
+/// A webview may disappear before it answers ConPTY's initial cursor query.
+/// Closing that session must still reap the child and join its workers.
+#[cfg(windows)]
+#[test]
+fn a_terminal_closed_before_the_cursor_reply_settles() {
+    let (sent, received) = std::sync::mpsc::channel();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            let _ = sent.send(frame[1..].to_vec());
+        }
+        Ok(())
+    });
+    let mut session = Session::start(
+        chatty_program(),
+        80,
+        24,
+        sink,
+        Arc::new(Diagnostics::default()),
+    )
+    .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let mut output = Vec::new();
+    while !output.windows(4).any(|bytes| bytes == b"\x1b[6n") {
+        output.extend(
+            received
+                .recv_timeout(deadline.saturating_duration_since(Instant::now()))
+                .unwrap(),
+        );
+    }
+    session
+        .stop()
+        .expect("closing an unanswered cursor query must settle");
+}
+
+#[cfg(windows)]
+#[test]
+fn terminal_cleanup_is_independent_of_concurrent_helpers() {
+    use std::{
+        os::windows::process::CommandExt,
+        process::{Command, Stdio},
+    };
+    let mut failures = 0;
+    for attempt in 0..24 {
+        let program = chatty_program();
+        let barrier = Arc::new(std::sync::Barrier::new(2));
+        let spawning = barrier.clone();
+        let helper = std::thread::spawn(move || {
+            spawning.wait();
+            std::thread::sleep(Duration::from_millis(attempt % 8));
+            cadrumo_application::process::creation::run(|| {
+                Command::new(std::env::current_exe().unwrap())
+                    .args([
+                        "--ignored",
+                        "--exact",
+                        "terminal::tests::terminal_pipe_holder_child",
+                    ])
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .creation_flags(0x0800_0000)
+                    .spawn()
+            })
+            .unwrap()
+        });
+        barrier.wait();
+        let mut session = Session::start(
+            program,
+            80,
+            24,
+            Arc::new(|_| Ok(())),
+            Arc::new(Diagnostics::default()),
+        )
+        .unwrap();
+        let mut helper = helper.join().unwrap();
+        assert!(helper.try_wait().unwrap().is_none());
+        let stopped = session.stop();
+        let _ = helper.kill();
+        helper.wait().unwrap();
+        if stopped.is_err() {
+            failures += 1;
+            session
+                .stop()
+                .expect("helper exit must release any inherited PTY pipe");
+        }
+    }
+    assert_eq!(
+        failures, 0,
+        "an unrelated helper inherited the terminal's output pipe"
+    );
+}
+
+#[cfg(windows)]
+#[test]
+#[ignore = "subprocess fixture for terminal handle inheritance"]
+fn terminal_pipe_holder_child() {
+    std::io::copy(&mut std::io::stdin(), &mut std::io::sink()).unwrap();
+}
+
 /// When frames stop reaching the webview the session stops itself: the child
 /// is terminated and every worker joined without anyone closing it.
 #[test]

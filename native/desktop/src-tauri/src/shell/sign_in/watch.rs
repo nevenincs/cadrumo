@@ -251,11 +251,12 @@ fn run(inner: &Inner) -> Result<()> {
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x0800_0000);
     }
-    let mut child = command.spawn().map_err(|error| {
-        failure(ErrorCode::SpawnFailed)
-            .with_reason("sign_in_watch_spawn")
-            .caused_by(error)
-    })?;
+    let mut child =
+        cadrumo_application::process::creation::run(|| command.spawn()).map_err(|error| {
+            failure(ErrorCode::SpawnFailed)
+                .with_reason("sign_in_watch_spawn")
+                .caused_by(error)
+        })?;
     let output = child.stdout.take();
     *lock(&inner.input) = child.stdin.take();
     *lock(&inner.running) = Some(child);

@@ -208,7 +208,7 @@ impl LaunchTarget {
             command.creation_flags(CREATE_NO_WINDOW);
             // No process may start while this process is attached to a runtime console.
             let _quiescent = super::windows::console_quiescent();
-            command.spawn()
+            cadrumo_application::process::creation::run(|| command.spawn())
         }
         #[cfg(unix)]
         {

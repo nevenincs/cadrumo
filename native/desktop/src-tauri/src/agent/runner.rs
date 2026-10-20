@@ -104,11 +104,12 @@ pub fn start_child(
         .creation_flags(CREATE_NO_WINDOW | CREATE_SUSPENDED);
     let job =
         ProcessJob::new().map_err(|cause| failure(ErrorCode::SpawnFailed).caused_by(cause))?;
-    let mut child = command.spawn().map_err(|cause| {
-        let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
-        diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
-        error
-    })?;
+    let mut child =
+        cadrumo_application::process::creation::run(|| command.spawn()).map_err(|cause| {
+            let error = failure(ErrorCode::SpawnFailed).caused_by(cause);
+            diagnostics.spawn_failure(ProcessRole::AgentLauncher, error.clone());
+            error
+        })?;
     if let Err(cause) = job.adopt_suspended(&child) {
         // The child is still suspended: none of its code has run.
         let _ = child.kill();

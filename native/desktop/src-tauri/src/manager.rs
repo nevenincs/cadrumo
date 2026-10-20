@@ -601,7 +601,7 @@ impl ManagerStart {
             if self.closed.load(Ordering::Acquire) {
                 return Err(failure(ErrorCode::SessionUnavailable));
             }
-            command.spawn()
+            cadrumo_application::process::creation::run(|| command.spawn())
         };
         let mut child = spawned.map_err(|error| {
             let error = failure(ErrorCode::ManagerDispatchFailed).caused_by(error);

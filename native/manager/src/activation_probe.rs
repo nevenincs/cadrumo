@@ -16,18 +16,20 @@ const POLL: Duration = Duration::from_millis(10);
 /// The caller retains its admitted package lease throughout this metadata-only probe.
 /// Success establishes Retry grammar support, never session admission or readiness.
 pub fn require_retry_support(manager: &Path, package: &Path) -> io::Result<()> {
-    let mut child = Command::new(manager)
-        .arg("--supports-retry")
-        .env_clear()
-        .envs(cadrumo_platform::storage::strict_host_environment(
-            std::env::vars_os(),
-        ))
-        .current_dir(package)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .creation_flags(0x0800_0000)
-        .spawn()?;
+    let mut child = cadrumo_application::process::creation::run(|| {
+        Command::new(manager)
+            .arg("--supports-retry")
+            .env_clear()
+            .envs(cadrumo_platform::storage::strict_host_environment(
+                std::env::vars_os(),
+            ))
+            .current_dir(package)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .creation_flags(0x0800_0000)
+            .spawn()
+    })?;
     match wait_exit(&mut child, PROBE_BOUND) {
         Ok(status) if status.success() => Ok(()),
         Ok(_) => Err(io::ErrorKind::Unsupported.into()),

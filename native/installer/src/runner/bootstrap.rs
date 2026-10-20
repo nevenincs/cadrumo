@@ -438,18 +438,20 @@ impl NativeProcess {
 
 fn launch(runner: &Path, plan: &Path, scope: Scope) -> Result<NativeProcess, Failure> {
     if scope == Scope::User {
-        let child = Command::new(runner)
-            .args([
-                std::ffi::OsStr::new("install"),
-                std::ffi::OsStr::new("--plan"),
-                plan.as_os_str(),
-            ])
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .creation_flags(0x0800_0000)
-            .spawn()
-            .map_err(|_| Failure::NativeFailed)?;
+        let child = cadrumo_application::process::creation::run(|| {
+            Command::new(runner)
+                .args([
+                    std::ffi::OsStr::new("install"),
+                    std::ffi::OsStr::new("--plan"),
+                    plan.as_os_str(),
+                ])
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .creation_flags(0x0800_0000)
+                .spawn()
+        })
+        .map_err(|_| Failure::NativeFailed)?;
         return Ok(NativeProcess::User(child));
     }
     let executable: Vec<u16> = runner.as_os_str().encode_wide().chain([0]).collect();

@@ -160,14 +160,16 @@ pub fn escape_job(already_attempted: bool, intent: crate::invocation::Intent) ->
     if already_attempted {
         return Err(io::Error::other("manager_job_escape_refused"));
     }
-    Command::new(std::env::current_exe()?)
-        .arg("--breakaway-attempt")
-        .args(intent.argument())
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .creation_flags(0x0100_0000 | 0x0800_0000)
-        .spawn()?;
+    cadrumo_application::process::creation::run(|| {
+        Command::new(std::env::current_exe()?)
+            .arg("--breakaway-attempt")
+            .args(intent.argument())
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .creation_flags(0x0100_0000 | 0x0800_0000)
+            .spawn()
+    })?;
     Ok(true)
 }
 

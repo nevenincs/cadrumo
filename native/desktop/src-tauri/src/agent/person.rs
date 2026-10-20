@@ -112,11 +112,12 @@ impl Person {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x0800_0000);
         }
-        let mut child = command.spawn().map_err(|error| {
-            ApplicationError::new(ErrorCode::SpawnFailed, Operation::Cli)
-                .with_reason("person_hold_spawn")
-                .caused_by(error)
-        })?;
+        let mut child =
+            cadrumo_application::process::creation::run(|| command.spawn()).map_err(|error| {
+                ApplicationError::new(ErrorCode::SpawnFailed, Operation::Cli)
+                    .with_reason("person_hold_spawn")
+                    .caused_by(error)
+            })?;
         let stdin = child
             .stdin
             .take()

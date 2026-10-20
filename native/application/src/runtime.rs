@@ -94,7 +94,7 @@ pub async fn identity_cancellable(
         .kill_on_drop(true);
     #[cfg(windows)]
     command.creation_flags(0x0800_0000);
-    let mut child = command.spawn()?;
+    let mut child = crate::process::creation::run(|| command.spawn())?;
     let stdout = child
         .stdout
         .take()

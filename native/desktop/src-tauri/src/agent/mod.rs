@@ -342,6 +342,21 @@ fn admin_refusal(
     }
 }
 
+fn selection_refusal(
+    error: &crate::shell::provider_settings::wire::CommandFailure,
+) -> &'static str {
+    use crate::shell::provider_settings::wire::{CommandFailure, Refusal};
+    match error {
+        CommandFailure::Host(error) => admin_refusal(error),
+        CommandFailure::Refused(refused) => match refused.code {
+            Refusal::Busy => "agent_service_busy",
+            Refusal::NotSignedIn | Refusal::ProfileLocked => "agent_signed_out",
+            Refusal::CatalogUnavailable | Refusal::RuntimeUnavailable => "agent_service_not_ready",
+            _ => "agent_service_failed",
+        },
+    }
+}
+
 /// Whether the service answered that it is still working on the request.
 fn catalog_busy(answer: &Value) -> bool {
     answer["kind"] == "refused" && answer["code"] == "busy"
@@ -497,7 +512,17 @@ async fn agent_send(
             &request.selection.provider,
             &request.selection.transport,
         )
-        .map_err(|error| host.refuse("agent_service_failed", error))?;
+        .map_err(|error| {
+            let code = selection_refusal(&error);
+            match error {
+                crate::shell::provider_settings::wire::CommandFailure::Host(error) => {
+                    host.refuse(code, error)
+                }
+                // A correlated busy/signed-out response is not a broken child
+                // stream. Preserve the response without inventing an I/O failure.
+                _ => Refused::new(code.to_owned()),
+            }
+        })?;
         if !available {
             return refused("agent_provider_credential_missing");
         }
@@ -665,6 +690,20 @@ async fn agent_attach<R: Runtime>(
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn provider_selection_preserves_busy_and_sign_in_refusals() {
+        use crate::shell::provider_settings::wire::{CommandFailure, Refusal};
+        for (refusal, expected) in [
+            (Refusal::Busy, "agent_service_busy"),
+            (Refusal::NotSignedIn, "agent_signed_out"),
+            (Refusal::ProfileLocked, "agent_signed_out"),
+            (Refusal::CatalogUnavailable, "agent_service_not_ready"),
+            (Refusal::Unknown, "agent_service_failed"),
+        ] {
+            assert_eq!(selection_refusal(&CommandFailure::from(refusal)), expected);
+        }
+    }
 
     #[test]
     fn a_service_start_or_lost_bridge_is_not_reported_as_sign_out() {

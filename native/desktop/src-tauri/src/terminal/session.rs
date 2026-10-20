@@ -112,6 +112,7 @@ struct Shared {
     input_wake: SyncSender<Input>,
     stop_requested: AtomicBool,
     exited: AtomicBool,
+    cleanup_stage: Mutex<&'static str>,
     write_error: Mutex<Option<ApplicationError>>,
     /// Terminates the child when a worker abandons the session.
     killer: Mutex<Killer>,
@@ -126,6 +127,7 @@ impl Shared {
             input_wake,
             stop_requested: AtomicBool::new(false),
             exited: AtomicBool::new(false),
+            cleanup_stage: Mutex::new("terminal_child_exit_timeout"),
             write_error: Mutex::new(None),
             killer: Mutex::new(killer),
         }
@@ -213,13 +215,15 @@ impl Session {
         sink: Sink,
         diagnostics: Arc<Diagnostics>,
     ) -> Result<Self> {
-        let pair = native_pty_system()
-            .openpty(size(cols, rows)?)
-            .map_err(|cause| {
-                let error = failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(cause));
-                diagnostics.spawn_failure(program.role, error.clone());
-                error
-            })?;
+        let size = size(cols, rows)?;
+        let pair =
+            cadrumo_application::process::creation::run(|| native_pty_system().openpty(size))
+                .map_err(|cause| {
+                    let error =
+                        failure(ErrorCode::SpawnFailed).caused_by(std::io::Error::other(cause));
+                    diagnostics.spawn_failure(program.role, error.clone());
+                    error
+                })?;
         let mut command = CommandBuilder::new(&program.executable);
         command.env_clear();
         for (key, value) in &program.environment {
@@ -278,14 +282,29 @@ impl Session {
                     shared.stop_input();
                     // ConPTY reports end of output only once the pseudoconsole
                     // closes; the reader keeps draining meanwhile.
+                    *shared
+                        .cleanup_stage
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner()) = "terminal_console_close_timeout";
                     drop(take_master(&master));
                     let mut outcome = Ok(());
                     let Workers { reader, writer } = workers.recv().unwrap_or_default();
-                    for worker in [reader, writer].into_iter().flatten() {
-                        if worker.join().is_err() {
+                    for (worker, stage) in [
+                        (reader, "terminal_output_join_timeout"),
+                        (writer, "terminal_input_join_timeout"),
+                    ] {
+                        *shared
+                            .cleanup_stage
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner()) = stage;
+                        if worker.is_some_and(|worker| worker.join().is_err()) {
                             outcome = Err(failure(ErrorCode::Panic));
                         }
                     }
+                    *shared
+                        .cleanup_stage
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner()) = "terminal_exit_delivery_timeout";
                     let code = status.as_ref().ok().map(|status| status.exit_code());
                     let wait_error = status
                         .err()
@@ -527,7 +546,14 @@ impl Session {
                 let error = self
                     .kill_error
                     .clone()
-                    .unwrap_or_else(|| failure(ErrorCode::CleanupFailed));
+                    .unwrap_or_else(|| failure(ErrorCode::CleanupFailed))
+                    .with_reason(
+                        *self
+                            .shared
+                            .cleanup_stage
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner()),
+                    );
                 self.diagnostics
                     .failure_for(self.shared.process, error.clone());
                 return Err(error);
