@@ -372,6 +372,31 @@ def test_service_records_refuse_wrong_profile_capability_and_retired_person(tmp_
         assert retired.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
 
 
+def test_service_records_recheck_peer_before_access_or_accepting_secret_input(tmp_path: Path) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        assert service.claim() is not None
+        assert service.connected is not None
+        runtime.verifier.connections.remove(service.connected.connection_id)
+
+        read, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
+        assert read.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
+        assert material == bytearray()
+        generation = service.observe_generation(RECORD_CAPABILITY)
+        assert generation.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
+        deleted = service.record_delete(
+            RECORD_CAPABILITY, "synthetic-record", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        assert deleted.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
+        payload = bytearray(b"synthetic secret never admitted")
+        written = service.record_write(
+            RECORD_CAPABILITY, "synthetic-record", payload, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        assert written.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
+        assert payload == bytearray(len(payload))
+
+
 def test_service_refresh_tolerates_lease_retirement_before_profile_guard(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

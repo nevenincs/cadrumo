@@ -62,13 +62,17 @@ class ProfileConnectionExtensionRecordsMixin:
                 request.byte_count is not None and request.byte_count > policy.maximum_bytes
             ):
                 return self._extension_refused(context, request, channel, ExtensionRecordRefusal.INVALID)
-            with host.guard:
-                status = self._status(connection, host, request.request_id, request.session_id)
-                if not isinstance(status, ProfileStatus) or status.status.denial is not None:
-                    return self._extension_refused(context, request, channel, refusal)
-                if not self._service_verifier.recheck_service(context, channel, service.peer):
-                    return self._extension_refused(context, request, channel, refusal)
-                if action == "write":
+            # Only writes have a separate input phase to authorize. Other
+            # actions enter the access fence below directly; checking custody
+            # and process identity twice without intervening input adds a
+            # worker round trip and peer inspection to every provider read.
+            if action == "write":
+                with host.guard:
+                    status = self._status(connection, host, request.request_id, request.session_id)
+                    if not isinstance(status, ProfileStatus) or status.status.denial is not None:
+                        return self._extension_refused(context, request, channel, refusal)
+                    if not self._service_verifier.recheck_service(context, channel, service.peer):
+                        return self._extension_refused(context, request, channel, refusal)
                     write_document(
                         channel,
                         SecretReady(

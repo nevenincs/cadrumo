@@ -365,7 +365,7 @@ class AgentHostController:
             raise _ended_before_ready(process, AgentHostRefusal.NOT_READY, observe=observe) from error
         ready = _ready_from_line(line, resolved.generations)
         _LOGGER.info(
-            "agent gateway timing credentials_seconds=%.3f frame_build_and_spawn_seconds=%.3f "
+            "agent gateway timing access_setup_seconds=%.3f frame_build_and_spawn_seconds=%.3f "
             "frame_write_seconds=%.3f ready_wait_seconds=%.3f total_seconds=%.3f",
             credentials_ready - started,
             spawned - credentials_ready,
