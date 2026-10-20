@@ -3935,6 +3935,8 @@ tui:
     opening: Opening Cadrumo…
     palette:
       placeholder: Search for areas, records and actions…
+    read_unavailable: This view could not be loaded. Try again.
+    retry: Retry
     system:
       quit: Quit
       quit_help: Leave Cadrumo; the profile's session stays as it is

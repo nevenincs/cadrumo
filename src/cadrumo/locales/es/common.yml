@@ -4038,6 +4038,8 @@ tui:
     opening: Abriendo Cadrumo…
     palette:
       placeholder: Busca áreas, registros y acciones…
+    read_unavailable: No se ha podido cargar esta vista. Inténtalo de nuevo.
+    retry: Reintentar
     system:
       quit: Salir
       quit_help: Sale de Cadrumo; la sesión del perfil queda como está

@@ -83,6 +83,10 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
         boundary.enter("refresh_search")
         return WorkbenchSearchService(())
 
+    def refresh_catalogue():
+        boundary.enter("refresh_catalogue")
+        return _catalogue([])
+
     def load_root() -> RootBindingV1:
         boundary.enter("load_root")
         return RootBindingV1(
@@ -90,7 +94,7 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
             refresh_home=refresh_home,
             workbench_search_service=WorkbenchSearchService(()),
             refresh_workbench_search=refresh_search,
-            refresh_destination_catalogue=None,
+            refresh_destination_catalogue=refresh_catalogue,
             account_factories=_account_factories(),
             read_account_session=None,
         )
@@ -108,7 +112,7 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
         for _ in range(4):
             await pilot.pause()
 
-    assert boundary.names == {"load_root", "refresh_home", "refresh_search"}
+    assert boundary.names == {"load_root", "refresh_home", "refresh_search", "refresh_catalogue"}
     assert boundary.on_loop == []
 
 

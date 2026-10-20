@@ -6,7 +6,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import Button, Static
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
@@ -114,6 +114,8 @@ class RootNavigationMixin:
         """
         if self._refresh_home is None:
             return
+        self.query_one("#root-retry", Button).display = False
+        self.query_one("#root-read-refusal", Static).update("")
         self._home_request = semantic_focus
         self._navigation_revision += 1
         self._home_navigation_revision = self._navigation_revision
@@ -153,14 +155,16 @@ class RootNavigationMixin:
     async def _return_home(self: CadrumoTuiApp, navigation_revision: int) -> None:
         try:
             await self._rebuild_workbench_search()
-            self._rebuild_destination_catalogue()
+            if not self._navigation_is_current(navigation_revision):
+                return
+            await self._rebuild_destination_catalogue(navigation_revision)
             await self._show_home_now(self._home_semantic_focus, navigation_revision)
         finally:
             self._returning_home = False
-            if self.is_running:
+            if self.is_running and not self._home_rebuilding:
                 self.query_one("#root-updating", Static).display = False
 
-    def _rebuild_destination_catalogue(self: CadrumoTuiApp) -> None:
+    async def _rebuild_destination_catalogue(self: CadrumoTuiApp, navigation_revision: int) -> None:
         """Re-admit destinations against the generation the factories now read.
 
         Availability is a property of the CURRENT capture, not of the first
@@ -173,7 +177,9 @@ class RootNavigationMixin:
         if refresh is None or self._destination_catalogue is None:
             return
         try:
-            refreshed = refresh()
+            refreshed = await await_cancellation_complete(
+                asyncio.to_thread(refresh), task_name="tui-destination-refresh"
+            )
         except Exception as error:  # a refused re-admission must not end the session
             diagnostic_event(
                 get_logger(__name__),
@@ -181,7 +187,10 @@ class RootNavigationMixin:
                 fields=diagnostic_error_fields(error),
                 primary_error=error,
             )
-            self._workbench_search_refusal_code = "workbench.destinations.refresh_unavailable"
+            if self._refresh_destination_catalogue is refresh and self._navigation_is_current(navigation_revision):
+                self._workbench_search_refusal_code = "workbench.destinations.refresh_unavailable"
+            return
+        if self._refresh_destination_catalogue is not refresh or not self._navigation_is_current(navigation_revision):
             return
         self._destination_catalogue = refreshed
         self._active_destination_catalogue = refreshed

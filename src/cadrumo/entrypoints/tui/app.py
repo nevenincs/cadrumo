@@ -21,10 +21,11 @@ from textual.binding import Binding
 from textual.command import CommandPalette
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, Static
+from textual.widgets import Button, Footer, Static
 
 from ...application.overview.home import HomeSessionPosture
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.logging import get_logger
@@ -137,7 +138,8 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         BASE_CSS
         + """
     #root-updating { display: none; padding: $cadrumo-space-0 $cadrumo-gutter; }
-    #root-account-refusal, #root-navigation-refusal {
+    #root-retry { display: none; margin: 0 $cadrumo-gutter; }
+    #root-account-refusal, #root-navigation-refusal, #root-read-refusal {
         height: auto;
         color: $warning;
         padding: $cadrumo-space-0 $cadrumo-gutter;
@@ -276,6 +278,8 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             yield AccountBar(id="root-account-bar")
             yield Static("", id="root-account-refusal", markup=False)
             yield Static("", id="root-navigation-refusal", markup=False)
+            yield Static("", id="root-read-refusal", markup=False)
+            yield Button(tr("tui.root.retry"), id="root-retry")
             yield Static(tr("tui.root.no_areas"), id="root-no-areas", markup=False)
             yield Static(tr("tui.root.updating"), id="root-updating", markup=False)
         yield Footer(compact=True)
@@ -293,17 +297,25 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
 
     async def _open_root(self, load_root: RootLoaderV1) -> None:
         """Build the workbench root on a worker thread, then bind it on the loop."""
+        self.query_one("#root-no-areas", Static).display = False
+        self.query_one("#root-updating", Static).display = True
         try:
             binding = await await_cancellation_complete(asyncio.to_thread(load_root), task_name="tui-root-load")
         except AccountSessionExpiredError as error:
             if self._load_root is load_root and self.is_running:
                 self._request_recompose(AccountRecomposeRequiredV1(reason=self._session_failure_reason(error)))
             return
-        except Exception:
+        except Exception as error:
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_root_open_failed",
+                fields=diagnostic_error_fields(error),
+                primary_error=error,
+            )
             if self._load_root is load_root and self.is_running:
                 self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
                 self.query_one("#root-updating", Static).display = False
-                self._refuse_account_action()
+                self._offer_root_retry()
             return
         if self._load_root is not load_root or not self.is_running:
             return
@@ -614,6 +626,9 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
 
     def refresh_account_chrome(self) -> None:
         """Re-word the account keys and every account bar after a language change."""
+        self.query_one("#root-retry", Button).label = tr("tui.root.retry")
+        if self._home_refresh_refusal_code is not None:
+            self.query_one("#root-read-refusal", Static).update(tr("tui.root.read_unavailable"))
         self._describe_account_keys()
         self._refresh_account_bars()
 
@@ -822,6 +837,33 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         self.query_one("#root-navigation-refusal", Static).update(message)
         self.notify(message, severity="warning")
 
+    def _offer_root_retry(self) -> None:
+        """Keep an unsuccessful read actionable without discarding the session."""
+        message = tr("tui.root.read_unavailable")
+        self.query_one("#root-read-refusal", Static).update(message)
+        self.query_one("#root-no-areas", Static).display = False
+        retry = self.query_one("#root-retry", Button)
+        retry.display = True
+        retry.disabled = False
+        if len(self.screen_stack) == 1:
+            retry.focus()
+        self.notify(message, severity="warning")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Retry a failed bootstrap or Home read through its original read door."""
+        if event.button.id != "root-retry":
+            return
+        event.stop()
+        if event.button.disabled or self._recomposition_pending:
+            return
+        event.button.disabled = True
+        event.button.display = False
+        self.query_one("#root-read-refusal", Static).update("")
+        if self._destination_catalogue is None and self._load_root is not None:
+            self.run_worker(self._open_root(self._load_root), group="root-open")
+        else:
+            self._show_home(self._home_semantic_focus)
+
     def on_home_target_selected(self, event: HomeTargetSelected) -> None:
         """Open what the selected Home row points at, and remember the row.
 
@@ -848,21 +890,12 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         if refresh_home is None or navigation_revision != self._navigation_revision:
             return
         try:
-            refreshed = await self._read_home_refresh(refresh_home)
+            refreshed = await await_cancellation_complete(asyncio.to_thread(refresh_home), task_name="tui-home-refresh")
         except AccountSessionExpiredError as error:
             if self._refresh_home is refresh_home and self.is_running:
                 self._request_recompose(AccountRecomposeRequiredV1(reason=self._session_failure_reason(error)))
             return
-        if refreshed is None or not self._home_refresh_is_current(refresh_home, navigation_revision):
-            return
-        self._apply_home_refresh(refreshed, semantic_focus)
-
-    async def _read_home_refresh(self, refresh_home: HomeRefreshDoorV1) -> RootPresentationV1 | HomeProjectionV1 | None:
-        try:
-            return await await_cancellation_complete(asyncio.to_thread(refresh_home), task_name="tui-home-refresh")
-        except AccountSessionExpiredError:
-            raise
-        except Exception:
+        except Exception as error:
             # A refused refresh is an ordinary outcome, not a crash. The read
             # door refuses when a sibling process writes the profile mid-capture,
             # which is correct and says nothing about this session's validity --
@@ -870,10 +903,19 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             # the refresh did not happen. The sibling search path already handles
             # its own refusal this way; letting this one escape would end the
             # session with a traceback over a concurrent write.
-            if self._refresh_home is refresh_home and self.is_running:
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_home_refresh_failed",
+                fields=diagnostic_error_fields(error),
+                primary_error=error,
+            )
+            if self._home_refresh_is_current(refresh_home, navigation_revision):
                 self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
-                self._refuse_account_action()
-            return None
+                self._offer_root_retry()
+            return
+        if not self._home_refresh_is_current(refresh_home, navigation_revision):
+            return
+        self._apply_home_refresh(refreshed, semantic_focus)
 
     def _home_refresh_is_current(self, refresh_home: HomeRefreshDoorV1, navigation_revision: int) -> bool:
         # A severed session, a closing app, or a newer navigation invalidates
@@ -898,6 +940,8 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             )
             self._account_factories = refreshed.account_factories
         self._home_refresh_refusal_code = None
+        self.query_one("#root-read-refusal", Static).update("")
+        self.query_one("#root-retry", Button).display = False
         # Home is rebuilt after every return, including from a language
         # change, so this is where the footer catches up with the page.
         self._describe_account_keys()

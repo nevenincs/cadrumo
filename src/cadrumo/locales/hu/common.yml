@@ -4016,6 +4016,8 @@ tui:
     opening: A Cadrumo megnyitása…
     palette:
       placeholder: Területek, bejegyzések és műveletek keresése…
+    read_unavailable: Ez a nézet nem tölthető be. Próbáld újra.
+    retry: Újrapróbálás
     system:
       quit: Kilépés
       quit_help: Kilépés a Cadrumo alkalmazásból; a profil munkamenete változatlan

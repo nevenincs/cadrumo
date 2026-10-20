@@ -549,7 +549,7 @@ core:
 desktop:
   about:
     agent: Agent
-    agent_version: 'Versió de l''agent'
+    agent_version: Versió de l'agent
     application: Aplicació
     build_date: Data de compilació
     build_id: Compilació
@@ -561,17 +561,17 @@ desktop:
     copy: Copia
     debug_badge: Depuració
     dependencies: Dependències ({count})
-    description: 'Versió i detalls de compilació d''aquesta instal·lació.'
+    description: Versió i detalls de compilació d'aquesta instal·lació.
     desktop_host: Escriptori
     interpreter: Intèrpret
-    load_failed: 'No s''han pogut llegir els detalls de la versió ({code}).'
+    load_failed: No s'han pogut llegir els detalls de la versió ({code}).
     loading: Llegint els detalls de la versió…
     manager: Gestor
     managers: Gestors
     open: Quant a Cadrumo
     packages: Paquets inclosos ({count})
     python: Python
-    runtime: 'Entorn d''execució'
+    runtime: Entorn d'execució
     settings_hint: Versió i detalls de compilació
     target: Plataforma
     title: Quant a Cadrumo
@@ -4033,6 +4033,8 @@ tui:
     opening: S'està obrint Cadrumo…
     palette:
       placeholder: Cerca àrees, registres i accions…
+    read_unavailable: No s’ha pogut carregar aquesta vista. Torna-ho a provar.
+    retry: Torna-ho a provar
     system:
       quit: Surt
       quit_help: Surt de Cadrumo; la sessió del perfil queda com està
