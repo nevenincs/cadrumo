@@ -9,11 +9,12 @@ from textual.screen import Screen
 from textual.widgets import Static
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.logging import get_logger
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from .declarations.controller import calendar_address_focus_key
 from .home import HomeTarget, home_target_action_id, home_target_agenda_address, home_target_work_unit_id
-from .navigation import NavigationContractError, TuiFocusIdentityV1, TuiNavigationTargetV1
+from .navigation import DestinationFactoryError, NavigationContractError, TuiFocusIdentityV1, TuiNavigationTargetV1
 
 if TYPE_CHECKING:
     from .app import CadrumoTuiApp
@@ -31,16 +32,34 @@ class RootNavigationMixin:
             return
         try:
             screen = catalogue.create_screen(target)
-        except NavigationContractError:
+        except NavigationContractError as error:
+            # Factory defects share the contract-error base with expected
+            # unavailable routes, but must still produce failure diagnostics.
+            if isinstance(error, DestinationFactoryError):
+                diagnostic_event(
+                    get_logger(__name__),
+                    "tui_destination_open_failed",
+                    fields={
+                        **diagnostic_error_fields(error),
+                        "reason_code": target.destination,
+                        "outcome": "failed",
+                    },
+                    primary_error=error,
+                )
             self._refuse_navigation()
             return
-        except Exception:
+        except Exception as error:
             # A destination reads its sources as it opens, and the usual reason
             # those reads fail is that the session lapsed while the operator
             # sat on Home. Home's refresh is what tells expiry apart and
             # returns to sign-in; any other failure stays a visible refusal
             # rather than ending the session with a traceback.
-            get_logger("cadrumo.entrypoints.tui.app").warning("destination %s could not open", target.destination)
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_destination_open_failed",
+                fields={**diagnostic_error_fields(error), "reason_code": target.destination, "outcome": "failed"},
+                primary_error=error,
+            )
             self._refuse_navigation()
             self._show_home(self._home_semantic_focus)
             return
@@ -155,7 +174,13 @@ class RootNavigationMixin:
             return
         try:
             refreshed = refresh()
-        except Exception:  # a refused re-admission must not end the session
+        except Exception as error:  # a refused re-admission must not end the session
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_destination_refresh_failed",
+                fields=diagnostic_error_fields(error),
+                primary_error=error,
+            )
             self._workbench_search_refusal_code = "workbench.destinations.refresh_unavailable"
             return
         self._destination_catalogue = refreshed
@@ -174,7 +199,13 @@ class RootNavigationMixin:
             refreshed = await await_cancellation_complete(
                 asyncio.to_thread(refresh_workbench_search), task_name="tui-search-refresh"
             )
-        except Exception:  # projection failures must not leak protected diagnostics
+        except Exception as error:  # projection failures must not leak protected diagnostics
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_search_refresh_failed",
+                fields=diagnostic_error_fields(error),
+                primary_error=error,
+            )
             if self._refresh_workbench_search is refresh_workbench_search and self.is_running:
                 self._workbench_search_refusal_code = "workbench.search.refresh_unavailable"
             return

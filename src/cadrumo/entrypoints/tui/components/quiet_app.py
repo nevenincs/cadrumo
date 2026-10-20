@@ -6,12 +6,23 @@ import os
 import sys
 from typing import override
 
-from textual.app import App
+from textual.app import App, AutopilotCallbackType
 from textual.driver import Driver
 from textual.events import DescendantFocus
 from textual.widgets import Input, TextArea
 
 from ....core.config import Settings
+from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event
+from ....core.logging import get_logger
+
+
+class TuiRunFailedError(RuntimeError):
+    """A Textual run ended unsuccessfully without retaining an exception."""
+
+    def __init__(self, exit_code: int) -> None:
+        """Retain the unsuccessful status independently of the app's return value."""
+        self.exit_code = exit_code
+        super().__init__(f"TUI exited unsuccessfully (code {exit_code})")
 
 
 class QuietApp[ReturnType](App[ReturnType]):
@@ -35,6 +46,51 @@ class QuietApp[ReturnType](App[ReturnType]):
         super().__init__(ansi_color=True if os.environ.get("TERM_PROGRAM") == "cadrumo" else None)
 
     @override
+    async def run_async(
+        self,
+        *,
+        headless: bool = False,
+        inline: bool = False,
+        inline_no_clear: bool = False,
+        mouse: bool = True,
+        size: tuple[int, int] | None = None,
+        auto_pilot: AutopilotCallbackType | None = None,
+    ) -> ReturnType | None:
+        """Propagate failures after Textual has restored the terminal and shut down.
+
+        Textual's production runner returns the app value even after an event
+        or worker crashes. Its test runner alone re-raises the saved exception.
+        A failed run must never look like an operator's ordinary dismissal to
+        the session owner. ``App.run`` delegates here too.
+        """
+        try:
+            result = await super().run_async(
+                headless=headless,
+                inline=inline,
+                inline_no_clear=inline_no_clear,
+                mouse=mouse,
+                size=size,
+                auto_pilot=auto_pilot,
+            )
+            if self._exception is not None:
+                raise self._exception
+            if self.return_code not in (None, 0):
+                raise TuiRunFailedError(self.return_code)
+            return result
+        except BaseException as error:
+            diagnostic_event(
+                get_logger(__name__),
+                "tui_application_failed",
+                fields={
+                    **diagnostic_error_fields(error),
+                    "exit_code": self.return_code,
+                    "outcome": "failed",
+                },
+                primary_error=error,
+            )
+            raise
+
+    @override
     def get_driver_class(self) -> type[Driver]:
         """Use the Windows driver whose input loop sleeps until input arrives."""
         driver = super().get_driver_class()
@@ -54,4 +110,4 @@ class QuietApp[ReturnType](App[ReturnType]):
             widget.cursor_blink = False
 
 
-__all__ = ["QuietApp"]
+__all__ = ["QuietApp", "TuiRunFailedError"]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import subprocess
 import sys
 from typing import override
 
@@ -11,9 +12,10 @@ from textual.app import App, ComposeResult, RenderResult
 from textual.screen import Screen
 from textual.strip import Strip
 from textual.widgets import Input
+from textual.worker import WorkerFailed
 
 from ..host import ScreenHostApp
-from ..quiet_app import QuietApp
+from ..quiet_app import QuietApp, TuiRunFailedError
 from ..status import ProgressLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -116,3 +118,96 @@ def test_no_color_is_read_as_the_boolean_cadrumo_declares(
     monkeypatch.setenv("TERM_PROGRAM", "WindowsTerminal")
     monkeypatch.setenv("NO_COLOR", value)
     assert ScreenHostApp(_InputScreen()).no_color is monochrome
+
+
+class _FailingScreen(Screen[None]):
+    def on_mount(self) -> None:
+        raise ValueError("synthetic TUI failure")
+
+
+def test_production_sync_run_raises_hosted_screen_failure_after_shutdown() -> None:
+    app = ScreenHostApp(_FailingScreen())
+    with pytest.raises(ValueError, match="synthetic TUI failure"):
+        app.run(headless=True)
+    assert app.return_code == 1
+    assert not app.is_running
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("worker", [False, True])
+async def test_production_async_run_raises_event_and_worker_failures(
+    caplog: pytest.LogCaptureFixture, *, worker: bool
+) -> None:
+    error = ValueError("synthetic TUI failure")
+
+    class FailingApp(QuietApp[None]):
+        def on_mount(self) -> None:
+            if worker:
+                self.run_worker(self.fail())
+            else:
+                self.call_later(self.fail_event)
+
+        def fail_event(self) -> None:
+            raise error
+
+        async def fail(self) -> None:
+            raise error
+
+    app = FailingApp()
+    with pytest.raises(WorkerFailed if worker else ValueError) as caught:
+        await app.run_async(headless=True)
+    if not worker:
+        assert caught.value is error
+    assert app.return_code == 1
+    assert not app.is_running
+    diagnostic = next(record for record in caplog.records if record.getMessage() == "tui_application_failed")
+    assert diagnostic.__dict__["error_type"] == ("WorkerFailed" if worker else "ValueError")
+    assert diagnostic.__dict__["exit_code"] == 1
+    assert diagnostic.__dict__["outcome"] == "failed"
+    assert diagnostic.exc_info is None
+
+
+@pytest.mark.asyncio
+async def test_production_run_preserves_normal_return_value() -> None:
+    class NormalApp(QuietApp[str]):
+        def on_mount(self) -> None:
+            self.exit("complete")
+
+    app = NormalApp()
+    assert await app.run_async(headless=True) == "complete"
+    assert app.return_code == 0
+
+
+@pytest.mark.asyncio
+async def test_explicit_failure_exit_cannot_be_mistaken_for_dismissal() -> None:
+    class RefusedApp(QuietApp[None]):
+        def on_mount(self) -> None:
+            self.exit(return_code=7)
+
+    with pytest.raises(TuiRunFailedError) as caught:
+        await RefusedApp().run_async(headless=True)
+    assert caught.value.exit_code == 7
+
+
+def test_crashed_tui_child_process_exits_with_failure() -> None:
+    """Exercise the production runner outside pytest's exception-handling loop."""
+    child = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-c",
+            (
+                "from cadrumo.entrypoints.tui.components.quiet_app import QuietApp\n"
+                "class BrokenApp(QuietApp):\n"
+                "    def on_mount(self):\n"
+                "        raise ValueError('synthetic child crash')\n"
+                "BrokenApp().run(headless=True)\n"
+            ),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=45,
+        check=False,
+    )
+    assert child.returncode != 0
+    assert "ValueError: synthetic child crash" in child.stderr

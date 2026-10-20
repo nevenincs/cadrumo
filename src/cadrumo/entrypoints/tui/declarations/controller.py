@@ -477,8 +477,11 @@ def calendar_address_focus_key(modelo: object, year: object, period: str) -> str
 
     Separate from :func:`calendar_focus_key` so a caller holding only the
     natural address -- a Home agenda row -- lands on the same calendar row.
+    Registry period tokens contain hyphens but never underscores; encode
+    those separators for NamespacedId without changing the filing address.
     """
-    return f"declarations.calendar.m{modelo}.y{year}.p{period.casefold()}"
+    period_segment = period.casefold().replace("-", "_")
+    return f"declarations.calendar.m{modelo}.y{year}.p{period_segment}"
 
 
 def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:

@@ -10,7 +10,7 @@ import pytest
 from textual.binding import Binding
 from textual.pilot import Pilot
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import DataTable, Static
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -19,6 +19,7 @@ from ....application.search.workbench import WorkbenchDestinationAdmissionState,
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
+from ....core.period import Period
 from ..account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,
@@ -28,6 +29,8 @@ from ..account import (
 )
 from ..app import CadrumoTuiApp, RootPresentationV1
 from ..components.account_chrome import AccountActionV1, AccountChromeScreen
+from ..declarations.calendar import DeclarationsCalendarScreen
+from ..declarations.tests.calendar_fixtures import calendar_controller, calendar_projection
 from ..home import HomeScreen
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
@@ -103,6 +106,37 @@ def _catalogue(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("period", ["AD-HOC", "EXT-1T", "EVENT-3", "1T"])
+async def test_mouse_click_home_filing_opens_matching_calendar_row(period: str) -> None:
+    home = build_home_projection_fixture(HomeFixtureScenario.READY)
+    address = {"modelo": "360", "filing_year": 2025, "period": Period.from_year_and_code(2025, period)}
+    home = home.model_copy(update={"agenda": (home.agenda[0].model_copy(update=address),)})
+    calendar = calendar_projection()
+    row = calendar.entries[0].model_copy(update={**address, "recovery_action": None})
+    calendar = calendar.model_copy(update={"entries": (*calendar.entries[1:], row)})
+
+    def factory(context: TuiScreenContextV1) -> Screen[None]:
+        return DeclarationsCalendarScreen(calendar_controller(calendar, context=context))
+
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([], destination="workbench.declarations", destination_factory=factory),
+        refresh_home=lambda: home,
+    )
+    async with app.run_test(size=(160, 50)) as pilot:
+        await _settle(app, pilot)
+        assert await pilot.click("#home-agenda", offset=(2, 0))
+        await pilot.pause()
+        assert isinstance(app.screen, DeclarationsCalendarScreen)
+        table = app.screen.query_one("#declarations-calendar-agenda", DataTable)
+        assert table.ordered_rows[table.cursor_row].key.value == f"360|2025|{period}"
+        await pilot.press("escape")
+        await _settle(app, pilot)
+        assert isinstance(app.screen, HomeScreen)
+        assert app.screen.highlighted_target is not None
+        assert app.screen.highlighted_target.identity == f"agenda:360:2025:{period}"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "destination_state",
     [WorkbenchDestinationAdmissionState.LOCKED, WorkbenchDestinationAdmissionState.STALE],
@@ -139,13 +173,16 @@ async def test_navigate_to_refuses_unavailable_destination_without_replacing_hom
 
 
 @pytest.mark.asyncio
-async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacing_home() -> None:
+@pytest.mark.parametrize("failure_type", [TypeError, RuntimeError])
+async def test_navigate_to_refuses_a_factory_invocation_failure_without_leaving_home(
+    caplog: pytest.LogCaptureFixture, failure_type: type[Exception]
+) -> None:
     """A broken injected factory is contained at the root boundary, after real invocation."""
     seen: list[TuiScreenContextV1] = []
 
     def broken_factory(context: TuiScreenContextV1) -> Screen[None]:
         seen.append(context)
-        raise TypeError("factory implementation failure")
+        raise failure_type("factory implementation failure")
 
     target = TuiNavigationTargetV1(
         destination="workbench.ledger",
@@ -167,15 +204,28 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacin
         assert home.id == "home-screen"
 
         app.navigate_to(target)
-        await pilot.pause()
+        await _settle(app, pilot)
 
         assert seen == [TuiScreenContextV1(destination="workbench.ledger", focus=target.focus)]
-        assert app.screen is home
+        if failure_type is TypeError:
+            assert app.screen is home
+        else:
+            # Other read failures refresh Home so it can detect an expired
+            # session; they must still never mount the failed destination.
+            assert isinstance(app.screen, HomeScreen)
         assert len(app.screen_stack) == 2
         assert app._active_target is None
         assert app.is_running
         assert str(app.query_one("#root-navigation-refusal", Static).render()) == tr("tui.root.navigation.unavailable")
         assert str(app.query_one("#root-account-refusal", Static).render()) == ""
+        record = next(record for record in caplog.records if record.getMessage() == "tui_destination_open_failed")
+        if failure_type is TypeError:
+            assert record.__dict__["error_type"] == "DestinationFactoryError"
+            assert "TypeError" in str(record.__dict__["root_cause"])
+        else:
+            assert record.__dict__["error_type"] == "RuntimeError"
+            assert str(record.__dict__["error_origin"]).endswith(":broken_factory")
+        assert record.exc_info is None
 
 
 @pytest.mark.asyncio
@@ -793,7 +843,9 @@ async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_
 
 
 @pytest.mark.asyncio
-async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal() -> None:
+async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """A bad refreshed projection retains the last complete search generation."""
     contexts: list[TuiScreenContextV1] = []
     initial_search = WorkbenchSearchService(())
@@ -823,6 +875,11 @@ async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal() -
     assert app.workbench_search_service is initial_search
     assert "12345678Z" not in app.workbench_search_refusal_code
     assert "protected" not in app.workbench_search_refusal_code
+    record = next(record for record in caplog.records if record.getMessage() == "tui_search_refresh_failed")
+    assert record.__dict__["error_type"] == "RuntimeError"
+    assert str(record.__dict__["error_origin"]).endswith(":fail_refresh")
+    assert record.exc_info is None
+    assert "12345678Z" not in record.getMessage()
 
 
 @pytest.mark.asyncio

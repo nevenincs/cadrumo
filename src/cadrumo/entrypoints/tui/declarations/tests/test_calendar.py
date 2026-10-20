@@ -18,16 +18,39 @@ from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
+from .....core.period import Period, StandardPeriodCode
 from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
 from ..calendar import DeclarationsCalendarScreen
-from ..controller import calendar_focus_key
+from ..controller import calendar_address_focus_key, calendar_focus_key
 from ..models import DeclarationsCalendarScopeV1
 from .calendar_fixtures import calendar_controller, calendar_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.parametrize(
+    "token",
+    [*(code.value for code in StandardPeriodCode), "AD-HOC", "EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T", "EVENT-3"],
+)
+def test_calendar_focus_accepts_all_filing_period_families_and_resolves_exact_row(token: str) -> None:
+    projection = calendar_projection()
+    target = projection.entries[0].model_copy(
+        update={"period": Period.from_year_and_code(2026, token), "recovery_action": None}
+    )
+    projection = projection.model_copy(update={"entries": (*projection.entries[1:], target)})
+    focus = TuiFocusIdentityV1(
+        destination="workbench.declarations",
+        semantic_key=calendar_address_focus_key("130", 2026, token),
+    )
+    controller = calendar_controller(
+        projection, context=TuiScreenContextV1(destination="workbench.declarations", focus=focus)
+    )
+    assert controller.context_identity() == f"130|2026|{token}"
+    assert calendar_focus_key(target) == focus.semantic_key
+
 
 _EXPECTED = {
     OutputLanguage.ES: (

@@ -110,6 +110,20 @@ def test_precomposed_root_uses_injected_doors_without_local_operation_services()
     assert mounted == [True, True]
 
 
+def test_production_root_launcher_propagates_event_failure_instead_of_normal_dismissal() -> None:
+    error = ValueError("synthetic root event failure")
+
+    def fail() -> None:
+        raise error
+
+    async def trigger(pilot: Pilot[object]) -> None:
+        pilot.app.call_later(fail)
+
+    with pytest.raises(ValueError) as caught:
+        asyncio.run(run_precomposed_runtime_root_session(load_root=_root, headless=True, auto_pilot=trigger))
+    assert caught.value is error
+
+
 @pytest.mark.parametrize("profile_first", [False, True])
 def test_pushed_retirement_severs_precomposed_root(*, profile_first: bool) -> None:
     root = _root()
