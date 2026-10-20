@@ -293,9 +293,6 @@ desktop:
     sign_in_cancelled: A bejelentkezés megszakadt.
     sign_in_cleanup_failed: Indítsd újra a Cadrumót, mielőtt ismét bejelentkezel.
     sign_in_close: Bejelentkezés bezárása
-    sign_in_continue_browser: Folytatás a böngészőben
-    sign_in_description: 'Folytasd a bejelentkezést itt: {provider}. A jelszavadat
-      csak a szolgáltató oldalán add meg.'
     sign_in_done: Kész
     sign_in_failure: Nem sikerült befejezni a bejelentkezést. Próbáld meg később újra.
     sign_in_host_disconnected: A Cadrumo elvesztette a kapcsolatot ezzel a bejelentkezéssel,
@@ -311,13 +308,8 @@ desktop:
     sign_in_retry_checking: Újrapróbálkozás előkészítése…
     sign_in_retry_refresh_failed: Zárd be, majd nyisd meg a szolgáltató beállításait,
       és próbáld újra.
-    sign_in_security: A Cadrumo soha nem kéri el a szolgáltatói jelszavadat.
-    sign_in_start_browser: Bejelentkezés böngészővel
-    sign_in_start_device: Eszközkód használata
     sign_in_starting: Bejelentkezés indítása…
     sign_in_success: 'Bejelentkeztél ide: {provider}.'
-    sign_in_success_description: Sikeres bejelentkezés. A Kész gombbal visszatérhetsz
-      a beállításokhoz.
     sign_in_success_title: 'Sikeres bejelentkezés: {provider}'
     sign_in_timeout: A bejelentkezés túl sokáig tartott, ezért megszakadt.
     sign_in_title: 'Bejelentkezés: {provider}'

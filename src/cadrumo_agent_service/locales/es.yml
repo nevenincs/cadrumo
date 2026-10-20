@@ -295,9 +295,6 @@ desktop:
     sign_in_cancelled: Se canceló el inicio de sesión.
     sign_in_cleanup_failed: Reinicia Cadrumo antes de volver a iniciar sesión.
     sign_in_close: Cerrar el inicio de sesión
-    sign_in_continue_browser: Continuar en el navegador
-    sign_in_description: Continúa en la página de inicio de sesión de {provider}.
-      Escribe tu contraseña solo allí.
     sign_in_done: Listo
     sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo
       más tarde.
@@ -314,13 +311,8 @@ desktop:
     sign_in_retry_checking: Preparando otro intento…
     sign_in_retry_refresh_failed: Cierra y abre la configuración de proveedores y
       vuelve a intentarlo.
-    sign_in_security: Cadrumo nunca te pedirá la contraseña del proveedor.
-    sign_in_start_browser: Iniciar sesión en el navegador
-    sign_in_start_device: Usar un código de dispositivo
     sign_in_starting: Iniciando sesión…
     sign_in_success: Has iniciado sesión en {provider}.
-    sign_in_success_description: Has iniciado sesión. Pulsa Listo para volver a la
-      configuración.
     sign_in_success_title: 'Inicio de sesión completado: {provider}'
     sign_in_timeout: El inicio de sesión tardó demasiado y se canceló.
     sign_in_title: Iniciar sesión con {provider}

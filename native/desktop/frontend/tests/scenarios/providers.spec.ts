@@ -640,11 +640,11 @@ test("the dialog offers only sign-in methods declared by the agent", async ({
   await expect
     .poll(async () => hostCalls(target))
     .toContain(`providerSignInStart ${signInCapableLane.id} browser`);
-  await expect(
-    dialog.getByRole("button", {
-      name: label("desktop.providers.sign_in_start_device"),
-    }),
-  ).toHaveCount(0);
+  expect(
+    (await hostCalls(target)).filter((call) =>
+      call.startsWith("providerSignInStart "),
+    ),
+  ).toEqual([`providerSignInStart ${signInCapableLane.id} browser`]);
   await dialog
     .getByRole("button", { name: label("desktop.providers.sign_in_close") })
     .last()
