@@ -559,7 +559,7 @@ class AgentService:
             ).prepare()
             prepared = monotonic()
             controller = AgentHostController(
-                launcher=WindowsAgentProcessLauncher(), credentials=self._credentials, launch=launch
+                launcher=WindowsAgentProcessLauncher(on_exit=self._wake), credentials=self._credentials, launch=launch
             )
             self._clear_hosted_certifications()
             self._controller = controller

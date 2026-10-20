@@ -167,14 +167,32 @@ class WindowsOwnedProcess:
         self._thread_handle = thread_handle
         self.pid = pid
 
-    def wait(self, *, timeout: float) -> int:
-        """Wait for this exact child, without reopening a possibly reused PID."""
+    def retain_waiter(self) -> WindowsOwnedProcess:
+        """Duplicate only wait/query rights before transferring a wait to another thread.
+
+        The duplicate remains valid when the scope closes its original handles;
+        its owner must close it after observing exit.
+        """
+        import win32api
+
+        if self._handle is None:
+            raise RefusalError(RefusalCode.UNAVAILABLE)
+        current = win32api.GetCurrentProcess()
+        duplicate = owned_windows_handle(win32api.DuplicateHandle(current, self._handle, current, 0x00101000, False, 0))
+        detached = native_windows_call(duplicate, "Detach")
+        if type(detached) is not int or detached <= 0:
+            raise RefusalError(RefusalCode.UNAVAILABLE)
+        return WindowsOwnedProcess(handle=detached, pid=self.pid)
+
+    def wait(self, *, timeout: float | None) -> int:
+        """Wait for this exact child; ``None`` waits for exit without polling."""
         import win32event
         import win32process
 
-        if self._handle is None or not math.isfinite(timeout) or timeout < 0:
+        if self._handle is None or (timeout is not None and (not math.isfinite(timeout) or timeout < 0)):
             raise RefusalError(RefusalCode.UNAVAILABLE)
-        result = win32event.WaitForSingleObject(self._handle, min(0xFFFFFFFE, math.ceil(timeout * 1000)))
+        milliseconds = win32event.INFINITE if timeout is None else min(0xFFFFFFFE, math.ceil(timeout * 1000))
+        result = win32event.WaitForSingleObject(self._handle, milliseconds)
         if result == win32event.WAIT_TIMEOUT:
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         if result != win32event.WAIT_OBJECT_0:

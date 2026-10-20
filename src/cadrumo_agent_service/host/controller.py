@@ -277,9 +277,19 @@ class AgentHostController:
         """
         with self._lock:
             ready = self._ready
-        if ready is None or self._credentials.current_generations() != ready.generations:
+            process = self._process
+            if ready is None or process is None:
+                return None
+            try:
+                if process.wait(timeout=0) is not None:
+                    return None
+            except Exception:
+                # Readers withhold an unobservable tree; only its owner retires it.
+                return None
+        if self._credentials.current_generations() != ready.generations:
             return None
-        return ready
+        with self._lock:
+            return ready if self._ready is ready and self._process is process else None
 
     def superseded(self) -> bool:
         """Whether a ready tree runs under generations that are no longer current."""

@@ -77,6 +77,26 @@ def test_normal_exit_and_environment_are_preserved(tmp_path: Path) -> None:
     assert caught.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
 
 
+def test_exit_waiter_survives_the_original_handles_closing(tmp_path: Path) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = scope.launch(
+            executable=native_python(),
+            arguments=("-c", "import time; time.sleep(0.1); raise SystemExit(23)"),
+            directory=tmp_path,
+            environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+        )
+        waiter = process.retain_waiter()
+        try:
+            process.close()
+            assert waiter.wait(timeout=10) == 23
+            assert waiter.wait(timeout=None) == 23
+        finally:
+            waiter.close()
+    finally:
+        scope.terminate()
+
+
 def test_a_refused_creation_names_the_failed_call_and_its_win32_error(tmp_path: Path) -> None:
     not_an_image = tmp_path / "synthetic.exe"
     not_an_image.write_bytes(b"synthetic, not a Windows image")

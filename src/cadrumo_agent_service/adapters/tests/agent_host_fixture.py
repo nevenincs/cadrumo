@@ -60,7 +60,7 @@ def main() -> None:
     document = json.loads(frame) if frame.strip() else {}
     providers = sorted(document.get("credentials", {}))
     grandchild = None
-    if mode in {"ready", "deaf"}:
+    if mode in {"ready", "deaf", "crash"}:
         grandchild = subprocess.Popen(
             [sys.executable, "-c", "import time; time.sleep(600)"],
             stdin=subprocess.DEVNULL,
@@ -70,6 +70,7 @@ def main() -> None:
     (record / "received.json").write_text(
         json.dumps(
             {
+                "pid": os.getpid(),
                 "frame_sha256": hashlib.sha256(frame).hexdigest(),
                 "providers": providers,
                 "bearer_sha256": (
@@ -123,7 +124,7 @@ sys.stdout.write(line)
         # The agent relays its worker's records on its own standard error; the files are only copies.
         sys.stderr.buffer.write(relayed)
         sys.stderr.flush()
-    if mode in {"ready", "chatty", "diagnostics", "deaf"}:
+    if mode in {"ready", "chatty", "diagnostics", "deaf", "crash"}:
         answer = {"event": "agent_ready", "gateway_port": 47001, "agent_version": "0.0.0-test", "hosting_contract": 1}
     elif mode == "future":
         answer = {"event": "agent_ready", "gateway_port": 47001, "agent_version": "9.0.0-test", "hosting_contract": 2}
@@ -134,6 +135,10 @@ sys.stdout.write(line)
         return
     sys.stdout.buffer.write(json.dumps(answer).encode("utf-8") + b"\n")
     sys.stdout.buffer.flush()
+    if mode == "crash":
+        while not (record / "crash").exists():
+            time.sleep(0.01)
+        os._exit(7)
     if mode == "deaf":
         time.sleep(600)
         return

@@ -11,6 +11,7 @@ import json
 import sys
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -72,13 +73,16 @@ def _alive(pid: int, *, within: float = 0) -> bool:
         win32api.CloseHandle(handle)
 
 
-def _running_service(tmp_path: Path, source: _CredentialSource) -> tuple[AgentService, list[dict[str, Any]], int]:
+def _running_service(
+    tmp_path: Path, source: _CredentialSource, *, mode: str = "ready", wake: Callable[[], None] | None = None
+) -> tuple[AgentService, list[dict[str, Any]], int]:
     events: list[dict[str, Any]] = []
     service = AgentService(
         client=cast(InstalledServiceClient, SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=events.append,
+        wake=wake,
     )
     service._credentials = _GatewayCredentials(
         source, bytearray(b"synthetic-gateway-bearer"), bytearray(b"synthetic-host-token"), service._closing
@@ -86,11 +90,11 @@ def _running_service(tmp_path: Path, source: _CredentialSource) -> tuple[AgentSe
     record = tmp_path / "tree"
     record.mkdir()
     controller = AgentHostController(
-        launcher=WindowsAgentProcessLauncher(),
+        launcher=WindowsAgentProcessLauncher(on_exit=wake),
         credentials=service._credentials,
         launch=AgentLaunch(
             executable=native_python(),
-            arguments=fixture_arguments(_FIXTURE, "ready", str(record)),
+            arguments=fixture_arguments(_FIXTURE, mode, str(record)),
             directory=record,
             environment=fixture_environment(),
             ready_timeout=30,
@@ -102,6 +106,29 @@ def _running_service(tmp_path: Path, source: _CredentialSource) -> tuple[AgentSe
     grandchild = json.loads((record / "received.json").read_text(encoding="utf-8"))["grandchild"]
     assert isinstance(grandchild, int) and _alive(grandchild)
     return service, events, grandchild
+
+
+def test_an_exited_agent_is_not_published_and_its_descendants_are_retired(tmp_path: Path) -> None:
+    woke = threading.Event()
+    service, events, grandchild = _running_service(tmp_path, _CredentialSource(), mode="crash", wake=woke.set)
+    controller = service._controller
+    assert controller is not None
+    record = tmp_path / "tree"
+    process_id = json.loads((record / "received.json").read_text(encoding="utf-8"))["pid"]
+    try:
+        assert not woke.is_set()
+        (record / "crash").touch()
+        assert woke.wait(10), "native process exit must wake the otherwise idle service"
+        assert not _alive(process_id, within=10)
+        assert _alive(grandchild), "only the gateway exited; the owner must still clean up its tree"
+        assert controller.published() is None
+        assert service.observe() is False
+        service.stop()
+        assert not _alive(grandchild, within=5)
+        assert events == [{"event": "stopped", "code": "agent_retired"}]
+    finally:
+        service.stop()
+        service._ownership.close()
 
 
 def test_a_settings_change_retires_the_running_agent_and_publishes_why_its_replacement_did_not_start(

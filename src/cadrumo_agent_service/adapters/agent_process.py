@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from queue import Empty, Queue
 from threading import Lock, Thread
@@ -127,6 +127,7 @@ class WindowsAgentProcess:
         standard_output: BinaryIO,
         standard_error: BinaryIO,
         diagnostic_sink: AgentDiagnosticSink | None = None,
+        on_exit: Callable[[], None] | None = None,
     ) -> None:
         """Take ownership of the job, the agent and the parent pipe ends, and start draining standard error.
 
@@ -143,6 +144,13 @@ class WindowsAgentProcess:
         )
         self._lines: Queue[bytes | BaseException] = Queue(maxsize=1)
         self._reader: Thread | None = None
+        if on_exit is not None:
+            waiter = process.retain_waiter()
+            try:
+                Thread(target=_observe_exit, args=(waiter, on_exit), name="agent-process-exit", daemon=True).start()
+            except BaseException:
+                waiter.close()
+                raise
 
     def write_input(self, data: bytearray) -> None:
         """Write and flush these bytes to the agent's standard input."""
@@ -242,6 +250,10 @@ class WindowsAgentProcess:
 class WindowsAgentProcessLauncher:
     """Start each agent tree in a fresh kill-on-close job with private standard pipes."""
 
+    def __init__(self, *, on_exit: Callable[[], None] | None = None) -> None:
+        """Wake the lifecycle owner when the gateway process ends."""
+        self._on_exit = on_exit
+
     def launch(
         self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
     ) -> AgentProcess:
@@ -265,6 +277,7 @@ class WindowsAgentProcessLauncher:
                 standard_output=standard_output,
                 standard_error=standard_error,
                 diagnostic_sink=sink,
+                on_exit=self._on_exit,
             )
         except BaseException:
             # The drain could not start, so the tree has no owner: end it and release every pipe end.
@@ -274,6 +287,20 @@ class WindowsAgentProcessLauncher:
                 for stream in (standard_input, standard_output, standard_error):
                     stream.close()
             raise
+
+
+def _observe_exit(waiter: WindowsOwnedProcess, wake: Callable[[], None]) -> None:
+    """Retain the exact process while waiting; wake the owner to revalidate it."""
+    try:
+        waiter.wait(timeout=None)
+    except RefusalError:
+        # A failed observation also needs a fresh lifecycle decision.
+        pass
+    finally:
+        try:
+            waiter.close()
+        finally:
+            wake()
 
 
 class _StandardOutput:

@@ -97,3 +97,44 @@ def test_a_failure_reaches_the_waiting_request_and_is_not_kept() -> None:
         read.answer("lease-1", within=5)
     work.fail = False
     assert read.answer("lease-1", within=5) == "result-2"
+
+
+@pytest.mark.parametrize("invalidate", (False, True), ids=("changing-lease", "forgetting"))
+def test_changing_context_does_not_multiply_unfinished_reads(invalidate: bool) -> None:
+    work = _Work()
+    read = BoundedRead(work, name="test", fresh_seconds=30)
+    try:
+        assert read.answer("lease-0", within=0.05) == BUSY
+        for index in range(1, 32):
+            if invalidate:
+                read.forget()
+            assert read.answer(f"lease-{index}", within=0.01) == BUSY
+        assert work.runs == 1, "invalidation must not abandon ownership of unfinished work"
+    finally:
+        work.release.set()
+
+
+def test_invalidated_work_cannot_answer_the_request_that_was_waiting_for_it() -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    entered = Event()
+    release = Event()
+    status = ["old-profile-status"]
+
+    def compute() -> str:
+        result = status[0]
+        entered.set()
+        assert release.wait(10)
+        return result
+
+    read = BoundedRead(compute, name="test", fresh_seconds=30)
+    with ThreadPoolExecutor(max_workers=1) as callers:
+        answer = callers.submit(read.answer, "lease-1", within=10)
+        try:
+            assert entered.wait(5)
+            read.forget()
+            status[0] = "new-profile-status"
+        finally:
+            release.set()
+        assert answer.result(timeout=5) == BUSY
+    assert read.answer("lease-2", within=5) == "new-profile-status"

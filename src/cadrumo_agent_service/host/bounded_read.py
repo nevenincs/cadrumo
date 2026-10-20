@@ -61,7 +61,8 @@ class BoundedRead[T]:
         self._fresh_seconds = fresh_seconds
         self._lock = Lock()
         self._kept: tuple[Hashable, T, float] | None = None
-        self._running: tuple[Hashable, Future[T]] | None = None
+        self._running: tuple[Hashable, int, Future[T]] | None = None
+        self._generation = 0
         self._outlived: set[Future[T]] = set()
 
     def answer(self, key: Hashable, *, within: float) -> T | dict[str, str]:
@@ -75,46 +76,58 @@ class BoundedRead[T]:
             if kept is not None and kept[0] == key and monotonic() - kept[2] < self._fresh_seconds:
                 return kept[1]
             running = self._running
-            if running is None or running[0] != key:
+            if running is not None and (running[0] != key or running[1] != self._generation):
+                # Invalidation withdraws the result, not ownership of the work.
+                # Another provider probe must wait until this one actually ends.
+                return BUSY
+            if running is None:
                 future: Future[T] = Future()
-                self._running = running = (key, future)
-                Thread(target=self._run, args=(key, future), name=f"agent-service-{self._name}", daemon=True).start()
+                self._running = running = (key, self._generation, future)
+                try:
+                    Thread(target=self._run, args=running, name=f"agent-service-{self._name}", daemon=True).start()
+                except BaseException:
+                    self._running = None
+                    raise
         try:
-            return running[1].result(timeout=within)
+            value = running[2].result(timeout=within)
         except FutureTimeoutError:
             with self._lock:
-                if not running[1].done():
+                if not running[2].done():
                     # Its result is kept for the request that comes back for it.
-                    self._outlived.add(running[1])
+                    if running[1] == self._generation:
+                        self._outlived.add(running[2])
                     return BUSY
-            return running[1].result()
+            value = running[2].result()
+        with self._lock:
+            return value if running[1] == self._generation else BUSY
 
     def forget(self) -> None:
         """Drop the kept result: what it was computed from has changed.
 
-        Work still running finishes for the requests waiting on it, but its
-        result is not kept, and the next request starts the work afresh.
+        Work still running retains its slot until it ends. Its waiting callers
+        receive busy rather than a result from the invalidated context. Later
+        requests can start fresh work once that slot is released.
         """
         with self._lock:
             self._kept = None
-            self._running = None
+            self._generation += 1
             self._outlived.clear()
 
-    def _run(self, key: Hashable, future: Future[T]) -> None:
+    def _run(self, key: Hashable, generation: int, future: Future[T]) -> None:
         try:
             value = self._compute()
         except BaseException as error:
             with self._lock:
                 self._outlived.discard(future)
-                if self._running is not None and self._running[1] is future:
+                if self._running is not None and self._running[2] is future:
                     self._running = None
                 future.set_exception(error)
             return
         with self._lock:
             outlived = future in self._outlived
             self._outlived.discard(future)
-            if self._running is not None and self._running[1] is future:
+            if self._running is not None and self._running[2] is future:
                 self._running = None
-                if outlived:
+                if outlived and generation == self._generation:
                     self._kept = (key, value, monotonic())
             future.set_result(value)
