@@ -10,7 +10,7 @@ pub mod track;
 pub mod wire;
 
 use super::sign_in::{Presence, SignIn};
-use crate::agent::person::{HeldPerson, Person, PersonEvent};
+use crate::agent::person::{HeldPerson, PersonEvent};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use serde::Serialize;
 use serde_json::Value;
@@ -83,11 +83,14 @@ impl Current {
 }
 
 /// The held person bridge as the tracker's relay.
-struct PersonRelay<'a>(&'a mut Person);
+struct PersonRelay(HeldPerson);
 
-impl Relay for PersonRelay<'_> {
+impl Relay for PersonRelay {
     fn call(&mut self, request: Value) -> Result<Value> {
-        self.0.exchange(request)
+        // Each exchange retains correlation and session authority. Do not hold
+        // the bridge across an entire setup snapshot: service admission and
+        // person activity must be able to run between its independent reads.
+        lock(&self.0).exchange(request)
     }
 }
 
@@ -171,8 +174,7 @@ impl SetupHost {
             // Replacing, not clearing first: the session stays held while it is shared.
             let person = sign_in.person(&profile_id)?;
             *held = Some(person.clone());
-            let mut bridged = lock(&person);
-            let identity = bridged.identity.clone();
+            let identity = lock(&person).identity.clone();
             let mut followed = lock(&tracker);
             // Another held session's operations are not this window's to follow.
             let tracked = match followed.take() {
@@ -180,8 +182,8 @@ impl SetupHost {
                 _ => Tracker::new(identity),
             };
             let tracked = followed.insert(tracked);
-            let answered = tracked.handle(&mut PersonRelay(&mut bridged), request);
-            if matches!(answered, Err(Stop::Host(_))) && !bridged.is_open() {
+            let answered = tracked.handle(&mut PersonRelay(person.clone()), request);
+            if matches!(answered, Err(Stop::Host(_))) && !lock(&person).is_open() {
                 *held = None;
             }
             Ok(answered)
@@ -400,6 +402,57 @@ fn desktop_setup_unobserve(host: State<'_, Arc<SetupHost>>, subscription: u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn setup_relay_releases_the_person_between_requests() {
+        use crate::agent::person::{Person, request_id};
+        let profile = request_id().unwrap();
+        let identity = serde_json::json!({
+            "kind": "session_held", "profile_id": profile,
+            "session_id": request_id().unwrap(), "runtime_boot_id": request_id().unwrap(),
+            "connection_id": request_id().unwrap(),
+        });
+        let reply = serde_json::json!({
+            "kind": "profile_language", "profile_id": profile,
+            "session_id": identity["session_id"], "request_id": "",
+            "runtime_boot_id": identity["runtime_boot_id"],
+            "connection_id": identity["connection_id"],
+            "language": "en", "record_revision": 1,
+        });
+        let script = format!(
+            "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
+             for ($i = 0; $i -lt 2; $i++) {{ \
+             $request = [Console]::In.ReadLine() | ConvertFrom-Json; \
+             $reply = '{reply}' | ConvertFrom-Json; $reply.request_id = $request.request_id; \
+             [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress)); [Console]::Out.Flush(); \
+             }}; [Console]::In.ReadLine() | Out-Null }}"
+        );
+        let mut command = std::process::Command::new("powershell.exe");
+        command.args([
+            "-NoLogo",
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            &script,
+        ]);
+        let held = Arc::new(Mutex::new(Person::hold(command, &profile).unwrap()));
+        let mut relay = PersonRelay(held.clone());
+        relay
+            .call(serde_json::json!({"action":"language_observe"}))
+            .unwrap();
+        // Another consumer can acquire and exchange while the setup relay is
+        // still alive; the snapshot no longer monopolizes the bridge.
+        let mut other = held
+            .try_lock()
+            .expect("setup retained the shared person lock");
+        assert_eq!(
+            other
+                .exchange(serde_json::json!({"action":"language_observe"}))
+                .unwrap()["language"],
+            "en"
+        );
+    }
     use serde_json::json;
 
     fn snapshot(details: &str) -> Snapshot {

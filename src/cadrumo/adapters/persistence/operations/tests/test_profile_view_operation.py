@@ -83,6 +83,35 @@ def _registry() -> OperationRegistry:
     )
 
 
+@pytest.mark.parametrize("language", [None, "en", "es", "ca", "hu"])
+def test_preferences_disclose_only_saved_language_and_keep_the_revision_pin(
+    tmp_path: Path, language: str | None
+) -> None:
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
+    facts = (UserProfileFact(path="identity.tax_id", value="00000000T"),)
+    if language is not None:
+        facts += (UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),)
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=facts)
+        with bundled_indexed_authority().operation() as authority:
+            request = ProfileViewOperationRequest(profile_id=profile_id, page_kind=ProfileViewPageKind.PREFERENCES)
+            page = read_profile_view_page(request, authority_operation=authority)
+            expected = (
+                () if language is None else (ProfileViewFactItem(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),)
+            )
+            assert page.items == expected
+            assert page.next_cursor is None
+            assert page.total_items == len(expected)
+            stale = read_profile_view_page(
+                request.model_copy(
+                    update={"expected_revision": page.record_revision, "expected_content_digest": "0" * 64}
+                ),
+                authority_operation=authority,
+            )
+            assert stale.refusal_code is ProfileViewRefusalCode.STALE_REVISION
+
+
 @pytest.mark.parametrize("page_kind", [ProfileViewPageKind.FACTS, ProfileViewPageKind.QUESTIONS])
 def test_registered_view_reads_real_encrypted_profile_and_pins_continuations(
     tmp_path: Path, page_kind: ProfileViewPageKind

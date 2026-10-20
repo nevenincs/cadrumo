@@ -228,6 +228,8 @@ pub(super) fn entry(event: &Event) -> Entry {
             let name = match key.as_str() {
                 "gatewayPort" => "gateway_port",
                 "delayMs" => "delay_ms",
+                "prepareMs" => "prepare_ms",
+                "spawnMs" => "spawn_ms",
                 "packageAbi" => "package_abi",
                 "logLevel" => "log_level",
                 "logLevelOverridden" => "log_level_overridden",
@@ -265,6 +267,16 @@ pub(super) fn entry(event: &Event) -> Entry {
         } = fact
         {
             message.push_str(&format!(" at http://127.0.0.1:{gateway_port}"));
+        }
+        if let cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
+            prepare_ms,
+            spawn_ms,
+            ..
+        } = fact
+        {
+            message.push_str(&format!(
+                ": preparation {prepare_ms} ms, process launch {spawn_ms} ms"
+            ));
         }
     }
     if let Some(fact) = event.lifecycle {
@@ -610,6 +622,27 @@ mod tests {
             std::fs::read_to_string(diagnostics.snapshot(0).paths.unwrap().current).unwrap();
         assert!(!persisted.contains("CANARY"));
         std::fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn agent_startup_durations_are_visible_and_project_as_closed_scalars() {
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            cadrumo_application::diagnostics::service::ServiceFact::AgentStartupTiming {
+                generation: 2,
+                prepare_ms: 2400,
+                spawn_ms: 350,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "agent_startup_timing: preparation 2400 ms, process launch 350 ms"
+        );
+        assert_eq!(entries[0].context["service_prepare_ms"], 2400);
+        assert_eq!(entries[0].context["service_spawn_ms"], 350);
     }
 
     #[test]

@@ -507,8 +507,9 @@ The agent image has no default profile. It admits the invocations declared in it
 invocation table in `native/application-environment.toml`, each selecting its own
 profile, and refuses any other module, verb, `-c` or script before Python starts. The
 table includes the gateway, which runs the agent's command-line module with `serve`,
-the worker, which runs the agent's worker module, four store and version
-invocations of the command-line module: `stores-state`, `setup`, `migrate` with its
+the worker, which runs the agent's worker module, store and version
+invocations of the command-line module: `preflight` (interface versions and store
+state in one read-only process), `stores-state`, `setup`, `migrate` with its
 optional `--expect-from` and `--expect-head` revision assertions, and `version --json`,
 and the agent's declared provider catalog, `providers --declared --json`.
 The store and version invocations run in the gateway's environment, take no port and

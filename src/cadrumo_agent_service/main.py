@@ -8,8 +8,10 @@ import json
 import os
 import sys
 from threading import Event, Lock, Thread
-from time import monotonic
+from time import monotonic, time
 from uuid import UUID
+
+import psutil
 
 from cadrumo.core.diagnostic_log import diagnostic_process
 from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
@@ -25,6 +27,14 @@ from .service import AgentService, service_failure
 _LOGGER = get_logger(__name__)
 _OUTPUT_GUARD = Lock()
 _MAX_STARTUP_FRAME_BYTES = 64 * 1024
+
+
+def _process_uptime() -> float:
+    """Diagnostic only: failure to inspect this process cannot refuse service."""
+    try:
+        return max(0.0, time() - float(psutil.Process().create_time()))
+    except psutil.Error:
+        return -1.0
 
 
 def _read_startup_frame(stdin_fd: int) -> bytearray:
@@ -127,10 +137,12 @@ def _serve() -> None:
         if connected is None:
             raise RuntimeError("service_connection_unavailable")
         _LOGGER.info(
-            "agent service ready startup_frame_seconds=%.3f runtime_connection_seconds=%.3f since_entry_seconds=%.3f",
+            "agent service ready startup_frame_seconds=%.3f runtime_connection_seconds=%.3f "
+            "since_entry_seconds=%.3f process_uptime_seconds=%.3f",
             connecting - entered,
             connected_at - connecting,
             monotonic() - entered,
+            _process_uptime(),
         )
         _publish(
             {

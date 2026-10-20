@@ -171,7 +171,11 @@ class ProfileWorkerOperationHost:
             if self._closed:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             if self._services is None:
+                started = monotonic()
                 self._services = self._compose()
+                _log.info(
+                    "worker operation composition total_seconds=%.3f (includes cold imports)", monotonic() - started
+                )
             return self._services
 
     def _await_composition(self) -> None:

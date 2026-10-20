@@ -25,12 +25,12 @@ class ProfileLanguage:
 def read_profile_language(client: FrontendClient) -> ProfileLanguage:
     """Read the encrypted preference through the registered exact-profile view."""
     pinned = PinnedConnection.of(client)
-    viewed = client.read_profile_view((ProfileViewPageKind.FACTS,))
+    viewed = client.read_profile_view((ProfileViewPageKind.PREFERENCES,))
     pinned.require_held(client)
     language = next(
         (
             OutputLanguage(item.value)
-            for item in viewed.items(ProfileViewPageKind.FACTS)
+            for item in viewed.items(ProfileViewPageKind.PREFERENCES)
             if isinstance(item, ProfileViewFactItem) and item.path == PROFILE_OUTPUT_LANGUAGE_PATH
         ),
         None,

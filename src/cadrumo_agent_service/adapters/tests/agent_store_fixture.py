@@ -96,6 +96,12 @@ def _step(
 
 def _answer(verb: list[str], stores: Path, config: dict[str, object]) -> tuple[dict[str, object], int]:
     malformed = config.get("malformed") == verb[0]
+    if verb == ["preflight"]:
+        return {
+            "api_version": config.get("api", "v1"),
+            "package_version": "0.0.0-test",
+            "stores": _stores_state(stores, malformed=malformed or config.get("malformed") == "stores-state"),
+        }, 0
     if verb == ["version", "--json"]:
         return {"api_version": config.get("api", "v1"), "package_version": "0.0.0-test"}, 0
     if verb == ["stores-state"]:

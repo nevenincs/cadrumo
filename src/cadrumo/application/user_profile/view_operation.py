@@ -43,6 +43,7 @@ class ProfileViewPageKind(StrEnum):
     """One independent page stream over a single profile revision."""
 
     FACTS = "facts"
+    PREFERENCES = "preferences"
     ISSUES = "issues"
     READINESS_ISSUES = "readiness_issues"
     OVERVIEW = "overview"
@@ -59,7 +60,8 @@ class ProfileViewOperationRequest(CredentialFreeOperationRequest):
     page_kind: ProfileViewPageKind = Field(
         description="facts reads saved taxpayer values; questions pairs saved setup answers with canonical prompts, "
         "help and choices (no defaults). questions covers scalar setup fields, not all profile facts or tax duties. "
-        "status describes basic setup readiness only. Read actual facts before asking the user."
+        "status describes basic setup readiness only. preferences reads only the saved output language. "
+        "Read actual facts before asking the user."
     )
     cursor: NonNegativeInt = 0
     limit: int = Field(default=PROFILE_VIEW_MAX_ITEMS, ge=1, le=PROFILE_VIEW_MAX_ITEMS)
@@ -336,6 +338,7 @@ def _validate_refused_page(result: ProfileViewOperationResult) -> None:
 def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
     allowed = {
         ProfileViewPageKind.FACTS: {"fact"},
+        ProfileViewPageKind.PREFERENCES: {"fact"},
         ProfileViewPageKind.QUESTIONS: {"question"},
         ProfileViewPageKind.ISSUES: {"issue"},
         ProfileViewPageKind.READINESS_ISSUES: {"issue"},
@@ -344,6 +347,14 @@ def _validate_page_item_kinds(result: ProfileViewOperationResult) -> None:
     }[result.page_kind]
     if any(item.kind not in allowed for item in result.items):
         raise ValueError("profile view page contains another stream's item")
+    if result.page_kind is ProfileViewPageKind.PREFERENCES:
+        from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+
+        if result.total_items > 1 or any(
+            not isinstance(item, ProfileViewFactItem) or item.path != PROFILE_OUTPUT_LANGUAGE_PATH
+            for item in result.items
+        ):
+            raise ValueError("profile preferences may disclose only the saved output language")
 
 
 def _validate_status_page(result: ProfileViewOperationResult) -> None:

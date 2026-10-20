@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
@@ -20,6 +21,7 @@ from cadrumo.application.operations.registry import OperationPublicDefinitionCon
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
@@ -46,6 +48,9 @@ if TYPE_CHECKING:
         ProfileViewOperationRequest,
         ProfileViewPageKind,
     )
+
+
+_LOGGER = get_logger(__name__)
 
 
 class ProfileViewFrontend(OperationFrontend):
@@ -239,9 +244,12 @@ class ProfileViewFrontend(OperationFrontend):
         self, request: ProfileViewOperationRequest, contract: OperationPublicDefinitionContractV1, deadline: float
     ) -> ProfileViewOperationProjection:
         """Require one successful registered operation and its exact addressed page."""
+        started = monotonic()
         operation_id = self.submit(request, deadline=exchange_deadline(deadline))
+        submitted = monotonic()
         self.start(operation_id, deadline=exchange_deadline(deadline))
         projection = self._await_profile_view_terminal(operation_id, deadline)
+        settled = monotonic()
         page = self.result(
             operation_id,
             terminal_revision=projection.revision,
@@ -258,6 +266,18 @@ class ProfileViewFrontend(OperationFrontend):
             if page.refusal_code is None:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             raise FrontendRefusedError(page.refusal_code.value)
+        _LOGGER.info(
+            "profile view timing operation=%s page_kind=%s cursor=%d items=%d "
+            "submit_seconds=%.3f settle_seconds=%.3f result_seconds=%.3f total_seconds=%.3f",
+            operation_id,
+            request.page_kind.value,
+            request.cursor,
+            len(page.items),
+            submitted - started,
+            settled - submitted,
+            monotonic() - settled,
+            monotonic() - started,
+        )
         return page
 
     def _await_profile_view_terminal(self, operation_id: OperationId, deadline: float) -> OperationPublicProjectionV1:

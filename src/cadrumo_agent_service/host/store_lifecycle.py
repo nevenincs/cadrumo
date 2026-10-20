@@ -5,8 +5,8 @@ do not match its build, a fresh root included; the host owns their lifecycle.
 Before every gateway start the runtime runs the agent's own one-shot
 invocations, with the gateway's program, directory and environment:
 
-* ``version --json``: the agent's command-line contract must be ``v1``.
-* ``stores-state``: read-only. ``absent`` runs ``setup``; ``older`` copies the
+* ``preflight``: one read-only process checks the ``v1`` interface and stores.
+  ``absent`` runs ``setup``; ``older`` copies the
   stores aside and runs ``migrate`` with the revisions the state reported;
   ``current`` runs nothing; ``newer`` is a downgrade and is refused.
 * ``stores-state`` again, which must read ``current``.
@@ -57,7 +57,7 @@ type StoreState = Literal["absent", "current", "older", "newer"]
 class StoreStep(StrEnum):
     """The invocation or host action a diagnostic concerns."""
 
-    VERSION = "version"
+    PREFLIGHT = "preflight"
     STORES_STATE = "stores_state"
     SETUP = "setup"
     COPY_ASIDE = "copy_aside"
@@ -85,7 +85,7 @@ class StoreOutcome(StrEnum):
 class StoreLifecycleBounds:
     """The hard time bound of each invocation, in seconds."""
 
-    version: float = 15.0
+    preflight: float = 20.0
     stores_state: float = 20.0
     setup: float = 45.0
     migrate: float = 90.0
@@ -143,13 +143,6 @@ class AgentStoresAside(Protocol):
 _STRICT: Final = ConfigDict(extra="forbid", strict=True, frozen=True)
 
 
-class _Version(BaseModel):
-    model_config = _STRICT
-
-    api_version: str = Field(max_length=16)
-    package_version: str = Field(min_length=1, max_length=64)
-
-
 class _StoreJudgement(BaseModel):
     model_config = _STRICT
 
@@ -164,6 +157,14 @@ class _StoresState(BaseModel):
     state: StoreState
     primary: _StoreJudgement
     checkpoint: _StoreJudgement
+
+
+class _Preflight(BaseModel):
+    model_config = _STRICT
+
+    api_version: str = Field(max_length=16)
+    package_version: str = Field(min_length=1, max_length=64)
+    stores: _StoresState
 
 
 class _StoreChange(BaseModel):
@@ -218,9 +219,8 @@ class AgentStoreLifecycle:
 
     def prepare(self) -> None:
         """Bring the stores to current, or refuse with the closed reason the launcher maps."""
-        self._require_api()
+        state = self._preflight()
         self._run_host_action(StoreStep.COPY_ASIDE, self._aside.clear_partial)
-        state = self._stores_state(StoreStep.STORES_STATE)
         kept = self._run_host_action(StoreStep.COPY_ASIDE, self._aside.kept)
         if kept:
             if state.state != "current":
@@ -241,13 +241,14 @@ class AgentStoreLifecycle:
         if self._run_host_action(StoreStep.COPY_ASIDE, self._aside.kept):
             self._run_host_action(StoreStep.COPY_ASIDE, self._aside.discard)
 
-    def _require_api(self) -> None:
-        result = self._invoke(StoreStep.VERSION, ("version", "--json"), self._bounds.version)
+    def _preflight(self) -> _StoresState:
+        result = self._invoke(StoreStep.PREFLIGHT, ("preflight",), self._bounds.preflight)
         if result.status != 0:
-            raise _refused(StoreStep.VERSION, StoreOutcome.FAILED)
-        version = _parse(StoreStep.VERSION, _Version, result.standard_output)
-        if version.api_version != AGENT_COMMAND_LINE_API:
-            raise _refused(StoreStep.VERSION, StoreOutcome.INCOMPATIBLE, AgentHostRefusal.AGENT_INCOMPATIBLE)
+            raise _refused(StoreStep.PREFLIGHT, StoreOutcome.FAILED)
+        report = _parse(StoreStep.PREFLIGHT, _Preflight, result.standard_output)
+        if report.api_version != AGENT_COMMAND_LINE_API:
+            raise _refused(StoreStep.PREFLIGHT, StoreOutcome.INCOMPATIBLE, AgentHostRefusal.AGENT_INCOMPATIBLE)
+        return report.stores
 
     def _stores_state(self, step: StoreStep) -> _StoresState:
         result = self._invoke(step, ("stores-state",), self._bounds.stores_state)

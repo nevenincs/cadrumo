@@ -317,7 +317,9 @@ class AgentHostController:
             return True
 
     def _start(self) -> AgentReady:
+        started = time.monotonic()
         resolved = self._credentials.resolve_for_agent()
+        credentials_ready = time.monotonic()
         try:
             frame = build_credential_frame(
                 resolved.credentials, gateway_bearer=resolved.gateway_bearer, host_token=resolved.host_token
@@ -345,8 +347,10 @@ class AgentHostController:
                 raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED) from error
             with self._lock:
                 self._process = process
+            spawned = time.monotonic()
             try:
                 process.write_input(frame)
+                framed = time.monotonic()
             except OSError as error:
                 raise _ended_before_ready(
                     process, AgentHostRefusal.LAUNCH_FAILED, observe=EXIT_OBSERVATION_SECONDS
@@ -359,7 +363,17 @@ class AgentHostController:
             # A tree still running when the bound passed has no exit status to wait for.
             observe = 0.0 if isinstance(error, TimeoutError) else EXIT_OBSERVATION_SECONDS
             raise _ended_before_ready(process, AgentHostRefusal.NOT_READY, observe=observe) from error
-        return _ready_from_line(line, resolved.generations)
+        ready = _ready_from_line(line, resolved.generations)
+        _LOGGER.info(
+            "agent gateway timing credentials_seconds=%.3f frame_build_and_spawn_seconds=%.3f "
+            "frame_write_seconds=%.3f ready_wait_seconds=%.3f total_seconds=%.3f",
+            credentials_ready - started,
+            spawned - credentials_ready,
+            framed - spawned,
+            time.monotonic() - framed,
+            time.monotonic() - started,
+        )
+        return ready
 
     def _retire(self) -> None:
         with self._lock:

@@ -515,6 +515,13 @@ async fn start(
     let launch = launch.clone();
     let prepare_bearer = bearer.clone();
     let prepare_profile = profile.clone();
+    let preparation_started = Instant::now();
+    // Include held-person acquisition (which can wait on another consumer)
+    // in the visible startup interval, not just the child launch afterwards.
+    let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
+    shared
+        .diagnostics
+        .service(None, ServiceFact::AgentStarting { generation });
     let (Prepared { command, person }, person_failure) =
         tauri::async_runtime::spawn_blocking(move || {
             let prepared = launch(&prepare_bearer, &prepare_profile)?;
@@ -526,10 +533,7 @@ async fn start(
         })
         .await
         .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
-    let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
-    shared
-        .diagnostics
-        .service(None, ServiceFact::AgentStarting { generation });
+    let prepared_at = Instant::now();
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
@@ -546,6 +550,22 @@ async fn start(
     })
     .await
     .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    shared.diagnostics.service(
+        None,
+        ServiceFact::AgentStartupTiming {
+            generation,
+            prepare_ms: prepared_at
+                .duration_since(preparation_started)
+                .as_millis()
+                .try_into()
+                .unwrap_or(u64::MAX),
+            spawn_ms: prepared_at
+                .elapsed()
+                .as_millis()
+                .try_into()
+                .unwrap_or(u64::MAX),
+        },
+    );
     let refused = {
         let mut running = lock(&shared.running);
         if shared.closed.load(Ordering::Acquire) {
@@ -1834,10 +1854,17 @@ mod tests {
             assert!(rig.supervisor.gateway().is_none());
             assert!(lock(&rig.supervisor.shared.running).is_none());
             assert!(
-                !rig.diagnostics.snapshot(u64::MAX).events.iter().any(|event| {
-                    event.failure.is_some()
-                        || matches!(event.service, Some(ServiceFact::AgentRetryScheduled { .. }))
-                })
+                !rig.diagnostics
+                    .snapshot(u64::MAX)
+                    .events
+                    .iter()
+                    .any(|event| {
+                        event.failure.is_some()
+                            || matches!(
+                                event.service,
+                                Some(ServiceFact::AgentRetryScheduled { .. })
+                            )
+                    })
             );
             rig.supervisor.close().await.unwrap();
         }

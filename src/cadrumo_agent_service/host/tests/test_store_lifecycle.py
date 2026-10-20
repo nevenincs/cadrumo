@@ -29,7 +29,7 @@ _LAUNCH = AgentLaunch(
     directory=Path("/root/agent/opaque"),
     environment={"ROOT_SLOT": "/root/agent/opaque"},
 )
-_BOUNDS = StoreLifecycleBounds(version=1.0, stores_state=2.0, setup=3.0, migrate=4.0)
+_BOUNDS = StoreLifecycleBounds(preflight=1.0, stores_state=2.0, setup=3.0, migrate=4.0)
 _LOGGER_NAME = "cadrumo_agent_service.host.store_lifecycle"
 _AGENT_DETAIL = "AGENT-DETAIL-TEXT"
 _HOME = "/private/home/of/the/agent"
@@ -150,12 +150,12 @@ def _refusal(lifecycle: AgentStoreLifecycle) -> AgentHostError:
     return raised.value
 
 
-def test_current_stores_run_nothing_but_the_two_reads() -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("current", found="0002"))]})
+def test_current_stores_run_nothing_but_one_combined_read() -> None:
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("current", found="0002")})]})
     aside = _Aside()
     _lifecycle(runner, aside).prepare()
-    assert runner.calls == [("version", "--json"), ("stores-state",)]
-    assert runner.timeouts == [_BOUNDS.version, _BOUNDS.stores_state]
+    assert runner.calls == [("preflight",)]
+    assert runner.timeouts == [_BOUNDS.preflight]
     assert aside.actions == ["clear_partial"]
 
 
@@ -163,49 +163,48 @@ def test_current_stores_run_nothing_but_the_two_reads() -> None:
 def test_absent_stores_are_set_up_then_must_read_current(status: str) -> None:
     runner = _Runner(
         {
-            "version": [_out(_VERSION)],
-            "stores-state": [_out(_state("absent")), _out(_state("current", found="0002"))],
+            "preflight": [_out({**_VERSION, "stores": _state("absent")})],
             "setup": [_out(_step(status))],
+            "stores-state": [_out(_state("current", found="0002"))],
         }
     )
     aside = _Aside()
     _lifecycle(runner, aside).prepare()
-    assert runner.calls == [("version", "--json"), ("stores-state",), ("setup",), ("stores-state",)]
-    assert runner.timeouts[2] == _BOUNDS.setup
+    assert runner.calls == [("preflight",), ("setup",), ("stores-state",)]
+    assert runner.timeouts[1] == _BOUNDS.setup
     assert aside.actions == ["clear_partial"]
 
 
 def test_older_stores_are_copied_aside_before_the_asserted_migrate_and_the_copy_goes_once_current() -> None:
     runner = _Runner(
         {
-            "version": [_out(_VERSION)],
-            "stores-state": [_out(_state("older")), _out(_state("current", found="0002"))],
+            "preflight": [_out({**_VERSION, "stores": _state("older")})],
             "migrate": [_out(_step("succeeded"))],
+            "stores-state": [_out(_state("current", found="0002"))],
         }
     )
     aside = _Aside()
     _lifecycle(runner, aside).prepare()
     assert runner.calls == [
-        ("version", "--json"),
-        ("stores-state",),
+        ("preflight",),
         ("migrate", "--expect-from", "0001", "--expect-head", "0002"),
         ("stores-state",),
     ]
-    assert runner.timeouts[2] == _BOUNDS.migrate
+    assert runner.timeouts[1] == _BOUNDS.migrate
     assert aside.actions == ["clear_partial", "keep", "discard"]
 
 
 def test_older_stores_are_not_migrated_while_the_profile_is_not_quiet() -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("older"))]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("older")})]})
     aside = _Aside()
     error = _refusal(_lifecycle(runner, aside, quiesced=False))
     assert error.reason is AgentHostRefusal.STORES_UNPREPARED
-    assert runner.calls == [("version", "--json"), ("stores-state",)]
+    assert runner.calls == [("preflight",)]
     assert aside.actions == ["clear_partial"]
 
 
 def test_a_copy_that_cannot_be_taken_stops_the_migrate() -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("older"))]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("older")})]})
     aside = _Aside(keep_error=OSError("disk full"))
     assert _refusal(_lifecycle(runner, aside)).reason is AgentHostRefusal.STORES_UNPREPARED
     assert ("migrate",) not in [call[:1] for call in runner.calls]
@@ -223,13 +222,13 @@ def test_a_copy_that_cannot_be_taken_stops_the_migrate() -> None:
 def test_a_migrate_that_did_not_succeed_keeps_the_copy_and_is_not_retried(
     result: AgentInvocationResult, caplog: pytest.LogCaptureFixture
 ) -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("older"))], "migrate": [result]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("older")})], "migrate": [result]})
     aside = _Aside()
     with caplog.at_level(logging.WARNING, logger=_LOGGER_NAME):
         error = _refusal(_lifecycle(runner, aside))
     assert error.reason is AgentHostRefusal.STORES_UNPREPARED
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
-    assert [call[0] for call in runner.calls] == ["version", "stores-state", "migrate"]
+    assert [call[0] for call in runner.calls] == ["preflight", "migrate"]
     assert aside.actions == ["clear_partial", "keep"]
     assert aside.copy
     # The agent's text and its home's path never reach a diagnostic.
@@ -238,16 +237,16 @@ def test_a_migrate_that_did_not_succeed_keeps_the_copy_and_is_not_retried(
 
 
 def test_a_kept_copy_over_stores_that_are_not_current_refuses_every_later_start() -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("older"))]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("older")})]})
     aside = _Aside(kept=True)
     assert _refusal(_lifecycle(runner, aside)).reason is AgentHostRefusal.STORES_UNPREPARED
-    assert runner.calls == [("version", "--json"), ("stores-state",)]
+    assert runner.calls == [("preflight",)]
     assert aside.actions == ["clear_partial"]
     assert aside.copy
 
 
 def test_a_kept_copy_is_removed_once_the_stores_read_current() -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("current", found="0002"))]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("current", found="0002")})]})
     aside = _Aside(kept=True)
     _lifecycle(runner, aside).prepare()
     assert aside.actions == ["clear_partial", "discard"]
@@ -257,20 +256,22 @@ def test_a_kept_copy_is_removed_once_the_stores_read_current() -> None:
 @pytest.mark.parametrize("found", ["0003", None])
 def test_newer_stores_are_a_downgrade_and_refused_as_incompatible(found: str | None) -> None:
     # An unreadable primary store reports newer with nothing found.
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("newer", found=found))]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("newer", found=found)})]})
     aside = _Aside()
     error = _refusal(_lifecycle(runner, aside))
     assert error.reason is AgentHostRefusal.STORES_NEWER
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_INCOMPATIBLE
-    assert runner.calls == [("version", "--json"), ("stores-state",)]
+    assert runner.calls == [("preflight",)]
 
 
 def test_another_command_line_contract_is_incompatible() -> None:
-    runner = _Runner({"version": [_out({"api_version": "v2", "package_version": "9.0.0"})]})
+    runner = _Runner(
+        {"preflight": [_out({**{"api_version": "v2", "package_version": "9.0.0"}, "stores": _state("current")})]}
+    )
     error = _refusal(_lifecycle(runner, _Aside()))
     assert error.reason is AgentHostRefusal.AGENT_INCOMPATIBLE
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_INCOMPATIBLE
-    assert runner.calls == [("version", "--json")]
+    assert runner.calls == [("preflight",)]
 
 
 @pytest.mark.parametrize(
@@ -282,24 +283,24 @@ def test_another_command_line_contract_is_incompatible() -> None:
     ],
 )
 def test_a_setup_that_did_not_succeed_is_refused_without_a_recheck(status: AgentInvocationResult) -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("absent"))], "setup": [status]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("absent")})], "setup": [status]})
     assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.STORES_UNPREPARED
-    assert [call[0] for call in runner.calls] == ["version", "stores-state", "setup"]
+    assert [call[0] for call in runner.calls] == ["preflight", "setup"]
 
 
 def test_a_recheck_that_is_not_current_is_refused() -> None:
     runner = _Runner(
         {
-            "version": [_out(_VERSION)],
-            "stores-state": [_out(_state("absent")), _out(_state("older"))],
+            "preflight": [_out({**_VERSION, "stores": _state("absent")})],
             "setup": [_out(_step("succeeded"))],
+            "stores-state": [_out(_state("older"))],
         }
     )
     assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.STORES_UNPREPARED
 
 
 def test_an_invocation_that_cannot_run_is_refused() -> None:
-    runner = _Runner({"version": OSError("no image")})
+    runner = _Runner({"preflight": OSError("no image")})
     assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.STORES_UNPREPARED
 
 
@@ -337,9 +338,9 @@ _MALFORMED_STATES = {
 
 @pytest.mark.parametrize("document", list(_MALFORMED_STATES.values()), ids=list(_MALFORMED_STATES))
 def test_a_stores_state_that_is_not_exactly_the_agents_shape_is_refused(document: dict[str, object]) -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(document)]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": document})]})
     assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.STORES_UNPREPARED
-    assert runner.calls == [("version", "--json"), ("stores-state",)]
+    assert runner.calls == [("preflight",)]
 
 
 @pytest.mark.parametrize(
@@ -352,9 +353,7 @@ def test_a_stores_state_that_is_not_exactly_the_agents_shape_is_refused(document
     ],
 )
 def test_stores_state_output_that_is_not_one_bounded_object_is_refused(output: bytes) -> None:
-    runner = _Runner(
-        {"version": [_out(_VERSION)], "stores-state": [AgentInvocationResult(status=0, standard_output=output)]}
-    )
+    runner = _Runner({"preflight": [AgentInvocationResult(status=0, standard_output=output)]})
     assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.STORES_UNPREPARED
 
 
@@ -369,15 +368,15 @@ def test_stores_state_output_that_is_not_one_bounded_object_is_refused(output: b
     ],
 )
 def test_a_setup_report_that_is_not_exactly_the_agents_shape_is_refused(document: dict[str, object]) -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("absent"))], "setup": [_out(document)]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("absent")})], "setup": [_out(document)]})
     assert _refusal(_lifecycle(runner, _Aside())).reason is AgentHostRefusal.STORES_UNPREPARED
-    assert [call[0] for call in runner.calls] == ["version", "stores-state", "setup"]
+    assert [call[0] for call in runner.calls] == ["preflight", "setup"]
 
 
 @pytest.mark.parametrize("found", ["--compact", "", "0001 --compact", "x" * 65])
 def test_a_reported_revision_that_could_read_as_an_option_is_never_passed_back(found: str) -> None:
-    runner = _Runner({"version": [_out(_VERSION)], "stores-state": [_out(_state("older", found=found))]})
+    runner = _Runner({"preflight": [_out({**_VERSION, "stores": _state("older", found=found)})]})
     aside = _Aside()
     assert _refusal(_lifecycle(runner, aside)).reason is AgentHostRefusal.STORES_UNPREPARED
-    assert aside.actions == ["clear_partial"]
-    assert runner.calls == [("version", "--json"), ("stores-state",)]
+    assert aside.actions == ([] if len(found) > 64 else ["clear_partial"])
+    assert runner.calls == [("preflight",)]

@@ -91,6 +91,11 @@ pub enum ServiceFact {
     AgentStarting {
         generation: u64,
     },
+    AgentStartupTiming {
+        generation: u64,
+        prepare_ms: u64,
+        spawn_ms: u64,
+    },
     AgentReady {
         generation: u64,
         gateway_port: u16,

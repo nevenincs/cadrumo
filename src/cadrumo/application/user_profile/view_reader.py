@@ -15,6 +15,7 @@ from ...core.config import override_settings
 from ...core.identity.digest import ContentDigest
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..modelo.profile_readiness_gate import (
     modelo_work_profile_baseline_missing_paths,
@@ -253,6 +254,9 @@ def _build_page_source(
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
     if request.page_kind is ProfileViewPageKind.FACTS:
         return _build_fact_source(record)
+    if request.page_kind is ProfileViewPageKind.PREFERENCES:
+        value = record_to_path_values(record).get(PROFILE_OUTPUT_LANGUAGE_PATH)
+        return () if value is None else (ProfileViewFactItem(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=value),)
     if request.page_kind is ProfileViewPageKind.QUESTIONS:
         return profile_question_items(build_setup_flow(authority_operation), record_to_path_values(record))
     if request.page_kind in {ProfileViewPageKind.ISSUES, ProfileViewPageKind.READINESS_ISSUES}:
@@ -270,30 +274,38 @@ def _paginate_source(
     if request.cursor > len(source):
         # An out-of-range cursor cannot masquerade as a completed page.
         return _refused_page(common, ProfileViewRefusalCode.STALE_REVISION, total_items=len(source))
-    selected: list[ProfileViewItem] = []
-    for item in source[request.cursor : request.cursor + request.limit]:
-        candidate = (*selected, item)
+    candidates = source[request.cursor : request.cursor + request.limit]
+
+    def page_for(count: int) -> ProfileViewOperationResult:
+        candidate = candidates[:count]
         next_cursor = request.cursor + len(candidate)
-        page = ProfileViewOperationResult(
+        return ProfileViewOperationResult(
             **common,
             outcome="page",
             total_items=len(source),
             items=candidate,
             next_cursor=next_cursor if next_cursor < len(source) else None,
         )
-        if len(page.model_dump_json().encode("utf-8")) > PROFILE_VIEW_MAX_RESULT_BYTES:
-            if not selected:
-                return _refused_page(common, ProfileViewRefusalCode.ITEM_TOO_LARGE, total_items=len(source))
-            break
-        selected.append(item)
-    next_cursor = request.cursor + len(selected)
-    return ProfileViewOperationResult(
-        **common,
-        outcome="page",
-        total_items=len(source),
-        items=tuple(selected),
-        next_cursor=next_cursor if next_cursor < len(source) else None,
-    )
+
+    # Normal pages fit: serialize once, not each increasingly long prefix.
+    # For a byte-limited page, find the largest fitting prefix in logarithmic
+    # probes. Items and order, the byte ceiling and indivisible refusal remain
+    # identical to the sequential collector.
+    page = page_for(len(candidates))
+    if len(page.model_dump_json().encode("utf-8")) <= PROFILE_VIEW_MAX_RESULT_BYTES:
+        return page
+    low, high = 0, len(candidates) - 1
+    best: ProfileViewOperationResult | None = None
+    while low < high:
+        count = (low + high + 1) // 2
+        page = page_for(count)
+        if len(page.model_dump_json().encode("utf-8")) <= PROFILE_VIEW_MAX_RESULT_BYTES:
+            low, best = count, page
+        else:
+            high = count - 1
+    if low == 0:
+        return _refused_page(common, ProfileViewRefusalCode.ITEM_TOO_LARGE, total_items=len(source))
+    return best if best is not None else page_for(low)
 
 
 def read_profile_view_page(
