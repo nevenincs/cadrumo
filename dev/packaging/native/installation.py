@@ -7,6 +7,8 @@ import json
 import os
 import re
 import shutil
+import stat
+import sys
 from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 
@@ -16,6 +18,7 @@ from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
 from .installation_filesystem import file_identity, remove_owned_file
+from .installation_windows import windows_path_redirects
 from .layout import desktop_image, load_layout
 from .linux_desktop_runtime import validate_payload as validate_linux_desktop_runtime
 from .package_inventory import package_inventory
@@ -26,12 +29,28 @@ def member(root: Path, relative: str) -> Path:
     path = PurePosixPath(relative)
     if not path.parts or path.is_absolute() or ".." in path.parts or "\\" in relative or ":" in relative:
         raise ValueError(f"Unsafe installation member: {relative}")
+    if sys.platform == "win32" and os.path.isreserved(relative):
+        # Win32 trims trailing dots/spaces and interprets device names. Such
+        # aliases must not bypass the lexical traversal check above.
+        raise ValueError(f"Unsafe installation member: {relative}")
     candidate = root.joinpath(*path.parts)
     for parent in (candidate, *candidate.parents):
-        if parent.is_symlink() or parent.is_junction():
+        if os.name == "nt":
+            if windows_path_redirects(parent):
+                raise ValueError(f"Installation path redirects through a link: {parent}")
+            continue
+        try:
+            metadata = parent.lstat()
+        except FileNotFoundError:
+            # A member may be about to be created. Still inspect every
+            # existing ancestor, including those above the supplied root.
+            continue
+        if stat.S_ISLNK(metadata.st_mode):
             raise ValueError(f"Installation path redirects through a link: {parent}")
-    if not candidate.resolve().is_relative_to(root.resolve()):
-        raise ValueError(f"Installation path escapes prefix: {relative}")
+    # The relative components cannot traverse or select a drive, and every
+    # ancestor was checked without following links. Resolving both paths again
+    # adds filesystem walks without strengthening this containment check.
+    # Keep these checks per call: do not cache admission across replacements.
     return candidate
 
 

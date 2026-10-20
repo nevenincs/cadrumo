@@ -1,12 +1,16 @@
-"""Remove unchanged receipt-owned installation files through exact Windows handles."""
+"""Inspect native installation paths and remove files through exact Windows handles."""
 
 from __future__ import annotations
 
+import ctypes
 import hashlib
 import os
 import sys
+from collections.abc import Callable
 from contextlib import ExitStack
+from functools import cache
 from pathlib import Path
+from typing import cast
 
 from cadrumo.adapters.persistence.storage.custody.filesystem_primitives import (
     WindowsDirectoryAnchorErrors,
@@ -16,10 +20,44 @@ from cadrumo.adapters.persistence.storage.custody.filesystem_primitives import (
 )
 
 
+@cache
+def _file_attributes_api() -> Callable[[str], int]:
+    if sys.platform == "win32":
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        attributes = kernel32.GetFileAttributesW
+        attributes.argtypes = [wintypes.LPCWSTR]
+        attributes.restype = wintypes.DWORD
+        return cast(Callable[[str], int], attributes)
+    raise ValueError("Native Windows attributes are unavailable")
+
+
+def windows_path_redirects(path: Path) -> bool:
+    """Inspect fresh no-follow attributes without opening a metadata handle.
+
+    Cache only the API binding, never a path's attributes. GetFileAttributesW
+    describes the link itself, so every reparse point is refused, including a
+    dangling junction. Missing names are valid for not-yet-created members.
+    """
+    if sys.platform == "win32":
+        attributes = _file_attributes_api()(str(path))
+        if attributes == 0xFFFFFFFF:
+            error = ctypes.get_last_error()
+            if error in (2, 3):
+                return False
+            if error == 53 and path == Path(path.anchor):
+                # GetFileAttributes cannot inspect a bare UNC share. Keep the
+                # previous no-follow metadata inspection for that ancestor.
+                return bool(path.lstat().st_file_attributes & 0x400)
+            raise ctypes.WinError(error)
+        return bool(attributes & 0x400)
+    raise ValueError("Native Windows attributes are unavailable")
+
+
 def remove_windows_owned_file(path: Path, checksum: str, expected: tuple[int, int]) -> bool:
     """Delete only the unchanged preflight identity while native handles deny replacement."""
     if sys.platform == "win32":
-        import ctypes
         import msvcrt
         from ctypes import wintypes
 
