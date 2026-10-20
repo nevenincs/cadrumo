@@ -20,6 +20,8 @@ from .agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
 
 _STANDARD_ERROR_CHUNK_BYTES: Final = 4096
 _STANDARD_ERROR_RELEASE_SECONDS: Final = 1.0
+_DIAGNOSTIC_BACKLOG_BYTES: Final = 1024 * 1024
+"""Agent output the application log may fall behind by before the excess is dropped."""
 _OUTPUT_SETTLE_SECONDS: Final = 2.0
 """How long an invocation that has exited is given to finish delivering its standard output."""
 _INVOCATION_TERMINATE_SECONDS: Final = 10.0
@@ -32,6 +34,12 @@ class _StandardErrorTail:
     or a chatty agent would block on a full pipe. Everything but the last
     bytes is discarded after structured diagnostics are forwarded to the application
     log. The host still reads the native launch-profile refusal from the end.
+
+    The drain only reads: diagnostics reach the application log from a thread of
+    their own. Writing the log can stall for seconds on a loaded disk, and a
+    drain that waited on it would stop reading, fill the pipe and block every
+    agent process that logs, its stop included. Output the log has not taken
+    when the backlog reaches its bound is dropped and counted, never waited on.
     """
 
     def __init__(self, stream: BinaryIO, *, limit: int, diagnostics: AgentDiagnosticLines | None = None) -> None:
@@ -41,6 +49,11 @@ class _StandardErrorTail:
         self._limit = limit
         self._lock = Lock()
         self._tail = bytearray()
+        self._backlog: Queue[bytes | None] = Queue()
+        self._backlog_bytes = 0
+        self._dropping = False
+        if diagnostics is not None:
+            Thread(target=self._forward, args=(diagnostics,), name="agent-diagnostic-log", daemon=True).start()
         self._drain_thread = Thread(target=self._drain, name="agent-standard-error", daemon=True)
         self._drain_thread.start()
 
@@ -63,16 +76,43 @@ class _StandardErrorTail:
             with contextlib.suppress(OSError, ValueError):
                 reader = getattr(self._stream, "read1", self._stream.read)
                 while chunk := reader(_STANDARD_ERROR_CHUNK_BYTES):
-                    if self._diagnostics is not None:
-                        self._diagnostics.feed(chunk)
                     with self._lock:
                         self._tail += chunk
                         del self._tail[: -self._limit]
+                        if self._diagnostics is not None:
+                            self._hand_to_log(chunk)
         finally:
-            if self._diagnostics is not None:
-                self._diagnostics.finish()
+            with self._lock:
+                if self._dropping:
+                    self._backlog.put(b"")
+            # The end of the output, after every chunk already handed over.
+            self._backlog.put(None)
             with contextlib.suppress(OSError):
                 self._stream.close()
+
+    def _hand_to_log(self, chunk: bytes) -> None:
+        """Queue a chunk for the log, or drop it while the backlog is at its bound; the lock is held."""
+        if self._backlog_bytes + len(chunk) > _DIAGNOSTIC_BACKLOG_BYTES:
+            self._dropping = True
+            return
+        if self._dropping:
+            # Tells the log that output went missing before this chunk.
+            self._backlog.put(b"")
+            self._dropping = False
+        self._backlog_bytes += len(chunk)
+        self._backlog.put(chunk)
+
+    def _forward(self, diagnostics: AgentDiagnosticLines) -> None:
+        try:
+            while (chunk := self._backlog.get()) is not None:
+                if chunk:
+                    with self._lock:
+                        self._backlog_bytes -= len(chunk)
+                    diagnostics.feed(chunk)
+                else:
+                    diagnostics.lost()
+        finally:
+            diagnostics.finish()
 
 
 class WindowsAgentProcess:
@@ -160,6 +200,10 @@ class WindowsAgentProcess:
             self._output.close()
             # The drain closes its own end once the job's writers are gone.
             self._standard_error.release(timeout=_STANDARD_ERROR_RELEASE_SECONDS)
+
+    def work_done(self) -> tuple[int, ...] | None:
+        """What the whole tree has done so far, as its job accounts it; ``None`` once the job is released."""
+        return self._scope.work_done()
 
     def job_limit_flags(self) -> int:
         """The agent job's limit flags as the kernel holds them; it never admits breakaway."""

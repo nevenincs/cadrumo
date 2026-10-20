@@ -43,6 +43,7 @@ _FAKE = b"sk-test-NOT-A-REAL-KEY"
 _GATEWAY_FAKE = b"zai-test-NOT-A-REAL-KEY"
 _ZAI_URL = "https://api.z.ai/api/anthropic"
 _CONTROLLER_LOGGER = "cadrumo_agent_service.host.controller"
+_RETIREMENT_LOGGER = "cadrumo_agent_service.host.controller.retirement"
 
 
 class _CredentialSource:
@@ -69,7 +70,7 @@ class _CredentialSource:
 
 
 def _controller(
-    tmp_path: Path, mode: str, source: _CredentialSource, *, ready_timeout: float = 30
+    tmp_path: Path, mode: str, source: _CredentialSource, *, ready_timeout: float = 30, stop_grace: float = 10
 ) -> AgentHostController:
     return AgentHostController(
         launcher=WindowsAgentProcessLauncher(),
@@ -80,7 +81,7 @@ def _controller(
             directory=tmp_path,
             environment=fixture_environment(),
             ready_timeout=ready_timeout,
-            stop_grace=10,
+            stop_grace=stop_grace,
         ),
     )
 
@@ -295,6 +296,50 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
     finally:
         controller.stop()
     assert not [thread for thread in threading.enumerate() if thread.name == "agent-standard-error"]
+
+
+def test_a_tree_that_ignores_the_stop_is_ended_once_it_does_no_work_not_at_the_grace_period(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The agent never reads the end of its input, and its grandchild only sleeps.
+
+    The stall bound is 1 s and the tree is sampled every 0.1 s, so the stop
+    ends the tree after about 1.1 s; the 30 s grace period would never be
+    reached. The bound of 5 s leaves the job's termination its loaded-host time.
+    """
+    controller = _controller(tmp_path, "deaf", _CredentialSource(), stop_grace=30)
+    controller.start()
+    grandchild = _received(tmp_path)["grandchild"]
+    assert isinstance(grandchild, int)
+    try:
+        with caplog.at_level(logging.INFO, logger=_RETIREMENT_LOGGER):
+            started = time.monotonic()
+            controller.stop()
+            elapsed = time.monotonic() - started
+    finally:
+        controller.stop()
+    assert controller.state is AgentHostState.DETACHED
+    assert 1.0 <= elapsed < 5.0, f"the stop took {elapsed:.3f} s"
+    assert not _alive(grandchild, within=5)
+    retired = [record.getMessage() for record in caplog.records if record.name == _RETIREMENT_LOGGER]
+    assert len(retired) == 1
+    assert retired[0].startswith("agent tree retired: stop stalled after ")
+
+
+def test_a_tree_that_exits_on_the_stop_is_ended_as_soon_as_it_has(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    controller = _controller(tmp_path, "ready", _CredentialSource())
+    controller.start()
+    with caplog.at_level(logging.INFO, logger=_RETIREMENT_LOGGER):
+        started = time.monotonic()
+        controller.stop()
+        elapsed = time.monotonic() - started
+    assert (tmp_path / "stopped").read_text(encoding="utf-8") == "stdin closed"
+    assert elapsed < 5.0, f"the stop took {elapsed:.3f} s"
+    retired = [record.getMessage() for record in caplog.records if record.name == _RETIREMENT_LOGGER]
+    assert len(retired) == 1
+    assert retired[0].startswith("agent tree retired: stop exited after ")
 
 
 def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(

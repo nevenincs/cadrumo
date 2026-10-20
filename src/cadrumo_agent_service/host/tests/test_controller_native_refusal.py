@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -81,10 +82,16 @@ class _Process:
             # Only the first observation fails: the controller's own retirement waits afterwards.
             error, self._wait_error = self._wait_error, None
             raise error
+        if self._status is None:
+            time.sleep(timeout)
         return self._status
 
     def terminate(self, *, timeout: float) -> None:
         self.terminated = True
+
+    def work_done(self) -> tuple[int, ...] | None:
+        # A scripted tree does no work, so a stop it does not answer is taken as ignored.
+        return ()
 
     def contains_process_id(self, process_id: int) -> bool:
         return False

@@ -174,6 +174,7 @@ class AgentDiagnosticLines:
         self._sink, self._pid, self._cli = sink, pid, cli
         self._partial = bytearray()
         self._oversize = False
+        self._discarding = False
         self._cli_record = bytearray()
 
     def _line(self, data: bytes) -> None:
@@ -203,15 +204,26 @@ class AgentDiagnosticLines:
             if index:
                 if self._oversize:
                     self._sink.problem("agent_diagnostic_line_too_large")
-                elif self._partial:
+                elif self._partial and not self._discarding:
                     self._line(bytes(self._partial).rstrip(b"\r"))
                 self._partial.clear()
                 self._oversize = False
+                self._discarding = False
+            if self._discarding:
+                continue
             if len(self._partial) + len(part) > _LINE_BYTES:
                 self._oversize = True
                 self._partial.clear()
             elif not self._oversize:
                 self._partial.extend(part)
+
+    def lost(self) -> None:
+        """Report output dropped before the next chunk, and discard the line it broke through its newline."""
+        self._sink.problem("agent_diagnostic_output_dropped")
+        self._flush_cli()
+        self._partial.clear()
+        self._oversize = False
+        self._discarding = True
 
     def finish(self) -> None:
         """Drain a last unterminated diagnostic after the writer has ended."""

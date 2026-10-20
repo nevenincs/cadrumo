@@ -4,8 +4,9 @@ The controller resolves the profile's provider credentials, starts the agent
 inside a contained process tree, writes the credentials once as a standard-input
 frame, and waits for a single ready line. It publishes the agent only while the
 sign-in and provider-settings generations it started under are still current.
-Closing the agent's standard input is the stop signal; a tree that has not
-exited within the grace period is terminated whole. A tree that ends before its
+Closing the agent's standard input is the stop signal. The tree is terminated
+whole once its agent has exited, once the whole tree has done no work at all
+for the stall bound, or at the grace period, whichever comes first. A tree that ends before its
 ready line with the native host's launch-profile refusal status is a typed
 refusal that records the host's own code and subject.
 """
@@ -14,6 +15,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -30,12 +32,16 @@ from .credential_frame import AgentCredential, CredentialFrameError, build_crede
 from .native_refusal import NativeLaunchRefusal, native_launch_refusal_from
 
 _LOGGER = get_logger(__name__)
+_RETIREMENT_LOGGER = _LOGGER.getChild("retirement")
+"""Each retirement's phases; kept apart so the launch path's own records stay what they are."""
 
 READY_LINE_MAX_BYTES: Final = 4 * 1024
 EXIT_OBSERVATION_SECONDS: Final = 2.0
 """How long a tree whose pipe ended is given to report the status it exited with."""
 STANDARD_ERROR_SETTLE_SECONDS: Final = 1.0
 """How long a tree that has exited is given to finish delivering its standard error."""
+STOP_SAMPLE_SECONDS: Final = 0.1
+"""How often a stopping tree's exit and work are observed."""
 HOSTING_CONTRACT: Final = 1
 """The one hosting-contract version this host speaks; an agent announcing another is refused."""
 
@@ -147,6 +153,13 @@ class AgentProcess(Protocol):
         """End the whole tree and confirm no member remains."""
         ...
 
+    def work_done(self) -> tuple[int, ...] | None:
+        """What the whole tree has done so far, unchanged only while no member runs or performs I/O.
+
+        ``None`` where it cannot be observed.
+        """
+        ...
+
     def contains_process_id(self, process_id: int) -> bool:
         """Whether this live process belongs to the agent's tree, as the kernel's containment says."""
         ...
@@ -172,6 +185,13 @@ class AgentLaunch:
     environment: Mapping[str, str]
     ready_timeout: float = 60.0
     stop_grace: float = 10.0
+    stop_stall: float = 1.0
+    """How long a stopping tree may do no work at all before it is taken to ignore the stop.
+
+    A stopping gateway and worker keep running and doing I/O until they exit:
+    under generated processor, disk and process-start load their longest pause
+    was 0.25 s, except while the whole machine stalled.
+    """
     terminate_timeout: float = 10.0
 
 
@@ -339,21 +359,61 @@ class AgentHostController:
             self._state = AgentHostState.STOPPING if process is not None else AgentHostState.DETACHED
         if process is None:
             return
+        signalled = time.monotonic()
+        ended_by = "unobserved"
+        stopped = signalled
         try:
             with contextlib.suppress(OSError):
                 process.close_input()
             # Give the agent its grace to settle the live run, then end the whole
             # tree either way: an exited agent can leave descendants running.
-            process.wait(timeout=self._launch.stop_grace)
+            ended_by = self._await_stop(process, signalled)
+            stopped = time.monotonic()
             process.terminate(timeout=self._launch.terminate_timeout)
         except BaseException:
+            failed = time.monotonic()
+            _RETIREMENT_LOGGER.warning(
+                "agent tree not retired: stop %s after %.3f s, termination unconfirmed after %.3f s",
+                ended_by,
+                stopped - signalled,
+                failed - stopped,
+            )
             with self._lock:
                 self._process = process
                 self._state = AgentHostState.STOPPING
             raise
         else:
+            ended = time.monotonic()
+            _RETIREMENT_LOGGER.info(
+                "agent tree retired: stop %s after %.3f s, tree ended %.3f s later, %.3f s in all",
+                ended_by,
+                stopped - signalled,
+                ended - stopped,
+                ended - signalled,
+            )
             with self._lock:
                 self._state = AgentHostState.DETACHED
+
+    def _await_stop(self, process: AgentProcess, signalled: float) -> str:
+        """Wait for the agent to exit; say how the wait ended.
+
+        ``exited`` when the agent exited, ``stalled`` when the whole tree did no
+        work for the stall bound, and ``grace`` at the grace period. A tree whose
+        work cannot be observed is given the grace period.
+        """
+        deadline = signalled + self._launch.stop_grace
+        work: tuple[int, ...] | None = None
+        working_at = signalled
+        while (remaining := deadline - time.monotonic()) > 0:
+            if process.wait(timeout=min(STOP_SAMPLE_SECONDS, remaining)) is not None:
+                return "exited"
+            now = time.monotonic()
+            current = process.work_done()
+            if current is None or current != work:
+                work, working_at = current, now
+            elif now - working_at >= self._launch.stop_stall:
+                return "stalled"
+        return "grace"
 
 
 def _ended_before_ready(process: AgentProcess, refusal: AgentHostRefusal, *, observe: float) -> AgentHostError:

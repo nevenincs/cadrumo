@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -159,3 +161,55 @@ def test_a_relayed_worker_record_keeps_its_exception_detail(log_file: Path) -> N
     assert written.count("relayed probe") == 1
     assert "RuntimeError: diagnostic failure" in written
     assert "PRIVATE-TOOL-CANARY" not in written
+
+
+class _StalledLog(logging.Handler):
+    """A log destination whose writes wait until it is released, as a file on a saturated disk does."""
+
+    def __init__(self) -> None:
+        super().__init__(logging.DEBUG)
+        self.entered = threading.Event()
+        self.released = threading.Event()
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        self.entered.set()
+        self.released.wait(30)
+
+
+def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: Path) -> None:
+    """A stalled log never stops the drain: the agent's writes complete and the loss is reported.
+
+    Before the drain handed lines to their own thread, the first write into a
+    stalled log stopped all reading and the writer blocked on the full pipe
+    for as long as the log stalled.
+    """
+    import os
+    import time
+
+    stalled = _StalledLog()
+    logger = logging.getLogger("cadrumo_agent.worker.executor")
+    logger.addHandler(stalled)
+    reader, writer = os.pipe()
+    stream = os.fdopen(reader, "rb")
+    tail = _StandardErrorTail(
+        stream, limit=8192, diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=os.getpid())
+    )
+    try:
+        os.write(writer, _line(1))
+        assert stalled.entered.wait(10)
+        # Twice the backlog the log may fall behind by, far past what the pipe holds.
+        record = _line(2, message="x" * 900)
+        started = time.monotonic()
+        for _ in range(2 * 1024 * 1024 // len(record)):
+            os.write(writer, record)
+        assert time.monotonic() - started < 10
+    finally:
+        stalled.released.set()
+        os.close(writer)
+        tail.release(timeout=10)
+        logger.removeHandler(stalled)
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline and "agent_diagnostic_output_dropped" not in _read(log_file):
+        time.sleep(0.05)
+    assert "agent_diagnostic_output_dropped" in _read(log_file)

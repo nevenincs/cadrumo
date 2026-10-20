@@ -3,7 +3,8 @@
 Modes: ``ready`` answers ready; ``chatty`` fills its standard error far past a
 pipe's capacity and then answers ready; ``future`` answers ready under a hosting
 contract this host does not speak; ``refuse`` answers a refusal; ``silent`` never
-answers. Every one of these records what it received (provider ids and a digest
+answers; ``deaf`` answers ready, then never reads its standard input again, so
+it ignores the stop signal. Every one of these records what it received (provider ids and a digest
 of the frame, never the frame), its environment and its arguments, and in
 ``ready`` mode starts a grandchild that only the job can end.
 
@@ -59,7 +60,7 @@ def main() -> None:
     document = json.loads(frame) if frame.strip() else {}
     providers = sorted(document.get("credentials", {}))
     grandchild = None
-    if mode == "ready":
+    if mode in {"ready", "deaf"}:
         grandchild = subprocess.Popen(
             [sys.executable, "-c", "import time; time.sleep(600)"],
             stdin=subprocess.DEVNULL,
@@ -122,7 +123,7 @@ sys.stdout.write(line)
         # The agent relays its worker's records on its own standard error; the files are only copies.
         sys.stderr.buffer.write(relayed)
         sys.stderr.flush()
-    if mode in {"ready", "chatty", "diagnostics"}:
+    if mode in {"ready", "chatty", "diagnostics", "deaf"}:
         answer = {"event": "agent_ready", "gateway_port": 47001, "agent_version": "0.0.0-test", "hosting_contract": 1}
     elif mode == "future":
         answer = {"event": "agent_ready", "gateway_port": 47001, "agent_version": "9.0.0-test", "hosting_contract": 2}
@@ -133,6 +134,9 @@ sys.stdout.write(line)
         return
     sys.stdout.buffer.write(json.dumps(answer).encode("utf-8") + b"\n")
     sys.stdout.buffer.flush()
+    if mode == "deaf":
+        time.sleep(600)
+        return
     sys.stdin.buffer.read()
     (record / "stopped").write_text("stdin closed", encoding="utf-8")
 

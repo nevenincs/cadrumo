@@ -470,6 +470,36 @@ class WindowsProcessScope:
         limits = cast("dict[str, object]", information["BasicLimitInformation"])
         return int(cast("int", limits["LimitFlags"]))
 
+    def work_done(self) -> tuple[int, ...] | None:
+        """The job's accumulated processor time, page faults, processes and I/O, or ``None`` once it is released.
+
+        The values move while any member runs, faults a page in, starts or
+        ends, or performs I/O, so two equal readings mean the whole tree did
+        nothing in between. It is one kernel query, cheap enough to sample.
+        """
+        if sys.platform != "win32":
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+        import win32job
+
+        with self._lock:
+            if self._job is None:
+                return None
+            query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
+            information = cast(
+                "dict[str, dict[str, int]]", query_job(self._job, win32job.JobObjectBasicAndIoAccountingInformation)
+            )
+        basic, io = information["BasicInfo"], information["IoInfo"]
+        return (
+            basic["TotalUserTime"],
+            basic["TotalKernelTime"],
+            basic["TotalPageFaultCount"],
+            basic["TotalProcesses"],
+            basic["ActiveProcesses"],
+            io["ReadOperationCount"],
+            io["WriteOperationCount"],
+            io["OtherOperationCount"],
+        )
+
     def contains_process(self, process_handle: int) -> bool:
         """Corroborate a retained live native process against this exact Job."""
         if sys.platform != "win32":
