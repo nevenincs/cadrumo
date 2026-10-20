@@ -22,6 +22,7 @@ def log_startup_phase(
     elapsed: float,
     *,
     primary_error: BaseException | None = None,
+    expected_refusals: tuple[type[Exception], ...] = (),
 ) -> None:
     """Keep diagnostic failures from replacing an existing product primary."""
     outcome = "entered" if transition == "enter" else "completed"
@@ -33,6 +34,8 @@ def log_startup_phase(
     }
     if primary_error is not None:
         outcome = "cancelled" if isinstance(primary_error, CancelledError | KeyboardInterrupt) else "failed"
+        if isinstance(primary_error, expected_refusals):
+            outcome = "refused"
         fields["outcome"] = outcome
         fields.update(diagnostic_error_fields(primary_error))
     diagnostic_event(
@@ -45,8 +48,14 @@ def log_startup_phase(
 
 
 @contextmanager
-def startup_phase(logger: Logger, phase: str) -> Generator[None]:
-    """Emit only fixed phase names and elapsed native monotonic seconds."""
+def startup_phase(
+    logger: Logger, phase: str, *, expected_refusals: tuple[type[Exception], ...] = ()
+) -> Generator[None]:
+    """Time a phase; declared policy refusals stay distinct from startup faults.
+
+    Every exception still escapes unchanged. Callers must name their expected
+    refusal types explicitly; transport and unexpected errors remain failures.
+    """
     with diagnostic_scope():
         started = time.monotonic()
         primary: BaseException | None = None
@@ -58,4 +67,6 @@ def startup_phase(logger: Logger, phase: str) -> Generator[None]:
             raise
         finally:
             elapsed = time.monotonic() - started
-            log_startup_phase(logger, phase, "leave", elapsed, primary_error=primary)
+            log_startup_phase(
+                logger, phase, "leave", elapsed, primary_error=primary, expected_refusals=expected_refusals
+            )

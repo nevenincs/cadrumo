@@ -702,7 +702,7 @@ impl Tracker {
         if let Some(language) = &self.locale {
             return Ok(language.clone());
         }
-        let reply = bridge.call(json!({"action": "language_read"}))?;
+        let reply = bridge.call(json!({"action": "language_observe"}))?;
         let language = reply["language"].as_str().map(str::to_owned);
         self.locale = Some(language.clone());
         Ok(language)

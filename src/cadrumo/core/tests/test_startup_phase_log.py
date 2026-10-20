@@ -139,6 +139,23 @@ def test_context_manager_keeps_body_error_when_leave_logging_is_interrupted() ->
     assert [_fields(r)[1] for r in capture.records] == ["enter"]
 
 
+@pytest.mark.parametrize("expected", [True, False])
+def test_expected_refusal_preserves_the_error_without_reporting_a_startup_crash(expected: bool) -> None:
+    logger, capture = _logger()
+    primary = PermissionError("private password refusal")
+    with (
+        pytest.raises(PermissionError) as raised,
+        startup_phase(logger, "worker_human_proof", expected_refusals=(PermissionError,) if expected else ()),
+    ):
+        raise primary
+    assert raised.value is primary
+    record = capture.records[-1]
+    assert record.__dict__["outcome"] == ("refused" if expected else "failed")
+    assert record.levelno == (logging.DEBUG if expected else logging.ERROR)
+    assert record.__dict__["error_type"] == "PermissionError"
+    assert "private password refusal" not in record.getMessage()
+
+
 def test_context_manager_raises_leave_interruption_without_a_body_error() -> None:
     logger, _ = _logger()
 

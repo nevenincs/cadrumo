@@ -273,7 +273,7 @@ async def _handle_human_control(context: _WorkerControl, request: object) -> _Co
     if not isinstance(request, ProfileWorkerControlRequest) or request.action not in {"password", "receipt"}:
         return None
     with (
-        startup_phase(_log, "worker_human_proof"),
+        startup_phase(_log, "worker_human_proof", expected_refusals=(ProfileAccessRefusedError,)),
         read_secret(context.channel, deadline=time.monotonic() + 5) as secret,
     ):
         if request.action == "password":

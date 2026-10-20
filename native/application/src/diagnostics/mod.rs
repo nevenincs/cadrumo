@@ -504,6 +504,14 @@ impl Diagnostics {
         id
     }
     pub fn finish(&self, id: u64, code: Option<i32>, phase: ProcessPhase) {
+        self.finish_child(id, code, phase, false);
+    }
+    /// Helpers report their decoded envelope after output collection. A nonzero
+    /// exit alone cannot distinguish a routine refusal from a broken child.
+    pub fn finish_helper(&self, id: u64, code: Option<i32>, phase: ProcessPhase) {
+        self.finish_child(id, code, phase, true);
+    }
+    fn finish_child(&self, id: u64, code: Option<i32>, phase: ProcessPhase, helper: bool) {
         self.state
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -516,7 +524,9 @@ impl Diagnostics {
                 EventKind::ChildExited
             },
             Some(id),
-            if phase == ProcessPhase::Failed || (phase == ProcessPhase::Exited && code != Some(0)) {
+            if phase == ProcessPhase::Failed
+                || (!helper && phase == ProcessPhase::Exited && code != Some(0))
+            {
                 Some(ApplicationError::new(
                     ErrorCode::ChildFailed,
                     Operation::Launch,

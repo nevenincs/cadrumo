@@ -168,7 +168,8 @@ impl Children {
         match outcome {
             Ok(Some((status, phase))) => {
                 if let Some(process) = active.process.take() {
-                    self.diagnostics.finish(process, status.code(), phase);
+                    self.diagnostics
+                        .finish_helper(process, status.code(), phase);
                 }
                 Ok(())
             }
@@ -528,7 +529,7 @@ impl Children {
         {
             if let Some(process) = active.process.take() {
                 self.diagnostics
-                    .finish(process, status.code(), ProcessPhase::Exited);
+                    .finish_helper(process, status.code(), ProcessPhase::Exited);
             }
             active.child = None;
             active.busy = false;

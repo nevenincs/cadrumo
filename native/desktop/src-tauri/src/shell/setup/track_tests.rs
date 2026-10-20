@@ -252,7 +252,7 @@ impl Relay for FakeHold {
             .unwrap_or_default()
             .to_owned();
         Ok(match request["action"].as_str().expect("an action") {
-            "language_read" => json!({"kind": "profile_language", "language": "es"}),
+            "language_observe" => json!({"kind": "profile_language", "language": "es"}),
             "operation_submit" => {
                 if request["definition_id"] == SETUP
                     && let Some(holder) = self.busy_holder.clone()

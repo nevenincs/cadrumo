@@ -1,10 +1,11 @@
 use super::format::Level;
 use cadrumo_application::diagnostics::{
     Event, EventKind, HostOutcome,
-    helper::HelperOutcome,
+    helper::{HelperDecode, HelperOutcome},
     lifecycle::{LifecycleFact, RuntimeExit, RuntimeReason, SupervisorOutcome},
     service::{AgentRefusal, ServiceFact},
 };
+use cadrumo_application::process::status::ProcessRole;
 
 const PROJECT_LOGGER_ROOTS: [&str; 5] = [
     "cadrumo",
@@ -53,13 +54,34 @@ pub fn level(event: &Event) -> Level {
         };
     }
     if let Some(fact) = &event.helper_result {
-        return if fact.envelope_decode
-            == cadrumo_application::diagnostics::helper::HelperDecode::Success
-        {
-            Level::Debug
-        } else {
-            Level::Error
+        return match fact.envelope_decode {
+            HelperDecode::Success => Level::Debug,
+            HelperDecode::Refused
+                if fact.command == "config.login"
+                    && fact.code.as_deref() == Some("REFUSED_CLI_BOUNDARY")
+                    && matches!(
+                        fact.reason.as_deref(),
+                        Some("credential_rejected" | "throttled")
+                    ) =>
+            {
+                Level::Warning
+            }
+            _ => Level::Error,
         };
+    }
+    // Helper envelopes own the outcome classification. Exit and timing facts
+    // remain available without multiplying one refusal into several failures.
+    if event
+        .status
+        .as_ref()
+        .is_some_and(|s| s.role == ProcessRole::SignIn)
+        && (matches!(event.kind, EventKind::ChildExited)
+            || (matches!(event.kind, EventKind::HelperTiming)
+                && event
+                    .helper_timing
+                    .is_some_and(|fact| fact.outcome == HelperOutcome::NonzeroExit)))
+    {
+        return Level::Debug;
     }
     match event.kind {
         EventKind::Failure => Level::Error,
@@ -215,6 +237,62 @@ mod tests {
         diagnostics::{Diagnostics, HostStage},
         process::status::ProcessRole,
     };
+
+    #[test]
+    fn helper_refusal_has_one_warning_and_bad_output_still_has_one_error() {
+        use cadrumo_application::diagnostics::helper::{
+            HelperExecutable, HelperIdentity, HelperKind, HelperResult, HelperTiming,
+        };
+        use cadrumo_application::process::status::ProcessPhase;
+        let identity = HelperIdentity {
+            command: "config.login",
+            executable: HelperExecutable::Cli,
+        };
+        let refusal = serde_json::json!({
+            "schema_version": "2", "command": "config.login", "status": "error",
+            "error": { "code": "REFUSED_CLI_BOUNDARY", "context": { "reason": "credential_rejected" } }
+        }).to_string();
+        for (stderr, expected) in [
+            (refusal.as_bytes(), Level::Warning),
+            (b"broken child".as_slice(), Level::Error),
+        ] {
+            let diagnostics = Diagnostics::default();
+            let id = diagnostics.start(4200, ProcessRole::SignIn);
+            diagnostics.finish_helper(id, Some(2), ProcessPhase::Exited);
+            diagnostics.helper_result(
+                Some(id),
+                HelperResult::inspect(identity, false, b"", stderr),
+                None,
+            );
+            diagnostics.helper_timing(
+                Some(id),
+                HelperTiming {
+                    helper_kind: HelperKind::Mutation,
+                    outcome: HelperOutcome::NonzeroExit,
+                    admission_wait_ms: 0,
+                    spawn_ms: Some(1),
+                    execution_ms: Some(500),
+                    cleanup_ms: Some(1),
+                    output_join_ms: Some(0),
+                    total_ms: 502,
+                },
+            );
+            let events = diagnostics.snapshot(0).events;
+            assert_eq!(
+                events.iter().map(level).collect::<Vec<_>>(),
+                [Level::Debug, Level::Debug, expected, Level::Debug]
+            );
+            assert_eq!(events[1].status.as_ref().unwrap().exit_code, Some(2));
+            assert!(events[1].failure.is_none());
+        }
+        let diagnostics = Diagnostics::default();
+        let id = diagnostics.start(4201, ProcessRole::SignIn);
+        diagnostics.finish_helper(id, None, ProcessPhase::Failed);
+        assert_eq!(
+            level(diagnostics.snapshot(0).events.last().unwrap()),
+            Level::Error
+        );
+    }
 
     #[test]
     fn owned_python_logger_families_are_closed_at_the_package_boundary() {

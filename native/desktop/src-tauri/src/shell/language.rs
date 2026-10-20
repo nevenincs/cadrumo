@@ -278,7 +278,9 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 
 #[tauri::command]
 async fn desktop_language_read(host: State<'_, Arc<LanguageHost>>) -> Result<DesktopLanguage> {
-    host.refresh(None, false).await
+    // Mounts and sign-in transitions can request a read alongside the watcher.
+    // The person holder invalidates its exact-session cache on runtime pushes.
+    host.refresh(None, true).await
 }
 
 #[tauri::command]
