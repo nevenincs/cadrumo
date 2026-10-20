@@ -318,7 +318,9 @@ fn person_refusal(
 ) -> &'static str {
     match error.reason.as_deref() {
         Some("agent_service_unavailable") => "agent_service_busy",
-        Some("person_not_signed_in" | "person_request_refused") => "agent_signed_out",
+        Some("person_not_signed_in" | "person_request_refused" | "person_session_retired") => {
+            "agent_signed_out"
+        }
         _ => "agent_service_failed",
     }
 }
@@ -725,6 +727,7 @@ mod tests {
             ("person_bridge_closed", "agent_service_failed"),
             ("person_reply_timeout", "agent_service_failed"),
             ("person_not_signed_in", "agent_signed_out"),
+            ("person_session_retired", "agent_signed_out"),
         ] {
             let error = ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
                 .with_reason(reason);

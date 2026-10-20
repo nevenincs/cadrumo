@@ -815,15 +815,29 @@ async fn retire_failed_person(
     {
         return false;
     }
-    shared.diagnostics.host_failure(HostStage::Agent, error);
+    let retired = error.reason.as_deref() == Some("person_session_retired");
+    if !retired {
+        shared.diagnostics.host_failure(HostStage::Agent, error);
+    }
     publish(
         shared,
         State::Refused {
-            code: Refusal::ServiceFailed,
+            code: if retired {
+                Refusal::SignedOut
+            } else {
+                Refusal::ServiceFailed
+            },
         },
     );
-    let _ = stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
-    true
+    let cause = if retired {
+        AgentStopCause::SignInUnavailable
+    } else {
+        AgentStopCause::ProtocolRefused
+    };
+    let _ = stop_running(shared, Some(generation), cause).await;
+    // A revoked session needs a fresh authority observation, not a service
+    // failure retry. Transport faults retain the bounded retry policy.
+    !retired
 }
 
 /// The one moment this round must look again without a new observation: when
@@ -1796,6 +1810,35 @@ mod tests {
             rig.supervisor.retry();
             serving(&rig, from).await;
             assert!(!original.same_instance(&rig.supervisor.gateway().unwrap()));
+            rig.supervisor.close().await.unwrap();
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn a_retired_person_stops_the_service_without_a_service_failure_retry() {
+            let rig = rig(false, false);
+            serving(&rig, 0).await;
+            let generation = rig.supervisor.gateway().unwrap().generation;
+            // Keep the next authority observation retired as well.
+            *rig.observation.lock().unwrap() = observed(false, true, Some("A"));
+            let from = lock(&rig.statuses).len();
+            let retry = retire_failed_person(
+                &rig.supervisor.shared,
+                generation,
+                ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                    .with_reason("person_session_retired"),
+            )
+            .await;
+            assert!(!retry);
+            let refused = until(&rig, from, "refused").await;
+            assert_eq!(refused["code"], "agent_signed_out");
+            assert!(rig.supervisor.gateway().is_none());
+            assert!(lock(&rig.supervisor.shared.running).is_none());
+            assert!(
+                !rig.diagnostics.snapshot(u64::MAX).events.iter().any(|event| {
+                    event.failure.is_some()
+                        || matches!(event.service, Some(ServiceFact::AgentRetryScheduled { .. }))
+                })
+            );
             rig.supervisor.close().await.unwrap();
         }
 

@@ -350,6 +350,18 @@ impl Person {
                 error
             }
         })?;
+        // Retirement is an unsolicited terminal event, so it has no request
+        // correlation key. Preserve session loss instead of diagnosing it as
+        // a malformed reply. exchange() still closes and fences this bridge.
+        if reply["kind"] == "session_retired" {
+            if reply["profile_id"] != self.identity["profile_id"] {
+                return Err(failed("person_reply_identity_mismatch"));
+            }
+            return Err(
+                ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                    .with_reason("person_session_retired"),
+            );
+        }
         self.refused_in_step = reply["kind"] == "session_refused" && reply["request_id"] == id;
         if reply["kind"] == "session_refused" {
             return Err(self.refused("person_request_refused", &reply));
@@ -729,6 +741,40 @@ mod failure_tests {
     use cadrumo_application::error::application::Cause;
 
     const PROFILE: &str = "12345678-1234-4234-8234-123456789abc";
+
+    #[test]
+    fn retirement_during_an_exchange_is_session_loss_and_never_a_reply_mismatch() {
+        let identity = json!({
+            "kind": "session_held",
+            "profile_id": PROFILE,
+            "session_id": request_id().unwrap(),
+            "runtime_boot_id": request_id().unwrap(),
+            "connection_id": request_id().unwrap(),
+        });
+        let retired = json!({"kind": "session_retired", "profile_id": PROFILE});
+        let script = format!(
+            "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
+             $null = [Console]::In.ReadLine(); \
+             [Console]::Out.WriteLine('{retired}'); [Console]::Out.Flush(); \
+             if ($null -ne [Console]::In.ReadLine()) {{ exit 9 }}; exit 0 }}"
+        );
+        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        let (events, mut heard) = tokio::sync::broadcast::channel(4);
+        *person.events.lock().unwrap() = Some(events);
+        let failure = person.failures();
+        let error = person.exchange(json!({"action": "activity"})).unwrap_err();
+        assert_eq!(error.code, ErrorCode::SessionUnavailable);
+        assert_eq!(error.reason.as_deref(), Some("person_session_retired"));
+        assert_eq!(heard.try_recv().unwrap(), PersonEvent::Retired);
+        assert_eq!(failure.borrow().as_ref().unwrap().reason, error.reason);
+        assert!(!person.is_open());
+        let later = person.exchange(json!({"action": "status"})).unwrap_err();
+        assert_eq!(later.reason.as_deref(), Some("person_bridge_closed"));
+        assert!(
+            person.child.wait().unwrap().success(),
+            "no request was replayed"
+        );
+    }
 
     #[test]
     fn a_refused_hold_names_the_childs_refusal_reason_frame_and_trace() {
