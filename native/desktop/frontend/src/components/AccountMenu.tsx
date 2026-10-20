@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ export function AccountMenu({
   onSignOut,
   onCreate,
   onAbout,
+  google,
 }: {
   account: SignInController;
   onSignIn: () => void;
@@ -28,6 +29,7 @@ export function AccountMenu({
   onCreate: () => void;
   /** Opens the About dialog, where the host can say what is installed. */
   onAbout?: () => void;
+  google?: ReactNode;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
@@ -191,6 +193,12 @@ export function AccountMenu({
                 {t("desktop.account.switch_hint")}
               </p>
             )}
+          </>
+        )}
+        {signedIn && google && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-2">{google}</div>
           </>
         )}
         {account.profiles && !account.profiles.complete && (

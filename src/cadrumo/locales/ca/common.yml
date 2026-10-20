@@ -748,6 +748,7 @@ desktop:
   google:
     checking: Comprovant l'accés a Google…
     not_in_this_build: Aquesta versió de Cadrumo no pot iniciar la sessió a Google.
+    open_drive: Obre la carpeta del perfil a Google Drive
     palette_sign_in: Autentica't amb Google
     sign_in: Inicia la sessió
     sign_in_label: Inicia la sessió a Google

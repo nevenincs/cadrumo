@@ -1,21 +1,25 @@
 import { useId } from "react";
-import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import type { GoogleAccount as GoogleAccountState } from "../ipc/contract";
 import { useStrings } from "../shell/strings";
-import { canSignInGoogle, googleWords } from "./setup/setupWords";
+import { canSignInGoogle, googleWords, refusalWords } from "./setup/setupWords";
 
-/** The signed-in profile's Google account in Settings: whether it is signed
+/** The signed-in profile's Google account: whether it is signed
  * in, and the one act that changes that. It is the profile's own sign-in,
  * not a component of Cadrumo, so it stands apart from setup. */
 export function GoogleAccount({
   google,
   disabled,
+  refusal,
   onSignIn,
   onSignOut,
 }: {
   google: GoogleAccountState;
   disabled?: boolean;
+  refusal?: string | null;
   onSignIn: () => void;
   onSignOut: () => void;
 }) {
@@ -32,7 +36,7 @@ export function GoogleAccount({
       <h3 id={headingId} className="text-sm font-medium text-muted-foreground">
         {t("desktop.google.title")}
       </h3>
-      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="grid min-w-0 gap-2">
         <p
           role="status"
           className="flex min-w-0 flex-1 items-center gap-2 text-sm wrap-anywhere text-foreground"
@@ -40,30 +44,30 @@ export function GoogleAccount({
           {(busy || google.state === null) && <Spinner />}
           {googleWords(t, google)}
         </p>
-        {signedIn ? (
-          <Button
-            variant="outline"
-            size="sm"
-            aria-label={t("desktop.google.sign_out_label")}
-            disabled={disabled || busy}
-            onClick={onSignOut}
-          >
-            {t("desktop.google.sign_out")}
-          </Button>
-        ) : (
-          canSignInGoogle(google) && (
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={t("desktop.google.sign_in_label")}
-              disabled={disabled}
-              onClick={onSignIn}
+        {(signedIn || canSignInGoogle(google) || busy) && (
+          <div role="menu" aria-labelledby={headingId}>
+            <DropdownMenuItem
+              aria-label={t(
+                signedIn
+                  ? "desktop.google.sign_out_label"
+                  : "desktop.google.sign_in_label",
+              )}
+              disabled={disabled || busy}
+              onSelect={(event) => {
+                event.preventDefault();
+                if (signedIn) onSignOut();
+                else onSignIn();
+              }}
             >
-              {t("desktop.google.sign_in")}
-            </Button>
-          )
+              <Icon name={signedIn ? "signOut" : "user"} />
+              {t(
+                signedIn ? "desktop.google.sign_out" : "desktop.google.sign_in",
+              )}
+            </DropdownMenuItem>
+          </div>
         )}
       </div>
+      {refusal && <Alert role="alert">{refusalWords(t, refusal)}</Alert>}
     </section>
   );
 }

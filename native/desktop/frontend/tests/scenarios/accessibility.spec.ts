@@ -72,6 +72,19 @@ const SURFACES: {
   unchecked?: readonly string[];
 }[] = [
   {
+    name: "Google authentication in the profile menu",
+    scenario: "google-account",
+    extra: "&setup=ready",
+    reach: async (target) => {
+      await target
+        .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+        .click();
+      await expect(
+        target.getByRole("region", { name: label("desktop.google.title") }),
+      ).toBeVisible();
+    },
+  },
+  {
     name: "the sign-in dialog",
     scenario: "signed-out",
     reach: async (target) => {

@@ -497,6 +497,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.docs.unavailable",
         "desktop.google.checking",
         "desktop.google.not_in_this_build",
+        "desktop.google.open_drive",
         "desktop.google.palette_sign_in",
         "desktop.google.sign_in",
         "desktop.google.sign_in_label",

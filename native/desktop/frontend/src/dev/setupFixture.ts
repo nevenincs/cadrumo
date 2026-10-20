@@ -49,6 +49,7 @@ export type SetupFixtureControls = {
   interrupt(): void;
   /** Google's own page answers the sign-in this window started. */
   finishGoogle(succeeded: boolean): void;
+  setGoogle(account: GoogleAccount): void;
 };
 
 declare global {
@@ -350,6 +351,7 @@ export function setupFixture({
   let google: GoogleAccount = {
     state: signedIn ? "signed_in" : "signed_out",
     email: signedIn ? GOOGLE_EMAIL : null,
+    drive_folder_id: signedIn ? "profile-drive-folder" : null,
     stage: "idle",
     failure: null,
     sentence: null,
@@ -649,12 +651,17 @@ export function setupFixture({
       seed.row = failed(held, "interrupted");
       publish();
     },
+    setGoogle(account) {
+      google = account;
+      publish();
+    },
     finishGoogle(succeeded) {
       if (google.stage !== "signing_in") return;
       google = succeeded
         ? {
             state: "signed_in",
             email: GOOGLE_EMAIL,
+            drive_folder_id: "profile-drive-folder",
             stage: "idle",
             failure: null,
             sentence: null,
@@ -804,6 +811,7 @@ export function setupFixture({
       google = {
         state: "signed_out",
         email: null,
+        drive_folder_id: null,
         stage: "idle",
         failure: null,
         sentence: null,

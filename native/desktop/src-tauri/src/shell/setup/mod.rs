@@ -459,7 +459,7 @@ mod tests {
         serde_json::from_value(json!({
             "rows": [], "rows_mode": null, "complete": null, "hardware_limited": null,
             "check": null, "setup": null,
-            "google": {"state": null, "email": null, "stage": "idle", "failure": null, "sentence": null},
+            "google": {"state": null, "email": null, "drive_folder_id": null, "stage": "idle", "failure": null, "sentence": null},
             "details": details,
         }))
         .unwrap()

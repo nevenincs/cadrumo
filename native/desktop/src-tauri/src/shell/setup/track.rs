@@ -35,6 +35,7 @@ pub const GOOGLE_SIGN_IN: &str = "config.google.login";
 pub const GOOGLE_SIGN_OUT: &str = "config.google.logout";
 /// The product's read of the profile's stored sign-in; it contacts nothing.
 pub const GOOGLE_STATUS: &str = "config.google.status";
+pub const GOOGLE_FOLDER: &str = "config.google.folder.view";
 const MAX_ITEMS: usize = 16;
 const EVENT_PAGES: usize = 16;
 
@@ -598,6 +599,20 @@ struct GoogleStatusResult {
     session_present: bool,
     #[serde(default)]
     account_email: Option<String>,
+    #[serde(default)]
+    granted_scopes: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct GoogleFolderOutcome {
+    outcome: String,
+    result: Option<GoogleFolderResult>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct GoogleFolderResult {
+    configured: bool,
+    root_folder_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -612,6 +627,9 @@ struct GoogleAccount {
     email: Option<String>,
     reading: Option<String>,
     stale: bool,
+    folder_needed: bool,
+    folder_reading: Option<String>,
+    drive_folder_id: Option<String>,
 }
 
 /// The setup state this window follows on one held person session.
@@ -729,6 +747,7 @@ impl Tracker {
             self.observe_google(bridge)?;
         }
         self.follow_account(bridge)?;
+        self.follow_google_folder(bridge)?;
         let unread = (self.rows.is_none() && self.rows_from_setup.is_none()) || self.refresh_rows;
         let checking = self
             .check
@@ -1129,6 +1148,9 @@ impl Tracker {
             return Ok(());
         }
         let operation_id = self.submit_google(bridge, definition_id)?;
+        self.account.drive_folder_id = None;
+        self.account.folder_reading = None;
+        self.account.folder_needed = false;
         self.google = GoogleTrack {
             stage: if definition_id == GOOGLE_SIGN_OUT {
                 GoogleStage::SigningOut
@@ -1225,6 +1247,7 @@ impl Tracker {
                         self.account.reading = None;
                         self.account.state = Some(GoogleState::Unknown);
                         self.account.email = None;
+                        self.account.drive_folder_id = None;
                         return Ok(());
                     }
                     Err(error) => return Err(error),
@@ -1233,9 +1256,12 @@ impl Tracker {
                 return Ok(());
             }
             self.account.reading = None;
-            let (state, email) = self.account_reading(bridge, &operation_id, &projection)?;
+            let (state, email, drive) = self.account_reading(bridge, &operation_id, &projection)?;
             self.account.state = Some(state);
             self.account.email = email;
+            self.account.drive_folder_id = None;
+            self.account.folder_reading = None;
+            self.account.folder_needed = drive;
         }
         if (self.account.state.is_none() || self.account.stale) && !self.google.acting() {
             self.account.stale = false;
@@ -1247,6 +1273,8 @@ impl Tracker {
                 Err(Stop::Refused(_)) => {
                     self.account.state = Some(GoogleState::Unknown);
                     self.account.email = None;
+                    self.account.drive_folder_id = None;
+                    self.account.folder_needed = false;
                 }
                 Err(error) => return Err(error),
             }
@@ -1259,8 +1287,8 @@ impl Tracker {
         bridge: &mut dyn Relay,
         operation_id: &str,
         projection: &Projection,
-    ) -> Result<(GoogleState, Option<String>), Stop> {
-        let unknown = Ok((GoogleState::Unknown, None));
+    ) -> Result<(GoogleState, Option<String>, bool), Stop> {
+        let unknown = Ok((GoogleState::Unknown, None, false));
         if !matches!(projection.condition(), Some("succeeded" | "refused")) {
             return unknown;
         }
@@ -1271,19 +1299,71 @@ impl Tracker {
         };
         if settled.outcome == "succeeded" {
             return Ok(match settled.result {
-                Some(read) if read.session_present => (GoogleState::SignedIn, read.account_email),
-                Some(_) => (GoogleState::SignedOut, None),
-                None => (GoogleState::Unknown, None),
+                Some(read) if read.session_present => (
+                    GoogleState::SignedIn,
+                    read.account_email,
+                    read.granted_scopes
+                        .iter()
+                        .any(|scope| scope == "https://www.googleapis.com/auth/drive.file"),
+                ),
+                Some(_) => (GoogleState::SignedOut, None, false),
+                None => (GoogleState::Unknown, None, false),
             });
         }
         Ok(
             match settled.refusal.and_then(|refusal| refusal.failure_category) {
-                Some(Failure::NotInThisBuild) => (GoogleState::NotInThisBuild, None),
+                Some(Failure::NotInThisBuild) => (GoogleState::NotInThisBuild, None, false),
                 // A sign-in made for another installation, or one that has ended.
-                Some(Failure::NeedsSignIn) => (GoogleState::SignedOut, None),
-                _ => (GoogleState::Unknown, None),
+                Some(Failure::NeedsSignIn) => (GoogleState::SignedOut, None, false),
+                _ => (GoogleState::Unknown, None, false),
             },
         )
+    }
+
+    fn follow_google_folder(&mut self, bridge: &mut dyn Relay) -> Result<(), Stop> {
+        if self.google.acting() || self.account.stale || self.account.reading.is_some() {
+            return Ok(());
+        }
+        if self.account.folder_needed {
+            self.account.folder_needed = false;
+            match self.submit_google(bridge, GOOGLE_FOLDER) {
+                Ok(id) => self.account.folder_reading = Some(id),
+                Err(Stop::Refused(_)) => return Ok(()),
+                Err(error) => return Err(error),
+            }
+        }
+        let Some(id) = self.account.folder_reading.clone() else {
+            return Ok(());
+        };
+        let subject = self.google_subject()?;
+        let projection = match observe_subject(bridge, &id, 0, GOOGLE_FOLDER, &subject) {
+            Ok(observation) => observation.projection,
+            Err(Stop::Refused(_)) => {
+                self.account.folder_reading = None;
+                return Ok(());
+            }
+            Err(error) => return Err(error),
+        };
+        if !projection.terminal() {
+            return Ok(());
+        }
+        self.account.folder_reading = None;
+        if projection.condition() != Some("succeeded") {
+            return Ok(());
+        }
+        let settled: GoogleFolderOutcome = match result(bridge, &id, GOOGLE_FOLDER) {
+            Ok(settled) => settled,
+            Err(Stop::Refused(_)) => return Ok(()),
+            Err(error) => return Err(error),
+        };
+        if settled.outcome == "succeeded" {
+            self.account.drive_folder_id = settled
+                .result
+                .filter(|folder| folder.configured)
+                .and_then(|folder| folder.root_folder_id)
+                .filter(|id| super::wire::is_drive_folder_id(id));
+        }
+        Ok(())
     }
 
     // ── Rendering ───────────────────────────────────────────────────────────
@@ -1468,6 +1548,11 @@ impl Tracker {
                 .transpose()?,
             google: Google {
                 state: self.account.state,
+                drive_folder_id: self
+                    .account
+                    .drive_folder_id
+                    .clone()
+                    .filter(|_| !self.google.acting() && !self.account.stale),
                 email: self
                     .account
                     .email

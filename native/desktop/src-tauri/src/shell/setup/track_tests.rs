@@ -154,7 +154,7 @@ struct FakeHold {
 /// A stored sign-in read: signed in as `email`, or not signed in.
 fn account(email: Option<&str>) -> (&'static str, Value) {
     let result = json!({"profile_id": PROFILE, "session_present": email.is_some(),
-                        "account_email": email, "granted_scopes": [], "issued_at": null});
+                        "account_email": email, "granted_scopes": ["openid", "email", "https://www.googleapis.com/auth/drive.file"], "issued_at": null});
     (
         "succeeded",
         json!({"profile_id": PROFILE, "outcome": "succeeded", "result": result, "refusal": null}),
@@ -166,7 +166,12 @@ fn account_refused(category: &str) -> (&'static str, Value) {
     ("refused", google_outcome(Some(category)))
 }
 
-const GOOGLE: [&str; 3] = [GOOGLE_SIGN_IN, GOOGLE_SIGN_OUT, GOOGLE_STATUS];
+const GOOGLE: [&str; 4] = [
+    GOOGLE_SIGN_IN,
+    GOOGLE_SIGN_OUT,
+    GOOGLE_STATUS,
+    GOOGLE_FOLDER,
+];
 
 /// The product's Google consent review: the person's own sign-in, by its digest.
 fn google_consent() -> Value {
@@ -180,6 +185,10 @@ fn settle_status(operation: &mut FakeOperation) {
         operation.revision = 2;
     } else if operation.definition == GOOGLE_SIGN_OUT {
         operation.settle("succeeded", Some(google_outcome(None)));
+    } else if operation.definition == GOOGLE_FOLDER {
+        operation.settle("succeeded", Some(json!({
+            "outcome": "succeeded", "result": {"configured": true, "root_folder_id": "profile-folder_123"}
+        })));
     } else if operation.definition == GOOGLE_STATUS {
         // The hold settles it from what it was told the stored sign-in is.
     } else if operation.definition != SETUP {
@@ -859,4 +868,85 @@ fn phase_and_retry_codes_parse_only_in_their_closed_forms() {
     );
     assert_eq!(retry_notice("dependencies.setup.browser.retry.1.4"), None);
     assert_eq!(retry_notice("dependencies.setup.browser.retry.x.4"), None);
+}
+
+#[test]
+fn drive_folder_requires_a_sign_in_and_grant_and_is_read_once_for_the_profile() {
+    let mut hold = FakeHold::new(settle_status);
+    let mut tracker = tracker();
+    let signed_out = tracker.handle(&mut hold, Action::Observe).unwrap();
+    assert!(signed_out.google.drive_folder_id.is_none());
+    assert_eq!(hold.submitted(GOOGLE_FOLDER), 0);
+    hold.account = account(Some("person@example.com"));
+    let mut tracker = super::Tracker::new(identity());
+    let signed_in = tracker.handle(&mut hold, Action::Observe).unwrap();
+    assert_eq!(
+        signed_in.google.drive_folder_id.as_deref(),
+        Some("profile-folder_123")
+    );
+    tracker.handle(&mut hold, Action::Observe).unwrap();
+    assert_eq!(hold.submitted(GOOGLE_FOLDER), 1);
+    hold.account = account(None);
+    let signed_out = tracker.handle(&mut hold, Action::GoogleSignOut).unwrap();
+    assert!(signed_out.google.drive_folder_id.is_none());
+
+    hold.account = account(Some("person@example.com"));
+    hold.account.1["result"]["granted_scopes"] = json!(["openid", "email"]);
+    let mut tracker = super::Tracker::new(identity());
+    let no_grant = tracker.handle(&mut hold, Action::Observe).unwrap();
+    assert_eq!(no_grant.google.state, Some(GoogleState::SignedIn));
+    assert!(no_grant.google.drive_folder_id.is_none());
+    assert_eq!(hold.submitted(GOOGLE_FOLDER), 1);
+}
+
+#[test]
+fn a_pending_or_refused_folder_does_not_hide_account_status_or_keep_a_stale_link() {
+    let mut hold = FakeHold::new(settle_status);
+    hold.account = account(Some("person@example.com"));
+    hold.on_submit = Box::new(|operation| {
+        if operation.definition != GOOGLE_FOLDER {
+            settle_status(operation);
+        }
+    });
+    let mut tracker = tracker();
+    let pending = tracker.handle(&mut hold, Action::Observe).unwrap();
+    assert_eq!(pending.google.state, Some(GoogleState::SignedIn));
+    assert!(pending.google.drive_folder_id.is_none());
+    let folder = hold
+        .operations
+        .iter()
+        .find(|op| op.definition == GOOGLE_FOLDER)
+        .unwrap()
+        .id
+        .clone();
+    hold.operation(&folder).settle("refused", None);
+    let refused = tracker.handle(&mut hold, Action::Observe).unwrap();
+    assert!(refused.google.drive_folder_id.is_none());
+    assert_eq!(refused.google.state, Some(GoogleState::SignedIn));
+    tracker.handle(&mut hold, Action::Observe).unwrap();
+    assert_eq!(hold.submitted(GOOGLE_FOLDER), 1);
+}
+
+#[test]
+fn folder_links_reject_unconfigured_missing_and_non_identifier_results() {
+    for (configured, id) in [
+        (false, Some("folder")),
+        (true, None),
+        (true, Some("../other?auth=bad")),
+        (true, Some("")),
+    ] {
+        let mut hold = FakeHold::new(settle_status);
+        hold.account = account(Some("person@example.com"));
+        hold.on_submit = Box::new(move |operation| {
+            settle_status(operation);
+            if operation.definition == GOOGLE_FOLDER {
+                operation.settle("succeeded", Some(json!({
+                    "outcome": "succeeded", "result": {"configured": configured, "root_folder_id": id}
+                })));
+            }
+        });
+        let snapshot = tracker().handle(&mut hold, Action::Observe).unwrap();
+        assert!(snapshot.google.drive_folder_id.is_none());
+        assert_eq!(snapshot.google.state, Some(GoogleState::SignedIn));
+    }
 }

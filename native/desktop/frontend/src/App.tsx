@@ -532,6 +532,17 @@ export function App({ host }: { host: Host }) {
   const setup = useSetup(host.setup, reader, signedIn);
   const setupOffered = setup.offered;
   const setupSnapshot = setup.snapshot;
+  const google = setupOffered ? setupSnapshot?.google : null;
+  const driveFolder = google?.drive_folder_id;
+  const driveUrl =
+    signedIn &&
+    google?.state === "signed_in" &&
+    google.stage !== "signing_in" &&
+    google.stage !== "signing_out" &&
+    driveFolder &&
+    /^[A-Za-z0-9_-]{1,256}$/.test(driveFolder)
+      ? `https://drive.google.com/drive/folders/${driveFolder}`
+      : null;
   const setupRun = setupSnapshot?.setup ?? null;
   const setupLive = liveRun(setupSnapshot);
   const setupIncomplete = setupOffered && setupSnapshot?.complete === false;
@@ -1440,6 +1451,17 @@ export function App({ host }: { host: Host }) {
         run: () => openLink(AEAT_SEDE),
       },
       {
+        id: "link.drive",
+        label: t("desktop.google.open_drive"),
+        group: "links",
+        icon: "folder",
+        keywords: "google drive profile folder browser",
+        enabled: () => driveUrl !== null,
+        run: () => {
+          if (driveUrl) openLink(driveUrl);
+        },
+      },
+      {
         id: "account.signIn",
         label: t("desktop.signin.submit"),
         group: "account",
@@ -1562,6 +1584,7 @@ export function App({ host }: { host: Host }) {
       switchProfile,
       cycleFocus,
       openLink,
+      driveUrl,
       host,
       revealLogs,
       goHome,
@@ -2095,6 +2118,16 @@ export function App({ host }: { host: Host }) {
       divided: !views,
       onClick: () => runAction("link.aeat"),
     },
+    ...(driveUrl
+      ? [
+          {
+            id: "drive",
+            icon: "folder",
+            label: t("desktop.google.open_drive"),
+            onClick: () => runAction("link.drive"),
+          } satisfies RailItem,
+        ]
+      : []),
     {
       id: "panel",
       icon: "console",
@@ -2429,6 +2462,17 @@ export function App({ host }: { host: Host }) {
                 setCreatingProfile(false);
                 setSignInDismissed(false);
               }}
+              google={
+                setupOffered && setupSnapshot ? (
+                  <GoogleAccount
+                    google={setupSnapshot.google}
+                    disabled={setup.pending || account.busy}
+                    refusal={setup.refusal}
+                    onSignIn={setup.signInGoogle}
+                    onSignOut={setup.signOutGoogle}
+                  />
+                ) : undefined
+              }
               onSignOut={signOut}
               onCreate={askNewProfile}
               onAbout={
@@ -2718,16 +2762,6 @@ export function App({ host }: { host: Host }) {
                     <SetupAdvisory
                       control={setup}
                       onOpen={() => openSetup(null)}
-                    />
-                  ) : undefined
-                }
-                account={
-                  setupOffered && setupSnapshot ? (
-                    <GoogleAccount
-                      google={setupSnapshot.google}
-                      disabled={setup.pending}
-                      onSignIn={setup.signInGoogle}
-                      onSignOut={setup.signOutGoogle}
                     />
                   ) : undefined
                 }

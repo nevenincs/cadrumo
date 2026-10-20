@@ -2,12 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo, useState } from "react";
 import { setupFixture, type SetupShape } from "../../dev/setupFixture";
 import { useSetup } from "../../shell/setup";
-import { GoogleAccount } from "../GoogleAccount";
 import { SetupAdvisory } from "./SetupAdvisory";
 import { SetupDialog } from "./SetupDialog";
 
-// The setup dialog, and what Settings shows -- the setup advisory and the
-// profile's Google account -- over the scenario host's synthetic setup:
+// The setup dialog and Settings advisory over the scenario host's synthetic setup:
 // nothing is downloaded, and a setup the story starts runs by itself, a step
 // every `latencyMs`.
 const noop = () => undefined;
@@ -33,20 +31,11 @@ function Screen({
   );
   const control = useSetup(host, "Demo profile", true);
   const [open, setOpen] = useState(!settings);
-  const google = control.snapshot?.google ?? null;
   return (
     <>
       {settings && (
         <div className="grid w-settings gap-3 bg-popover p-3.5">
           <SetupAdvisory control={control} onOpen={() => setOpen(true)} />
-          {google && (
-            <GoogleAccount
-              google={google}
-              disabled={control.pending}
-              onSignIn={control.signInGoogle}
-              onSignOut={control.signOutGoogle}
-            />
-          )}
         </div>
       )}
       <SetupDialog

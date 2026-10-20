@@ -736,6 +736,7 @@ desktop:
   google:
     checking: A Google-bejelentkezés ellenőrzése…
     not_in_this_build: A Cadrumo ezen verziója nem tud bejelentkezni a Google-be.
+    open_drive: A profil mappájának megnyitása a Google Drive-ban
     palette_sign_in: Hitelesítés a Google-lel
     sign_in: Bejelentkezés
     sign_in_label: Bejelentkezés a Google-be

@@ -159,6 +159,7 @@ export function canSignInGoogle(google: GoogleAccount | null): boolean {
     google.stage !== "signing_in" &&
     google.stage !== "signing_out" &&
     google.state !== null &&
+    google.state !== "signed_in" &&
     google.state !== "not_in_this_build"
   );
 }

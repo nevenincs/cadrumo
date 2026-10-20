@@ -426,7 +426,7 @@ test("an interrupted setup whose plan changed asks for approval again", async ({
   await expect(approveButton(shown, GROWN_SIZE)).toBeVisible();
 });
 
-test("the Google account is the profile's own row in Settings, apart from setup", async ({
+test("Google authentication belongs to the profile menu, apart from Settings and setup", async ({
   page: target,
 }) => {
   await open(target, "google_signed_out", "google-account");
@@ -437,12 +437,17 @@ test("the Google account is the profile's own row in Settings, apart from setup"
   );
   const settings = await openSettings(target);
   await expect(settings.locator("[data-setup-advisory]")).toHaveCount(0);
-  const google = settings.getByRole("region", {
+  await expect(settings.locator("[data-google-account]")).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  const google = target.getByRole("region", {
     name: label("desktop.google.title"),
   });
   await expect(google).toContainText(label("desktop.google.signed_out"));
   await google
-    .getByRole("button", { name: label("desktop.google.sign_in_label") })
+    .getByRole("menuitem", { name: label("desktop.google.sign_in_label") })
     .click();
   await expect(google).toContainText(label("desktop.google.waiting"));
   await act(target, "finishGoogle", true);
@@ -450,7 +455,7 @@ test("the Google account is the profile's own row in Settings, apart from setup"
     label("desktop.google.signed_in", { email: "persona@example.com" }),
   );
   await google
-    .getByRole("button", { name: label("desktop.google.sign_out_label") })
+    .getByRole("menuitem", { name: label("desktop.google.sign_out_label") })
     .click();
   await expect(google).toContainText(label("desktop.google.signed_out"));
   const calls = await target.evaluate(() => window.__scenarioHostCalls ?? []);
@@ -464,16 +469,23 @@ test("a Google sign-in that does not finish says so on the account's row", async
 }) => {
   await open(target, "google_signed_out", "google-account");
   const settings = await openSettings(target);
-  const google = settings.getByRole("region", {
+  await expect(settings.locator("[data-google-account]")).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  const google = target.getByRole("region", {
     name: label("desktop.google.title"),
   });
   await google
-    .getByRole("button", { name: label("desktop.google.sign_in_label") })
+    .getByRole("menuitem", { name: label("desktop.google.sign_in_label") })
     .click();
   await act(target, "finishGoogle", false);
   await expect(google).toContainText("Google sign-in didn't finish.");
   await expect(
-    google.getByRole("button", { name: label("desktop.google.sign_in_label") }),
+    google.getByRole("menuitem", {
+      name: label("desktop.google.sign_in_label"),
+    }),
   ).toBeEnabled();
 });
 
@@ -668,4 +680,106 @@ test("a tool refusal whose recovery is malformed opens nothing", async ({
   await expect(target.locator("body")).not.toContainText(
     "OPERATION_NOT_SUCCESSFUL",
   );
+});
+
+test("Drive opens the profile folder and disappears when either account signs out", async ({
+  page,
+}) => {
+  await open(page, "google_signed_out", "google-account");
+  const drive = page.locator("[data-rail=drive]");
+  await expect(drive).toHaveCount(0);
+  await page
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  await page
+    .getByRole("menuitem", { name: label("desktop.google.sign_in_label") })
+    .click();
+  await expect(drive).toHaveCount(0);
+  await act(page, "finishGoogle", true);
+  await expect(drive).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: label("desktop.titlebar.profile_menu") }),
+  ).toBeFocused();
+  await drive.click();
+  expect(await page.evaluate(() => window.__scenarioHostCalls ?? [])).toContain(
+    "openExternal https://drive.google.com/drive/folders/profile-drive-folder",
+  );
+  await page
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  await page
+    .getByRole("menuitem", { name: label("desktop.google.sign_out_label") })
+    .click();
+  await expect(drive).toHaveCount(0);
+  await page
+    .getByRole("menuitem", { name: label("desktop.google.sign_in_label") })
+    .click();
+  await act(page, "finishGoogle", true);
+  await expect(drive).toBeVisible();
+  await page
+    .getByRole("menuitem", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(drive).toHaveCount(0);
+  await expect(page.locator("[data-google-account]")).toHaveCount(0);
+});
+
+test("Drive stays hidden without a usable folder and while Google authentication changes", async ({
+  page,
+}) => {
+  await open(page, "ready", "google-account");
+  const drive = page.locator("[data-rail=drive]");
+  await expect(drive).toBeVisible();
+  for (const google of [
+    { state: "signed_in", drive_folder_id: null, stage: "idle" },
+    { state: "unknown", drive_folder_id: null, stage: "idle" },
+    {
+      state: "signed_in",
+      drive_folder_id: "../other?query=bad",
+      stage: "idle",
+    },
+    {
+      state: "signed_in",
+      drive_folder_id: "profile-folder",
+      stage: "signing_out",
+    },
+  ] as const) {
+    await page.evaluate(
+      (google) =>
+        window.__scenarioSetup?.setGoogle({
+          ...google,
+          email: null,
+          failure: null,
+          sentence: null,
+        }),
+      google,
+    );
+    await expect(drive).toHaveCount(0);
+  }
+});
+
+test("Google authentication supports keyboard navigation inside the profile menu", async ({
+  page,
+}) => {
+  await open(page, "google_signed_out", "google-account");
+  const trigger = page.getByRole("button", {
+    name: label("desktop.titlebar.profile_menu"),
+  });
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("End");
+  const signIn = page.getByRole("menuitem", {
+    name: label("desktop.google.sign_in_label"),
+  });
+  await expect(signIn).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("[data-google-account]")).toContainText(
+    label("desktop.google.waiting"),
+  );
+  await expect(signIn).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
 });

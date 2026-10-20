@@ -53,8 +53,7 @@ function Choice<T extends string>({
 }
 
 /** Window presentation settings and the shared output language; above them,
- * while Cadrumo is not fully set up, the one line that leads into setup;
- * after them, the signed-in profile's Google account. */
+ * while Cadrumo is not fully set up, the one line that leads into setup. */
 export function Settings({
   prefs,
   setPrefs,
@@ -62,7 +61,6 @@ export function Settings({
   onReset,
   close,
   advisory,
-  account,
   about,
 }: {
   prefs: Prefs;
@@ -73,8 +71,6 @@ export function Settings({
   /** The setup advisory, first under the title; absent, or rendering
    * nothing, when there is nothing to finish. */
   advisory?: ReactNode;
-  /** The profile's Google account, after the window's section. */
-  account?: ReactNode;
   /** The installation's version row, which opens the About dialog; absent
    * where the host cannot say what is installed. */
   about?: { state: AboutState | null; onOpen: () => void };
@@ -189,7 +185,6 @@ export function Settings({
             {t("desktop.settings.reset_layout")}
           </Button>
         </section>
-        {account}
         {about && (
           <button
             type="button"

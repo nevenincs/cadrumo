@@ -720,6 +720,7 @@ desktop:
   google:
     checking: Checking the Google sign-in…
     not_in_this_build: This version of Cadrumo can't sign in to Google.
+    open_drive: Open profile folder in Google Drive
     palette_sign_in: Authenticate with Google
     sign_in: Sign in
     sign_in_label: Sign in to Google

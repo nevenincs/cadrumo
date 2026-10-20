@@ -359,6 +359,8 @@ pub struct Google {
     pub state: Option<GoogleState>,
     /// The signed-in account's address; present only when signed in.
     pub email: Option<String>,
+    /// The profile's saved folder, only with a stored Drive grant.
+    pub drive_folder_id: Option<String>,
     pub stage: GoogleStage,
     pub failure: Option<Failure>,
     pub sentence: Option<String>,
@@ -570,9 +572,25 @@ impl Snapshot {
             && plain_option(self.google.sentence.as_ref(), SENTENCE_LIMIT)
             && (self.google.email.is_none() || self.google.state == Some(GoogleState::SignedIn))
             && plain_option(self.google.email.as_ref(), NAME_LIMIT)
+            && self.google.drive_folder_id.as_ref().is_none_or(|id| {
+                self.google.state == Some(GoogleState::SignedIn)
+                    && !matches!(
+                        self.google.stage,
+                        GoogleStage::SigningIn | GoogleStage::SigningOut
+                    )
+                    && is_drive_folder_id(id)
+            })
             && self.details.len() <= DETAILS_LIMIT
             && !self.details.chars().any(|c| c.is_control() && c != '\n')
     }
+}
+
+pub(super) fn is_drive_folder_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 256
+        && id
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
 }
 
 /// One setup action the window asked for, in its closed form.
@@ -726,7 +744,7 @@ mod tests {
             "rows": [row()], "rows_mode": "quick", "complete": false, "hardware_limited": false,
             "check": {"operation_id": "c".repeat(64), "kind": "status_quick", "stage": "done"},
             "setup": run("review"),
-            "google": {"state": "signed_out", "email": null, "stage": "idle", "failure": null, "sentence": null},
+            "google": {"state": "signed_out", "email": null, "drive_folder_id": null, "stage": "idle", "failure": null, "sentence": null},
             "details": "Cadrumo setup details\nitem: browser; state: absent; check: quick\n",
         })
     }

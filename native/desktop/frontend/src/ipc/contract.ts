@@ -1039,6 +1039,8 @@ export type GoogleAccount = {
   state: GoogleAccountState | null;
   /** The account's address; present only when signed in. */
   email: string | null;
+  /** The profile's saved folder, present only with a stored Drive grant. */
+  drive_folder_id: string | null;
   stage: GoogleActStage;
   failure: SetupFailureCategory | null;
   /** The failure's sentence; present exactly when `stage` is "failed". */
