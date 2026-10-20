@@ -38,6 +38,7 @@ import type {
 } from "../shell/agentSession";
 import {
   archivedCount,
+  createTranscriptProjection,
   newestRanWith,
   replyFacts,
   replyIdOf,
@@ -287,6 +288,7 @@ export function AgentColumn({
     view.reader === reader && view.pending?.conversationId === conversationId
       ? view.pending
       : null;
+  const projectTranscript = useMemo(() => createTranscriptProjection(), []);
   const history = useMemo((): AgentRead<ReturnType<typeof transcriptItems>> => {
     if (live.read.kind !== "ready" && !pending) return live.read;
     const records = live.read.kind === "ready" ? [...live.read.value] : [];
@@ -318,7 +320,7 @@ export function AgentColumn({
         skills: pending.skills,
       });
     }
-    const items = transcriptItems(records, locale, t);
+    const items = projectTranscript(records, locale, t);
     return {
       kind: "ready",
       value: items.map((item) =>
@@ -330,7 +332,7 @@ export function AgentColumn({
           : item,
       ),
     };
-  }, [live.read, pending, locale, t]);
+  }, [live.read, pending, locale, t, projectTranscript]);
   // What the agent served of the conversation's replies beside their words: the
   // state of the newest, what they ran with, and the tokens they used.
   const newest =

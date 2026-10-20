@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { failureCode } from "../errors";
 import { questionnaireFaults } from "./agentClarification";
 import type {
@@ -223,6 +223,39 @@ const quiet = (live: LiveTurns): StreamStep => ({
   reread: false,
   resubscribe: false,
 });
+
+/** Fold adjacent text chunks before touching the conversation's records.
+ * Sequence checks happen before folding so replayed text is never appended. */
+export function coalesceStreamEvents(
+  events: readonly AgentStreamEvent[],
+  applied: Readonly<Record<string, number>>,
+): AgentStreamEvent[] {
+  const sequences = { ...applied };
+  const result: AgentStreamEvent[] = [];
+  for (const event of events) {
+    if (event.type !== "text" && event.type !== "thought") {
+      result.push(event);
+      if (event.type === "lost") return [...events];
+      continue;
+    }
+    if (event.sequence <= (sequences[event.reply_id] ?? 0)) continue;
+    sequences[event.reply_id] = event.sequence;
+    const previous = result.at(-1);
+    if (
+      previous &&
+      (previous.type === "text" || previous.type === "thought") &&
+      previous.type === event.type &&
+      previous.reply_id === event.reply_id &&
+      previous.message_id === event.message_id
+    ) {
+      result[result.length - 1] = {
+        ...event,
+        delta: previous.delta + event.delta,
+      };
+    } else result.push(event);
+  }
+  return result;
+}
 
 export function applyStreamEvent(
   live: LiveTurns,
@@ -586,6 +619,9 @@ export function useLiveConversation({
     let changes: ((live: LiveTurns) => LiveTurns)[] = [];
     let stop: (() => void) | null = null;
     let timer: number | undefined;
+    let frame: number | undefined;
+    let frameFallback: number | undefined;
+    let queued: AgentStreamEvent[] = [];
     // Reads made, so that an answer to an earlier one is dropped.
     let reads = 0;
     // Streams lost in a row, with no progress between them.
@@ -603,7 +639,7 @@ export function useLiveConversation({
     const apply = (live: LiveTurns, events: AgentStreamEvent[]) => {
       let reread = false;
       let resubscribe = false;
-      for (const event of events) {
+      for (const event of coalesceStreamEvents(events, live.applied)) {
         const step = applyStreamEvent(live, event);
         live = step.live;
         reread ||= step.reread;
@@ -626,11 +662,14 @@ export function useLiveConversation({
     function load() {
       held ??= [];
       const mine = ++reads;
-      Promise.all([
-        source.history(id),
-        session ? session.pending(id) : NOTHING_PENDING,
-      ]).then(
-        ([records, pending]) => {
+      const snapshot = source.snapshot
+        ? source.snapshot(id)
+        : Promise.all([
+            source.history(id),
+            session ? session.pending(id) : NOTHING_PENDING,
+          ]).then(([history, pending]) => ({ history, pending }));
+      snapshot.then(
+        ({ history: records, pending }) => {
           if (!alive || mine !== reads) return;
           const events = held ?? [];
           held = null;
@@ -702,12 +741,34 @@ export function useLiveConversation({
         held?.push(event);
         return;
       }
-      const step = apply(current, [event]);
+      queued.push(event);
+      // Text can share a paint; decisions, settlement and loss must take
+      // effect immediately, after all text that preceded them.
+      if (event.type !== "text" && event.type !== "thought") flush();
+      else if (frame === undefined) {
+        frame = window.requestAnimationFrame(flush);
+        // Hidden windows may suspend animation frames.
+        frameFallback = window.setTimeout(flush, 50);
+      }
+    }
+    function cancelFrame() {
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+      window.clearTimeout(frameFallback);
+      frame = undefined;
+      frameFallback = undefined;
+    }
+    function flush() {
+      cancelFrame();
+      if (!alive || !current || queued.length === 0) return;
+      const events = queued;
+      queued = [];
+      const step = apply(current, events);
       show(step.live);
       follow(step);
     }
     take.current = (change) => {
       if (!alive) return;
+      flush();
       if (held || !current) changes.push(change);
       else show(change(current));
     };
@@ -732,6 +793,8 @@ export function useLiveConversation({
     return () => {
       alive = false;
       window.clearTimeout(timer);
+      cancelFrame();
+      queued = [];
       stop?.();
       take.current = null;
       if (watching.current === id) watching.current = null;
@@ -778,14 +841,17 @@ export function useLiveConversation({
 
   const mine = key !== null && state.for === key;
   const live = mine ? state.live : null;
-  const read: AgentRead<AgentTurnRecord[]> =
-    key === null
-      ? { kind: "unavailable" }
-      : mine && state.failed !== null
-        ? { kind: "failed", code: state.failed }
-        : live
-          ? { kind: "ready", value: live.turns }
-          : { kind: "loading" };
+  const read = useMemo(
+    (): AgentRead<AgentTurnRecord[]> =>
+      key === null
+        ? { kind: "unavailable" }
+        : mine && state.failed !== null
+          ? { kind: "failed", code: state.failed }
+          : live
+            ? { kind: "ready", value: live.turns }
+            : { kind: "loading" },
+    [key, mine, state.failed, live],
+  );
   const going = live ? liveReply(live.turns) : undefined;
   return {
     read,

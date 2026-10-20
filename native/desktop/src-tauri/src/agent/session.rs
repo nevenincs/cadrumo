@@ -497,28 +497,52 @@ impl Run {
 
 /// The runs grouped into chains, each from its first run to its last.
 pub fn chains(runs: &[Run]) -> Vec<Vec<Run>> {
-    let by_id: HashMap<&str, &Run> = runs.iter().map(|run| (run.id.as_str(), run)).collect();
-    let head = |run: &Run| {
-        let mut current = run;
-        for _ in 0..runs.len() {
-            match current
+    let by_id: HashMap<&str, usize> = runs
+        .iter()
+        .enumerate()
+        .map(|(index, run)| (run.id.as_str(), index))
+        .collect();
+    let mut roots = vec![None; runs.len()];
+    for index in 0..runs.len() {
+        if roots[index].is_some() {
+            continue;
+        }
+        let mut path: Vec<usize> = Vec::new();
+        let mut positions: HashMap<usize, usize> = HashMap::new();
+        let mut current = index;
+        let root = loop {
+            if let Some(root) = roots[current] {
+                break root;
+            }
+            if let Some(&at) = positions.get(&current) {
+                // Malformed cycles still have one deterministic group and
+                // cannot turn a listing into an unbounded walk.
+                break *path[at..].iter().min_by_key(|&&i| &runs[i].id).unwrap();
+            }
+            positions.insert(current, path.len());
+            path.push(current);
+            match runs[current]
                 .predecessor
                 .as_deref()
-                .and_then(|predecessor| by_id.get(predecessor))
+                .and_then(|id| by_id.get(id))
             {
-                Some(predecessor) => current = predecessor,
-                None => break,
+                Some(&parent) => current = parent,
+                None => break current,
             }
+        };
+        for index in path {
+            roots[index] = Some(root);
         }
-        current.id.clone()
-    };
+    }
+    let mut positions = HashMap::new();
     let mut grouped: Vec<(String, Vec<Run>)> = Vec::new();
-    for run in runs {
-        let head = head(run);
-        match grouped.iter_mut().find(|(id, _)| *id == head) {
-            Some((_, chain)) => chain.push(run.clone()),
-            None => grouped.push((head, vec![run.clone()])),
-        }
+    for (index, run) in runs.iter().enumerate() {
+        let root = roots[index].unwrap();
+        let position = *positions.entry(root).or_insert_with(|| {
+            grouped.push((runs[root].id.clone(), Vec::new()));
+            grouped.len() - 1
+        });
+        grouped[position].1.push(run.clone());
     }
     grouped
         .into_iter()
@@ -713,9 +737,69 @@ struct Watch {
     pumps: Vec<Pump>,
 }
 
+/// Completed run reads are reused only while the fresh listing still names
+/// the same revision. Bound both retained payload and entry count.
+const HISTORY_CACHE_BYTES: usize = 8 * 1024 * 1024;
+const HISTORY_CACHE_RUNS: usize = 64;
+const HISTORY_READERS: usize = 4;
+
+type RunRead = (String, Value, Value);
+
+#[derive(Default)]
+struct HistoryCache {
+    gateway: Option<Gateway>,
+    entries: std::collections::VecDeque<(Run, Value, Value, usize)>,
+    bytes: usize,
+}
+
+impl HistoryCache {
+    fn get(&mut self, run: &Run) -> Option<RunRead> {
+        let at = self
+            .entries
+            .iter()
+            .position(|(held, _, _, _)| held == run)?;
+        let entry = self.entries.remove(at)?;
+        let answer = (run.id.clone(), entry.1.clone(), entry.2.clone());
+        self.entries.push_back(entry);
+        Some(answer)
+    }
+
+    fn insert(&mut self, run: &Run, status: &Value, history: &Value) {
+        if run.live()
+            || run.updated_at.is_empty()
+            || text(status, "status") != Some(run.status.as_str())
+        {
+            return;
+        }
+        let bytes = serde_json::to_vec(&(status, history))
+            .map(|bytes| bytes.len())
+            .unwrap_or(usize::MAX);
+        if bytes > HISTORY_CACHE_BYTES {
+            return;
+        }
+        self.entries.retain(|(held, _, _, size)| {
+            if held.id == run.id {
+                self.bytes -= size;
+                false
+            } else {
+                true
+            }
+        });
+        while self.bytes + bytes > HISTORY_CACHE_BYTES || self.entries.len() >= HISTORY_CACHE_RUNS {
+            if let Some((_, _, _, size)) = self.entries.pop_front() {
+                self.bytes -= size;
+            }
+        }
+        self.entries
+            .push_back((run.clone(), status.clone(), history.clone(), bytes));
+        self.bytes += bytes;
+    }
+}
+
 /// The session state one host holds.
 #[derive(Default)]
 pub struct Session {
+    history_cache: Mutex<HistoryCache>,
     watches: Mutex<HashMap<u32, Watch>>,
     /// Every run the host has seen, and the run it continues.
     known: Mutex<HashMap<String, Option<String>>>,
@@ -758,22 +842,42 @@ impl Session {
                 .get("runs")
                 .and_then(Value::as_array)
                 .ok_or_else(|| refused("agent_gateway_unreadable"))?;
-            for run in listed {
-                let id = text(run, "run_id")
-                    .filter(|id| gateway::run_id(id))
-                    .ok_or_else(|| refused("agent_gateway_unreadable"))?;
-                let cached = lock(&self.known).get(id).cloned();
-                let predecessor = match cached {
-                    Some(predecessor) => predecessor,
-                    None => {
-                        let status = client.run_status(id)?;
-                        let predecessor = text(&status, "continues_run_id")
-                            .filter(|id| gateway::run_id(id))
-                            .map(str::to_owned);
-                        lock(&self.known).insert(id.to_owned(), predecessor.clone());
-                        predecessor
-                    }
-                };
+            let ids = listed
+                .iter()
+                .map(|run| {
+                    text(run, "run_id")
+                        .filter(|id| gateway::run_id(id))
+                        .ok_or_else(|| refused("agent_gateway_unreadable"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let mut known = lock(&self.known).clone();
+            let missing: Vec<&str> = ids
+                .iter()
+                .copied()
+                .filter(|id| !known.contains_key(*id))
+                .collect();
+            for batch in missing.chunks(HISTORY_READERS) {
+                let predecessors = thread::scope(|scope| {
+                    let jobs = batch
+                        .iter()
+                        .map(|&id| (id, scope.spawn(move || client.run_status(id))))
+                        .collect::<Vec<_>>();
+                    jobs.into_iter()
+                        .map(|(id, job)| {
+                            let status =
+                                job.join().map_err(|_| refused("agent_service_failed"))??;
+                            let predecessor = text(&status, "continues_run_id")
+                                .filter(|id| gateway::run_id(id))
+                                .map(str::to_owned);
+                            Ok((id.to_owned(), predecessor))
+                        })
+                        .collect::<Result<Vec<_>, Refused>>()
+                })?;
+                lock(&self.known).extend(predecessors.iter().cloned());
+                known.extend(predecessors);
+            }
+            for (run, id) in listed.iter().zip(ids) {
+                let predecessor = known.get(id).cloned().flatten();
                 runs.push(Run {
                     id: id.to_owned(),
                     status: text(run, "status").unwrap_or_default().to_owned(),
@@ -895,7 +999,10 @@ impl Session {
         if chain.is_empty() {
             return Err(refused("agent_conversation_unavailable"));
         }
-        if chain.iter().any(|run| !SETTLED.contains(&run.status.as_str())) {
+        if chain
+            .iter()
+            .any(|run| !SETTLED.contains(&run.status.as_str()))
+        {
             return Err(refused("agent_reply_in_progress"));
         }
         let answer = client.archive_conversation(conversation)?;
@@ -907,20 +1014,103 @@ impl Session {
         Ok(())
     }
 
-    pub fn history(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
-        let client = Client::new(&Self::gateway(supervisor)?);
-        let runs = self
-            .chain(&client, conversation)?
+    /// Read one fresh run listing, then fetch only changed runs, with bounded
+    /// parallelism. Never hold the cache mutex while waiting on the gateway.
+    fn read_history(
+        &self,
+        supervisor: &Supervisor,
+        conversation: &str,
+    ) -> Result<Vec<RunRead>, Refused> {
+        let gateway = Self::gateway(supervisor)?;
+        let client = Client::new(&gateway);
+        let runs = self.chain(&client, conversation)?;
+        let mut answers = {
+            let mut cache = lock(&self.history_cache);
+            if !cache
+                .gateway
+                .as_ref()
+                .is_some_and(|held| held.same_instance(&gateway))
+            {
+                *cache = HistoryCache {
+                    gateway: Some(gateway.clone()),
+                    ..HistoryCache::default()
+                };
+            }
+            runs.iter().map(|run| cache.get(run)).collect::<Vec<_>>()
+        };
+        let missing: Vec<usize> = answers
+            .iter()
+            .enumerate()
+            .filter_map(|(index, answer)| answer.is_none().then_some(index))
+            .collect();
+        for batch in missing.chunks(HISTORY_READERS) {
+            let fetched = thread::scope(|scope| {
+                let jobs = batch
+                    .iter()
+                    .map(|&index| {
+                        let run = &runs[index];
+                        let client = &client;
+                        (
+                            index,
+                            scope.spawn(move || -> Result<RunRead, Refused> {
+                                Ok((
+                                    run.id.clone(),
+                                    client.run_status(&run.id)?,
+                                    client.history(&run.id)?,
+                                ))
+                            }),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                jobs.into_iter()
+                    .map(|(index, job)| {
+                        job.join()
+                            .map_err(|_| refused("agent_service_failed"))?
+                            .map(|answer| (index, answer))
+                    })
+                    .collect::<Result<Vec<_>, Refused>>()
+            })?;
+            if !Self::gateway(supervisor)?.same_instance(&gateway) {
+                return Err(refused("agent_service_not_ready"));
+            }
+            let mut cache = lock(&self.history_cache);
+            for (index, answer) in fetched {
+                if cache
+                    .gateway
+                    .as_ref()
+                    .is_some_and(|held| held.same_instance(&gateway))
+                {
+                    cache.insert(&runs[index], &answer.1, &answer.2);
+                }
+                answers[index] = Some(answer);
+            }
+        }
+        if !Self::gateway(supervisor)?.same_instance(&gateway) {
+            return Err(refused("agent_service_not_ready"));
+        }
+        answers
             .into_iter()
-            .map(|run| {
-                Ok((
-                    run.id.clone(),
-                    client.run_status(&run.id)?,
-                    client.history(&run.id)?,
-                ))
+            .map(|answer| answer.ok_or_else(|| refused("agent_gateway_unreadable")))
+            .collect()
+    }
+
+    pub fn history(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
+        Ok(Value::Array(history_records(
+            &self.read_history(supervisor, conversation)?,
+        )))
+    }
+
+    /// History and pending questions share the same reads of the newest run.
+    pub fn snapshot(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {
+        let runs = self.read_history(supervisor, conversation)?;
+        let pending = runs
+            .last()
+            .filter(|(_, status, _)| {
+                !text(status, "status").is_some_and(|status| SETTLED.contains(&status))
             })
-            .collect::<Result<Vec<_>, Refused>>()?;
-        Ok(Value::Array(history_records(&runs)))
+            .map(|(id, status, history)| pending_of(id, status, history))
+            .unwrap_or_else(|| json!({ "questionnaires": [], "approvals": [] }));
+        Ok(json!({ "history": history_records(&runs), "pending": pending }))
     }
 
     /// One page of the documents stored for one conversation: its own
@@ -932,12 +1122,8 @@ impl Session {
     ) -> Result<Value, Refused> {
         let (after, q) = admit_documents(query)?;
         let gateway = Self::gateway(supervisor)?;
-        let page = Client::new(&gateway).attachments(
-            &query.conversation_id,
-            after,
-            q,
-            DOCUMENT_PAGE,
-        )?;
+        let page =
+            Client::new(&gateway).attachments(&query.conversation_id, after, q, DOCUMENT_PAGE)?;
         documents_page(&page)
     }
 
@@ -1108,6 +1294,7 @@ impl Session {
 
     /// Ends every watch, as the service stops or the window closes.
     pub fn close(&self) {
+        *lock(&self.history_cache) = HistoryCache::default();
         for (_, watch) in lock(&self.watches).drain() {
             for pump in watch.pumps {
                 pump.stopped.store(true, Ordering::Release);
@@ -1319,7 +1506,13 @@ mod tests {
         );
         let mut plain = request();
         plain["selection"].as_object_mut().unwrap().remove("effort");
-        let next = start_body("r0100", &send(plain), r"C:\ws", Some("r00ff"), Some("Renta"));
+        let next = start_body(
+            "r0100",
+            &send(plain),
+            r"C:\ws",
+            Some("r00ff"),
+            Some("Renta"),
+        );
         assert_eq!(next["continues_run_id"], "r00ff");
         assert!(next.get("title").is_none());
         assert!(next["agent"].get("effort").is_none());
@@ -1327,7 +1520,13 @@ mod tests {
 
     #[test]
     fn a_title_given_before_the_first_send_names_the_first_run() {
-        let first = start_body("r00ff", &send(request()), r"C:\ws", None, Some("Renta 2025"));
+        let first = start_body(
+            "r00ff",
+            &send(request()),
+            r"C:\ws",
+            None,
+            Some("Renta 2025"),
+        );
         assert_eq!(first["title"], "Renta 2025");
     }
 
@@ -1339,11 +1538,16 @@ mod tests {
         named["attachments"] = json!([{"name": "factura.pdf", "sha256": SHA}]);
         assert!(admit_send(&send(named.clone())).is_ok());
         let body = start_body("r00ff", &send(named), r"C:\ws", None, None);
-        assert_eq!(body["attachments"], json!([{"name": "factura.pdf", "sha256": SHA}]));
+        assert_eq!(
+            body["attachments"],
+            json!([{"name": "factura.pdf", "sha256": SHA}])
+        );
         // A message naming none sends no field at all.
-        assert!(start_body("r00ff", &send(request()), r"C:\ws", None, None)
-            .get("attachments")
-            .is_none());
+        assert!(
+            start_body("r00ff", &send(request()), r"C:\ws", None, None)
+                .get("attachments")
+                .is_none()
+        );
         let mut extra = request();
         extra["attachments"] = json!([{"name": "a", "sha256": SHA, "path": "C:\\a"}]);
         assert!(serde_json::from_value::<SendRequest>(extra).is_err());
@@ -1437,7 +1641,11 @@ mod tests {
             json!({"attachments": [], "next_after": "../x"}),
             json!({"attachments": [], "next_after": 3}),
         ] {
-            assert_eq!(documents_page(&bad).unwrap_err().code, "agent_gateway_unreadable", "{bad}");
+            assert_eq!(
+                documents_page(&bad).unwrap_err().code,
+                "agent_gateway_unreadable",
+                "{bad}"
+            );
         }
     }
 
@@ -1451,7 +1659,10 @@ mod tests {
         let mut foreign = query(None, None);
         foreign.conversation_id = "../r00ff".to_owned();
         assert!(admit_documents(&foreign).is_err());
-        assert_eq!(admit_documents(&query(None, Some(""))).unwrap(), (None, None));
+        assert_eq!(
+            admit_documents(&query(None, Some(""))).unwrap(),
+            (None, None)
+        );
         assert_eq!(
             admit_documents(&query(Some("b.pdf"), Some("fact"))).unwrap(),
             (Some("b.pdf"), Some("fact"))
@@ -1467,8 +1678,17 @@ mod tests {
 
     #[test]
     fn a_title_is_one_trimmed_line_of_at_most_the_gateway_limit() {
-        assert_eq!(admit_title("  IVA del trimestre ").unwrap(), "IVA del trimestre");
-        assert_eq!(admit_title(&"ñ".repeat(TITLE_LIMIT)).unwrap().chars().count(), TITLE_LIMIT);
+        assert_eq!(
+            admit_title("  IVA del trimestre ").unwrap(),
+            "IVA del trimestre"
+        );
+        assert_eq!(
+            admit_title(&"ñ".repeat(TITLE_LIMIT))
+                .unwrap()
+                .chars()
+                .count(),
+            TITLE_LIMIT
+        );
         for refused_title in ["", "   ", "dos\nlíneas", "tab\there"] {
             assert_eq!(
                 admit_title(refused_title).unwrap_err().code,
@@ -1540,6 +1760,93 @@ mod tests {
         );
         assert_eq!(conversation_record(&chains[1])["archived"], true);
         assert!(chains[0][2].live() && !chains[0][1].live());
+    }
+
+    #[test]
+    fn long_chains_branches_missing_parents_and_cycles_are_bounded() {
+        let runs: Vec<Run> = (0..2_000)
+            .rev()
+            .map(|i| {
+                run(
+                    &format!("r{i:04}"),
+                    (i > 0).then(|| format!("r{:04}", i - 1)).as_deref(),
+                    &format!("{i:04}"),
+                    "completed",
+                )
+            })
+            .collect();
+        let grouped = chains(&runs);
+        assert_eq!(grouped.len(), 1);
+        assert_eq!(grouped[0].len(), 2_000);
+        assert_eq!(grouped[0][0].id, "r0000");
+        assert_eq!(grouped[0][1_999].id, "r1999");
+        let malformed = [
+            run("b", Some("a"), "2", "completed"),
+            run("a", Some("b"), "1", "completed"),
+            run("branch", Some("b"), "3", "completed"),
+            run("orphan", Some("missing"), "4", "completed"),
+            run("self", Some("self"), "5", "completed"),
+        ];
+        let groups = chains(&malformed);
+        let ids: Vec<Vec<&str>> = groups
+            .iter()
+            .map(|group| group.iter().map(|run| run.id.as_str()).collect())
+            .collect();
+        assert_eq!(
+            ids,
+            [vec!["a", "b", "branch"], vec!["orphan"], vec!["self"]]
+        );
+    }
+
+    #[test]
+    fn history_cache_reuses_only_unchanged_settled_runs() {
+        let mut cache = HistoryCache::default();
+        let completed = run("r1", None, "revision-1", "completed");
+        let status = json!({"status": "completed"});
+        let history = json!({"state": {"messages": [{"content": "answer"}]}});
+        cache.insert(&completed, &status, &history);
+        assert_eq!(
+            cache.get(&completed),
+            Some(("r1".into(), status.clone(), history.clone()))
+        );
+        let mut changed = completed.clone();
+        changed.updated_at = "revision-2".into();
+        assert!(cache.get(&changed).is_none());
+        changed = completed.clone();
+        changed.status = "repair_needed".into();
+        assert!(cache.get(&changed).is_none());
+        let running = run("r2", None, "revision-1", "running");
+        cache.insert(&running, &json!({"status": "running"}), &history);
+        assert!(cache.get(&running).is_none());
+        let unknown_revision = run("r3", None, "", "completed");
+        cache.insert(&unknown_revision, &status, &history);
+        assert!(cache.get(&unknown_revision).is_none());
+        cache.insert(&completed, &json!({"status": "running"}), &history);
+        assert_eq!(cache.entries.len(), 1);
+    }
+
+    #[test]
+    fn history_cache_evicts_old_reads_and_bounds_retained_bytes() {
+        let mut cache = HistoryCache::default();
+        let status = json!({"status": "completed"});
+        for i in 0..HISTORY_CACHE_RUNS + 1 {
+            cache.insert(
+                &run(&format!("r{i}"), None, "1", "completed"),
+                &status,
+                &json!({}),
+            );
+        }
+        assert_eq!(cache.entries.len(), HISTORY_CACHE_RUNS);
+        assert!(cache.get(&run("r0", None, "1", "completed")).is_none());
+        let huge = json!({"text": "x".repeat(HISTORY_CACHE_BYTES)});
+        cache.insert(&run("huge", None, "1", "completed"), &status, &huge);
+        assert!(cache.get(&run("huge", None, "1", "completed")).is_none());
+        let large = json!({"text": "x".repeat(HISTORY_CACHE_BYTES / 2)});
+        cache.insert(&run("large1", None, "1", "completed"), &status, &large);
+        cache.insert(&run("large2", None, "1", "completed"), &status, &large);
+        assert!(cache.bytes <= HISTORY_CACHE_BYTES);
+        assert!(cache.get(&run("large1", None, "1", "completed")).is_none());
+        assert!(cache.get(&run("large2", None, "1", "completed")).is_some());
     }
 
     #[test]

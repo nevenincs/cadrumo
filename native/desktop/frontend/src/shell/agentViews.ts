@@ -8,6 +8,8 @@ import { failureCode } from "../errors";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
 import type {
+  AgentApproval,
+  AgentQuestionnaire,
   AgentEffort,
   AgentToolKind,
   AgentTransport,
@@ -213,6 +215,11 @@ export type AgentTurnRecord =
 export const replyIdOf = (record: AgentTurnRecord): string =>
   record.kind === "reply" ? record.id : record.reply_id;
 
+export type AgentSnapshot = {
+  history: AgentTurnRecord[];
+  pending: { questionnaires: AgentQuestionnaire[]; approvals: AgentApproval[] };
+};
+
 /** The agent views a host offers. Each read is refused while nobody is
  * signed in, as the profile's own views are. */
 export interface AgentViews {
@@ -220,6 +227,8 @@ export interface AgentViews {
   conversations(): Promise<AgentConversationRecord[]>;
   /** The records of one conversation, oldest first. */
   history(conversationId: string): Promise<AgentTurnRecord[]>;
+  /** A host can serve history and outstanding requests from one read. */
+  snapshot?(conversationId: string): Promise<AgentSnapshot>;
   /** One page of the documents stored for a conversation. Refused while
    * its storage cannot be read. */
   documents?(query: AgentDocumentsQuery): Promise<AgentDocumentPage>;
@@ -374,14 +383,47 @@ function failureWords(
 }
 
 /** When a message was sent, in words: the time today, else the day too. */
+const timeFormats = new Map<string, Intl.DateTimeFormat>();
+
 function sentLabel(locale: string, at: Date, now: Date): string | undefined {
   if (!Number.isFinite(at.getTime())) return undefined;
   const sameDay = dayStart(at) === dayStart(now);
-  return new Intl.DateTimeFormat(locale, {
-    ...(sameDay ? {} : { day: "numeric", month: "short" }),
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(at);
+  const key = `${locale}:${sameDay}`;
+  let format = timeFormats.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(locale, {
+      ...(sameDay ? {} : { day: "numeric", month: "short" }),
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    timeFormats.set(key, format);
+  }
+  return format.format(at);
+}
+
+type TranscriptProjectionEntry = {
+  item: TranscriptItem;
+  reply: AgentReplyRecord | undefined;
+  last: boolean;
+  thinking: string | undefined;
+};
+
+type TranscriptProjectionCache = {
+  locale?: string;
+  t?: Translate;
+  day?: number;
+  entries: Map<AgentTurnRecord, TranscriptProjectionEntry>;
+};
+
+/** Retains unchanged rows only for this transcript's latest projection. */
+export function createTranscriptProjection() {
+  const cache: TranscriptProjectionCache = { entries: new Map() };
+  return (
+    records: readonly AgentTurnRecord[],
+    locale: string,
+    t: Translate,
+    now = new Date(),
+  ) => transcriptItems(records, locale, t, now, cache);
 }
 
 /**
@@ -397,6 +439,7 @@ export function transcriptItems(
   locale: string,
   t: Translate,
   now: Date = new Date(),
+  cache?: TranscriptProjectionCache,
 ): TranscriptItem[] {
   const replies = new Map<string, AgentReplyRecord>();
   const lastAgent = new Map<string, number>();
@@ -404,11 +447,11 @@ export function transcriptItems(
   records.forEach((record, index) => {
     if (record.kind === "reply") replies.set(record.id, record);
     else if (record.kind === "agent") lastAgent.set(record.reply_id, index);
-    else if (record.kind === "thought" && record.text.trim())
-      thoughts.set(record.reply_id, [
-        ...(thoughts.get(record.reply_id) ?? []),
-        record.text,
-      ]);
+    else if (record.kind === "thought" && record.text.trim()) {
+      const held = thoughts.get(record.reply_id);
+      if (held) held.push(record.text);
+      else thoughts.set(record.reply_id, [record.text]);
+    }
   });
   // A reply's thoughts go with the item its state is drawn on.
   const thinking = (reply: string) => {
@@ -436,62 +479,98 @@ export function transcriptItems(
     };
   };
   const items: TranscriptItem[] = [];
+  const previous =
+    cache?.locale === locale && cache.t === t && cache.day === dayStart(now)
+      ? cache.entries
+      : undefined;
+  const entries = new Map<AgentTurnRecord, TranscriptProjectionEntry>();
   records.forEach((record, index) => {
+    if (
+      record.kind === "thought" ||
+      (record.kind === "reply" && lastAgent.has(record.id))
+    )
+      return;
+    const id =
+      record.kind === "reply"
+        ? unique(`reply:${record.id}`)
+        : unique(`${record.kind}:${record.reply_id}:${record.id}`);
+    const reply =
+      record.kind === "agent" ? replies.get(record.reply_id) : undefined;
+    const last =
+      record.kind === "agent" && lastAgent.get(record.reply_id) === index;
+    const thought =
+      record.kind === "agent" && last
+        ? thinking(record.reply_id).thinking
+        : record.kind === "reply"
+          ? thinking(record.id).thinking
+          : undefined;
+    const before = previous?.get(record);
+    if (
+      before &&
+      before.item.id === id &&
+      before.reply === reply &&
+      before.last === last &&
+      before.thinking === thought
+    ) {
+      items.push(before.item);
+      entries.set(record, before);
+      return;
+    }
+    let item: TranscriptItem | undefined;
     switch (record.kind) {
       case "person": {
         const sentAtLabel = record.sent_at
           ? sentLabel(locale, new Date(record.sent_at), now)
           : undefined;
-        items.push({
+        item = {
           kind: "person",
-          id: unique(`person:${record.reply_id}:${record.id}`),
+          id,
           text: record.text,
           ...(record.attachments?.length
             ? { files: sentFiles(record.attachments) }
             : {}),
           ...(record.skills?.length ? { skills: record.skills } : {}),
           ...(sentAtLabel ? { sentAtLabel } : {}),
-        });
-        return;
+        };
+        break;
       }
       case "tool":
-        items.push({
+        item = {
           kind: "tool",
-          id: unique(`tool:${record.reply_id}:${record.id}`),
+          id,
           label: record.title,
           state: record.status,
           detail: toolKindWords(t, record.tool_kind),
           ...(record.details?.length ? { internals: record.details } : {}),
-        });
-        return;
-      case "thought":
-        return;
-      case "agent": {
-        const reply = replies.get(record.reply_id);
-        const last = lastAgent.get(record.reply_id) === index;
-        items.push({
+        };
+        break;
+      case "agent":
+        item = {
           kind: "agent",
-          id: unique(`agent:${record.reply_id}:${record.id}`),
+          id,
           text: record.text,
           ...(last && reply ? drawn(reply) : { state: "complete" as const }),
-          ...(last ? thinking(record.reply_id) : {}),
-        });
-        return;
-      }
+          ...(thought ? { thinking: thought } : {}),
+        };
+        break;
       case "reply": {
-        if (lastAgent.has(record.id)) return;
         const state = drawn(record);
-        if (state.state === "complete") return;
-        items.push({
+        if (state.state === "complete") break;
+        item = {
           kind: "agent",
-          id: unique(`reply:${record.id}`),
+          id,
           text: "",
           ...state,
-          ...thinking(record.id),
-        });
+          ...(thought ? { thinking: thought } : {}),
+        };
       }
     }
+    if (item) {
+      items.push(item);
+      entries.set(record, { item, reply, last, thinking: thought });
+    }
   });
+  if (cache) Object.assign(cache, { locale, t, day: dayStart(now), entries });
   return items;
 }
 

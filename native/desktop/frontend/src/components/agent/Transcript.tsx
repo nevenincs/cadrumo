@@ -1,4 +1,6 @@
 import {
+  memo,
+  useCallback,
   useId,
   useLayoutEffect,
   useRef,
@@ -109,7 +111,7 @@ function SentSkills({ skills }: { skills: readonly string[] }) {
   );
 }
 
-function PersonTurn({
+const PersonTurn = memo(function PersonTurn({
   message,
   locale,
 }: {
@@ -150,7 +152,7 @@ function PersonTurn({
       </article>
     </li>
   );
-}
+});
 
 /**
  * A line that opens and closes what is behind it, below it: the agent's
@@ -215,14 +217,14 @@ function Thinking({ text }: { text: string }) {
   return <p className="whitespace-pre-wrap wrap-anywhere">{shown}</p>;
 }
 
-function AgentTurn({
+const AgentTurn = memo(function AgentTurn({
   message,
   onRetry,
   onOpenProviderSettings,
   onOpenLink,
 }: {
   message: Extract<TranscriptMessage, { kind: "agent" }>;
-  onRetry?: () => void;
+  onRetry?: (id: string) => void;
   onOpenProviderSettings?: () => void;
   onOpenLink?: OpenLink;
 }) {
@@ -297,7 +299,11 @@ function AgentTurn({
                 </AgentTextAction>
               )
             ) : (
-              <AgentTextAction variant="outline" size="xs" onAction={onRetry}>
+              <AgentTextAction
+                variant="outline"
+                size="xs"
+                onAction={onRetry ? () => onRetry(message.id) : undefined}
+              >
                 {t("desktop.agent.retry")}
               </AgentTextAction>
             )}
@@ -306,9 +312,13 @@ function AgentTurn({
       </article>
     </li>
   );
-}
+});
 
-function ToolRow({ activity }: { activity: TranscriptToolActivity }) {
+const ToolRow = memo(function ToolRow({
+  activity,
+}: {
+  activity: TranscriptToolActivity;
+}) {
   const t = useStrings();
   const { state } = activity;
   const failed = state === "failed";
@@ -355,7 +365,7 @@ function ToolRow({ activity }: { activity: TranscriptToolActivity }) {
       </div>
     </li>
   );
-}
+});
 
 /**
  * The conversation so far, oldest first and newest at the bottom: what the
@@ -393,6 +403,19 @@ export function Transcript({
   followNewest?: boolean;
 }) {
   const t = useStrings();
+  // Event handlers always use the current caller without invalidating every
+  // completed row when the parent publishes another text chunk.
+  const actions = useRef({ onRetry, onOpenProviderSettings, onOpenLink });
+  actions.current = { onRetry, onOpenProviderSettings, onOpenLink };
+  const retry = useCallback((id: string) => actions.current.onRetry?.(id), []);
+  const settings = useCallback(
+    () => actions.current.onOpenProviderSettings?.(),
+    [],
+  );
+  const openLink = useCallback(
+    (url: string) => actions.current.onOpenLink?.(url),
+    [],
+  );
   const scroller = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   // Whether the person is reading the bottom of the list. Only their own
@@ -413,15 +436,23 @@ export function Transcript({
     const el = scroller.current;
     const inner = content.current;
     if (!el || !inner || !followNewest) return;
+    let frame: number | undefined;
     const follow = () => {
-      if (atNewest.current) el.scrollTop = el.scrollHeight;
+      if (!atNewest.current || frame !== undefined) return;
+      frame = requestAnimationFrame(() => {
+        frame = undefined;
+        if (atNewest.current) el.scrollTop = el.scrollHeight;
+      });
     };
     follow();
     const observer = new ResizeObserver(follow);
     observer.observe(el);
     observer.observe(inner);
-    return () => observer.disconnect();
-  }, [items, followNewest]);
+    return () => {
+      observer.disconnect();
+      if (frame !== undefined) cancelAnimationFrame(frame);
+    };
+  }, [followNewest]);
 
   return (
     <div
@@ -449,9 +480,11 @@ export function Transcript({
                 <AgentTurn
                   key={item.id}
                   message={item}
-                  onRetry={onRetry ? () => onRetry(item.id) : undefined}
-                  onOpenProviderSettings={onOpenProviderSettings}
-                  onOpenLink={onOpenLink}
+                  onRetry={onRetry ? retry : undefined}
+                  onOpenProviderSettings={
+                    onOpenProviderSettings ? settings : undefined
+                  }
+                  onOpenLink={onOpenLink ? openLink : undefined}
                 />
               ) : (
                 <ToolRow key={item.id} activity={item} />

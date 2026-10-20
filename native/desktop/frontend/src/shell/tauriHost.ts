@@ -458,6 +458,7 @@ function tauriAgent(call: HostCall): {
     agent: {
       conversations: () => call("agent_conversations", {}),
       history: (conversationId) => call("agent_history", { conversationId }),
+      snapshot: (conversationId) => call("agent_snapshot", { conversationId }),
       documents: (query) => call("agent_documents", { query }),
     },
   };

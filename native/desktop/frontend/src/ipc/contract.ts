@@ -21,6 +21,7 @@ import type {
 } from "../shell/agentSession";
 import type { AgentAccessAnswer } from "../shell/agentAccess";
 import type {
+  AgentSnapshot,
   AgentConversationRecord,
   AgentDocumentPage,
   AgentDocumentsQuery,
@@ -1426,6 +1427,10 @@ export interface HostCommands {
   agent_conversations: {
     args: Authorized;
     result: AgentConversationRecord[];
+  };
+  agent_snapshot: {
+    args: Authorized<{ conversationId: string }>;
+    result: AgentSnapshot;
   };
   agent_history: {
     args: Authorized<{ conversationId: string }>;

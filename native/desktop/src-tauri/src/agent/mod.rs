@@ -216,6 +216,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_unobserve,
         agent_conversations,
         agent_history,
+        agent_snapshot,
         agent_documents,
         agent_attach,
         runtime_attendance_inventory,
@@ -632,6 +633,18 @@ async fn agent_history(
 ) -> std::result::Result<Value, Refused> {
     blocking(&host, move |host| {
         host.session.history(&host.supervisor, &conversation_id)
+    })
+    .await
+}
+
+/// A single read of the conversation and what its current reply waits on.
+#[tauri::command]
+async fn agent_snapshot(
+    host: State<'_, Arc<AgentHost>>,
+    conversation_id: String,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        host.session.snapshot(&host.supervisor, &conversation_id)
     })
     .await
 }
