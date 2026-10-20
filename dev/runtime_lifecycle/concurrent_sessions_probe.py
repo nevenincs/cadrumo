@@ -611,9 +611,7 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--source", action="store_true", help="This checkout's environment.")
     parser.add_argument("--stop-after", choices=tuple(_PHASES), help="Run the phases up to this one only.")
     options = parser.parse_args(arguments)
-    base = REPO_ROOT / "build" / "acceptance"
-    base.mkdir(parents=True, exist_ok=True)
-    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-concurrent-", dir=base))
+    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-concurrent-"))
     root, secrets = scratch / "storage", scratch / "secrets"
     root.mkdir()
     secrets.mkdir()

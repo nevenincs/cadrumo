@@ -42,9 +42,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import secrets
 import shutil
 import sys
+import tempfile
 import threading
 import time
 import traceback
@@ -356,6 +356,34 @@ _STATUS_UNTIL: Final = """async ({command, until, boundMs}) => {
 }"""
 
 
+#: Resolves with the provider catalog, or with the last refusal once it is not
+#: busy or the bound passes. A service still building the catalog answers busy
+#: and keeps the answer for the next read, so the lane asks again on each
+#: rendered frame, as the agent column asks again.
+_CATALOG_SETTLED: Final = """async ({boundMs}) => {
+    const token = window.__CADRUMO_LANE_TOKEN__;
+    if (!token) throw new Error('desktop token unavailable');
+    const bound = Date.now() + boundMs;
+    for (;;) {
+        try {
+            return {ok: await window.__TAURI_INTERNALS__.invoke('agent_provider_catalog', {token})};
+        } catch (error) {
+            const busy = error && error.code === 'agent_service_busy';
+            if (!busy || Date.now() >= bound) return {refused: error};
+        }
+        await new Promise((next) => requestAnimationFrame(next));
+    }
+}"""
+
+
+def provider_catalog(page: Any, seconds: float) -> Any:
+    """The agent's provider catalog once the service has built it, or a failure naming its refusal."""
+    answer = page.evaluate(_CATALOG_SETTLED, {"boundMs": seconds * 1000})
+    if "refused" in answer:
+        raise AcceptanceError(f"agent_provider_catalog: {json.dumps(answer['refused'])}")
+    return answer.get("ok")
+
+
 def invoke(page: Any, command: str, **args: Any) -> Any:
     """The result of one desktop command, or a failure naming its refusal."""
     answer = page.evaluate(_INVOKE, {"command": command, "args": args})
@@ -514,7 +542,7 @@ def require_ready_lane(page: Any) -> str:
     ready, status = status_until(page, "agent_status", "agent_ready", _RUNTIME_SECONDS)
     if not ready:
         raise UnavailableError(f"the agent service is not ready: {json.dumps(status)}")
-    catalog = invoke(page, "agent_provider_catalog")
+    catalog = provider_catalog(page, _RUNTIME_SECONDS)
     if not isinstance(catalog, Mapping):
         raise AcceptanceError(f"the agent's provider catalog is unreadable: {json.dumps(catalog)}")
     lanes, missing = ready_lanes(catalog)
@@ -1007,10 +1035,8 @@ def _main(argv: list[str] | None) -> int:
     parser.add_argument("--keep", action="store_true", help="Keep the run directory after a pass.")
     parser.add_argument("playwright", nargs="*", help="Arguments after -- go to Playwright, such as -g PATTERN.")
     options = parser.parse_args(argv)
-    base = _REPOSITORY / "build" / "acceptance"
-    base.mkdir(parents=True, exist_ok=True)
-    run_directory = base / f"desktop-agent-live-{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{secrets.token_hex(3)}"
-    run_directory.mkdir()
+    run_directory = Path(tempfile.mkdtemp(prefix=f"desktop-agent-live-{datetime.now(UTC):%Y%m%dT%H%M%SZ}-"))
+    base = run_directory.parent
     try:
         unproven = run(
             run_directory,

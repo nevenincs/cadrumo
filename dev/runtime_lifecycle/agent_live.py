@@ -64,7 +64,6 @@ from typing import Any, Final
 import psutil
 
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev._paths import REPO_ROOT
 
 from .caller_owned_root import (
     AcceptanceError,
@@ -554,12 +553,9 @@ def main(arguments: list[str] | None = None) -> int:
     )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    # dev._paths deliberately redirects stdlib temp into the checkout. CLI
-    # provider proofs need an explicit external root to avoid repository
-    # instruction discovery in their isolated tool runtime.
-    base = options.scratch_parent or REPO_ROOT / "build" / "acceptance"
-    base.mkdir(parents=True, exist_ok=True)
-    scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=base))
+    if options.scratch_parent is not None:
+        options.scratch_parent.mkdir(parents=True, exist_ok=True)
+    scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=options.scratch_parent))
     try:
         asyncio.run(run(package, scratch))
     except (AcceptanceError, BaseExceptionGroup) as failure:

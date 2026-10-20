@@ -76,7 +76,6 @@ _CLASSIFIED = "ledger.transaction.classified"
 _EXTRA_MISSING = "ERROR_OPTIONAL_EXTRA_MISSING"
 
 _REVIEW_SECONDS = 600
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 class _ModelUnpackagedError(Exception):
@@ -336,9 +335,7 @@ def main(arguments: list[str] | None = None) -> int:
     )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    base = _REPOSITORY_ROOT / "build" / "acceptance"
-    base.mkdir(parents=True, exist_ok=True)
-    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-", dir=base))
+    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-"))
     try:
         receipt = asyncio.run(run(Programs.of(package), package, scratch, models=model_store(options.ollama_models)))
     except (AcceptanceError, BaseExceptionGroup) as failure:

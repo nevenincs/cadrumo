@@ -131,13 +131,13 @@ just verify-caller-owned-runtime build/windows-x64/stage/Release/app
 
 `verify-caller-owned-runtime` checks `cadrumo-runtime --configured-root`: its
 readiness line, client discovery, password sign-in, stop when its stdin closes
-(exit 64), and an unchanged installed default root, from a disposable root
-under `build/acceptance`. It reports `incomplete`
+(exit 64), and an unchanged installed default root, from a disposable
+temporary root. It reports `incomplete`
 (exit 3) on a logon whose credential store refuses to keep a sign-in.
 
 The generic held-session helper uses
 `cadrumo-runtime session hold --profile-id UUID --password-stdin` for attended
-MCP admission under `build/acceptance`. `session_holder.py` owns this real child
+MCP admission on a disposable temporary root. `session_holder.py` owns this real child
 and its correlated status, attendance inventory and exact allow/reject decisions.
 Password admission requires the runtime-owned marker binding the disposable
 canonical root and its native identity. It creates no persisted sign-in receipt
@@ -168,8 +168,8 @@ default `~/.ollama/models`); and a free loopback port 11434. No remote service i
 attendance approval only admits the MCP connection; the review is answered on
 its own interaction.
 
-The driver runs each step as a real process on a fresh root under
-`build/acceptance/reviewed-operation-*`, with the password only on a command's
+The driver runs each step as a real process on a fresh temporary root
+`reviewed-operation-*`, with the password only on a command's
 standard input:
 
 1. `aeat config profile create NAME --quiet --secrets-stdin`, then
