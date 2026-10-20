@@ -272,6 +272,8 @@ declare global {
      * agent refuses where the column would not let anything through. A run
      * may make more than one session; this is the one that has been called. */
     __fixtureAgentSession?: AgentSession;
+    /** The same session's read projections, for controlled transport delays. */
+    __fixtureAgentViews?: AgentViews;
     /** Every resolution of a questionnaire the page has handed the host, in
      * order, whether the agent took it or not. */
     __fixtureAgentAnswers?: AgentQuestionnaireAnswer[];
@@ -955,6 +957,8 @@ export function fixtureAgent({
       await wait();
     },
     async status() {
+      window.__fixtureAgentSession = session;
+      window.__fixtureAgentViews = agent;
       say("agentStatus");
       await wait();
       const answer = status();

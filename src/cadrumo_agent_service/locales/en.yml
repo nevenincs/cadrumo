@@ -148,6 +148,7 @@ desktop:
     send_too_long: This message has {count} characters; {max} is the most
     send_too_many_skills: A message can load at most {max} skills
     send_waiting: Wait until every file has uploaded
+    sending: Sending…
     sent_files: Files sent with this message
     sent_skills: Skills loaded
     service_absent: The agent isn't installed. Reinstall Cadrumo to add it.

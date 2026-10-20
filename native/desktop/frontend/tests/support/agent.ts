@@ -116,6 +116,9 @@ export async function send(target: Page, text: string) {
 
 /** Waits until no reply is being written. */
 export async function settled(target: Page) {
+  await expect(conversation(target)).not.toContainText(
+    label("desktop.agent.sending"),
+  );
   await expect(
     agentColumn(target).getByRole("button", {
       name: label("desktop.agent.stop"),

@@ -150,6 +150,7 @@ desktop:
     send_too_long: Este mensaje tiene {count} caracteres; el máximo es {max}
     send_too_many_skills: Un mensaje puede cargar como máximo {max} habilidades
     send_waiting: Espera a que se suban todos los archivos
+    sending: Enviando…
     sent_files: Archivos enviados con este mensaje
     sent_skills: Habilidades cargadas
     service_absent: El agente no está instalado. Reinstala Cadrumo para añadirlo.

@@ -415,6 +415,19 @@ export function withSent(
   sent: PersonSent,
   now: Date,
 ): LiveTurns {
+  // A slow acknowledgement can arrive after history already contains the
+  // message that began this reply.
+  if (
+    sent.at === "start" &&
+    live.turns.some(
+      (record) =>
+        record.kind === "person" &&
+        !isLocal(record) &&
+        record.reply_id === sent.reply_id &&
+        record.text === sent.text,
+    )
+  )
+    return live;
   const turns = withReply(live.turns, sent.reply_id);
   const sentBefore = turns.filter(
     (record) => isLocal(record) && replyIdOf(record) === sent.reply_id,
@@ -559,6 +572,7 @@ export function useLiveConversation({
   >(null);
   const watching = useRef<string | null>(null);
   const waiters = useRef<Waiter[]>([]);
+  const retryWatch = useRef<{ id: string; retry: () => void } | null>(null);
 
   useEffect(() => {
     if (key === null || !views) return;
@@ -662,6 +676,16 @@ export function useLiveConversation({
             if (first) {
               held = null;
               setState({ for: id, live: null, failed: failureCode(error) });
+              // A later deliberate send can retry the initial subscription.
+              retryWatch.current = {
+                id,
+                retry: () => {
+                  retryWatch.current = null;
+                  setState({ for: id, live: current, failed: null });
+                  subscribe(true);
+                },
+              };
+              rejectWaiters();
             } else {
               losses += 1;
               timer = window.setTimeout(attach, resubscribeDelay(losses));
@@ -697,6 +721,11 @@ export function useLiveConversation({
       waiters.current = [];
       for (const waiter of mine) waiter.resolve();
     }
+    function rejectWaiters() {
+      const mine = waiters.current.filter((waiter) => waiter.id === id);
+      waiters.current = waiters.current.filter((waiter) => waiter.id !== id);
+      for (const waiter of mine) waiter.reject();
+    }
 
     subscribe(true);
 
@@ -706,6 +735,8 @@ export function useLiveConversation({
       stop?.();
       take.current = null;
       if (watching.current === id) watching.current = null;
+      if (retryWatch.current?.id === id) retryWatch.current = null;
+      rejectWaiters();
     };
   }, [key, views, session]);
 
@@ -740,6 +771,7 @@ export function useLiveConversation({
               resolve,
               reject: () => reject(new Error("agent_conversation_closed")),
             });
+            if (retryWatch.current?.id === id) retryWatch.current.retry();
           }),
     [],
   );

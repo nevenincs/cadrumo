@@ -269,6 +269,19 @@ export const LongConversationWide: Story = {
 
 export const AgentWorking: Story = { args: { items: WORKING } };
 
+export const Sending: Story = {
+  args: {
+    items: [
+      {
+        kind: "person",
+        id: "pending",
+        text: "Help me review this quarter's invoices.",
+        sending: true,
+      },
+    ],
+  },
+};
+
 export const AgentWaitingOnPerson: Story = {
   args: {
     items: WORKING.map((item) =>

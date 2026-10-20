@@ -309,6 +309,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.agent.row_documents",
         "desktop.agent.search_history",
         "desktop.agent.send",
+        "desktop.agent.sending",
         "desktop.agent.send_nothing",
         "desktop.agent.send_too_long",
         "desktop.agent.send_too_many_skills",

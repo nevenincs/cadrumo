@@ -149,6 +149,7 @@ desktop:
     send_too_long: Ez az üzenet {count} karakter hosszú; legfeljebb {max} lehet
     send_too_many_skills: Egy üzenet legfeljebb {max} készséget tölthet be
     send_waiting: Várd meg, amíg minden fájl feltöltődik
+    sending: Küldés…
     sent_files: Az üzenettel küldött fájlok
     sent_skills: Betöltött készségek
     service_absent: Az ügynök nincs telepítve. Telepítsd újra a Cadrumót a hozzáadásához.

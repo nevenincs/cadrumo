@@ -161,6 +161,8 @@ export type TranscriptMessage =
       skills?: readonly string[];
       /** When it was sent, already worded, e.g. "10:42". */
       sentAtLabel?: string;
+      /** The person's submission is still awaiting acknowledgement. */
+      sending?: boolean;
     }
   | {
       kind: "agent";

@@ -40,10 +40,12 @@ import {
   archivedCount,
   newestRanWith,
   replyFacts,
+  replyIdOf,
   transcriptItems,
   useAgentRead,
   useConversationGroups,
   type AgentRead,
+  type AgentDocumentReference,
   type AgentViews,
 } from "../shell/agentViews";
 import { queuedWords, runStateWords } from "../shell/agentWords";
@@ -86,6 +88,16 @@ const NO_SELECTION: AgentSelection = {
 };
 
 type Panel = "none" | "history" | "settings";
+
+type PendingSend = {
+  id: string;
+  conversationId: string | null;
+  replyId: string | null;
+  text: string;
+  attachments: AgentDocumentReference[];
+  skills: string[];
+  previousReplies: string[];
+};
 
 /** Why the agent service is not serving, in words; null when it is. */
 function serviceWords(t: Translate, status: AgentServiceStatus): string | null {
@@ -202,6 +214,7 @@ export function AgentColumn({
     conversationId: null as string | null,
     chosen: null as AgentSelection | null,
     sending: false,
+    pending: null as PendingSend | null,
     sendFailure: null as string | null,
     // Why the history's last archive or rename was refused.
     archiveFailure: null as string | null,
@@ -219,12 +232,15 @@ export function AgentColumn({
       conversationId: null,
       chosen: null,
       sending: false,
+      pending: null,
       sendFailure: null,
       archiveFailure: null,
       draft: { key: view.draft.key + 1, text: "" },
       revision: 0,
     });
   const { panel, archived, conversationId, revision } = view;
+  const currentSend = useRef<string | null>(null);
+  currentSend.current = view.pending?.id ?? null;
   const change = (next: Partial<typeof view>) =>
     setView((held) => ({ ...held, ...next }));
 
@@ -263,13 +279,54 @@ export function AgentColumn({
     onSettled,
     onToolRefused,
   });
+  const pending =
+    view.reader === reader && view.pending?.conversationId === conversationId
+      ? view.pending
+      : null;
   const history = useMemo((): AgentRead<ReturnType<typeof transcriptItems>> => {
-    if (live.read.kind !== "ready") return live.read;
+    if (live.read.kind !== "ready" && !pending) return live.read;
+    const records = live.read.kind === "ready" ? [...live.read.value] : [];
+    // Keep the person's words ahead of any events that beat the send
+    // acknowledgement, and through an initial history read still in flight.
+    const echoed =
+      pending &&
+      records.some(
+        (record) =>
+          record.kind === "person" &&
+          record.text === pending.text &&
+          (pending.replyId
+            ? record.reply_id === pending.replyId
+            : !pending.previousReplies.includes(record.reply_id)),
+      );
+    if (pending && !echoed) {
+      const nextReply = records.findIndex((record) =>
+        pending.replyId
+          ? replyIdOf(record) === pending.replyId
+          : !pending.previousReplies.includes(replyIdOf(record)),
+      );
+      records.splice(nextReply < 0 ? records.length : nextReply, 0, {
+        kind: "person",
+        id: pending.id,
+        reply_id: pending.replyId ?? pending.id,
+        text: pending.text,
+        sent_at: null,
+        attachments: pending.attachments,
+        skills: pending.skills,
+      });
+    }
+    const items = transcriptItems(records, locale, t);
     return {
       kind: "ready",
-      value: transcriptItems(live.read.value, locale, t),
+      value: items.map((item) =>
+        pending &&
+        pending.replyId === null &&
+        item.kind === "person" &&
+        item.id === `person:${pending.id}:${pending.id}`
+          ? { ...item, sending: true }
+          : item,
+      ),
     };
-  }, [live.read, locale, t]);
+  }, [live.read, pending, locale, t]);
   // What the agent served of the conversation's replies beside their words: the
   // state of the newest, what they ran with, and the tokens they used.
   const newest =
@@ -382,6 +439,8 @@ export function AgentColumn({
         ...held,
         panel: "none",
         conversationId: id,
+        pending: null,
+        sending: false,
         // A conversation opened runs with its own choice, not the last one's.
         chosen: held.conversationId === id ? held.chosen : null,
         sendFailure: null,
@@ -522,22 +581,27 @@ export function AgentColumn({
     setView((held) => ({
       ...held,
       sending: false,
+      pending: null,
       sendFailure: failure,
       draft: { key: held.draft.key + 1, text },
     }));
-  const deliver = async (request: AgentSendRequest) => {
+  const deliver = async (
+    request: AgentSendRequest,
+    submission: PendingSend,
+  ) => {
     if (!session) return;
+    const current = () =>
+      currentReader.current === reader && currentSend.current === submission.id;
     try {
       const { reply_id } = await session.send(request);
+      if (!current()) return;
       // The agent returns no id for the message, so it is shown as sent until
       // the history has it.
       live.sent({
         reply_id,
         text: request.text,
         at: "start",
-        attachments: namedFor(request.conversation_id).map(
-          ({ name, sha256, media_type }) => ({ name, sha256, media_type }),
-        ),
+        attachments: submission.attachments,
         ...(request.skills ? { skills: request.skills } : {}),
       });
       // What the message named went with it.
@@ -546,10 +610,14 @@ export function AgentColumn({
       setView((held) => ({
         ...held,
         sending: false,
+        pending:
+          held.pending?.id === submission.id
+            ? { ...held.pending, replyId: reply_id }
+            : held.pending,
         revision: held.revision + 1,
       }));
     } catch (error) {
-      giveBack(request.text, failureCode(error));
+      if (current()) giveBack(request.text, failureCode(error));
     }
   };
   // Pressing Send is the person's decision: the message goes, and nothing
@@ -565,27 +633,55 @@ export function AgentColumn({
       giveBack(text, "agent_selection_unavailable");
       return;
     }
+    const submission: PendingSend = {
+      id: crypto.randomUUID(),
+      conversationId,
+      replyId: null,
+      text,
+      attachments: conversationId
+        ? namedFor(conversationId).map(({ name, sha256, media_type }) => ({
+            name,
+            sha256,
+            media_type,
+          }))
+        : [],
+      skills: references.skills,
+      previousReplies:
+        live.read.kind === "ready" ? live.read.value.map(replyIdOf) : [],
+    };
+    currentSend.current = submission.id;
+    change({ pending: submission });
+    const current = () =>
+      currentReader.current === reader && currentSend.current === submission.id;
     let request: AgentSendRequest;
     try {
       // A new conversation begins with its first message, never on its own.
       let id = conversationId;
       if (id === null) {
         id = (await session.startConversation()).id;
-        started(id);
+        if (!current()) return;
+        setView((held) => ({
+          ...held,
+          conversationId: id,
+          pending: held.pending
+            ? { ...held.pending, conversationId: id }
+            : null,
+        }));
       }
       // Watched before anything is sent, so the reply is followed from its
       // first word.
       await live.watch(id);
+      if (!current()) return;
       request = { conversation_id: id, text, selection: runs };
       if (references.skills.length > 0) request.skills = references.skills;
       const named = namedFor(id);
       if (named.length > 0) request.attachments = documentRefs(named);
     } catch (error) {
-      giveBack(text, failureCode(error));
+      if (current()) giveBack(text, failureCode(error));
       return;
     }
     // A send that fails is given back by `deliver` itself.
-    await deliver(request);
+    await deliver(request, submission);
   };
   // What the reply waits on. While it asks questions, a message written
   // below answers them in the person's own words, and goes on with the
@@ -700,6 +796,8 @@ export function AgentColumn({
                 change({
                   panel: "none",
                   conversationId: null,
+                  pending: null,
+                  sending: false,
                   chosen: null,
                   sendFailure: null,
                 })
@@ -839,17 +937,24 @@ export function AgentColumn({
           ) : (
             <ReadState read={conversations} icon="clock" />
           )
-        ) : conversationId === null ? (
+        ) : conversationId === null && !pending ? (
           <AgentWelcome />
         ) : history.kind === "ready" ? (
           // Replying again to a failed turn is the agent's to offer; until
           // a host can, Retry says it is not available.
-          <Transcript
-            items={history.value}
-            locale={locale}
-            onOpenProviderSettings={openSettings}
-            onOpenLink={onOpenLink}
-          />
+          <>
+            {live.read.kind === "failed" && (
+              <p role="alert" className="px-3 py-2 text-sm text-destructive">
+                {t("desktop.agent.read_failed")}
+              </p>
+            )}
+            <Transcript
+              items={history.value}
+              locale={locale}
+              onOpenProviderSettings={openSettings}
+              onOpenLink={onOpenLink}
+            />
+          </>
         ) : (
           <ReadState read={history} icon="agent" />
         )}

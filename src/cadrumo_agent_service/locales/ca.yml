@@ -149,6 +149,7 @@ desktop:
     send_too_long: Aquest missatge té {count} caràcters; el màxim és {max}
     send_too_many_skills: Un missatge pot carregar com a màxim {max} habilitats
     send_waiting: Espera que es pugin tots els fitxers
+    sending: Enviant…
     sent_files: Fitxers enviats amb aquest missatge
     sent_skills: Habilitats carregades
     service_absent: L'agent no està instal·lat. Reinstal·la Cadrumo per afegir-lo.

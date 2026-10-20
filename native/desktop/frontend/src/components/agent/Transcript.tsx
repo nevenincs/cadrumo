@@ -132,10 +132,20 @@ function PersonTurn({
             {message.text}
           </p>
         )}
-        {message.sentAtLabel && (
-          <span className="text-xs text-muted-foreground">
-            {message.sentAtLabel}
+        {message.sending ? (
+          <span
+            role="status"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          >
+            <Spinner />
+            {t("desktop.agent.sending")}
           </span>
+        ) : (
+          message.sentAtLabel && (
+            <span className="text-xs text-muted-foreground">
+              {message.sentAtLabel}
+            </span>
+          )
         )}
       </article>
     </li>
