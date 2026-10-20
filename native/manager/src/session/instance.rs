@@ -75,7 +75,7 @@ pub fn session_lock_name(manager_id: &str, _user: &str, session: &str) -> io::Re
     Ok(format!("{}.session.{session}.lock", validated(manager_id)?))
 }
 
-/// Claim this session's lock for `manager_id`, polling until `patience` ends.
+/// Claim this session's lock for `manager_id`, waiting until `patience` ends.
 ///
 /// `Ok(None)` means another manager in this session holds it.
 pub fn claim_session(manager_id: &str, patience: Duration) -> io::Result<Option<SessionLock>> {
@@ -213,6 +213,64 @@ mod tests {
         holder.join().expect("holder");
         let lock = claim_session(&manager, Duration::from_secs(2)).expect("claim");
         assert!(lock.is_some());
+    }
+
+    #[test]
+    fn a_waiting_claim_is_woken_when_the_holder_releases() {
+        let manager = manager_id("waiting");
+        let (held, holding) = mpsc::channel();
+        let holder_id = manager.clone();
+        let holder = std::thread::spawn(move || {
+            let lock = claim_session(&holder_id, Duration::ZERO)
+                .expect("claim")
+                .expect("free");
+            held.send(()).expect("report");
+            std::thread::sleep(Duration::from_millis(50));
+            drop(lock);
+        });
+        holding.recv().expect("held");
+        let lock = claim_session(&manager, Duration::from_secs(5))
+            .expect("claim")
+            .expect("released while waiting");
+        holder.join().expect("holder");
+        drop(lock);
+    }
+
+    #[test]
+    #[ignore = "manual native timing benchmark; shared-host wall time is not a gate"]
+    fn session_lock_handoff_benchmark() {
+        let mut delays = Vec::new();
+        for _ in 0..20 {
+            let manager = manager_id("timing");
+            let (held, holding) = mpsc::channel();
+            let (released, release_time) = mpsc::channel();
+            let holder_id = manager.clone();
+            let holder = std::thread::spawn(move || {
+                let lock = claim_session(&holder_id, Duration::ZERO)
+                    .expect("claim")
+                    .expect("free");
+                held.send(()).expect("report");
+                std::thread::sleep(Duration::from_millis(5));
+                let at = std::time::Instant::now();
+                drop(lock);
+                released.send(at).expect("release time");
+            });
+            holding.recv().expect("held");
+            let lock = claim_session(&manager, Duration::from_secs(5))
+                .expect("claim")
+                .expect("released");
+            let acquired = std::time::Instant::now();
+            delays.push(acquired.duration_since(release_time.recv().expect("release time")));
+            holder.join().expect("holder");
+            drop(lock);
+        }
+        delays.sort();
+        eprintln!(
+            "session_lock_handoff samples={} median_ms={:.3} max_ms={:.3}",
+            delays.len(),
+            (delays[9].as_secs_f64() + delays[10].as_secs_f64()) * 500.0,
+            delays[19].as_secs_f64() * 1000.0,
+        );
     }
 
     #[test]

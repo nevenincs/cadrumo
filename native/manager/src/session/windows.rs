@@ -38,8 +38,6 @@ const WAIT_OBJECT_0: u32 = 0;
 const WAIT_ABANDONED: u32 = 0x80;
 const WAIT_TIMEOUT: u32 = 0x102;
 const ERROR_INVALID_HANDLE: i32 = 6;
-/// The pause between attempts on a lock another manager holds.
-const LOCK_POLL: Duration = Duration::from_millis(25);
 
 #[link(name = "kernel32")]
 unsafe extern "system" {
@@ -303,7 +301,7 @@ pub(crate) struct SessionMutex {
     _thread: PhantomData<*const ()>,
 }
 
-/// Claim the mutex called `name` for `user`, polling until `patience` ends.
+/// Claim the mutex called `name` for `user`, waiting in the kernel until `patience` ends.
 ///
 /// `Ok(None)` means another holder still has it. An abandoned mutex, left by a holder that
 /// ended without releasing it, is claimed.
@@ -342,11 +340,12 @@ pub(crate) fn claim(
             "another account owns the session lock",
         ));
     }
-    let deadline = Instant::now() + patience;
+    let started = Instant::now();
     loop {
-        // SAFETY: the mutex handle is open for the duration of the call; a zero timeout
-        // only polls.
-        match unsafe { WaitForSingleObject(raw(&mutex), 0) } {
+        let remaining = patience.saturating_sub(started.elapsed());
+        // SAFETY: this thread retains the handle throughout the bounded wait.
+        // A release or abandonment wakes it immediately, without a polling delay.
+        match unsafe { WaitForSingleObject(raw(&mutex), wait_milliseconds(remaining)) } {
             WAIT_OBJECT_0 | WAIT_ABANDONED => {
                 HELD.with(|held| held.borrow_mut().push(name.to_owned()));
                 return Ok(Some(SessionMutex {
@@ -358,12 +357,17 @@ pub(crate) fn claim(
             WAIT_TIMEOUT => {}
             _ => return Err(io::Error::last_os_error()),
         }
-        let remaining = deadline.saturating_duration_since(Instant::now());
-        if remaining.is_zero() {
+        if started.elapsed() >= patience {
             return Ok(None);
         }
-        std::thread::sleep(LOCK_POLL.min(remaining));
     }
+}
+
+/// Round up sub-millisecond bounds without ever selecting Win32's INFINITE sentinel.
+fn wait_milliseconds(remaining: Duration) -> u32 {
+    u32::try_from(remaining.as_nanos().div_ceil(1_000_000))
+        .unwrap_or(u32::MAX - 1)
+        .min(u32::MAX - 1)
 }
 
 impl Drop for SessionMutex {
@@ -383,6 +387,14 @@ pub(crate) mod squat {
     use super::*;
 
     const EVENT_MANUAL_RESET: i32 = 1;
+
+    #[test]
+    fn mutex_wait_bounds_are_finite_and_round_up() {
+        assert_eq!(wait_milliseconds(Duration::ZERO), 0);
+        assert_eq!(wait_milliseconds(Duration::from_nanos(1)), 1);
+        assert_eq!(wait_milliseconds(Duration::from_millis(25)), 25);
+        assert_eq!(wait_milliseconds(Duration::MAX), u32::MAX - 1);
+    }
 
     #[link(name = "kernel32")]
     unsafe extern "system" {
