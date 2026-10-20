@@ -79,6 +79,7 @@ _LIFECYCLE_FIELDS = tuple(
             "kdf_request_write_elapsed_ms",
             "kdf_result_wait_elapsed_ms",
             "kdf_start_elapsed_ms",
+            "kdf_worker_age_seconds",
             "login_method",
             "observation_elapsed_ms",
             "observed_active_count",

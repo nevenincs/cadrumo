@@ -9,6 +9,7 @@ import subprocess
 import time
 from itertools import count
 from pathlib import Path
+from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -107,6 +108,27 @@ def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scop
     assert context["kdf_cleanup_pipes_elapsed_ms"] == 1.0
     assert context["kdf_cleanup_directory_elapsed_ms"] == 1.0
     assert cast("float", context["elapsed_seconds"]) >= 0.007
+
+
+def test_prewarmed_worker_reports_request_time_separately_from_idle_lifetime(
+    simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG, logger=supervision.__name__)
+    now = [1_000_000_000]
+    monkeypatch.setattr(supervision.time, "monotonic_ns", lambda: now[0])
+    monkeypatch.setattr(_SupervisedKdfWorker, "_close", lambda _self, *, failed: None)
+    with simulated_worker as worker:
+        process = SimpleNamespace(poll=lambda: None, returncode=0)
+        monkeypatch.setattr(worker, "_process", process)
+        monkeypatch.setattr(worker, "_job", SimpleNamespace(contains=lambda _process: True))
+        monkeypatch.setattr(worker, "_ready_payload", {})
+        now[0] += 1_200_000_000_000
+        assert worker.adopt(deadline=time.monotonic() + 30)
+        assert worker.calibrate(_kdf()) == 0.000000125
+        now[0] += 600_000_000
+    _, context = _summary(caplog)
+    assert context["elapsed_seconds"] == pytest.approx(0.6)
+    assert context["kdf_worker_age_seconds"] == pytest.approx(1200.6)
 
 
 @pytest.mark.parametrize(

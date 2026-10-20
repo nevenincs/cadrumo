@@ -107,6 +107,7 @@ class _SupervisedKdfWorker:
         self._environment_keys: frozenset[str] | None = None
         self._expected_posix_file_descriptors: tuple[int, int] | None = None
         self._started_ns = 0
+        self._adopted_ns: int | None = None
         self._phase_elapsed_ms: dict[_KdfStage, float | None] = dict.fromkeys(_PHASE_FIELDS)
         self._cleanup_elapsed_ms: dict[_CleanupPart, float | None] = dict.fromkeys(("process", "pipes", "directory"))
         self._failure_stage: _KdfStage | Literal["caller"] | None = None
@@ -118,6 +119,7 @@ class _SupervisedKdfWorker:
 
     def __enter__(self) -> _SupervisedKdfWorker:
         self._started_ns = time.monotonic_ns()
+        self._adopted_ns = None
         self._phase_elapsed_ms = dict.fromkeys(_PHASE_FIELDS)
         self._cleanup_elapsed_ms = dict.fromkeys(("process", "pipes", "directory"))
         self._failure_stage = None
@@ -155,6 +157,7 @@ class _SupervisedKdfWorker:
         if sys.platform == "win32" and (self._job is None or not self._job.contains(process)):
             return False
         self._deadline = deadline
+        self._adopted_ns = time.monotonic_ns()
         return True
 
     def __exit__(self, exc_type: object, exc_value: object, _traceback: object) -> None:
@@ -346,12 +349,20 @@ class _SupervisedKdfWorker:
             and cleanup_error is None
         ):
             outcome = "sample_rejected"
+        finished_ns = time.monotonic_ns()
+        if self._adopted_ns is not None:
+            # A prestarted child may wait minutes for a password. Preserve that
+            # lifetime separately; it is not time spent handling the request.
+            fields["kdf_worker_age_seconds"] = max(0, finished_ns - self._started_ns) / 1_000_000_000
         fields.update(
             kdf_operation=self._operation.value if self._operation is not None else None,
             stage=self._failure_stage,
             error_type=self._failure_type,
             outcome=outcome,
-            elapsed_seconds=max(0, time.monotonic_ns() - self._started_ns) / 1_000_000_000,
+            elapsed_seconds=max(
+                0, finished_ns - (self._adopted_ns if self._adopted_ns is not None else self._started_ns)
+            )
+            / 1_000_000_000,
             cleanup_status=cleanup_status,
             cleanup_incomplete=cleanup_status != "completed",
             cleanup_error_type=type(cleanup_error).__name__ if cleanup_error is not None else None,

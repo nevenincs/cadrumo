@@ -237,7 +237,16 @@ class ProfileConnectionOperationMixin:
 
     @contextmanager
     def _language_observed_after(self: RuntimeProfileConnections, context: ConnectionContext) -> Generator[None]:
-        """Look at the profile's language hint once this request ends; only an operation's worker moves it."""
+        """Bracket operations so a first read does not invalidate itself.
+
+        Establish the initial hint before any read or mutation. The final
+        observation still cues a change during the operation, including when
+        the initial hint could not be read.
+        """
+        with self._guard:
+            connection = self._connections.get(context.connection_id)
+        if connection is not None:
+            self.observe_profile_language(connection.profile_id, establish_baseline=True)
         try:
             yield
         finally:

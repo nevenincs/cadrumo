@@ -20,7 +20,8 @@ from ..profile_host import ProfileConnection
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_committed_hint_invalidates_only_its_profile_and_live_session(tmp_path: Path) -> None:
+@pytest.mark.parametrize("initial_read", [False, True])
+def test_committed_hint_invalidates_only_its_profile_and_live_session(tmp_path: Path, initial_read: bool) -> None:
     """Real sidecar publication is presentation invalidation, never admission evidence."""
     boot = uuid4()
     profiles = RuntimeProfileConnections(
@@ -48,19 +49,30 @@ def test_committed_hint_invalidates_only_its_profile_and_live_session(tmp_path: 
     other_profile = profiles._connections[other.connection_id].profile_id
 
     # Operation traffic is the only moment the hint can move; the first look gives each session a baseline.
-    profiles.observe_profile_language(connection.profile_id)
-    assert len(profiles.take_events(first)) == 1
+    if initial_read:
+        # Initial canonical reads must not produce a cue that dirties their own result.
+        with profiles._language_observed_after(first):
+            assert profiles.take_events(first) == ()
+        assert profiles.take_events(first) == ()
+    else:
+        # Without an initial baseline a completed operation must still invalidate.
+        profiles.observe_profile_language(connection.profile_id)
+        assert len(profiles.take_events(first)) == 1
     assert profiles.take_events(other) == ()
     assert profiles.take_events(stranger) == ()
     profiles.observe_profile_language(connection.profile_id)
     assert profiles.take_events(first) == ()
 
-    write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=str(connection.profile_id), language="hu")
-    # An idle connection's turns never read the hint: nothing moves without operation traffic.
-    assert profiles.take_events(first) == ()
+    with profiles._language_observed_after(first):
+        write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=str(connection.profile_id), language="hu")
+        # Even a change during the read must be heard on operation completion.
+        assert profiles.take_events(first) == ()
+    (changed,) = profiles.take_events(first)
+    assert isinstance(changed, ProfileLanguageChanged)
     profiles.observe_profile_language(other_profile)
     assert profiles.take_events(first) == () and len(profiles.take_events(other)) == 1
 
+    write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=str(connection.profile_id), language="es")
     profiles.observe_profile_language(connection.profile_id)
     (event,) = profiles.take_events(first)
     assert isinstance(event, ProfileLanguageChanged)

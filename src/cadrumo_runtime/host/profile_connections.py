@@ -227,7 +227,7 @@ class RuntimeProfileConnections(
         """Let the connection's sole writer drain its bounded event queue."""
         return self._events.take(context)
 
-    def observe_profile_language(self, profile_id: UUID) -> None:
+    def observe_profile_language(self, profile_id: UUID, *, establish_baseline: bool = False) -> None:
         """Cue each session of the profile that has not yet heard its current language hint.
 
         Only an operation's worker writes this hint, mirroring the canonical CAS
@@ -246,9 +246,14 @@ class RuntimeProfileConnections(
                 session_id = connection.session_id
                 if connection.profile_id != profile_id or session_id is None:
                     continue
-                if self._language_observations.get(connection_id) == (session_id, language):
+                previous = self._language_observations.get(connection_id)
+                if previous == (session_id, language):
                     continue
                 self._language_observations[connection_id] = session_id, language
+                if establish_baseline and (previous is None or previous[0] != session_id):
+                    # Before its first operation this session has no canonical
+                    # read to invalidate. Later changes still publish a cue.
+                    continue
                 changed.append(
                     ProfileLanguageChanged(
                         runtime_boot_id=self.boot,

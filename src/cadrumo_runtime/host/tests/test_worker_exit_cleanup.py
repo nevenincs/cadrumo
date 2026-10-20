@@ -41,6 +41,23 @@ from ..profile_login import ProfileWorkerHumanLogin
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+@pytest.mark.parametrize(
+    "action,elapsed,warns",
+    [("password", 0.7, False), ("password", 1.6, True), ("status", 0.7, True)],
+)
+def test_password_dispatch_budget_allows_derivation_without_hiding_other_slow_controls(
+    action: str, elapsed: float, warns: bool, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    request = ProfileWorkerControlRequest.model_validate({"request_id": uuid4(), "action": action})
+    monkeypatch.setattr(worker_service, "time", SimpleNamespace(monotonic=lambda: 10.0 + elapsed))
+    caplog.set_level(logging.DEBUG, logger=worker_service._log.name)
+    worker_service._record_control_dispatch_elapsed(request, handler_started=10.0, outcome="completed")
+    records = [record for record in caplog.records if record.msg == "profile_worker_control_dispatch_slow"]
+    assert bool(records) is warns
+    if warns:
+        assert records[0].__dict__["budget_seconds"] == (1.5 if action == "password" else 0.5)
+
+
 def test_description_keeps_loop_responsive_and_retains_host_until_thread_settles() -> None:
     """A cancelled description cannot leave its host in use after cleanup."""
 

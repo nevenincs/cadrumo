@@ -62,6 +62,9 @@ from .worker_submission_staging import WorkerSubmissionStaging
 
 _ControlDisposition = Literal["handled", "status", "stop"]
 _CONTROL_DISPATCH_SLOW_SECONDS = 0.5
+# Password derivation is intentionally calibrated up to 0.5 s, before
+# attestation, secret transport and cleanup. This is a diagnostic budget only.
+_PASSWORD_DISPATCH_SLOW_SECONDS = 1.5
 _EXPIRY_MARGIN_SECONDS = 0.05
 #: Control actions that only read, so they leave custody expiry asleep.
 _READS = frozenset({"status", "activity"})
@@ -418,7 +421,12 @@ def _record_control_dispatch_elapsed(
 ) -> None:
     """Log only slow dispatches and bounded request/handler labels, never frame contents."""
     elapsed = max(0.0, time.monotonic() - handler_started)
-    if elapsed < _CONTROL_DISPATCH_SLOW_SECONDS:
+    budget = (
+        _PASSWORD_DISPATCH_SLOW_SECONDS
+        if isinstance(request, ProfileWorkerControlRequest) and request.action == "password"
+        else _CONTROL_DISPATCH_SLOW_SECONDS
+    )
+    if elapsed < budget:
         return
     try:
         diagnostic_event(
@@ -427,6 +435,7 @@ def _record_control_dispatch_elapsed(
             fields={
                 **_control_dispatch_metadata(request),
                 "elapsed_seconds": round(elapsed, 3),
+                "budget_seconds": budget,
                 "outcome": outcome,
             },
             level=logging.WARNING,
