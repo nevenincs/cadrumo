@@ -27,6 +27,9 @@ _LEVELS: Final = {
     "CRITICAL": logging.CRITICAL,
 }
 _CLI_LINE: Final = re.compile(r"^(WARNING|ERROR|CRITICAL) (cadrumo_agent(?:\.[\w.]+)?): (.*)$", re.DOTALL)
+_HEALTH_SUCCESS: Final = re.compile(
+    r'HTTP Request: (?:GET|HEAD) http://(?:127\.0\.0\.1|localhost|\[::1\])(?::[0-9]+)?/health "HTTP/[^ ]+ 200 OK"'
+)
 # Operational scalars only. Conversation/tool arguments and arbitrary nested
 # extras are not diagnostic context and must never enter the plaintext feed.
 _FIELDS: Final = frozenset(
@@ -51,7 +54,7 @@ _FIELDS: Final = frozenset(
 
 
 class AgentDiagnosticSink:
-    """Preserve producer identity and severity; collapse duplicate stderr/file copies."""
+    """Preserve diagnostics while omitting healthy polling and duplicate stderr/file copies."""
 
     def __init__(self) -> None:
         """Create a bounded, thread-safe duplicate window for one hosted run."""
@@ -111,6 +114,11 @@ class AgentDiagnosticSink:
                 service = entry.get("service")
                 role = "extension_service"
                 exception = entry.get("exception")
+                # Worker supervision probes are useful only when they fail or
+                # change lifecycle state. Keep failures and exception detail;
+                # a successful transport access line adds no operational fact.
+                if name == "httpx" and level == "INFO" and not exception and _HEALTH_SUCCESS.fullmatch(message):
+                    return
                 if isinstance(exception, str) and exception:
                     message += "\n" + exception
                 values = {

@@ -114,6 +114,32 @@ def test_protocol_unknown_bytes_malformed_and_oversized_records(log_file: Path) 
     assert "worker diagnostic" in written
 
 
+def test_successful_local_health_polls_are_quiet_but_failures_and_other_requests_survive(log_file: Path) -> None:
+    """Filter only the successful local probe, before URL scrubbing removes its purpose."""
+    sink = AgentDiagnosticSink()
+    for sequence, (level, url, status, exception) in enumerate(
+        [
+            ("INFO", "http://127.0.0.1:54321/health", "200 OK", None),
+            ("INFO", "http://localhost:54321/health", "200 OK", None),
+            ("INFO", "http://[::1]:54321/health", "200 OK", None),
+            ("INFO", "http://127.0.0.1:54321/health", "503 Service Unavailable", None),
+            ("WARNING", "http://127.0.0.1:54321/health", "200 OK", None),
+            ("INFO", "http://127.0.0.1:54321/v1/runs", "200 OK", None),
+            ("INFO", "https://provider.example/health", "200 OK", None),
+            ("INFO", "http://127.0.0.1:54321/health", "200 OK", "RuntimeError: probe decode failed"),
+        ],
+        start=1,
+    ):
+        record = json.loads(_line(sequence, level=level))
+        record.update(name="httpx", message=f'HTTP Request: GET {url} "HTTP/1.1 {status}"', exception=exception)
+        sink.line(json.dumps(record).encode(), pid=0)
+    written = _read(log_file)
+    assert written.count("HTTP Request:") == 5
+    assert "503 Service Unavailable" in written
+    assert "[WARNING] httpx:" in written
+    assert "probe decode failed" in written
+
+
 def test_real_pipe_is_forwarded_before_writer_closes(log_file: Path) -> None:
     """The drain must read a small live write without waiting for a 4KiB buffer."""
     import os
