@@ -247,6 +247,10 @@ def component_identities(
     }
 
 
+# The file uv writes into a locally built distribution's metadata as its install-time cache key.
+_INSTALL_CACHE_KEY = "uv_cache.json"
+
+
 def _logical_descriptors(document: Any, tokens: Mapping[str, str]) -> Any:
     """Name each image a service descriptor binds by its logical token, without derived digests."""
     if isinstance(document, list):
@@ -285,7 +289,22 @@ def logical_inventory(
     if descriptors is not None and descriptors in content:
         document = _logical_descriptors(json.loads((root / descriptors).read_bytes()), tokens)
         content[descriptors] = hashlib.sha256(json.dumps(document, sort_keys=True).encode("utf-8")).hexdigest()
+    # The installer stamps a locally built distribution with the time it installed it, and
+    # its RECORD lists that file's hash; neither is content the source determines.
+    for path in [path for path in content if path.endswith(f".dist-info/{_INSTALL_CACHE_KEY}")]:
+        del content[path]
+        record = str(PurePosixPath(path).with_name("RECORD"))
+        if record in content:
+            rows = (root / record).read_bytes().decode("utf-8").splitlines()
+            kept = "\n".join(row for row in rows if row.partition(",")[0] != _record_entry(path))
+            content[record] = hashlib.sha256(kept.encode("utf-8")).hexdigest()
     return content
+
+
+def _record_entry(path: str) -> str:
+    """Name a dist-info member the way its distribution's RECORD lists it, relative to site-packages."""
+    member = PurePosixPath(path)
+    return f"{member.parent.name}/{member.name}"
 
 
 def package_fingerprint(
@@ -294,18 +313,19 @@ def package_fingerprint(
     *,
     kind: str,
     build_type: str,
-    payload: Mapping[str, str] | None = None,
 ) -> str:
-    """Hash the logical staged inventory and the component fingerprints: the content a package identity names.
+    """Hash what the package ships: its logical staged inventory and the native identities it carries.
 
-    ``payload`` names the fingerprints of the Python payload producers the stage holds.
+    Only staged content counts. The Python payload's producer fingerprints are keyed on inputs
+    (a checkout edit that changes no staged byte still moves them), so they stay in their own
+    build records and out of the package identity; the staged files they produced already
+    count byte for byte, deterministic bytecode included.
     """
     document = {
         "kind": kind,
         "build_type": build_type,
         "files": dict(sorted(files.items())),
         "components": {name: identity.fingerprint for name, identity in sorted(identities.items())},
-        "payload": dict(sorted((payload or {}).items())),
     }
     return hashlib.sha256(json.dumps(document, sort_keys=True).encode("utf-8")).hexdigest()
 
@@ -422,14 +442,7 @@ def stamp_package(
         identities,
         descriptors=descriptors,
     )
-    payload = {
-        name: record["fingerprint"]
-        for name in ACTION_COMPONENTS.values()
-        if (record := read_record(binary_dir, name)) is not None and kind == "application"
-    }
-    stamp = package_identity(
-        binary_dir, package_fingerprint(content, identities, kind=kind, build_type=build_type, payload=payload)
-    )
+    stamp = package_identity(binary_dir, package_fingerprint(content, identities, kind=kind, build_type=build_type))
     package = (build_paths(binary_dir)["stage"] / configuration / "app").resolve()
     records = StagedRecords(
         configuration=configuration,

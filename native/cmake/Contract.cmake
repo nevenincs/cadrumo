@@ -77,8 +77,9 @@ string(JSON build_freeze SET "${build_freeze}" date "\"${CADRUMO_BUILD_DATE}\"")
 file(CONFIGURE OUTPUT "${CONTRACT_DIR}/build-freeze.json" CONTENT "@build_freeze@\n" @ONLY)
 # Prefix a target's commands with this to publish component-identity/<Config>/<component>.json first.
 function(cadrumo_identity_command output)
-  set(command "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}" ${CADRUMO_HELPER} run --build "${CMAKE_BINARY_DIR}"
-    -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_stamp --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>")
+  # One process: the resolution writes only generated/ files and needs no wrapped environment.
+  set(command "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}"
+    "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_stamp --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>")
   foreach(component IN LISTS ARGN)
     list(APPEND command --component "${component}")
   endforeach()

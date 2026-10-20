@@ -294,6 +294,11 @@ def _read_record(record: Path) -> str:
     return raw.decode("utf-8")
 
 
+def _under(path: str, base: str) -> bool:
+    """Whether case-folded ``path`` is ``base`` or lies below it."""
+    return path == base or path.startswith(base.rstrip(r"\/") + os.sep)
+
+
 def consumed_inputs(name: str, build: Path, *, root: Path = REPO_ROOT) -> dict[str, Path]:
     """Return the checkout files the previous build of the component read, keyed by repository path.
 
@@ -301,29 +306,46 @@ def consumed_inputs(name: str, build: Path, *, root: Path = REPO_ROOT) -> dict[s
     files inside a build directory are derived; neither is listed. The desktop compiles a
     snapshot of the native sources in its build directory, which maps back to them.
     """
-    root, build = root.resolve(), build.resolve()
+    # Plain string checks: a build reads thousands of records' paths, and resolving each one
+    # through the filesystem cost most of a resolution.
+    resolved_root = root.resolve()
+    root_text, build_text = os.path.normcase(str(resolved_root)), os.path.normcase(str(build.resolve()))
     component = COMPONENTS[name]
-    snapshots = [path for pattern in component.snapshots for path in build.glob(pattern)]
-    builds = root / "build"
+    snapshots = [
+        (os.path.normcase(str(path.resolve())), len(str(path.resolve())))
+        for pattern in component.snapshots
+        for path in build.glob(pattern)
+    ]
+    excluded = (build_text, os.path.join(root_text, "build"))
     consumed: dict[str, Path] = {}
+    seen: set[str] = set()
     for pattern in component.records:
         for record in sorted(build.glob(pattern)):
             for listed in dependency_record_paths(_read_record(record), record=record):
-                path = Path(os.path.normpath(listed))
-                snapshot = next((base for base in snapshots if path.is_relative_to(base)), None)
-                if snapshot is not None:
-                    path = root / "native" / path.relative_to(snapshot)
+                text = os.path.normpath(str(listed))
+                folded = os.path.normcase(text)
+                for base, length in snapshots:
+                    if _under(folded, base):
+                        text = os.path.join(str(root), "native", text[length:].lstrip(r"\/"))
+                        folded = os.path.normcase(text)
+                        break
+                if folded in seen:
+                    continue
+                seen.add(folded)
                 # A file only the snapshot holds was generated there, and a file since removed
                 # is no longer read; neither is a checkout input.
                 if (
-                    not path.is_absolute()
-                    or path.is_relative_to(build)
-                    or path.is_relative_to(builds)
-                    or not path.is_file()
+                    not os.path.isabs(text)
+                    or not _under(folded, root_text)
+                    or any(_under(folded, base) for base in excluded)
+                    or not os.path.isfile(text)
                 ):
                     continue
+                # Only the few survivors resolve, which restores the on-disk case that compiler
+                # read logs fold away.
+                path = Path(text)
                 try:
-                    relative = path.resolve().relative_to(root)
+                    relative = path.resolve().relative_to(resolved_root)
                 except ValueError:
                     continue
                 if relative.parts and relative.parts[0] == "build":

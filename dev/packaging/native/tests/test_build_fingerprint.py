@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from ...command_execution import run_command
-from ..assemble import logical_inventory, package_fingerprint
+from ..assemble import logical_inventory, package_fingerprint, stamp_package
 from ..build_fingerprint import (
     COMPONENTS,
     FILE_API_QUERY,
@@ -28,6 +28,7 @@ from ..build_stamp import (
     UNSETTLED,
     BuildStamp,
     ComponentIdentity,
+    begin_record,
     built_current,
     changed_inputs,
     identity_path,
@@ -37,6 +38,8 @@ from ..build_stamp import (
     resolve,
     settle_record,
 )
+from ..hashing import digest
+from ..stdlib import bytecode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -380,6 +383,28 @@ def test_logical_package_content_ignores_relinked_bytes_but_not_their_component(
     assert stage("a" * 64) != first
 
 
+def test_logical_package_content_ignores_the_install_time_cache_key(tmp_path: Path) -> None:
+    metadata = "lib/cadrumo-0.6.0.dist-info"
+
+    def stage(installed: str, module: str) -> dict[str, str]:
+        _write(tmp_path / f"{metadata}/uv_cache.json", json.dumps({"timestamp": installed}))
+        _write(tmp_path / "lib/cadrumo/__init__.py", module)
+        rows = [
+            f"cadrumo/__init__.py,sha256={digest(tmp_path / 'lib/cadrumo/__init__.py')},{len(module)}",
+            f"cadrumo-0.6.0.dist-info/uv_cache.json,sha256={digest(tmp_path / f'{metadata}/uv_cache.json')},20",
+            "cadrumo-0.6.0.dist-info/RECORD,,",
+        ]
+        _write(tmp_path / f"{metadata}/RECORD", "\n".join(rows) + "\n")
+        files = {path.relative_to(tmp_path).as_posix(): digest(path) for path in tmp_path.rglob("*") if path.is_file()}
+        return logical_inventory(tmp_path, files, [], {}, descriptors=None)
+
+    first = stage("08:45", "VALUE = 1\n")
+    assert f"{metadata}/uv_cache.json" not in first
+    # A reinstall of the same source stamps a new install time; the package content is unchanged.
+    assert stage("08:59", "VALUE = 1\n") == first
+    assert stage("09:10", "VALUE = 2\n") != first
+
+
 def test_a_build_record_opens_on_change_settles_and_names_what_changed(build: Path, checkout: Path) -> None:
     _all(build, checkout)
     record = read_record(build, "manager")
@@ -427,3 +452,56 @@ def test_a_reused_image_needs_the_same_fingerprint_command_and_bytes(build: Path
     _write(checkout / "native/desktop/src-tauri/src/lib.rs", "// edited\n")
     resolve(build, ["desktop"], configuration="Debug", now=DAY, root=checkout)
     assert not built_current(build, "desktop", "Debug", image, command)
+
+
+def test_the_package_identity_moves_only_with_what_the_stage_ships(build: Path, checkout: Path) -> None:
+    paths = json.loads((build / "build-paths.json").read_text(encoding="utf-8"))["paths"]
+    _write(build / "build-paths.json", json.dumps({"paths": {**paths, "stage": "stage"}}))
+    resolve(build, ["interpreter"], configuration="Debug", now=DAY, root=checkout)
+    stage = build / "stage/Debug/app"
+
+    def staged(source: bytes) -> dict[str, str]:
+        files = {
+            "python.exe": b"host image",
+            "lib/mod.py": source,
+            "lib/__pycache__/mod.cpython-313.pyc": bytecode(source, "mod.py", prefix="lib"),
+        }
+        for member, content in files.items():
+            (stage / member).parent.mkdir(parents=True, exist_ok=True)
+            if not (stage / member).is_file() or (stage / member).read_bytes() != content:
+                (stage / member).write_bytes(content)
+        return {member: digest(stage / member) for member in files}
+
+    def package(files: dict[str, str]) -> str:
+        record, _, _ = stamp_package(
+            build,
+            stage,
+            {"version": "0.6.0"},
+            files,
+            [("interpreter", "python.exe")],
+            kind="application",
+            build_type="debug",
+            build_member="data/build.json",
+            descriptors=None,
+            packages="lib",
+        )
+        return str(record["build_id"])
+
+    def payload(content: str) -> None:
+        stamp = BuildStamp("2026101901", 1, "2026-10-19T08:30:00Z")
+        begin_record(build, ComponentIdentity("app-payload", content * 64, "0.6.0", stamp), {"src/x.py": content})
+
+    payload("a")
+    first = package(staged(b"VALUE = 1\n"))
+    # A checkout edit that changes no staged byte moves the payload's input fingerprint, not the package.
+    payload("b")
+    assert package(staged(b"VALUE = 1\n")) == first
+    # Touching a staged source without changing it keeps its checked-hash bytecode, and the package.
+    os.utime(stage / "lib/mod.py", ns=(1_600_000_000_000_000_000, 1_600_000_000_000_000_000))
+    assert package(staged(b"VALUE = 1\n")) == first
+    # A changed staged byte moves the package; reverting it restores the identity even after
+    # other packages took numbers in between.
+    second = package(staged(b"VALUE = 2\n"))
+    assert second != first
+    assert package(staged(b"VALUE = 3\n")) not in {first, second}
+    assert package(staged(b"VALUE = 1\n")) == first
