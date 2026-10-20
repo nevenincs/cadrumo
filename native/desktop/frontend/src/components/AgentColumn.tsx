@@ -538,6 +538,27 @@ export function AgentColumn({
     filterLabel: t("desktop.agent.attach_filter"),
     t,
   });
+  useEffect(() => {
+    if (!pending?.conversationId || live.read.kind !== "ready") return;
+    const delivered = live.read.value.some(
+      (record) =>
+        record.kind === "person" &&
+        record.text === pending.text &&
+        (pending.replyId
+          ? record.reply_id === pending.replyId
+          : !pending.previousReplies.includes(record.reply_id)),
+    );
+    if (!delivered) return;
+    // Durable history can confirm delivery before its command returns, or
+    // after the service recovered from a lost acknowledgement. Never resend
+    // it or leave the composer waiting for an answer that may never arrive.
+    staging.sent(pending.conversationId);
+    setView((held) =>
+      held.reader === reader && held.pending?.id === pending.id
+        ? { ...held, sending: false, pending: null, sendFailure: null }
+        : held,
+    );
+  }, [pending, live.read, staging, reader]);
   const namedFor = staging.namedFor;
   const lister = useMemo(
     () => (agent?.documents ? new DocumentLister(agent.documents) : null),

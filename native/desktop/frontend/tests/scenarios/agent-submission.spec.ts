@@ -164,6 +164,14 @@ test("a slow acknowledgement does not move or duplicate a message already in his
   await expect(conversation(page)).not.toContainText(
     label("desktop.agent.working"),
   );
+  // History is sufficient evidence of delivery even if the send command's
+  // acknowledgement never returns. The composer must already be usable.
+  await expect(
+    agentColumn(page).getByRole("button", {
+      name: label("desktop.agent.stop"),
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await release(page);
   await settled(page);
   await expect(personTurns(page)).toHaveCount(1);

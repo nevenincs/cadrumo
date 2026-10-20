@@ -8,6 +8,7 @@ import json
 import os
 import struct
 import sys
+import time
 from collections.abc import Mapping
 from queue import Queue
 from threading import Event, Semaphore, Thread
@@ -18,6 +19,7 @@ from cadrumo.adapters.persistence.storage.profile_persistence_composition import
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -29,6 +31,7 @@ from .session_hold_operations import RELAY_ACTION_KEYS, OperationRelay, RelayRef
 _MAXIMUM_REQUEST_LINE_BYTES = 16_384
 _MAXIMUM_RESPONSE_LINE_BYTES = MAXIMUM_FRAME_BYTES + 1
 _MAXIMUM_PASSWORD_BYTES = 4_096
+_LOGGER = get_logger(__name__)
 
 type _Arrival = Literal["line", "retired", "profile_language_changed", "attendance_changed", "operation_changed"]
 
@@ -241,6 +244,7 @@ async def _hold(
             if set(request) != {"request_id", "action"} | action_keys.get(action, set()):
                 _emit_refusal("invalid", request_id)
                 return 1
+            started = time.monotonic()
             try:
                 if action == "close":
                     _emit({"kind": "session_closed", "request_id": str(request_id)})
@@ -344,6 +348,30 @@ async def _hold(
                 # the exception, only its registered, message-free report.
                 _emit_refusal("unavailable", request_id, _report_failure(error))
                 return 1
+            finally:
+                elapsed = time.monotonic() - started
+                if elapsed >= 1.0:
+                    _LOGGER.warning(
+                        "session_hold_request_slow action=%s request_id=%s elapsed_seconds=%.3f",
+                        action
+                        if action
+                        in {
+                            "close",
+                            "observe_events",
+                            "service_admission",
+                            "attendance_inventory",
+                            "attendance_decision",
+                            "status",
+                            "activity",
+                            "language_read",
+                            "language_set",
+                            "language_observe",
+                            *RELAY_ACTION_KEYS,
+                        }
+                        else "invalid",
+                        request_id,
+                        elapsed,
+                    )
     finally:
         client.close()
 

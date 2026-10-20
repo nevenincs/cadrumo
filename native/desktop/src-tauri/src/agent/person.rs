@@ -14,8 +14,11 @@ use std::{
 /// Diagnostic standard error kept from the bridge child; its registered error
 /// document is the only part ever read back.
 const STDERR_LIMIT: usize = 64 * 1024;
-/// How long the bridge child has to answer each request, its identity included.
-const REPLY_LIMIT: Duration = Duration::from_secs(12);
+/// The runtime permits a 120 s exchange. Service admission first checks status
+/// and then has its own 10 s exchange. Leave time for the holder to serialize
+/// their answer; cutting it off at 12 s used to retire valid person authority
+/// (and every agent child) while the runtime was still handling the request.
+const REPLY_LIMIT: Duration = Duration::from_secs(140);
 
 fn failed(reason: &'static str) -> ApplicationError {
     ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason(reason)
@@ -317,7 +320,36 @@ impl Person {
                     .with_reason("person_request_write")
                     .caused_by(error)
             })?;
-        let reply = self.read()?;
+        let reply = self.read().map_err(|error| {
+            // Name only the closed protocol action, never arguments or profile
+            // data, so a timeout identifies which runtime path was waiting.
+            let action = document["action"].as_str().unwrap_or("unknown");
+            let reason = match action {
+                "status" => Some("person_action_status"),
+                "activity" => Some("person_action_activity"),
+                "service_admission" => Some("person_action_service_admission"),
+                "attendance_inventory" => Some("person_action_attendance_inventory"),
+                "attendance_decision" => Some("person_action_attendance_decision"),
+                "language_read" => Some("person_action_language_read"),
+                "language_observe" => Some("person_action_language_observe"),
+                "language_set" => Some("person_action_language_set"),
+                "observe_events" => Some("person_action_observe_events"),
+                "operation_submit" => Some("person_action_operation_submit"),
+                "operation_observe" => Some("person_action_operation_observe"),
+                "operation_result" => Some("person_action_operation_result"),
+                "operation_review" => Some("person_action_operation_review"),
+                "operation_respond" => Some("person_action_operation_respond"),
+                "operation_cancel" => Some("person_action_operation_cancel"),
+                _ => None,
+            };
+            if let Some(reason) = reason {
+                ApplicationError::new(error.code, Operation::Cli)
+                    .with_reason(reason)
+                    .caused_by(error)
+            } else {
+                error
+            }
+        })?;
         self.refused_in_step = reply["kind"] == "session_refused" && reply["request_id"] == id;
         if reply["kind"] == "session_refused" {
             return Err(self.refused("person_request_refused", &reply));
@@ -762,6 +794,43 @@ mod failure_tests {
     }
 
     #[test]
+    fn a_runtime_reply_after_twelve_seconds_does_not_retire_the_person() {
+        let identity = json!({
+            "kind": "session_held",
+            "profile_id": PROFILE,
+            "session_id": request_id().unwrap(),
+            "runtime_boot_id": request_id().unwrap(),
+            "connection_id": request_id().unwrap(),
+        });
+        let reply = json!({
+            "kind": "events_observed",
+            "runtime_boot_id": identity["runtime_boot_id"],
+            "connection_id": identity["connection_id"],
+        });
+        let script = format!(
+            "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
+             foreach ($delay in @(13000, 0)) {{ \
+               $request = [Console]::In.ReadLine() | ConvertFrom-Json; \
+               Start-Sleep -Milliseconds $delay; \
+               $reply = '{reply}' | ConvertFrom-Json; \
+               $reply | Add-Member -NotePropertyName request_id -NotePropertyValue $request.request_id; \
+               [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress)); [Console]::Out.Flush(); \
+             }}; [Console]::In.ReadLine() | Out-Null }}"
+        );
+        let mut person = Person::hold(powershell(&script), PROFILE).unwrap();
+        for _ in 0..2 {
+            assert_eq!(
+                person
+                    .exchange(json!({"action": "observe_events"}))
+                    .unwrap()["kind"],
+                "events_observed"
+            );
+            assert!(person.is_open());
+            assert!(person.failures().borrow().is_none());
+        }
+    }
+
+    #[test]
     fn a_timed_out_exchange_notifies_shared_owners_and_keeps_its_original_cause() {
         let session = "22345678-1234-4234-8234-123456789abc";
         let identity = format!(
@@ -781,15 +850,17 @@ mod failure_tests {
         let error = person
             .exchange(json!({"action": "language_read"}))
             .unwrap_err();
-        assert_eq!(error.reason.as_deref(), Some("person_reply_timeout"));
+        assert_eq!(error.reason.as_deref(), Some("person_action_language_read"));
         assert_eq!(failure.borrow().as_ref().unwrap().reason, error.reason);
         assert!(!person.is_open());
         let later = person.exchange(json!({"action": "activity"})).unwrap_err();
         assert_eq!(later.reason.as_deref(), Some("person_bridge_closed"));
         assert!(matches!(
             &later.causes[..],
-            [Cause::Application { code: ErrorCode::TimedOut, reason: Some(reason), .. }, Cause::TimedOut]
-                if reason == "person_reply_timeout"
+            [Cause::Application { code: ErrorCode::TimedOut, reason: Some(action), .. },
+             Cause::Application { code: ErrorCode::TimedOut, reason: Some(reason), .. },
+             Cause::TimedOut]
+                if action == "person_action_language_read" && reason == "person_reply_timeout"
         ));
         assert!(
             person.child.wait().unwrap().success(),
