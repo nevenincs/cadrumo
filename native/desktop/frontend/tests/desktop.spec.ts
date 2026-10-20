@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { identity } from "../../scripts/configuration.mjs";
 import { label } from "./support/strings";
+import { ABOUT_FIXTURE } from "../src/dev/fixtures/about";
 
 const local = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -19,7 +20,7 @@ async function signInHost(
   logLevel = "INFO",
 ) {
   await target.addInitScript(
-    ({ supported, docs, deferInitial, deferInitialList, logLevel }) => {
+    ({ supported, docs, deferInitial, deferInitialList, logLevel, about }) => {
       const state = {
         presence: "absent",
         supported,
@@ -79,6 +80,8 @@ async function signInHost(
             options?: { headers?: Record<string, string> },
           ) {
             switch (command) {
+              case "about_info":
+                return about;
               case "manager_status":
                 return { state: "ready", failure: null };
               case "manager_subscribe":
@@ -287,6 +290,7 @@ async function signInHost(
       deferInitial,
       deferInitialList,
       logLevel,
+      about: ABOUT_FIXTURE,
     },
   );
   await serveDocs(target);
@@ -1644,6 +1648,8 @@ test("a forced appearance reaches the documentation through the bridge", async (
 test("the shell runs under the window's content security policy without a violation", async ({
   page: target,
 }) => {
+  const pageErrors: string[] = [];
+  target.on("pageerror", (error) => pageErrors.push(error.message));
   const template = JSON.parse(
     readFileSync(local("../../src-tauri/tauri.conf.json.in"), "utf8"),
   ) as { app: { security: { csp: string } } };
@@ -1702,6 +1708,9 @@ test("the shell runs under the window's content security policy without a violat
     .getByRole("button", { name: label("desktop.rail.settings"), exact: true })
     .click();
   await expect(target.locator(".settings")).toBeVisible();
+  await expect(target.locator(".settings [data-about-open]")).toContainText(
+    ABOUT_FIXTURE.display_version!,
+  );
   await target.keyboard.press("Escape");
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
     "Stand-in documentation",
@@ -1713,4 +1722,5 @@ test("the shell runs under the window's content security policy without a violat
       () => (window as unknown as { __violations: string[] }).__violations,
     ),
   ).toEqual([]);
+  expect(pageErrors).toEqual([]);
 });
