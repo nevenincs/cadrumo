@@ -363,7 +363,7 @@ def test_configure_selects_existing_tools_without_creating_a_builder_environment
     assert not (build / "_deps" / "builder").exists()
 
 
-def test_authority_targets_validate_tools_before_checking_authority_currency(tmp_path: Path) -> None:
+def test_authority_target_validates_tools_before_checking_authority_currency(tmp_path: Path) -> None:
     body = (
         f'include("{(_CMAKE_MODULES / "BuildLog.cmake").as_posix()}")\n'
         'set(CADRUMO_DEV_PYTHON "builder-python")\n'
@@ -373,17 +373,14 @@ def test_authority_targets_validate_tools_before_checking_authority_currency(tmp
     _, build, result = _configure(tmp_path, body)
     assert result.returncode == 0, result.stdout + result.stderr
 
-    current = _ninja_commands(build, "registry_authority")
-    rebuild = _ninja_commands(build, "registry_authority_rebuild")
+    commands = _ninja_commands(build, "registry_authority")
 
-    for commands in (current, rebuild):
-        # Existing tools are validated before authority currency is checked.
-        assert commands.index("validate-existing-builder") < commands.index(
-            "builder-python -B -m dev.packaging.native.authority_build"
-        )
-        assert f"--build {build.as_posix()}".lower() in commands.lower()
-    assert "--rebuild" not in current
-    assert "--rebuild" in rebuild
+    # Existing tools are validated before authority currency is checked.
+    assert commands.index("validate-existing-builder") < commands.index(
+        "builder-python -B -m dev.packaging.native.authority_build"
+    )
+    assert f"--build {build.as_posix()}".lower() in commands.lower()
+    assert "--rebuild" not in commands
 
 
 def _agent_project(tmp_path: Path, *definitions: str, environment: Mapping[str, str] | None = None):
