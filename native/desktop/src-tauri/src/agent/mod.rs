@@ -206,6 +206,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_conversation_start,
         agent_conversation_rename,
         agent_conversation_delete,
+        agent_conversation_archive,
         agent_send,
         agent_cancel,
         agent_pending,
@@ -492,6 +493,18 @@ async fn agent_conversation_delete(
 ) -> std::result::Result<(), Refused> {
     blocking(&host, move |host| {
         host.session.delete(&host.supervisor, &conversation_id)
+    })
+    .await
+}
+
+/// Archives the whole settled conversation, preserving its records.
+#[tauri::command]
+async fn agent_conversation_archive(
+    host: State<'_, Arc<AgentHost>>,
+    conversation_id: String,
+) -> std::result::Result<(), Refused> {
+    blocking(&host, move |host| {
+        host.session.archive(&host.supervisor, &conversation_id)
     })
     .await
 }

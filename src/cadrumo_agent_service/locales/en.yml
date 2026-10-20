@@ -50,6 +50,8 @@ desktop:
     delete: Delete
     delete_confirm: Delete “{title}” and its documents ({count})? This can't be undone.
     delete_confirm_bare: Delete “{title}”? This can't be undone.
+    delete_incomplete: Deletion is not finished yet. Cadrumo will continue cleanup
+      when the agent service restarts.
     documents: Documents
     documents_attached: 'In this conversation: {count}'
     documents_empty: No documents in this conversation yet

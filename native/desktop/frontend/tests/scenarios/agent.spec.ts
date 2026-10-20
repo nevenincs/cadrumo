@@ -637,6 +637,75 @@ const titleField = (target: Page) =>
     name: label("desktop.agent.rename_label"),
   });
 
+test("deletion asks first, can be cancelled, and removes only the chosen conversation", async ({
+  page: target,
+}) => {
+  scenarioOnly("the conversations are the scenario host's");
+  await open(target);
+  await openConversation(target, "Facturas de septiembre");
+  const body = await openHistory(target);
+  const row = rowOf(body, "Facturas de septiembre");
+  await row
+    .getByRole("button", { name: label("desktop.agent.delete"), exact: true })
+    .click();
+  await expect(row.getByRole("group")).toBeVisible();
+  await row
+    .getByRole("button", { name: label("desktop.agent.cancel"), exact: true })
+    .click();
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("agentDelete ")),
+  ).toEqual([]);
+  await row
+    .getByRole("button", { name: label("desktop.agent.delete"), exact: true })
+    .click();
+  await row
+    .getByRole("group")
+    .getByRole("button", { name: label("desktop.agent.delete"), exact: true })
+    .click();
+  await expect(row).toHaveCount(0);
+  await expect(body.getByText("IVA del tercer trimestre")).toBeVisible();
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("agentDelete ")),
+  ).toEqual(["agentDelete c-facturas-septiembre"]);
+  // Reopening history cannot resurrect the removed conversation.
+  await body.getByText("IVA del tercer trimestre", { exact: true }).click();
+  await openHistory(target);
+  await expect(rowOf(body, "Facturas de septiembre")).toHaveCount(0);
+});
+
+test("archived conversations can be deleted from their history", async ({
+  page: target,
+}) => {
+  scenarioOnly("the conversations are the scenario host's");
+  await open(target);
+  const body = await openHistory(target);
+  await rowOf(body, "Facturas de septiembre")
+    .getByRole("button", { name: label("desktop.agent.archive"), exact: true })
+    .click();
+  await body
+    .getByRole("button", {
+      name: label("desktop.agent.archived_toggle", { count: 3 }),
+    })
+    .click();
+  const row = rowOf(body, "Facturas de septiembre");
+  await row
+    .getByRole("button", { name: label("desktop.agent.delete"), exact: true })
+    .click();
+  await row
+    .getByRole("group")
+    .getByRole("button", { name: label("desktop.agent.delete"), exact: true })
+    .click();
+  await expect(row).toHaveCount(0);
+  await body
+    .getByRole("button", { name: label("desktop.agent.show_active") })
+    .click();
+  await expect(
+    body.getByRole("button", {
+      name: label("desktop.agent.archived_toggle", { count: 2 }),
+    }),
+  ).toBeVisible();
+});
+
 test("a conversation is renamed from its row's context menu", async ({
   page: target,
 }) => {

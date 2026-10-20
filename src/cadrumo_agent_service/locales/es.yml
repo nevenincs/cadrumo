@@ -51,6 +51,8 @@ desktop:
     delete: Eliminar
     delete_confirm: ¿Eliminar «{title}» y sus documentos ({count})? No se puede deshacer.
     delete_confirm_bare: ¿Eliminar «{title}»? No se puede deshacer.
+    delete_incomplete: La eliminación aún no ha terminado. Cadrumo continuará la limpieza
+      cuando se reinicie el servicio del agente.
     documents: Documentos
     documents_attached: 'En esta conversación: {count}'
     documents_empty: Todavía no hay documentos en esta conversación

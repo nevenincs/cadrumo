@@ -51,6 +51,8 @@ desktop:
     delete_confirm: Vols suprimir «{title}» i els seus documents ({count})? No es
       pot desfer.
     delete_confirm_bare: Vols suprimir «{title}»? No es pot desfer.
+    delete_incomplete: L’eliminació encara no ha acabat. Cadrumo continuarà la neteja
+      quan es reiniciï el servei de l’agent.
     documents: Documents
     documents_attached: 'En aquesta conversa: {count}'
     documents_empty: Encara no hi ha documents en aquesta conversa

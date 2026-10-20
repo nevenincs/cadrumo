@@ -76,6 +76,7 @@ function DeleteConfirmation({
  */
 export function HistoryList({
   groups,
+  busy = false,
   viewingArchived = false,
   archivedCount,
   onToggleArchived,
@@ -87,6 +88,8 @@ export function HistoryList({
   onMenu,
 }: {
   groups: readonly ConversationGroup[];
+  /** A history mutation is awaiting the host's answer. */
+  busy?: boolean;
   /** The list is showing archived conversations, not active ones. */
   viewingArchived?: boolean;
   archivedCount: number;
@@ -149,6 +152,7 @@ export function HistoryList({
   };
 
   const rowMenu = (conversation: ConversationSummary): MenuEntry[] => {
+    if (busy) return [];
     const restore = viewingArchived ? onRestore : undefined;
     const archive = viewingArchived ? undefined : onArchive;
     const items: MenuEntry[] = [];
@@ -236,7 +240,7 @@ export function HistoryList({
                         conversation={conversation}
                         onCancel={() => cancel(conversation.id)}
                         onDelete={
-                          onDelete
+                          onDelete && !busy
                             ? () => {
                                 setConfirming(null);
                                 onDelete(conversation.id);
@@ -280,7 +284,9 @@ export function HistoryList({
                             }
                           }}
                           onAction={
-                            onOpen ? () => onOpen(conversation.id) : undefined
+                            onOpen && !busy
+                              ? () => onOpen(conversation.id)
+                              : undefined
                           }
                           className="grid h-auto min-w-0 flex-1 justify-start justify-items-start gap-0 bg-transparent px-2 py-1.5 text-left font-normal whitespace-normal hover:bg-transparent"
                         >
@@ -310,7 +316,7 @@ export function HistoryList({
                               icon="unarchive"
                               label={t("desktop.agent.restore")}
                               onAction={
-                                onRestore
+                                onRestore && !busy
                                   ? () => onRestore(conversation.id)
                                   : undefined
                               }
@@ -320,7 +326,7 @@ export function HistoryList({
                               icon="archive"
                               label={t("desktop.agent.archive")}
                               onAction={
-                                onArchive
+                                onArchive && !busy
                                   ? () => onArchive(conversation.id)
                                   : undefined
                               }
@@ -331,7 +337,7 @@ export function HistoryList({
                             label={t("desktop.agent.delete")}
                             data-delete-for={conversation.id}
                             onAction={
-                              onDelete
+                              onDelete && !busy
                                 ? () => setConfirming(conversation.id)
                                 : undefined
                             }

@@ -1189,6 +1189,23 @@ export function fixtureAgent({
       const record = conversations.find((held) => held.id === conversationId);
       if (record) record.archived = true;
     },
+    async delete(conversationId) {
+      say(`agentDelete ${conversationId}`);
+      await check();
+      const index = conversations.findIndex(
+        (held) => held.id === conversationId,
+      );
+      if (index < 0) throw coded("agent_conversation_unknown");
+      for (const held of [...replies.values()]) {
+        if (held.conversationId === conversationId) {
+          for (const timer of held.timers) window.clearTimeout(timer);
+          settle(held.run.id, "cancelled");
+        }
+      }
+      conversations.splice(index, 1);
+      delete runsOf[conversationId];
+      storage.delete(conversationId);
+    },
     async rename(conversationId, title) {
       say(`agentRename ${conversationId}`);
       await check();

@@ -126,6 +126,8 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.service_starting");
     case "agent_reply_in_progress":
       return t("desktop.agent.reply_in_progress");
+    case "agent_conversation_delete_incomplete":
+      return t("desktop.agent.delete_incomplete");
     case "agent_gateway_attachment_not_found":
       return t("desktop.agent.reference_missing");
     case "agent_gateway_attachment_changed":
@@ -216,8 +218,9 @@ export function AgentColumn({
     sending: false,
     pending: null as PendingSend | null,
     sendFailure: null as string | null,
-    // Why the history's last archive or rename was refused.
+    // Why the history's last action was refused.
     archiveFailure: null as string | null,
+    historyBusy: false,
     // The composer is drawn anew with this draft when a send is given back.
     draft: { key: 0, text: "" },
     // Counts the messages sent and the replies finished, each a reason to
@@ -235,6 +238,7 @@ export function AgentColumn({
       pending: null,
       sendFailure: null,
       archiveFailure: null,
+      historyBusy: false,
       draft: { key: view.draft.key + 1, text: "" },
       revision: 0,
     });
@@ -416,9 +420,47 @@ export function AgentColumn({
     conversations.kind === "ready" && conversationId !== null
       ? conversations.value.find((record) => record.id === conversationId)
       : undefined;
-  // Archiving is the agent's, one run at a time and for good: the history
+  // Archiving is the agent's, for the whole chain and for good: the history
   // offers it where the host does, and never an undo.
   const archiveHost = session?.archive ? session : undefined;
+  const historyAction = useRef(false);
+  const mutateHistory = async (id: string, action: "archive" | "delete") => {
+    const perform = session?.[action];
+    if (!perform || historyAction.current) return;
+    historyAction.current = true;
+    change({ archiveFailure: null, historyBusy: true });
+    let failure: string | null = null;
+    try {
+      await perform(id);
+    } catch (error: unknown) {
+      failure = failureCode(error);
+    } finally {
+      historyAction.current = false;
+    }
+    if (currentReader.current !== reader) return;
+    setView((held) => {
+      const removed =
+        action === "delete" &&
+        (failure === null ||
+          failure === "agent_conversation_delete_incomplete") &&
+        held.conversationId === id;
+      return {
+        ...held,
+        historyBusy: false,
+        archiveFailure: failure,
+        revision: held.revision + 1,
+        ...(removed
+          ? {
+              conversationId: null,
+              pending: null,
+              sending: false,
+              chosen: null,
+              draft: { key: held.draft.key + 1, text: "" },
+            }
+          : {}),
+      };
+    });
+  };
   // Renaming is offered where the host renames. A refusal is said where the
   // rename was asked: in the history, or over the composer for the header.
   const renameHost = session?.rename ? session : undefined;
@@ -931,20 +973,15 @@ export function AgentColumn({
                 }
                 onToggleArchived={() => change({ archived: !archived })}
                 onOpen={open}
+                busy={view.historyBusy}
                 onArchive={
                   archiveHost
-                    ? (id) => {
-                        change({ archiveFailure: null });
-                        archiveHost.archive?.(id).then(
-                          () =>
-                            setView((held) => ({
-                              ...held,
-                              revision: held.revision + 1,
-                            })),
-                          (error: unknown) =>
-                            change({ archiveFailure: failureCode(error) }),
-                        );
-                      }
+                    ? (id) => void mutateHistory(id, "archive")
+                    : undefined
+                }
+                onDelete={
+                  session?.delete
+                    ? (id) => void mutateHistory(id, "delete")
                     : undefined
                 }
                 onRename={

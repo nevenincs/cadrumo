@@ -2,8 +2,7 @@
 //! behind `AgentSession` and `AgentViews`, each answered from the gateway or
 //! refused with a typed code where nothing honest can answer.
 //!
-//! cadrumo-agent has no conversation: its unit is the run. A conversation
-//! here is a chain of runs, each continuing the one before, named by its
+//! A conversation is a chain of runs, each continuing the one before, named by its
 //! first run's id. Every run starts in the profile's one agent workspace,
 //! which the launcher reports when it is ready, and the provider catalog is
 //! read for it. A reply is one run.
@@ -877,7 +876,35 @@ impl Session {
                 known.remove(&run.id);
             }
         }
+        lock(&self.watches).retain(|_, watch| {
+            if watch.conversation != conversation {
+                return true;
+            }
+            for pump in &watch.pumps {
+                pump.stopped.store(true, Ordering::Release);
+            }
+            false
+        });
         deletion_complete(&answer)
+    }
+
+    /// Archive every settled run together; the gateway owns the final guard.
+    pub fn archive(&self, supervisor: &Supervisor, conversation: &str) -> Result<(), Refused> {
+        let client = Client::new(&Self::gateway(supervisor)?);
+        let chain = self.chain(&client, conversation)?;
+        if chain.is_empty() {
+            return Err(refused("agent_conversation_unavailable"));
+        }
+        if chain.iter().any(|run| !SETTLED.contains(&run.status.as_str())) {
+            return Err(refused("agent_reply_in_progress"));
+        }
+        let answer = client.archive_conversation(conversation)?;
+        if text(&answer, "run_id") != Some(conversation)
+            || text(&answer, "status") != Some("archived")
+        {
+            return Err(refused("agent_gateway_unreadable"));
+        }
+        Ok(())
     }
 
     pub fn history(&self, supervisor: &Supervisor, conversation: &str) -> Result<Value, Refused> {

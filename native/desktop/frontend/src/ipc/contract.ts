@@ -1370,6 +1370,11 @@ export interface HostCommands {
     args: Authorized<{ conversationId: string }>;
     result: null;
   };
+  /** Archives every settled run together, keeping the conversation readable. */
+  agent_conversation_archive: {
+    args: Authorized<{ conversationId: string }>;
+    result: null;
+  };
   /** Opens the host's file picker and stores what is picked in the
    * conversation's storage, following each upload on `updates`. */
   agent_attach: {

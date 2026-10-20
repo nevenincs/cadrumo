@@ -472,12 +472,16 @@ export interface AgentSession {
   cancel(replyId: string): Promise<void>;
   /**
    * Archives the conversation: every run of its chain, which cadrumo-agent
-   * archives one at a time and only once it has settled. It cannot be undone:
+   * archives together and only once every run has settled. It cannot be undone:
    * the agent has no way to unarchive. A conversation with a live reply is
    * refused with `agent_reply_in_progress`. Absent where the host offers no
    * archiving.
    */
   archive?(conversationId: string): Promise<void>;
+  /** Deletes the conversation and its stored documents after the person's
+   * confirmation. The agent ends live replies first. A partial removal is
+   * reported as `agent_conversation_delete_incomplete`, never as success. */
+  delete?(conversationId: string): Promise<void>;
   /**
    * Gives the conversation the person's title in place of the one its first
    * message gave it. One not sent yet takes it with its first run. A title

@@ -411,6 +411,14 @@ function tauriAgent(call: HostCall): {
           readable(readSkillVerification(answer)),
         ),
       startConversation: () => call("agent_conversation_start", {}),
+      archive: (conversationId) =>
+        call("agent_conversation_archive", { conversationId }).then(
+          () => undefined,
+        ),
+      delete: (conversationId) =>
+        call("agent_conversation_delete", { conversationId }).then(
+          () => undefined,
+        ),
       rename: (conversationId, title) =>
         call("agent_conversation_rename", { conversationId, title }).then(
           () => undefined,

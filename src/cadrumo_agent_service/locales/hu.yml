@@ -51,6 +51,8 @@ desktop:
     delete_confirm: 'Törlöd ezt: „{title}”, a dokumentumaival együtt ({count})? Ez
       nem vonható vissza.'
     delete_confirm_bare: 'Törlöd ezt: „{title}”? Ez nem vonható vissza.'
+    delete_incomplete: A törlés még nem fejeződött be. A Cadrumo az ügynökszolgáltatás
+      újraindításakor folytatja a törlést.
     documents: Dokumentumok
     documents_attached: 'Ebben a beszélgetésben: {count}'
     documents_empty: Ebben a beszélgetésben még nincs dokumentum

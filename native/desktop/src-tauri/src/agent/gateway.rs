@@ -207,6 +207,15 @@ impl Client {
         )
     }
 
+    /// Archive the whole settled conversation in one gateway transaction.
+    pub fn archive_conversation(&self, root: &str) -> Result<Value, Refused> {
+        self.post(
+            &format!("/conversations/{root}/archive"),
+            &serde_json::json!({}),
+            None,
+        )
+    }
+
     /// `PATCH /v1/conversations/{root}`: the conversation's title, kept on its
     /// first run.
     pub fn rename_conversation(&self, root: &str, title: &str) -> Result<Value, Refused> {
