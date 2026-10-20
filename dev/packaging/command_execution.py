@@ -147,11 +147,19 @@ class _Descriptor(Protocol):
     def fileno(self) -> int: ...
 
 
-def _descriptor(stream: object, name: str) -> int:
-    """Return a standard stream's descriptor, refusing a process that has no such stream."""
-    if not isinstance(stream, _Descriptor):
-        raise RuntimeError(f"this process has no {name} for a child to inherit")
-    return stream.fileno()
+def _descriptor(stream: object, original: object, name: str) -> int:
+    """Return a standard stream's descriptor, refusing a process that has no such stream.
+
+    A stream replaced by one without a descriptor (an in-memory capture) hands the child the
+    process's original stream instead, as a POSIX child inherits descriptor 1 or 2 regardless.
+    """
+    for candidate in (stream, original):
+        if isinstance(candidate, _Descriptor):
+            try:
+                return candidate.fileno()
+            except (OSError, ValueError):
+                continue
+    raise RuntimeError(f"this process has no {name} for a child to inherit")
 
 
 async def _run_process(
@@ -175,7 +183,8 @@ async def _run_process(
     stderr: int | None = asyncio.subprocess.PIPE
     if inherit_output:
         if windows:
-            stdout, stderr = _descriptor(sys.stdout, "stdout"), _descriptor(sys.stderr, "stderr")
+            stdout = _descriptor(sys.stdout, sys.__stdout__, "stdout")
+            stderr = _descriptor(sys.stderr, sys.__stderr__, "stderr")
         else:
             stdout, stderr = None, None
     process = await asyncio.create_subprocess_exec(

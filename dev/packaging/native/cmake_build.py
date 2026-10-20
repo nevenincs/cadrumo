@@ -19,7 +19,7 @@ from pathlib import Path
 from dev._paths import REPO_ROOT
 
 from ..command_execution import CommandResult, run_command
-from .action_cache import action_lock, completed, fingerprint, modified_inputs, staleness
+from .action_cache import action_lock, completed, fingerprint, modified_inputs, receipt_staleness, staleness
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, command_line, display_path
 from .build_paths import build_paths
@@ -41,6 +41,7 @@ from .build_timing import BuildTimings, measure_build
 from .build_toolchain import builder_inputs, native_toolchain_identity, selected_uv
 from .hashing import digest, digest_cache
 from .stable_output import write_text
+from .stage_reuse import record_reuse
 
 
 def action_toolchain(configured: Mapping[str, object], action: str, target: str) -> dict[str, object]:
@@ -338,7 +339,8 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
         selected = action_toolchain(configured, arguments.action, arguments.target)
         with timings.phase("builder-admission"):
             selected_builder_inputs = builder_inputs(selected)
-        with action_lock(build, "shared-inputs", timings=timings):
+        # One digest cache serves the input fingerprint, the reuse checks and the stability recheck.
+        with action_lock(build, "shared-inputs", timings=timings), digest_cache(build):
 
             def admitted_identity() -> str:
                 identity = fingerprint(arguments.inputs, (*extra, Path(sys.executable), *selected_builder_inputs))
@@ -353,10 +355,22 @@ def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTim
             with timings.phase("input-fingerprint"):
                 identity = admitted_identity()
             timings.log.debug(f"input identity {identity}")
+            # The Python payload producers keep build records beside the native components.
+            component = ACTION_COMPONENTS.get(arguments.action)
+            if component is not None:
+                # The receipt was written for exactly these inputs and the settled record of that
+                # build still matches every artifact it staged: nothing to rebuild or re-read.
+                with timings.phase("record-currency"):
+                    unproven = receipt_staleness(destination, identity) or record_reuse(build, component, identity)
+                if unproven is None:
+                    timings.log.status(
+                        f"up to date, reusing {display_path(destination)}: "
+                        f"inputs unchanged and the settled {component} record matches its staged artifacts"
+                    )
+                    return
+                timings.log.verbose(f"verifying every output: {unproven}")
             with timings.phase("existing-output-inventory"):
                 reason = staleness(destination, identity)
-            # The product and agent payloads keep build records beside the native components.
-            component = ACTION_COMPONENTS.get(arguments.action)
             enrolled = (*extra, Path(sys.executable), *selected_builder_inputs)
             selection = [arguments.target, selected]
             if reason is None:

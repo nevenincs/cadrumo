@@ -56,8 +56,13 @@ RECORD_SCHEMA = 1
 BUILDING, SETTLED, UNSETTLED = "building", "settled", "unsettled"
 """Record states: a build of the fingerprint is under way; it completed from inputs that held
 still from start to end; or its inputs moved while it ran, so its outputs prove nothing."""
-ACTION_COMPONENTS = {"product": "app-payload", "agent": "app-agent"}
-"""The Python payload producers, recorded beside the native components."""
+ACTION_COMPONENTS = {
+    "product": "app-payload",
+    "agent": "app-agent",
+    "provision": "app-runtime",
+    "authority": "app-authority",
+}
+"""The Python payload producers and the authority check, recorded beside the native components."""
 PACKAGE = "package"
 IMAGE_VARIABLE = "CADRUMO_IMAGE_COMPONENT"
 """Names the component whose images a compiler or Cargo command is building."""

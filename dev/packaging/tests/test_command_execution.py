@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import os
 import subprocess
 import sys
@@ -82,6 +83,26 @@ def test_run_command_inherited_output_reaches_the_parent_streams_in_order(
     assert (execution.stdout, execution.stderr) == ("", "")
     captured = capfd.readouterr()
     assert captured.out.splitlines() == ["before", "out"]
+    assert captured.err.splitlines() == ["err"]
+
+
+def test_inherited_output_falls_back_to_the_process_streams_when_sys_streams_have_no_descriptor(
+    tmp_path: Path, capfd: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An in-memory replacement of sys.stdout and sys.stderr still lets a child inherit real streams."""
+    replaced = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", replaced)
+    monkeypatch.setattr(sys, "stderr", replaced)
+    execution = run_command(
+        (sys.executable, "-c", "import sys; print('out'); print('err', file=sys.stderr)"),
+        cwd=tmp_path,
+        inherit_output=True,
+    )
+
+    assert execution.returncode == 0
+    assert replaced.getvalue() == ""
+    captured = capfd.readouterr()
+    assert captured.out.splitlines() == ["out"]
     assert captured.err.splitlines() == ["err"]
 
 
