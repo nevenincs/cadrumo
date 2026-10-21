@@ -27,7 +27,6 @@
         "cadrumo_harness.mcp.corpus_query",
         "cadrumo_harness.mcp.lifecycle_notices",
         "cadrumo_harness.mcp.main",
-        "cadrumo_harness.mcp.operating_layer",
         "cadrumo_harness.mcp.operation_contract_cache",
         "cadrumo_harness.mcp.operation_discovery",
         "cadrumo_harness.mcp.operation_guidance",

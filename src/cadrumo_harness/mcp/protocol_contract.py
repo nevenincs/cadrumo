@@ -207,18 +207,6 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         _reads("Session and profile status"),
     ),
     (
-        "harness_load",
-        "Load how to operate Cadrumo: call it first in a session. rules is every operating rule as one text, "
-        "always whole. skills lists each workflow skill by name with its description, its resource "
-        "(cadrumo://skill/{name}) and applies_when, the structured predicate over profile facts, workflow phase "
-        "and deadline situation that says when the skill applies. Pass skill with a listed name for that "
-        "skill's document in skill.text; a name no skill has is refused with unknown_skill. A client that reads "
-        "resources can also read cadrumo://skill/{name} and cadrumo://rule/{name}. Rules and skills are guidance: "
-        "they grant nothing, and every operation is admitted or refused by the runtime on its own evidence",
-        _schema({}, {"skill": _TEXT}),
-        _reads("Load the operating rules and skills"),
-    ),
-    (
         "authority",
         "Read bundled public reference data from one pinned published tax authority generation, with the content "
         "the command line prints as JSON. modelos lists the registry's modelos (filing_year and domain narrow it); "

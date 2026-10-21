@@ -5,7 +5,7 @@ tags:
 date: '2026-10-21'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9f202bd373ef7e3b31e78b45e09ef779114ca85925e822908c75dd47f5f133d'
+body_hash: 'sha256:2ab8022634fbe8f2f47851219fa8054de5f1721991b71a3fe97b99f41ca8afb9'
 related:
   - "[[2026-10-21-agent-harness-plan]]"
 ---
@@ -43,6 +43,22 @@ related:
 - `S01` `verify:` `git -C Y:/code/cadrumo-agent-worktrees/main log --diff-filter=A --format=%h-%cI-%s -- src/cadrumo_agent/harness/_data/agent: fork point 5bdf185 2026-10-16T09:18:40+02:00` -> `pass`
 - `S01` `verify:` `git -C Y:/code/cadrumo-worktrees/tui log --format=%h-%cI-%s e4188cc067 -- src/cadrumo_harness/_data/agent: only post-fork change is 72cd94bc66 to reference/command-operations.md` -> `pass`
 - `S01` `by:` `implementation-engineer-standard`
+- `S02` `D` `src/cadrumo_harness/mcp/operating_layer.py`
+- `S02` `D` `src/cadrumo_harness/mcp/tests/test_operating_layer.py`
+- `S02` `M` `src/cadrumo_harness/mcp/server.py`
+- `S02` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S02` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S02` `M` `src/cadrumo_harness/mcp/surfaces.py`
+- `S02` `M` `src/cadrumo_harness/mcp/main.py`
+- `S02` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
+- `S02` `M` `src/cadrumo_harness/mcp/tests/test_tool_annotations.py`
+- `S02` `M` `src/cadrumo_harness/mcp/tests/test_mcp_surface_pins.py`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S02` `verify:` `pytest src/cadrumo_harness/mcp/tests` -> `pass`
+- `S02` `verify:` `pytest -m integration src/cadrumo_harness/mcp/tests/test_installed_stdio.py test_tool_annotations.py test_mcp_surface_pins.py test_mcp_surfaces.py` -> `pass`
+- `S02` `verify:` `ty check src/cadrumo_harness` -> `pass`
+- `S02` `by:` `implementation-engineer-high`
 
 ## Notes
 

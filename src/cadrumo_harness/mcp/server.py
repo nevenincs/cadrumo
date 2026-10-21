@@ -1,4 +1,4 @@
-"""MCP SDK transport wiring for the client-owned runtime adapter and the operating layer's resources."""
+"""MCP SDK transport wiring for the client-owned runtime adapter."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ import anyio
 
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
-from .operating_layer import MARKDOWN_MIME_TYPE, RESOURCE_TEMPLATES, operating_resources, read_operating_resource
 from .operation_guidance import operation_guidance
 from .progress_relay import relayed_progress
 from .protocol_contract import (
@@ -31,24 +30,13 @@ if TYPE_CHECKING:
 
 
 def build_server(adapter: RuntimeMcpAdapter) -> Server:
-    """Register the tools of the adapter's surface and the operating layer's resources around one adapter."""
-    from mcp import MCPError
+    """Register the tools of the adapter's surface around one adapter."""
     from mcp.server import Server
     from mcp.types import (
-        INVALID_PARAMS,
-        INVALID_REQUEST,
         CallToolRequestParams,
         CallToolResult,
-        ListResourcesResult,
-        ListResourceTemplatesResult,
         ListToolsResult,
-        PaginatedRequestParams,
-        ReadResourceRequestParams,
-        ReadResourceResult,
-        Resource,
-        ResourceTemplate,
         TextContent,
-        TextResourceContents,
         Tool,
         ToolAnnotations,
     )
@@ -91,65 +79,8 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
             is_error=has_refusal(result),
         )
 
-    async def admit(method: str) -> None:
-        # Nothing but the handshake, the tool list and status answers a connection no session admits.
-        refused = await adapter.admit_resource_request(method)
-        if refused is not None:
-            raise MCPError(code=INVALID_REQUEST, message=str(refused["code"]), data=refused)
-
-    async def list_resource_templates(
-        _context: object, _params: PaginatedRequestParams | None
-    ) -> ListResourceTemplatesResult:
-        await admit("resources/templates/list")
-        return ListResourceTemplatesResult(
-            resource_templates=[
-                ResourceTemplate(
-                    name=template.name,
-                    uri_template=template.uri_template,
-                    description=template.description,
-                    mime_type=MARKDOWN_MIME_TYPE,
-                )
-                for template in RESOURCE_TEMPLATES
-            ]
-        )
-
-    async def list_resources(_context: object, _params: PaginatedRequestParams | None) -> ListResourcesResult:
-        await admit("resources/list")
-        served = await anyio.to_thread.run_sync(operating_resources)
-        return ListResourcesResult(
-            resources=[
-                Resource(
-                    name=resource.name,
-                    uri=resource.uri,
-                    description=resource.description,
-                    mime_type=MARKDOWN_MIME_TYPE,
-                    _meta=None if resource.applies_when is None else {"applies_when": resource.applies_when},
-                )
-                for resource in served
-            ]
-        )
-
-    async def read_resource(_context: object, params: ReadResourceRequestParams) -> ReadResourceResult:
-        await admit("resources/read")
-        text = await anyio.to_thread.run_sync(read_operating_resource, params.uri)
-        if text is None:
-            raise MCPError(
-                code=INVALID_PARAMS,
-                message="unknown_resource",
-                data={"outcome": "refused", "code": "unknown_resource", "uri": params.uri},
-            )
-        return ReadResourceResult(
-            contents=[TextResourceContents(uri=params.uri, mime_type=MARKDOWN_MIME_TYPE, text=text)]
-        )
-
-    return Server(
-        "cadrumo",
-        on_list_tools=list_tools,
-        on_call_tool=call_tool,
-        on_list_resources=list_resources,
-        on_list_resource_templates=list_resource_templates,
-        on_read_resource=read_resource,
-    )
+    # The server serves no resource: everything it answers is a tool call.
+    return Server("cadrumo", on_list_tools=list_tools, on_call_tool=call_tool)
 
 
 async def _relay_progress(context: ServerRequestContext[Any], tool: str, result: dict[str, Any]) -> None:

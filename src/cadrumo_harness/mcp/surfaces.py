@@ -103,7 +103,6 @@ class McpSurface:
 _EVERY_TOOL: Final = frozenset(
     {
         "status",
-        "harness_load",
         "authority",
         "corpus_search",
         "search",

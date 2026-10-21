@@ -32,7 +32,6 @@ from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
 from .corpus_query import corpus_query
 from .lifecycle_notices import LifecycleNoticeBoard
-from .operating_layer import harness_load
 from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
@@ -435,30 +434,9 @@ class RuntimeMcpAdapter:
                 return await self._wire(lambda: authority_query(args))
             if name == "corpus_search":
                 return await self._wire(lambda: corpus_query(args))
-            if name == "harness_load":
-                return await self._wire(lambda: harness_load(args))
             return await self._wire(lambda: call_admitted_operation(self, name, args))
         except Exception as error:
             return await self._refusal(name, error)
-
-    async def admit_resource_request(self, method: str) -> dict[str, Any] | None:
-        """Admit one resource request as every tool but ``status`` is admitted, under the same session.
-
-        The operating layer's resources are bundled public text, and still
-        nothing but the handshake, the tool list and ``status`` answers a
-        connection no live sign-in or configured key admits. Returns ``None``
-        when a session admits the request, else the refusal a tool would answer.
-        """
-        async with self._lock:
-            try:
-                await self._hold_or_restore_session()
-                self._admitted()
-            except Exception as error:
-                reply = await self._refusal(method, error)
-            else:
-                return None
-        _LOGGER.warning("MCP resource request refused: method=%s reason=%s", method, reply["code"])
-        return reply
 
     async def _refusal(self, name: str, error: Exception) -> dict[str, Any]:
         """Turn one failure into its stable refusal, with the remedy that says what the agent does next."""

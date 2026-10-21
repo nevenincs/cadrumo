@@ -17,7 +17,7 @@ import pytest
 from mcp import ClientSession, MCPError
 from mcp.client import Client
 from mcp.client.stdio import StdioServerParameters, stdio_client
-from mcp.types import INVALID_REQUEST, LATEST_PROTOCOL_VERSION
+from mcp.types import LATEST_PROTOCOL_VERSION, METHOD_NOT_FOUND
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.core.external_constants import OutputLanguage
@@ -52,7 +52,6 @@ _UNADMITTED: tuple[tuple[str, dict[str, object]], ...] = (
     _PROFILE_CALL,
     ("authority", {"query": "auth_providers"}),
     ("corpus_search", {"query": "iva"}),
-    ("harness_load", {}),
     ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID, "limit": 3}),
     ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
 )
@@ -105,12 +104,11 @@ async def test_installed_stdio_serves_a_client_that_never_sends_the_handshake(tm
             tools = (await client.list_tools()).tools
             status = await client.call_tool("status", {})
             refused = [await client.call_tool(name, arguments) for name, arguments in _UNADMITTED]
-            # A resource is bundled text, and still only the tool list and status answer before admission.
+            # The server serves no document of its own, so a resource read reaches no handler at all.
             with pytest.raises(MCPError) as unread:
                 await client.read_resource("cadrumo://rule/cadrumo-operator-grounding")
 
-    assert unread.value.code == INVALID_REQUEST
-    _assert_runtime_unavailable(unread.value.data, outcome="refused", code="runtime_unavailable")
+    assert unread.value.code == METHOD_NOT_FOUND
     names = {tool.name for tool in tools}
     assert {"status", "execute", "authority", "search"} <= names
     assert not names & _REMOVED_TOOLS
@@ -130,13 +128,14 @@ async def test_installed_stdio_answers_a_handshaking_client_the_same_way(tmp_pat
             stdio_client(_installed_server(tmp_path, profile_id), errlog=error_log) as (reader, writer),
             ClientSession(reader, writer, read_timeout_seconds=45) as client,
         ):
-            await client.initialize()
+            handshake = await client.initialize()
             status = await client.call_tool("status", {})
             authority = await client.call_tool(
                 "authority", {"query": "describe", "modelo": "100", "filing_year": 2024, "period": "0A"}
             )
             removed = [await client.call_tool(name, {}) for name in sorted(_REMOVED_TOOLS)]
 
+    assert handshake.capabilities.resources is None
     assert status.is_error is False
     _assert_runtime_unavailable(status.structured_content, **_status_without_a_runtime(profile_id))
     assert authority.is_error is True

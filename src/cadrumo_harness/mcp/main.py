@@ -7,7 +7,6 @@ import io
 import os
 import sys
 from importlib.metadata import version
-from pathlib import Path
 from typing import BinaryIO, TextIO, cast
 from uuid import UUID
 
@@ -30,24 +29,9 @@ def main() -> None:
         help="the protected reference of a key the person issued with config automation; requires --profile-id",
     )
     parser.add_argument("--surface", help="the named surface to serve; every tool and operation when omitted")
-    parser.add_argument(
-        "--materialise-workspace",
-        type=Path,
-        metavar="DIRECTORY",
-        help="write the operating rules and skills into DIRECTORY as a Claude Code workspace, then exit unserved",
-    )
     args = parser.parse_args()
     if args.credential_reference is not None and args.profile_id is None:
         parser.error("--credential-reference names the key of one profile; give that profile with --profile-id")
-    if args.materialise_workspace is not None:
-        if args.profile_id is not None or args.surface is not None:
-            parser.error("--materialise-workspace writes files and serves nothing; give it alone")
-        from ..workspace import materialise_workspace
-
-        # Only the person's own launch opts in to writing files; no tool call writes one.
-        manifest = materialise_workspace(args.materialise_workspace)
-        cast(TextIO, sys.stdout).write(manifest.model_dump_json() + "\n")
-        return
     required_version = os.environ.get("CADRUMO_MCP_REQUIRED_VERSION")
     if required_version is not None and version("cadrumo") != required_version:
         parser.error("installed Cadrumo cohort does not match the required version")
