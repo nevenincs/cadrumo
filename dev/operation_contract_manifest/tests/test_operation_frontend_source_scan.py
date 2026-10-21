@@ -40,31 +40,10 @@ _SCANNED_TIERS = (
 _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
     (
         "src/cadrumo_runtime/commands/runtime_automation_request.py",
-        "AutomationCreateInput._decode_proposal",
-    ): (
-        "module-wide alias propagation carries CLI into proposal; the protected input validator compares "
-        "the enrollment kind, requiring ENROLL rather than distinguishing frontends"
-    ),
-    (
-        "src/cadrumo_runtime/commands/runtime_automation_request.py",
-        "AutomationChangeInput._decode_proposal",
-    ): (
-        "module-wide alias propagation carries CLI into proposal; the protected own-grant input validator "
-        "rejects ENROLL by enrollment kind, without comparing frontends"
-    ),
-    (
-        "src/cadrumo_runtime/commands/runtime_automation_request.py",
         "automation_create",
     ): (
         "alias propagation carries CLI through the enrollment client and terminal result; the requester "
         "projects an optional delivered credential reference, without conditioning an operation on frontend"
-    ),
-    (
-        "src/cadrumo_runtime/commands/runtime_automation_request.py",
-        "automation_change",
-    ): (
-        "alias propagation carries CLI through the own-grant client and proposal; this requester selects "
-        "the rotated credential by enrollment kind and projects its optional reference, not frontend"
     ),
     (
         "src/cadrumo_runtime/commands/sign_in_status.py",
@@ -178,20 +157,47 @@ def _named_members(node: ast.AST, aliases: Mapping[str, frozenset[str]]) -> froz
     return frozenset(found)
 
 
-def _frontend_aliases(module: ast.Module) -> Mapping[str, frozenset[str]]:
-    """Every name, at any depth, bound to an expression that names frontend members.
+def _scope_nodes(scope: ast.AST) -> Iterator[ast.AST]:
+    """Walk one namespace without treating a nested function's locals as its own."""
+    yield scope
+    for child in ast.iter_child_nodes(scope):
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+            continue
+        yield from _scope_nodes(child)
+
+
+def _frontend_aliases(
+    scope: ast.AST, inherited: Mapping[str, frozenset[str]] | None = None
+) -> Mapping[str, frozenset[str]]:
+    """Names in one lexical namespace bound to frontend members.
 
     A set of frontends is usually bound to a name first and compared through
     it, so a binding is followed to a fixed point: a name bound to another
     such name carries its members too.
     """
     bindings: list[tuple[str, ast.expr]] = []
-    for node in ast.walk(module):
+    # Module aliases remain a conservative union, including writes from
+    # functions with global/nonlocal effects. Each function below replaces
+    # names it owns with its own lexical bindings and parameters.
+    nodes = tuple(ast.walk(scope)) if isinstance(scope, ast.Module) else tuple(_scope_nodes(scope))
+    for node in nodes:
         if isinstance(node, ast.Assign):
             bindings.extend((target.id, node.value) for target in node.targets if isinstance(target, ast.Name))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
             bindings.append((node.target.id, node.value))
-    aliases: dict[str, frozenset[str]] = {}
+    shadowed = {name for name, _value in bindings}
+    if isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+        arguments = scope.args
+        shadowed.update(argument.arg for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs))
+        shadowed.update(argument.arg for argument in (arguments.vararg, arguments.kwarg) if argument is not None)
+    for node in ast.walk(scope):
+        if isinstance(node, (ast.Global, ast.Nonlocal)):
+            # A nested writer may change a closure cell or module binding;
+            # retain the module-wide conservative union for that name.
+            shadowed.difference_update(node.names)
+    aliases: dict[str, frozenset[str]] = {
+        name: members for name, members in (inherited or {}).items() if name not in shadowed
+    }
     while True:
         grown = False
         for name, value in bindings:
@@ -218,16 +224,20 @@ def _owned(module: ast.Module) -> Iterator[tuple[str, ast.AST]]:
 
 def _comparison_sites(path: str, module: ast.Module) -> list[_Site]:
     """Every comparison or ``match`` case in a module that names a frontend member."""
-    aliases = _frontend_aliases(module)
+    module_aliases = _frontend_aliases(module)
+    scopes: dict[str, Mapping[str, frozenset[str]]] = {"<module>": module_aliases}
     sites: list[_Site] = []
     for owner, node in _owned(module):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            parent = owner.rpartition(".")[0] or "<module>"
+            scopes[owner] = _frontend_aliases(node, scopes[parent])
         if isinstance(node, ast.Compare):
             judged, what = node, "comparison"
         elif isinstance(node, ast.match_case):
             judged, what = node.pattern, "match case"
         else:
             continue
-        members = _named_members(judged, aliases)
+        members = _named_members(judged, scopes[owner])
         if members:
             sites.append(_Site(path=path, line=judged.lineno, owner=owner, members=members, what=what))
     return sites
@@ -353,4 +363,42 @@ def test_the_scan_reads_a_direct_comparison_a_bound_set_a_match_and_a_predicate_
     assert predicates == {"is_external_client": frozenset({"EXTERNAL_CLIENT"})}
     assert [(site.line, site.owner, site.what) for site in calls] == [
         (10, "Guard.refuse", "call of is_external_client")
+    ]
+
+
+def test_frontend_aliases_respect_local_bindings_and_parameter_shadowing() -> None:
+    """A frontend connection in one function cannot classify another's status parameter."""
+    module = ast.parse(
+        "PERSON = {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}\n"
+        "def connect():\n"
+        "    status = open_client(frontend=OperationFrontendProjection.CLI)\n"
+        "def observation(status):\n"
+        "    return status is None\n"
+        "def shadowed(PERSON):\n"
+        "    return PERSON is None\n"
+        "def global_guard(context):\n"
+        "    return context.frontend in PERSON\n"
+        "def local_guard(context):\n"
+        "    selected = {OperationFrontendProjection.TUI}\n"
+        "    return context.frontend in selected\n"
+        "def explicit_guard(status):\n"
+        "    return status.frontend is OperationFrontendProjection.EXTERNAL_CLIENT\n"
+        "def change_global():\n"
+        "    global PERSON\n"
+        "    PERSON = {OperationFrontendProjection.EXTERNAL_CLIENT}\n"
+        "def closure_guard(context):\n"
+        "    selected = {OperationFrontendProjection.TUI}\n"
+        "    def change_nonlocal():\n"
+        "        nonlocal selected\n"
+        "        selected = {OperationFrontendProjection.EXTERNAL_CLIENT}\n"
+        "    def nested():\n"
+        "        return context.frontend in selected\n"
+        "    return nested()\n"
+    )
+    sites = _comparison_sites("synthetic.py", module)
+    assert [(site.owner, site.members) for site in sites] == [
+        ("global_guard", frozenset({"CLI", "TUI", "EXTERNAL_CLIENT"})),
+        ("local_guard", frozenset({"TUI"})),
+        ("explicit_guard", frozenset({"EXTERNAL_CLIENT"})),
+        ("closure_guard.nested", frozenset({"TUI", "EXTERNAL_CLIENT"})),
     ]
