@@ -1,13 +1,13 @@
 desktop:
   startup:
-    starting: "Iniciant Cadrumo…"
-    progress: "Progrés de l’inici"
-    environment_step: "Preparar l’aplicació"
-    runtime_step: "Iniciar el servei local"
-    workspace_step: "Obrir l’espai de treball"
-    environment: "Preparant els fitxers i la configuració…"
-    runtime: "Iniciant i comprovant el servei local…"
-    workspace: "Obrint l’espai de treball…"
-    failed: "No s’ha pogut iniciar Cadrumo"
-    failure: "Error en iniciar ({code}). Tanca aquesta finestra i torna-ho a provar. Consulta el registre de l’aplicació per obtenir-ne més detalls."
-    interrupted: "S’ha interromput la connexió d’inici. Tanca aquesta finestra i torna-ho a provar."
+    environment: Preparant els fitxers i la configuració…
+    environment_step: Preparar l’aplicació
+    failed: No s’ha pogut iniciar Cadrumo
+    failure: No s'ha pogut completar l'inici.
+    interrupted: S'ha interromput l'inici.
+    progress: Progrés de l’inici
+    runtime: Iniciant i comprovant el servei local…
+    runtime_step: Iniciar el servei local
+    starting: Iniciant Cadrumo…
+    workspace: Obrint l’espai de treball…
+    workspace_step: Obrir l’espai de treball

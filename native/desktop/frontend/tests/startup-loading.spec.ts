@@ -105,7 +105,12 @@ test("loading paints before assembly and follows actual stages accessibly", asyn
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "es");
   await update(page, { failure: { code: "manager_unavailable" } });
-  await expect(page.getByRole("alert")).toContainText("manager_unavailable");
+  await expect(page.getByRole("alert")).toHaveText(
+    "No se ha podido completar el inicio.",
+  );
+  await expect(page.getByRole("alert")).not.toContainText(
+    "manager_unavailable",
+  );
   await expect(page.locator("main")).toHaveAttribute("aria-busy", "false");
   await expect(page.locator(".spinner")).toBeHidden();
   await expect(page.getByRole("status")).toContainText(
@@ -126,7 +131,7 @@ for (const screen of [
       isMobile: screen.touch,
     });
     for (const colorScheme of ["light", "dark"] as const) {
-      test(`stable centered loading and elided failures in ${colorScheme}`, async ({
+      test(`stable centered loading and safe failures in ${colorScheme}`, async ({
         page,
       }, testInfo) => {
         await page.emulateMedia({ colorScheme });
@@ -172,17 +177,17 @@ for (const screen of [
         const code = "startup_failure_".repeat(80);
         await update(page, { failure: { code } });
         const failure = page.getByRole("alert");
-        await expect(failure).toContainText(code);
+        await expect(failure).toHaveText("Az indítást nem sikerült befejezni.");
+        await expect(failure).not.toContainText(code);
+        await expect(failure).not.toHaveAttribute("title", /startup_failure_/);
         expect(await geometry(page)).toEqual(initial);
         expect(
           await failure.evaluate((element) => ({
-            clipped: element.scrollWidth > element.clientWidth,
             ellipsis: getComputedStyle(element).textOverflow,
             lines: getComputedStyle(element).whiteSpace,
             title: element.getAttribute("title") === element.textContent,
           })),
         ).toEqual({
-          clipped: true,
           ellipsis: "ellipsis",
           lines: "nowrap",
           title: true,
@@ -224,8 +229,6 @@ test("startup transport failure leaves a readable error", async ({ page }) => {
     });
   });
   await page.goto("/startup.html");
-  await expect(page.getByRole("alert")).toContainText(
-    "connection was interrupted",
-  );
+  await expect(page.getByRole("alert")).toHaveText("Startup was interrupted.");
   await expect(page.locator("main")).toHaveAttribute("aria-busy", "false");
 });

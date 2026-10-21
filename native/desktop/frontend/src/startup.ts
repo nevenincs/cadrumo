@@ -6,12 +6,9 @@ import "./styles/startup.css";
 import "virtual:desktop-palette.css";
 
 let locale = navigator.language.split("-")[0] ?? "en";
-function text(key: string, code?: string): string {
+function text(key: string): string {
   const full = `desktop.startup.${key}`;
-  return (catalogue[locale]?.[full] ?? catalogue.en?.[full] ?? full).replace(
-    "{code}",
-    code ?? "",
-  );
+  return catalogue[locale]?.[full] ?? catalogue.en?.[full] ?? full;
 }
 const host = tauriStartup();
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -43,7 +40,7 @@ async function refresh(): Promise<void> {
     status.textContent = text(progress.phase);
     main.dataset.phase = progress.phase;
     if (progress.failure) {
-      failed(text("failure", progress.failure.code));
+      failed(text("failure"));
       return;
     }
     window.setTimeout(() => void refresh(), 150);

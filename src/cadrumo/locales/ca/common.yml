@@ -1452,7 +1452,7 @@ operation:
       response_not_pending: Aquesta operació no espera cap resposta.
       stale_operation_revision: L'operació ha avançat mentre decidies. Espera l'actualització
         i torna-ho a provar.
-      unknown_operation: El backend ja no coneix aquesta operació.
+      unknown_operation: No s'ha trobat aquesta operació.
       unsupported_cancellation_version: Aquesta versió no pot cancel·lar aquesta operació.
         Actualitza Cadrumo.
       unsupported_detach_version: Aquesta versió no pot desvincular aquesta operació.
@@ -3968,8 +3968,8 @@ tui:
       page: Resultat, pàgina {page} de {pages}
     run:
       busy_holder: 'Operació que el reté: {operation_id}'
-      contract_changed: El servei ofereix ara un altre contracte per a aquesta operació.
-        Torna a obrir Operacions i prova-ho de nou. No s'ha enviat res.
+      contract_changed: Aquesta operació ha canviat mentre el formulari era obert.
+        Torna a obrir Operacions i torna-ho a provar.
       detached: Has deixat l'operació mentre encara estava en curs. Aquí no se'n coneix
         el resultat.
       start_unconfirmed: La sol·licitud ha quedat registrada, però no se n'ha confirmat

@@ -1406,7 +1406,7 @@ operation:
       response_not_pending: This operation is not waiting for a response.
       stale_operation_revision: The operation moved on while you were deciding. Wait
         for the refresh and try again.
-      unknown_operation: This operation is no longer known to the backend.
+      unknown_operation: This operation could not be found.
       unsupported_cancellation_version: This build cannot cancel that operation. Update
         Cadrumo.
       unsupported_detach_version: This version cannot detach that operation. Update
@@ -3869,8 +3869,8 @@ tui:
       page: Result, page {page} of {pages}
     run:
       busy_holder: 'Operation holding it: {operation_id}'
-      contract_changed: The runtime now serves a different contract for this operation.
-        Reopen Operations and try again. Nothing was sent.
+      contract_changed: This operation changed while the form was open. Reopen Operations
+        and try again.
       detached: You left the operation while it was still running. Its outcome is
         not known here.
       start_unconfirmed: The request was recorded, but its start was not confirmed.

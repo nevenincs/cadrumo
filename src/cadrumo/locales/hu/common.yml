@@ -1437,7 +1437,7 @@ operation:
       response_not_pending: Ez a művelet nem vár választ.
       stale_operation_revision: A művelet továbblépett, amíg döntöttél. Várd meg a
         frissítést, és próbáld újra.
-      unknown_operation: A háttérrendszer már nem ismeri ezt a műveletet.
+      unknown_operation: Ez a művelet nem található.
       unsupported_cancellation_version: Ez a verzió nem tudja megszakítani azt a műveletet.
         Frissítsd a Cadrumót.
       unsupported_detach_version: Ez a verzió nem tudja leválasztani azt a műveletet.
@@ -3949,8 +3949,8 @@ tui:
       page: Eredmény, {page}. oldal, összesen {pages}
     run:
       busy_holder: 'Az ezt lefoglaló művelet: {operation_id}'
-      contract_changed: A szolgáltatás már más szerződést ad ehhez a művelethez. Nyisd
-        meg újra a Műveleteket, és próbáld meg ismét. Semmi sem lett elküldve.
+      contract_changed: Ez a művelet megváltozott, amíg az űrlap nyitva volt. Nyisd
+        meg újra a Műveleteket, és próbáld újra.
       detached: Kiléptél a műveletből, miközben még futott. Az eredménye itt nem ismert.
       start_unconfirmed: A kérés rögzítésre került, de az indítása nem lett megerősítve.
         Semmi sem lett megismételve.
