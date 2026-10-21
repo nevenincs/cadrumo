@@ -427,3 +427,141 @@ def test_the_agent_source_is_selected_by_the_cache_variable_alone(tmp_path: Path
     commands = _ninja_commands(build, "agent_project").lower()
     assert f"--agent-source {named.as_posix().lower()}" in commands
     assert decoy.as_posix().lower() not in commands
+
+
+def test_windows_recipe_provisions_the_component_only_installer_before_pytest() -> None:
+    """Local and CI entry points share one real CMake prerequisite producer."""
+    import yaml
+
+    status, output = _just("--dry-run", "test-windows")
+    assert status == 0, output
+    commands = _commands(output)
+    configure = commands.index("cmake --preset windows-tests-x64")
+    build = commands.index("cmake --build --preset windows-tests-debug --target rust_installer")
+    publish = commands.index("$env:CADRUMO_TEST_MSI_ADAPTER = $inputs.adapter")
+    pytest_commands = [index for index, line in enumerate(commands) if line.startswith("uv run --no-sync pytest ")]
+    assert len(pytest_commands) == 1
+    assert configure < build < publish < pytest_commands[0]
+    assert '-m "windows_only and not os_keychain and not native_package"' in commands[pytest_commands[0]]
+    assert "-n0" in commands[pytest_commands[0]]
+    assert not any("cargo " in line or "x86_64-pc-windows-msvc" in line for line in commands)
+    selected = _presets("configurePresets")["windows-tests-x64"]
+    assert selected["cacheVariables"]["CADRUMO_CONFIGURE_PAYLOAD"] == "OFF"
+    assert selected["environment"]["CADRUMO_BUILD_DIR"] == "${sourceDir}/build/windows-tests-x64"
+    assert _presets("buildPresets")["windows-tests-debug"]["configuration"] == "Debug"
+    workflow = yaml.safe_load((REPO_ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8"))
+    assert any(step.get("run") == "just test-windows" for step in workflow["jobs"]["test-windows-only"]["steps"])
+
+
+@pytest.mark.parametrize("configuration", ("Debug", "Release"))
+def test_installer_publishes_its_actual_configuration_specific_test_inputs(tmp_path: Path, configuration: str) -> None:
+    """The real module exports both paths without a second Cargo layout owner."""
+    body = (
+        f'include("{(_CMAKE_MODULES / "BuildLog.cmake").as_posix()}")\n'
+        "set(WIN32 TRUE)\n"
+        'set(CADRUMO_PATH_CARGO "${CMAKE_BINARY_DIR}/cargo with spaces")\n'
+        'set(CADRUMO_PATH_GENERATED "${CMAKE_BINARY_DIR}/generated")\n'
+        "set(CADRUMO_PIN_rust_target fixture-rust-target)\n"
+        "function(cadrumo_cargo_command output)\n"
+        '  set(${output} "${CMAKE_COMMAND}" -E echo fixture-cargo PARENT_SCOPE)\n'
+        "endfunction()\n"
+        "add_custom_target(native_contract)\n"
+        f'include("{(_CMAKE_MODULES / "Installer.cmake").as_posix()}")\n'
+    )
+    _, build, result = _configure(tmp_path, body, f"-DCMAKE_BUILD_TYPE={configuration}")
+    assert result.returncode == 0, result.stdout + result.stderr
+    manifest = json.loads(
+        (build / "generated" / f"installer-test-inputs-{configuration}.json").read_text(encoding="utf-8")
+    )
+    profile = "debug" if configuration == "Debug" else "release"
+    directory = build / "cargo with spaces/installer/fixture-rust-target" / profile
+    assert manifest == {
+        "schema_version": 1,
+        "configuration": configuration,
+        "adapter": (directory / "cadrumo_installer.dll").as_posix(),
+        "runner": (directory / "cadrumo-msi-maintenance.exe").as_posix(),
+    }
+    commands = _ninja_commands(build, "rust_installer")
+    assert "fixture-cargo build --locked --lib --bins" in commands
+    assert "--profile " + ("dev" if configuration == "Debug" else "release") in commands
+
+
+@pytest.mark.windows_only
+@pytest.mark.parametrize(
+    "failure", ("none", "configure", "build", "adapter", "runner", "schema", "configuration", "pytest")
+)
+def test_windows_recipe_propagates_prerequisite_and_pytest_failures(tmp_path: Path, failure: str) -> None:
+    """Execute the real recipe with recording tools; no compiler or tests are substituted as passes."""
+    powershell = shutil.which("pwsh")
+    assert powershell is not None
+    status, recipe = _just("--dry-run", "test-windows")
+    assert status == 0, recipe
+    adapter = tmp_path / "adapter with spaces.dll"
+    runner = tmp_path / "maintenance with spaces.exe"
+    for artifact in (adapter, runner):
+        artifact.write_bytes(b"recording tool fixture")
+    if failure == "adapter":
+        adapter.unlink()
+    if failure == "runner":
+        runner.unlink()
+    inputs = tmp_path / "build/windows-tests-x64/generated/installer-test-inputs-Debug.json"
+    inputs.parent.mkdir(parents=True)
+    inputs.write_text(
+        json.dumps(
+            {
+                "schema_version": 2 if failure == "schema" else 1,
+                "configuration": "Release" if failure == "configuration" else "Debug",
+                "adapter": str(adapter),
+                "runner": str(runner),
+            }
+        ),
+        encoding="utf-8",
+    )
+    recording = tmp_path / "record.ps1"
+    recording.write_text(
+        r"""
+$ErrorActionPreference = 'Stop'
+function cmake {
+    $stage = if ($args[0] -eq '--preset') { 'configure' } else { 'build' }
+    Add-Content -LiteralPath 'calls.txt' -Value $stage
+    $global:LASTEXITCODE = if ($env:CADRUMO_NATIVE_TEST_FAILURE -eq $stage) { 23 } else { 0 }
+}
+function uv {
+    Add-Content -LiteralPath 'calls.txt' -Value 'pytest'
+    $observation = @{
+        arguments = @($args)
+        adapter = $env:CADRUMO_TEST_MSI_ADAPTER
+    }
+    $observation | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath 'pytest.json'
+    $global:LASTEXITCODE = if ($env:CADRUMO_NATIVE_TEST_FAILURE -eq 'pytest') { 29 } else { 0 }
+}
+"""
+        + recipe,
+        encoding="utf-8",
+    )
+    result = run_command(
+        [powershell, "-NoProfile", "-File", str(recording)],
+        cwd=tmp_path,
+        environment={
+            **os.environ,
+            "CADRUMO_NATIVE_TEST_FAILURE": failure,
+            "CADRUMO_TEST_MSI_ADAPTER": "untrusted ambient adapter",
+        },
+        timeout_seconds=None,
+    )
+    calls = (tmp_path / "calls.txt").read_text(encoding="utf-8-sig").splitlines()
+    expected_calls = ["configure"] if failure == "configure" else ["configure", "build"]
+    if failure in {"none", "pytest"}:
+        expected_calls.append("pytest")
+        observation = json.loads((tmp_path / "pytest.json").read_text(encoding="utf-8-sig"))
+        assert observation["adapter"] == str(adapter)
+        assert observation["arguments"][:5] == ["run", "--no-sync", "pytest", "-v", "-n0"]
+    else:
+        assert not (tmp_path / "pytest.json").exists()
+    assert calls == expected_calls
+    if failure in {"configure", "build"}:
+        assert result.returncode == 23, result.stdout + result.stderr
+    elif failure == "pytest":
+        assert result.returncode == 29, result.stdout + result.stderr
+    else:
+        assert (result.returncode == 0) is (failure == "none"), result.stdout + result.stderr

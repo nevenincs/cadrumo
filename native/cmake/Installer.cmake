@@ -14,6 +14,10 @@ set(CADRUMO_MSI_ADAPTER
   "${CADRUMO_INSTALLER_TARGET_DIR}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo_installer.dll")
 set(CADRUMO_MSI_RUNNER
   "${CADRUMO_INSTALLER_TARGET_DIR}/${CADRUMO_PIN_rust_target}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo-msi-maintenance.exe")
+# Source-owned Windows tests consume these existing CMake-selected outputs.
+# Keep Cargo triples/profile/layout details here, out of recipes and CI.
+file(GENERATE OUTPUT "${CADRUMO_PATH_GENERATED}/installer-test-inputs-$<CONFIG>.json"
+  CONTENT "{\"schema_version\":1,\"configuration\":\"$<CONFIG>\",\"adapter\":\"${CADRUMO_MSI_ADAPTER}\",\"runner\":\"${CADRUMO_MSI_RUNNER}\"}\n")
 # The version resources of the DLL and the runner name the product and this build.
 cadrumo_cargo_command(installer_cargo --build-identity installer
   --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}" --env "CADRUMO_ID_NAME=${CADRUMO_ID_NAME}")

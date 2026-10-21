@@ -59,7 +59,7 @@ add_custom_target(python_dependencies
   DEPENDS ${provision_inputs} "${PROJECT_BINARY_DIR}/inputs-provision.txt"
   BYPRODUCTS "${CADRUMO_PATH_RUNTIME}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-add_dependencies(python_dependencies python_sdk agent_project)
+add_dependencies(python_dependencies python_sdk)
 cadrumo_build_step(step_comment native_build_tools GROUP dependencies
   SUMMARY "install the pinned build-only tools" OUTPUTS "${CADRUMO_PATH_TOOLS}")
 add_custom_target(native_build_tools
@@ -72,7 +72,10 @@ if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET python_dependencies PATHS "${CADRUMO_PATH_RUNTIME}")
   cadrumo_register_clean(TARGET native_build_tools PATHS "${CADRUMO_PATH_TOOLS}")
 endif()
-include("${PROJECT_SOURCE_DIR}/native/cmake/Agent.cmake")
+if(CADRUMO_CONFIGURE_PAYLOAD)
+  include("${PROJECT_SOURCE_DIR}/native/cmake/Agent.cmake")
+  add_dependencies(python_dependencies agent_project)
+endif()
 set(native_helper_inputs "${native_helper_inputs}" PARENT_SCOPE)
 set(contract_inputs "${contract_inputs}" PARENT_SCOPE)
 set(CADRUMO_HELPER "${CADRUMO_HELPER}" PARENT_SCOPE)

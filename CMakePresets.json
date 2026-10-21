@@ -36,6 +36,17 @@
       }
     },
     {
+      "name": "windows-tests-x64",
+      "displayName": "Windows native test prerequisites without payload assembly",
+      "inherits": "windows-x64",
+      "environment": {
+        "CADRUMO_BUILD_DIR": "${sourceDir}/build/windows-tests-x64"
+      },
+      "cacheVariables": {
+        "CADRUMO_CONFIGURE_PAYLOAD": "OFF"
+      }
+    },
+    {
       "name": "linux-x86-64",
       "displayName": "linux-x86-64 (requires native SDK/toolchain)",
       "generator": "Ninja Multi-Config",
@@ -85,6 +96,11 @@
       "configurePreset": "windows-installers-x64",
       "configuration": "Release",
       "targets": ["native-installer"]
+    },
+    {
+      "name": "windows-tests-debug",
+      "configurePreset": "windows-tests-x64",
+      "configuration": "Debug"
     },
     {
       "name": "debug",
