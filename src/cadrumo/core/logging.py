@@ -37,7 +37,8 @@ import logging
 import re
 import sys
 from collections import deque
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Generator, Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload, override
@@ -604,6 +605,8 @@ def _install_run_context_record_factory() -> None:
         ctx = run_var.get(None)
         record.run_id = ctx.run_id if ctx is not None else ""
         record.step_id = step_var.get(None) or ""
+        if _OPERATOR_DOCUMENT_OUTPUT.get():
+            record.__dict__["_cadrumo_operator_document_output"] = True
         stamp_diagnostic_record(record)
         return record
 
@@ -680,6 +683,32 @@ class _ThirdPartyDebugFilter(logging.Filter):
 #: the operator's stream as a structured document. Pass it through ``extra`` on
 #: any log call that accompanies such a write.
 OPERATOR_DOCUMENT_LOG_EXTRA = "operator_document"
+_OPERATOR_DOCUMENT_OUTPUT: ContextVar[bool] = ContextVar("cadrumo_operator_document_output", default=False)
+
+
+@contextmanager
+def operator_document_output() -> Generator[None]:
+    """Keep invocation diagnostics in their file while stderr carries a JSON document.
+
+    Records capture the scope when created, so deferred delivery and copied
+    async/thread contexts keep the same routing. Other invocations and text
+    output retain their stderr diagnostics; no process or handler level changes.
+    """
+    _install_run_context_record_factory()
+    token = _OPERATOR_DOCUMENT_OUTPUT.set(True)
+    try:
+        yield
+    finally:
+        _OPERATOR_DOCUMENT_OUTPUT.reset(token)
+
+
+def _operator_document_record(record: logging.LogRecord) -> bool:
+    """Recognize document routing captured at emission, even after its scope ends."""
+    return (
+        getattr(record, OPERATOR_DOCUMENT_LOG_EXTRA, None) is not None
+        or getattr(record, "_cadrumo_operator_document_output", False) is True
+    )
+
 
 #: Line format of every ``cadrumo.log`` record. Readers that parse the file,
 #: such as the desktop log view, receive this value rather than a copy.
@@ -687,7 +716,7 @@ LOG_FILE_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s | %(diagnos
 
 
 class DropOperatorDocumentEchoFilter(logging.Filter):
-    """Suppress records already rendered as an operator document, on stderr only.
+    """Keep document-scoped diagnostics and rendered failures off stderr only.
 
     stderr is the machine-readable error channel: the CLI's terminal boundary
     writes the JSON error document there, and an automation or script parses that
@@ -705,7 +734,7 @@ class DropOperatorDocumentEchoFilter(logging.Filter):
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:
-        return getattr(record, OPERATOR_DOCUMENT_LOG_EXTRA, None) is None
+        return not _operator_document_record(record)
 
 
 def default_log_file_path() -> Path:
@@ -1026,6 +1055,9 @@ def _forward_first_record(
 
 
 def _handle_as_last_resort(record: logging.LogRecord) -> None:
+    if _operator_document_record(record):
+        _pending_records.append(record)
+        return
     last_resort = logging.lastResort
     if last_resort is not None and record.levelno >= last_resort.level:
         last_resort.handle(record)

@@ -15,7 +15,10 @@ Two related concerns:
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from contextlib import closing
+from io import StringIO
 from pathlib import Path
 from typing import override
 
@@ -23,7 +26,7 @@ import pytest
 
 from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
-from ...logging import get_logger
+from ...logging import DropOperatorDocumentEchoFilter, get_logger, operator_document_output
 from ...storage_taxonomy import StorageCategory
 from .run_scope import run_context
 
@@ -133,3 +136,65 @@ class TestStderrRunEventFilter:
             assert len(events) == 3
             kinds = {e.kind for e in events}
             assert RunEventKind.NAVIGATION in kinds
+
+
+def test_document_diagnostics_keep_file_evidence_and_restore_stderr_after_failure(tmp_path: Path) -> None:
+    """Nested JSON invocations preserve diagnostics without corrupting their operator stream."""
+    logger = get_logger(__name__ + ".document")
+    stderr = StringIO()
+    stream = logging.StreamHandler(stderr)
+    stream.addFilter(DropOperatorDocumentEchoFilter())
+    log_path = tmp_path / "diagnostics.log"
+    with closing(logging.FileHandler(log_path, encoding="utf-8")) as file_handler:
+        previous_handlers, previous_propagation, previous_level = logger.handlers[:], logger.propagate, logger.level
+        logger.handlers, logger.propagate = [], False
+        logger.addHandler(stream)
+        logger.addHandler(file_handler)
+        logger.setLevel(logging.DEBUG)
+        try:
+            with pytest.raises(RuntimeError, match="document scope failure"), operator_document_output():
+                logger.error("outer diagnostic")
+                with operator_document_output():
+                    logger.error("nested diagnostic")
+                logger.error("still in document scope")
+                raise RuntimeError("document scope failure")
+            logger.error("text diagnostic after failure")
+            file_handler.flush()
+        finally:
+            logger.handlers, logger.propagate = previous_handlers, previous_propagation
+            logger.setLevel(previous_level)
+    assert stderr.getvalue() == "text diagnostic after failure\n"
+    assert log_path.read_text(encoding="utf-8").splitlines() == [
+        "outer diagnostic",
+        "nested diagnostic",
+        "still in document scope",
+        "text diagnostic after failure",
+    ]
+
+
+def test_document_routing_survives_async_thread_handoff_and_deferred_delivery() -> None:
+    """The record's originating invocation controls routing after that invocation has returned."""
+    logger = get_logger(__name__ + ".threaded_document")
+    capture = _CaptureHandler()
+    previous_handlers, previous_propagation, previous_level = logger.handlers[:], logger.propagate, logger.level
+    logger.handlers, logger.propagate = [], False
+    logger.addHandler(capture)
+    logger.setLevel(logging.DEBUG)
+
+    async def emit() -> None:
+        with operator_document_output():
+            await asyncio.to_thread(logger.error, "owned thread diagnostic")
+        logger.error("outside document scope")
+
+    try:
+        asyncio.run(emit())
+    finally:
+        logger.handlers, logger.propagate = previous_handlers, previous_propagation
+        logger.setLevel(previous_level)
+    stderr = StringIO()
+    handler = logging.StreamHandler(stderr)
+    handler.addFilter(DropOperatorDocumentEchoFilter())
+    for record in capture.records:
+        handler.handle(record)
+    assert [record.getMessage() for record in capture.records] == ["owned thread diagnostic", "outside document scope"]
+    assert stderr.getvalue() == "outside document scope\n"

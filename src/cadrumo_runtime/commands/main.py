@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Sequence
+from contextlib import nullcontext
 
 from typer import Exit as TyperExit
 from typer._click.exceptions import ClickException as TyperClickException
@@ -17,6 +18,7 @@ from cadrumo.core.errors.error_codes import (
     render_error_text,
 )
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.logging import operator_document_output
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.errors import (
     CliRefusedBoundaryError,
@@ -35,6 +37,12 @@ from .presentation import precondition_action_lines, resolve_cli_precondition_ac
 def main(arguments: Sequence[str] | None = None) -> int:
     """Run one runtime configuration command without entering the daemon server."""
     argv = list(sys.argv[1:] if arguments is None else arguments)
+    with operator_document_output() if argv_requests_json(argv) else nullcontext():
+        return _run_command(argv)
+
+
+def _run_command(argv: list[str]) -> int:
+    """Dispatch and render within the invocation's diagnostic routing scope."""
     register_client_logging_namespace()
     configure_stdio_for_utf8()
     disable_rich_cli_rendering()
