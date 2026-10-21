@@ -135,7 +135,6 @@ class _Cache:
             self.transformed[(raw, treatment)] = value
             self.new_transformed = True
 
-
     def flush(self) -> None:
         """Write this process's new rows, keeping the newest row per path; nothing when none is new."""
         with self.guard:

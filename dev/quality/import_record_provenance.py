@@ -224,16 +224,99 @@ class RecordTargetProvenance(DeclarationWalks):
         reference = f"{module}.{function.name}"
         parameters = [parameter.arg for parameter in (*function.args.posonlyargs, *function.args.args)]
         sources: list[SourceExpression] = []
-        for node in ast.walk(self.modules[module].tree):
-            if not isinstance(node, ast.Call) or self.reference(module, node.func) != reference:
+        for caller, source in self.modules.items():
+            if not self._reference_visible(caller, reference):
                 continue
-            value = next((keyword.value for keyword in node.keywords if keyword.arg == name), None)
-            if value is None and name in parameters and len(node.args) > parameters.index(name):
-                value = node.args[parameters.index(name)]
-            if value is None:
-                raise ValueError("unknown helper argument")
-            sources.append(SourceExpression(module, value))
+            parents = {id(child): parent for parent in ast.walk(source.tree) for child in ast.iter_child_nodes(parent)}
+            for node in ast.walk(source.tree):
+                if self.reference(caller, node) == reference:
+                    parent = parents.get(id(node))
+                    if not isinstance(parent, ast.Call) or parent.func is not node:
+                        raise ValueError("parameterized callable escapes direct invocation")
+                if not isinstance(node, ast.Call) or self.reference(caller, node.func) != reference:
+                    continue
+                value = next((keyword.value for keyword in node.keywords if keyword.arg == name), None)
+                if value is None and name in parameters and len(node.args) > parameters.index(name):
+                    value = node.args[parameters.index(name)]
+                if value is None:
+                    raise ValueError("unknown helper argument")
+                sources.append(SourceExpression(caller, value))
+        sources.extend(self._parameterized_sources(module, function, name))
         return tuple(sources)
+
+    def _parameterized_sources(
+        self, module: str, function: ast.FunctionDef | ast.AsyncFunctionDef, name: str
+    ) -> tuple[SourceExpression, ...]:
+        sources: list[SourceExpression] = []
+        for decorator in function.decorator_list:
+            if (
+                not isinstance(decorator, ast.Call)
+                or self.reference(module, decorator.func) != "pytest.mark.parametrize"
+            ):
+                raise ValueError("unknown parameter-function decorator")
+            declared = (
+                decorator.args[0]
+                if decorator.args
+                else next((item.value for item in decorator.keywords if item.arg == "argnames"), None)
+            )
+            cases = (
+                decorator.args[1]
+                if len(decorator.args) > 1
+                else next((item.value for item in decorator.keywords if item.arg == "argvalues"), None)
+            )
+            if isinstance(declared, ast.Constant) and isinstance(declared.value, str):
+                names = tuple(part.strip() for part in declared.value.split(","))
+            elif isinstance(declared, (ast.Tuple, ast.List)) and all(
+                isinstance(part, ast.Constant) and isinstance(part.value, str) for part in declared.elts
+            ):
+                names = tuple(part.value for part in declared.elts if isinstance(part, ast.Constant))
+            else:
+                raise ValueError("open parameterized argument names")
+            if name not in names:
+                continue
+            if not isinstance(cases, (ast.Tuple, ast.List)):
+                raise ValueError("open parameterized declaration cases")
+            indirect = next((item.value for item in decorator.keywords if item.arg == "indirect"), None)
+            if (
+                indirect is not None
+                and not (isinstance(indirect, ast.Constant) and indirect.value is False)
+                and not (
+                    isinstance(indirect, (ast.Tuple, ast.List))
+                    and all(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in indirect.elts)
+                    and name not in {item.value for item in indirect.elts if isinstance(item, ast.Constant)}
+                )
+            ):
+                raise ValueError("indirect parameterized declaration")
+            for case in cases.elts:
+                if len(names) == 1:
+                    value = case
+                elif isinstance(case, (ast.Tuple, ast.List)) and len(case.elts) == len(names):
+                    value = case.elts[names.index(name)]
+                else:
+                    raise ValueError("open parameterized declaration")
+                if not isinstance(value, (ast.Call, ast.Constant)):
+                    raise ValueError("parameterized record must be constructed inline")
+                self._require_inline_parameter_value(module, value)
+                sources.append(SourceExpression(module, value))
+        return tuple(sources)
+
+    def _require_inline_parameter_value(self, module: str, node: ast.AST) -> None:
+        if isinstance(node, ast.Constant) or (isinstance(node, ast.Name) and node.id == "__package__"):
+            return
+        if isinstance(node, ast.Call) and self.fields(self.reference(module, node.func) or ""):
+            if f"{self.reference(module, node.func)}.__post_init__" in self.definitions:
+                raise ValueError("parameterized record has post-init behavior")
+            for child in (*node.args, *(keyword.value for keyword in node.keywords)):
+                self._require_inline_parameter_value(module, child)
+            return
+        if isinstance(node, (ast.Tuple, ast.List)):
+            for child in node.elts:
+                self._require_inline_parameter_value(module, child)
+            return
+        if isinstance(node, ast.Attribute):
+            self._require_closed_factory_input(SourceExpression(module, node), frozenset())
+            return
+        raise ValueError("parameterized record has an open constructor input")
 
     def _module_assignment(self, module: str, name: str) -> SourceExpression:
         assignments = self.context(module).latest_values(name, 10**9, None)
@@ -329,8 +412,161 @@ class RecordTargetProvenance(DeclarationWalks):
             return self._replace_sources(expression, path, visiting)
         definition = self.definitions.get(reference or "")
         if not isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            bound = self._bound_method_results(expression, path, visiting)
+            if bound is not None:
+                return bound
             raise ValueError(f"unknown declaration constructor in {expression.module}:{getattr(node, 'lineno', 0)}")
         return self._factory_results(expression, reference or "", definition, path, visiting)
+
+    def _bound_method_results(
+        self, expression: SourceExpression, path: tuple[str, ...], visiting: frozenset[tuple[str, int, tuple[str, ...]]]
+    ) -> tuple[SourceExpression, ...] | None:
+        node = expression.node
+        if not isinstance(node, ast.Call):
+            return None
+        function = node.func
+        if isinstance(function, ast.Name):
+            self._require_unescaped_factory_name(expression.module, function.id)
+            context = self.context(expression.module)
+            assignments = context.latest_values(
+                function.id, getattr(node, "lineno", 10**9), context.nearest_function(node)
+            )
+            if assignments is None or len(assignments) != 1:
+                return None
+            function = assignments[0].value
+        if not isinstance(function, ast.Attribute):
+            return None
+        if isinstance(function.value, ast.Name):
+            if function.value.id not in expression.bindings:
+                raise ValueError("named mutable factory receiver")
+        elif not (
+            isinstance(function.value, ast.Call)
+            and self.reference(expression.module, function.value.func) in self.classes
+        ):
+            raise ValueError("unknown factory receiver construction")
+        receivers = self._expand(SourceExpression(expression.module, function.value, expression.bindings), (), visiting)
+        results: list[SourceExpression] = []
+        for receiver in receivers:
+            owner = self.constructor_reference(receiver)
+            if owner is None or not self.fields(owner):
+                return None
+            self._require_construction_only_class(owner)
+            if f"{owner}.__post_init__" in self.definitions:
+                raise ValueError("factory receiver has post-init behavior")
+            for field in self.fields(owner):
+                if not isinstance(field.target, ast.Name):
+                    continue
+                argument = self._argument(receiver, field.target.id)
+                if argument is None:
+                    raise ValueError("unknown factory constructor input")
+                self._require_closed_factory_input(argument, frozenset())
+            reference = f"{owner}.{function.attr}"
+            definition = self.definitions.get(reference)
+            if not isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                return None
+            results.extend(self._factory_results(expression, reference, definition, path, visiting, receiver=receiver))
+        return tuple(results) if receivers else None
+
+    def _require_construction_only_class(self, owner: str) -> None:
+        if owner in self._closed_factory_classes:
+            return
+        for module, source in self.modules.items():
+            if not self._reference_visible(module, owner):
+                continue
+            parents = {id(child): parent for parent in ast.walk(source.tree) for child in ast.iter_child_nodes(parent)}
+            for node in ast.walk(source.tree):
+                if not isinstance(node, (ast.Name, ast.Attribute)) or self.reference(module, node) != owner:
+                    continue
+                parent = parents.get(id(node))
+                if not isinstance(parent, ast.Call) or parent.func is not node:
+                    raise ValueError("factory class escapes construction")
+        self._closed_factory_classes.add(owner)
+
+    def _reference_visible(self, module: str, reference: str) -> bool:
+        if reference.rpartition(".")[0] == module:
+            return True
+        for binding in self.modules[module].bindings.values():
+            if binding.target is None:
+                continue
+            prefix = binding.target
+            if binding.imported_name is not None:
+                prefix = f"{prefix}.{binding.imported_name}"
+            if reference == prefix or reference.startswith(f"{prefix}."):
+                return True
+        return False
+
+    def _require_closed_factory_input(self, expression: SourceExpression, visiting: frozenset[tuple[str, int]]) -> None:
+        node = expression.node
+        key = (expression.module, id(node))
+        if key in visiting or len(visiting) > 80:
+            raise ValueError("cyclic factory input")
+        visiting = visiting | {key}
+        if isinstance(node, ast.Constant) or (isinstance(node, ast.Name) and node.id == "__package__"):
+            return
+        if isinstance(node, ast.Name):
+            values = self._expand(expression, (), frozenset())
+            if not values or any(not isinstance(value.node, ast.Constant) for value in values):
+                self._require_unescaped_factory_name(expression.module, node.id, allowed=node)
+            for value in values:
+                self._require_closed_factory_input(value, visiting)
+            return
+        if isinstance(node, (ast.Tuple, ast.List, ast.Set, ast.Dict)):
+            children = (*node.keys, *node.values) if isinstance(node, ast.Dict) else node.elts
+            for child in children:
+                if child is None:
+                    raise ValueError("open factory input mapping")
+                self._require_closed_factory_input(
+                    SourceExpression(expression.module, child, expression.bindings), visiting
+                )
+            return
+        if isinstance(node, ast.Attribute):
+            owner = self.reference(expression.module, node.value)
+            definition = self.classes.get(owner or "")
+            if (
+                definition is not None
+                and any(
+                    self.reference((owner or "").rpartition(".")[0], base)
+                    in {"enum.Enum", "enum.IntEnum", "enum.StrEnum"}
+                    for base in definition.bases
+                )
+                and not any(isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) for item in definition.body)
+            ):
+                return
+            raise ValueError("unknown factory input attribute")
+        if isinstance(node, ast.Call):
+            owner = self.constructor_reference(expression)
+            fields = self.fields(owner or "")
+            if not fields or f"{owner}.__post_init__" in self.definitions:
+                raise ValueError("unknown nested factory input")
+            for field in fields:
+                if not isinstance(field.target, ast.Name):
+                    continue
+                value = self._argument(expression, field.target.id)
+                if value is None:
+                    raise ValueError("unknown nested constructor field")
+                self._require_closed_factory_input(value, visiting)
+            return
+        raise ValueError("open factory input")
+
+    def _require_unescaped_factory_name(self, module: str, name: str, *, allowed: ast.AST | None = None) -> None:
+        tree = self.modules[module].tree
+        parents = {id(child): parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Name) or node.id != name or not isinstance(node.ctx, ast.Load):
+                continue
+            if allowed is not None:
+                if node is not allowed:
+                    raise ValueError("mutable factory input escapes")
+            else:
+                parent = parents.get(id(node))
+                if not isinstance(parent, ast.Call) or parent.func is not node:
+                    raise ValueError("bound factory alias escapes")
+        if any(
+            binding.target == module and binding.imported_name == name
+            for source in self.modules.values()
+            for binding in source.bindings.values()
+        ):
+            raise ValueError("factory source escapes its declaring module")
 
     def _graph_records(
         self, graph: SourceExpression, path: tuple[str, ...], visiting: frozenset[tuple[str, int, tuple[str, ...]]]
@@ -393,6 +629,8 @@ class RecordTargetProvenance(DeclarationWalks):
         definition: ast.FunctionDef | ast.AsyncFunctionDef,
         path: tuple[str, ...],
         visiting: frozenset[tuple[str, int, tuple[str, ...]]],
+        *,
+        receiver: SourceExpression | None = None,
     ) -> tuple[SourceExpression, ...]:
         call = expression.node
         if not isinstance(call, ast.Call):
@@ -403,6 +641,11 @@ class RecordTargetProvenance(DeclarationWalks):
         module = owner
         if owner in self.classes:
             module = owner.rpartition(".")[0]
+            if parameters and parameters[0].arg == "self":
+                if receiver is None:
+                    raise ValueError("unknown factory receiver")
+                bindings["self"] = (receiver,)
+                parameters = parameters[1:]
             if parameters and parameters[0].arg == "cls":
                 bindings["cls"] = (SourceExpression(module, ast.Name(id=owner.rpartition(".")[2])),)
                 parameters = parameters[1:]
@@ -430,6 +673,8 @@ class RecordTargetProvenance(DeclarationWalks):
         }
         if rebound & bindings.keys():
             raise ValueError("factory parameter is rebound")
+        if receiver is not None:
+            self._require_pure_receiver_method(owner, definition, frozenset())
         returns = [
             node
             for node in ast.walk(definition)
@@ -444,6 +689,88 @@ class RecordTargetProvenance(DeclarationWalks):
             for result in returns
             if result.value is not None
             for item in self._expand(SourceExpression(module, result.value, bindings), path, visiting)
+        )
+
+    def _require_pure_receiver_method(
+        self, owner: str, definition: ast.FunctionDef | ast.AsyncFunctionDef, visiting: frozenset[str]
+    ) -> None:
+        reference = f"{owner}.{definition.name}"
+        if reference in visiting or definition.decorator_list:
+            raise ValueError("cyclic receiver method")
+        visiting = visiting | {reference}
+        if any(
+            not isinstance(item, ast.Return)
+            and not (
+                isinstance(item, ast.Expr)
+                and isinstance(item.value, ast.Constant)
+                and isinstance(item.value.value, str)
+            )
+            for item in definition.body
+        ):
+            raise ValueError("factory receiver method is not a pure return")
+        module = owner.rpartition(".")[0]
+        for statement in definition.body:
+            if isinstance(statement, ast.Return) and not isinstance(statement.value, ast.Call):
+                raise ValueError("receiver method must return a constructed record")
+        for item in ast.walk(definition):
+            if isinstance(item, ast.Name) and item.id == "self":
+                parent = next((parent for parent in ast.walk(definition) if item in ast.iter_child_nodes(parent)), None)
+                if not isinstance(parent, ast.Attribute) or parent.value is not item:
+                    raise ValueError("raw factory receiver escapes")
+            if not isinstance(item, ast.Call):
+                continue
+            arguments = (*item.args, *(keyword.value for keyword in item.keywords))
+            if any(self._contains_receiver_value(argument) for argument in arguments):
+                called = self.reference(module, item.func) or ""
+                if not self.fields(called) and not self._pure_record_classmethod(called):
+                    raise ValueError("factory receiver escapes")
+            if not isinstance(item.func, ast.Attribute) or not any(
+                isinstance(child, ast.Name) and child.id == "self" for child in ast.walk(item.func.value)
+            ):
+                continue
+            if not isinstance(item.func.value, ast.Name) or item.func.value.id != "self":
+                raise ValueError("factory receiver calls an unknown method")
+            sibling = self.definitions.get(f"{owner}.{item.func.attr}")
+            if not isinstance(sibling, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                raise ValueError("factory receiver calls an unknown method")
+            self._require_pure_receiver_method(owner, sibling, visiting)
+
+    @staticmethod
+    def _contains_receiver_value(node: ast.AST) -> bool:
+        return (isinstance(node, ast.Name) and node.id == "self") or any(
+            RecordTargetProvenance._contains_receiver_value(child) for child in ast.iter_child_nodes(node)
+        )
+
+    def _pure_record_classmethod(self, reference: str) -> bool:
+        owner = reference.rpartition(".")[0]
+        definition = self.definitions.get(reference)
+        if not self.fields(owner) or not isinstance(definition, ast.FunctionDef):
+            return False
+        if len(definition.decorator_list) != 1 or not isinstance(definition.decorator_list[0], ast.Name):
+            return False
+        if definition.decorator_list[0].id != "classmethod":
+            return False
+        statements = [
+            item
+            for item in definition.body
+            if not (
+                isinstance(item, ast.Expr)
+                and isinstance(item.value, ast.Constant)
+                and isinstance(item.value.value, str)
+            )
+        ]
+        if len(statements) != 1 or not isinstance(statements[0], ast.Return):
+            return False
+        value = statements[0].value
+        return (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Name)
+            and value.func.id == "cls"
+            and all(
+                not isinstance(item, ast.Call)
+                for argument in (*value.args, *(item.value for item in value.keywords))
+                for item in ast.walk(argument)
+            )
         )
 
     def _callback_targets(self, callback: str) -> frozenset[str]:

@@ -558,6 +558,7 @@
         "cadrumo.application.auth.session_acquire_operation_access",
         "cadrumo.application.auth.session_types",
         "cadrumo.application.auth.sessions",
+        "cadrumo.application.auth.setup_handoff",
         "cadrumo.application.auth.sync_readiness",
         "cadrumo.application.auth.sync_requirement_text",
         "cadrumo.application.auth.teardown_operation_access",

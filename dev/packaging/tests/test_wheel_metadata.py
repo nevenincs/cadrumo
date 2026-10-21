@@ -33,13 +33,13 @@ def test_shared_core_and_extra_names_preserve_both_metadata_rows(tmp_path: Path,
             condition = f"({marker.strip()}) and " if separator else ""
             rows.append(f'Requires-Dist: {dependency.strip()}; {condition}extra == "{extra}"')
     if leak_optional:
-        rows.append("Requires-Dist: anthropic")
+        rows.append("Requires-Dist: google-auth")
     wheel = _wheel(
         tmp_path / "cadrumo-1.0-py3-none-any.whl", {"cadrumo-1.0.dist-info/METADATA": "\n".join(rows) + "\n"}
     )
 
     if leak_optional:
-        with pytest.raises(SystemExit, match=r"optional dependencies leaked.*anthropic"):
+        with pytest.raises(SystemExit, match=r"optional dependencies leaked.*google-auth"):
             assert_wheel_metadata_matches_pyproject(REPO_ROOT, wheel)
     else:
         assert_wheel_metadata_matches_pyproject(REPO_ROOT, wheel)

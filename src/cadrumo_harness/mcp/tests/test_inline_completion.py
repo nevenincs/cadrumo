@@ -1,5 +1,7 @@
 """Inline completion retains the same result, refusal and recovery semantics."""
 
+from typing import Any
+
 import pytest
 
 from ..operation_guidance import operation_guidance
@@ -8,7 +10,7 @@ from ..protocol_contract import has_refusal, unknown_outcome_instruction, valida
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _submitted(lifecycle: str = "terminal", disposition: str = "none") -> dict:
+def _submitted(lifecycle: str = "terminal", disposition: str = "none") -> dict[str, Any]:
     return {
         "outcome": "submitted",
         "receipt": {"operation_id": "o"},
@@ -56,7 +58,9 @@ def test_inline_refusal_is_reported_and_lost_read_is_not_a_failed_write() -> Non
     assert has_refusal(response)
     response["completion"] = {"outcome": "unresolved", "code": "connection_closed"}
     assert not has_refusal(response)
-    assert "Do not repeat this call" in unknown_outcome_instruction(response)
+    instruction = unknown_outcome_instruction(response)
+    assert instruction is not None
+    assert "Do not repeat this call" in instruction
     assert operation_guidance("execute", response)["next_call"]["tool"] == "result"
 
 

@@ -32,7 +32,7 @@ type = layers
 name = Every harness source package has a declared lane
 containers = cadrumo_harness
 layers =
-    _resources : _skill_metadata : _workspace : access : mcp : resources : tests : (_data)
+    _resources : _skill_metadata : access : mcp : resources : tests : workspace : (_data)
 exhaustive = True
 
 [importlinter:contract:closed-client-classification]
@@ -64,7 +64,7 @@ type = layers
 name = Every repository tooling package has a declared lane
 containers = dev
 layers =
-    _paths : acceptance : actionlint : agent_eval : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : docs : env : exit_codes : first_party_source : harness_data : identity : ingest_harness : init : locales : operation_contract_manifest : packaging : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : test_runs : tests : tui
+    _paths : acceptance : actionlint : agent_eval : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : desktop_profile_fixture : docs : env : exit_codes : first_party_source : harness_data : identity : ingest_harness : init : locales : operation_contract_manifest : packaging : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : test_runs : tests : tui
 exhaustive = True
 
 [importlinter:contract:closed-documentation-classification]

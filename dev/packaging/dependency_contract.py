@@ -62,7 +62,6 @@ _CORE_PRESENT_TRANSITIVE_NAMES = {
 
 
 _EXTRAS_PRESENT_NAMES = {
-    "anthropic",
     "google-api-python-client",
     "playwright",
 }

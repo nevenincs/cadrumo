@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo_harness._workspace import materialise_plugin
 from cadrumo_harness.resources import harness_root, iter_reference_documents
+from cadrumo_harness.workspace import materialise_plugin
 
 from ..claude_plugin import PluginTreeError, verify_plugin_tree
 from ..python_cohort import PythonCohort

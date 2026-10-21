@@ -3,7 +3,7 @@
 The plugin is the primary consumer distribution: a ``.claude-plugin/`` manifest,
 the shipped skills and reference documents, an ``.mcp.json`` that launches
 ``cadrumo-mcp`` from the embedded product wheels, and those wheels with their
-runtime dependency wheelhouse. :func:`cadrumo_harness._workspace.materialise_plugin`
+runtime dependency wheelhouse. :func:`cadrumo_harness.workspace.materialise_plugin`
 writes it; this command supplies the cohort and then checks the written tree
 against that cohort rather than trusting the writer.
 
@@ -26,8 +26,8 @@ from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo_harness._workspace import materialise_plugin
 from cadrumo_harness.resources import harness_root, iter_reference_documents
+from cadrumo_harness.workspace import materialise_plugin
 from dev._paths import REPO_ROOT, UTF_8
 from dev.source_tree import content_digest, repository_files
 

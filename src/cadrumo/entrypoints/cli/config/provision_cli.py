@@ -723,7 +723,7 @@ def provision_load(
 
 def provision_report(ctx: typer.Context) -> None:
     """Report the measured hardware, the per-role model selection, and admission."""
-    from ....application.local_reader_operation import LOCAL_READER_OPERATION_SUBJECT
+    from ....application.local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT
 
     completed = run_registered_operation(
         bound_profile_client(ctx),

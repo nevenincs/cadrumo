@@ -17,6 +17,7 @@ from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+
 @pytest.mark.parametrize("key", ["config_provision_status", "config_provision_probe", "config_provision_report"])
 def test_a_runtime_reading_provision_command_declares_network(key: str) -> None:
     assert "network" in COMMAND_GRAPH.spec(key).policy.expanded_capabilities

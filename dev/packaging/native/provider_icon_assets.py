@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-import importlib
+import importlib.util
 import json
 import re
 import sys
@@ -71,12 +71,24 @@ def _provider_icons_module(archive: zipfile.ZipFile) -> Generator[ModuleType]:
         for filename, contents in assets.items():
             (icon_directory / filename).write_bytes(contents)
 
-        search_root = str(Path(temporary))
-        sys.path.insert(0, search_root)
         try:
-            yield importlib.import_module(f"{package_name}.provider_icons")
+            package_spec = importlib.util.spec_from_file_location(
+                package_name, package / "__init__.py", submodule_search_locations=[str(package)]
+            )
+            if package_spec is None or package_spec.loader is None:
+                raise ProviderIconGenerationError("The provider icon package cannot be loaded")
+            package_module = importlib.util.module_from_spec(package_spec)
+            sys.modules[package_name] = package_module
+            package_spec.loader.exec_module(package_module)
+            module_name = f"{package_name}.provider_icons"
+            module_spec = importlib.util.spec_from_file_location(module_name, package / "provider_icons.py")
+            if module_spec is None or module_spec.loader is None:
+                raise ProviderIconGenerationError("The provider icon validator cannot be loaded")
+            module = importlib.util.module_from_spec(module_spec)
+            sys.modules[module_name] = module
+            module_spec.loader.exec_module(module)
+            yield module
         finally:
-            sys.path.remove(search_root)
             for name in tuple(sys.modules):
                 if name == package_name or name.startswith(f"{package_name}."):
                     del sys.modules[name]

@@ -242,36 +242,20 @@ def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
     assert _SEEN_MULTIPLE == [["Ada", "Grace"]]
 
 
-@pytest.mark.parametrize(
-    ("value", "expected_parser", "expected_click_type"),
-    (
-        (
-            ValueContract(
-                DeferredTarget("builtins", "str"),
-                parser=DeferredTarget(
-                    ".test_command_runtime",
-                    "public_parser",
-                    __package__,
-                ),
-            ),
-            public_parser,
-            None,
-        ),
-        (
-            ValueContract(
-                DeferredTarget("builtins", "int"),
-                click_type=DeferredTarget("click", "IntRange"),
-            ),
-            None,
-            IntRange,
-        ),
-    ),
-)
+@pytest.mark.parametrize("use_parser", [True, False])
 def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_and_options(
-    value: ValueContract,
-    expected_parser: object | None,
-    expected_click_type: type[IntRange] | None,
+    use_parser: bool,
 ) -> None:
+    value = (
+        ValueContract(
+            DeferredTarget("builtins", "str"),
+            parser=DeferredTarget(".test_command_runtime", "public_parser", __package__),
+        )
+        if use_parser
+        else ValueContract(DeferredTarget("builtins", "int"), click_type=DeferredTarget("click", "IntRange"))
+    )
+    expected_parser = public_parser if use_parser else None
+    expected_click_type = None if use_parser else IntRange
     constraint = ParameterConstraint(
         minimum=1,
         maximum=3,

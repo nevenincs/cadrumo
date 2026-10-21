@@ -29,6 +29,209 @@ class Graph:
 """
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "",
+        "        self.modules[key] = unknown\n",
+        "        self.modules.update({'chosen': unknown})\n",
+        "        mutate(self)\n",
+        "        mutate(receiver=self)\n",
+        "        mutate(self.modules)\n",
+        "        self.mutate()\n",
+        (
+            "        for self in [Builder({'chosen': 'sample.forbidden'})]:\n"
+            "            return Target(self.modules[key])\n"
+        ),
+    ],
+)
+def test_bound_record_factory_preserves_finite_mapping_and_refuses_mutation(tmp_path: Path, mutation: str) -> None:
+    categories, edges = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+from sample.records import Target
+@dataclass
+class Builder:
+    modules: dict[str, str]
+    def target(self, key):
+"""
+            + mutation
+            + """        return Target(self.modules[key])
+    def leaf(self, key):
+        return self.target(key)
+""",
+            "loader": """from importlib import import_module
+from sample.builder import Builder
+select = Builder({'chosen': 'sample.forbidden'}).leaf
+target = select('chosen')
+import_module(target.module)
+""",
+        },
+    )
+    assert categories == (["UNRESOLVED_DYNAMIC_TARGET"] if mutation else [])
+    if not mutation:
+        assert ("sample.loader", "sample.forbidden") in edges
+
+
+@pytest.mark.parametrize("value", ["Target('sample.forbidden')", "unknown"])
+def test_parameterized_record_sources_keep_forbidden_edges_and_refuse_open_values(tmp_path: Path, value: str) -> None:
+    categories, edges = _check(
+        tmp_path,
+        {
+            "loader": """import pytest
+from importlib import import_module
+from sample.records import Target
+@pytest.mark.parametrize(('selected', 'unrelated'), (("""
+            + value
+            + """, 1),))
+def test_declared(selected, unrelated):
+    import_module(selected.module)
+""",
+        },
+    )
+    assert categories == (["UNRESOLVED_DYNAMIC_TARGET"] if value == "unknown" else [])
+    if value != "unknown":
+        assert ("sample.loader", "sample.forbidden") in edges
+
+
+@pytest.mark.parametrize("call", ["mutate(receiver=self)", "mutate(self.modules)", "self.mutate()"])
+def test_bound_factory_return_refuses_receiver_escapes_and_mutating_siblings(tmp_path: Path, call: str) -> None:
+    categories, _edges = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+from sample.records import Target
+def mutate(receiver):
+    receiver.modules['chosen'] = 'sample.forbidden'
+    return None
+@dataclass
+class Builder:
+    modules: dict[str, str]
+    def mutate(self):
+        self.modules['chosen'] = 'sample.forbidden'
+        return None
+    def target(self, key):
+        return """
+            + call
+            + """ or Target(self.modules[key])
+""",
+            "loader": """from importlib import import_module
+from sample.builder import Builder
+select = Builder({'chosen': 'sample.allowed'}).target
+target = select('chosen')
+import_module(target.module)
+""",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+@pytest.mark.parametrize(
+    "setup",
+    [
+        (
+            "builder = Builder({'chosen': 'sample.allowed'})\nalias = builder\n"
+            "alias.modules['chosen'] = 'sample.forbidden'\nselect = builder.target\n"
+        ),
+        (
+            "select = Builder({'chosen': 'sample.allowed'}).target\n"
+            "select.__self__.modules['chosen'] = 'sample.forbidden'\n"
+        ),
+        (
+            "modules = {'chosen': 'sample.allowed'}\nalias = modules\n"
+            "alias['chosen'] = 'sample.forbidden'\nselect = Builder(modules).target\n"
+        ),
+    ],
+)
+def test_bound_factory_requires_unescaped_receiver_and_mutable_inputs(tmp_path: Path, setup: str) -> None:
+    categories, _edges = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+from sample.records import Target
+@dataclass
+class Builder:
+    modules: dict[str, str]
+    def target(self, key):
+        return Target(self.modules[key])
+""",
+            "loader": "from importlib import import_module\nfrom sample.builder import Builder\n"
+            + setup
+            + "target = select('chosen')\nimport_module(target.module)\n",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+def test_bound_factory_refuses_post_init_mutation_of_constructor_input(tmp_path: Path) -> None:
+    categories, _edges = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+from sample.records import Target
+def mutate(modules):
+    modules['chosen'] = 'sample.forbidden'
+@dataclass
+class Builder:
+    modules: dict[str, str]
+    def __post_init__(self):
+        mutate(self.modules)
+    def target(self, key):
+        return Target(self.modules[key])
+""",
+            "loader": """from importlib import import_module
+from sample.builder import Builder
+select = Builder({'chosen': 'sample.allowed'}).target
+target = select('chosen')
+import_module(target.module)
+""",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+def test_parameterized_and_direct_record_sources_are_both_retained(tmp_path: Path) -> None:
+    categories, edges = _check(
+        tmp_path,
+        {
+            "loader": """import pytest
+from importlib import import_module
+from sample.records import Target
+@pytest.mark.parametrize('selected', [Target('sample.forbidden')])
+def test_declared(selected):
+    import_module(selected.module)
+test_declared(Target('sample.allowed'))
+""",
+        },
+    )
+    assert categories == []
+    assert ("sample.loader", "sample.forbidden") in edges
+
+
+@pytest.mark.parametrize("indirect", ["True", "['selected']", "unknown"])
+def test_indirect_parameterized_record_sources_refuse_fixture_substitution(tmp_path: Path, indirect: str) -> None:
+    categories, _edges = _check(
+        tmp_path,
+        {
+            "loader": """import pytest
+from importlib import import_module
+from sample.records import Target
+@pytest.fixture
+def selected(request):
+    return Target('sample.forbidden')
+@pytest.mark.parametrize('selected', [Target('sample.allowed')], indirect="""
+            + indirect
+            + """)
+def test_declared(selected):
+    import_module(selected.module)
+test_declared(Target('sample.allowed'))
+""",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
 def _check(tmp_path: Path, sources: dict[str, str]) -> tuple[list[str], set[tuple[str, str]]]:
     root = tmp_path / "sample"
     root.mkdir()
@@ -51,6 +254,254 @@ def _check(tmp_path: Path, sources: dict[str, str]) -> tuple[list[str], set[tupl
     return [finding.category for finding in findings], {
         (item.source_module, item.target_module) for item in occurrences
     }
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        "@pytest.mark.parametrize('selected', cases)",
+        "@pytest.mark.parametrize(names, [Target('sample.allowed')])",
+        "@pytest.mark.parametrize(argnames='selected', argvalues=cases)",
+        "@pytest.mark.parametrize('selected', [selected_case])",
+    ],
+)
+def test_open_decorator_cannot_be_hidden_by_closed_direct_call(tmp_path: Path, declaration: str) -> None:
+    categories, _ = _check(
+        tmp_path,
+        {
+            "loader": """import pytest
+from importlib import import_module
+from sample.records import Target
+cases = [Target('sample.forbidden')]
+names = 'selected'
+selected_case = Target('sample.allowed')
+"""
+            + declaration
+            + """
+def test_declared(selected):
+    import_module(selected.module)
+selected_case.module = 'sample.forbidden'
+test_declared(Target('sample.allowed'))
+"""
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+def test_keyword_parameterized_records_keep_forbidden_edge(tmp_path: Path) -> None:
+    categories, edges = _check(
+        tmp_path,
+        {
+            "loader": """import pytest
+from importlib import import_module
+from sample.records import Target
+@pytest.mark.parametrize(argnames='selected', argvalues=[Target('sample.forbidden')])
+def test_declared(selected):
+    import_module(selected.module)
+"""
+        },
+    )
+    assert categories == []
+    assert ("sample.loader", "sample.forbidden") in edges
+
+
+@pytest.mark.parametrize("decorator", ["", "@replace_selected\n"])
+def test_parameterized_function_keeps_external_calls_and_refuses_wrappers(tmp_path: Path, decorator: str) -> None:
+    categories, edges = _check(
+        tmp_path,
+        {
+            "loader": """import pytest
+from importlib import import_module
+from sample.records import Target
+def replace_selected(function):
+    def wrapped(selected):
+        return function(Target('sample.forbidden'))
+    return wrapped
+"""
+            + decorator
+            + """@pytest.mark.parametrize('selected', [Target('sample.allowed')])
+def test_declared(selected):
+    import_module(selected.module)
+""",
+            "caller": """from sample.loader import test_declared
+from sample.records import Target
+test_declared(Target('sample.forbidden'))
+""",
+        },
+    )
+    assert categories == (["UNRESOLVED_DYNAMIC_TARGET"] if decorator else [])
+    if not decorator:
+        assert ("sample.loader", "sample.forbidden") in edges
+
+
+def test_parameterized_records_refuse_mutating_factory(tmp_path: Path) -> None:
+    categories, _ = _check(
+        tmp_path,
+        {
+            "loader": """import pytest
+from importlib import import_module
+from sample.records import Target
+def make_case():
+    case = Target('sample.allowed')
+    case.module = 'sample.forbidden'
+    return case
+@pytest.mark.parametrize('selected', [make_case()])
+def test_declared(selected):
+    import_module(selected.module)
+"""
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+@pytest.mark.parametrize("argument", ["receiver=self", "receiver=Envelope(self)"])
+def test_parameterized_records_refuse_post_init_keyword_receiver_escape(tmp_path: Path, argument: str) -> None:
+    categories, _ = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+def mutate(*, receiver):
+    receiver.module = 'sample.forbidden'
+@dataclass
+class Envelope:
+    receiver: object
+@dataclass
+class Selected:
+    module: str
+    def __post_init__(self):
+        mutate("""
+            + argument
+            + """)
+""",
+            "loader": """import pytest
+from importlib import import_module
+from sample.builder import Selected
+@pytest.mark.parametrize('selected', [Selected('sample.allowed')])
+def test_declared(selected):
+    import_module(selected.module)
+""",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+@pytest.mark.parametrize(
+    "effect", ["        mutate(self.target)", "        for victim in [self.target]:\n            mutate(victim)"]
+)
+def test_parameterized_records_refuse_all_post_init_child_alias_effects(tmp_path: Path, effect: str) -> None:
+    categories, _ = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+from sample.records import Target
+def mutate(target):
+    target.module = 'sample.forbidden'
+@dataclass
+class Selected:
+    target: Target
+    def __post_init__(self):
+"""
+            + effect
+            + "\n",
+            "loader": """import pytest
+from importlib import import_module
+from sample.builder import Selected
+from sample.records import Target
+@pytest.mark.parametrize('selected', [Selected(Target('sample.allowed'))])
+def test_declared(selected):
+    import_module(selected.target.module)
+""",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+@pytest.mark.parametrize(
+    "method, setup",
+    [
+        ("    @replace\n    def target(self, key):\n        return Target(self.modules[key])\n", ""),
+        (
+            "    def identity(self):\n        return self\n"
+            "    def target(self, key):\n"
+            "        return Target(qualname=mutate(self.identity()), module=self.modules[key])\n",
+            "",
+        ),
+        (
+            "    def target(self, key):\n"
+            "        return Target(qualname=mutate(Envelope(self)), module=self.modules[key])\n",
+            "",
+        ),
+        (
+            "    def target(self, key):\n        return Target(self.modules[key])\n",
+            "Builder.target = lambda self, key: Target('sample.forbidden')\n",
+        ),
+        (
+            "    def target(self, key):\n        return Target(self.modules[key])\n",
+            "alias = Builder\nalias.target = lambda self, key: Target('sample.forbidden')\n",
+        ),
+        ("    def target(self, key):\n        return Target(self.modules[key])\n", "mutate(Builder)\n"),
+    ],
+)
+def test_bound_factory_refuses_decorators_computed_escapes_and_class_replacement(
+    tmp_path: Path, method: str, setup: str
+) -> None:
+    categories, _ = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+from sample.records import Target
+def replace(method):
+    return lambda self, key: Target('sample.forbidden')
+def mutate(receiver):
+    receiver.modules['chosen'] = 'sample.forbidden'
+    return 'value'
+@dataclass
+class Envelope:
+    receiver: object
+@dataclass
+class Builder:
+    modules: dict[str, str]
+"""
+            + method,
+            "loader": """from importlib import import_module
+from sample.builder import Builder, mutate
+from sample.records import Target
+"""
+            + setup
+            + """target = Builder({'chosen': 'sample.allowed'}).target('chosen')
+import_module(target.module)
+""",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
+
+
+def test_bound_factory_refuses_nested_mutable_constructor_alias(tmp_path: Path) -> None:
+    categories, _ = _check(
+        tmp_path,
+        {
+            "builder": """from dataclasses import dataclass
+from sample.records import Target
+@dataclass
+class Mapping:
+    modules: dict[str, str]
+@dataclass
+class Builder:
+    mapping: Mapping
+    def target(self, key):
+        return Target(self.mapping.modules[key])
+""",
+            "loader": """from importlib import import_module
+from sample.builder import Builder, Mapping
+modules = {'chosen': 'sample.allowed'}
+mapping = Mapping(modules)
+modules['chosen'] = 'sample.forbidden'
+target = Builder(mapping).target('chosen')
+import_module(target.module)
+""",
+        },
+    )
+    assert categories == ["UNRESOLVED_DYNAMIC_TARGET"]
 
 
 def test_receiver_excludes_unrelated_record_sources(tmp_path: Path) -> None:

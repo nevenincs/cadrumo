@@ -1,8 +1,8 @@
 """Capability-gated optional package extras and their import guard.
 
 The shipped package is lean: a bare ``pip install cadrumo`` omits the optional
-integration stacks (Google export, the live-AEAT browser, the Anthropic-API LLM
-provider). Each maps to a ``[project.optional-dependencies]`` extra and is
+integration stacks (Google export and the live-AEAT browser). Each maps to a
+``[project.optional-dependencies]`` extra and is
 imported lazily, so the core CLI builds and runs without it.
 
 This module is the single source of truth for those extras. It lives in ``core``
@@ -30,7 +30,6 @@ from .errors.hierarchy import CoreError
 from .models import STRICT_FROZEN_CONFIG
 
 __all__ = [
-    "ANTHROPIC_EXTRA",
     "BROWSER_EXTRA",
     "GOOGLE_EXTRA",
     "LLM_EXTRA",
@@ -66,7 +65,6 @@ class OptionalExtra(BaseModel):
 # with the matching constant; the doctor enumerates the tuple.
 GOOGLE_EXTRA = OptionalExtra(extra="google", import_name="googleapiclient", feature="Google Drive / Sheets export")
 BROWSER_EXTRA = OptionalExtra(extra="browser", import_name="playwright", feature="live AEAT browser automation")
-ANTHROPIC_EXTRA = OptionalExtra(extra="anthropic", import_name="anthropic", feature="the Anthropic-API LLM provider")
 # ``ofxtools`` is GPL-3.0-only; gating it behind an extra keeps the CORE
 # dependency closure free of strong copyleft.
 OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
@@ -97,7 +95,6 @@ PDF_EXTRA = OptionalExtra(extra="pdf", import_name="reportlab", feature="the cal
 OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (
     GOOGLE_EXTRA,
     BROWSER_EXTRA,
-    ANTHROPIC_EXTRA,
     OFX_EXTRA,
     LLM_EXTRA,
     PDF_EXTRA,

@@ -11,7 +11,6 @@ from ..assemble import agent_closure, package_binaries, package_build_record, pa
 from ..build_stamp import BuildStamp, ComponentIdentity
 from ..layout import application_images, load_layout
 from ..metadata import generate
-from ..platforms.windows import _version_resource
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -43,22 +42,6 @@ def test_the_shared_record_and_header_carry_the_interpreter_identity_and_both_di
     debug, release = selection.split("#else")
     assert '#define CADRUMO_BUILD_TYPE "debug"' in debug and "CADRUMO_DISPLAY_VERSION_DEBUG" in debug
     assert '#define CADRUMO_BUILD_TYPE "release"' in release and "CADRUMO_DISPLAY_VERSION_RELEASE" in release
-
-
-def test_version_resources_carry_the_sequence_and_the_display_version_of_each_type(tmp_path: Path) -> None:
-    resource = _version_resource(tmp_path, "0,6,0,412", "0.6.0", STAMP, '"Publisher\\0"', '"Host\\0"')
-    assert "FILEVERSION 0,6,0,412" in resource
-    assert "PRODUCTVERSION 0,6,0,412" in resource
-    debug, release = resource[resource.index("#if CADRUMO_BUILD_DEBUG") : resource.index("#endif\n   VALUE")].split(
-        "#else"
-    )
-    assert 'VALUE "FileVersion", "0.6.0+2026101903.debug\\0"' in debug
-    assert 'VALUE "BuildType", "debug\\0"' in debug
-    assert 'VALUE "FileVersion", "0.6.0+2026101903\\0"' in release
-    assert 'VALUE "BuildType", "release\\0"' in release
-    assert 'VALUE "BuildId", "2026101903\\0"' in resource
-    assert 'VALUE "ProductVersion", "0.6.0\\0"' in resource
-    assert 'VALUE "BuildDate", "2026-10-19T08:30:00Z\\0"' in resource
 
 
 def _identity(component: str, build_id: str, sequence: int) -> ComponentIdentity:

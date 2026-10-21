@@ -36,9 +36,8 @@ dependencies = [
   # the only place TOML is parsed; several times faster than the stdlib parser.
   "rtoml>=0.14.0,<1",
   # Capability-gated integrations live in [project.optional-dependencies].
-  # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
-  # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
-  # imported and map to the `anthropic`, `google`, and `browser` extras below.
+  # The `google-*` stack (Drive/Sheets export) and `playwright*` (live AEAT
+  # browser) are lazily imported and map to the `google` and `browser` extras.
   # Argon2id KDF for the file-fallback master-key provider's
   # passphrase-to-KEK derivation. OWASP-current top-tier
   # password-hashing primitive; ships pre-built wheels for
@@ -166,22 +165,18 @@ workbook-windows = [
 # flow: loopback IP + PKCE via
 # google-auth-oauthlib's InstalledAppFlow; the storage provider drives Drive v3
 # / Sheets v4 through the discovery client. google-auth-httplib2 is intentionally
-# NOT pinned — transport is satisfied by `requests` (transitive via google-auth).
+# NOT pinned — transport and typed network failures use `requests` directly.
 google = [
   "google-auth>=2.62.0,<3",
   "google-auth-oauthlib>=1.3.1,<2",
   "google-api-python-client>=2.195.0,<3",
+  "requests>=2.34.2,<3",
 ]
 # Live AEAT browser automation (the `cadrumo app live ...` sede sessions).
 browser = [
   "playwright>=1.58.0,<2",
   # Runtime browser evasion used by AEAT live browser sessions.
   "playwright-stealth>=2.0.3,<3",
-]
-# Direct Anthropic-API LLM classification provider (distinct from the
-# subprocess CLI providers, which need no Python SDK).
-anthropic = [
-  "anthropic>=1.13.0,<2",
 ]
 # OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
 # parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
@@ -247,7 +242,6 @@ pdf = [
 all = [
   "cadrumo[google]",
   "cadrumo[browser]",
-  "cadrumo[anthropic]",
   "cadrumo[ofx]",
   "cadrumo[llm]",
   "cadrumo[pdf]",
@@ -1460,6 +1454,7 @@ ignore_names = [
   "win32con",
   "win32event",
   "win32file",
+  "win32gui",
   "win32job",
   "win32pipe",
   "win32process",

@@ -88,6 +88,7 @@ def test_missing_aeat_setup_survives_capture_settlement_and_result_read(tmp_path
                 OperationErrorDetailV1,
             )
             assert isinstance(projected, OperationResultProjectionSuccessV1)
+            assert isinstance(projected.projection, OperationErrorDetailV1)
             return projected.projection
 
         detail = asyncio.run(run())

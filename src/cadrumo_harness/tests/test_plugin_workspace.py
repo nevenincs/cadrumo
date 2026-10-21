@@ -25,8 +25,8 @@ import yaml
 
 from cadrumo.core.hashing import sha256_hex
 
-from .._workspace import _PluginPythonCohort, materialise_plugin
 from ..resources import harness_root, iter_reference_documents
+from ..workspace import _PluginPythonCohort, materialise_plugin
 from ._plugin_cohort import PluginTestCohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

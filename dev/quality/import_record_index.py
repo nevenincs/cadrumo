@@ -22,6 +22,7 @@ class DeclarationIndex(ABC):
         self.definitions: dict[str, ast.AST] = {}
         self.classes: dict[str, ast.ClassDef] = {}
         self._field_cache: dict[str, tuple[ast.AnnAssign, ...]] = {}
+        self._closed_factory_classes: set[str] = set()
         self.callback_sources: dict[str, list[SourceExpression]] = {}
         self._index_definitions()
         self.target_fields = self._index_target_fields()
@@ -197,10 +198,22 @@ class DeclarationIndex(ABC):
         return self._post_init_is_closed(module, definition)
 
     def _post_init_is_closed(self, module: str, definition: ast.ClassDef) -> bool:
+        fields = {
+            item.target.id
+            for item in definition.body
+            if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name)
+        }
         for method in definition.body:
             if not isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)) or method.name != "__post_init__":
                 continue
             for node in ast.walk(method):
+                if (
+                    isinstance(node, ast.Attribute)
+                    and isinstance(node.value, ast.Name)
+                    and node.value.id == "self"
+                    and node.attr not in fields
+                ):
+                    return False
                 if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign, ast.NamedExpr)):
                     return False
                 if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store):
@@ -217,9 +230,10 @@ class DeclarationIndex(ABC):
                     and not node.keywords
                 ):
                     return False
-                if not any(isinstance(argument, ast.Name) and argument.id == "self" for argument in node.args):
+                arguments = (*node.args, *(keyword.value for keyword in node.keywords))
+                if not any(self._passes_raw_self(argument) for argument in arguments):
                     continue
-                if qualified_name(node.func) != "object.__setattr__" or len(node.args) != 3:
+                if qualified_name(node.func) != "object.__setattr__" or len(node.args) != 3 or node.keywords:
                     return False
                 field, value = node.args[1:]
                 if not isinstance(field, ast.Constant) or field.value not in {"module", "package"}:
@@ -237,6 +251,14 @@ class DeclarationIndex(ABC):
                 ] or value.keywords:
                     return False
         return True
+
+    @staticmethod
+    def _passes_raw_self(node: ast.AST) -> bool:
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "self":
+            return False
+        return (isinstance(node, ast.Name) and node.id == "self") or any(
+            DeclarationIndex._passes_raw_self(child) for child in ast.iter_child_nodes(node)
+        )
 
     def normalizes_module(self, expression: SourceExpression) -> bool:
         """Recognize the proved standard relative-module normalization in post-init."""

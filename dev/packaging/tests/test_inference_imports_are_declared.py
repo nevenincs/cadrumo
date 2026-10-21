@@ -60,7 +60,7 @@ _INFERENCE_PACKAGE = _REPO_ROOT / "src" / "cadrumo" / "adapters" / "outbound" / 
 
 #: Import names that are the standard library or this project itself, so they
 #: are never expected to appear in a dependency declaration.
-_NOT_THIRD_PARTY = frozenset({"cadrumo", "cadrumo_data", "dev"})
+_NOT_THIRD_PARTY = frozenset({"cadrumo", "cadrumo_client", "cadrumo_data", "dev"})
 
 
 def _declared_distributions() -> set[str]:
@@ -202,5 +202,6 @@ def test_a_development_group_entry_is_not_a_declaration() -> None:
         "and never reach the built distribution's metadata, so accepting one lets a shipped module "
         "rely on a package the wheel does not require"
     )
-    assert "anthropic" in declared, "the reader stopped seeing optional-dependencies extras"
+    assert "anthropic" not in declared, "the retired tax provider must remain development-only"
+    assert "nvidia-ml-py" in declared, "the reader stopped seeing optional-dependencies extras"
     assert "pydantic" in declared, "the reader stopped seeing [project] dependencies"

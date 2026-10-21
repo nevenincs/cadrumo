@@ -132,6 +132,7 @@
         "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap",
         "cadrumo_runtime.host.frontend.tui",
         "cadrumo_runtime.host.frontend.tui.__main__",
+        "cadrumo_runtime.host.frontend.tui.aeat_setup_session",
         "cadrumo_runtime.host.frontend.tui.aeat_sync",
         "cadrumo_runtime.host.frontend.tui.aeat_sync.runtime_handoff",
         "cadrumo_runtime.host.frontend.tui.bound_session",

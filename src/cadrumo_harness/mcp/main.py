@@ -42,7 +42,7 @@ def main() -> None:
     if args.materialise_workspace is not None:
         if args.profile_id is not None or args.surface is not None:
             parser.error("--materialise-workspace writes files and serves nothing; give it alone")
-        from .._workspace import materialise_workspace
+        from ..workspace import materialise_workspace
 
         # Only the person's own launch opts in to writing files; no tool call writes one.
         manifest = materialise_workspace(args.materialise_workspace)

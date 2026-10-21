@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Generator
 from contextlib import contextmanager
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -30,12 +31,12 @@ from dev.ci.profile_wizard_benchmark import _observe, observe_worker, summarize
 def observe_ledger_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[None]:
     """Measure real IPC, custody, journals and transaction reads without payloads."""
     from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from cadrumo.adapters.persistence.storage.custody import _kdf_process
-    from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
+    from cadrumo.adapters.persistence.storage.custody.tests.kdf_benchmark_observation import observe_kdf_startup
     from cadrumo_client.transport.framing import VerifiedConnection
     from cadrumo_client.transport.frontend_client import FrontendClient
 
     with pytest.MonkeyPatch.context() as patch, observe_modelo_boundaries(recorder), observe_worker(recorder):
+        observe_kdf_startup(partial(_observe, patch, recorder))
         for owner, method, label in (
             (FrontendClient, "operation", "frontend.operation"),
             (FrontendClient, "contract", "frontend.contract"),
@@ -43,9 +44,6 @@ def observe_ledger_boundaries(recorder: RuntimeBenchmarkRecorder) -> Generator[N
             (VerifiedConnection, "operation", "ipc.exchange"),
             (TransactionCatalogueRepository, "load", "ledger.load"),
             (TransactionCatalogueRepository, "load_revisioned", "ledger.load_revisioned"),
-            (_SupervisedKdfWorker, "_start", "startup.kdf_prepare_and_launch"),
-            (_kdf_process, "worker_command", "startup.kdf_command"),
-            (_kdf_process, "_launch_worker_process", "startup.kdf_spawn"),
         ):
             _observe(patch, recorder, owner, method, label)
         try:
