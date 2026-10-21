@@ -23,8 +23,8 @@ module's place, so the lane runs the same number of real builds it always has:
 a translated witness and an English one cost the same, and only the translated
 one can see a mechanism that silently followed the Sphinx language.
 
-The two builds are two concurrent subprocesses, so the gate costs the longer of
-them rather than their sum, and they are one module-scoped fixture, because
+The standalone gate runs two concurrent subprocesses; an xdist worker executes
+them sequentially inside its one shared-machine slot. They are one module-scoped fixture, because
 pytest-xdist distributes by file: the assertions below are readings of one pair
 of builds, not a build each.
 """
@@ -46,7 +46,7 @@ from dev.packaging.command_execution import CommandResult, run_command
 
 from ..compile_once import INTENDED_DIFFERENCES, WITNESS_LANGUAGE, Comparison, compare, witness_build
 from ..i18n import SITE_ROOT_LANGUAGES
-from ._sphinx_build_harness import gate_build_env, gate_build_jobs
+from ._sphinx_build_harness import gate_build_concurrency, gate_build_env, gate_build_jobs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -121,8 +121,13 @@ def _succeeded(result: CommandResult, what: str) -> CommandResult:
 
 @pytest.fixture(scope="module")
 def built(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Built]:
-    """Run the one compile and the witness build at the same time, and compare them."""
+    """Run the compile and witness within the harness's machine-share budget."""
     root = tmp_path_factory.mktemp("localized-compile")
+    yield _build_pair(root)
+
+
+def _build_pair(root: Path) -> _Built:
+    """Execute both strict builds and compare their complete witness roots."""
     html_root, build_root = root / "html", root / "build"
     # The stored form is the roots' own intermediate, removed once they are
     # composed from it, so the gate that reads what the compile carried asks
@@ -142,10 +147,9 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Built]:
         # compile's selectors keep from its caller for exactly this.
         base=gate_build_env(root / "witness-state", CADRUMO_DOCS_JOBS=gate_build_jobs()),
     )
-    # Two threads over the owned command runner: the builds are concurrent, so
-    # the gate costs the longer of them rather than their sum, and each reports
-    # its own duration and its own output rather than the pair's.
-    with ThreadPoolExecutor(max_workers=2) as pool:
+    # The standalone gate overlaps the builds. An xdist worker already owns
+    # one slot, so it completes both commands sequentially within that slot.
+    with ThreadPoolExecutor(max_workers=gate_build_concurrency()) as pool:
         building = pool.submit(
             run_command,
             witness_command,
@@ -167,7 +171,7 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Built]:
         f"beside the {WITNESS_LANGUAGE} build it is measured against in {witnessed.duration_seconds:.0f} s",
         flush=True,
     )
-    yield _Built(
+    return _Built(
         comparison=compare(html_root / WITNESS_LANGUAGE, witness, WITNESS_LANGUAGE),
         html_root=html_root,
         witness=witness,

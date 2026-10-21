@@ -58,9 +58,11 @@ def gate_build_jobs() -> str:
     same reason: co-resident CI lanes and peer agents already contend for those
     cores, so an uncapped build starves itself and everything beside it.
 
-    An explicit ``CADRUMO_DOCS_JOBS`` still wins, routed through the shared
+    An explicit ``CADRUMO_DOCS_JOBS`` is validated through the shared
     :func:`~dev.docs.build.docs_build_jobs` resolver so the deployment knob
-    keeps one validation path rather than two.
+    keeps one validation path rather than two. A direct serial pytest run
+    keeps that width; an xdist worker already owns one shared-machine slot
+    and therefore runs one Sphinx reader, even with an explicit override.
 
     Windows note: Sphinx parallel workers require ``os.fork``
     (``sphinx.util.parallel.parallel_available`` is ``False`` on win32), so on
@@ -74,8 +76,26 @@ def gate_build_jobs() -> str:
     if "CADRUMO_DOCS_JOBS" in os.environ:
         from ..build import docs_build_jobs
 
-        return docs_build_jobs(os.environ)
-    return _GATE_BUILD_JOBS_DEFAULT
+        requested = docs_build_jobs(os.environ)
+    else:
+        requested = _GATE_BUILD_JOBS_DEFAULT
+    # xdist already allocated this process one slot in the shared machine
+    # budget. A Sphinx pool inside every slot would multiply that budget.
+    return "1" if _outer_worker_owns_parallelism() else requested
+
+
+def _outer_worker_owns_parallelism() -> bool:
+    """Whether xdist already assigned this build its machine-share slot."""
+    return bool(os.environ.get("PYTEST_XDIST_WORKER"))
+
+
+def gate_build_concurrency() -> int:
+    """Keep the compile and witness inside one outer worker's build slot.
+
+    Direct serial pytest retains the two concurrent builds. Under xdist,
+    both builds still execute, sequentially, with one Sphinx reader each.
+    """
+    return 1 if _outer_worker_owns_parallelism() else 2
 
 
 def copy_docs_source(tmp_path: Path) -> Path:
