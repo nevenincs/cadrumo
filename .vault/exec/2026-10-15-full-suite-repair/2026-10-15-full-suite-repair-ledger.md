@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:f058da118f75e4203c0a066616046a4fe5a135b3e8b554caeb9cf4101ffa2d35'
+body_hash: 'sha256:ba360cdf90c0794088754d1e7c6c6ea69907b6244bc49030e05e3730f1fd535b'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1464,6 +1464,7 @@ related:
 - `S04` `verify:` `2026-10-21 CTest manager.supervision installer.rust native.identity-coverage application.rust (4 groups)` -> `pass`
 - `S04` `verify:` `2026-10-21 browser failures rerun after repairs (all 13 original failures)` -> `pass`
 - `S04` `verify:` `native_bundle=pass;packaged_ctest=14_pass_1_fail;approval_scenarios=32_pass;frontend_check` -> `pass`
+- `S04` `verify:` `runtime_current_ids=3894_accounted;runtime_focused=112_pass;runtime_serial=15_pass;core_logging=95_pass;service_native_repairs=2_pass;client_native_recheck` -> `pass`
 
 ## Notes
 
@@ -1508,3 +1509,4 @@ related:
 - `S04` Current user authorizes full verification and autonomous Sol6.1 high workers; historical selector-only restriction superseded. Browser and Python repairs remain active; no all-green claim.
 - `S04` Independent desktop review found no concrete defects; HMR regression reproduced failure before fix and passes after. Browser 9 live-agent opt-in skips remain classified. Native bundle, refreshed host checks and Python gates remain active.
 - `S04` Bundle build and installer bootstrap passed. Fifteen packaged CTest groups completed: fourteen passed, lifecycle group had three failures and one teardown error; its six passing cases include crash recovery with the production lease and manager replacement. Preserve lifecycle-full-20261021.xml; exact failed client/service cases are being rechecked. Full Python gates remain active. Ledger diagnostics stale AGENT expectation repaired, focused real-supervisor case passed and committed 3bdbabcb01. S03/S04 remain open.
+- `S04` Runtime portable evidence union3817pass77expectedskip; original full red receipt retained. Production JSON routing committed0b853e1207; runtime fixture65files725364a503; service bounded reads830b557c2e. Core/native independent review accepted. Full product/dev test-gate remains active, new import package-anchor/coverage-enrollment repairs underway. Bundle refresh source snapshot changed due concurrent external profile-custody edit; no immutable all-green claim. S03/S04 remain open.
