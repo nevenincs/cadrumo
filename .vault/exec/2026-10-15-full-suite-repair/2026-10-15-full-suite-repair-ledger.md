@@ -5,7 +5,7 @@ tags:
 date: '2026-10-15'
 modified: '2026-10-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e423c83154286461f864646d2344e8217d4a9e4bc2c632d5936f7209300aa35'
+body_hash: 'sha256:4714607d255cf2a6a1d80e051159412581853834c0ed03f9dadce68af2fef782'
 related:
   - "[[2026-10-15-full-suite-repair-plan]]"
 ---
@@ -1486,6 +1486,10 @@ related:
 - `S04` `verify:` `private-ingest` -> `pass`
 - `S04` `verify:` `docs-worker-budget` -> `pass`
 - `S04` `verify:` `original-full-run` -> `fail`
+- `S04` `verify:` `captured-original-host4` -> `pass`
+- `S04` `verify:` `current-tui-parity` -> `pass`
+- `S04` `verify:` `guarded-and-retired3` -> `pass`
+- `S04` `verify:` `current-import-worker7` -> `pass`
 
 ## Notes
 
@@ -1539,3 +1543,4 @@ related:
 - `S04` Reviewed and committed JSON diagnostic correlation 28c9237641 (6 passes), canonical acquisition observation 301d3c2240 (26 passes), and promoted Modelo architecture coverage b5b74d9bd2 (5 passes); capability dependent integration 7 passes. MCP migration accounts for 21 retired historical failures with zero pass credit and 55 moved definitions pending current-source qualification. Main broad run and quiet host, Windows, docs, browser, capability and final package lanes remain open.
 - `S04` Committed cd9d060e86 standalone probe package context (3 passes) and eb1fcd843a lexical source scanner plus technical type census (4+3 passes), preserving strict positive controls and removing obsolete exemptions. User-requested corpus configuration persisted only its root in ignored env/.env after exact pinned key and canonical loader validation; full corpus lane queued. Migration107 historical outcomes classify47retired and60moved pending, zero pass credit. Recovered empty stale Git lock only after age/process/exclusive-open checks, retained original lock beside index; other staging untouched. Main and final verification remain open.
 - `S04` Original main run completed57973:57381pass241skip177fail174error; all351 outcomes mapped and original red receipt retained. Eight scratch cleanup messages remain unresolved; DACL fixture lifetime repair awaits native proof. Corpus configured in ignored local env and canonical71pass; fresh dotenv1pass. Docs budget095f1f8401 passes18 controls. Migration109 historical outcomes48retired61moved pending, no pass credit. Captured host, Windows, docs, browser, capabilities, current migration, native and static work remain; S03/S04 open.
+- `S04` Capturedfive4pass1fail retained; final current TUI module1pass after reviewed fixture-only admission/privacy correction ab32a19878. Retired custody warm admission1fdb2aa9ad and external guarded warmup26fb72a1b5 fresh3pass. Current4858module canonical metadata unchanged,7worker casespass. ExternalPO3ee542eb96 preserved; only2Catalan forms corrected7741844772 via canonical writer. Windows1085selected active; browser/docs/migration/capability/native/static remain pending. S03/S04 open.
